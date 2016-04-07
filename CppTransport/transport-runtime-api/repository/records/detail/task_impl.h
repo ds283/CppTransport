@@ -65,6 +65,15 @@ namespace transport
 
 
     template <typename number>
+    void task_record<number>::add_new_output_group(const std::string& name)
+      {
+        this->content_groups.push_back(name);
+        this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_content, name);
+        this->metadata.update_last_edit_time();
+      }
+
+
+    template <typename number>
     void task_record<number>::delete_output_group(const std::string& name)
       {
         std::list<std::string>::const_iterator t = std::find(this->content_groups.cbegin(), this->content_groups.cend(), name);
@@ -72,6 +81,8 @@ namespace transport
         if(t == this->content_groups.end()) return;
 
         this->content_groups.erase(t);
+        this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::remove_content, name);
+        this->metadata.update_last_edit_time();
       }
 
 

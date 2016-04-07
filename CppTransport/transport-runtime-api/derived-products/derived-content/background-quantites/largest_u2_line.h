@@ -50,6 +50,25 @@ namespace transport
 				    virtual ~largest_u2_line() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::largest_u2; }
+
+
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+            //! get wavenumber query
+            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+
+
 				    // DERIVE LIVES -- implements a 'derived_line' interface
 
 		      public:

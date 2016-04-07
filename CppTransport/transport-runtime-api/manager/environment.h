@@ -13,6 +13,7 @@
 
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <pwd.h>
 
 #include "transport-runtime-api/defaults.h"
 
@@ -36,6 +37,19 @@ namespace transport
 
         //! destructor is default
         ~local_environment() = default;
+
+
+        // USERS AND AUTHENTICATION
+
+      public:
+
+        //! get userid of owner
+        std::string get_userid() const { return(this->userid); }
+
+      protected:
+
+        //! detect userid
+        void detect_userid();
 
 
         // PYTHON SUPPORT
@@ -117,6 +131,10 @@ namespace transport
 
       protected:
 
+        // USERS AND AUTHENTICATION
+
+        //! userid
+        std::string userid;
 
         // ENVIRONMENT PATHS
 
@@ -174,6 +192,9 @@ namespace transport
         seaborn_cached(false),
         seaborn_available(false)
       {
+        // detect user id
+        detect_userid();
+
         // detect home directory
         detect_home();
 
@@ -182,6 +203,18 @@ namespace transport
 
         // detection of Python support (Python interpreter, Matplotlib, style sheets, Seaborn, etc.) is
         // deferred until needed, since it slows down program initialization
+      }
+
+
+    void local_environment::detect_userid()
+      {
+        struct passwd* pw;
+        uid_t uid;
+
+        uid = geteuid();
+        pw = getpwuid(uid);
+
+        if(pw != nullptr) this->userid = std::string(pw->pw_name);
       }
 
 

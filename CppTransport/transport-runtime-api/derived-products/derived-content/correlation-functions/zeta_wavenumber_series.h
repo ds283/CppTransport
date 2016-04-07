@@ -50,7 +50,28 @@ namespace transport
 				    virtual ~zeta_twopf_wavenumber_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::zeta_twopf_wavenumber; }
+
+
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+            //! get wavenumber query
+            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+
+
 		        // DERIVE LINES -- implements a 'time_series' interface
+
+          public:
 
 		        //! generate data lines for plotting
 		        virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
@@ -275,7 +296,28 @@ namespace transport
 						virtual ~zeta_threepf_wavenumber_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::zeta_threepf_wavenumber; }
+
+
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+            //! get wavenumber query
+            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+
+
 				    // DERIVE LINES -- implements a 'derived_line' interface
+
+          public:
 
 				    //! generate data lines for plotting
 				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
@@ -496,7 +538,28 @@ namespace transport
 		        virtual ~zeta_reduced_bispectrum_wavenumber_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::zeta_redbsp_wavenumber; }
+
+
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+            //! get wavenumber query
+            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+
+
 		        // DERIVE LINES -- implements a 'derived_line' interface
+
+          public:
 
 		        //! generate data lines for plotting
 		        virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,

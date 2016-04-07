@@ -199,6 +199,9 @@ namespace transport
 				    //! Add a line to the collection
 				    virtual void add_line(const derived_line<number>& line);
 
+            //! Get list of lines in collection
+            const std::list< std::unique_ptr< derived_line<number> > >& get_lines() const { return(this->lines); }
+
 						//! Get x-axis type
 						axis_value get_x_axis_value() const;
 

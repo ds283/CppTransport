@@ -773,7 +773,8 @@ namespace transport
     template <typename number>
     void fNL_batcher<number>::flush(replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing " << template_name(this->type) << " batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing " <<
+            template_type_to_string(this->type) << " batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;

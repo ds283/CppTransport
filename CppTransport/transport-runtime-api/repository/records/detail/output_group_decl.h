@@ -21,7 +21,7 @@ namespace transport
 
         //! Create a derived_product descriptor
         derived_content(const std::string& prod, const std::string& fnam, const boost::posix_time::ptime& now,
-                        const std::list<std::string>& gp, const std::list<std::string>& nt, const std::list<std::string>& tg)
+                        const std::list<std::string>& gp, const std::list<note>& nt, const std::list<std::string>& tg)
           : parent_product(prod),
             filename(fnam),
             created(now),
@@ -49,10 +49,10 @@ namespace transport
         const boost::filesystem::path& get_filename() const { return(this->filename); }
 
         //! Get notes
-        const std::list<std::string>& get_notes() const { return(this->notes); }
+        const std::list<note>& get_notes() const { return(this->notes); }
 
         //! Add note
-        void add_note(const std::string& note) { this->notes.push_back(note); }
+        void add_note(const std::string& uid, const std::string& note) { this->notes.emplace_back(uid, note); }
 
         //! Get tags
         const std::list<std::string>& get_tags() const { return(this->tags); }
@@ -89,7 +89,7 @@ namespace transport
         boost::posix_time::ptime created;
 
         //! Notes
-        std::list<std::string> notes;
+        std::list<note> notes;
 
         //! Tags
         std::list<std::string> tags;
@@ -604,7 +604,7 @@ namespace transport
 
         //! Create an output_group_record descriptor
         output_group_record(const std::string& tn, const paths_group& p,
-                            bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                            bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                             repository_record::handler_package& pkg);
 
         //! Deserialization constructor
@@ -621,17 +621,17 @@ namespace transport
         //! Get task name
         const std::string& get_task_name() const { return(this->task); }
 
-        //! Get locked flag
+        //! Get locked status
         bool get_lock_status() const { return (this->locked); }
 
-        //! Set locked flag
-        void set_lock_status(bool g) { this->locked = g; }
+        //! Set locked status
+        void set_lock_status(bool g);
 
         //! Get notes
-        const std::list<std::string>& get_notes() const { return (this->notes); }
+        const std::list<note>& get_notes() const { return (this->notes); }
 
         //! Add note
-        void add_note(const std::string& note) { this->notes.push_back(note); }
+        void add_note(const std::string& note);
 
         //! Remove numbered note
         void remove_note(unsigned int number);
@@ -714,7 +714,7 @@ namespace transport
         bool locked;
 
         //! Array of strings representing notes attached to this group
-        std::list<std::string> notes;
+        std::list<note> notes;
 
         //! Array of strings representing metadata tags
         std::list<std::string> tags;

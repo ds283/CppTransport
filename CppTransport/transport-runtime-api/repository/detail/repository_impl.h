@@ -91,10 +91,11 @@ namespace transport
 
     template <typename number>
     repository<number>::repository(const boost::filesystem::path path, model_manager <number>& f, repository_mode mode,
-                                   error_handler e, warning_handler w, message_handler m,
+                                   local_environment& ev, error_handler e, warning_handler w, message_handler m,
                                    package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf)
       : root_path(path.is_absolute() ? path : boost::filesystem::absolute(path)),
         access_mode(mode),
+        env(ev),
         error(e),
         warning(w),
         message(m),
@@ -462,12 +463,12 @@ namespace transport
         const std::list<std::string>& tags = writer.get_tags();
 
         // set up notes for the new output record, if it exists
-        std::list<std::string> notes;
+        std::list<note> notes;
         if(!writer.is_collecting_statistics())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NOTE_NO_STATISTICS << " '" << rec->get_task()->get_model()->get_backend() << "'";
-            notes.push_back(msg.str());
+            notes.emplace_back(this->env.get_userid(), msg.str());
           }
 
         // create a new, empty output group record
@@ -505,7 +506,6 @@ namespace transport
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
-        rec->update_last_edit_time();
         rec->commit();
 
         this->advise_commit(output_record.get());
@@ -564,9 +564,8 @@ namespace transport
         assert(ptk != nullptr);
 
         // create a new, empty output group record
-        std::list<std::string> notes;
         std::unique_ptr<output_group_record<postintegration_payload>>
-          output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags, mgr));
+          output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<note>(), tags, mgr));
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
@@ -607,7 +606,6 @@ namespace transport
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
-        rec->update_last_edit_time();
         rec->commit();
 
         this->advise_commit(output_record.get());
@@ -659,7 +657,7 @@ namespace transport
 
         // create a new, empty output group record
         std::unique_ptr< output_group_record<output_payload> >
-          output_record(this->output_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<std::string>(), tags, mgr));
+          output_record(this->output_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<note>(), tags, mgr));
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
@@ -679,7 +677,6 @@ namespace transport
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
-        rec->update_last_edit_time();
         rec->commit();
 
         this->advise_commit(output_record.get());

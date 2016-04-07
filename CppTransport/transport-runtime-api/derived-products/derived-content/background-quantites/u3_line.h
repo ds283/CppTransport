@@ -53,6 +53,25 @@ namespace transport
 				    virtual ~u3_line() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::u3; }
+
+
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+            //! get wavenumber query
+            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+
+
 				    // DERIVE LIVES -- implements a 'derived_line' interface
 
 		      public:
@@ -71,16 +90,23 @@ namespace transport
 
             // MANAGE LABEL OPTIONS
 
+          public:
+
             //! get k_t label setting
             bool get_use_kt_label() const { return(this->use_kt_label); }
+
             //! set k_t label setting
             void set_use_kt_label(bool g) { this->use_kt_label = g; }
+
             //! get alpha label setting
             bool get_use_alpha_label() const { return(this->use_alpha_label); }
+
             //! set alpha label setting
             void set_use_alpha_label(bool g) { this->use_alpha_label = g; }
+
             //! get beta label setting
             bool get_use_beta_label() const { return(this->use_beta_label); }
+
             //! set beta label setting
             void set_use_beta_label(bool g) { this->use_beta_label = g; }
 

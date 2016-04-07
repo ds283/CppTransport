@@ -48,10 +48,10 @@ namespace transport
         //! Get record type
         virtual task_type get_type() const = 0;
 
-        //! Add content
-        void add_new_output_group(const std::string& name) { this->content_groups.push_back(name); }
+        //! Add new content group
+        void add_new_output_group(const std::string& name);
 
-        //! Remove content
+        //! Remove content group
         void delete_output_group(const std::string& name);
 
         //! Get content groups

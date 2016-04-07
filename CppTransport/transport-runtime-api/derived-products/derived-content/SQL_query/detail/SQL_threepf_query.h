@@ -67,7 +67,11 @@ namespace transport
 
 		      public:
 
+            //! build a full SQL query using the supplied policy object
 		        virtual std::string make_query(const SQL_policy& policy, bool serials_only=false) const override;
+
+            //! extract the raw query snippet
+            virtual const std::string& get_query_string() const override { return(this->query); }
 
 
 		        // CLONE -- required by 'linecache'
@@ -88,6 +92,7 @@ namespace transport
 
 		      protected:
 
+            //! raw query string
 		        std::string query;
 
 				    //! configuration to query for -- full threepf? or one of the twopf configurations corresponding to a side?

@@ -60,7 +60,8 @@ namespace transport
         virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "fNL, template =  " << template_name(this->type); return(msg.str()); }
+        virtual std::string name() const override { std::ostringstream msg; msg << "fNL, template =  " <<
+          template_type_to_string(this->type); return(msg.str()); }
 
 
         // CLONE
@@ -118,7 +119,8 @@ namespace transport
         virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "bispectrum.template, template =  " << template_name(this->type); return(msg.str()); }
+        virtual std::string name() const override { std::ostringstream msg; msg << "bispectrum.template, template =  " <<
+          template_type_to_string(this->type); return(msg.str()); }
 
 
         // CLONE
@@ -176,7 +178,8 @@ namespace transport
         virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "template.template, template =  " << template_name(this->type); return(msg.str()); }
+        virtual std::string name() const override { std::ostringstream msg; msg << "template.template, template =  " <<
+          template_type_to_string(this->type); return(msg.str()); }
 
 
         // CLONE

@@ -72,6 +72,14 @@ namespace transport
             virtual ~fNL_line() = default;
 
 
+            // INTERFACE
+
+          public:
+
+            //! get template type
+            template_type get_template() const { return(this->type); }
+
+
             // LABELLING SERVICES
 
           public:

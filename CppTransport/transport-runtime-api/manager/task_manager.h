@@ -154,12 +154,71 @@ namespace transport
 		template <typename number>
 		void task_manager<number>::process(void)
 			{
+        error_handler err(local_env, arg_cache);
+
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
             // output model list, perform other tasks specifically on master node
-            this->master.pre_process_tasks();
-						this->master.execute_tasks();
-            this->master.post_process_tasks();
+            try
+              {
+                this->master.pre_process_tasks();
+              }
+            catch(runtime_exception& xe)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT A" << '\n';
+#endif
+                err(xe.what());
+              }
+            catch(std::exception& xe)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT B" << '\n';
+#endif
+                err(xe.what());
+              }
+
+            try
+              {
+                // we must get to execute_tasks() if at all possible, because it sets up a WorkerBundle
+                // instance that is responsible for issuing SETUP/TERMINATION notices to workers
+                // if the WorkerBundle never gets instantiated then no TERMINATION notices will ever be issued,
+                // so the MPI job will hang even if the master node exits
+                this->master.execute_tasks();
+              }
+            catch(runtime_exception& xe)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT C" << '\n';
+#endif
+                err(xe.what());
+              }
+            catch(std::exception& xe)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT D" << '\n';
+#endif
+                err(xe.what());
+              }
+
+            try
+              {
+                this->master.post_process_tasks();
+              }
+            catch(runtime_exception& xe)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT E" << '\n';
+#endif
+                err(xe.what());
+              }
+            catch(std::exception& xe)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT F" << '\n';
+#endif
+                err(xe.what());
+              }
 					}
 				else
 					{

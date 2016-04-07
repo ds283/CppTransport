@@ -68,6 +68,14 @@ namespace transport
 						virtual ~cost_wavenumber() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::integration_cost; }
+
+
 				    // DERIVE LINES -- implements a 'derived_line' interface
 
 				  public:

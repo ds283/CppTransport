@@ -39,7 +39,11 @@ namespace transport
 
 				  public:
 
+            //! build a full SQL query using the supplied policy object
 						virtual std::string make_query(const SQL_policy& policy, bool serials_only) const = 0;
+
+            //! extract the raw query snippet
+            virtual const std::string& get_query_string() const = 0;
 
 
 						// CLONE - required by 'linecache'

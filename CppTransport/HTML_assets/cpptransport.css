@@ -2,15 +2,44 @@ body {
     padding-top: 65px;
 }
 
+/* Revert prism.js to normal word wrapping */
+code[class*="language-"] {
+    word-wrap: break-word;
+}
+
 /* restyle link buttons to remove surrounding padding and align as if they were text */
 .btn-link {
     vertical-align: baseline;
     padding: 0;
 }
 
+/* prevent scrollable menus from becoming too long */
+.scrollable-menu {
+    height: auto;
+    max-height: 400px;
+    overflow-x: hidden;
+}
+
+/* give log panes (notes, activities) a maximum height */
+.scrollable-panel {
+    height: auto;
+    max-height: 400px;
+    overflow-x: hidden;
+}
+
 /* Many elements require extra vertical space above them */
 .topskip {
     margin-top: 20px;
+}
+
+/* Smaller vertical space used in derived line descriptions */
+.topskip-small {
+    margin-top: 0;
+}
+
+/* Some elements, eg. tags require extra horizontal space between themselves and the next element */
+.rightskip {
+    margin-right: 5px;
 }
 
 /* Style for included output images */
@@ -33,10 +62,18 @@ body {
     height: 600px;
 }
 
-/* Style for charts included as part of a report */
+/* Style for charts included as part of a report -- standard 2-up format */
 .report-chart {
     margin: 15px;
     border: 2px solid #ccc;
     width: 600px;
     height: 450px;
+}
+
+/* Style for charts included as part of a report -- small 3-up format */
+.report-sm-chart {
+    margin: 15px;
+    border: 2px solid #ccc;
+    width: 380px;
+    height: 290px;
 }

@@ -49,7 +49,25 @@ namespace transport
 		        virtual ~background_time_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::background; }
+
+
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+
 		        // DERIVE LINES -- implements a 'time_series' interface
+
+          public:
 
 		        //! generate data lines for plotting
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
@@ -287,7 +305,28 @@ namespace transport
 		        virtual ~twopf_time_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::twopf_time; }
+
+
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+            //! get wavenumber query
+            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+
+
 		        // DERIVE LINES -- implements a 'time_series' interface
+
+          public:
 
 		        //! generate data lines for plotting
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
@@ -514,6 +553,25 @@ namespace transport
 		        threepf_time_series(Json::Value& reader, task_finder<number>& finder);
 
 		        virtual ~threepf_time_series() = default;
+
+
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::threepf_time; }
+
+
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+            //! get wavenumber query
+            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
 
 
 		        // DERIVE LINES -- implements a 'time_series' interface

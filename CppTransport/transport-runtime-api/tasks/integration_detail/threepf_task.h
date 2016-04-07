@@ -591,7 +591,7 @@ namespace transport
 
         std::ostringstream msg;
         msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C << '\n';
+          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C;
         this->get_model()->message(msg.str());
 
         this->compute_horizon_exit_times();

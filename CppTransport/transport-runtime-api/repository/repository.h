@@ -20,6 +20,8 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime-api/manager/environment.h"
+
 
 #include "boost/date_time.hpp"
 

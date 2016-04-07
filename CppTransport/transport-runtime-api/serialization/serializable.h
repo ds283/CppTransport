@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __serializable_H_
-#define __serializable_H_
+#ifndef CPPTRANSPORT_SERIALIZABLE_H
+#define CPPTRANSPORT_SERIALIZABLE_H
 
 
 #include <list>
@@ -48,4 +48,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__serializable_H_
+#endif //CPPTRANSPORT_SERIALIZABLE_H

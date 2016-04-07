@@ -196,6 +196,7 @@ INSTALL(DIRECTORY cpptransport-templates DESTINATION share/cpptransport)
 INSTALL(DIRECTORY thirdparty/bootstrap DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/bootstrap-tab-history DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/jQuery DESTINATION share/cpptransport/HTML)
+INSTALL(DIRECTORY thirdparty/prism DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
 INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake)
@@ -555,6 +556,7 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES
   transport-runtime-api/derived-products/derived-content/concepts/derived_line.h
   transport-runtime-api/derived-products/derived-content/concepts/derived_line_helper.h
+  transport-runtime-api/derived-products/derived-content/concepts/derived_line_type.h
   )
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
@@ -705,6 +707,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/work_journal.h
   transport-runtime-api/localizations/messages_en/report_HTML.h
   transport-runtime-api/localizations/messages_en/repository_toolkit.h
+  transport-runtime-api/localizations/messages_en/repository_records.h
   )
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
@@ -797,6 +800,7 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES
   transport-runtime-api/repository/records/detail/record_impl.h
   transport-runtime-api/repository/records/detail/task_decl.h
   transport-runtime-api/repository/records/detail/task_impl.h
+  transport-runtime-api/repository/records/detail/notes.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES

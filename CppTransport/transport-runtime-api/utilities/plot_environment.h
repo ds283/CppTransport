@@ -63,6 +63,7 @@ namespace transport
         plot_style style = this->args.get_plot_environment();
 
         outf << "import matplotlib.pyplot as plt" << '\n';
+        outf << "import matplotlib.colors as col" << '\n';
 
         switch(style)
           {

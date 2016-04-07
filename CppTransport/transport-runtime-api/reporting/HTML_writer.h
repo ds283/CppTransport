@@ -27,6 +27,12 @@ namespace transport
     namespace reporting
       {
 
+        enum class HTML_mode
+          {
+            production,       // indicates production mode; omits indents
+            debug             // indicates debug mode; indents are retained in the output HTML for ease of reading
+          };
+
         class HTML_element
           {
 
@@ -46,7 +52,7 @@ namespace transport
           public:
 
             //! write self to a stream
-            virtual void write(std::ostream& out, const std::string& indent) const = 0;
+            virtual void write(std::ostream& out, const std::string& indent, HTML_mode mode) const = 0;
 
             //! clone self
             virtual HTML_element* clone() const = 0;
@@ -85,7 +91,7 @@ namespace transport
           public:
 
             //! write self to stream
-            void write(std::ostream& out, const std::string& indent) const override final;
+            void write(std::ostream& out, const std::string& indent, HTML_mode mode) const override final;
 
             //! clone self
             HTML_string* clone() const override final { return new HTML_string(static_cast<const HTML_string&>(*this)); }
@@ -104,9 +110,9 @@ namespace transport
           };
 
 
-        void HTML_string::write(std::ostream& out, const std::string& indent) const
+        void HTML_string::write(std::ostream& out, const std::string& indent, HTML_mode mode) const
           {
-            out << indent;
+            if(mode == HTML_mode::debug) out << indent;
             if(this->is_bold) out << "<b>";
             out << value;
             if(this->is_bold) out << "</b>";
@@ -122,15 +128,16 @@ namespace transport
           public:
 
             //! constructor
-            HTML_node(std::string t, bool c=true)
+            HTML_node(std::string t, bool c=true, bool lf=true)
               : tag(std::move(t)),
-                has_closing_tag(c)
+                has_closing_tag(c),
+                has_linefeed(lf)
               {
               }
 
             //! convenience constructor for node containing a string
-            HTML_node(std::string t, std::string e, bool c=true)
-              : HTML_node(std::move(t), c)
+            HTML_node(std::string t, std::string e, bool c=true, bool lf=true)
+              : HTML_node(std::move(t), c, lf)
               {
                 HTML_string str(e);
                 this->add_element(str);
@@ -163,7 +170,7 @@ namespace transport
           public:
 
             //! write self to stream
-            void write(std::ostream& out, const std::string& indent) const override final;
+            void write(std::ostream& out, const std::string& indent, HTML_mode mode) const override final;
 
             //! clone self
             HTML_node* clone() const override final { return new HTML_node(static_cast<const HTML_node&>(*this)); }
@@ -178,6 +185,10 @@ namespace transport
 
             //! does this element require a closing tag?
             const bool has_closing_tag;
+
+            //! normally have linefeed after opening tag?
+            //! linefeeds need to be suppressed in some cases, eg for <code> blocks
+            const bool has_linefeed;
 
             //! typedef for attribute database
             typedef std::map< std::string, std::string > attribute_list;
@@ -210,10 +221,11 @@ namespace transport
           }
 
 
-        void HTML_node::write(std::ostream& out, const std::string& indent) const
+        void HTML_node::write(std::ostream& out, const std::string& indent, HTML_mode mode) const
           {
             // write opening tag with attributes if present
-            out << indent << "<" << tag;
+            if(mode == HTML_mode::debug) out << indent;
+            out << "<" << tag;
 
             for(const attribute_list::value_type& attribute : this->attributes)
               {
@@ -227,19 +239,21 @@ namespace transport
                   }
               }
 
-            out << ">" << '\n';
+            out << ">";
+            if(this->has_linefeed) out << '\n';
 
             // write content, with new indent given by old indent plus standard 4 spaces
             std::string new_indent = indent + "    ";
             for(const std::shared_ptr<HTML_element>& element : this->content)
               {
-                element->write(out, new_indent);
+                element->write(out, new_indent, mode);
               }
 
             // write closing tag
             if(this->has_closing_tag)
               {
-                out << indent << "</" << tag << ">" << '\n';
+                if(mode == HTML_mode::debug) out << indent;
+                out << "</" << tag << ">" << '\n';
               }
           }
 
@@ -350,12 +364,11 @@ namespace transport
             for(const boost::filesystem::path& p : this->stylesheets)
               {
                 HTML_node script("link", false);
-                script.add_attribute("rel", "stylesheet").add_attribute("type", "text/css").add_attribute("href",
-                                                                                                          p.string());
+                script.add_attribute("rel", "stylesheet").add_attribute("type", "text/css").add_attribute("href", p.string());
                 head.add_element(script);
               }
 
-            head.write(this->out, indent);
+            head.write(this->out, indent, HTML_mode::production);
           }
 
 
@@ -390,7 +403,7 @@ namespace transport
                 body.add_element(script);
               }
 
-            body.write(this->out, indent);
+            body.write(this->out, indent, HTML_mode::production);
           }
 
 

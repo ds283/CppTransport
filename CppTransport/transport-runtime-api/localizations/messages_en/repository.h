@@ -30,6 +30,8 @@
 #define CPPTRANSPORT_REPO_PRODUCT_DUPLICATE           "Repository error: attempt to add record for already existing derived product"
 #define CPPTRANSPORT_REPO_CONTENT_DUPLICATE           "Repository error: attempt to add record for already existing content group"
 
+#define CPPTRANSPORT_REPO_GROUP_IS_LOCKED             "Repository error: attempt to delete locked content group"
+
 #define CPPTRANSPORT_REPO_COMMIT_FAILURE              "Repository error: could not write database record for"
 #define CPPTRANSPORT_REPO_DESERIALIZE_FAILURE         "Repository error: could not read database record for"
 
@@ -106,7 +108,7 @@
 
 #define CPPTRANSPORT_REPO_TRANSACTION_OVER_RELEASE    "Internal error: over-release of transaction"
 
-#define CPPTRANSPORT_REPO_COMMIT_READONLY             "Attempt to commit read-only record"
+#define CPPTRANSPORT_REPO_COMMIT_READONLY             "Internal error: Attempt to commit read-only record"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_REPOSITORY_H

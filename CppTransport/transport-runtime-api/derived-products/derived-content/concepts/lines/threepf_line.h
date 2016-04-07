@@ -77,7 +77,10 @@ namespace transport
             //! set dimensionless
             void set_dimensionless(bool g) { this->dimensionless = g; }
 
+
             // MANAGE LABEL OPTIONS
+
+          public:
 
             //! get k_t label setting
             bool get_use_kt_label() const { return(this->use_kt_label); }

@@ -86,6 +86,7 @@ namespace transport
         //! execute any queued tasks
         void execute_tasks(void);
 
+
       protected:
 
         //! warn user of unrecognized options or command-line switches
@@ -112,6 +113,9 @@ namespace transport
         //! recognize plotting control switches
         void recognize_plot_switches(boost::program_options::variables_map& option_map);
 
+        //! validate tasks supplied on the command line
+        void validate_tasks();
+
         //! autocomplete content groups by scheduling tasks which are needed, but do not yet have content
         void autocomplete_task_schedule();
 
@@ -130,15 +134,19 @@ namespace transport
       protected:
 
         //! Get worker number
+        // TODO: replace with a better abstraction
         unsigned int worker_number() { return(static_cast<unsigned int>(this->world.rank()-1)); }
 
         //! Return MPI rank of this process
+        // TODO: replace with a better abstraction
         unsigned int get_rank(void) const { return(static_cast<unsigned int>(this->world.rank())); }
 
-        //! Map worker number to communicator rank
+        //! Map worker number to communicator rank (note: has to be duplicated in WorkerBundle)
+        // TODO: replace with a better abstraction (which can be shared with WorkerBundle)
         constexpr unsigned int worker_rank(unsigned int worker_number) const { return(worker_number+1); }
 
         //! Map communicator rank to worker number
+        // TODO: replace with a better abstraction
         constexpr unsigned int worker_number(unsigned int worker_rank) const { return(worker_rank-1); }
 
 
@@ -156,12 +164,6 @@ namespace transport
         // WORKER HANDLING
 
       protected:
-
-        //! Master node: Terminate all worker processes
-        void terminate_workers(void);
-
-        //! Master node: Collect data on workers
-        void initialize_workers(void);
 
         //! Master node: set up workers in preparation for a new task
         void set_up_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);

@@ -1142,7 +1142,7 @@ namespace transport
             kv.set_tiling(true);
             kv.write(std::cout);
 
-            const std::list<std::string>& notes = rec.get_notes();
+            const std::list<note>& notes = rec.get_notes();
             if(!notes.empty())
               {
                 std::cout << '\n';
@@ -1154,9 +1154,13 @@ namespace transport
                 kv.reset();
 
                 unsigned int serial = 0;
-                for(const std::string& note : notes)
+                for(const note& it : notes)
                   {
-                    kv.insert_back(boost::lexical_cast<std::string>(serial), note);
+                    std::ostringstream msg;
+                    const std::string uid = it.get_uid();
+                    const std::string time = boost::posix_time::to_simple_string(it.get_timestamp());
+                    msg << (!uid.empty() ? uid + " " + time + ": " : "") << it.get_note();
+                    kv.insert_back(boost::lexical_cast<std::string>(serial), msg.str());
                     ++serial;
                   }
 
@@ -1261,7 +1265,7 @@ namespace transport
                     kv.set_tiling(true);
                     kv.write(std::cout);
 
-                    const std::list<std::string>& notes = item.get_notes();
+                    const std::list<note>& notes = item.get_notes();
                     if(!notes.empty())
                       {
                         std::cout << '\n';
@@ -1273,9 +1277,13 @@ namespace transport
                         kv.reset();
 
                         unsigned int serial = 0;
-                        for(const std::string& note : notes)
+                        for(const note& it : notes)
                           {
-                            kv.insert_back(boost::lexical_cast<std::string>(serial), note);
+                            std::ostringstream msg;
+                            const std::string uid = it.get_uid();
+                            const std::string time = boost::posix_time::to_simple_string(it.get_timestamp());
+                            msg << (!uid.empty() ? uid + " " + time + ": " : "") << it.get_note();
+                            kv.insert_back(boost::lexical_cast<std::string>(serial), msg.str());
                             ++serial;
                           }
 

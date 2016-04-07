@@ -109,6 +109,29 @@ namespace transport
             template <typename number>
             void write_output_content(HTML_report_bundle<number>& bundle, HTML_node& parent);
 
+
+            // INTEGRATION TASKS
+
+          protected:
+
+            //! write integration task details for twopf task
+            template <typename number>
+            void write_task_data(HTML_report_bundle<number>& bundle, twopf_task<number>& tk,
+                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write integration task details for threepf task
+            template <typename number>
+            void write_task_data(HTML_report_bundle<number>& bundle, threepf_task<number>& tk,
+                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write task details for a generic integration task
+            template <typename number>
+            void write_generic_task_data(HTML_report_bundle<number>& bundle, twopf_db_task<number>& tk,
+                                         HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+
+            // INTEGRATION CONTENT
+
           protected:
 
             //! create a worker table for an integration content record
@@ -123,7 +146,8 @@ namespace transport
 
             //! create visual report of timing statistics
             template <typename number>
-            void write_timing_report(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent);
+            void write_integration_analysis(HTML_report_bundle<number>& bundle,
+                                            const output_group_record<integration_payload> rec, HTML_node& parent);
 
             //! produce bar chart showing number of configurations processed per worker
             template <typename number>
@@ -135,24 +159,235 @@ namespace transport
             void write_timing_histogram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
                                         HTML_node& parent, timing_db& timing_data);
 
+            //! write specialized integration analysis for 3pf
+            template <typename number>
+            void write_3pf_integration_analysis(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+                                                const integration_task_record<number>& irec,
+                                                worker_information_db& worker_db, timing_db& timing_data,
+                                                HTML_node& parent);
+
+            //! plot a generic scatter diagram */
+            template <typename number, typename Payload>
+            void plot_scatter(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
+                              std::string script, std::string image,
+                              const std::list< std::tuple<double, double, double> >& dataset,
+                              std::string xlabel, std::string ylabel, std::string colour_label,
+                              std::string css_class, std::string popover_title, std::string popover_text,
+                              bool xlog, bool ylog, HTML_node& parent);
+
+            //! for 3pf tasks, write a plot of integration time vs. k_t
+            template <typename number>
+            void write_time_kt_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                       const integration_task_record<number>& irec,
+                                       worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
+
+            //! for 3pf tasks, write a plot of integration time vs. alpha
+            template <typename number>
+            void write_time_alpha_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                          const integration_task_record<number>& irec,
+                                          worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
+
+            //! for 3pf tasks, write a plot of integration time vs. beta
+            template <typename number>
+            void write_time_beta_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                         const integration_task_record<number>& irec,
+                                         worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
+
             //! write standardized matplotlib preamble
             template <typename number>
             void write_matplotlib_preamble(std::ofstream& out, HTML_report_bundle<number>& bundle);
 
-            //! write integration task details for twopf task
-            template <typename number>
-            void write_task_data(HTML_report_bundle<number>& bundle, twopf_task<number>& tk,
-                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
 
-            //! write integration task details for threepf task
-            template <typename number>
-            void write_task_data(HTML_report_bundle<number>& bundle, threepf_task<number>& tk,
-                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+            // DERIVED PRODUCTS
 
-            //! write task details for a generic integrationt ask
+          protected:
+
+            //! write details for line_plot2d product
             template <typename number>
-            void write_generic_task_data(HTML_report_bundle<number>& bundle, twopf_db_task<number>& tk,
-                                         HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+            void write_derived_product(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                       const derived_data::line_plot2d<number>& product, HTML_node& parent);
+
+            //! write details for line_asciitable products
+            template <typename number>
+            void write_derived_product(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                       const derived_data::line_asciitable<number>& product, HTML_node& parent);
+
+            //! write details for generic derived product
+            template <typename number>
+            void write_generic_derived_product(HTML_report_bundle<number>& bundle, const derived_data::derived_product<number>& product,
+                                               HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write details for generic line collection
+            template <typename number>
+            void write_line_collection(HTML_report_bundle<number>& bundle, const derived_data::line_collection<number>& product,
+                                       HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write a collapsible list of lines in a line collection
+            template <typename number>
+            void write_line_list(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                 const derived_data::line_collection<number>& line_collection, HTML_node& parent);
+
+
+            // DERIVED LINES
+
+          public:
+
+            // CATEGORIES
+
+            //! write a title for a derived line data element
+            void derived_line_title(std::string title, HTML_node& parent);
+
+            //! write details for a generic derived line in a line collection
+            template <typename number>
+            void write_generic_derived_line(HTML_report_bundle<number>& bundle, const derived_data::derived_line<number>& line, HTML_node& parent);
+
+            //! write details for a generic wavenumber series line line
+            template <typename number>
+            void write_wavenumber_series_line(HTML_report_bundle<number>& bundle, const derived_data::wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a twopf line
+            template <typename number>
+            void write_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_line<number>& line, HTML_node& parent);
+
+            //! write details for a threepf line
+            template <typename number>
+            void write_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_line<number>& line, HTML_node& parent);
+
+            //! write details for a zeta twopf line
+            template <typename number>
+            void write_zeta_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_line<number>& line, HTML_node& parent);
+
+            //! write details for a zeta threepf line
+            template <typename number>
+            void write_zeta_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_line<number>& line, HTML_node& parent);
+
+            //! write details for a zeta reduced bispectrum line
+            template <typename number>
+            void write_zeta_redbsp_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_line<number>& line, HTML_node& parent);
+
+            //! write details for a tensor twopf line
+            template <typename number>
+            void write_tensor_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_line<number>& line, HTML_node& parent);
+
+            //! write details for an fNL line
+            template <typename number>
+            void write_fNL_line(HTML_report_bundle<number>& bundle, const derived_data::fNL_line<number>& line, HTML_node& parent);
+
+            //! write details for an r line
+            template <typename number>
+            void write_r_line(HTML_report_bundle<number>& bundle, const derived_data::r_line<number>& line, HTML_node& parent);
+
+            // SQL QUERIES
+
+            //! construct a generic SQL language block
+            void write_SQL_block(const std::string& SQL, HTML_node& parent);
+
+            //! embed an SQL block in a titled panel
+            void write_SQL_panel(std::string title, const std::string& SQL, HTML_node& parent);
+
+            //! write details for an SQL time configuration query
+            template <typename number>
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& query, HTML_node& parent);
+
+            //! write details for an SQL twopf momentum-configuration query
+            template <typename number>
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& query, HTML_node& parent);
+
+            //! write details for an SQL threepf momentum-configuration query
+            template <typename number>
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& query, HTML_node& parent);
+
+
+            // SPECIFIC LINES
+
+            //! write details for a background time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::background_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a twopf time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a threepf time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a tensor twopf time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a zeta twopf time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a zeta threepf time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a zeta reduced bispectrum time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_time_series<number>& line, HTML_node& parent);
+
+            //! write details for a twopf wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a threepf wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a tensor twopf wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a zeta twopf wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a zeta threepf wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a zeta reduced bispectrum wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for an fNL time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::fNL_time_series<number>& line, HTML_node& parent);
+
+            //! write details for an r time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::r_time_series<number>& line, HTML_node& parent);
+
+            //! write details for an r wavenumber series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::r_wavenumber_series<number>& line, HTML_node& parent);
+
+            //! write details for a background time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::background_line<number>& line, HTML_node& parent);
+
+            //! write details for a u2 time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::u2_line<number>& line, HTML_node& parent);
+
+            //! write details for a u3 time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::u3_line<number>& line, HTML_node& parent);
+
+            //! write details for a largest-u2-element time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::largest_u2_line<number>& line, HTML_node& parent);
+
+            //! write details for a largest-u3-element time series line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::largest_u3_line<number>& line, HTML_node& parent);
+
+            //! write details for a cost-per-momentum-configuration integration analysis line
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::cost_wavenumber<number>& line, HTML_node& parent);
+
 
             // MAKE BUTTONS
 
@@ -184,7 +419,7 @@ namespace transport
 
             //! write a link-to-derived product button
             template <typename number>
-            void write_derived_product_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& element, HTML_node& parent);
+            void write_derived_product_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& pane, HTML_node& parent);
 
 
             // WRITE GENERIC RECORD DETAILS
@@ -192,8 +427,8 @@ namespace transport
           protected:
 
             //! write details for generic records
-            template <typename RecordType>
-            void write_generic_record(const RecordType& rec, HTML_node& parent);
+            template <typename number, typename RecordType>
+            void write_generic_record(HTML_report_bundle<number>& bundle, const RecordType& rec, HTML_node& parent);
 
             //! write details for generic output records
             template <typename number, typename Payload>
@@ -205,7 +440,10 @@ namespace transport
             void write_seeded(HTML_report_bundle<number>& bundle, const Payload& payload, HTML_node& parent);
 
             //! write a collapsible notes section
-            void write_notes_collapsible(const std::list<std::string>& notes, const std::string& tag, HTML_node& parent);
+            void write_notes_collapsible(const std::list<note>& notes, const std::string& tag, HTML_node& parent);
+
+            //! write a collapsible activity log
+            void write_activity_collapsible(const std::list<metadata_history>& activity, const std::string& tag, HTML_node& parent);
 
 
             // WRITE JAVASCRIPT HANDLERS
@@ -214,7 +452,8 @@ namespace transport
 
             //! write JavaScript button handler which changes pane and scrolls to a given element
             template <typename number>
-            void write_JavaScript_button_scroll(HTML_report_bundle<number>& bundle, std::string button, std::string pane, std::string element);
+            void write_JavaScript_button(HTML_report_bundle<number>& bundle, std::string button, std::string pane,
+                                         std::string element);
 
             //! write JavaScript button handler which simply changes pane
             template <typename number>
@@ -232,7 +471,7 @@ namespace transport
             HTML_node make_menu_tab(std::string pane, std::string name);
 
             //! build a content-group menu tab
-            template <typename number, typename DatabaseType, typename PayloadType>
+            template <typename number, typename DatabaseType>
             HTML_node make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name);
 
             //! write a grid data element
@@ -326,6 +565,9 @@ namespace transport
               {
                 if(xe.get_exception_code() == exception_type::REPORTING_ERROR)
                   {
+#ifdef TRACE_OUTPUT
+                    std::cout << "TRACE_OUTPUT M" << '\n';
+#endif
                     this->err(xe.what());
                     return;
                   }
@@ -344,11 +586,24 @@ namespace transport
             // add plugin to enable history on bootstrap tabs
             bundle.emplace_JavaScript_asset("bootstrap-tab-history/bootstrap-tab-history.js", "bootstrap-tab-history.js");
 
+            // add prism.js for syntax highlighting
+            bundle.emplace_JavaScript_asset("prism/prism.min.js", "prism.min.js");
+
             // add our own JavaScript file utility.js which handles eg. resizing navigation bar on window resize
             bundle.emplace_JavaScript_asset("HTML_assets/utility.js", "utility.js");
 
             // add bootstrap CSS file
             bundle.emplace_CSS_asset("bootstrap/css/bootstrap.min.css", "bootstrap.min.css");
+
+            // add bootstrap glyphicon fonts
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.eot", "glyphicons-halflings-regular.eot");
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.svg", "glyphicons-halflings-regular.svg");
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.ttf", "glyphicons-halflings-regular.ttf");
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.woff", "glyphicons-halflings-regular.woff");
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.woff2", "glyphicons-halflings-regular.woff2");
+
+            // add prism.js CSS file
+            bundle.emplace_CSS_asset("prism/prism.css", "prism.css");
 
             // add our own CSS file
             bundle.emplace_CSS_asset("HTML_assets/cpptransport.css", "cpptransport.css");
@@ -395,25 +650,22 @@ namespace transport
             HTML_node integration_tasks_tab = this->make_menu_tab("integration", "Integration tasks");
 
             // Integration content tab
-            HTML_node integration_content_tab = this->make_content_menu_tab<number, integration_content_db, integration_payload>(
-              bundle.get_integration_content_db(), bundle, "Integration content");
+            HTML_node integration_content_tab = this->make_content_menu_tab<number>(bundle.get_integration_content_db(), bundle, "Integration content");
 
             // Postintegration tasks tab
             HTML_node postintegration_tasks_tab = this->make_menu_tab("postintegration", "Postintegration tasks");
 
             // Postintegration content tab
-            HTML_node postintegration_content_tab = this->make_content_menu_tab<number, postintegration_content_db, postintegration_payload>(
-              bundle.get_postintegration_content_db(), bundle, "Postintegration content");
+            HTML_node postintegration_content_tab = this->make_content_menu_tab<number>(bundle.get_postintegration_content_db(), bundle, "Postintegration content");
 
             // Output tasks tab
             HTML_node output_tasks_tab = this->make_menu_tab("output", "Output tasks");
 
             // Output content tab
-            HTML_node output_content_tab = this->make_content_menu_tab<number, output_content_db, output_payload>(
-              bundle.get_output_content_db(), bundle, "Output_content");
+            HTML_node output_content_tab = this->make_content_menu_tab<number>(bundle.get_output_content_db(), bundle, "Output_content");
 
             // Derived products tab
-            HTML_node derived_products_tab = this->make_menu_tab("derived", "Derived products");
+            HTML_node derived_products_tab = this->make_content_menu_tab<number>(bundle.get_derived_product_db(), bundle, "Derived products");
 
             tablist.add_element(package_tab);
             tablist.add_element(integration_tasks_tab);
@@ -459,10 +711,7 @@ namespace transport
 
             this->write_output_content(bundle, tab_panes);
 
-            HTML_node derived_products_pane("div");
-            derived_products_pane.add_attribute("id", "derived").add_attribute("class", "tab-pane fade");
-            this->write_derived_products(bundle, derived_products_pane);
-            tab_panes.add_element(derived_products_pane);
+            this->write_derived_products(bundle, tab_panes);
 
             parent.add_element(navbar);
             parent.add_element(tab_panes);
@@ -481,37 +730,47 @@ namespace transport
           }
 
 
-        template <typename number, typename DatabaseType, typename PayloadType>
+        template <typename number, typename DatabaseType>
         HTML_node HTML_report::make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name)
           {
             HTML_node tab("li");
-            tab.add_attribute("class", "dropdown");
             HTML_node anchor("a", name);
             anchor.add_attribute("href", "#").add_attribute("class", "dropdown-toggle").add_attribute("data-toggle", "dropdown");
 
-            HTML_node caret("span");
-            caret.add_attribute("class", "caret");
-            anchor.add_element(caret);
-
-            HTML_node dropdown_menu("ul");
-            dropdown_menu.add_attribute("class", "dropdown-menu scrollable-menu").add_attribute("role", "menu");
-
-            for(const typename DatabaseType::value_type& group : db)
+            if(db.size() > 0)
               {
-                const output_group_record<PayloadType>& rec = *group.second;
-                std::string tag = bundle.get_id(rec);
+                tab.add_attribute("class", "dropdown");
 
-                HTML_node menu_item("li");
-                HTML_node menu_anchor("a", rec.get_name());
-                menu_anchor.add_attribute("href", "#" + tag).add_attribute("data-toggle", "tab");
-                menu_anchor.add_attribute("data-tab-history", "true").add_attribute("data-tab-history-changer", "push").add_attribute("data-tab-history-update-url", "true");
+                HTML_node caret("span");
+                caret.add_attribute("class", "caret");
+                anchor.add_element(caret);
 
-                menu_item.add_element(menu_anchor);
-                dropdown_menu.add_element(menu_item);
+                HTML_node dropdown_menu("ul");
+                dropdown_menu.add_attribute("class", "dropdown-menu scrollable-menu").add_attribute("role", "menu");
+
+                for(const typename DatabaseType::value_type& group : db)
+                  {
+                    // DatabaseType::value_type is a std::pair< std::string, pointer-to-record >
+                    const typename DatabaseType::value_type::second_type::element_type& rec = *group.second;
+                    std::string tag = bundle.get_id(rec);
+
+                    HTML_node menu_item("li");
+                    HTML_node menu_anchor("a", rec.get_name());
+                    menu_anchor.add_attribute("href", "#" + tag).add_attribute("data-toggle", "tab");
+                    menu_anchor.add_attribute("data-tab-history", "true").add_attribute("data-tab-history-changer", "push").add_attribute("data-tab-history-update-url", "true");
+
+                    menu_item.add_element(menu_anchor);
+                    dropdown_menu.add_element(menu_item);
+                  }
+
+                tab.add_element(anchor);
+                tab.add_element(dropdown_menu);
               }
-
-            tab.add_element(anchor);
-            tab.add_element(dropdown_menu);
+            else
+              {
+                tab.add_attribute("class", "dropdown disabled");
+                tab.add_element(anchor);
+              }
 
             return tab;
           }
@@ -575,7 +834,7 @@ namespace transport
                 this->make_list_item_label(rec.get_name(), item);
 
                 // write generic repository information for this record
-                this->write_generic_record(rec, item);
+                this->write_generic_record(bundle, rec, item);
 
                 HTML_node panel("div");
                 panel.add_attribute("class", "panel panel-default");
@@ -739,7 +998,7 @@ namespace transport
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
-                    this->write_generic_record(rec, item);
+                    this->write_generic_record(bundle, rec, item);
 
                     HTML_node panel("div");
                     panel.add_attribute("class", "panel panel-default");
@@ -923,7 +1182,7 @@ namespace transport
           {
             this->make_data_element("Initial conditions", format_number(tk.get_N_initial()) + " e-folds", col1_list);
             this->make_data_element("<var>N</var><sub>*</sub>", format_number(tk.get_N_horizon_crossing()) + " e-folds", col1_list);
-            this->make_data_element("<var>N</var><sub>subhorizon</sub>", format_number(tk.get_N_subhorizon_efolds()) + " e-folds", col1_list);
+            this->make_data_element("Subhorizon e-folds", format_number(tk.get_N_subhorizon_efolds()) + " e-folds", col1_list);
             this->make_data_element("Maximum refinements", boost::lexical_cast<std::string>(tk.get_max_refinements()), col1_list);
 
             this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation()) + " e-folds", col2_list);
@@ -963,7 +1222,7 @@ namespace transport
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
-                    this->write_generic_record(rec, item);
+                    this->write_generic_record(bundle, rec, item);
 
                     HTML_node panel("div");
                     panel.add_attribute("class", "panel panel-default");
@@ -1122,7 +1381,7 @@ namespace transport
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
-                    this->write_generic_record(rec, item);
+                    this->write_generic_record(bundle, rec, item);
 
                     // write elements
                     const typename std::vector< output_task_element<number> >& elements = rec.get_task()->get_elements();
@@ -1276,23 +1535,24 @@ namespace transport
         void HTML_report::write_derived_products(HTML_report_bundle<number>& bundle, HTML_node& parent)
           {
             typename derived_product_db<number>::type& db = bundle.get_derived_product_db();
-
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
+            typename task_db<number>::type& tk_db = bundle.get_task_db();
 
             for(const typename derived_product_db<number>::value_type& product : db)
               {
                 const derived_product_record<number>& rec = *product.second;
                 const std::string tag = bundle.get_id(rec);
 
-                HTML_node item("a");
-                item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
-                this->make_list_item_label(rec.get_name(), item);
+                HTML_node pane("div");
+                pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                // write generic repository information for this record
-                this->write_generic_record(rec, item);
+                HTML_node list("div");
+                list.add_attribute("class", "list-group");
+
+                HTML_node anchor("a");
+                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+
+                this->make_list_item_label(rec.get_name(), anchor);
+                this->write_generic_record(bundle, rec, anchor);
 
                 HTML_node panel("div");
                 panel.add_attribute("class", "panel panel-default");
@@ -1303,34 +1563,25 @@ namespace transport
                 HTML_node panel_body("div");
                 panel_body.add_attribute("class", "panel-body");
 
-                HTML_node row("div");
-                row.add_attribute("class", "row");
+                switch(rec.get_product()->get_type())
+                  {
+                    case derived_data::derived_product_type::line_2dplot:
+                      {
+                        const derived_data::line_plot2d<number>& item = dynamic_cast< const derived_data::line_plot2d<number>& >(*rec.get_product());
+                        this->write_derived_product(bundle, rec, item, panel_body);
+                        break;
+                      }
 
-                HTML_node col1("div");
-                col1.add_attribute("class", "col-md-4");
-                HTML_node col1_list("dl");
-                col1_list.add_attribute("class", "dl-horizontal");
+                    case derived_data::derived_product_type::line_table:
+                      {
+                        const derived_data::line_asciitable<number>& item = dynamic_cast< const derived_data::line_asciitable<number>& >(*rec.get_product());
+                        this->write_derived_product(bundle, rec, item, panel_body);
+                        break;
+                      }
+                  }
 
-                this->make_data_element("Product type", derived_data::derived_product_type_to_string(rec.get_product()->get_type()), col1_list);
-
-                col1.add_element(col1_list);
-
-                HTML_node col2("div");
-                col2.add_attribute("class", "col-md-4");
-                HTML_node col2_list("dl");
-                col2_list.add_attribute("class", "dl-horizontal");
-
-                this->make_data_element("Filename", rec.get_product()->get_filename().string(), col2_list);
-
-                col2.add_element(col2_list);
-
-                HTML_node col3("div");
-                col3.add_attribute("class", "col-md-4");
-
-                row.add_element(col1).add_element(col2).add_element(col3);
-                panel_body.add_element(row);
                 panel.add_element(panel_heading).add_element(panel_body);
-                item.add_element(panel);
+                anchor.add_element(panel);
 
                 typename std::list< derivable_task<number>* > task_list;
                 rec.get_product()->get_task_list(task_list);
@@ -1361,8 +1612,12 @@ namespace transport
                     HTML_node head_row("tr");
 
                     HTML_node name_label("th", "Name");
+                    HTML_node type_label("th", "Type");
+                    HTML_node edited_label("th", "Last updated");
 
                     head_row.add_element(name_label);
+                    head_row.add_element(type_label);
+                    head_row.add_element(edited_label);
                     head.add_element(head_row);
 
                     HTML_node body("tbody");
@@ -1371,10 +1626,24 @@ namespace transport
                       {
                         HTML_node table_row("tr");
 
-                        HTML_node name("td");
-                        this->write_task_button(bundle, tk->get_name(), name);
+                        if(tk != nullptr)
+                          {
+                            typename task_db<number>::type::const_iterator t = tk_db.find(tk->get_name());
 
-                        table_row.add_element(name);
+                            if(t != tk_db.end())
+                              {
+
+                                HTML_node name("td");
+                                this->write_task_button(bundle, tk->get_name(), name);
+
+                                HTML_node type("td", task_type_to_string(tk->get_type()));
+                                HTML_node edited("td", boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
+
+                                table_row.add_element(name);
+                                table_row.add_element(type);
+                                table_row.add_element(edited);
+                              }
+                          }
                         body.add_element(table_row);
                       }
 
@@ -1382,13 +1651,987 @@ namespace transport
                     table_wrapper.add_element(table);
                     tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
                     group_list.add_element(tbl_panel);
-                    item.add_element(button).add_element(group_list);
+                    anchor.add_element(button).add_element(group_list);
                   }
 
-                list.add_element(item);
+                list.add_element(anchor);
+                pane.add_element(list);
+                parent.add_element(pane);
+              }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_product(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                                const derived_data::line_plot2d<number>& product, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->write_generic_derived_product(bundle, product, col1_list, col2_list, col3_list);
+            this->write_line_collection(bundle, product, col1_list, col2_list, col3_list);
+
+            this->make_data_element("Reverse x-axis", product.get_reverse_x() ? "Yes" : "No", col1_list);
+            this->make_data_element("Reverse y-axis", product.get_reverse_y() ? "Yes" : "No", col1_list);
+
+            HTML_node tdt("dt", "Title");
+            HTML_node tdd("dd");
+            if(product.get_title() && !product.get_title_text().empty())
+              {
+                HTML_node s("code", product.get_title_text(), true, false);
+                s.add_attribute("class", "language-latex");
+                tdd.add_element(s);
+              }
+            else
+              {
+                HTML_node s("span", "NULL");
+                s.add_attribute("class", "label label-default");
+                tdd.add_element(s);
+              }
+            col2_list.add_element(tdt).add_element(tdd);
+
+            HTML_node xdt("dt", "x-axis label");
+            HTML_node xdd("dd");
+            if(product.get_x_label() && !product.get_x_label_text().empty())
+              {
+                HTML_node s("code", product.get_x_label_text(), true, false);
+                s.add_attribute("class", "language-latex");
+                xdd.add_element(s);
+              }
+            else
+              {
+                HTML_node s("span", "NULL");
+                s.add_attribute("class", "label label-default");
+                xdd.add_element(s);
+              }
+            col2_list.add_element(xdt).add_element(xdd);
+
+            HTML_node ydt("dt", "y-axis label");
+            HTML_node ydd("dd");
+            if(product.get_y_label() && !product.get_y_label_text().empty())
+              {
+                HTML_node s("code", product.get_y_label_text(), true, false);
+                s.add_attribute("class", "language-latex");
+                ydd.add_element(s);
+              }
+            else
+              {
+                HTML_node s("span", "NULL");
+                s.add_attribute("class", "label label-default");
+                ydd.add_element(s);
+              }
+            col2_list.add_element(ydt).add_element(ydd);
+
+            this->make_data_element("Legend", product.get_legend() ? derived_data::legend_pos_to_string(product.get_legend_position()) : "No", col3_list);
+            this->make_data_element("LaTeX typsetting", product.get_typeset_with_LaTeX() ? "Yes" : "No", col3_list);
+            this->make_data_element("Dash second axis", product.get_dash_second_axis() ? "Yes" :  "No", col3_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+
+            this->write_line_list(bundle, rec, product, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_product(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                                const derived_data::line_asciitable<number>& product, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->write_generic_derived_product(bundle, product, col1_list, col2_list, col3_list);
+            this->write_line_collection(bundle, product, col1_list, col2_list, col3_list);
+
+            this->make_data_element("x-axis label", product.get_x_label(), col3_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+
+            this->write_line_list(bundle, rec, product, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_generic_derived_product(HTML_report_bundle<number>& bundle, const derived_data::derived_product<number>& product,
+                                                        HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list)
+          {
+            this->make_data_element("Product type", derived_data::derived_product_type_to_string(product.get_type()), col1_list);
+            this->make_data_element("Filename", product.get_filename().string(), col2_list);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_line_collection(HTML_report_bundle<number>& bundle, const derived_data::line_collection<number>& product,
+                                                HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list)
+          {
+            this->make_data_element("x-axis values", derived_data::axis_value_to_string(product.get_x_axis_value()), col1_list);
+            this->make_data_element("LaTeX labels", product.get_use_LaTeX() ? "Yes" : "No", col1_list);
+
+            this->make_data_element("log x values", product.get_log_x() ? "Yes" : "No", col2_list);
+
+            this->make_data_element("log y values", product.get_log_y() ? "Yes" : "No", col3_list);
+            this->make_data_element("abs y values", product.get_abs_y() ? "Yes" : "No", col3_list);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_line_list(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                          const derived_data::line_collection<number>& line_collection, HTML_node& parent)
+          {
+            const std::list< std::unique_ptr< derived_data::derived_line<number> > >& lines = line_collection.get_lines();
+
+            if(lines.empty()) return;
+
+            std::string tag = bundle.get_id(rec);
+
+            HTML_node button("button");
+            button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "lines");
+            button.add_attribute("type", "button").add_attribute("class", "btn btn-info topskip");
+            this->make_badged_text("Derived lines", lines.size(), button);
+
+            HTML_node content("div");
+            content.add_attribute("id", tag + "lines").add_attribute("class", "collapse");
+
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-info topskip");
+
+            HTML_node panel_head("div", "Derived lines in this collection");
+            panel_head.add_attribute("class", "panel-heading");
+
+            HTML_node line_list("ul");
+            line_list.add_attribute("class", "list-group");
+
+            unsigned int count = 0;
+            for(const std::unique_ptr< derived_data::derived_line<number> >& line : lines)
+              {
+                HTML_node item("li");
+                item.add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+
+                std::ostringstream lbl_text;
+                lbl_text << "Line " << ++count;
+                HTML_node lbl("span", lbl_text.str());
+                lbl.add_attribute("class", "label label-primary");
+                item.add_element(lbl);
+
+                if(line)
+                  {
+                    switch(line->get_line_type())
+                      {
+                        case derived_data::derived_line_type::background:
+                          {
+                            const derived_data::background_time_series<number>& ln = dynamic_cast< derived_data::background_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::twopf_time:
+                          {
+                            const derived_data::twopf_time_series<number>& ln = dynamic_cast< derived_data::twopf_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::threepf_time:
+                          {
+                            const derived_data::threepf_time_series<number>& ln = dynamic_cast< derived_data::threepf_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::tensor_twopf_time:
+                          {
+                            const derived_data::tensor_twopf_time_series<number>& ln = dynamic_cast< derived_data::tensor_twopf_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::zeta_twopf_time:
+                          {
+                            const derived_data::zeta_twopf_time_series<number>& ln = dynamic_cast< derived_data::zeta_twopf_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::zeta_threepf_time:
+                          {
+                            const derived_data::zeta_threepf_time_series<number>& ln = dynamic_cast< derived_data::zeta_threepf_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::zeta_redbsp_time:
+                          {
+                            const derived_data::zeta_reduced_bispectrum_time_series<number>& ln = dynamic_cast< derived_data::zeta_reduced_bispectrum_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::twopf_wavenumber:
+                          {
+                            const derived_data::twopf_wavenumber_series<number>& ln = dynamic_cast< derived_data::twopf_wavenumber_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::threepf_wavenumber:
+                          {
+                            const derived_data::threepf_wavenumber_series<number>& ln = dynamic_cast< derived_data::threepf_wavenumber_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::tensor_twopf_wavenumber:
+                          {
+                            const derived_data::tensor_twopf_wavenumber_series<number>& ln = dynamic_cast< derived_data::tensor_twopf_wavenumber_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::zeta_twopf_wavenumber:
+                          {
+                            const derived_data::zeta_twopf_wavenumber_series<number>& ln = dynamic_cast< derived_data::zeta_twopf_wavenumber_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::zeta_threepf_wavenumber:
+                          {
+                            const derived_data::zeta_threepf_wavenumber_series<number>& ln = dynamic_cast< derived_data::zeta_threepf_wavenumber_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::zeta_redbsp_wavenumber:
+                          {
+                            const derived_data::zeta_reduced_bispectrum_wavenumber_series<number>& ln = dynamic_cast< derived_data::zeta_reduced_bispectrum_wavenumber_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::fNL_time:
+                          {
+                            const derived_data::fNL_time_series<number>& ln = dynamic_cast< derived_data::fNL_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::r_time:
+                          {
+                            const derived_data::r_time_series<number>& ln = dynamic_cast< derived_data::r_time_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::r_wavenumber:
+                          {
+                            const derived_data::r_wavenumber_series<number>& ln = dynamic_cast< derived_data::r_wavenumber_series<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::background_line:
+                          {
+                            const derived_data::background_line<number>& ln = dynamic_cast< derived_data::background_line<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::u2:
+                          {
+                            const derived_data::u2_line<number>& ln = dynamic_cast< derived_data::u2_line<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::u3:
+                          {
+                            const derived_data::u3_line<number>& ln = dynamic_cast< derived_data::u3_line<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::largest_u2:
+                          {
+                            const derived_data::largest_u2_line<number>& ln = dynamic_cast< derived_data::largest_u2_line<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::largest_u3:
+                          {
+                            const derived_data::largest_u3_line<number>& ln = dynamic_cast< derived_data::largest_u3_line<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+
+                        case derived_data::derived_line_type::integration_cost:
+                          {
+                            const derived_data::cost_wavenumber<number>& ln = dynamic_cast< derived_data::cost_wavenumber<number>& >(*line);
+                            this->write_derived_line(bundle, ln, item);
+                            break;
+                          }
+                      }
+                  }
+                line_list.add_element(item);
               }
 
-            parent.add_element(list);
+            panel.add_element(panel_head).add_element(line_list);
+            content.add_element(panel);
+            parent.add_element(button).add_element(content);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_wavenumber_series_line(HTML_report_bundle<number>& bundle, const derived_data::wavenumber_series<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Spectral index", line.is_spectral_index() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("2pf type", derived_data::twopf_type_to_string(line.get_type()), col1_list);
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col2_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_zeta_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_zeta_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_zeta_redbsp_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_line<number>& line, HTML_node& parent)
+          {
+            // not currently used
+          }
+
+
+        template <typename number>
+        void HTML_report::write_tensor_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_fNL_line(HTML_report_bundle<number>& bundle, const derived_data::fNL_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Template", derived_data::template_type_to_string(line.get_template()), col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_r_line(HTML_report_bundle<number>& bundle, const derived_data::r_line<number>& line, HTML_node& parent)
+          {
+            // not currently used
+          }
+
+
+        void HTML_report::write_SQL_block(const std::string& SQL, HTML_node& parent)
+          {
+            HTML_node pre("pre");
+
+            HTML_node code("code", SQL, true, false);
+            code.add_attribute("class", "language-sql");
+            pre.add_element(code);
+
+            parent.add_element(pre);
+          }
+
+
+        void HTML_report::write_SQL_panel(std::string title, const std::string& SQL, HTML_node& parent)
+          {
+            HTML_node t("h6", title);
+            t.add_attribute("class", "topskip-small");
+            parent.add_element(t);
+
+            this->write_SQL_block(SQL, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& query, HTML_node& parent)
+          {
+            this->write_SQL_panel("SQL query for time sample points", query.get_query_string(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& query, HTML_node& parent)
+          {
+            this->write_SQL_panel("SQL query for 2-point function momentum-configuration points", query.get_query_string(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& query, HTML_node& parent)
+          {
+            this->write_SQL_panel("SQL query for 3-point function momentum-configuration sample points", query.get_query_string(), parent);
+          }
+
+
+        void HTML_report::derived_line_title(std::string title, HTML_node& parent)
+          {
+            HTML_node t("h4", title);
+            parent.add_element(t);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_generic_derived_line(HTML_report_bundle<number>& bundle, const derived_data::derived_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Derivatives/momenta", derived_data::dot_type_to_string(line.get_dot_meaning()), col1_list);
+            this->make_data_element("k-labels", derived_data::klabel_type_to_string(line.get_klabel_meaning()), col2_list);
+            this->make_data_element("Add identifiers to labels", line.get_label_tags() ? "Yes" : "No", col3_list);
+
+            HTML_node tt("dt", "Data from task");
+            HTML_node td("dd");
+            derivable_task<number>* ptk = line.get_parent_task();
+            if(ptk != nullptr)
+              {
+                this->write_task_button(bundle, ptk->get_name(), td);
+                col1_list.add_element(tt).add_element(td);
+              }
+
+            HTML_node lt("dt", "Label");
+            HTML_node ld("dd");
+            if(line.is_label_set() && !line.get_non_LaTeX_label().empty())
+              {
+                HTML_node s("code", line.get_non_LaTeX_label(), true, false);
+                s.add_attribute("class", "language-latex");
+                ld.add_element(s);
+              }
+            else
+              {
+                HTML_node s("span", "DEFAULT");
+                s.add_attribute("class", "label label-default");
+                ld.add_element(s);
+              }
+            col2_list.add_element(lt).add_element(ld);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::background_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("background &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("2-point function &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_twopf_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("3-point function &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_threepf_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("tensor 2-point function &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_tensor_twopf_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("zeta 2-point function &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_zeta_twopf_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("zeta 3-point function &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_zeta_threepf_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("zeta reduced bispectrum &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_zeta_redbsp_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("2-point function &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_twopf_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("3-point function &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_threepf_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("3-point function &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_tensor_twopf_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("zeta 2-point function &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_zeta_twopf_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("zeta 3-point function &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_zeta_threepf_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("zeta reduced bispectrum &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_zeta_redbsp_line(bundle, line, parent);
+            this->write_wavenumber_series_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::fNL_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("f<sub>NL</sub>-like quantity &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_fNL_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::r_time_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("tensor-to-scalar ratio &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_r_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::r_wavenumber_series<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("tensor-to-scalar ratio &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_r_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::background_line<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("background quantity &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+
+            HTML_node row("div");
+            row.add_attribute("class", "row");
+            HTML_node col("div");
+            col.add_attribute("class", "col-md-12");
+            this->make_data_element("Quantity", derived_data::background_quantity_to_string(line.get_quantity()), parent);
+            row.add_element(col);
+            parent.add_element(row);
+
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::u2_line<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("u<sub>2</sub> tensor &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::u3_line<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("u<sub>3</sub> tensor &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::largest_u2_line<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("largest element of u<sub>2</sub> tensor &mdash; time data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::largest_u3_line<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("largest element of u<sub>3</sub> tensor &mdash; time date", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
+            this->write_SQL_query(bundle, line.get_time_query(), parent);
+            this->write_SQL_query(bundle, line.get_k_query(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::cost_wavenumber<number>& line, HTML_node& parent)
+          {
+            this->derived_line_title("integration analysis &mdash; momentum-configuration data", parent);
+
+            this->write_generic_derived_line(bundle, line, parent);
           }
 
 
@@ -1447,7 +2690,7 @@ namespace transport
                 this->make_data_element("Complete", (payload.is_failed() ? "No" : "Yes"), col1_list);
                 this->make_data_element("Workgroup", boost::lexical_cast<std::string>(payload.get_workgroup_number()), col1_list);
                 this->make_data_element("Wallclock time", format_time(metadata.total_wallclock_time), col1_list);
-                this->make_data_element("Total time", format_time(metadata.total_integration_time), col1_list);
+                this->make_data_element("CPU time", format_time(metadata.total_integration_time), col1_list);
                 this->make_data_element("Failures", boost::lexical_cast<std::string>(metadata.total_failures), col1_list);
 
                 col1.add_element(col1_list);
@@ -1491,7 +2734,7 @@ namespace transport
                 anchor.add_element(panel);
 
                 this->write_worker_table(bundle, rec, anchor);
-                if(rec.get_payload().has_statistics()) this->write_timing_report(bundle, rec, anchor);
+                if(rec.get_payload().has_statistics()) this->write_integration_analysis(bundle, rec, anchor);
 
                 list.add_element(anchor);
                 pane.add_element(list);
@@ -1650,7 +2893,8 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_timing_report(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent)
+        void HTML_report::write_integration_analysis(HTML_report_bundle<number>& bundle,
+                                                     const output_group_record<integration_payload> rec, HTML_node& parent)
           {
             worker_information_db worker_db = bundle.read_worker_database(rec.get_payload().get_container_path());
             std::string tag = bundle.get_id(rec);
@@ -1662,6 +2906,10 @@ namespace transport
             count_list counts = this->count_configurations_per_worker(timing_data);
 
             // Produce report
+
+            // GLOBAL SECTION
+            // Any kind of task gets a histogram showing the distribution of configurations among workers
+            // and the overall distribution of integration time
 
             HTML_node button("button", "Integration report");
             button.add_attribute("type", "button");
@@ -1682,7 +2930,7 @@ namespace transport
             HTML_node panel("div");
             panel.add_attribute("class", "panel panel-info topskip");
 
-            HTML_node panel_head("div", "Breakdown of integration details for this output group");
+            HTML_node panel_head("div", "Integration analysis for this output group");
             panel_head.add_attribute("class", "panel-heading");
 
             HTML_node panel_body("div");
@@ -1701,6 +2949,35 @@ namespace transport
 
             chart_row.add_element(col1).add_element(col2);
             panel_body.add_element(chart_row);
+
+            // ADD CONTENT FOR TASKS OF A SPECIFIC TYPE
+
+            // get record for owning task
+            typename task_db<number>::type& tk_db = bundle.get_task_db();
+            typename task_db<number>::type::const_iterator tk_t = tk_db.find(rec.get_task_name());
+            if(tk_t != tk_db.end())
+              {
+                const task_record<number>& trec = *tk_t->second;
+                if(trec.get_type() == task_type::integration)
+                  {
+                    const integration_task_record<number>& irec = dynamic_cast< const integration_task_record<number>& >(trec);
+
+                    switch(irec.get_task_type())
+                      {
+                        case integration_task_type::threepf:
+                          {
+                            // 3pf tasks get a special analysis
+                            this->write_3pf_integration_analysis(bundle, rec, irec, worker_db, timing_data, panel_body);
+                            break;
+                          }
+
+                        // other tasks get no special treatment
+                        default:
+                          break;
+                      }
+                  }
+              }
+
             panel.add_element(panel_head).add_element(panel_body);
             content.add_element(panel);
             parent.add_element(button).add_element(content);
@@ -1733,7 +3010,7 @@ namespace transport
                 out << count;
                 ++count;
               }
-            out << "]" << '\n';
+            out << " ]" << '\n';
 
             count = 0;
             out << "height = [ ";
@@ -1845,7 +3122,6 @@ namespace transport
                 boost::filesystem::remove(script_path);
                 HTML_node chart("img", false);
                 chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "report-chart");
-                chart.add_attribute("class", "report-chart");
                 chart.add_attribute("data-toggle", "popover").add_attribute("data-placement", "top").add_attribute("title", "Timing distribution");
                 chart.add_attribute("data-content", "Shows the distribution of integration times in this output group");
                 parent.add_element(chart);
@@ -1858,6 +3134,201 @@ namespace transport
                 HTML_node br("br", false);
                 parent.add_element(no_chart).add_element(br);
               }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_3pf_integration_analysis(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+                                                         const integration_task_record<number>& irec,
+                                                         worker_information_db& worker_db, timing_db& timing_data,
+                                                         HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-6");
+
+            HTML_node col2("div");
+            col1.add_attribute("class", "col-md-6");
+
+            this->write_time_kt_diagram(bundle, rec, irec, worker_db, timing_data, col1);
+            this->write_time_alpha_diagram(bundle, rec, irec, worker_db, timing_data, col1);
+            this->write_time_beta_diagram(bundle, rec, irec, worker_db, timing_data, col2);
+
+            row.add_element(col1).add_element(col2);
+            parent.add_element(row);
+          }
+
+
+        template <typename number, typename Payload>
+        void HTML_report::plot_scatter(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
+                                       std::string script, std::string image,
+                                       const std::list< std::tuple<double, double, double> >& dataset,
+                                       std::string xlabel, std::string ylabel, std::string colour_label,
+                                       std::string css_class, std::string popover_title, std::string popover_text,
+                                       bool xlog, bool ylog, HTML_node& parent)
+          {
+            boost::filesystem::path relative_asset_loc = bundle.make_asset_directory(rec.get_name());
+
+            boost::filesystem::path relative_script_loc = relative_asset_loc / script;
+            boost::filesystem::path relative_image_loc = relative_asset_loc / image;
+
+            boost::filesystem::path script_path = this->root / relative_script_loc;
+            boost::filesystem::path image_path = this->root / relative_image_loc;
+
+            std::ofstream out(script_path.string(), std::ios::out | std::ios::trunc);
+            if(out.fail() || !out.is_open()) return;
+
+            this->write_matplotlib_preamble(out, bundle);
+            out << "plt.figure()" << '\n';
+
+            unsigned count = 0;
+            out << "x = [ ";
+            for(const std::tuple<double, double, double>& item : dataset)
+              {
+                if(count > 0) out << ", ";
+                out << format_number(std::get<0>(item));
+                ++count;
+              }
+            out << " ]" << '\n';
+
+            count = 0;
+            out << "y = [ ";
+            for(const std::tuple<double, double, double>& item : dataset)
+              {
+                if(count > 0) out << ", ";
+                out << format_number(std::get<1>(item));
+                ++count;
+              }
+            out << " ]" << '\n';
+
+            count = 0;
+            out << "colours = [ ";
+            for(const std::tuple<double, double, double>& item : dataset)
+              {
+                if(count > 0) out << ", ";
+                out << format_number(std::get<2>(item));
+                ++count;
+              }
+            out << " ]" << '\n';
+
+            out << "colour_map = plt.get_cmap('autumn')" << '\n';
+            out << "plt.scatter(x, y, marker='o', c=colours, cmap=colour_map, norm=col.LogNorm())" << '\n';
+            out << "plt.colorbar(cmap=colour_map, label=r'" << colour_label << "')" << '\n';
+            if(xlog) out << "plt.xscale('log')" << '\n';
+            if(ylog) out << "plt.yscale('log')" << '\n';
+            if(!xlabel.empty()) out << "plt.xlabel(r'" << xlabel << "')" << '\n';
+            if(!ylabel.empty()) out << "plt.ylabel(r'" << ylabel << "')" << '\n';
+            out << "plt.savefig('" << image_path.string() << "')" << '\n';
+            out << "plt.close()" << '\n';
+
+            out.close();
+
+            local_environment& env = bundle.get_environment();
+            bool success = env.execute_python(script_path) == 0;
+
+            if(success)
+              {
+                boost::filesystem::remove(script_path);
+                HTML_node chart("img", false);
+                chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", css_class);
+                if(!popover_title.empty() && !popover_text.empty())
+                  {
+                    chart.add_attribute("data-toggle", "popover").add_attribute("data-placement", "top").add_attribute("title", popover_title);
+                    chart.add_attribute("data-content", popover_text);
+                  }
+                parent.add_element(chart);
+              }
+            else
+              {
+                if(boost::filesystem::exists(image_path)) boost::filesystem::remove(image_path);
+                HTML_node no_chart("div", "Could not generate chart");
+                no_chart.add_attribute("class", "label label-danger");
+                HTML_node br("br", false);
+                parent.add_element(no_chart).add_element(br);
+              }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_time_kt_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                                const integration_task_record<number>& irec,
+                                                worker_information_db& worker_db, timing_db& timing_data,
+                                                HTML_node& parent)
+          {
+            integration_task<number>& raw_tk = *irec.get_task();
+            threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(raw_tk);
+            const threepf_kconfig_database& kconfig_db = tk.get_threepf_database();
+
+            std::list< std::tuple<double, double, double> > dataset;
+            for(const timing_db::value_type& item : timing_data)
+              {
+                const timing_record& data_point = *item.second;
+                threepf_kconfig_database::const_record_iterator krec = kconfig_db.lookup(data_point.get_serial());
+
+                dataset.emplace_back(std::make_tuple((*krec)->kt_conventional, static_cast<double>(data_point.get_integration_time()) / 1E9, (1.0-(*krec)->beta)/2.0));
+              }
+
+            this->plot_scatter(bundle, rec, "_timing_kt.py", "_timing_kt.png", dataset, "configuration scale $k_t$",
+                               "integration time in seconds", "$k_3 / k_t$",
+                               "report-chart", "Time dependence: scale",
+                               "Shows the dependence of the integration time on the overall configuration scale",
+                               true, true, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_time_alpha_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                                   const integration_task_record<number>& irec,
+                                                   worker_information_db& worker_db, timing_db& timing_data,
+                                                   HTML_node& parent)
+          {
+            integration_task<number>& raw_tk = *irec.get_task();
+            threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(raw_tk);
+            const threepf_kconfig_database& kconfig_db = tk.get_threepf_database();
+
+            std::list< std::tuple<double, double, double> > dataset;
+            for(const timing_db::value_type& item : timing_data)
+              {
+                const timing_record& data_point = *item.second;
+                threepf_kconfig_database::const_record_iterator krec = kconfig_db.lookup(data_point.get_serial());
+
+                dataset.emplace_back(std::make_tuple((*krec)->alpha, static_cast<double>(data_point.get_integration_time()) / 1E9, (*krec)->kt_conventional));
+              }
+
+            this->plot_scatter(bundle, rec, "_timing_alpha.py", "_timing_alpha.png", dataset, "shape parameter $\\alpha$",
+                               "integration time in seconds", "$k_t$",
+                               "report-chart", "Time dependence: shape",
+                               "Shows the dependence of the integration time on the shape parameter alpha",
+                               false, true, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_time_beta_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                                  const integration_task_record<number>& irec,
+                                                  worker_information_db& worker_db, timing_db& timing_data,
+                                                  HTML_node& parent)
+          {
+            integration_task<number>& raw_tk = *irec.get_task();
+            threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(raw_tk);
+            const threepf_kconfig_database& kconfig_db = tk.get_threepf_database();
+
+            std::list< std::tuple<double, double, double> > dataset;
+            for(const timing_db::value_type& item : timing_data)
+              {
+                const timing_record& data_point = *item.second;
+                threepf_kconfig_database::const_record_iterator krec = kconfig_db.lookup(data_point.get_serial());
+
+                dataset.emplace_back(std::make_tuple((1.0-(*krec)->beta)/2.0, static_cast<double>(data_point.get_integration_time()) / 1E9, (*krec)->kt_conventional));
+              }
+
+            this->plot_scatter(bundle, rec, "_timing_beta.py", "_timing_beta.png", dataset, "shape parameter $k_3 / k_t$",
+                               "integration time in seconds", "$k_t$",
+                               "report-chart", "Time dependence: shape",
+                               "Shows the dependence of the integration time on the shape parameter k3/kt",
+                               true, true, parent);
           }
 
 
@@ -2074,6 +3545,11 @@ namespace transport
 
                         if(t != product_db.end())
                           {
+                            HTML_node link_dt("dt", "Derived product");
+                            HTML_node link_dd("dd");
+                            this->write_derived_product_button(bundle, t->second->get_product()->get_name(), link_dd);
+                            col1_list.add_element(link_dt).add_element(link_dd);
+
                             this->make_data_element("Type", derived_data::derived_product_type_to_string(t->second->get_product()->get_type()), col1_list);
                           }
                         else
@@ -2204,20 +3680,18 @@ namespace transport
 
             if(!tags.empty())
               {
-                unsigned int count = 0;
                 for(const std::string& tag : tags)
                   {
-                    if(count > 0)
-                      {
-                        HTML_string pad("&nbsp;");
-                        parent.add_element(pad);
-                      }
+                    HTML_node tg("span");
+                    tg.add_attribute("class", "label label-info rightskip");
 
-                    HTML_node tg("span", tag);
-                    tg.add_attribute("class", "label label-info");
+                    HTML_node icon("span");
+                    icon.add_attribute("class", "glyphicon glyphicon-tag");
+
+                    HTML_string tg_text(tag);
+                    tg.add_element(icon).add_element(tg_text);
 
                     parent.add_element(tg);
-                    ++count;
                   }
               }
             else
@@ -2232,8 +3706,9 @@ namespace transport
           }
 
 
-        template <typename RecordType>
-        void HTML_report::write_generic_record(const RecordType& rec, HTML_node& parent)
+        template <typename number, typename RecordType>
+        void HTML_report::write_generic_record(HTML_report_bundle<number>& bundle,
+                                               const RecordType& rec, HTML_node& parent)
           {
             boost::posix_time::ptime created = rec.get_creation_time();
             boost::posix_time::ptime edited = rec.get_last_edit_time();
@@ -2279,14 +3754,17 @@ namespace transport
 
             row.add_element(col1).add_element(col2).add_element(col3);
             panel_body.add_element(row);
+
+            this->write_activity_collapsible(rec.get_history(), bundle.get_id(rec), panel_body);
+
             panel.add_element(panel_heading).add_element(panel_body);
             parent.add_element(panel);
           }
 
 
         template <typename number, typename Payload>
-        void HTML_report::write_generic_output_record(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
-                                                      HTML_node& parent)
+        void HTML_report::write_generic_output_record(HTML_report_bundle<number>& bundle,
+                                                      const output_group_record<Payload>& rec, HTML_node& parent)
           {
             boost::posix_time::ptime created = rec.get_creation_time();
             boost::posix_time::ptime edited = rec.get_last_edit_time();
@@ -2342,7 +3820,9 @@ namespace transport
 
             row.add_element(col1).add_element(col2).add_element(col3);
             panel_body.add_element(row);
+
             this->write_notes_collapsible(rec.get_notes(), bundle.get_id(rec), panel_body);
+            this->write_activity_collapsible(rec.get_history(), bundle.get_id(rec), panel_body);
 
             panel.add_element(panel_heading).add_element(panel_body);
             parent.add_element(panel);
@@ -2365,7 +3845,8 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_JavaScript_button_scroll(HTML_report_bundle<number>& bundle, std::string button, std::string pane, std::string element)
+        void HTML_report::write_JavaScript_button(HTML_report_bundle<number>& bundle, std::string button,
+                                                  std::string pane, std::string element)
           {
             // we need a Javascript function which causes this button to activate the appropriate task pane when clicked
             bundle.write_JavaScript("$(function(){");
@@ -2435,7 +3916,7 @@ namespace transport
                       }
                   }
 
-                this->write_JavaScript_button_scroll(bundle, button_id, pane, element_id);
+                this->write_JavaScript_button(bundle, button_id, pane, element_id);
               }
             else
               {
@@ -2516,7 +3997,7 @@ namespace transport
 
                 parent.add_element(button);
 
-                this->write_JavaScript_button_scroll(bundle, button_id, "packages", element);
+                this->write_JavaScript_button(bundle, button_id, "packages", element);
               }
             else
               {
@@ -2534,17 +4015,17 @@ namespace transport
             typename derived_product_db<number>::type& db = bundle.get_derived_product_db();
             typename derived_product_db<number>::type::const_iterator t = db.find(name);
 
-            std::string element;
-            if(t != db.end()) element = bundle.get_id(*t->second);
+            std::string pane;
+            if(t != db.end()) pane = bundle.get_id(*t->second);
 
-            this->write_derived_product_button(bundle, name, element, parent);
+            this->write_derived_product_button(bundle, name, pane, parent);
           }
 
 
         template <typename number>
-        void HTML_report::write_derived_product_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& element, HTML_node& parent)
+        void HTML_report::write_derived_product_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& pane, HTML_node& parent)
           {
-            if(!element.empty())
+            if(!pane.empty())
               {
                 std::string button_id = this->make_button_tag();
 
@@ -2553,7 +4034,7 @@ namespace transport
 
                 parent.add_element(button);
 
-                this->write_JavaScript_button_scroll(bundle, button_id, "derived", element);
+                this->write_JavaScript_button(bundle, button_id, pane);
               }
             else
               {
@@ -2565,7 +4046,7 @@ namespace transport
           }
 
 
-        void HTML_report::write_notes_collapsible(const std::list<std::string>& notes, const std::string& tag, HTML_node& parent)
+        void HTML_report::write_notes_collapsible(const std::list<note>& notes, const std::string& tag, HTML_node& parent)
           {
             if(notes.empty()) return;
 
@@ -2577,17 +4058,99 @@ namespace transport
             HTML_node content("div");
             content.add_attribute("id", tag + "notes").add_attribute("class", "collapse");
 
-            HTML_node list("ol");
-            list.add_attribute("class", "list-group topskip");
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-info scrollable-panel topskip");
 
-            for(const std::string& note : notes)
+            HTML_node panel_head("div", "Notes attached to this record");
+            panel_head.add_attribute("class", "panel-heading");
+
+            HTML_node list("ol");
+            list.add_attribute("class", "list-group");
+
+            for(const note& it : notes)
               {
-                HTML_node item("li", note);
-                item.add_attribute("class", "list-group-item list-group-item-info");
+                HTML_node item("li");
+                item.add_attribute("class", "list-group-item");
+
+                if(!it.get_uid().empty())
+                  {
+                    HTML_node uid_block("span");
+                    uid_block.add_attribute("class", "label label-primary rightskip");
+
+                    HTML_node uid_icon("span");
+                    uid_icon.add_attribute("class", "glyphicon glyphicon-user");
+
+                    HTML_string uid(it.get_uid());
+                    uid_block.add_element(uid_icon).add_element(uid);
+
+                    HTML_node timestamp_block("span");
+                    timestamp_block.add_attribute("class", "label label-default");
+
+                    HTML_node timestamp_icon("span");
+                    timestamp_icon.add_attribute("class", "glyphicon glyphicon-calendar");
+
+                    HTML_string timestamp(boost::posix_time::to_simple_string(it.get_timestamp()));
+                    timestamp_block.add_element(timestamp_icon).add_element(timestamp);
+                    item.add_element(uid_block).add_element(timestamp_block);
+                  }
+                else
+                  {
+                    HTML_node uid_block("span");
+                    uid_block.add_attribute("class", "label label-danger");
+
+                    HTML_node icon("span");
+                    icon.add_attribute("class", "glyphicon glyphicon-user");
+
+                    HTML_string uid(it.get_uid());
+
+                    // omit timestamp on presumption it is meaningless
+                    uid_block.add_element(icon).add_element(uid);
+                    item.add_element(uid_block);
+                  }
+
+                HTML_node bk("br", false);
+                HTML_string note_text(it.get_note());
+                item.add_element(bk).add_element(note_text);
+
                 list.add_element(item);
               }
 
-            content.add_element(list);
+            panel.add_element(panel_head).add_element(list);
+            content.add_element(panel);
+            parent.add_element(button).add_element(content);
+          }
+
+
+        void HTML_report::write_activity_collapsible(const std::list<metadata_history>& activity, const std::string& tag, HTML_node& parent)
+          {
+            if(activity.empty()) return;
+
+            HTML_node button("button");
+            button.add_attribute("type", "button").add_attribute("class", "btn btn-info");
+            button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "activity");
+            this->make_badged_text("Activity log", activity.size(), button);
+
+            HTML_node content("div");
+            content.add_attribute("id", tag + "activity").add_attribute("class", "collapse");
+
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-info scrollable-panel topskip");
+
+            HTML_node panel_head("div", "Activity report");
+            panel_head.add_attribute("class", "panel-heading");
+
+            HTML_node list("ol");
+            list.add_attribute("class", "list-group");
+
+            for(const metadata_history& log_item : activity)
+              {
+                HTML_node item("li", log_item.to_string());
+                item.add_attribute("class", "list-group-item");
+                list.add_element(item);
+              }
+
+            panel.add_element(panel_head).add_element(list);
+            content.add_element(panel);
             parent.add_element(button).add_element(content);
           }
 

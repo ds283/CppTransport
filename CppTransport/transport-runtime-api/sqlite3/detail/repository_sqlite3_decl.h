@@ -52,7 +52,7 @@ namespace transport
         //! Open a repository with a specified pathname, and specified warning and error handlers.
         //! Creates the repository directory structure if it does not already exist
         repository_sqlite3(const boost::filesystem::path path, model_manager<number>& f, repository_mode mode,
-                           error_handler e, warning_handler w, message_handler m);
+                           local_environment& ev, error_handler e, warning_handler w, message_handler m);
 
         //! Close a repository, including any corresponding containers
         virtual ~repository_sqlite3();
@@ -344,23 +344,23 @@ namespace transport
 
         //! Create a new content group for an integration task
         virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                     bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                      transaction_manager& mgr) override;
 
         //! Create a new content group for a postintegration task
         virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                             bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                              transaction_manager& mgr) override;
 
         //! Create a new content group for an output task
         virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                           bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                            transaction_manager& mgr) override;
 
         //! Implementation -- Create a new content group record
         template <typename Payload>
         std::unique_ptr< output_group_record<Payload> > content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                     bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                      transaction_manager& mgr);
 
         // 2. Factories from JSON representations: these are needed as part of the 'json_repository<>' interface

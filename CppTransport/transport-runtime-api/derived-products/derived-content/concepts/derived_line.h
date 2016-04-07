@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __derived_line_H_
-#define __derived_line_H_
+#ifndef CPPTRANSPORT_DERIVED_LINE_H
+#define CPPTRANSPORT_DERIVED_LINE_H
 
 
 #include <iostream>
@@ -35,6 +35,8 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 #include "transport-runtime-api/derived-products/line-collections/line_values.h"
+
+#include "transport-runtime-api/derived-products/derived-content/concepts/derived_line_type.h"
 
 
 #define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 "task-name"
@@ -145,6 +147,14 @@ namespace transport
 						virtual ~derived_line();
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const = 0;
+
+
 				    // ADMIN
 
 				  public:
@@ -181,6 +191,12 @@ namespace transport
 
 						//! has a label been set?
 						bool is_label_set() const { return(this->label_set); }
+
+            //! get LaTeX label
+            const std::string get_LaTeX_label() const { return(this->LaTeX_label); }
+
+            //! get non-LaTeX label
+            const std::string get_non_LaTeX_label() const { return(this->non_LaTeX_label); }
 
 						//! use tags?
 						bool get_label_tags() const { return(this->use_tags); }
@@ -833,4 +849,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__derived_line_H_
+#endif //CPPTRANSPORT_DERIVED_LINE_H
