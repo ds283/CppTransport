@@ -469,6 +469,9 @@ namespace transport
                     std::vector<std::string> add_note;
                     std::vector<std::string> delete_note;
 
+                    // unlock happens first, so it can be chained with other update flags
+                    if(option_map.count(CPPTRANSPORT_SWITCH_UNLOCK)) toolkit.unlock_content(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >());
+
                     if(option_map.count(CPPTRANSPORT_SWITCH_ADD_TAG)) add_tag = option_map[CPPTRANSPORT_SWITCH_ADD_TAG].as< std::vector<std::string> >();
                     if(option_map.count(CPPTRANSPORT_SWITCH_DELETE_TAG)) delete_tag = option_map[CPPTRANSPORT_SWITCH_DELETE_TAG].as< std::vector<std::string> >();
                     if(option_map.count(CPPTRANSPORT_SWITCH_ADD_NOTE)) add_note = option_map[CPPTRANSPORT_SWITCH_ADD_NOTE].as< std::vector<std::string> >();
@@ -479,8 +482,8 @@ namespace transport
                         toolkit.update_tags_notes(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >(), add_tag, delete_tag, add_note, delete_note);
                       }
 
+                    // lock happens last so it does not interfere with other update flags
                     if(option_map.count(CPPTRANSPORT_SWITCH_LOCK)) toolkit.lock_content(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >());
-                    if(option_map.count(CPPTRANSPORT_SWITCH_UNLOCK)) toolkit.unlock_content(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >());
                   }
 
               }
