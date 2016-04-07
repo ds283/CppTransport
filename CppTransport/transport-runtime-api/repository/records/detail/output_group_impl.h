@@ -202,7 +202,7 @@ namespace transport
     void output_group_record<Payload>::set_lock_status(bool g)
       {
         this->locked = g;
-        this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::locked);
+        this->metadata.add_history_item(this->handlers.env.get_userid(), g ? history_actions::locked : history_actions::unlocked);
         this->metadata.update_last_edit_time();
       }
 
