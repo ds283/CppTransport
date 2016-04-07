@@ -3545,6 +3545,11 @@ namespace transport
 
                         if(t != product_db.end())
                           {
+                            HTML_node link_dt("dt", "Derived product");
+                            HTML_node link_dd("dd");
+                            this->write_derived_product_button(bundle, t->second->get_product()->get_name(), link_dd);
+                            col1_list.add_element(link_dt).add_element(link_dd);
+
                             this->make_data_element("Type", derived_data::derived_product_type_to_string(t->second->get_product()->get_type()), col1_list);
                           }
                         else
