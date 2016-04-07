@@ -55,6 +55,14 @@ namespace transport
             virtual derived_line_type get_line_type() const override { return derived_line_type::fNL_time; }
 
 
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+
             // DERIVE LINES -- implements a 'time_series' interface
 
           public:

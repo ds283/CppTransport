@@ -89,7 +89,7 @@ namespace transport
             //! query type of twopf - is it imaginary?
             bool is_imag_twopf() const { return(this->twopf_meaning == twopf_type::imaginary); }
 
-            //! is this dimensionles?
+            //! is this dimensionless?
             bool is_dimensionless() const { return(this->dimensionless); }
 
             //! set dimensionless

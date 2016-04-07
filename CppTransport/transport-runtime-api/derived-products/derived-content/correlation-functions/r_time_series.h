@@ -56,6 +56,17 @@ namespace transport
             virtual derived_line_type get_line_type() const override { return derived_line_type::r_time; }
 
 
+            // EXTRACT QUERIES
+
+          public:
+
+            //! get time query
+            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+
+            //! get wavenumber query
+            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+
+
 				    // DERIVE LINES -- implements a 'time series' interface
 
 		      public:
