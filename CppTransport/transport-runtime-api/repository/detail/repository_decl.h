@@ -462,16 +462,16 @@ namespace transport
 
         //! Create a new content group for an integration task
         virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                     bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                      transaction_manager& mgr) = 0;
 
         //! Create a new content group for a postintegration task
         virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg, transaction_manager& mgr) = 0;
+                                                                                                                             bool lock, const std::list<note>& nt, const std::list<std::string>& tg, transaction_manager& mgr) = 0;
 
         //! Create a new content group for an output task
         virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                           bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                            transaction_manager& mgr) = 0;
 
 

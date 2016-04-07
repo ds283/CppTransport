@@ -800,6 +800,7 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES
   transport-runtime-api/repository/records/detail/record_impl.h
   transport-runtime-api/repository/records/detail/task_decl.h
   transport-runtime-api/repository/records/detail/task_impl.h
+  transport-runtime-api/repository/records/detail/notes.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES

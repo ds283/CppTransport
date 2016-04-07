@@ -440,7 +440,7 @@ namespace transport
             void write_seeded(HTML_report_bundle<number>& bundle, const Payload& payload, HTML_node& parent);
 
             //! write a collapsible notes section
-            void write_notes_collapsible(const std::list<std::string>& notes, const std::string& tag, HTML_node& parent);
+            void write_notes_collapsible(const std::list<note>& notes, const std::string& tag, HTML_node& parent);
 
             //! write a collapsible activity log
             void write_activity_collapsible(const std::list<metadata_history>& activity, const std::string& tag, HTML_node& parent);
@@ -594,6 +594,13 @@ namespace transport
 
             // add bootstrap CSS file
             bundle.emplace_CSS_asset("bootstrap/css/bootstrap.min.css", "bootstrap.min.css");
+
+            // add bootstrap glyphicon fonts
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.eot", "glyphicons-halflings-regular.eot");
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.svg", "glyphicons-halflings-regular.svg");
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.ttf", "glyphicons-halflings-regular.ttf");
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.woff", "glyphicons-halflings-regular.woff");
+            bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.woff2", "glyphicons-halflings-regular.woff2");
 
             // add prism.js CSS file
             bundle.emplace_CSS_asset("prism/prism.css", "prism.css");
@@ -3668,20 +3675,18 @@ namespace transport
 
             if(!tags.empty())
               {
-                unsigned int count = 0;
                 for(const std::string& tag : tags)
                   {
-                    if(count > 0)
-                      {
-                        HTML_string pad("&nbsp;");
-                        parent.add_element(pad);
-                      }
+                    HTML_node tg("span");
+                    tg.add_attribute("class", "label label-info rightskip");
 
-                    HTML_node tg("span", tag);
-                    tg.add_attribute("class", "label label-info");
+                    HTML_node icon("span");
+                    icon.add_attribute("class", "glyphicon glyphicon-tag");
+
+                    HTML_string tg_text(tag);
+                    tg.add_element(icon).add_element(tg_text);
 
                     parent.add_element(tg);
-                    ++count;
                   }
               }
             else
@@ -4036,7 +4041,7 @@ namespace transport
           }
 
 
-        void HTML_report::write_notes_collapsible(const std::list<std::string>& notes, const std::string& tag, HTML_node& parent)
+        void HTML_report::write_notes_collapsible(const std::list<note>& notes, const std::string& tag, HTML_node& parent)
           {
             if(notes.empty()) return;
 
@@ -4057,10 +4062,51 @@ namespace transport
             HTML_node list("ol");
             list.add_attribute("class", "list-group");
 
-            for(const std::string& note : notes)
+            for(const note& it : notes)
               {
-                HTML_node item("li", note);
+                HTML_node item("li");
                 item.add_attribute("class", "list-group-item");
+
+                if(!it.get_uid().empty())
+                  {
+                    HTML_node uid_block("span");
+                    uid_block.add_attribute("class", "label label-primary rightskip");
+
+                    HTML_node uid_icon("span");
+                    uid_icon.add_attribute("class", "glyphicon glyphicon-user");
+
+                    HTML_string uid(it.get_uid());
+                    uid_block.add_element(uid_icon).add_element(uid);
+
+                    HTML_node timestamp_block("span");
+                    timestamp_block.add_attribute("class", "label label-default");
+
+                    HTML_node timestamp_icon("span");
+                    timestamp_icon.add_attribute("class", "glyphicon glyphicon-calendar");
+
+                    HTML_string timestamp(boost::posix_time::to_simple_string(it.get_timestamp()));
+                    timestamp_block.add_element(timestamp_icon).add_element(timestamp);
+                    item.add_element(uid_block).add_element(timestamp_block);
+                  }
+                else
+                  {
+                    HTML_node uid_block("span");
+                    uid_block.add_attribute("class", "label label-danger");
+
+                    HTML_node icon("span");
+                    icon.add_attribute("class", "glyphicon glyphicon-user");
+
+                    HTML_string uid(it.get_uid());
+
+                    // omit timestamp on presumption it is meaningless
+                    uid_block.add_element(icon).add_element(uid);
+                    item.add_element(uid_block);
+                  }
+
+                HTML_node bk("br", false);
+                HTML_string note_text(it.get_note());
+                item.add_element(bk).add_element(note_text);
+
                 list.add_element(item);
               }
 

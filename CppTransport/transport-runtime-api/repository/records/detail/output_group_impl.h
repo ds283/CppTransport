@@ -60,7 +60,7 @@ namespace transport
 
     template <typename Payload>
     output_group_record<Payload>::output_group_record(const std::string& tn, const paths_group& p,
-                                                      bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                      bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                       repository_record::handler_package& pkg)
       : repository_record(pkg),
         task(tn),
@@ -142,7 +142,7 @@ namespace transport
 
         for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); ++t)
           {
-            notes.push_back(t->asString());
+            notes.emplace_back(*t);
           }
 
         Json::Value tag_list = reader[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS];
@@ -166,18 +166,19 @@ namespace transport
 
         Json::Value note_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); ++t)
+        for(const note& item : this->notes)
           {
-            Json::Value note_element = *t;
+            Json::Value note_element(Json::objectValue);
+            item.serialize(note_element);
             note_list.append(note_element);
           }
         writer[CPPTRANSPORT_NODE_OUTPUTGROUP_NOTES] = note_list;
 
         Json::Value tag_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = tags.begin(); t != tags.end(); ++t)
+        for(const std::string& tag : this->tags)
           {
-            Json::Value tag_element = *t;
+            Json::Value tag_element = tag;
             tag_list.append(tag_element);
           }
         writer[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
@@ -191,7 +192,7 @@ namespace transport
     template <typename Payload>
     void output_group_record<Payload>::add_note(const std::string& note)
       {
-        this->notes.push_back(note);
+        this->notes.emplace_back(this->handlers.env.get_userid(), note);
         this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_note);
         this->metadata.update_last_edit_time();
       }
@@ -234,7 +235,7 @@ namespace transport
     template <typename Payload>
     void output_group_record<Payload>::remove_note(unsigned int number)
       {
-        std::list<std::string>::const_iterator it = this->notes.cbegin();
+        std::list<note>::const_iterator it = this->notes.cbegin();
         while(number > 0 && it != this->notes.end())
           {
             --number;
@@ -493,7 +494,7 @@ namespace transport
 
         for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); ++t)
           {
-            notes.push_back(t->asString());
+            notes.emplace_back(*t);
           }
 
         Json::Value tag_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS];
@@ -523,9 +524,10 @@ namespace transport
 
         Json::Value note_list(Json::arrayValue);
 
-        for(const std::string& note : this->notes)
+        for(const note& item : this->notes)
           {
-            Json::Value note_element = note;
+            Json::Value note_element(Json::objectValue);
+            item.serialize(note_element);
             note_list.append(note_element);
           }
         writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES] = note_list;

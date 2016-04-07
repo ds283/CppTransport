@@ -509,7 +509,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                                     bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                                      transaction_manager& mgr)
       {
         return this->content_group_record_factory<integration_payload>(tn, path, lock, nt, tg, mgr);
@@ -525,7 +525,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                                             bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                                              transaction_manager& mgr)
       {
         return this->content_group_record_factory<postintegration_payload>(tn, path, lock, nt, tg, mgr);
@@ -541,7 +541,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                           bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                            transaction_manager& mgr)
       {
         return this->content_group_record_factory<output_payload>(tn, path, lock, nt, tg, mgr);
@@ -558,7 +558,7 @@ namespace transport
     template <typename number>
     template <typename Payload>
     std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                             bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                              transaction_manager& mgr)
       {
         count_function counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);

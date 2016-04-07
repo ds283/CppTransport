@@ -38,6 +38,7 @@ namespace transport
 
         constexpr auto CPPTRANSPORT_HTML_JAVASCRIPT_DIR = "js";
         constexpr auto CPPTRANSPORT_HTML_CSS_DIR = "css";
+        constexpr auto CPPTRANSPORT_HTML_FONTS_DIR = "fonts";
         constexpr auto CPPTRANSPORT_HTML_ASSET_DIR = "assets";
 
         template <typename number>
@@ -63,6 +64,9 @@ namespace transport
             //! emplace CSS asset
             void emplace_CSS_asset(boost::filesystem::path source, boost::filesystem::path dest);
 
+            //! empalce font asset
+            void emplace_font_asset(boost::filesystem::path source, boost::filesystem::path dest);
+
             //! emplace JavaScript asset
             void emplace_JavaScript_asset(boost::filesystem::path source, boost::filesystem::path dest);
 
@@ -74,6 +78,11 @@ namespace transport
             //! returns relative path of emplaced asset
             boost::filesystem::path emplace_asset(const boost::filesystem::path& source, const std::string& name,
                                                   const boost::filesystem::path& filename);
+
+          protected:
+
+            //! emplace an asset file
+            void copy_asset(boost::filesystem::path source, boost::filesystem::path absolute_path, boost::filesystem::path dest_filename);
 
 
             // EMPLACE HTML CONTENT
@@ -267,28 +276,26 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report_bundle<number>::emplace_CSS_asset(boost::filesystem::path source, boost::filesystem::path dest)
+        void HTML_report_bundle<number>::copy_asset(boost::filesystem::path source, boost::filesystem::path absolute_path,
+                                                    boost::filesystem::path dest_filename)
           {
-            boost::filesystem::path css_relative_path = CPPTRANSPORT_HTML_CSS_DIR;
-            boost::filesystem::path css_absolute_path = this->root / css_relative_path;
-
-            if(!boost::filesystem::exists(css_absolute_path))
+            if(!boost::filesystem::exists(absolute_path))
               {
                 try
                   {
-                    boost::filesystem::create_directories(css_absolute_path);
+                    boost::filesystem::create_directories(absolute_path);
                   }
                 catch(boost::filesystem::filesystem_error &xe)
                   {
                     std::ostringstream msg;
-                    msg << CPPTRANSPORT_HTML_ASSET_CREATE_FAILURE << " '" << css_absolute_path.string() << "'";
+                    msg << CPPTRANSPORT_HTML_ASSET_CREATE_FAILURE << " '" << absolute_path.string() << "'";
                     throw runtime_exception(exception_type::REPORTING_ERROR, msg.str());
                   }
               }
 
             // copy asset into destination directory hierarchy
             boost::filesystem::path asset_src = this->find_asset(source);
-            boost::filesystem::path asset_dest = css_absolute_path / dest;
+            boost::filesystem::path asset_dest = absolute_path / dest_filename;
 
             try
               {
@@ -301,9 +308,29 @@ namespace transport
                     << CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_B << " '" << asset_src.string() << "'";
                 throw runtime_exception(exception_type::REPORTING_ERROR, msg.str());
               }
+          }
+
+
+        template <typename number>
+        void HTML_report_bundle<number>::emplace_CSS_asset(boost::filesystem::path source, boost::filesystem::path dest)
+          {
+            boost::filesystem::path css_relative_path = CPPTRANSPORT_HTML_CSS_DIR;
+            boost::filesystem::path css_absolute_path = this->root / css_relative_path;
+
+            this->copy_asset(source, css_absolute_path, dest);
 
             // add to HTML writer
             this->HTML->add_stylesheet(css_relative_path / dest);
+          }
+
+
+        template <typename number>
+        void HTML_report_bundle<number>::emplace_font_asset(boost::filesystem::path source, boost::filesystem::path dest)
+          {
+            boost::filesystem::path font_relative_path = CPPTRANSPORT_HTML_FONTS_DIR;
+            boost::filesystem::path font_absolute_path = this->root / font_relative_path;
+
+            this->copy_asset(source, font_absolute_path, dest);
           }
 
 

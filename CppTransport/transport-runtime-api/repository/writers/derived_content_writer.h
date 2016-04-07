@@ -310,7 +310,7 @@ namespace transport
     void derived_content_writer<number>::push_content(derived_data::derived_product<number>& product, const std::list<std::string>& used_groups)
 	    {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        std::list<std::string> notes;
+        std::list<note> notes;
         std::list<std::string> tags;
 
         this->content.emplace_back(product.get_name(), product.get_filename().string(), now, used_groups, notes, tags);

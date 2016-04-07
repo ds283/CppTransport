@@ -39,6 +39,7 @@
 #include "boost/filesystem/operations.hpp"
 
 #include "transport-runtime-api/repository/records/detail/metadata_decl.h"
+#include "transport-runtime-api/repository/records/detail/notes.h"
 #include "transport-runtime-api/repository/records/detail/record_decl.h"
 #include "transport-runtime-api/repository/records/detail/package_decl.h"
 #include "transport-runtime-api/repository/records/detail/task_decl.h"
