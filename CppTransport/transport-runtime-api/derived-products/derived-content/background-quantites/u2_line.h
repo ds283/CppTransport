@@ -74,7 +74,8 @@ namespace transport
 		      public:
 
 				    //! generate data lines for plotting
-				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines, const std::list<std::string>& tags) const override;
+				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                      const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
 		      protected:
 
@@ -171,7 +172,8 @@ namespace transport
 
 
 				template <typename number>
-				void u2_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines, const std::list<std::string>& tags) const
+				void u2_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                           const std::list<std::string>& tags, slave_message_buffer& messages) const
 					{
 				    // attach our datapipe to an output group
 				    std::string group = this->attach(pipe, tags);
@@ -230,9 +232,8 @@ namespace transport
                                 line_data[j] = u2_tensor[mdl->flatten(m,n)];
                               }
 
-                            data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
-                                                   this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
-                            lines.push_back(line);
+                            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+                                               this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t), messages);
                           }
                       }
                   }

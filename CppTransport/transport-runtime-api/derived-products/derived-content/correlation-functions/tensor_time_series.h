@@ -74,7 +74,7 @@ namespace transport
 
 		        //! generate data lines for plotting
 		        virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                  const std::list<std::string>& tags) const override;
+		                                  const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const;
@@ -151,7 +151,7 @@ namespace transport
 
         template <typename number>
         void tensor_twopf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                                            const std::list<std::string>& tags) const
+                                                            const std::list<std::string>& tags, slave_message_buffer& messages) const
 	        {
             // attach our datapipe to an output group
             std::string group = this->attach(pipe, tags);
@@ -201,10 +201,8 @@ namespace transport
                                 value = value_type::correlation_function_value;
                               }
 
-								            data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
-								                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
-
-								            lines.push_back(line);
+                            lines.emplace_back(group, this->x_type, value, t_axis, line_data,
+                                               this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t), messages);
 									        }
 							        }
 					        }

@@ -29,4 +29,7 @@
 #define CPPTRANSPORT_DERIVED_PRODUCT_LINE_2D_PLOT    "2d plot"
 #define CPPTRANSPORT_DERIVED_PRODUCT_LINE_TABLE      "table"
 
+#define CPPTRANSPORT_PRODUCT_CANT_BUILD_SPLINE_A     "Could not build successful spline for line with label"
+#define CPPTRANSPORT_PRODUCT_CANT_BUILD_SPLINE_B     "(plot shows original line)"
+
 #endif // CPPTRANSPORT_MESSAGES_EN_DERIVED_PRODUCT_H

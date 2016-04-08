@@ -8,6 +8,7 @@
 
 
 #include "transport-runtime-api/manager/detail/slave_controller_decl.h"
+#include "transport-runtime-api/manager/detail/slave_message_buffer.h"
 
 
 namespace transport
@@ -507,6 +508,11 @@ namespace transport
 
                     for(unsigned int i = 0; i < list.size(); ++i)
                       {
+                        // set up message buffer; will push any errors to master node when it goes out of scope
+                        slave_message_buffer messages(this->environment, this->world);
+                        slave_message_context ctx(messages, tk->get_name());
+
+                        // get derived product
                         typename derived_data::derived_product<number>& product = list[i].get_product();
 
                         // merge command-line supplied tags with tags specified in the task
@@ -522,7 +528,7 @@ namespace transport
                         try
                           {
                             boost::timer::cpu_timer derive_timer;
-                            this_groups = product.derive(*pipe, task_tags, this->local_env, this->arg_cache);
+                            this_groups = product.derive(*pipe, task_tags, messages, this->local_env, this->arg_cache);
                             content_groups.merge(this_groups);
                             derive_timer.stop();
                             processing_time += derive_timer.elapsed().wall;
@@ -536,9 +542,7 @@ namespace transport
 
                             std::ostringstream msg;
                             msg << CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT << " '" << product.get_name() << "'";
-
-                            boost::mpi::request err_msg = this->world.isend(MPI::RANK_MASTER, MPI::REPORT_ERROR, MPI::error_report(msg.str()));
-                            err_msg.wait();
+                            messages.push_back(msg.str());
                           }
 
                         // check that the datapipe was correctly detached

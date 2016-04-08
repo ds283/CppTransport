@@ -84,20 +84,24 @@ namespace transport
 		      public:
 
 				    //! generate data lines for plotting
-				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines, const std::list<std::string>& tags) const override;
+				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                      const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
 		      protected:
 
 				    //! epsilon line
-				    void epsilon_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines, const std::list<std::string>& tags,
+				    void epsilon_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
+                              const std::list<std::string>& tags, slave_message_buffer& messages,
 				                      const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
 		        //! Hubble line
-		        void Hubble_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines, const std::list<std::string>& tags,
+		        void Hubble_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
+                             const std::list<std::string>& tags, slave_message_buffer& messages,
 		                         const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
 		        //! aHubble line
-		        void aHubble_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines, const std::list<std::string>& tags,
+		        void aHubble_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
+                              const std::list<std::string>& tags, slave_message_buffer& messages,
 		                          const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
 		        //! generate a LaTeX label
@@ -205,7 +209,8 @@ namespace transport
 
 
 				template <typename number>
-				void background_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines, const std::list<std::string>& tags) const
+				void background_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                                   const std::list<std::string>& tags, slave_message_buffer& messages) const
 					{
 				    // attach our datapipe to an output group
 				    std::string group = this->attach(pipe, tags);
@@ -233,15 +238,15 @@ namespace transport
 				    switch(this->type)
 					    {
 				        case background_quantity::epsilon:
-					        this->epsilon_line(group, pipe, lines, tags, t_axis, bg_data);
+					        this->epsilon_line(group, pipe, lines, tags, messages, t_axis, bg_data);
 					        break;
 
 				        case background_quantity::Hubble:
-					        this->Hubble_line(group, pipe, lines, tags, t_axis, bg_data);
+					        this->Hubble_line(group, pipe, lines, tags, messages, t_axis, bg_data);
 					        break;
 
 				        case background_quantity::aHubble:
-					        this->aHubble_line(group, pipe, lines, tags, t_axis, bg_data);
+					        this->aHubble_line(group, pipe, lines, tags, messages, t_axis, bg_data);
 					        break;
 					    }
 
@@ -250,7 +255,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void background_line<number>::epsilon_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines, const std::list<std::string>& tags,
+		    void background_line<number>::epsilon_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                                   const std::list<std::string>& tags, slave_message_buffer& messages,
 		                                               const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
 			    {
 		        model<number>* mdl = this->gadget.get_model();
@@ -263,14 +269,14 @@ namespace transport
 				        line_data[j] = mdl->epsilon(this->gadget.get_integration_task()->get_params(), bg_data[j]);
 					    }
 
-				    data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
-				                           this->get_LaTeX_label(), this->get_non_LaTeX_label());
-				    lines.push_back(line);
+            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+                               this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
 
 		    template <typename number>
-		    void background_line<number>::Hubble_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines, const std::list<std::string>& tags,
+		    void background_line<number>::Hubble_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                                  const std::list<std::string>& tags, slave_message_buffer& messages,
 		                                              const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
 			    {
 		        model<number>* mdl = this->gadget.get_model();
@@ -283,14 +289,14 @@ namespace transport
 		            line_data[j] = mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
-		        data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
-		                               this->get_LaTeX_label(), this->get_non_LaTeX_label());
-		        lines.push_back(line);
+            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+                               this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
 
 		    template <typename number>
-		    void background_line<number>::aHubble_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines, const std::list<std::string>& tags,
+		    void background_line<number>::aHubble_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
+		                                               const std::list<std::string>& tags, slave_message_buffer& messages,
 		                                               const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
 			    {
 		        model<number>* mdl = this->gadget.get_model();
@@ -308,9 +314,8 @@ namespace transport
 		            line_data[j] = a * mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
-		        data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
-		                               this->get_LaTeX_label(), this->get_non_LaTeX_label());
-		        lines.push_back(line);
+            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+                               this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
 

@@ -731,6 +731,7 @@ set(TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES
   transport-runtime-api/manager/detail/slave_controller_impl.h
   transport-runtime-api/manager/detail/slave_datapipe_dispatch_decl.h
   transport-runtime-api/manager/detail/slave_datapipe_dispatch_impl.h
+  transport-runtime-api/manager/detail/slave_message_buffer.h
   )
 
 set(TRANSPORT_RUNTIME_API_MANAGER_FILES

@@ -225,7 +225,7 @@ namespace transport
 
 				    //! generate data lines for plotting
 				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-				                              const std::list<std::string>& tags) const = 0;
+				                              const std::list<std::string>& tags, slave_message_buffer& messages) const = 0;
 
 
 				    // CLONE

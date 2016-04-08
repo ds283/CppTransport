@@ -72,7 +72,7 @@ namespace transport
 
 		        //! generate data lines for plotting
 		        virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                  const std::list<std::string>& tags) const override;
+		                                  const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(double t) const;
@@ -145,7 +145,7 @@ namespace transport
 
 		    template <typename number>
 		    void r_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                                   const std::list<std::string>& tags) const
+		                                                   const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
             std::list<std::string> groups;
 
@@ -207,10 +207,8 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        data_line<number> line = data_line<number>(groups, this->x_type, value_type::r_value, w_axis, line_data,
-				                                                   this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
-
-				        lines.push_back(line);
+                lines.emplace_back(groups, this->x_type, value_type::r_value, w_axis, line_data,
+                                   this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 					    }
 
 				    // detach pipe from output group

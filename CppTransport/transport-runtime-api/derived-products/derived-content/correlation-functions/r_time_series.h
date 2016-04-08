@@ -73,7 +73,7 @@ namespace transport
 
 				    //! generate data lines for plotting
 				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-				                              const std::list<std::string>& tags) const override;
+				                              const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(const twopf_kconfig& k) const;
@@ -149,8 +149,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void r_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                             const std::list<std::string>& tags) const
+		    void r_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
+		                                             const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
             std::list< std::string > groups;
 
@@ -210,10 +210,8 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        data_line<number> line = data_line<number>(groups, this->x_type, value_type::r_value, t_axis, line_data,
-				                                                   this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]));
-
-				        lines.push_back(line);
+				        lines.emplace_back(groups, this->x_type, value_type::r_value, t_axis, line_data,
+                                   this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]), messages);
 					    }
 
 				    // detach pipe from output group

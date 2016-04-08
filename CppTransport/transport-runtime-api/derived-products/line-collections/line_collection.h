@@ -212,7 +212,8 @@ namespace transport
 				    void merge_lines(datapipe<number>& pipe, const std::list< data_line<number> >& input, std::deque<double>& axis, std::vector<output_line>& data) const;
 
 						//! Obtain output from our lines
-				    void obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const;
+				    void obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags,
+                               std::list< data_line<number> >& derived_lines, slave_message_buffer& messages) const;
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS -- implements a 'derived_product' interface
@@ -371,18 +372,19 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const
+		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags,
+                                                    std::list< data_line<number> >& derived_lines, slave_message_buffer& messages) const
 			    {
             for(const std::unique_ptr< derived_line<number> >& line : this->lines)
 			        {
-		            line->derive_lines(pipe, derived_lines, tags);
+		            line->derive_lines(pipe, derived_lines, tags, messages);
 			        }
 			    }
 
 
 		    template <typename number>
-		    void line_collection<number>::merge_lines(datapipe<number>& pipe,
-		                                              const std::list< data_line<number> >& input, std::deque<double>& axis, std::vector<output_line>& output) const
+		    void line_collection<number>::merge_lines(datapipe<number>& pipe, const std::list< data_line<number> >& input,
+                                                  std::deque<double>& axis, std::vector<output_line>& output) const
 			    {
 		        // step through our plot lines, merging axis data and excluding any lines which are unplottable
 

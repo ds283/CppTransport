@@ -59,7 +59,7 @@
 
 
 #define CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT  "Error processing derived product"
-#define CPPTRANSPORT_MASTER_REPORTED_BY_WORKER       "reported by process"
+#define CPPTRANSPORT_MASTER_REPORTED_BY_WORKER       "reported by worker"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_TASK_MANAGER_H

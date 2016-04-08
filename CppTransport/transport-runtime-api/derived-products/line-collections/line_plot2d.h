@@ -143,7 +143,8 @@ namespace transport
 		      public:
 
 				    //! Generate our derived output
-				    virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args) override;
+				    virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags,
+                                                  slave_message_buffer& messages, local_environment& env, argument_cache& args) override;
 
 
 		      protected:
@@ -397,11 +398,14 @@ namespace transport
 
 
 				template <typename number>
-				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args)
+				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags,
+                                                           slave_message_buffer& messages, local_environment& env, argument_cache& args)
 					{
+            slave_message_context ctx(messages, this->name);
+
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
-						this->obtain_output(pipe, tags, derived_lines);
+						this->obtain_output(pipe, tags, derived_lines, messages);
 
 						// merge this output onto a single axis
 						// this turns our collection of data_lines into a collection of output_lines.

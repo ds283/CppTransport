@@ -75,7 +75,7 @@ namespace transport
 
 		        //! generate data lines for plotting
 		        virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                  const std::list<std::string>& tags) const override;
+		                                  const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label(double t) const;
@@ -147,7 +147,7 @@ namespace transport
 
 		    template <typename number>
 		    void zeta_twopf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-		                                                            const std::list<std::string>& tags) const
+		                                                            const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
 		        // attach our datapipe to an output group
             std::string group = this->attach(pipe, tags);
@@ -199,9 +199,8 @@ namespace transport
                     value = value_type::correlation_function_value;
                   }
 
-                data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
-                                                           this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
-                lines.push_back(line);
+                lines.emplace_back(group, this->x_type, value, w_axis, line_data,
+                                   this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 			        }
 
 		        // detach pipe from output group
@@ -321,7 +320,7 @@ namespace transport
 
 				    //! generate data lines for plotting
 				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-				                              const std::list<std::string>& tags) const override;
+				                              const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
 				    //! generate a LaTeX label
 				    std::string get_LaTeX_label(double t) const;
@@ -395,7 +394,7 @@ namespace transport
 
 		    template <typename number>
 		    void zeta_threepf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                                              const std::list<std::string>& tags) const
+		                                                              const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
 		        // attach our datapipe to an output group
             std::string group = this->attach(pipe, tags);
@@ -441,9 +440,8 @@ namespace transport
                     value = value_type::correlation_function_value;
                   }
 
-		            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
-		                                                       this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
-		            lines.push_back(line);
+                lines.emplace_back(group, this->x_type, value, w_axis, line_data,
+                                   this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 			        }
 
 		        // detach pipe from output group
@@ -563,7 +561,7 @@ namespace transport
 
 		        //! generate data lines for plotting
 		        virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-		                                  const std::list<std::string>& tags) const override;
+		                                  const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
 				    //! generate a LaTeX label
 				    std::string get_LaTeX_label(double t) const;
@@ -637,7 +635,7 @@ namespace transport
 
 		    template <typename number>
 		    void zeta_reduced_bispectrum_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-		                                                                         const std::list<std::string>& tags) const
+		                                                                         const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
 		        // attach our datapipe to an output group
             std::string group = this->attach(pipe, tags);
@@ -661,10 +659,8 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-		            data_line<number> line = data_line<number>(group, this->x_type, value_type::fNL_value, w_axis, line_data,
-		                                                       this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
-
-		            lines.push_back(line);
+                lines.emplace_back(group, this->x_type, value_type::fNL_value, w_axis, line_data,
+                                   this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 			        }
 
 		        // detach pipe from output group

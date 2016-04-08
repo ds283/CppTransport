@@ -69,7 +69,7 @@ namespace transport
 
             //! generate data lines for plotting
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                      const std::list<std::string>& tags) const override;
+                                      const std::list<std::string>& tags, slave_message_buffer& messages) const override;
 
             //! generate a LaTeX label
             std::string get_LaTeX_label() const;
@@ -140,7 +140,7 @@ namespace transport
 
         template <typename number>
         void fNL_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                                   const std::list<std::string>& tags) const
+                                                   const std::list<std::string>& tags, slave_message_buffer& messages) const
           {
             // attach datapipe to an output group
             std::string group = this->attach(pipe, tags);
@@ -156,9 +156,7 @@ namespace transport
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-            data_line<number> line = data_line<number>(group, this->x_type, value_type::fNL_value, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label());
-
-            lines.push_back(line);
+            lines.emplace_back(group, this->x_type, value_type::fNL_value, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 
             // detach pipe from output group
             this->detach(pipe);
