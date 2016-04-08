@@ -301,6 +301,9 @@ namespace transport
                     bool success = true;
                     batcher.begin_assignment();
 
+                    slave_message_buffer messages(this->environment, this->world, [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
+                    slave_message_context msg_ctx(messages, tk->get_name());
+
                     // keep track of wallclock time
                     boost::timer::cpu_timer timer;
 
@@ -314,7 +317,7 @@ namespace transport
                     catch(runtime_exception& xe)
                       {
                         success = false;
-                        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << "-- Exception reported during integration: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
+                        messages.push_back(xe.what());
                       }
 
                     // all work is now done - stop the wallclock timer
@@ -509,7 +512,7 @@ namespace transport
                     for(unsigned int i = 0; i < list.size(); ++i)
                       {
                         // set up message buffer; will push any errors to master node when it goes out of scope
-                        slave_message_buffer messages(this->environment, this->world);
+                        slave_message_buffer messages(this->environment, this->world, [&](const std::string& m) -> void { BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error) << m; });
                         slave_message_context ctx(messages, tk->get_name());
 
                         // get derived product
@@ -538,11 +541,7 @@ namespace transport
                         catch(runtime_exception& xe)
                           {
                             success = false;
-                            BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error) << "!! Exception reported while processing: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
-
-                            std::ostringstream msg;
-                            msg << CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT << " '" << product.get_name() << "'";
-                            messages.push_back(msg.str());
+                            messages.push_back(xe.what());
                           }
 
                         // check that the datapipe was correctly detached
@@ -888,6 +887,9 @@ namespace transport
                     bool success = true;
                     batcher.begin_assignment();
 
+                    slave_message_buffer messages(this->environment, this->world, [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
+                    slave_message_context msg_ctx(messages, tk->get_name());
+
                     // keep track of wallclock time
                     boost::timer::cpu_timer timer;
 
@@ -904,7 +906,7 @@ namespace transport
                     catch(runtime_exception& xe)
                       {
                         success = false;
-                        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << "-- Exception reported during postintegration: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
+                        messages.push_back(xe.what());
                       }
 
                     // inform the batcher we are at the end of this assignment

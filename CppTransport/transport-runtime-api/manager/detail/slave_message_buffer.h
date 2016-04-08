@@ -21,21 +21,28 @@ namespace transport
     class slave_message_buffer
       {
 
+        // ASSOCIATED TYPES
+
+        typedef std::function<void(const std::string&)> notify_handler;
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! constructor caches communicator objects
-        slave_message_buffer(boost::mpi::environment& e, boost::mpi::communicator& w)
+        slave_message_buffer(boost::mpi::environment& e, boost::mpi::communicator& w,
+                             notify_handler h)
           : environment(e),
-            world(w)
+            world(w),
+            handler(std::move(h))
           {
           }
 
         //! disable copying
         slave_message_buffer(const slave_message_buffer&) = delete;
 
-        //! destructor pushes all messages to master
+        //! destructor pushes all messages to master process,
+        //! and waits for replies before exiting
         ~slave_message_buffer();
 
 
@@ -69,6 +76,9 @@ namespace transport
         //! context stack
         std::list<std::string> context;
 
+        //! callback object, used eg. for journalling messages in a log
+        notify_handler handler;
+
       };
 
 
@@ -99,6 +109,10 @@ namespace transport
         // send requests synchronously so they appear in the correct order
         for(const std::string& message : this->messages)
           {
+            // journal error message
+            this->handler(message);
+
+            // push message to master and await acknowledgment
             boost::mpi::request request = this->world.isend(MPI::RANK_MASTER, MPI::REPORT_ERROR, MPI::error_report(message));
             request.wait();
           }
