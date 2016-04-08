@@ -60,7 +60,7 @@ namespace transport
           public:
 
             //! get type
-            virtual derived_line_type get_line_type() const override { return derived_line_type::background; }
+            virtual derived_line_type get_line_type() const override { return derived_line_type::background_line; }
 
 
             // EXTRACT QUERIES

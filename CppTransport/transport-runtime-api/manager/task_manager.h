@@ -175,7 +175,9 @@ namespace transport
 #ifdef TRACE_OUTPUT
                 std::cout << "TRACE_OUTPUT B" << '\n';
 #endif
-                err(xe.what());
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
+                err(msg.str());
               }
 
             try
@@ -198,7 +200,9 @@ namespace transport
 #ifdef TRACE_OUTPUT
                 std::cout << "TRACE_OUTPUT D" << '\n';
 #endif
-                err(xe.what());
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
+                err(msg.str());
               }
 
             try
@@ -217,7 +221,9 @@ namespace transport
 #ifdef TRACE_OUTPUT
                 std::cout << "TRACE_OUTPUT F" << '\n';
 #endif
-                err(xe.what());
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
+                err(msg.str());
               }
 					}
 				else

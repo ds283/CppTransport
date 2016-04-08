@@ -56,7 +56,7 @@
 #define CPPTRANSPORT_AXIS_VALUE_BETA                         "beta"
 #define CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K1                 "squeezing k1/kt"
 #define CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K2                 "squeezing k2/kt"
-#define CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K3                 "squeezing k3#def/kt"
+#define CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K3                 "squeezing k3/kt"
 #define CPPTRANSPORT_AXIS_VALUE_UNSET                        "unset"
 
 #define CPPTRANSPORT_VALUE_TYPE_FIELD                        "field"

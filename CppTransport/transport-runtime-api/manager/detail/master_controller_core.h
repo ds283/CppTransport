@@ -822,7 +822,9 @@ namespace transport
 #ifdef TRACE_OUTPUT
                             std::cout << "TRACE_OUTPUT K" << '\n';
 #endif
-                            this->err(xe.what());
+                            std::ostringstream msg;
+                            msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
+                            err(msg.str());
                           }
                         break;
                       }

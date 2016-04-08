@@ -14,6 +14,8 @@
 #define CPPTRANSPORT_TOO_FEW_WORKERS                 "Too few workers: require at least two worker processes to process a task"
 #define CPPTRANSPORT_UNEXPECTED_MPI                  "Internal error: unexpected MPI message received"
 
+#define CPPTRANSPORT_UNEXPECTED_UNHANDLED            "Internal error: unexpected unhandled exception"
+
 #define CPPTRANSPORT_TASK_MISSING                    "Could not find repository record for task"
 #define CPPTRANSPORT_TASK_CANT_BE_READ               "Can not read repository record for task"
 
