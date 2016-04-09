@@ -589,9 +589,8 @@ namespace transport
             // add prism.js for syntax highlighting
             bundle.emplace_JavaScript_asset("prism/prism.min.js", "prism.min.js");
 
-            // add bootstrap-sortable plugin to make tables sortable
-            bundle.emplace_JavaScript_asset("bootstrap-sortable/moment.min.js", "moment.min.js");
-            bundle.emplace_JavaScript_asset("bootstrap-sortable/bootstrap-sortable.js", "bootstrap-sortable.js");
+            // add DataTables javascript
+            bundle.emplace_JavaScript_asset("DataTables/datatables.min.js", "datatables.min.js");
 
             // add our own JavaScript file utility.js which handles eg. resizing navigation bar on window resize
             bundle.emplace_JavaScript_asset("HTML_assets/utility.js", "utility.js");
@@ -609,8 +608,8 @@ namespace transport
             // add prism.js CSS file
             bundle.emplace_CSS_asset("prism/prism.css", "prism.css");
 
-            // add bootstrap-sortable CSS file
-            bundle.emplace_CSS_asset("bootstrap-sortable/bootstrap-sortable.css", "bootstrap-sortable.css");
+            // add DataTables CSS file
+            bundle.emplace_CSS_asset("DataTables/datatables.min.css", "datatables.min.css");
 
             // add our own CSS file
             bundle.emplace_CSS_asset("HTML_assets/cpptransport.css", "cpptransport.css");
@@ -1409,10 +1408,10 @@ namespace transport
                         tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
-                        table_wrapper.add_attribute("class", "table-responsive");
+                        table_wrapper.add_attribute("class", "table-responsive padded");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed sortable");
+                        table.add_attribute("class", "table table-striped table-condensed sortable-filterable");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -2792,10 +2791,10 @@ namespace transport
             panel_head.add_attribute("class", "panel-heading");
 
             HTML_node table_wrapper("div");
-            table_wrapper.add_attribute("class", "table-responsive");
+            table_wrapper.add_attribute("class", "table-responsive padded");
 
             HTML_node table("table");
-            table.add_attribute("class", "table table-striped table-condensed sortable");
+            table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
 
             HTML_node head("thead");
             HTML_node head_row("tr");

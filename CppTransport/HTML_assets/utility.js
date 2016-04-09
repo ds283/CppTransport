@@ -7,12 +7,15 @@ $(window).on('resize load', function () {
     $('body').css({"padding-top": $(".navbar").height() + 20 + "px"});
 });
 
-// Initialize all tooltips
-$(function () {
-    $('[data-toggle="tooltip"]').tooltip()
-});
+$(document).ready(function () {
+    // Initialize DataTables
+    $('[class~="sortable"]').DataTable({responsive: true, bAutoWidth: false, dom: 't'});
+    $('[class~="sortable-filterable"]').DataTable({responsive: true, bAutoWidth: false, dom: 'fti'});
+    $('[class~="sortable-pageable"]').DataTable({responsive: true, bAutoWidth: false, dom: 'lftip'});
 
-// Initialize all popovers
-$(function () {
-    $('[data-toggle="popover"]').popover()
+    // Initialize all tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Initialize all popovers
+    $('[data-toggle="popover"]').popover();
 });
