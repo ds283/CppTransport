@@ -583,11 +583,15 @@ namespace transport
             bundle.emplace_JavaScript_asset("jQuery/jquery-2.2.2.min.js", "jquery-2.2.2.min.js");
             bundle.emplace_JavaScript_asset("bootstrap/js/bootstrap.min.js", "bootstrap.min.js");
 
-            // add plugin to enable history on bootstrap tabs
+            // add bootstrap-tab-history plugin to enable history on bootstrap tabs
             bundle.emplace_JavaScript_asset("bootstrap-tab-history/bootstrap-tab-history.js", "bootstrap-tab-history.js");
 
             // add prism.js for syntax highlighting
             bundle.emplace_JavaScript_asset("prism/prism.min.js", "prism.min.js");
+
+            // add bootstrap-sortable plugin to make tables sortable
+            bundle.emplace_JavaScript_asset("bootstrap-sortable/moment.min.js", "moment.min.js");
+            bundle.emplace_JavaScript_asset("bootstrap-sortable/bootstrap-sortable.js", "bootstrap-sortable.js");
 
             // add our own JavaScript file utility.js which handles eg. resizing navigation bar on window resize
             bundle.emplace_JavaScript_asset("HTML_assets/utility.js", "utility.js");
@@ -604,6 +608,9 @@ namespace transport
 
             // add prism.js CSS file
             bundle.emplace_CSS_asset("prism/prism.css", "prism.css");
+
+            // add bootstrap-sortable CSS file
+            bundle.emplace_CSS_asset("bootstrap-sortable/bootstrap-sortable.css", "bootstrap-sortable.css");
 
             // add our own CSS file
             bundle.emplace_CSS_asset("HTML_assets/cpptransport.css", "cpptransport.css");
@@ -1083,7 +1090,7 @@ namespace transport
                         table_wrapper.add_attribute("class", "table-responsive");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed");
+                        table.add_attribute("class", "table table-striped table-condensed sortable");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1289,7 +1296,7 @@ namespace transport
                         table_wrapper.add_attribute("class", "table-responsive");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed");
+                        table.add_attribute("class", "table table-striped table-condensed sortable");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1405,7 +1412,7 @@ namespace transport
                         table_wrapper.add_attribute("class", "table-responsive");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed");
+                        table.add_attribute("class", "table table-striped table-condensed sortable");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1467,7 +1474,7 @@ namespace transport
                         table_wrapper.add_attribute("class", "table-responsive");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed");
+                        table.add_attribute("class", "table table-striped table-condensed sortable");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1606,7 +1613,7 @@ namespace transport
                     table_wrapper.add_attribute("class", "table-responsive");
 
                     HTML_node table("table");
-                    table.add_attribute("class", "table table-striped table-condensed");
+                    table.add_attribute("class", "table table-striped table-condensed sortable");
 
                     HTML_node head("thead");
                     HTML_node head_row("tr");
@@ -2788,7 +2795,7 @@ namespace transport
             table_wrapper.add_attribute("class", "table-responsive");
 
             HTML_node table("table");
-            table.add_attribute("class", "table table-striped table-condensed");
+            table.add_attribute("class", "table table-striped table-condensed sortable");
 
             HTML_node head("thead");
             HTML_node head_row("tr");
@@ -3630,7 +3637,7 @@ namespace transport
                             table_wrapper.add_attribute("class", "table-responsive");
 
                             HTML_node table("table");
-                            table.add_attribute("class", "table table-striped table-condensed");
+                            table.add_attribute("class", "table table-striped table-condensed sortable");
 
                             HTML_node head("thead");
                             HTML_node head_row("tr");
