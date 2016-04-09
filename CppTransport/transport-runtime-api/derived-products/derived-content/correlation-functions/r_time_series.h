@@ -154,7 +154,7 @@ namespace transport
 			    {
             std::list< std::string > groups;
 
-						// attach our datapipe to an output group
+						// attach our datapipe to a content group
             std::string group = this->attach(pipe, tags, this->parent_task);
             groups.push_back(group);
 
@@ -184,7 +184,7 @@ namespace transport
 
 				    pipe.detach();
 
-				    // attach datapipe to an output group for the tensor part of r
+				    // attach datapipe to a content group for the tensor part of r
 				    postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
 				    assert(ptk != nullptr);
 
@@ -214,7 +214,7 @@ namespace transport
                                    this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]), messages);
 					    }
 
-				    // detach pipe from output group
+				    // detach pipe from content group
 				    this->detach(pipe);
 			    }
 

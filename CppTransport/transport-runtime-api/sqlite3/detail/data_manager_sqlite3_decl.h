@@ -101,23 +101,23 @@ namespace transport
 
         //! Seed a writer for a twopf task
         virtual void seed_writer(integration_writer<number>& writer, twopf_task<number>* tk,
-                                 const output_group_record<integration_payload>& seed) override;
+                                 const content_group_record<integration_payload>& seed) override;
 
         //! Seed a writer for a threepf task
         virtual void seed_writer(integration_writer<number>& writer, threepf_task<number>* tk,
-                                 const output_group_record<integration_payload>& seed) override;
+                                 const content_group_record<integration_payload>& seed) override;
 
         //! Seed a writer for a zeta twopf task
         virtual void seed_writer(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk,
-                                 const output_group_record<postintegration_payload>& seed) override;
+                                 const content_group_record<postintegration_payload>& seed) override;
 
         //! Seed a writer for a zeta threepf task
         virtual void seed_writer(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk,
-                                 const output_group_record<postintegration_payload>& seed) override;
+                                 const content_group_record<postintegration_payload>& seed) override;
 
         //! Seed a writer for an fNL task
         virtual void seed_writer(postintegration_writer<number>& writer, fNL_task<number>* tk,
-                                 const output_group_record<postintegration_payload>& seed) override;
+                                 const content_group_record<postintegration_payload>& seed) override;
 
 
         // CONSTRUCT BATCHERS  -- implements a 'data_manager' interface
@@ -260,16 +260,16 @@ namespace transport
       public:
 
         //! Attach an integration content group to a datapipe
-        std::unique_ptr< output_group_record<integration_payload> >
+        std::unique_ptr< content_group_record<integration_payload> >
           datapipe_attach_integration_content(datapipe<number>* pipe, integration_content_finder<number>& finder,
                                               const std::string& name, const std::list<std::string>& tags) override;
 
         //! Attach an postintegration content group to a datapipe
-        std::unique_ptr< output_group_record<postintegration_payload> >
+        std::unique_ptr< content_group_record<postintegration_payload> >
           datapipe_attach_postintegration_content(datapipe<number>* pipe, postintegration_content_finder<number>& finder,
                                                   const std::string& name, const std::list<std::string>& tags) override;
 
-        //! Detach an output_group_record from a pipe
+        //! Detach a content_group_record from a pipe
         void datapipe_detach(datapipe<number>* pipe) override;
 
         // PULL

@@ -152,7 +152,7 @@ namespace transport
 			    {
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-		        // attach our datapipe to an output group
+		        // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
@@ -217,7 +217,7 @@ namespace transport
 							    }
 					    }
 
-		        // detach pipe from output group
+		        // detach pipe from content group
 		        this->detach(pipe);
 			    }
 
@@ -416,7 +416,7 @@ namespace transport
 	        {
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-            // attach our datapipe to an output group
+            // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
             // pull wavenumber-axis data
@@ -496,7 +496,7 @@ namespace transport
 	                }
 	            }
 
-            // detach pipe from output group
+            // detach pipe from content group
             this->detach(pipe);
 	        }
 

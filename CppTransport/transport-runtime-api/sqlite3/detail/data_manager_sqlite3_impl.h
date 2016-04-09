@@ -418,7 +418,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::seed_writer(integration_writer<number>& writer, twopf_task<number>* tk,
-                                                   const output_group_record<integration_payload>& seed)
+                                                   const content_group_record<integration_payload>& seed)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -447,7 +447,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::seed_writer(integration_writer<number>& writer, threepf_task<number>* tk,
-                                                   const output_group_record<integration_payload>& seed)
+                                                   const content_group_record<integration_payload>& seed)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -480,7 +480,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::seed_writer(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk,
-                                                   const output_group_record<postintegration_payload>& seed)
+                                                   const content_group_record<postintegration_payload>& seed)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -500,7 +500,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::seed_writer(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk,
-                                                   const output_group_record<postintegration_payload>& seed)
+                                                   const content_group_record<postintegration_payload>& seed)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -521,7 +521,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::seed_writer(postintegration_writer<number>& writer, fNL_task<number>* tk,
-                                                   const output_group_record<postintegration_payload>& seed)
+                                                   const content_group_record<postintegration_payload>& seed)
       {
         assert(false);
       }
@@ -1012,7 +1012,7 @@ namespace transport
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Emplaced derived product " << dest_location;
 
-        // commit this product to the current output group
+        // commit this product to the current content group
         writer.push_content(*product, used_groups);
 
         return(success);
@@ -1581,19 +1581,19 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<integration_payload> >
+    std::unique_ptr< content_group_record<integration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_integration_content(datapipe<number>* pipe, integration_content_finder<number>& finder,
                                                                       const std::string& name, const std::list<std::string>& tags)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
-        // find a suitable output group for this task
-        std::unique_ptr< output_group_record<integration_payload> > group = finder(name, tags);
+        // find a suitable content group for this task
+        std::unique_ptr< content_group_record<integration_payload> > group = finder(name, tags);
 
         integration_payload& payload = group->get_payload();
 
-        // get path to the output group data container
+        // get path to the content group data container
         boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();
 
         this->datapipe_attach_container(pipe, ctr_path);
@@ -1603,19 +1603,19 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<postintegration_payload> >
+    std::unique_ptr< content_group_record<postintegration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_postintegration_content(datapipe<number>* pipe, postintegration_content_finder<number>& finder,
                                                                           const std::string& name, const std::list<std::string>& tags)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
-        // find a suitable output group for this task
-        std::unique_ptr< output_group_record<postintegration_payload> > group = finder(name, tags);
+        // find a suitable content group for this task
+        std::unique_ptr< content_group_record<postintegration_payload> > group = finder(name, tags);
 
         postintegration_payload& payload = group->get_payload();
 
-        // get path to the output group data container
+        // get path to the content group data container
         boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();
 
         this->datapipe_attach_container(pipe, ctr_path);

@@ -229,8 +229,8 @@ namespace transport
 
           public:
 
-            //! Collect a list of output groups used to derive content for this task
-            std::list<std::string> extract_output_groups(const std::list< data_line<number> >& list) const;
+            //! Collect a list of content groups used to derive content for this task
+            std::list<std::string> extract_content_groups(const std::list< data_line<number> >& list) const;
 
 
 						// GET AND SET BASIC LINE PROPERTIES
@@ -593,7 +593,7 @@ namespace transport
 
 
         template <typename number>
-        std::list<std::string> line_collection<number>::extract_output_groups(const std::list< data_line<number> >& list) const
+        std::list<std::string> line_collection<number>::extract_content_groups(const std::list< data_line<number> >& list) const
           {
             std::list<std::string> groups;
 

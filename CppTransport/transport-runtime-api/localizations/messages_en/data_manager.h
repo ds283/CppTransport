@@ -62,11 +62,11 @@
 #define CPPTRANSPORT_DATACTR_DETACH_FAIL                         "Data container error: Could not detach temporary database (backend code="
 
 #define CPPTRANSPORT_DATAMGR_NULL_DATAPIPE                       "Data manager error: Null datapipe specifier"
-#define CPPTRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED            "Data manager error: Attempt to detach datapipe, but no output group is attached"
+#define CPPTRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED            "Data manager error: Attempt to detach datapipe, but no content group is attached"
 #define CPPTRANSPORT_DATAMGR_PIPE_WRONG_CONTENT                  "Data manager error: Datapipe attached to wrong type of content group"
-#define CPPTRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED        "Data manager error: Attempt to attach datapipe, but output group already attached"
+#define CPPTRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED        "Data manager error: Attempt to attach datapipe, but content group already attached"
 #define CPPTRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK              "Data manager error: Attempt to attach datapipe to derivable task of unknown type: task name"
-#define CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED                   "Data manager error: Attempt to use datapipe when no output group is attached"
+#define CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED                   "Data manager error: Attempt to use datapipe when no content group is attached"
 #define CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK                      "Data manager error: Null task supplied when attaching datapipe"
 
 #define CPPTRANSPORT_DATAMGR_CONTAINER_NOT_EXIST                 "Data manager error: Could not find requested data container"

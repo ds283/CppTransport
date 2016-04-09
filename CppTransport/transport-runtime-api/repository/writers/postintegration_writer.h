@@ -198,7 +198,7 @@ namespace transport
 
       public:
 
-        //! pair with a named integration output group; if paired, then the parent group is the partner
+        //! pair with a named integration content group; if paired, then the parent group is the partner
         void set_pair(bool g) { this->paired = g; }
 
         //! query pairing status

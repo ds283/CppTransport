@@ -167,7 +167,7 @@ namespace transport
 				void largest_u2_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
                                                    const std::list<std::string>& tags, slave_message_buffer& messages) const
 					{
-				    // attach our datapipe to an output group
+				    // attach our datapipe to a content group
 				    std::string group = this->attach(pipe, tags);
 
 				    const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);

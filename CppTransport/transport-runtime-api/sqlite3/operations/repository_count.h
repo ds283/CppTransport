@@ -68,7 +68,7 @@ namespace transport
           }
 
 
-        unsigned int count_output_groups(sqlite3* db, const std::string& name)
+        unsigned int count_content_groups(sqlite3* db, const std::string& name)
           {
             return internal_count(db, name, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE, "name");
           }
@@ -78,9 +78,9 @@ namespace transport
           {
             unsigned int integration_groups     = count_integration_groups(db, name);
             unsigned int postintegration_groups = count_postintegration_groups(db, name);
-            unsigned int output_groups          = count_output_groups(db, name);
+            unsigned int content_groups          = count_content_groups(db, name);
 
-            return(integration_groups + postintegration_groups + output_groups);
+            return(integration_groups + postintegration_groups + content_groups);
           }
 
       }   // namespace sqlite3_operations

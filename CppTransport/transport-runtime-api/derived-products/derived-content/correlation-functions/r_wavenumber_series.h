@@ -149,7 +149,7 @@ namespace transport
 			    {
             std::list<std::string> groups;
 
-						// attach datapipe to an output group for the zeta part of r
+						// attach datapipe to a content group for the zeta part of r
             std::string group = this->attach(pipe, tags, this->parent_task);
             groups.push_back(group);
 
@@ -179,7 +179,7 @@ namespace transport
 
 				    pipe.detach();
 
-				    // attach datapipe to an output group for the tensor part of r
+				    // attach datapipe to a content group for the tensor part of r
 				    postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
 				    assert(ptk != nullptr);
 
@@ -211,7 +211,7 @@ namespace transport
                                    this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 					    }
 
-				    // detach pipe from output group
+				    // detach pipe from content group
 				    this->detach(pipe);
 			    }
 

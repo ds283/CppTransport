@@ -62,7 +62,7 @@ namespace transport
         //! export a derived product record in JSON format
         virtual std::string export_JSON_product_record(const std::string& name) = 0;
 
-        //! export an output group record in JSON format
+        //! export a content group record in JSON format
         virtual std::string export_JSON_content_record(const std::string& name) = 0;
 
 
@@ -87,13 +87,13 @@ namespace transport
         virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create a new content group for an integration task from a JSON value
-        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
+        virtual std::unique_ptr< content_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create a new content group for a postintegration task from a JSON value
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
+        virtual std::unique_ptr< content_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create a new content group for an output task from a JSON value
-        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
+        virtual std::unique_ptr< content_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
 
         // SERVICES FOR JSON-BASED REPOSITORIES

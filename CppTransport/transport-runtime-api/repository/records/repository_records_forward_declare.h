@@ -19,7 +19,7 @@ namespace transport
 		template <typename number> class postintegration_task_record;
 		template <typename number> class derived_product_record;
 		template <typename number> class output_task_record;
-    template <typename Payload> class output_group_record;
+    template <typename Payload> class content_group_record;
 
 		class integration_metadata;
 		class derived_content;

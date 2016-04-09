@@ -190,7 +190,7 @@ namespace transport
 		    void background_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                                      const std::list<std::string>& tags, slave_message_buffer& messages) const
           {
-            // attach our datapipe to an output group
+            // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
@@ -217,7 +217,7 @@ namespace transport
                   }
               }
 
-            // detach pipe from output group
+            // detach pipe from content group
             this->detach(pipe);
           }
 
@@ -404,7 +404,7 @@ namespace transport
 		    void twopf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
 		                                                 const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
-            // attach our datapipe to an output group
+            // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
 		        // pull time-axis data
@@ -463,7 +463,7 @@ namespace transport
 			            }
 			        }
 
-            // detach pipe from output group
+            // detach pipe from content group
             this->detach(pipe);
 			    }
 
@@ -658,7 +658,7 @@ namespace transport
         void threepf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
                                                      const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
-            // attach our datapipe to an output group
+            // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
 		        // pull time-axis data
@@ -716,7 +716,7 @@ namespace transport
 			            }
 			        }
 
-            // detach pipe from output group
+            // detach pipe from content group
             this->detach(pipe);
 			    }
 

@@ -163,9 +163,9 @@ namespace transport
             //! get unique ID for derived product
             std::string get_id(const derived_product_record<number>& rec) { return this->tags.get_id(rec); }
 
-            //! get unique ID for output group
+            //! get unique ID for content group
             template <typename Payload>
-            std::string get_id(const output_group_record<Payload>& rec) { return this->tags.get_id(rec); }
+            std::string get_id(const content_group_record<Payload>& rec) { return this->tags.get_id(rec); }
 
 
             // ENVIRONMENT QUERIES

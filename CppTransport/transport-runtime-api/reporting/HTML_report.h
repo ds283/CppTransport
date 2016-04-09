@@ -136,7 +136,7 @@ namespace transport
 
             //! create a worker table for an integration content record
             template <typename number>
-            void write_worker_table(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent);
+            void write_worker_table(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload> rec, HTML_node& parent);
 
             //! typedef for list of configurations-per-worker
             typedef std::map< std::pair<unsigned int, unsigned int>, unsigned int > count_list;
@@ -147,28 +147,28 @@ namespace transport
             //! create visual report of timing statistics
             template <typename number>
             void write_integration_analysis(HTML_report_bundle<number>& bundle,
-                                            const output_group_record<integration_payload> rec, HTML_node& parent);
+                                            const content_group_record<integration_payload> rec, HTML_node& parent);
 
             //! produce bar chart showing number of configurations processed per worker
             template <typename number>
-            void write_worker_chart(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+            void write_worker_chart(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload> rec,
                                     HTML_node& parent, count_list& counts);
 
             //! produce histogram showing distribution of integration times
             template <typename number>
-            void write_timing_histogram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+            void write_timing_histogram(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload> rec,
                                         HTML_node& parent, timing_db& timing_data);
 
             //! write specialized integration analysis for 3pf
             template <typename number>
-            void write_3pf_integration_analysis(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+            void write_3pf_integration_analysis(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload> rec,
                                                 const integration_task_record<number>& irec,
                                                 worker_information_db& worker_db, timing_db& timing_data,
                                                 HTML_node& parent);
 
             //! plot a generic scatter diagram */
             template <typename number, typename Payload>
-            void plot_scatter(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
+            void plot_scatter(HTML_report_bundle<number>& bundle, const content_group_record<Payload>& rec,
                               std::string script, std::string image,
                               const std::list< std::tuple<double, double, double> >& dataset,
                               std::string xlabel, std::string ylabel, std::string colour_label,
@@ -177,19 +177,19 @@ namespace transport
 
             //! for 3pf tasks, write a plot of integration time vs. k_t
             template <typename number>
-            void write_time_kt_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+            void write_time_kt_diagram(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload>& rec,
                                        const integration_task_record<number>& irec,
                                        worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
 
             //! for 3pf tasks, write a plot of integration time vs. alpha
             template <typename number>
-            void write_time_alpha_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+            void write_time_alpha_diagram(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload>& rec,
                                           const integration_task_record<number>& irec,
                                           worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
 
             //! for 3pf tasks, write a plot of integration time vs. beta
             template <typename number>
-            void write_time_beta_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+            void write_time_beta_diagram(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload>& rec,
                                          const integration_task_record<number>& irec,
                                          worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
 
@@ -432,7 +432,7 @@ namespace transport
 
             //! write details for generic output records
             template <typename number, typename Payload>
-            void write_generic_output_record(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
+            void write_generic_output_record(HTML_report_bundle<number>& bundle, const content_group_record<Payload>& rec,
                                              HTML_node& parent);
 
             //! write a seeding label
@@ -1068,14 +1068,14 @@ namespace transport
                     panel.add_element(panel_heading).add_element(panel_body);
                     item.add_element(panel);
 
-                    // write table of output groups, if any are present
-                    const std::list<std::string>& output_groups = rec.get_output_groups();
-                    if(!output_groups.empty())
+                    // write table of content groups, if any are present
+                    const std::list<std::string>& content_groups = rec.get_content_groups();
+                    if(!content_groups.empty())
                       {
                         HTML_node button("button");
                         button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "groups");
                         button.add_attribute("type", "button").add_attribute("class", "btn btn-info topskip");
-                        this->make_badged_text("Output groups", output_groups.size(), button);
+                        this->make_badged_text("Content groups", content_groups.size(), button);
 
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
@@ -1083,7 +1083,7 @@ namespace transport
                         HTML_node tbl_panel("div");
                         tbl_panel.add_attribute("class", "panel panel-info topskip");
 
-                        HTML_node tbl_panel_head("div", "Output groups belonging to this task");
+                        HTML_node tbl_panel_head("div", "Content groups belonging to this task");
                         tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
@@ -1107,7 +1107,7 @@ namespace transport
                         HTML_node body("tbody");
 
                         integration_content_db& content_db = bundle.get_integration_content_db();
-                        for(const std::string& group : output_groups)
+                        for(const std::string& group : content_groups)
                           {
                             integration_content_db::const_iterator t = content_db.find(group);
 
@@ -1273,15 +1273,15 @@ namespace transport
                     panel.add_element(panel_heading).add_element(panel_body);
                     item.add_element(panel);
 
-                    // write table of output groups, if any are present
-                    const std::list<std::string>& output_groups = rec.get_output_groups();
-                    if(!output_groups.empty())
+                    // write table of content groups, if any are present
+                    const std::list<std::string>& content_groups = rec.get_content_groups();
+                    if(!content_groups.empty())
                       {
                         HTML_node button("button");
                         button.add_attribute("data-toggle", "collapse").add_attribute("data-target",
                                                                                       "#" + tag + "groups");
                         button.add_attribute("type", "button").add_attribute("class", "btn btn-info topskip");
-                        this->make_badged_text("Output groups", output_groups.size(), button);
+                        this->make_badged_text("Content groups", content_groups.size(), button);
 
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
@@ -1289,7 +1289,7 @@ namespace transport
                         HTML_node tbl_panel("div");
                         tbl_panel.add_attribute("class", "panel panel-info topskip");
 
-                        HTML_node tbl_panel_head("div", "Output groups belonging to this task");
+                        HTML_node tbl_panel_head("div", "Content groups belonging to this task");
                         tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
@@ -1313,7 +1313,7 @@ namespace transport
                         HTML_node body("tbody");
 
                         postintegration_content_db& content_db = bundle.get_postintegration_content_db();
-                        for(const std::string& group : output_groups)
+                        for(const std::string& group : content_groups)
                           {
                             postintegration_content_db::const_iterator t = content_db.find(group);
 
@@ -1451,15 +1451,15 @@ namespace transport
                         item.add_element(button).add_element(group_list);
                       }
 
-                    // write table of output groups
-                    const std::list<std::string>& output_groups = rec.get_output_groups();
-                    if(!output_groups.empty())
+                    // write table of content groups
+                    const std::list<std::string>& content_groups = rec.get_content_groups();
+                    if(!content_groups.empty())
                       {
                         HTML_node button("button");
                         button.add_attribute("data-toggle", "collapse").add_attribute("data-target",
                                                                                       "#" + tag + "groups");
                         button.add_attribute("type", "button").add_attribute("class", "btn btn-info topskip");
-                        this->make_badged_text("Output groups", output_groups.size(), button);
+                        this->make_badged_text("Content groups", content_groups.size(), button);
 
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
@@ -1467,7 +1467,7 @@ namespace transport
                         HTML_node tbl_panel("div");
                         tbl_panel.add_attribute("class", "panel panel-info topskip");
 
-                        HTML_node tbl_panel_head("div", "Output groups belonging to this task");
+                        HTML_node tbl_panel_head("div", "Content groups belonging to this task");
                         tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
@@ -1489,7 +1489,7 @@ namespace transport
                         HTML_node body("tbody");
 
                         output_content_db& content_db = bundle.get_output_content_db();
-                        for(const std::string& group : output_groups)
+                        for(const std::string& group : content_groups)
                           {
                             output_content_db::const_iterator t = content_db.find(group);
 
@@ -2659,7 +2659,7 @@ namespace transport
 
             for(const integration_content_db::value_type& group : db)
               {
-                const output_group_record<integration_payload>& rec = *group.second;
+                const content_group_record<integration_payload>& rec = *group.second;
                 std::string tag = bundle.get_id(rec);
 
                 HTML_node pane("div");
@@ -2761,7 +2761,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_worker_table(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent)
+        void HTML_report::write_worker_table(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload> rec, HTML_node& parent)
           {
             worker_information_db worker_db = bundle.read_worker_database(rec.get_payload().get_container_path());
             std::string tag = bundle.get_id(rec);
@@ -2788,7 +2788,7 @@ namespace transport
             HTML_node panel("div");
             panel.add_attribute("class", "panel panel-info topskip");
 
-            HTML_node panel_head("div", "Worker summary for this output group");
+            HTML_node panel_head("div", "Worker summary for this content group");
             panel_head.add_attribute("class", "panel-heading");
 
             HTML_node table_wrapper("div");
@@ -2911,7 +2911,7 @@ namespace transport
 
         template <typename number>
         void HTML_report::write_integration_analysis(HTML_report_bundle<number>& bundle,
-                                                     const output_group_record<integration_payload> rec, HTML_node& parent)
+                                                     const content_group_record<integration_payload> rec, HTML_node& parent)
           {
             worker_information_db worker_db = bundle.read_worker_database(rec.get_payload().get_container_path());
             std::string tag = bundle.get_id(rec);
@@ -2947,7 +2947,7 @@ namespace transport
             HTML_node panel("div");
             panel.add_attribute("class", "panel panel-info topskip");
 
-            HTML_node panel_head("div", "Integration analysis for this output group");
+            HTML_node panel_head("div", "Integration analysis for this content group");
             panel_head.add_attribute("class", "panel-heading");
 
             HTML_node panel_body("div");
@@ -3002,7 +3002,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_worker_chart(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+        void HTML_report::write_worker_chart(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload> rec,
                                              HTML_node& parent, count_list& counts)
           {
             boost::filesystem::path relative_asset_loc = bundle.make_asset_directory(rec.get_name());
@@ -3090,7 +3090,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_timing_histogram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+        void HTML_report::write_timing_histogram(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload> rec,
                                                  HTML_node& parent, timing_db& timing_data)
           {
             boost::filesystem::path relative_asset_loc = bundle.make_asset_directory(rec.get_name());
@@ -3140,7 +3140,7 @@ namespace transport
                 HTML_node chart("img", false);
                 chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "report-chart");
                 chart.add_attribute("data-toggle", "popover").add_attribute("data-placement", "top").add_attribute("title", "Timing distribution");
-                chart.add_attribute("data-content", "Shows the distribution of integration times in this output group");
+                chart.add_attribute("data-content", "Shows the distribution of integration times in this content group");
                 parent.add_element(chart);
               }
             else
@@ -3155,7 +3155,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_3pf_integration_analysis(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+        void HTML_report::write_3pf_integration_analysis(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload> rec,
                                                          const integration_task_record<number>& irec,
                                                          worker_information_db& worker_db, timing_db& timing_data,
                                                          HTML_node& parent)
@@ -3179,7 +3179,7 @@ namespace transport
 
 
         template <typename number, typename Payload>
-        void HTML_report::plot_scatter(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
+        void HTML_report::plot_scatter(HTML_report_bundle<number>& bundle, const content_group_record<Payload>& rec,
                                        std::string script, std::string image,
                                        const std::list< std::tuple<double, double, double> >& dataset,
                                        std::string xlabel, std::string ylabel, std::string colour_label,
@@ -3269,7 +3269,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_time_kt_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+        void HTML_report::write_time_kt_diagram(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload>& rec,
                                                 const integration_task_record<number>& irec,
                                                 worker_information_db& worker_db, timing_db& timing_data,
                                                 HTML_node& parent)
@@ -3296,7 +3296,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_time_alpha_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+        void HTML_report::write_time_alpha_diagram(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload>& rec,
                                                    const integration_task_record<number>& irec,
                                                    worker_information_db& worker_db, timing_db& timing_data,
                                                    HTML_node& parent)
@@ -3323,7 +3323,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_time_beta_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+        void HTML_report::write_time_beta_diagram(HTML_report_bundle<number>& bundle, const content_group_record<integration_payload>& rec,
                                                   const integration_task_record<number>& irec,
                                                   worker_information_db& worker_db, timing_db& timing_data,
                                                   HTML_node& parent)
@@ -3365,7 +3365,7 @@ namespace transport
 
             for(const postintegration_content_db::value_type& group : db)
               {
-                const output_group_record<postintegration_payload>& rec = *group.second;
+                const content_group_record<postintegration_payload>& rec = *group.second;
                 std::string tag = bundle.get_id(rec);
 
                 HTML_node pane("div");
@@ -3461,7 +3461,7 @@ namespace transport
 
             for(const output_content_db::value_type& group : db)
               {
-                const output_group_record<output_payload>& rec = *group.second;
+                const content_group_record<output_payload>& rec = *group.second;
                 std::string tag = bundle.get_id(rec);
 
                 HTML_node pane("div");
@@ -3781,7 +3781,7 @@ namespace transport
 
         template <typename number, typename Payload>
         void HTML_report::write_generic_output_record(HTML_report_bundle<number>& bundle,
-                                                      const output_group_record<Payload>& rec, HTML_node& parent)
+                                                      const content_group_record<Payload>& rec, HTML_node& parent)
           {
             boost::posix_time::ptime created = rec.get_creation_time();
             boost::posix_time::ptime edited = rec.get_last_edit_time();
@@ -3907,7 +3907,7 @@ namespace transport
 
                 HTML_node button("button");
                 button.add_attribute("type", "button").add_attribute("class", "btn btn-link").add_attribute("id", button_id);
-                this->make_badged_text(name, t->second->get_output_groups().size(), button);
+                this->make_badged_text(name, t->second->get_content_groups().size(), button);
 
                 parent.add_element(button);
 

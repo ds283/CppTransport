@@ -47,7 +47,7 @@ namespace transport
 
           public:
 
-            bool operator()(const std::pair< const std::string, std::unique_ptr< output_group_record<Payload> > >& a)
+            bool operator()(const std::pair< const std::string, std::unique_ptr< content_group_record<Payload> > >& a)
               {
                 return(a.first == name);
               }
@@ -430,21 +430,21 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository<number>::advise_commit(output_group_record<Payload>* group)
+    void repository<number>::advise_commit(content_group_record<Payload>* group)
       {
         std::ostringstream msg;
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
-        msg << CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
-          << CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "' "
-          << CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
+        msg << CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_A << " '" << group->get_name() << "' "
+          << CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_B << " '" << group->get_task_name() << "' "
+          << CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
         this->message(msg.str());
 
         if(group->get_payload().is_failed())
           {
             std::ostringstream warn;
-            warn << CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_A << " '" << group->get_name() << "' " << CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_B;
+            warn << CPPTRANSPORT_REPO_WARN_CONTENT_GROUP_A << " '" << group->get_name() << "' " << CPPTRANSPORT_REPO_WARN_CONTENT_GROUP_B;
             this->warning(warn.str());
           }
       }
@@ -471,15 +471,15 @@ namespace transport
             notes.emplace_back(this->env.get_userid(), msg.str());
           }
 
-        // create a new, empty output group record
-        std::unique_ptr< output_group_record<integration_payload> >
+        // create a new, empty content group record
+        std::unique_ptr< content_group_record<integration_payload> >
           output_record(this->integration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags, mgr));
 
-        // stamp output group with the correct 'created' time stamp
+        // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate output group with content from the writer
+        // populate content group with content from the writer
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
         output_record->get_payload().set_workgroup_number(writer.get_workgroup_number());
@@ -504,8 +504,8 @@ namespace transport
         // commit new output record
         output_record->commit();
 
-        // add this output group to the integration task record
-        rec->add_new_output_group(output_record->get_name());
+        // add this content group to the integration task record
+        rec->add_new_content_group(output_record->get_name());
         rec->commit();
 
         this->advise_commit(output_record.get());
@@ -532,7 +532,7 @@ namespace transport
               }
 
             std::ostringstream msg1;
-            msg1 << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_B;
+            msg1 << CPPTRANSPORT_REPO_FAILED_TASK_CONTENT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_TASK_CONTENT_GROUP_B;
             this->error(msg1.str());
 
             std::ostringstream msg2;
@@ -563,15 +563,15 @@ namespace transport
         derivable_task<number>* ptk = tk->get_parent_task();
         assert(ptk != nullptr);
 
-        // create a new, empty output group record
-        std::unique_ptr<output_group_record<postintegration_payload>>
+        // create a new, empty content group record
+        std::unique_ptr<content_group_record<postintegration_payload>>
           output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<note>(), tags, mgr));
 
-        // stamp output group with the correct 'created' time stamp
+        // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate output group with content from the writer
+        // populate content group with content from the writer
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
 
@@ -592,7 +592,7 @@ namespace transport
             output_record->get_payload().set_size(0);
           }
 
-        // tag this output group with its contents
+        // tag this content group with its contents
         if(writer.get_products().get_zeta_twopf())   output_record->get_payload().get_precomputed_products().add_zeta_twopf();
         if(writer.get_products().get_zeta_threepf()) output_record->get_payload().get_precomputed_products().add_zeta_threepf();
         if(writer.get_products().get_zeta_redbsp())  output_record->get_payload().get_precomputed_products().add_zeta_redbsp();
@@ -604,8 +604,8 @@ namespace transport
         // commit new output record
         output_record->commit();
 
-        // add this output group to the integration task record
-        rec->add_new_output_group(output_record->get_name());
+        // add this content group to the integration task record
+        rec->add_new_content_group(output_record->get_name());
         rec->commit();
 
         this->advise_commit(output_record.get());
@@ -655,15 +655,15 @@ namespace transport
 
         const std::list<std::string>& tags = writer.get_tags();
 
-        // create a new, empty output group record
-        std::unique_ptr< output_group_record<output_payload> >
+        // create a new, empty content group record
+        std::unique_ptr< content_group_record<output_payload> >
           output_record(this->output_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<note>(), tags, mgr));
 
-        // stamp output group with the correct 'created' time stamp
+        // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate output group with content from the writer
+        // populate content group with content from the writer
         for(const derived_content& c : writer.get_content())
           {
             output_record->get_payload().add_derived_content(c);
@@ -675,8 +675,8 @@ namespace transport
         // commit new output record
         output_record->commit();
 
-        // add this output group to the integration task record
-        rec->add_new_output_group(output_record->get_name());
+        // add this content group to the integration task record
+        rec->add_new_content_group(output_record->get_name());
         rec->commit();
 
         this->advise_commit(output_record.get());
@@ -703,7 +703,7 @@ namespace transport
               }
 
             std::ostringstream msg1;
-            msg1 << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_B;
+            msg1 << CPPTRANSPORT_REPO_FAILED_OUTPUT_CONTENT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_OUTPUT_CONTENT_GROUP_B;
             this->error(msg1.str());
 
             std::ostringstream msg2;
@@ -718,52 +718,52 @@ namespace transport
 
 
     template<typename number>
-    std::unique_ptr< output_group_record<integration_payload> >
+    std::unique_ptr< content_group_record<integration_payload> >
     repository<number>::find_integration_task_output(const std::string& name, const std::list<std::string>& tags)
       {
-        // search for output groups associated with this task
+        // search for content groups associated with this task
         integration_content_db db = this->enumerate_integration_task_content(name);
 
         // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< output_group_record<integration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< output_group_record<integration_payload> > >& group) { return(group.second->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(group.second->check_tags(tags)); } );
 
         if(db.empty())
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
+            msg << CPPTRANSPORT_REPO_NO_MATCHING_CONTENT_GROUPS << " '" << name << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        std::unique_ptr< output_group_record<integration_payload> > rval;
+        std::unique_ptr< content_group_record<integration_payload> > rval;
         (*db.begin()).second.swap(rval);
         return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
     template<typename number>
-    std::unique_ptr< output_group_record<postintegration_payload> >
+    std::unique_ptr< content_group_record<postintegration_payload> >
     repository<number>::find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags)
       {
-        // search for output groups associated with this task
+        // search for content groups associated with this task
         postintegration_content_db db = this->enumerate_postintegration_task_content(name);
 
         // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< output_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< output_group_record<postintegration_payload> > >& group) { return(group.second.get()->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second.get()->check_tags(tags)); } );
 
         if(db.empty())
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
+            msg << CPPTRANSPORT_REPO_NO_MATCHING_CONTENT_GROUPS << " '" << name << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        std::unique_ptr< output_group_record<postintegration_payload> > rval;
+        std::unique_ptr< content_group_record<postintegration_payload> > rval;
         (*db.begin()).second.swap(rval);
         return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }

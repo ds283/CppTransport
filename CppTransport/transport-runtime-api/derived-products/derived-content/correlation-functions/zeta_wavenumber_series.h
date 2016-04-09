@@ -149,7 +149,7 @@ namespace transport
 		    void zeta_twopf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
 		                                                            const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
-		        // attach our datapipe to an output group
+		        // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
@@ -203,7 +203,7 @@ namespace transport
                                    this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 			        }
 
-		        // detach pipe from output group
+		        // detach pipe from content group
 		        this->detach(pipe);
 			    }
 
@@ -396,7 +396,7 @@ namespace transport
 		    void zeta_threepf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                                              const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
-		        // attach our datapipe to an output group
+		        // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
@@ -444,7 +444,7 @@ namespace transport
                                    this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 			        }
 
-		        // detach pipe from output group
+		        // detach pipe from content group
 		        this->detach(pipe);
 			    }
 
@@ -637,7 +637,7 @@ namespace transport
 		    void zeta_reduced_bispectrum_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                                                         const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
-		        // attach our datapipe to an output group
+		        // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
@@ -663,7 +663,7 @@ namespace transport
                                    this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 			        }
 
-		        // detach pipe from output group
+		        // detach pipe from content group
 		        this->detach(pipe);
 			    }
 

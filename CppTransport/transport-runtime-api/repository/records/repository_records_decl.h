@@ -44,8 +44,8 @@
 #include "transport-runtime-api/repository/records/detail/package_decl.h"
 #include "transport-runtime-api/repository/records/detail/task_decl.h"
 #include "transport-runtime-api/repository/records/detail/derived_product_decl.h"
-#include "transport-runtime-api/repository/records/detail/output_group_metadata_decl.h"
-#include "transport-runtime-api/repository/records/detail/output_group_decl.h"
+#include "transport-runtime-api/repository/records/detail/content_group_metadata_decl.h"
+#include "transport-runtime-api/repository/records/detail/content_group_decl.h"
 
 
 

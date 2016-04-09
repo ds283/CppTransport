@@ -35,7 +35,7 @@
 #define CPPTRANSPORT_REPO_COMMIT_FAILURE              "Repository error: could not write database record for"
 #define CPPTRANSPORT_REPO_DESERIALIZE_FAILURE         "Repository error: could not read database record for"
 
-#define CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH     "Repository error: Error while attempting to move output group to failure cache"
+#define CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH     "Repository error: Error while attempting to move content group to failure cache"
 
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A    "Autocommit: integration task"
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B    "requires package"
@@ -53,22 +53,22 @@
 #define CPPTRANSPORT_REPO_NOTE_NO_STATISTICS          "Collection of per-configuration timing statistics disabled because not supported by backend"
 #define CPPTRANSPORT_REPO_NOTE_NO_INTEGRATION         "Cannot be used for integrations over the spectrum or bispectrum because task does not linearly step in k-configurations or the storage policy disables some configurations"
 
-#define CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A   "Committed output group"
-#define CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B   "for task"
-#define CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_C   "tags"
-#define CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D   "at"
+#define CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_A   "Committed content group"
+#define CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_B   "for task"
+#define CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_C   "tags"
+#define CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_D   "at"
 
-#define CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_A         "Output group"
-#define CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_B         "has missing content"
+#define CPPTRANSPORT_REPO_WARN_CONTENT_GROUP_A         "Content group"
+#define CPPTRANSPORT_REPO_WARN_CONTENT_GROUP_B         "has missing content"
 
 #define CPPTRANSPORT_REPO_CONTENT_FAILED_A            "Content group"
 #define CPPTRANSPORT_REPO_CONTENT_FAILED_B            "moved to fail cache in repository"
 
-#define CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_A       "Task"
-#define CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Errors were encountered during integration"
+#define CPPTRANSPORT_REPO_FAILED_TASK_CONTENT_GROUP_A "Task"
+#define CPPTRANSPORT_REPO_FAILED_TASK_CONTENT_GROUP_B "Errors were encountered during integration"
 
-#define CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_A      "Task"
-#define CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_B      "Some derived content could not be generated"
+#define CPPTRANSPORT_REPO_FAILED_OUTPUT_CONTENT_GROUP_A "Task"
+#define CPPTRANSPORT_REPO_FAILED_OUTPUT_CONTENT_GROUP_B "Some derived content could not be generated"
 
 #define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A      "Task"
 #define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B      "Some postprocessing could not be completed"
@@ -90,7 +90,7 @@
 
 #define CPPTRANSPORT_REPO_TASK_NOT_INTEGRATION        "Repository error: derived product requires an integration task"
 #define CPPTRANSPORT_REPO_ZETA_TASK_NOT_DERIVABLE     "Repository error: task named in zeta task is not of derivable-type"
-#define CPPTRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS   "Repository error: no matching output groups for task"
+#define CPPTRANSPORT_REPO_NO_MATCHING_CONTENT_GROUPS   "Repository error: no matching content groups for task"
 
 #define CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL       "Repository error: failed to deserialize task"
 #define CPPTRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL    "Repository error: failed to deserialize derived product"

@@ -45,8 +45,8 @@ namespace transport
 
       public:
 
-        //! find output group
-        std::unique_ptr< output_group_record<integration_payload> > operator()(const std::string& name, const std::list<std::string>& tags);
+        //! find content group
+        std::unique_ptr< content_group_record<integration_payload> > operator()(const std::string& name, const std::list<std::string>& tags);
 
 
         // INTERNAL DATA
@@ -81,8 +81,8 @@ namespace transport
 
       public:
 
-        //! find output group
-        std::unique_ptr< output_group_record<postintegration_payload> > operator()(const std::string& name, const std::list<std::string>& tags);
+        //! find content group
+        std::unique_ptr< content_group_record<postintegration_payload> > operator()(const std::string& name, const std::list<std::string>& tags);
 
 
         // INTERNAL DATA

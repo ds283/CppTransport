@@ -10,7 +10,7 @@
 namespace transport
   {
 
-    constexpr auto CPPTRANSPORT_NODE_TASK_OUTPUT_GROUPS = "output-groups";
+    constexpr auto CPPTRANSPORT_NODE_TASK_CONTENT_GROUPS = "content-groups";
 
     constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TYPE = "type";
     constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TWOPF = "twopf";
@@ -37,7 +37,7 @@ namespace transport
     task_record<number>::task_record(Json::Value& reader, repository_record::handler_package& pkg)
       : repository_record(reader, pkg)
       {
-        Json::Value& group_list = reader[CPPTRANSPORT_NODE_TASK_OUTPUT_GROUPS];
+        Json::Value& group_list = reader[CPPTRANSPORT_NODE_TASK_CONTENT_GROUPS];
         assert(group_list.isArray());
 
         for(Json::Value::iterator t = group_list.begin(); t != group_list.end(); ++t)
@@ -58,14 +58,14 @@ namespace transport
             Json::Value group_element = string;
             group_list.append(group_element);
           }
-        writer[CPPTRANSPORT_NODE_TASK_OUTPUT_GROUPS] = group_list;
+        writer[CPPTRANSPORT_NODE_TASK_CONTENT_GROUPS] = group_list;
 
         this->repository_record::serialize(writer);
       }
 
 
     template <typename number>
-    void task_record<number>::add_new_output_group(const std::string& name)
+    void task_record<number>::add_new_content_group(const std::string& name)
       {
         this->content_groups.push_back(name);
         this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_content, name);
@@ -74,7 +74,7 @@ namespace transport
 
 
     template <typename number>
-    void task_record<number>::delete_output_group(const std::string& name)
+    void task_record<number>::delete_content_group(const std::string& name)
       {
         std::list<std::string>::const_iterator t = std::find(this->content_groups.cbegin(), this->content_groups.cend(), name);
 

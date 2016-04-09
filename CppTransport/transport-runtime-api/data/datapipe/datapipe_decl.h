@@ -236,13 +236,13 @@ namespace transport
         //! Detach a content group from the datapipe
         void detach(void);
 
-        //! Is this datapipe attached to an output group?
+        //! Is this datapipe attached to a content group?
         bool is_attached() const { return(this->type != attachment_type::none_attached); }
 
-		    //! Is this datapipe attached to an integration output group?
+		    //! Is this datapipe attached to an integration content group?
 		    bool is_integration_attached() const { return(this->type == attachment_type::integration_attached); }
 
-		    //! Is this datapipe attached to a postintegration output group?
+		    //! Is this datapipe attached to a postintegration content group?
 		    bool is_postintegration_attached() const { return(this->type == attachment_type::postintegration_attached); }
 
       protected:
@@ -262,11 +262,11 @@ namespace transport
 
 		    //! Get payload record if an integration group is attached; returns nullptr if an integration group is not attached
         //! Raw pointers are used because there is no notion of ownership transfer
-		    output_group_record<integration_payload>* get_attached_integration_record();
+		    content_group_record<integration_payload>* get_attached_integration_record();
 
 		    //! Get payload record if a postintegration group is attached; returns nullptr if a postintegration group is not attached
         //! Raw pointers are used because there is no notion of ownership transfer
-		    output_group_record<postintegration_payload>* get_attached_postintegration_record();
+		    content_group_record<postintegration_payload>* get_attached_postintegration_record();
 
 
         // PULL DATA
@@ -445,11 +445,11 @@ namespace transport
 		    //! what sort of group is currently attached?
 		    attachment_type type;
 
-        //! Attachment point for an integration_payload output group; null if none is attached
-        std::unique_ptr< output_group_record<integration_payload> > attached_integration_group;
+        //! Attachment point for an integration_payload content group; null if none is attached
+        std::unique_ptr< content_group_record<integration_payload> > attached_integration_group;
 
-		    //! Attachment point for a postintegration_payload output group; null if none is attached
-		    std::unique_ptr< output_group_record<postintegration_payload> > attached_postintegration_group;
+		    //! Attachment point for a postintegration_payload content group; null if none is attached
+		    std::unique_ptr< content_group_record<postintegration_payload> > attached_postintegration_group;
 
         //! Number of fields associated with currently attached group
         unsigned int N_fields;
@@ -487,7 +487,7 @@ namespace transport
 
         // CALLBACKS
 
-        //! Utility functions: find output groups, attach/detach output groups, etc.
+        //! Utility functions: find content groups, attach/detach content groups, etc.
         utility_callbacks utilities;
 
 	    };

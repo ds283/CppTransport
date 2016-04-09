@@ -209,13 +209,13 @@ namespace transport
 
 				  protected:
 
-				    //! attach datapipe to output group
+				    //! attach datapipe to content group
             std::string attach(datapipe<number>& pipe, const std::list<std::string>& tags) const ;
 
-						//! attach datapipe to output group, using specified task
+						//! attach datapipe to content group, using specified task
             std::string attach(datapipe<number>& pipe, const std::list<std::string>& tags, derivable_task<number>* tk) const;
 
-				    //! detach datapipe from output group
+				    //! detach datapipe from content group
 				    void detach(datapipe<number>& detach) const;
 
 

@@ -3,8 +3,8 @@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_OUTPUT_GROUP_METADATA_DECL_H
-#define CPPTRANSPORT_OUTPUT_GROUP_METADATA_DECL_H
+#ifndef CPPTRANSPORT_CONTENT_GROUP_METADATA_DECL_H
+#define CPPTRANSPORT_CONTENT_GROUP_METADATA_DECL_H
 
 
 namespace transport
@@ -264,4 +264,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_OUTPUT_GROUP_METADATA_DECL_H
+#endif //CPPTRANSPORT_CONTENT_GROUP_METADATA_DECL_H

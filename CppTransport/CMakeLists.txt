@@ -792,10 +792,10 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES
   transport-runtime-api/repository/records/detail/derived_product_impl.h
   transport-runtime-api/repository/records/detail/metadata_decl.h
   transport-runtime-api/repository/records/detail/metadata_impl.h
-  transport-runtime-api/repository/records/detail/output_group_decl.h
-  transport-runtime-api/repository/records/detail/output_group_impl.h
-  transport-runtime-api/repository/records/detail/output_group_metadata_decl.h
-  transport-runtime-api/repository/records/detail/output_group_metadata_impl.h
+  transport-runtime-api/repository/records/detail/content_group_decl.h
+  transport-runtime-api/repository/records/detail/content_group_impl.h
+  transport-runtime-api/repository/records/detail/content_group_metadata_decl.h
+  transport-runtime-api/repository/records/detail/content_group_metadata_impl.h
   transport-runtime-api/repository/records/detail/package_decl.h
   transport-runtime-api/repository/records/detail/package_impl.h
   transport-runtime-api/repository/records/detail/record_decl.h

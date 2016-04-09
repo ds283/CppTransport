@@ -58,13 +58,13 @@ namespace transport
             bool check_database(const std::string& item, DatabaseType& db);
 
             //! match an integration content group
-            void match_content(const output_group_record<integration_payload>& rec);
+            void match_content(const content_group_record<integration_payload>& rec);
 
             //! match a postintegration content group
-            void match_content(const output_group_record<postintegration_payload>& rec);
+            void match_content(const content_group_record<postintegration_payload>& rec);
 
             //! match an output content group
-            void match_content(const output_group_record<output_payload>& rec);
+            void match_content(const content_group_record<output_payload>& rec);
 
 
             // INTERNAL DATA
@@ -123,7 +123,7 @@ namespace transport
 
 
         template <typename number>
-        void content_group_data<number>::match_content(const output_group_record<integration_payload>& rec)
+        void content_group_data<number>::match_content(const content_group_record<integration_payload>& rec)
           {
             this->type = task_type_to_string(task_type::integration);
             this->task = rec.get_task_name();
@@ -132,7 +132,7 @@ namespace transport
 
 
         template <typename number>
-        void content_group_data<number>::match_content(const output_group_record<postintegration_payload>& rec)
+        void content_group_data<number>::match_content(const content_group_record<postintegration_payload>& rec)
           {
             this->type = task_type_to_string(task_type::postintegration);
             this->task = rec.get_task_name();
@@ -141,7 +141,7 @@ namespace transport
 
 
         template <typename number>
-        void content_group_data<number>::match_content(const output_group_record<output_payload>& rec)
+        void content_group_data<number>::match_content(const content_group_record<output_payload>& rec)
           {
             this->type = task_type_to_string(task_type::output);
             this->task = rec.get_task_name();

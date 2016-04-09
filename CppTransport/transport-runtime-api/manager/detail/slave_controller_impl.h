@@ -445,7 +445,7 @@ namespace transport
         // since there is currently no capacity to process output tasks on a GPU
         this->send_worker_data();
 
-        // set up output-group finder function; must survive throughout lifetime of datapipe
+        // set up content-group finder function; must survive throughout lifetime of datapipe
         integration_content_finder<number>     i_finder(*this->repo);
         postintegration_content_finder<number> p_finder(*this->repo);
 
@@ -491,7 +491,7 @@ namespace transport
 
                     bool success = true;
 
-                    // track output groups we use
+                    // track content groups we use
                     std::list<std::string> content_groups;
 
                     // keep track of wallclock time
@@ -846,7 +846,7 @@ namespace transport
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
-        // set up output-group finder functions; must survive throughout lifetime of datapipe
+        // set up content-group finder functions; must survive throughout lifetime of datapipe
         integration_content_finder<number>     i_finder(*this->repo);
         postintegration_content_finder<number> p_finder(*this->repo);
 

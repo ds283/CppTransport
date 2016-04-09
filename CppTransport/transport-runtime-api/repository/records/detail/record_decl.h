@@ -101,7 +101,7 @@ namespace transport
         //! get creation time
         const boost::posix_time::ptime& get_creation_time() const { return(this->metadata.get_creation_time()); }
 
-        //! set creation time (use with care; needed to timestamp created output group records correctly)
+        //! set creation time (use with care; needed to timestamp created content group records correctly)
         void set_creation_time(const boost::posix_time::ptime& t) { this->metadata.set_creation_time(t); }
 
         //! get last-edit time
@@ -167,7 +167,7 @@ namespace transport
             return(A->get_name() < B->get_name());
           }
 
-      }   // namespace output_group_helper
+      }   // namespace content_group_helper
 
   }   // namespace transport
 

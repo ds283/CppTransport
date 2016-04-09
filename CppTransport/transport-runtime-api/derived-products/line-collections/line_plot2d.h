@@ -430,11 +430,11 @@ namespace transport
 						// generate plot
 				    bool success = this->make_plot(pipe, axis, binned_lines, bin_types, env, args);
 
-            // get output groups which were used
-            std::list<std::string> used_groups = this->extract_output_groups(derived_lines);
+            // get content groups which were used
+            std::list<std::string> used_groups = this->extract_content_groups(derived_lines);
 
 						// commit product (even if the plot failed to generate and we are committing the script - the next line
-						// will prevent the whole output group being committed)
+						// will prevent the whole content group being committed)
 						pipe.commit(this, used_groups);
 
 						if(!success) throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, CPPTRANSPORT_PRODUCT_LINE_PLOT2D_PYTHON_FAIL);

@@ -104,7 +104,7 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   statistics cache evictions         = " << format_time(this->statistics_cache.get_eviction_timer());
         BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   data evictions                     = " << format_time(this->data_cache.get_eviction_timer());
 
-        // detach any attached output group, if necessary
+        // detach any attached content group, if necessary
         switch(this->type)
           {
             case attachment_type::integration_attached:
@@ -269,13 +269,13 @@ namespace transport
           {
             case attachment_type::integration_attached:
               {
-                BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
+                BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
                 break;
               }
 
             case attachment_type::postintegration_attached:
               {
-                BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
+                BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
                 break;
               }
 
@@ -299,14 +299,14 @@ namespace transport
 
 
     template <typename number>
-    output_group_record<integration_payload>* datapipe<number>::get_attached_integration_record()
+    content_group_record<integration_payload>* datapipe<number>::get_attached_integration_record()
       {
         return(this->attached_integration_group.get());   // is null if nothing attached
       }
 
 
     template <typename number>
-    output_group_record<postintegration_payload>* datapipe<number>::get_attached_postintegration_record()
+    content_group_record<postintegration_payload>* datapipe<number>::get_attached_postintegration_record()
       {
         return(this->attached_postintegration_group.get());
       }

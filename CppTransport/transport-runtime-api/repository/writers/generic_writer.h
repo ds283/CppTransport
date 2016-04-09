@@ -186,7 +186,7 @@ namespace transport
         //! Host information
         host_information host_info;
 
-        //! name of output group we are writing to
+        //! name of content group we are writing to
         std::string name;
 
 

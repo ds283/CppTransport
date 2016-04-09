@@ -195,8 +195,8 @@ namespace transport
 						// make table
 						this->make_table(pipe, axis, output_lines, env, args);
 
-            // get output groups which were used
-            std::list<std::string> used_groups = this->extract_output_groups(derived_lines);
+            // get content groups which were used
+            std::list<std::string> used_groups = this->extract_content_groups(derived_lines);
 
 						// commit product
 						pipe.commit(this, used_groups);

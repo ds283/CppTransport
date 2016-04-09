@@ -497,7 +497,7 @@ namespace transport
 		            //! Get path to the log directory
                 boost::filesystem::path       get_logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
 
-		            //! Get tags specified on the command line, used to narrow-down the list of output groups
+		            //! Get tags specified on the command line, used to narrow-down the list of content groups
 		            const std::list<std::string>& get_tags()          const { return(this->tags); }
 
               private:
@@ -860,7 +860,7 @@ namespace transport
                 //! Get workgroup number for paired integration
                 unsigned int                  get_paired_workgroup_number() const { return(this->workgroup_number); }
 
-                //! Get tags specified on the command line, used to narrow-down the list of output groups
+                //! Get tags specified on the command line, used to narrow-down the list of content groups
                 const std::list<std::string>& get_tags()                    const { return(this->tags); }
 
               private:

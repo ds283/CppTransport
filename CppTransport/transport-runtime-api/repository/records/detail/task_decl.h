@@ -49,13 +49,13 @@ namespace transport
         virtual task_type get_type() const = 0;
 
         //! Add new content group
-        void add_new_output_group(const std::string& name);
+        void add_new_content_group(const std::string& name);
 
         //! Remove content group
-        void delete_output_group(const std::string& name);
+        void delete_content_group(const std::string& name);
 
         //! Get content groups
-        const std::list<std::string>& get_output_groups() const { return(this->content_groups); }
+        const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface

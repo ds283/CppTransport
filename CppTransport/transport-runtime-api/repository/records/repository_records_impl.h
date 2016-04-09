@@ -25,8 +25,8 @@
 #include "transport-runtime-api/repository/records/detail/package_impl.h"
 #include "transport-runtime-api/repository/records/detail/task_impl.h"
 #include "transport-runtime-api/repository/records/detail/derived_product_impl.h"
-#include "transport-runtime-api/repository/records/detail/output_group_metadata_impl.h"
-#include "transport-runtime-api/repository/records/detail/output_group_impl.h"
+#include "transport-runtime-api/repository/records/detail/content_group_metadata_impl.h"
+#include "transport-runtime-api/repository/records/detail/content_group_impl.h"
 
 
 

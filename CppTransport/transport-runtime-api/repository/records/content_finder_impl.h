@@ -14,7 +14,7 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<integration_payload> >
+    std::unique_ptr< content_group_record<integration_payload> >
     integration_content_finder<number>::operator()(const std::string& name, const std::list<std::string>& tags)
       {
         return this->repo.find_integration_task_output(name, tags);
@@ -22,7 +22,7 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<postintegration_payload> >
+    std::unique_ptr< content_group_record<postintegration_payload> >
     postintegration_content_finder<number>::operator()(const std::string& name, const std::list<std::string>& tags)
       {
         return this->repo.find_postintegration_task_output(name, tags);

@@ -58,9 +58,9 @@ namespace transport
             //! get unique ID for derived product
             std::string get_id(const derived_product_record<number>& rec);
 
-            //! get unique ID for output group
+            //! get unique ID for content group
             template <typename Payload>
-            std::string get_id(const output_group_record<Payload>& rec);
+            std::string get_id(const content_group_record<Payload>& rec);
 
 
             // INTERNAL DATA
@@ -70,7 +70,7 @@ namespace transport
             typedef std::map< std::string, std::string > package_id_database;
             typedef std::map< std::string, std::string > task_id_database;
             typedef std::map< std::string, std::string > derived_product_id_database;
-            typedef std::map< std::string, std::string > output_group_id_database;
+            typedef std::map< std::string, std::string > content_group_id_database;
 
             //! map of packages to ids
             package_id_database package_db;
@@ -81,8 +81,8 @@ namespace transport
             //! map of derived_products to ids
             derived_product_id_database product_db;
 
-            //! map of output groups to ids
-            output_group_id_database output_db;
+            //! map of content groups to ids
+            content_group_id_database output_db;
 
 
             // UNIQUE COUNTER
@@ -155,9 +155,9 @@ namespace transport
 
         template <typename number>
         template <typename Payload>
-        std::string unique_tags<number>::get_id(const output_group_record<Payload>& rec)
+        std::string unique_tags<number>::get_id(const content_group_record<Payload>& rec)
           {
-            output_group_id_database::const_iterator t = this->output_db.find(rec.get_name());
+            content_group_id_database::const_iterator t = this->output_db.find(rec.get_name());
 
             if(t != this->output_db.end()) return t->second;
 

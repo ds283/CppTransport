@@ -3,8 +3,8 @@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_OUTPUT_GROUP_DECL_H
-#define CPPTRANSPORT_OUTPUT_GROUP_DECL_H
+#ifndef CPPTRANSPORT_CONTENT_GROUP_DECL_H
+#define CPPTRANSPORT_CONTENT_GROUP_DECL_H
 
 
 namespace transport
@@ -13,7 +13,7 @@ namespace transport
     // OUTPUT DESCRIPTORS
 
     //! Derived product descriptor. Used to enumerate the content associated with
-    //! a output task output group.
+    //! a output task content group.
     class derived_content: public serializable
       {
 
@@ -332,7 +332,7 @@ namespace transport
         //! was this integration seeded?
         bool seeded;
 
-        //! if this integration was seeded, parent output group
+        //! if this integration was seeded, parent content group
         std::string seed_group;
 
         //! does this group have per-configuration statistics?
@@ -471,16 +471,16 @@ namespace transport
         //! serial numbers reported failed
         std::list< unsigned int > failed_serials;
 
-        //! Paired to an integration output group?
+        //! Paired to an integration content group?
         bool paired;
 
-        //! Paired output group name, if used
+        //! Paired content group name, if used
         std::string parent_group;
 
         //! was this postintegration seeded?
         bool seeded;
 
-        //! if this postintegration was seeded, parent output group
+        //! if this postintegration was seeded, parent content group
         std::string seed_group;
 
         //! record container size
@@ -580,9 +580,9 @@ namespace transport
       };
 
 
-    //! Output group descriptor. Used to enumerate the output groups available for a particular task
+    //! Content group descriptor. Used to enumerate the content groups available for a particular task
     template <typename Payload>
-    class output_group_record: public repository_record
+    class content_group_record: public repository_record
       {
 
       public:
@@ -602,16 +602,16 @@ namespace transport
 
       public:
 
-        //! Create an output_group_record descriptor
-        output_group_record(const std::string& tn, const paths_group& p,
+        //! Create a content_group_record descriptor
+        content_group_record(const std::string& tn, const paths_group& p,
                             bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                             repository_record::handler_package& pkg);
 
         //! Deserialization constructor
-        output_group_record(Json::Value& reader, const boost::filesystem::path& root, repository_record::handler_package& pkg);
+        content_group_record(Json::Value& reader, const boost::filesystem::path& root, repository_record::handler_package& pkg);
 
-        //! Destroy an output_group_record descriptor
-        ~output_group_record() = default;
+        //! Destroy a content_group_record descriptor
+        ~content_group_record() = default;
 
 
         // GET AND SET METADATA
@@ -684,7 +684,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual output_group_record<Payload>* clone() const override { return new output_group_record<Payload>(static_cast<const output_group_record<Payload>&>(*this)); };
+        virtual content_group_record<Payload>* clone() const override { return new content_group_record<Payload>(static_cast<const content_group_record<Payload>&>(*this)); };
 
 
         // WRITE TO A STREAM
@@ -710,7 +710,7 @@ namespace transport
         //! Parent task associated with this output.
         std::string task;
 
-        //! Flag indicating whether or not this output group is locked
+        //! Flag indicating whether or not this content group is locked
         bool locked;
 
         //! Array of strings representing notes attached to this group
@@ -722,27 +722,27 @@ namespace transport
 
         // PATHS
 
-        //! Paths associated with this output group
+        //! Paths associated with this content group
         paths_group paths;
 
       };
 
 
-    namespace output_group_helper
+    namespace content_group_helper
       {
 
-        // used for sorting a list of output_groups into decreasing chronological order
+        // used for sorting a list of content_groups into decreasing chronological order
         template <typename Payload>
-        bool comparator(const std::unique_ptr< output_group_record<Payload> >& A,
-                        const std::unique_ptr< output_group_record<Payload> >& B)
+        bool comparator(const std::unique_ptr< content_group_record<Payload> >& A,
+                        const std::unique_ptr< content_group_record<Payload> >& B)
           {
             return(A->get_creation_time() > B->get_creation_time());
           }
 
-      }   // namespace output_group_helper
+      }   // namespace content_group_helper
 
 
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_OUTPUT_GROUP_DECL_H
+#endif //CPPTRANSPORT_CONTENT_GROUP_DECL_H

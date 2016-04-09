@@ -243,15 +243,15 @@ namespace transport
 		    void cost_wavenumber<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
                                                    const std::list<std::string>& tags, slave_message_buffer& messages) const
 			    {
-		        // attach our datapipe to an output group
+		        // attach our datapipe to a content group
 		        std::string group = this->attach(pipe, tags);
 
 		        // produce output if we are attached to a record with statistics
-		        // (we don't try to filter to find an output group which does have statistics,
-		        // because we want to match the same output groups as any other content producer)
+		        // (we don't try to filter to find a content group which does have statistics,
+		        // because we want to match the same content groups as any other content producer)
 		        if(pipe.is_integration_attached())
 			        {
-		            output_group_record<integration_payload>* record = pipe.get_attached_integration_record();
+		            content_group_record<integration_payload>* record = pipe.get_attached_integration_record();
 
 		            if(record && record->get_payload().has_statistics())
 			            {
@@ -314,7 +314,7 @@ namespace transport
 			            }
 			        }
 
-		        // detach pipe from output group
+		        // detach pipe from content group
 		        this->detach(pipe);
 			    }
 

@@ -36,24 +36,24 @@ namespace transport
 
         //! template method to extract a content group
         template <typename number, typename Payload>
-        std::unique_ptr< output_group_record<Payload> > get_rw_content_group(repository<number>& repo, const std::string& name, transaction_manager& mgr);
+        std::unique_ptr< content_group_record<Payload> > get_rw_content_group(repository<number>& repo, const std::string& name, transaction_manager& mgr);
 
 
         //! specialize for integration payloads
         template <>
-        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_integration_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_integration_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_integration_content(name, mgr);
           }
@@ -61,19 +61,19 @@ namespace transport
 
         //! specialize for postintegration payloads
         template <>
-        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_postintegration_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_postintegration_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_postintegration_content(name, mgr);
           }
@@ -81,19 +81,19 @@ namespace transport
 
         //! specialize for output payloads
         template <>
-        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_output_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_output_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
+        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_output_content(name, mgr);
           }
@@ -587,7 +587,7 @@ namespace transport
             items[item] = false;
           }
 
-        // only output group records carry tags and notes
+        // only content group records carry tags and notes
         integration_content_db& integration_content = this->cache.get_integration_content_db();
         postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
         output_content_db& output_content = this->cache.get_output_content_db();
@@ -620,8 +620,8 @@ namespace transport
         // step through records in content database
         for(const typename ContentDatabase::value_type& item : db)
           {
-            // ContentDatabase has mapped_type equal to std::unique_ptr< output_group_record<PayloadType> >
-            // to get the output_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
+            // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
+            // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
             const typename ContentDatabase::mapped_type::element_type& record = *item.second;
 
             // step through objects in match list
@@ -778,20 +778,20 @@ namespace transport
                                                                                                           postintegration_content_db& postintegration_content,
                                                                                                           output_content_db& output_content)
       {
-        // build graph representing output groups and their connexions
+        // build graph representing content groups and their connexions
         repository_vertex_map vmap;
         graph_type G;
 
-        // build directed graph representing the dependency chain among output groups
+        // build directed graph representing the dependency chain among content groups
         for(const integration_content_db::value_type& item : integration_content)
           {
-            const output_group_record<integration_payload>& rec = *item.second;
+            const content_group_record<integration_payload>& rec = *item.second;
             vmap.insert(rec.get_name());
           }
 
         for(const postintegration_content_db::value_type& item : postintegration_content)
           {
-            const output_group_record<postintegration_payload>& rec = *item.second;
+            const content_group_record<postintegration_payload>& rec = *item.second;
             vmap.insert(rec.get_name());
 
             // postintegration content will depend on the parent group, but possibly also a seed group
@@ -808,7 +808,7 @@ namespace transport
 
         for(const output_content_db::value_type& item : output_content)
           {
-            const output_group_record<output_payload>& rec = *item.second;
+            const content_group_record<output_payload>& rec = *item.second;
             vmap.insert(rec.get_name());
 
             // postintegration content dependency is summarized in the payload
@@ -883,8 +883,8 @@ namespace transport
         for(typename ContentDatabase::const_iterator t = db.begin(); t != db.end(); /* intentionally empty increment field */)
           {
             const typename ContentDatabase::value_type& item = *t;
-            // ContentDatabase has mapped_type equal to std::unique_ptr< output_group_record<PayloadType> >
-            // to get the output_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
+            // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
+            // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
             const typename ContentDatabase::mapped_type::element_type& record = *item.second;
 
             // step through objects in match list
@@ -995,8 +995,8 @@ namespace transport
         // step through records in content database
         for(const typename ContentDatabase::value_type& item : db)
           {
-            // ContentDatabase has mapped_type equal to std::unique_ptr< output_group_record<PayloadType> >
-            // to get the output_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
+            // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
+            // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
             const typename ContentDatabase::mapped_type::element_type& record = *item.second;
 
             // step through objects in match list
@@ -1064,8 +1064,8 @@ namespace transport
         // step through records in content database
         for(const typename ContentDatabase::value_type& item : db)
           {
-            // ContentDatabase has mapped_type equal to std::unique_ptr< output_group_record<PayloadType> >
-            // to get the output_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
+            // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
+            // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
             const typename ContentDatabase::mapped_type::element_type& record = *item.second;
 
             // step through objects in match list

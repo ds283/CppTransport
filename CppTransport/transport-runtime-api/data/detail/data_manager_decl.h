@@ -135,23 +135,23 @@ namespace transport
 
         //! Seed a writer for a twopf task
         virtual void seed_writer(integration_writer<number>& writer, twopf_task<number>* tk,
-                                 const output_group_record<integration_payload>& seed) = 0;
+                                 const content_group_record<integration_payload>& seed) = 0;
 
         //! Seed a writer for a threepf task
         virtual void seed_writer(integration_writer<number>& writer, threepf_task<number>* tk,
-                                 const output_group_record<integration_payload>& seed) = 0;
+                                 const content_group_record<integration_payload>& seed) = 0;
 
         //! Seed a writer for a zeta twopf task
         virtual void seed_writer(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk,
-                                 const output_group_record<postintegration_payload>& seed) = 0;
+                                 const content_group_record<postintegration_payload>& seed) = 0;
 
         //! Seed a writer for a zeta threepf task
         virtual void seed_writer(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk,
-                                 const output_group_record<postintegration_payload>& seed) = 0;
+                                 const content_group_record<postintegration_payload>& seed) = 0;
 
         //! Seed a writer for an fNL task
         virtual void seed_writer(postintegration_writer<number>& writer, fNL_task<number>* tk,
-                                 const output_group_record<postintegration_payload>& seed) = 0;
+                                 const content_group_record<postintegration_payload>& seed) = 0;
 
 
         // CONSTRUCT BATCHERS
@@ -295,16 +295,16 @@ namespace transport
       public:
 
         //! Attach an integration content group to a datapipe
-        virtual std::unique_ptr< output_group_record<integration_payload> >
+        virtual std::unique_ptr< content_group_record<integration_payload> >
           datapipe_attach_integration_content(datapipe<number>* pipe, integration_content_finder<number>& finder,
                                               const std::string& name, const std::list<std::string>& tags) = 0;
 
         //! Attach an postintegration content group to a datapipe
-        virtual std::unique_ptr< output_group_record<postintegration_payload> >
+        virtual std::unique_ptr< content_group_record<postintegration_payload> >
           datapipe_attach_postintegration_content(datapipe<number>* pipe, postintegration_content_finder<number>& finder,
                                                   const std::string& name, const std::list<std::string>& tags) = 0;
 
-        //! Detach an output_group_record from a pipe
+        //! Detach a content_group_record from a pipe
         virtual void datapipe_detach(datapipe<number>* pipe) = 0;
 
 

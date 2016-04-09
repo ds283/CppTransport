@@ -508,7 +508,7 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+    std::unique_ptr< content_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                                                                      bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                                      transaction_manager& mgr)
       {
@@ -517,14 +517,14 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr)
+    std::unique_ptr< content_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr)
       {
         return this->content_group_record_factory<integration_payload>(reader, mgr);
       }
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+    std::unique_ptr< content_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                                                                              bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                                              transaction_manager& mgr)
       {
@@ -533,14 +533,14 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr)
+    std::unique_ptr< content_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr)
       {
         return this->content_group_record_factory<postintegration_payload>(reader, mgr);
       }
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+    std::unique_ptr< content_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                                                            bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                            transaction_manager& mgr)
       {
@@ -549,7 +549,7 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr)
+    std::unique_ptr< content_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr)
       {
         return this->content_group_record_factory<output_payload>(reader, mgr);
       }
@@ -557,7 +557,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+    std::unique_ptr< content_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                                              bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                              transaction_manager& mgr)
       {
@@ -568,17 +568,17 @@ namespace transport
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2,  counter, storer, this->output_store.string(), CPPTRANSPORT_REPO_OUTPUT_EXISTS),
                                                this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
-        typename output_group_record<Payload>::paths_group paths;
+        typename content_group_record<Payload>::paths_group paths;
         paths.root   = this->get_root_path();
         paths.output = path;
 
-        return std::make_unique< output_group_record<Payload> >(tn, paths, lock, nt, tg, pkg);
+        return std::make_unique< content_group_record<Payload> >(tn, paths, lock, nt, tg, pkg);
       }
 
 
     template <typename number>
     template <typename Payload>
-    std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr)
+    std::unique_ptr< content_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr)
       {
         find_function finder = std::bind(&sqlite3_operations::find_group<Payload>, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
 
@@ -586,7 +586,7 @@ namespace transport
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
                                                this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
-        return std::make_unique< output_group_record<Payload> >(reader, this->root_path, pkg);
+        return std::make_unique< content_group_record<Payload> >(reader, this->root_path, pkg);
       }
 
 
@@ -982,13 +982,13 @@ namespace transport
 
     // Read a named integration content group from the database
     template <typename number>
-    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::query_integration_content(const std::string& name)
+    std::unique_ptr< content_group_record<integration_payload> > repository_sqlite3<number>::query_integration_content(const std::string& name)
       {
         return this->query_content_group<integration_payload>(name, boost::optional<transaction_manager&>());
       }
 
     template <typename number>
-    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::query_integration_content(const std::string& name, transaction_manager& mgr)
+    std::unique_ptr< content_group_record<integration_payload> > repository_sqlite3<number>::query_integration_content(const std::string& name, transaction_manager& mgr)
       {
         return this->query_content_group<integration_payload>(name, boost::optional<transaction_manager&>(mgr));
       }
@@ -996,13 +996,13 @@ namespace transport
 
     // Read a named postintegration content group from the database
     template <typename number>
-    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::query_postintegration_content(const std::string& name)
+    std::unique_ptr< content_group_record<postintegration_payload> > repository_sqlite3<number>::query_postintegration_content(const std::string& name)
       {
         return this->query_content_group<postintegration_payload>(name, boost::optional<transaction_manager&>());
       }
 
     template <typename number>
-    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::query_postintegration_content(const std::string& name, transaction_manager& mgr)
+    std::unique_ptr< content_group_record<postintegration_payload> > repository_sqlite3<number>::query_postintegration_content(const std::string& name, transaction_manager& mgr)
       {
         return this->query_content_group<postintegration_payload>(name, boost::optional<transaction_manager&>(mgr));
       }
@@ -1010,13 +1010,13 @@ namespace transport
 
     // Read a named output content group from the database
     template <typename number>
-    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::query_output_content(const std::string& name)
+    std::unique_ptr< content_group_record<output_payload> > repository_sqlite3<number>::query_output_content(const std::string& name)
       {
         return this->query_content_group<output_payload>(name, boost::optional<transaction_manager&>());
       }
 
     template <typename number>
-    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::query_output_content(const std::string& name, transaction_manager& mgr)
+    std::unique_ptr< content_group_record<output_payload> > repository_sqlite3<number>::query_output_content(const std::string& name, transaction_manager& mgr)
       {
         return this->query_content_group<output_payload>(name, boost::optional<transaction_manager&>(mgr));
       }
@@ -1025,7 +1025,7 @@ namespace transport
     // Read a named content group from the database
     template <typename number>
     template <typename Payload>
-    std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::query_content_group(const std::string& name, boost::optional<transaction_manager&> mgr)
+    std::unique_ptr< content_group_record<Payload> > repository_sqlite3<number>::query_content_group(const std::string& name, boost::optional<transaction_manager&> mgr)
       {
         boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
         Json::Value             root     = this->deserialize_JSON_document(filename);
@@ -1126,7 +1126,7 @@ namespace transport
       }
 
 
-    // Enumerate the output groups available from a named integration task
+    // Enumerate the content groups available from a named integration task
     template <typename number>
     integration_content_db repository_sqlite3<number>::enumerate_integration_task_content(const std::string& name)
       {
@@ -1155,7 +1155,7 @@ namespace transport
       }
 
 
-    // Enumerate the output groups available from a named postintegration task
+    // Enumerate the content groups available from a named postintegration task
     template <typename number>
     postintegration_content_db repository_sqlite3<number>::enumerate_postintegration_task_content(const std::string& name)
       {
@@ -1184,7 +1184,7 @@ namespace transport
       }
 
 
-    // Enumerate the output groups available from a named output task
+    // Enumerate the content groups available from a named output task
     template <typename number>
     output_content_db repository_sqlite3<number>::enumerate_output_task_content(const std::string& name)
       {
@@ -1291,7 +1291,7 @@ namespace transport
             Json::StreamWriterBuilder builder;
             return Json::writeString(builder, root);
           }
-        else if(sqlite3_operations::count_output_groups(this->db, name) > 0)
+        else if(sqlite3_operations::count_content_groups(this->db, name) > 0)
           {
             boost::filesystem::path filename = sqlite3_operations::find_group<output_payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
@@ -1350,7 +1350,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository_sqlite3<number>::enumerate_content_groups(std::map< std::string, std::unique_ptr< output_group_record<Payload> > >& db, const std::string name)
+    void repository_sqlite3<number>::enumerate_content_groups(std::map< std::string, std::unique_ptr< content_group_record<Payload> > >& db, const std::string name)
       {
         std::list<std::string> group_names;
 
@@ -1369,14 +1369,14 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository_sqlite3<number>::content_groups_from_list(const std::list<std::string>& list, std::map< std::string, std::unique_ptr< output_group_record<Payload> > >& db)
+    void repository_sqlite3<number>::content_groups_from_list(const std::list<std::string>& list, std::map< std::string, std::unique_ptr< content_group_record<Payload> > >& db)
       {
         for(const std::string& name : list)
           {
             boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
 
-            std::unique_ptr< output_group_record<Payload> > group = this->template content_group_record_factory<Payload>(root, boost::optional<transaction_manager&>());
+            std::unique_ptr< content_group_record<Payload> > group = this->template content_group_record_factory<Payload>(root, boost::optional<transaction_manager&>());
             db.insert( std::make_pair(group->get_name(), std::move(group)) );
           }
       }
@@ -1387,9 +1387,9 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository_sqlite3<number>::delete_content(task_record<number>& rec, output_group_record<Payload>& group_rec, transaction_manager& mgr)
+    void repository_sqlite3<number>::delete_content(task_record<number>& rec, content_group_record<Payload>& group_rec, transaction_manager& mgr)
       {
-        // verify that output group is unlocked
+        // verify that content group is unlocked
         if(group_rec.get_lock_status())
           {
             std::ostringstream msg;
@@ -1398,7 +1398,7 @@ namespace transport
           }
 
         // delete this content group from the task record
-        rec.delete_output_group(group_rec.get_name());
+        rec.delete_content_group(group_rec.get_name());
         rec.commit();
 
         // delete this content group from content table in the SQLite backend
@@ -1429,8 +1429,8 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        // query for output group record in readonly mode
-        std::unique_ptr< output_group_record<integration_payload> > group_rec = this->query_integration_content(name);
+        // query for content group record in readonly mode
+        std::unique_ptr< content_group_record<integration_payload> > group_rec = this->query_integration_content(name);
 
         if(group_rec) this->delete_content(*raw_rec, *group_rec, mgr);
       }
@@ -1449,8 +1449,8 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        // query for output group record in readonly mode
-        std::unique_ptr< output_group_record<postintegration_payload> > group_rec = this->query_postintegration_content(name);
+        // query for content group record in readonly mode
+        std::unique_ptr< content_group_record<postintegration_payload> > group_rec = this->query_postintegration_content(name);
 
         if(group_rec) this->delete_content(*raw_rec, *group_rec, mgr);
       }
@@ -1469,8 +1469,8 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        // query for output group record in readonly mode
-        std::unique_ptr< output_group_record<output_payload> > group_rec = this->query_output_content(name);
+        // query for content group record in readonly mode
+        std::unique_ptr< content_group_record<output_payload> > group_rec = this->query_output_content(name);
 
         if(group_rec) this->delete_content(*raw_rec, *group_rec, mgr);
       }
@@ -1751,7 +1751,7 @@ namespace transport
       {
         // loop through hot derived content
         // for each item, set up a new derived_content_writer which is populated with the configuration of the hot writer.
-        // However, in recovery mode, the output group is always treated as if it has failed.
+        // However, in recovery mode, the content group is always treated as if it has failed.
 
         // When we commit the writer, it will automatically move to the fail cache
 

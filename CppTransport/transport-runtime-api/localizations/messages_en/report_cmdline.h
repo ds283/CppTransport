@@ -55,7 +55,7 @@ constexpr auto CPPTRANSPORT_REPORT_PARENT_TASK                    = "Parent task
 constexpr auto CPPTRANSPORT_REPORT_KCONFIG_DB                     = "k-config database";
 constexpr auto CPPTRANSPORT_REPORT_USES_PACKAGE                   = "Initial conditions package";
 
-constexpr auto CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME              = "Output group";
+constexpr auto CPPTRANSPORT_REPORT_CONTENT_GROUP_NAME              = "Content group";
 constexpr auto CPPTRANSPORT_REPORT_OUTPUT_CREATED                 = "Created";
 constexpr auto CPPTRANSPORT_REPORT_OUTPUT_EDITED                  = "Last update";
 constexpr auto CPPTRANSPORT_REPORT_OUTPUT_FAILED                  = "Complete";
@@ -104,7 +104,7 @@ constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_GLOBAL_MAX             = "Max integra
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONFIGURATIONS         = "Configurations";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_FAILURES               = "Failures";
 
-constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONTENT_GROUPS         = "Summary of output groups used";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONTENT_GROUPS         = "Summary of content groups used";
 
 
 #endif //CPPTRANSPORT_MESSAGES_EN_REPORT_CMDLINE_H

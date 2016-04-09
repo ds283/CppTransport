@@ -650,7 +650,7 @@ namespace transport
             std::unique_ptr< task_record<number> > rec = this->repo->query_task(*t);
             if(rec)
               {
-                if(rec->get_output_groups().size() > 0)
+                if(rec->get_content_groups().size() > 0)
                   {
 //                    std::cout << "Task '" << *t << "' is needed, but already has content; evicting from list" << '\n';
                     t = required_tasks.erase(t);

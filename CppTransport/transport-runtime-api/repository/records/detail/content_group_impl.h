@@ -3,8 +3,8 @@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_OUTPUT_GROUP_IMPL_H
-#define CPPTRANSPORT_OUTPUT_GROUP_IMPL_H
+#ifndef CPPTRANSPORT_CONTENT_GROUP_IMPL_H
+#define CPPTRANSPORT_CONTENT_GROUP_IMPL_H
 
 
 namespace transport
@@ -55,11 +55,11 @@ namespace transport
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_GROUPS_SUMMARY = "content-groups-summary";
 
 
-    // OUTPUT_GROUP METHODS
+    // CONTENT_GROUP METHODS
 
 
     template <typename Payload>
-    output_group_record<Payload>::output_group_record(const std::string& tn, const paths_group& p,
+    content_group_record<Payload>::content_group_record(const std::string& tn, const paths_group& p,
                                                       bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                       repository_record::handler_package& pkg)
       : repository_record(pkg),
@@ -78,25 +78,25 @@ namespace transport
 
     template <typename Payload>
     template <typename Stream>
-    void output_group_record<Payload>::write(Stream& out) const
+    void content_group_record<Payload>::write(Stream& out) const
       {
-        out << CPPTRANSPORT_OUTPUT_GROUP;
-        if(this->locked) out << ", " << CPPTRANSPORT_OUTPUT_GROUP_LOCKED;
+        out << CPPTRANSPORT_CONTENT_GROUP;
+        if(this->locked) out << ", " << CPPTRANSPORT_CONTENT_GROUP_LOCKED;
         out << '\n';
-        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->paths.root << '\n';
-        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->paths.output << '\n';
+        out << "  " << CPPTRANSPORT_CONTENT_GROUP_REPO_ROOT << " = " << this->paths.root << '\n';
+        out << "  " << CPPTRANSPORT_CONTENT_GROUP_DATA_ROOT << " = " << this->paths.output << '\n';
 
         unsigned int count = 0;
 
         for(const std::string& note : this->notes)
           {
-            out << "  " << CPPTRANSPORT_OUTPUT_GROUP_NOTE << " " << count << '\n';
+            out << "  " << CPPTRANSPORT_CONTENT_GROUP_NOTE << " " << count << '\n';
             out << "    " << note << '\n';
             count++;
           }
 
         count = 0;
-        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_TAGS << ": ";
+        out << "  " << CPPTRANSPORT_CONTENT_GROUP_TAGS << ": ";
         for(const std::string& tag : this->tags)
           {
             if(count > 0) out << ", ";
@@ -112,7 +112,7 @@ namespace transport
 
 
     template <typename Payload>
-    bool output_group_record<Payload>::check_tags(std::list<std::string> match_tags) const
+    bool content_group_record<Payload>::check_tags(std::list<std::string> match_tags) const
       {
         // remove all this group's tags from the matching set.
         // If any remain after this process, then the match set isn't a subset of the group's tags.
@@ -126,7 +126,7 @@ namespace transport
 
 
     template <typename Payload>
-    output_group_record<Payload>::output_group_record(Json::Value& reader, const boost::filesystem::path& root,
+    content_group_record<Payload>::content_group_record(Json::Value& reader, const boost::filesystem::path& root,
                                                       repository_record::handler_package& pkg)
       : repository_record(reader, pkg),
         payload(reader)
@@ -156,7 +156,7 @@ namespace transport
 
 
     template <typename Payload>
-    void output_group_record<Payload>::serialize(Json::Value& writer) const
+    void content_group_record<Payload>::serialize(Json::Value& writer) const
       {
         writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_CONTENT);
 
@@ -190,7 +190,7 @@ namespace transport
 
 
     template <typename Payload>
-    void output_group_record<Payload>::add_note(const std::string& note)
+    void content_group_record<Payload>::add_note(const std::string& note)
       {
         this->notes.emplace_back(this->handlers.env.get_userid(), note);
         this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_note);
@@ -199,7 +199,7 @@ namespace transport
 
 
     template <typename Payload>
-    void output_group_record<Payload>::set_lock_status(bool g)
+    void content_group_record<Payload>::set_lock_status(bool g)
       {
         this->locked = g;
         this->metadata.add_history_item(this->handlers.env.get_userid(), g ? history_actions::locked : history_actions::unlocked);
@@ -208,7 +208,7 @@ namespace transport
 
 
     template <typename Payload>
-    void output_group_record<Payload>::add_tag(const std::string& tag)
+    void content_group_record<Payload>::add_tag(const std::string& tag)
       {
         this->tags.push_back(tag);
         this->tags.sort();
@@ -220,7 +220,7 @@ namespace transport
 
 
     template <typename Payload>
-    void output_group_record<Payload>::remove_tag(const std::string& tag)
+    void content_group_record<Payload>::remove_tag(const std::string& tag)
       {
         std::list<std::string>::const_iterator it = std::find(this->tags.cbegin(), this->tags.cend(), tag);
         if(it != this->tags.end())
@@ -233,7 +233,7 @@ namespace transport
 
 
     template <typename Payload>
-    void output_group_record<Payload>::remove_note(unsigned int number)
+    void content_group_record<Payload>::remove_note(unsigned int number)
       {
         std::list<note>::const_iterator it = this->notes.cbegin();
         while(number > 0 && it != this->notes.end())
@@ -251,18 +251,18 @@ namespace transport
       }
 
 
-    // output an output_group_record descriptor to a standard stream
+    // output a content_group_record descriptor to a standard stream
     template <typename Payload, typename Char, typename Traits>
-    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const output_group_record<Payload>& group)
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const content_group_record<Payload>& group)
       {
         group.write(out);
         return (out);
       }
 
 
-    // output an output_group_record descriptor to a standard stream
+    // output a content_group_record descriptor to a standard stream
     template <typename Payload, typename Char, typename Traits, typename Allocator>
-    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const output_group_record<Payload>& group)
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const content_group_record<Payload>& group)
       {
         group.write(out);
         return (out);
@@ -545,4 +545,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_OUTPUT_GROUP_IMPL_H
+#endif //CPPTRANSPORT_CONTENT_GROUP_IMPL_H

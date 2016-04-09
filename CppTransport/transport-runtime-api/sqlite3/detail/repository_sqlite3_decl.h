@@ -161,15 +161,15 @@ namespace transport
 
         //! Read an integration content group specification from the database
         //! Without a transaction_manager object, the returned record is readonly
-        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name) override;
+        virtual std::unique_ptr< content_group_record<integration_payload> > query_integration_content(const std::string& name) override;
 
         //! Read a postintegration content group specification from the database
         //! Without a transaction_manager object, the returned record is readonly
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name) override;
+        virtual std::unique_ptr< content_group_record<postintegration_payload> > query_postintegration_content(const std::string& name) override;
 
         //! Read an output content group specification from the database
         //! Without a transaction_manager object, the returned record is readonly
-        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name) override;
+        virtual std::unique_ptr< content_group_record<output_payload> > query_output_content(const std::string& name) override;
 
         // READ/WRITE
 
@@ -183,13 +183,13 @@ namespace transport
         virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, transaction_manager& mgr) override;
 
         //! Read an integration content group specification from the database
-        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name, transaction_manager& mgr) override;
+        virtual std::unique_ptr< content_group_record<integration_payload> > query_integration_content(const std::string& name, transaction_manager& mgr) override;
 
         //! Read a postintegration content group specification from the database
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name, transaction_manager& mgr) override;
+        virtual std::unique_ptr< content_group_record<postintegration_payload> > query_postintegration_content(const std::string& name, transaction_manager& mgr) override;
 
         //! Read an output content group specification from the database
-        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name, transaction_manager& mgr) override;
+        virtual std::unique_ptr< content_group_record<output_payload> > query_output_content(const std::string& name, transaction_manager& mgr) override;
 
       protected:
 
@@ -204,7 +204,7 @@ namespace transport
 
         //! Generic method to read a content group from the database
         template <typename Payload>
-        std::unique_ptr< output_group_record<Payload> > query_content_group(const std::string& name, boost::optional<transaction_manager&> mgr);
+        std::unique_ptr< content_group_record<Payload> > query_content_group(const std::string& name, boost::optional<transaction_manager&> mgr);
 
 
         // ENUMERATE DATABASE RECORDS
@@ -226,27 +226,27 @@ namespace transport
 
         // ENUMERATE OUTPUT GROUPS
 
-        //! Enumerate the output groups available from a named integration task; all records are returned in a readonly state, so if updates
+        //! Enumerate the content groups available from a named integration task; all records are returned in a readonly state, so if updates
         //! are required each individual record must be re-queried using the query_*() methods
         virtual integration_content_db enumerate_integration_task_content(const std::string& name) override;
 
-        //! Enumerate all integration output groups; all records are returned in a readonly state, so if updates
+        //! Enumerate all integration content groups; all records are returned in a readonly state, so if updates
         //! are required each individual record must be re-queried using the query_*() methods
         virtual integration_content_db enumerate_integration_task_content() override;
 
-        //! Enumerate the output groups available for a named postintegration task; all records are returned in a readonly state, so if updates
+        //! Enumerate the content groups available for a named postintegration task; all records are returned in a readonly state, so if updates
         //! are required each individual record must be re-queried using the query_*() methods
         virtual postintegration_content_db enumerate_postintegration_task_content(const std::string& name) override;
 
-        //! Enumerate all postintegration output groups; all records are returned in a readonly state, so if updates
+        //! Enumerate all postintegration content groups; all records are returned in a readonly state, so if updates
         //! are required each individual record must be re-queried using the query_*() methods
         virtual postintegration_content_db enumerate_postintegration_task_content() override;
 
-        //! Enumerate the output groups available from a named output task; all records are returned in a readonly state, so if updates
+        //! Enumerate the content groups available from a named output task; all records are returned in a readonly state, so if updates
         //! are required each individual record must be re-queried using the query_*() methods
         virtual output_content_db enumerate_output_task_content(const std::string& name) override;
 
-        //! Enumerate all output groups; all records are returned in a readonly state, so if updates
+        //! Enumerate all content groups; all records are returned in a readonly state, so if updates
         //! are required each individual record must be re-queried using the query_*() methods
         virtual output_content_db enumerate_output_task_content() override;
 
@@ -270,7 +270,7 @@ namespace transport
 
         //! generic utility function to remove a content group from a task record
         template <typename Payload>
-        void delete_content(task_record<number>& rec, output_group_record<Payload>& group_rec, transaction_manager& mgr);
+        void delete_content(task_record<number>& rec, content_group_record<Payload>& group_rec, transaction_manager& mgr);
 
 
         // ENUMERATE INFLIGHT TASKS
@@ -343,23 +343,23 @@ namespace transport
         virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod, transaction_manager& mgr) override;
 
         //! Create a new content group for an integration task
-        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+        virtual std::unique_ptr< content_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                                                      bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                      transaction_manager& mgr) override;
 
         //! Create a new content group for a postintegration task
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+        virtual std::unique_ptr< content_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                                                              bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                                              transaction_manager& mgr) override;
 
         //! Create a new content group for an output task
-        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+        virtual std::unique_ptr< content_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                                            bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                                            transaction_manager& mgr) override;
 
         //! Implementation -- Create a new content group record
         template <typename Payload>
-        std::unique_ptr< output_group_record<Payload> > content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+        std::unique_ptr< content_group_record<Payload> > content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                      bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
                                                                                      transaction_manager& mgr);
 
@@ -383,17 +383,17 @@ namespace transport
         virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create a new content group for an integration task from a JSON value
-        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
+        virtual std::unique_ptr< content_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create a new content group for a postintegration task from a JSON value
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
+        virtual std::unique_ptr< content_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create a new content group for an output task from a JSON value
-        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
+        virtual std::unique_ptr< content_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Implementation -- Create a new content group record
         template <typename Payload>
-        std::unique_ptr< output_group_record<Payload> > content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr);
+        std::unique_ptr< content_group_record<Payload> > content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr);
 
 
         // UTILITY FUNCTIONS
@@ -411,11 +411,11 @@ namespace transport
 
         //! Enumerate content groups for a named task, or all tasks of a specified payload if no name is provided
         template <typename Payload>
-        void enumerate_content_groups(std::map< std::string, std::unique_ptr < output_group_record<Payload> > >& db, const std::string name="");
+        void enumerate_content_groups(std::map< std::string, std::unique_ptr < content_group_record<Payload> > >& db, const std::string name="");
 
         //! Build a database of content groups from a list of names
         template <typename Payload>
-        void content_groups_from_list(const std::list<std::string>& list, std::map< std::string, std::unique_ptr < output_group_record<Payload> > >& db);
+        void content_groups_from_list(const std::list<std::string>& list, std::map< std::string, std::unique_ptr < content_group_record<Payload> > >& db);
 
 
         // COMMIT CALLBACK METHODS FOR REPOSITORY RECORDS
@@ -523,7 +523,7 @@ namespace transport
         //! relative BOOST path to derived product store
         boost::filesystem::path product_store;
 
-        //! relative BOOST path to output group store
+        //! relative BOOST path to content group store
         boost::filesystem::path output_store;
 
 

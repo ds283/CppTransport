@@ -152,7 +152,7 @@ namespace transport
         void zeta_twopf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                                           const std::list<std::string>& tags, slave_message_buffer& messages) const
           {
-            // attach datapipe to an output group
+            // attach datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
@@ -194,7 +194,7 @@ namespace transport
                                    this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t), messages);
               }
 
-            // detach pipe from output group
+            // detach pipe from content group
             this->detach(pipe);
           }
 
@@ -385,7 +385,7 @@ namespace transport
         void zeta_threepf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                                             const std::list<std::string>& tags, slave_message_buffer& messages) const
           {
-            // attach our datapipe to an output group
+            // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
@@ -426,7 +426,7 @@ namespace transport
                                    this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t), messages);
               }
 
-            // detach pipe from output group
+            // detach pipe from content group
             this->detach(pipe);
           }
 
@@ -617,7 +617,7 @@ namespace transport
         void zeta_reduced_bispectrum_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                                                        const std::list<std::string>& tags, slave_message_buffer& messages) const
           {
-            // attach our datapipe to an output group
+            // attach our datapipe to a content group
             std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
@@ -641,7 +641,7 @@ namespace transport
                                    this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t), messages);
               }
 
-            // detach pipe from output group
+            // detach pipe from content group
             this->detach(pipe);
           }
 

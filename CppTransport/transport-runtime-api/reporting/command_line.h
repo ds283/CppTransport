@@ -73,19 +73,19 @@ namespace transport
               };
 
             template <>
-            struct record_traits< output_group_record<integration_payload> >
+            struct record_traits< content_group_record<integration_payload> >
               {
                 std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_INTEGRATION); }
               };
 
             template <>
-            struct record_traits< output_group_record<postintegration_payload> >
+            struct record_traits< content_group_record<postintegration_payload> >
               {
                 std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_POSTINTEGRATION); }
               };
 
             template <>
-            struct record_traits< output_group_record<output_payload> >
+            struct record_traits< content_group_record<output_payload> >
               {
                 std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_OUTPUT); }
               };
@@ -207,19 +207,19 @@ namespace transport
 
             //! report on an integration content group
             template <typename number>
-            void report_object(const output_group_record<integration_payload>& rec, repository_cache<number>& cache);
+            void report_object(const content_group_record<integration_payload>& rec, repository_cache<number>& cache);
 
             //! report on a postintegration content group
             template <typename number>
-            void report_object(const output_group_record<postintegration_payload>& rec, repository_cache<number>& cache);
+            void report_object(const content_group_record<postintegration_payload>& rec, repository_cache<number>& cache);
 
             //! report on an output content group
             template <typename number>
-            void report_object(const output_group_record<output_payload>& rec, repository_cache<number>& cache);
+            void report_object(const content_group_record<output_payload>& rec, repository_cache<number>& cache);
 
             //! report provenance data for specified content group
             template <typename number>
-            void report_provenance(const output_group_record<output_payload>& rec, repository_cache<number>& cache);
+            void report_provenance(const content_group_record<output_payload>& rec, repository_cache<number>& cache);
 
 
             // GENERIC REPORTING FUNCTIONS
@@ -234,10 +234,10 @@ namespace transport
             //! (creation time, last edit time, API level)
             void report_record_generic(const repository_record& rec);
 
-            //! report details for a generic output group record
+            //! report details for a generic content group record
             //! (used instead of report_record_generic() and subsumes its functionality)
             template <typename Payload>
-            void report_output_record_generic(const output_group_record<Payload>& rec, std::string type="");
+            void report_output_record_generic(const content_group_record<Payload>& rec, std::string type="");
 
             //! compose tags into a single string
             std::string compose_tag_list(const std::list<std::string>& tag_list);
@@ -333,7 +333,7 @@ namespace transport
                 task.push_back(tk.first);
                 last_edit.push_back(boost::posix_time::to_simple_string(tk.second->get_last_edit_time()));
                 type.push_back(task_type_to_string(tk.second->get_type()));
-                num_groups.push_back(boost::lexical_cast<std::string>(tk.second->get_output_groups().size()));
+                num_groups.push_back(boost::lexical_cast<std::string>(tk.second->get_content_groups().size()));
               }
 
             columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_TASK_NAME, column_justify::left);
@@ -617,10 +617,10 @@ namespace transport
 
             kv.write(std::cout);
 
-            // write table of output groups
-            const std::list<std::string>& output_groups = rec.get_output_groups();
+            // write table of content groups
+            const std::list<std::string>& content_groups = rec.get_content_groups();
 
-            if(!output_groups.empty())
+            if(!content_groups.empty())
               {
                 std::cout << '\n';
 
@@ -632,7 +632,7 @@ namespace transport
                 std::vector<std::string> size;
 
                 integration_content_db& db = cache.get_integration_content_db();
-                for(const std::string& group : output_groups)
+                for(const std::string& group : content_groups)
                   {
                     integration_content_db::const_iterator t = db.find(group);
                     name.push_back(group);
@@ -653,7 +653,7 @@ namespace transport
                       }
                   }
 
-                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_CONTENT_GROUP_NAME, column_justify::left);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_CREATED, column_justify::right);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_FAILED, column_justify::right);
@@ -689,10 +689,10 @@ namespace transport
 
             kv.write(std::cout);
 
-            // write table of output groups
-            const std::list<std::string>& output_groups = rec.get_output_groups();
+            // write table of content groups
+            const std::list<std::string>& content_groups = rec.get_content_groups();
 
-            if(!output_groups.empty())
+            if(!content_groups.empty())
               {
                 std::cout << '\n';
 
@@ -704,7 +704,7 @@ namespace transport
                 std::vector<std::string> size;
 
                 postintegration_content_db& db = cache.get_postintegration_content_db();
-                for(const std::string& group : output_groups)
+                for(const std::string& group : content_groups)
                   {
                     postintegration_content_db::const_iterator t = db.find(group);
                     name.push_back(group);
@@ -725,7 +725,7 @@ namespace transport
                       }
                   }
 
-                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_CONTENT_GROUP_NAME, column_justify::left);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_CREATED, column_justify::right);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_FAILED, column_justify::right);
@@ -797,10 +797,10 @@ namespace transport
                 this->force_newline();
               }
 
-            // write table of output groups
-            const std::list<std::string>& output_groups = rec.get_output_groups();
+            // write table of content groups
+            const std::list<std::string>& content_groups = rec.get_content_groups();
 
-            if(!output_groups.empty())
+            if(!content_groups.empty())
               {
                 this->check_newline();
 
@@ -810,7 +810,7 @@ namespace transport
                 std::vector<std::string> updated;
 
                 output_content_db& db = cache.get_output_content_db();
-                for(const std::string& group : output_groups)
+                for(const std::string& group : content_groups)
                   {
                     output_content_db::const_iterator t = db.find(group);
                     name.push_back(group);
@@ -827,7 +827,7 @@ namespace transport
                       }
                   }
 
-                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_CONTENT_GROUP_NAME, column_justify::left);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_CREATED, column_justify::right);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
 
@@ -891,7 +891,7 @@ namespace transport
                           {
                             type.push_back(task_type_to_string(t->second->get_type()));
                             last_edit.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
-                            num_groups.push_back(boost::lexical_cast<std::string>(t->second->get_output_groups().size()));
+                            num_groups.push_back(boost::lexical_cast<std::string>(t->second->get_content_groups().size()));
                           }
                         else
                           {
@@ -923,11 +923,11 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_object(const output_group_record<integration_payload>& rec, repository_cache<number>& cache)
+        void command_line::report_object(const content_group_record<integration_payload>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
 
-            // produce generic report on output group
+            // produce generic report on content group
             typename task_db<number>::type& db = cache.get_task_db();
             typename task_db<number>::type::const_iterator t = db.find(rec.get_task_name());
 
@@ -988,11 +988,11 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_object(const output_group_record<postintegration_payload>& rec, repository_cache<number>& cache)
+        void command_line::report_object(const content_group_record<postintegration_payload>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
 
-            // produce generic report on output group
+            // produce generic report on content group
             typename task_db<number>::type& db = cache.get_task_db();
             typename task_db<number>::type::const_iterator t = db.find(rec.get_task_name());
 
@@ -1052,7 +1052,7 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_object(const output_group_record<output_payload>& rec, repository_cache<number>& cache)
+        void command_line::report_object(const content_group_record<output_payload>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
 
@@ -1081,7 +1081,7 @@ namespace transport
                     last_edit.push_back(data.get_last_edit());
                   }
 
-                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_CONTENT_GROUP_NAME, column_justify::left);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK, column_justify::left);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK_TYPE, column_justify::left);
                 columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
@@ -1124,7 +1124,7 @@ namespace transport
 
 
         template <typename Payload>
-        void command_line::report_output_record_generic(const output_group_record<Payload>& rec, std::string type)
+        void command_line::report_output_record_generic(const content_group_record<Payload>& rec, std::string type)
           {
             key_value kv(this->env, this->arg_cache);
 
@@ -1223,7 +1223,7 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_provenance(const output_group_record<output_payload>& rec, repository_cache<number>& cache)
+        void command_line::report_provenance(const content_group_record<output_payload>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
 
@@ -1311,7 +1311,7 @@ namespace transport
                             last_edit.push_back(data.get_last_edit());
                           }
 
-                        columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                        columns.emplace_back(CPPTRANSPORT_REPORT_CONTENT_GROUP_NAME, column_justify::left);
                         columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK, column_justify::left);
                         columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK_TYPE, column_justify::left);
                         columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
