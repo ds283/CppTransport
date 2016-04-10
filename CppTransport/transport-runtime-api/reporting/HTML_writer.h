@@ -164,6 +164,9 @@ namespace transport
             //! add an element to this node's content
             HTML_node& add_element(const HTML_element& element);
 
+            //! add an element to this node's content
+            HTML_node& add_element(std::shared_ptr<HTML_element> element);
+
 
             // INTERFACE -- from HTML_element
 
@@ -216,7 +219,14 @@ namespace transport
 
         HTML_node& HTML_node::add_element(const HTML_element& element)
           {
-            this->content.emplace_back(std::shared_ptr<HTML_element>(element.clone()));
+            this->content.emplace_back(element.clone());
+            return(*this);
+          }
+
+
+        HTML_node& HTML_node::add_element(std::shared_ptr<HTML_element> element)
+          {
+            this->content.push_back(element);
             return(*this);
           }
 
@@ -285,6 +295,9 @@ namespace transport
             //! add a JavaScript file
             void add_JavaScript(boost::filesystem::path p);
 
+            //! add a modal
+            void add_modal(HTML_element& modal);
+
 
             // INTERNAL API
 
@@ -317,7 +330,10 @@ namespace transport
             std::list< boost::filesystem::path > scripts;
 
             //! HTML element representing the document body
-            std::unique_ptr< HTML_element > body_element;
+            std::shared_ptr< HTML_element > body_element;
+
+            //! list of modals to add added at the end of the document body
+            std::list< std::shared_ptr<HTML_element> > modals;
 
           };
 
@@ -391,7 +407,18 @@ namespace transport
 
             // ATTACH DOCUMENT BODY IF IT EXISTS
 
-            if(this->body_element) body.add_element(*this->body_element);
+            if(this->body_element)
+              {
+                body.add_element(this->body_element);
+
+                for(const std::shared_ptr<HTML_element>& elt : this->modals)
+                  {
+                    if(elt)
+                      {
+                        body.add_element(elt);
+                      }
+                  }
+              }
 
             // ATTACH FOOTER TO LOAD JAVASCRIPT FILES
             // (comes at end so pages load faster)
@@ -422,6 +449,12 @@ namespace transport
         void HTML_writer::add_JavaScript(boost::filesystem::path p)
           {
             this->scripts.emplace_back(std::move(p));
+          }
+
+
+        void HTML_writer::add_modal(HTML_element& modal)
+          {
+            this->modals.emplace_back(modal.clone());
           }
 
 

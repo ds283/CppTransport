@@ -21,14 +21,14 @@
 #include "transport-runtime-api/utilities/formatter.h"
 #include "transport-runtime-api/utilities/plot_environment.h"
 
+#include "transport-runtime-api/defaults.h"
+
 
 namespace transport
   {
 
     namespace reporting
       {
-
-        constexpr auto CPPTRANSPORT_HTML_BUTTON_TAG_PREFIX = "button";
 
         class HTML_report
           {
@@ -45,7 +45,10 @@ namespace transport
                 err(eh),
                 warn(wh),
                 msg(mh),
-                button_id(0)
+                button_id(0),
+                misc_precision(CPPTRANSPORT_DEFAULT_HTML_MISC_PRECISION),
+                efolds_precision(CPPTRANSPORT_DEFAULT_HTML_EFOLDS_PRECISION),
+                database_precision(CPPTRANSPORT_DEFAULT_HTML_DATABASE_PRECISION)
               {
               }
 
@@ -446,6 +449,29 @@ namespace transport
             void write_activity_collapsible(const std::list<metadata_history>& activity, const std::string& tag, HTML_node& parent);
 
 
+            // WRITE CONFIGURATION DATABASES
+
+          protected:
+
+            //! write time configuration database
+            template <typename number>
+            void write_time_db_modal(HTML_report_bundle<number>& bundle, const time_config_database& db,
+                                     HTML_node& parent);
+
+            //! write k configuration database
+            template <typename number>
+            void write_kconfig_db_modal(HTML_report_bundle<number>& bundle, const twopf_kconfig_database& db,
+                                        HTML_node& parent);
+
+            //! write k configuration database
+            template <typename number>
+            void write_kconfig_db_modal(HTML_report_bundle<number>& bundle, const threepf_kconfig_database& db,
+                                        HTML_node& parent);
+
+            //! utility function to write a close button
+            void aria_close_button(HTML_node& parent);
+
+
             // WRITE JAVASCRIPT HANDLERS
 
           protected:
@@ -493,6 +519,7 @@ namespace transport
 
             //! reference to local environment object
             local_environment& env;
+
             //! reference to argument cache
             argument_cache& arg_cache;
 
@@ -516,6 +543,15 @@ namespace transport
 
             //! current unique button id
             unsigned int button_id;
+
+            //! numerical prevision for formatting miscellaneous quantities
+            unsigned int misc_precision;
+
+            //! numerical precision for formatting e-folds
+            unsigned int efolds_precision;
+
+            //! numerical precision for formatting database entries
+            unsigned int database_precision;
 
           };
 
@@ -597,6 +633,7 @@ namespace transport
 
             // add bootstrap CSS file
             bundle.emplace_CSS_asset("bootstrap/css/bootstrap.min.css", "bootstrap.min.css");
+            bundle.emplace_CSS_asset("bootstrap/css/bootstrap.min.css.map", "bootstrap.min.css.map");
 
             // add bootstrap glyphicon fonts
             bundle.emplace_font_asset("bootstrap/fonts/glyphicons-halflings-regular.eot", "glyphicons-halflings-regular.eot");
@@ -869,8 +906,8 @@ namespace transport
                 HTML_node col2_list("dl");
                 col2_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Initial time", format_number(rec.get_ics().get_N_initial()) + " e-folds", col2_list);
-                this->make_data_element("Horizon-crossing time", format_number(rec.get_ics().get_N_horizon_crossing()) + " e-folds", col2_list);
+                this->make_data_element("Initial time", format_number(rec.get_ics().get_N_initial(), this->efolds_precision) + " e-folds", col2_list);
+                this->make_data_element("Horizon-crossing time", format_number(rec.get_ics().get_N_horizon_crossing(), this->efolds_precision) + " e-folds", col2_list);
 
                 col2.add_element(col2_list);
 
@@ -923,7 +960,7 @@ namespace transport
                     label_text.bold();
                     label.add_element(label_text);
 
-                    HTML_node value("td", format_number(static_cast<double>(param_vec[i]), 6));
+                    HTML_node value("td", format_number(static_cast<double>(param_vec[i]), this->database_precision));
 
                     table_row.add_element(label).add_element(value);
                     params_table_body.add_element(table_row);
@@ -960,7 +997,8 @@ namespace transport
                     label_text.bold();
                     label.add_element(label_text);
 
-                    HTML_node value("td", format_number(static_cast<double>(ics_vec[i] / params.get_Mp()), 6) + " M<sub>P</sub>");    // using tags in string is hacky, but simple
+                    // using tags in string is hacky, but simple
+                    HTML_node value("td", format_number(static_cast<double>(ics_vec[i] / params.get_Mp()), this->database_precision) + " M<sub>P</sub>");
 
                     table_row.add_element(label).add_element(value);
                     ics_table_body.add_element(table_row);
@@ -1172,12 +1210,17 @@ namespace transport
             this->write_generic_task_data(bundle, tk, col1_list, col2_list, col3_list);
 
             const threepf_kconfig_database& threepf_db = tk.get_threepf_database();
-            this->make_data_element("3pf configurations", boost::lexical_cast<std::string>(threepf_db.size()), col3_list);
+            HTML_node k_dt("dt", "3pf configurations");
+            HTML_node k_dd("dd");
+            HTML_string k_str(boost::lexical_cast<std::string>(threepf_db.size()));
+            k_dd.add_element(k_str);
+            if(threepf_db.size() <= CPPTRANSPORT_DEFAULT_HTML_DATABASE_MAX_SIZE) this->write_kconfig_db_modal(bundle, threepf_db, k_dd);
+            col3_list.add_element(k_dt).add_element(k_dd);
 
             this->make_data_element("Integrable", tk.is_integrable() ? "Yes" : "No", col3_list);
             if(tk.is_integrable())
               {
-                this->make_data_element("Voxel size", format_number(tk.voxel_size()), col3_list);
+                this->make_data_element("Voxel size", format_number(tk.voxel_size(), this->misc_precision), col3_list);
               }
           }
 
@@ -1186,21 +1229,301 @@ namespace transport
         void HTML_report::write_generic_task_data(HTML_report_bundle<number>& bundle, twopf_db_task<number>& tk,
                                                   HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list)
           {
-            this->make_data_element("Initial conditions", format_number(tk.get_N_initial()) + " e-folds", col1_list);
-            this->make_data_element("<var>N</var><sub>*</sub>", format_number(tk.get_N_horizon_crossing()) + " e-folds", col1_list);
-            this->make_data_element("Subhorizon e-folds", format_number(tk.get_N_subhorizon_efolds()) + " e-folds", col1_list);
+            this->make_data_element("Initial conditions", format_number(tk.get_N_initial(), this->efolds_precision) + " e-folds", col1_list);
+            this->make_data_element("<var>N</var><sub>*</sub>", format_number(tk.get_N_horizon_crossing(), this->efolds_precision) + " e-folds", col1_list);
+            this->make_data_element("Subhorizon e-folds", format_number(tk.get_N_subhorizon_efolds(), this->efolds_precision) + " e-folds", col1_list);
             this->make_data_element("Maximum refinements", boost::lexical_cast<std::string>(tk.get_max_refinements()), col1_list);
 
-            this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation()) + " e-folds", col2_list);
-            this->make_data_element("ln <var>a</var><sub>*</sub>", format_number(tk.get_astar_normalization()), col2_list);
-            this->make_data_element("Adaptive ICs", tk.get_fast_forward() ? format_number(tk.get_fast_forward_efolds()) + " e-folds" : "No", col2_list);
+            this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation(), this->efolds_precision) + " e-folds", col2_list);
+            this->make_data_element("ln <var>a</var><sub>*</sub>", format_number(tk.get_astar_normalization(), this->misc_precision), col2_list);
+            this->make_data_element("Adaptive ICs", tk.get_fast_forward() ? format_number(tk.get_fast_forward_efolds(), this->efolds_precision) + " e-folds" : "No", col2_list);
             this->make_data_element("Collect ICs", tk.get_collect_initial_conditions() ? "Yes" : "No", col2_list);
 
             const time_config_database& time_db = tk.get_stored_time_config_database();
-            this->make_data_element("Time samples", boost::lexical_cast<std::string>(time_db.size()), col3_list);
+            HTML_node t_dt("dt", "Time samples");
+            HTML_node t_dd("dd");
+            HTML_string t_str(boost::lexical_cast<std::string>(time_db.size()));
+            t_dd.add_element(t_str);
+            if(time_db.size() <= CPPTRANSPORT_DEFAULT_HTML_DATABASE_MAX_SIZE) this->write_time_db_modal(bundle, time_db, t_dd);
+            col3_list.add_element(t_dt).add_element(t_dd);
 
             const twopf_kconfig_database& twopf_db = tk.get_twopf_database();
-            this->make_data_element("2pf configurations", boost::lexical_cast<std::string>(twopf_db.size()), col3_list);
+            HTML_node k_dt("dt", "2pf configurations");
+            HTML_node k_dd("dd");
+            HTML_string k_str(boost::lexical_cast<std::string>(twopf_db.size()));
+            k_dd.add_element(k_str);
+            if(twopf_db.size() <= CPPTRANSPORT_DEFAULT_HTML_DATABASE_MAX_SIZE) this->write_kconfig_db_modal(bundle, twopf_db, k_dd);
+            col3_list.add_element(k_dt).add_element(k_dd);
+          }
+
+
+        void HTML_report::aria_close_button(HTML_node& parent)
+          {
+            HTML_node button("button");
+            button.add_attribute("class", "close").add_attribute("data-dismiss", "modal");
+            button.add_attribute("aria-label", "Close");
+
+            HTML_node span("span", "&times;");
+            span.add_attribute("aria-hidden", "true");
+            button.add_element(span);
+
+            parent.add_element(button);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_time_db_modal(HTML_report_bundle<number>& bundle, const time_config_database& db,
+                                              HTML_node& parent)
+          {
+            std::string button_id = this->make_button_tag();
+            std::string modal_id = button_id + "modal";
+            std::string modal_label= button_id + "label";
+
+            HTML_node button("button", "(show)");
+            button.add_attribute("class", "btn btn-link").add_attribute("data-toggle", "modal");
+            button.add_attribute("data-target", "#" + modal_id);
+            parent.add_element(button);
+
+            HTML_node modal("div");
+            modal.add_attribute("class", "modal fade").add_attribute("id", modal_id).add_attribute("tabindex", "-1");
+            modal.add_attribute("role", "dialog").add_attribute("aria-labelledby", modal_label);
+
+            HTML_node dialog("div");
+            dialog.add_attribute("class", "modal-dialog modal-lg").add_attribute("role", "document");
+
+            HTML_node content("div");
+            content.add_attribute("class", "modal-content");
+
+            HTML_node header("div");
+            header.add_attribute("class", "modal-header");
+
+            this->aria_close_button(header);
+
+            HTML_node title("h4", "Time sample points");
+            title.add_attribute("class", "modal-title").add_attribute("id", modal_label);
+
+            HTML_node body("div");
+            body.add_attribute("class", "modal-body");
+
+            HTML_node table_wrapper("div");
+            table_wrapper.add_attribute("class", "table-responsive");
+
+            // generate table as shared_ptr<> to prevent long copy times if the label is large
+            std::shared_ptr<HTML_node> table  = std::make_shared<HTML_node>("table");
+            table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+
+            HTML_node thead("thead");
+            HTML_node head_row("tr");
+
+            HTML_node serial_label("th", "Serial");
+            HTML_node time_label("th", "Time");
+            head_row.add_element(serial_label).add_element(time_label);
+            thead.add_element(head_row);
+
+            std::shared_ptr<HTML_node> tbody = std::make_shared<HTML_node>("tbody");
+            for(time_config_database::const_config_iterator t = db.config_cbegin(); t != db.config_cend(); ++t)
+              {
+                std::shared_ptr<HTML_node> trow = std::make_shared<HTML_node>("tr");
+                HTML_node serial("td", boost::lexical_cast<std::string>(t->serial));
+                HTML_node time("td", format_number(t->t, this->database_precision));
+                trow->add_element(serial).add_element(time);
+                tbody->add_element(trow);
+              }
+            table->add_element(thead).add_element(tbody);
+            table_wrapper.add_element(table);
+            body.add_element(table_wrapper);
+
+            HTML_node footer("div");
+            footer.add_attribute("class", "modal-footer");
+
+            HTML_node dismiss("button", "Close");
+            dismiss.add_attribute("type", "button").add_attribute("class", "btn btn-default").add_attribute("data-dismiss", "modal");
+
+            header.add_element(title);
+            footer.add_element(dismiss);
+            content.add_element(header).add_element(body).add_element(footer);
+            dialog.add_element(content);
+            modal.add_element(dialog);
+
+            bundle.emplace_modal(modal);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_kconfig_db_modal(HTML_report_bundle<number>& bundle, const twopf_kconfig_database& db,
+                                                 HTML_node& parent)
+          {
+            std::string button_id = this->make_button_tag();
+            std::string modal_id = button_id + "modal";
+            std::string modal_label= button_id + "label";
+
+            HTML_node button("button", "(show)");
+            button.add_attribute("class", "btn btn-link").add_attribute("data-toggle", "modal");
+            button.add_attribute("data-target", "#" + modal_id);
+            parent.add_element(button);
+
+            HTML_node modal("div");
+            modal.add_attribute("class", "modal fade").add_attribute("id", modal_id).add_attribute("tabindex", "-1");
+            modal.add_attribute("role", "dialog").add_attribute("aria-labelledby", modal_label);
+
+            HTML_node dialog("div");
+            dialog.add_attribute("class", "modal-dialog modal-lg").add_attribute("role", "document");
+
+            HTML_node content("div");
+            content.add_attribute("class", "modal-content");
+
+            HTML_node header("div");
+            header.add_attribute("class", "modal-header");
+
+            this->aria_close_button(header);
+
+            HTML_node title("h4", "2pf-configuration samples");
+            title.add_attribute("class", "modal-title").add_attribute("id", modal_label);
+
+            HTML_node body("div");
+            body.add_attribute("class", "modal-body");
+
+            HTML_node table_wrapper("div");
+            table_wrapper.add_attribute("class", "table-responsive");
+
+            // generate table as shared_ptr<> to prevent long copy times if the label is large
+            std::shared_ptr<HTML_node> table = std::make_shared<HTML_node>("table");
+            table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+
+            HTML_node thead("thead");
+            HTML_node head_row("tr");
+
+            HTML_node serial_label("th", "Serial");
+            HTML_node k_label("th", "k");
+            HTML_node texit_label("th", "t<sub>exit</sub>");
+            HTML_node tmassless_label("th", "t<sub>massless</sub>");
+            head_row.add_element(serial_label).add_element(k_label).add_element(texit_label).add_element(tmassless_label);
+            thead.add_element(head_row);
+
+            std::shared_ptr<HTML_node> tbody = std::make_shared<HTML_node>("tbody");
+            for(twopf_kconfig_database::const_config_iterator t = db.config_cbegin(); t != db.config_cend(); ++t)
+              {
+                std::shared_ptr<HTML_node> trow = std::make_shared<HTML_node>("tr");
+                HTML_node serial("td", boost::lexical_cast<std::string>(t->serial));
+                HTML_node k("td", format_number(t->k_conventional, this->database_precision));
+                HTML_node texit("td", format_number(t->t_exit, this->database_precision));
+                HTML_node tmassless("td", format_number(t->t_massless, this->database_precision));
+                trow->add_element(serial).add_element(k).add_element(texit).add_element(tmassless);
+                tbody->add_element(trow);
+              }
+            table->add_element(thead).add_element(tbody);
+            table_wrapper.add_element(table);
+            body.add_element(table_wrapper);
+
+            HTML_node footer("div");
+            footer.add_attribute("class", "modal-footer");
+
+            HTML_node dismiss("button", "Close");
+            dismiss.add_attribute("type", "button").add_attribute("class", "btn btn-default").add_attribute("data-dismiss", "modal");
+
+            header.add_element(title);
+            footer.add_element(dismiss);
+            content.add_element(header).add_element(body).add_element(footer);
+            dialog.add_element(content);
+            modal.add_element(dialog);
+
+            bundle.emplace_modal(modal);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_kconfig_db_modal(HTML_report_bundle<number>& bundle, const threepf_kconfig_database& db,
+                                                 HTML_node& parent)
+          {
+            std::string button_id = this->make_button_tag();
+            std::string modal_id = button_id + "modal";
+            std::string modal_label= button_id + "label";
+
+            HTML_node button("button", "(show)");
+            button.add_attribute("class", "btn btn-link").add_attribute("data-toggle", "modal");
+            button.add_attribute("data-target", "#" + modal_id);
+            parent.add_element(button);
+
+            HTML_node modal("div");
+            modal.add_attribute("class", "modal fade").add_attribute("id", modal_id).add_attribute("tabindex", "-1");
+            modal.add_attribute("role", "dialog").add_attribute("aria-labelledby", modal_label);
+
+            HTML_node dialog("div");
+            dialog.add_attribute("class", "modal-dialog modal-lg").add_attribute("role", "document");
+
+            HTML_node content("div");
+            content.add_attribute("class", "modal-content");
+
+            HTML_node header("div");
+            header.add_attribute("class", "modal-header");
+
+            this->aria_close_button(header);
+
+            HTML_node title("h4", "3pf-configuration samples");
+            title.add_attribute("class", "modal-title").add_attribute("id", modal_label);
+
+            HTML_node body("div");
+            body.add_attribute("class", "modal-body");
+
+            HTML_node table_wrapper("div");
+            table_wrapper.add_attribute("class", "table-responsive");
+
+            // generate table as shared_ptr<> to prevent long copy times if the label is large
+            std::shared_ptr<HTML_node> table = std::make_shared<HTML_node>("table");
+            table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+
+            HTML_node thead("thead");
+            HTML_node head_row("tr");
+
+            HTML_node serial_label("th", "Serial");
+            HTML_node k_label("th", "k");
+            HTML_node alpha_label("th", "&alpha;");
+            HTML_node beta_label("th", "&beta;");
+            HTML_node k1_label("th", "k<sub>1</sub>");
+            HTML_node k2_label("th", "k<sub>1</sub>");
+            HTML_node k3_label("th", "k<sub>1</sub>");
+            HTML_node texit_label("th", "t<sub>exit</sub>");
+            HTML_node tmassless_label("th", "t<sub>massless</sub>");
+            head_row.add_element(serial_label).add_element(k_label).add_element(alpha_label).add_element(beta_label);
+            head_row.add_element(k1_label).add_element(k2_label).add_element(k3_label);
+            head_row.add_element(texit_label).add_element(tmassless_label);
+            thead.add_element(head_row);
+
+            std::shared_ptr<HTML_node> tbody = std::make_shared<HTML_node>("tbody");
+            for(threepf_kconfig_database::const_config_iterator t = db.config_cbegin(); t != db.config_cend(); ++t)
+              {
+                std::shared_ptr<HTML_node> trow = std::make_shared<HTML_node>("tr");
+                HTML_node serial("td", boost::lexical_cast<std::string>(t->serial));
+                HTML_node k("td", format_number(t->kt_conventional, this->database_precision));
+                HTML_node alpha("td", format_number(t->alpha, this->database_precision));
+                HTML_node beta("td", format_number(t->beta, this->database_precision));
+                HTML_node k1("td", format_number(t->k1_conventional, this->database_precision));
+                HTML_node k2("td", format_number(t->k2_conventional, this->database_precision));
+                HTML_node k3("td", format_number(t->k3_conventional, this->database_precision));
+                HTML_node texit("td", format_number(t->t_exit, this->database_precision));
+                HTML_node tmassless("td", format_number(t->t_massless, this->database_precision));
+                trow->add_element(serial).add_element(k).add_element(alpha).add_element(beta);
+                trow->add_element(k1).add_element(k2).add_element(k3);
+                trow->add_element(texit).add_element(tmassless);
+                tbody->add_element(trow);
+              }
+            table->add_element(thead).add_element(tbody);
+            table_wrapper.add_element(table);
+            body.add_element(table_wrapper);
+
+            HTML_node footer("div");
+            footer.add_attribute("class", "modal-footer");
+
+            HTML_node dismiss("button", "Close");
+            dismiss.add_attribute("type", "button").add_attribute("class", "btn btn-default").add_attribute("data-dismiss", "modal");
+
+            header.add_element(title);
+            footer.add_element(dismiss);
+            content.add_element(header).add_element(body).add_element(footer);
+            dialog.add_element(content);
+            modal.add_element(dialog);
+
+            bundle.emplace_modal(modal);
           }
 
 
@@ -2855,10 +3178,10 @@ namespace transport
                 HTML_node pert_step("td", info.get_pert_stepper());
 
                 std::pair<double, double> btol = info.get_backg_tol();
-                HTML_node backg_tol("td", format_number(btol.first, 2) + ", " + format_number(btol.second, 2));
+                HTML_node backg_tol("td", format_number(btol.first, this->misc_precision) + ", " + format_number(btol.second, this->misc_precision));
 
                 std::pair<double, double> ptol = info.get_pert_tol();
-                HTML_node pert_tol("td", format_number(ptol.first, 2) + ", " + format_number(ptol.second, 2));
+                HTML_node pert_tol("td", format_number(ptol.first, this->misc_precision) + ", " + format_number(ptol.second, this->misc_precision));
 
                 HTML_node os_name("td", info.get_os_name());
 
@@ -4174,7 +4497,7 @@ namespace transport
         std::string HTML_report::make_button_tag()
           {
             std::ostringstream tag;
-            tag << CPPTRANSPORT_HTML_BUTTON_TAG_PREFIX << this->button_id++;
+            tag << CPPTRANSPORT_DEFAULT_HTML_BUTTON_TAG_PREFIX << this->button_id++;
             return(tag.str());
           }
 

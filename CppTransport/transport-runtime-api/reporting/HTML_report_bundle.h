@@ -92,6 +92,9 @@ namespace transport
             //! emplace an HTML element
             void emplace_HTML_body(HTML_element& body) { this->HTML->add_body(body); }
 
+            //! emplace a modal dialog
+            void emplace_modal(HTML_element& modal) { this->HTML->add_modal(modal); }
+
 
             // WRITE JAVASCRIPT CONTENT
 

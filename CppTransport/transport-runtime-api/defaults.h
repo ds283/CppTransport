@@ -17,6 +17,12 @@ constexpr unsigned int CPPTRANSPORT_DEFAULT_TABLE_PRECISION            = (17);
 
 constexpr auto         CPPTRANSPORT_DEFAULT_REPORT_TAG_STEM            = "tag";
 
+constexpr auto         CPPTRANSPORT_DEFAULT_HTML_BUTTON_TAG_PREFIX     = "button";
+constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_DATABASE_MAX_SIZE     = 5000;
+constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_MISC_PRECISION        = 2;
+constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_EFOLDS_PRECISION      = 3;
+constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_DATABASE_PRECISION    = 6;
+
 constexpr unsigned int CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH             = (80);
 
 constexpr double       CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE          = (1E-8);

@@ -9,8 +9,8 @@ $(window).on('resize load', function () {
 
 $(document).ready(function () {
     // Initialize DataTables
-    $('[class~="sortable"]').DataTable({responsive: true, bAutoWidth: false, dom: 't'});
-    $('[class~="sortable-filterable"]').DataTable({responsive: true, bAutoWidth: false, dom: 'fti'});
+    $('[class~="sortable"]').DataTable({responsive: true, bAutoWidth: false, paging: false, dom: 't'});
+    $('[class~="sortable-filterable"]').DataTable({responsive: true, bAutoWidth: false, paging: false, dom: 'fti'});
     $('[class~="sortable-pageable"]').DataTable({responsive: true, bAutoWidth: false, dom: 'lftip'});
 
     // Initialize all tooltips
