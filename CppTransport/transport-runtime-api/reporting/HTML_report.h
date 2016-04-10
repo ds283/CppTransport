@@ -708,7 +708,7 @@ namespace transport
             HTML_node output_tasks_tab = this->make_menu_tab("output", "Output tasks");
 
             // Output content tab
-            HTML_node output_content_tab = this->make_content_menu_tab<number>(bundle.get_output_content_db(), bundle, "Output_content");
+            HTML_node output_content_tab = this->make_content_menu_tab<number>(bundle.get_output_content_db(), bundle, "Output content");
 
             // Derived products tab
             HTML_node derived_products_tab = this->make_content_menu_tab<number>(bundle.get_derived_product_db(), bundle, "Derived products");
