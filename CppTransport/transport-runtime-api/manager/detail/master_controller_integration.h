@@ -203,11 +203,9 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Workers processed " << i_metadata.total_configurations << " individual integrations";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   " << i_metadata.total_failures << " integrations failed, and " << i_metadata.total_refinements << " integrations required mesh refinement (may not match individual k-configurations for some backends)";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total integration time    = " << format_time(i_metadata.total_integration_time) << " | global mean integration time = " << format_time(i_metadata.total_integration_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Min mean integration time = " << format_time(i_metadata.min_mean_integration_time) << " | global min integration time = " << format_time(i_metadata.global_min_integration_time);
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Max mean integration time = " << format_time(i_metadata.max_mean_integration_time) << " | global max integration time = " << format_time(i_metadata.global_max_integration_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Global min integration time = " << format_time(i_metadata.global_min_integration_time) << " | global max integration time = " << format_time(i_metadata.global_max_integration_time);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total batching time       = " << format_time(i_metadata.total_batching_time) << " | global mean batching time = " << format_time(i_metadata.total_batching_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Min mean batching time    = " << format_time(i_metadata.min_mean_batching_time) << " | global min batching time = " << format_time(i_metadata.global_min_batching_time);
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Max mean batching time    = " << format_time(i_metadata.max_mean_batching_time) << " | global max batching time = " << format_time(i_metadata.global_max_batching_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Global min batching time = " << format_time(i_metadata.global_min_batching_time) << " | global max batching time = " << format_time(i_metadata.global_max_batching_time);
       }
 
 
@@ -272,17 +270,11 @@ namespace transport
         // it is fixed once the integration is complete, in integration_task_to_workers()
 
         metadata.total_integration_time += payload.get_integration_time();
-        boost::timer::nanosecond_type mean_integration_time = payload.get_integration_time() / (payload.get_num_integrations() > 0 ? payload.get_num_integrations() : 1);
-        if(metadata.max_mean_integration_time == 0 || mean_integration_time > metadata.max_mean_integration_time) metadata.max_mean_integration_time = mean_integration_time;
-        if(metadata.min_mean_integration_time == 0 || mean_integration_time < metadata.min_mean_integration_time) metadata.min_mean_integration_time = mean_integration_time;
 
         if(metadata.global_max_integration_time == 0 || payload.get_max_integration_time() > metadata.global_max_integration_time) metadata.global_max_integration_time = payload.get_max_integration_time();
         if(metadata.global_min_integration_time == 0 || payload.get_min_integration_time() < metadata.global_min_integration_time) metadata.global_min_integration_time = payload.get_min_integration_time();
 
         metadata.total_batching_time += payload.get_batching_time();
-        boost::timer::nanosecond_type mean_batching_time = payload.get_batching_time() / (payload.get_num_integrations() > 0 ? payload.get_num_integrations() : 1);
-        if(metadata.max_mean_batching_time == 0 || mean_batching_time > metadata.max_mean_batching_time) metadata.max_mean_batching_time = mean_batching_time;
-        if(metadata.min_mean_batching_time == 0 || mean_batching_time < metadata.min_mean_batching_time) metadata.min_mean_batching_time = mean_batching_time;
 
         if(metadata.global_max_batching_time == 0 || payload.get_max_batching_time() > metadata.global_max_batching_time) metadata.global_max_batching_time = payload.get_max_batching_time();
         if(metadata.global_min_batching_time == 0 || payload.get_min_batching_time() < metadata.global_min_batching_time) metadata.global_min_batching_time = payload.get_min_batching_time();

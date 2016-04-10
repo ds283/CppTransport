@@ -25,13 +25,9 @@ namespace transport
           : total_wallclock_time(0),
             total_aggregation_time(0),
             total_integration_time(0),
-            min_mean_integration_time(0),
-            max_mean_integration_time(0),
             global_min_integration_time(0),
             global_max_integration_time(0),
             total_batching_time(0),
-            min_mean_batching_time(0),
-            max_mean_batching_time(0),
             global_min_batching_time(0),
             global_max_batching_time(0),
             total_configurations(0),
@@ -42,22 +38,16 @@ namespace transport
 
         //! value constructor - ensure all fields get set at once
         integration_metadata(boost::timer::nanosecond_type wc, boost::timer::nanosecond_type ag,
-                             boost::timer::nanosecond_type it, boost::timer::nanosecond_type min_m_it, boost::timer::nanosecond_type max_m_it,
-                             boost::timer::nanosecond_type min_it, boost::timer::nanosecond_type max_it,
-                             boost::timer::nanosecond_type bt, boost::timer::nanosecond_type min_m_bt, boost::timer::nanosecond_type max_m_bt,
-                             boost::timer::nanosecond_type min_bt, boost::timer::nanosecond_type max_bt,
+                             boost::timer::nanosecond_type it, boost::timer::nanosecond_type min_it, boost::timer::nanosecond_type max_it,
+                             boost::timer::nanosecond_type bt, boost::timer::nanosecond_type min_bt, boost::timer::nanosecond_type max_bt,
                              unsigned int num_processed, unsigned int num_failed, unsigned int num_refined,
                              const std::list<unsigned int>& failures, bool f)
           : total_wallclock_time(wc),
             total_aggregation_time(ag),
             total_integration_time(it),
-            min_mean_integration_time(min_m_it),
-            max_mean_integration_time(max_m_it),
             global_min_integration_time(min_it),
             global_max_integration_time(max_it),
             total_batching_time(bt),
-            min_mean_batching_time(min_m_bt),
-            max_mean_batching_time(max_m_bt),
             global_min_batching_time(min_bt),
             global_max_batching_time(max_bt),
             total_configurations(num_processed),
@@ -91,12 +81,6 @@ namespace transport
         //! total integration time (measured by aggregating times reported by workers)
         boost::timer::nanosecond_type total_integration_time;
 
-        //! minimum mean integration time (taken over all workers)
-        boost::timer::nanosecond_type min_mean_integration_time;
-
-        //! maxmimum mean integration time (taken over all workers)
-        boost::timer::nanosecond_type max_mean_integration_time;
-
         //! global minimum integration time (per configuration)
         boost::timer::nanosecond_type global_min_integration_time;
 
@@ -105,12 +89,6 @@ namespace transport
 
         // total batching time (measured by aggregating times reported by workers)
         boost::timer::nanosecond_type total_batching_time;
-
-        //! minimum mean batching time (taken over all workers)
-        boost::timer::nanosecond_type min_mean_batching_time;
-
-        // maximum mean batching time (taken over all workers)
-        boost::timer::nanosecond_type max_mean_batching_time;
 
         // global minimum batching time (per configuration)
         boost::timer::nanosecond_type global_min_batching_time;
