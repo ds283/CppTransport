@@ -169,7 +169,7 @@ namespace transport
 		    writer[CPPTRANSPORT_NODE_PARAMS_MODEL_UID] = this->mdl->get_identity_string();
 
         // serialize value of Planck mass
-        writer[CPPTRANSPORT_NODE_PARAMS_MPLANCK] = this->M_Planck;
+        writer[CPPTRANSPORT_NODE_PARAMS_MPLANCK] = static_cast<double>(this->M_Planck);
 
         // serialize array of parameter values
 		    const std::vector<std::string>& names = this->mdl->get_param_names();
@@ -183,7 +183,7 @@ namespace transport
               {
                 Json::Value param_element(Json::objectValue);
 		            param_element[CPPTRANSPORT_NODE_PARAMS_NAME] = names[i];
-		            param_element[CPPTRANSPORT_NODE_PARAMS_VALUE] = this->params[i];
+		            param_element[CPPTRANSPORT_NODE_PARAMS_VALUE] = static_cast<double>(this->params[i]);
 		            param_array.append(param_element);
               }
 		        writer[CPPTRANSPORT_NODE_PARAMS_VALUES] = param_array;
