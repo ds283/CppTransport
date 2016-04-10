@@ -615,8 +615,14 @@ namespace transport
         template <typename number>
         void HTML_report::generate_report(HTML_report_bundle<number>& bundle)
           {
-            // add jQuery and bootstrap scripts; note jQuery must come first, before bootstrap is loaded
+            // add jQuery; note jQuery must come first, before bootstrap is loaded
             bundle.emplace_JavaScript_asset("jQuery/jquery-2.2.2.min.js", "jquery-2.2.2.min.js");
+
+            // add DataTables javascript; apparently this must become before bootstrap too,
+            // otherwise we get a lot of confusing 'is not a function' errors
+            bundle.emplace_JavaScript_asset("DataTables/datatables.min.js", "datatables.min.js");
+
+            // add bootstrap JavaScript
             bundle.emplace_JavaScript_asset("bootstrap/js/bootstrap.min.js", "bootstrap.min.js");
 
             // add bootstrap-tab-history plugin to enable history on bootstrap tabs
@@ -625,11 +631,11 @@ namespace transport
             // add prism.js for syntax highlighting
             bundle.emplace_JavaScript_asset("prism/prism.min.js", "prism.min.js");
 
-            // add DataTables javascript
-            bundle.emplace_JavaScript_asset("DataTables/datatables.min.js", "datatables.min.js");
-
             // add our own JavaScript file utility.js which handles eg. resizing navigation bar on window resize
             bundle.emplace_JavaScript_asset("HTML_assets/utility.js", "utility.js");
+
+            // add DataTables CSS file
+            bundle.emplace_CSS_asset("DataTables/datatables.min.css", "datatables.min.css");
 
             // add bootstrap CSS file
             bundle.emplace_CSS_asset("bootstrap/css/bootstrap.min.css", "bootstrap.min.css");
@@ -644,9 +650,6 @@ namespace transport
 
             // add prism.js CSS file
             bundle.emplace_CSS_asset("prism/prism.css", "prism.css");
-
-            // add DataTables CSS file
-            bundle.emplace_CSS_asset("DataTables/datatables.min.css", "datatables.min.css");
 
             // add our own CSS file
             bundle.emplace_CSS_asset("HTML_assets/cpptransport.css", "cpptransport.css");
