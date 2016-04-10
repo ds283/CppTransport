@@ -1483,8 +1483,8 @@ namespace transport
             HTML_node alpha_label("th", "&alpha;");
             HTML_node beta_label("th", "&beta;");
             HTML_node k1_label("th", "k<sub>1</sub>");
-            HTML_node k2_label("th", "k<sub>1</sub>");
-            HTML_node k3_label("th", "k<sub>1</sub>");
+            HTML_node k2_label("th", "k<sub>2</sub>");
+            HTML_node k3_label("th", "k<sub>3</sub>");
             HTML_node texit_label("th", "t<sub>exit</sub>");
             HTML_node tmassless_label("th", "t<sub>massless</sub>");
             head_row.add_element(serial_label).add_element(k_label).add_element(alpha_label).add_element(beta_label);
