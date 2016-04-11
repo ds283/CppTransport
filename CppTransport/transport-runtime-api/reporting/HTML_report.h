@@ -940,8 +940,27 @@ namespace transport
                 HTML_node params_panel_heading("div", "Parameter values");
                 params_panel_heading.add_attribute("class", "panel-heading");
 
+                HTML_node params_wrapper("div");
                 HTML_node params_table("table");
-                params_table.add_attribute("class", "table table-striped table-condensed");
+
+                if(param_vec.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+                  {
+                    params_wrapper.add_attribute("class", "table-responsive padded");
+                    params_table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                  }
+                else
+                  {
+                    params_wrapper.add_attribute("class", "table-responsive");
+                    params_table.add_attribute("class", "table table-striped table-condensed sortable");
+                  }
+
+                HTML_node params_table_head("thead");
+                HTML_node params_head_row("tr");
+                HTML_node params_name_label("th", "Name");
+                HTML_node params_value_label("th", "Value");
+                params_head_row.add_element(params_name_label).add_element(params_value_label);
+                params_table_head.add_element(params_head_row);
+
                 HTML_node params_table_body("tbody");
 
                 // add separate row for value of Planck mass
@@ -969,8 +988,9 @@ namespace transport
                     params_table_body.add_element(table_row);
                   }
 
-                params_table.add_element(params_table_body);
-                params_panel.add_element(params_panel_heading).add_element(params_table);
+                params_table.add_element(params_table_head).add_element(params_table_body);
+                params_wrapper.add_element(params_table);
+                params_panel.add_element(params_panel_heading).add_element(params_wrapper);
                 params_column.add_element(params_panel);
 
                 HTML_node data_grid("div");
@@ -987,8 +1007,27 @@ namespace transport
                 HTML_node ics_panel_heading("div", "Initial conditions");
                 ics_panel_heading.add_attribute("class", "panel-heading");
 
+                HTML_node ics_wrapper("div");
                 HTML_node ics_table("table");
-                ics_table.add_attribute("class", "table table-striped table-condensed");
+
+                if(ics_vec.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+                  {
+                    ics_wrapper.add_attribute("class", "table-responsive padded");
+                    ics_table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                  }
+                else
+                  {
+                    ics_wrapper.add_attribute("class", "table-responsive");
+                    ics_table.add_attribute("class", "table table-striped table-condensed sortable");
+                  }
+
+                HTML_node ics_table_head("thead");
+                HTML_node ics_head_row("tr");
+                HTML_node ics_name_label("th", "Name");
+                HTML_node ics_value_label("th", "Value");
+                ics_head_row.add_element(ics_name_label).add_element(ics_value_label);
+                ics_table_head.add_element(ics_head_row);
+
                 HTML_node ics_table_body("tbody");
 
                 for(unsigned int i = 0; i < ics_vec.size() && i < coord_names.size(); ++i)
@@ -1007,8 +1046,9 @@ namespace transport
                     ics_table_body.add_element(table_row);
                   }
 
-                ics_table.add_element(ics_table_body);
-                ics_panel.add_element(ics_panel_heading).add_element(ics_table);
+                ics_table.add_element(ics_table_head).add_element(ics_table_body);
+                ics_wrapper.add_element(ics_table);
+                ics_panel.add_element(ics_panel_heading).add_element(ics_wrapper);
                 ics_column.add_element(ics_panel);
 
                 data_grid.add_element(params_column).add_element(ics_column);
@@ -1127,10 +1167,18 @@ namespace transport
                         tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
-                        table_wrapper.add_attribute("class", "table-responsive");
-
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed sortable");
+
+                        if(content_groups.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+                          {
+                            table_wrapper.add_attribute("class", "table-responsive padded");
+                            table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                          }
+                        else
+                          {
+                            table_wrapper.add_attribute("class", "table-responsive");
+                            table.add_attribute("class", "table table-striped table-condensed sortable");
+                          }
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1313,7 +1361,14 @@ namespace transport
 
             // generate table as shared_ptr<> to prevent long copy times if the label is large
             std::shared_ptr<HTML_node> table  = std::make_shared<HTML_node>("table");
-            table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+            if(db.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+              {
+                table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+              }
+            else
+              {
+                table->add_attribute("class", "table table-striped table-condensed sortable");
+              }
 
             HTML_node thead("thead");
             HTML_node head_row("tr");
@@ -1391,7 +1446,14 @@ namespace transport
 
             // generate table as shared_ptr<> to prevent long copy times if the label is large
             std::shared_ptr<HTML_node> table = std::make_shared<HTML_node>("table");
-            table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+            if(db.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+              {
+                table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+              }
+            else
+              {
+                table->add_attribute("class", "table table-striped table-condensed sortable");
+              }
 
             HTML_node thead("thead");
             HTML_node head_row("tr");
@@ -1473,7 +1535,14 @@ namespace transport
 
             // generate table as shared_ptr<> to prevent long copy times if the label is large
             std::shared_ptr<HTML_node> table = std::make_shared<HTML_node>("table");
-            table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+            if(db.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+              {
+                table->add_attribute("class", "table table-striped table-condensed sortable-pageable");
+              }
+            else
+              {
+                table->add_attribute("class", "table table-striped table-condensed sortable");
+              }
 
             HTML_node thead("thead");
             HTML_node head_row("tr");
@@ -1618,10 +1687,18 @@ namespace transport
                         tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
-                        table_wrapper.add_attribute("class", "table-responsive");
-
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed sortable");
+
+                        if(content_groups.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+                          {
+                            table_wrapper.add_attribute("class", "table-responsive padded");
+                            table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                          }
+                        else
+                          {
+                            table_wrapper.add_attribute("class", "table-responsive");
+                            table.add_attribute("class", "table table-striped table-condensed sortable");
+                          }
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1734,10 +1811,18 @@ namespace transport
                         tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
-                        table_wrapper.add_attribute("class", "table-responsive padded");
-
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed sortable-filterable");
+
+                        if(elements.size() > 10)
+                          {
+                            table_wrapper.add_attribute("class", "table-responsive padded");
+                            table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                          }
+                        else
+                          {
+                            table_wrapper.add_attribute("class", "table-responsive");
+                            table.add_attribute("class", "table table-striped table-condensed sortable");
+                          }
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1796,10 +1881,18 @@ namespace transport
                         tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
-                        table_wrapper.add_attribute("class", "table-responsive");
-
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped table-condensed sortable");
+
+                        if(content_groups.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+                          {
+                            table_wrapper.add_attribute("class", "table-responsive padded");
+                            table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                          }
+                        else
+                          {
+                            table_wrapper.add_attribute("class", "table-responsive");
+                            table.add_attribute("class", "table table-striped table-condensed sortable");
+                          }
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1935,10 +2028,18 @@ namespace transport
                     tbl_panel_head.add_attribute("class", "panel-heading");
 
                     HTML_node table_wrapper("div");
-                    table_wrapper.add_attribute("class", "table-responsive");
-
                     HTML_node table("table");
-                    table.add_attribute("class", "table table-striped table-condensed sortable");
+
+                    if(task_list.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+                      {
+                        table_wrapper.add_attribute("class", "table-responsive padded");
+                        table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                      }
+                    else
+                      {
+                        table_wrapper.add_attribute("class", "table-responsive");
+                        table.add_attribute("class", "table table-striped table-condensed sortable");
+                      }
 
                     HTML_node head("thead");
                     HTML_node head_row("tr");
@@ -3117,10 +3218,18 @@ namespace transport
             panel_head.add_attribute("class", "panel-heading");
 
             HTML_node table_wrapper("div");
-            table_wrapper.add_attribute("class", "table-responsive padded");
-
             HTML_node table("table");
-            table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+
+            if(worker_db.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+              {
+                table_wrapper.add_attribute("class", "table-responsive padded");
+                table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+              }
+            else
+              {
+                table_wrapper.add_attribute("class", "table-responsive");
+                table.add_attribute("class", "table table-striped table-condensed sortable");
+              }
 
             HTML_node head("thead");
             HTML_node head_row("tr");
@@ -3959,10 +4068,18 @@ namespace transport
                             tbl_panel_head.add_attribute("class", "panel-heading");
 
                             HTML_node table_wrapper("div");
-                            table_wrapper.add_attribute("class", "table-responsive");
-
                             HTML_node table("table");
-                            table.add_attribute("class", "table table-striped table-condensed sortable");
+
+                            if(groups.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+                              {
+                                table_wrapper.add_attribute("class", "table-responsive padded");
+                                table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                              }
+                            else
+                              {
+                                table_wrapper.add_attribute("class", "table-responsive");
+                                table.add_attribute("class", "table table-striped table-condensed sortable");
+                              }
 
                             HTML_node head("thead");
                             HTML_node head_row("tr");

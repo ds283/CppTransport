@@ -22,6 +22,7 @@ constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_DATABASE_MAX_SIZE     = 5000;
 constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_MISC_PRECISION        = 2;
 constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_EFOLDS_PRECISION      = 3;
 constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_DATABASE_PRECISION    = 6;
+constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE   = 10;
 
 constexpr unsigned int CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH             = (80);
 
