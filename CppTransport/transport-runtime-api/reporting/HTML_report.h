@@ -1464,7 +1464,7 @@ namespace transport
 
             this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation(), this->efolds_precision) + " e-folds", col2_list);
             this->make_data_element("ln <var>a</var><sub>*</sub>", format_number(tk.get_astar_normalization(), this->misc_precision), col2_list);
-            this->make_data_element("Adaptive ICs", tk.get_fast_forward() ? format_number(tk.get_fast_forward_efolds(), this->efolds_precision) + " e-folds" : "No", col2_list);
+            this->make_data_element("Adaptive ICs", tk.get_adaptive_ics() ? format_number(tk.get_adaptive_ics_efolds(), this->efolds_precision) + " e-folds" : "No", col2_list);
             this->make_data_element("Collect ICs", tk.get_collect_initial_conditions() ? "Yes" : "No", col2_list);
 
             const time_config_database& time_db = tk.get_stored_time_config_database();

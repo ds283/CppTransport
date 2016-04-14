@@ -22,8 +22,8 @@
 namespace transport
 	{
 
-    constexpr auto CPPTRANSPORT_NODE_FAST_FORWARD         = "fast-forward";
-    constexpr auto CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS  = "ff-efolds";
+    constexpr auto CPPTRANSPORT_NODE_ADAPTIVE_ICS         = "adaptive-ics";
+    constexpr auto CPPTRANSPORT_NODE_ADAPTIVE_ICS_EFOLDS  = "adaptive-ics-efolds";
     constexpr auto CPPTRANSPORT_NODE_MESH_REFINEMENTS     = "mesh-refinements";
     constexpr auto CPPTRANSPORT_NODE_END_OF_INFLATION     = "end-of-inflation";
 
