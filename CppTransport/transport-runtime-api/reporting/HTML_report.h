@@ -942,7 +942,7 @@ namespace transport
                 if(!description.empty())
                   {
                     HTML_node well("div", description);
-                    well.add_attribute("class", "well topskip");
+                    well.add_attribute("class", "well");
                     panel_body.add_element(well);
                   }
 
