@@ -682,9 +682,7 @@ namespace transport
 						integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->parent_task);
 						if(itk != nullptr)
 							{
-						    out << ", " <<CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << itk->get_model()->get_name()
-							    << " [" << itk->get_model()->get_author() << " | " << itk->get_model()->get_tag() << "]" << '\n';
-
+						    out << ", " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << itk->get_model()->get_name() << "'" << '\n';
 							}
 
 						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS << " ";

@@ -27,6 +27,11 @@ namespace macro_packages
     constexpr unsigned int AUTHOR_RECORD_CLASS_ARGUMENT = 0;
     constexpr unsigned int AUTHOR_TOTAL_ARGUMENTS = 1;
     constexpr unsigned int CITEGUIDE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DESCRIPTION_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int LICENSE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int REVISION_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int REFERENCES_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int URLS_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int MODEL_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int UUID_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int HEADER_TOTAL_ARGUMENTS = 0;
@@ -396,6 +401,206 @@ namespace macro_packages
 
         //! destructor
         virtual ~replace_citeguide() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class replace_description : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_description(std::string n, translator_data& p, language_printer& prn)
+          : replacement_rule_simple(std::move(n), DESCRIPTION_TOTAL_ARGUMENTS),
+            data_payload(p),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~replace_description() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class replace_license : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_license(std::string n, translator_data& p, language_printer& prn)
+          : replacement_rule_simple(std::move(n), LICENSE_TOTAL_ARGUMENTS),
+            data_payload(p),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~replace_license() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class replace_revision : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_revision(std::string n, translator_data& p, language_printer& prn)
+          : replacement_rule_simple(std::move(n), REVISION_TOTAL_ARGUMENTS),
+            data_payload(p),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~replace_revision() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class replace_references : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_references(std::string n, translator_data& p, language_printer& prn)
+          : replacement_rule_simple(std::move(n), REFERENCES_TOTAL_ARGUMENTS),
+            data_payload(p),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~replace_references() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class replace_urls : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_urls(std::string n, translator_data& p, language_printer& prn)
+          : replacement_rule_simple(std::move(n), URLS_TOTAL_ARGUMENTS),
+            data_payload(p),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~replace_urls() = default;
 
 
         // INTERNAL API

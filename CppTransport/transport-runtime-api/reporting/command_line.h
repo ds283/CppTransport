@@ -525,25 +525,123 @@ namespace transport
             this->report_record_title(rec);
             this->report_record_generic(rec);
 
-            key_value kv(this->env, this->arg_cache);
-            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_NAME, rec.get_ics().get_model()->get_name());
-            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHORS, rec.get_ics().get_model()->get_author());
-            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_TAG, rec.get_ics().get_model()->get_tag());
-            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_N_INIT, boost::lexical_cast<std::string>(rec.get_ics().get_N_initial()));
-            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_N_CROSSING, boost::lexical_cast<std::string>(rec.get_ics().get_N_horizon_crossing()));
+            const initial_conditions<number>& ics = rec.get_ics();
+            model<number>* mdl = ics.get_model();
 
+            key_value kv(this->env, this->arg_cache);
+            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_NAME, mdl->get_name());
+            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_CITEGUIDE, mdl->get_citeguide());
+            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_LICENSE, mdl->get_license());
+            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_REVISION, boost::lexical_cast<std::string>(mdl->get_revision()));
+            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_N_INIT, boost::lexical_cast<std::string>(ics.get_N_initial()));
+            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_N_CROSSING, boost::lexical_cast<std::string>(ics.get_N_horizon_crossing()));
+
+            kv.set_tiling(true);
             kv.write(std::cout);
             std::cout << '\n';
 
-            key_value kv_params(this->env, this->arg_cache);
-            const parameters<number>& params = rec.get_ics().get_params();
-            const std::vector<number>& param_vec = params.get_vector();
-            const std::vector<std::string>& param_names = rec.get_ics().get_model()->get_param_names();
+            const std::string& description = mdl->get_description();
+            if(!description.empty())
+              {
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_PACKAGE_MODEL_DESCRIPTION;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+                std::cout << description << '\n' << '\n';
+              }
 
-            kv_params.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MP, boost::lexical_cast<std::string>(params.get_Mp()));
+            const author_db& db = mdl->get_authors();
+            if(!db.empty())
+              {
+                std::vector<column_descriptor> columns;
+                std::vector<std::string> name;
+                std::vector<std::string> email;
+                std::vector<std::string> institute;
+
+                for(const author_db::value_type& item : db)
+                  {
+                    if(item.second)
+                      {
+                        const author_record& record = *item.second;
+                        name.push_back(record.get_name());
+                        email.push_back(record.get_email());
+                        institute.push_back(record.get_institute());
+                      }
+                  }
+
+                columns.emplace_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHOR_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHOR_EMAIL, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHOR_INSTITUTE, column_justify::left);
+
+                std::vector< std::vector<std::string> > table;
+                table.push_back(name);
+                table.push_back(email);
+                table.push_back(institute);
+
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHORS;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+
+                asciitable at(std::cout, this->env, this->arg_cache);
+                at.set_terminal_output(true);
+                at.write(columns, table);
+                std::cout << '\n';
+              }
+
+            const std::vector<std::string> references = mdl->get_references();
+            if(!references.empty())
+              {
+                kv.reset();
+
+                unsigned int serial = 1;
+                for(const std::string& s : references)
+                  {
+                    kv.insert_back(boost::lexical_cast<std::string>(serial), s);
+                    ++serial;
+                  }
+
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_PACKAGE_MODEL_REFERENCES;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+
+                kv.set_tiling(false);
+                kv.write(std::cout);
+                std::cout << '\n';
+              }
+
+            const std::vector<std::string> urls = mdl->get_urls();
+            if(!urls.empty())
+              {
+                kv.reset();
+
+                unsigned int serial = 1;
+                for(const std::string& s : urls)
+                  {
+                    kv.insert_back(boost::lexical_cast<std::string>(serial), s);
+                    ++serial;
+                  }
+
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_PACKAGE_MODEL_URLS;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+
+                kv.set_tiling(false);
+                kv.write(std::cout);
+                std::cout << '\n';
+              }
+
+            kv.reset();
+            const parameters<number>& params = ics.get_params();
+            const std::vector<number>& param_vec = params.get_vector();
+            const std::vector<std::string>& param_names = mdl->get_param_names();
+
+            kv.insert_back(CPPTRANSPORT_REPORT_PACKAGE_MP, boost::lexical_cast<std::string>(params.get_Mp()));
             for(unsigned int i = 0; i < param_vec.size() && i < param_names.size(); ++i)
               {
-                kv_params.insert_back(param_names[i], boost::lexical_cast<std::string>(param_vec[i]));
+                kv.insert_back(param_names[i], boost::lexical_cast<std::string>(param_vec[i]));
               }
 
             if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
@@ -551,17 +649,17 @@ namespace transport
             if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
             std::cout << '\n';
 
-            kv_params.set_tiling(true);
-            kv_params.write(std::cout);
+            kv.set_tiling(true);
+            kv.write(std::cout);
             std::cout << '\n';
 
-            key_value kv_ics(this->env, this->arg_cache);
-            const std::vector<number>& ics_vec = rec.get_ics().get_vector();
-            const std::vector<std::string>& coord_names = rec.get_ics().get_model()->get_state_names();
+            kv.reset();
+            const std::vector<number>& ics_vec = ics.get_vector();
+            const std::vector<std::string>& coord_names = mdl->get_state_names();
 
             for(unsigned int i = 0; i < ics_vec.size() && i < coord_names.size(); ++i)
               {
-                kv_ics.insert_back(coord_names[i], boost::lexical_cast<std::string>(ics_vec[i]));
+                kv.insert_back(coord_names[i], boost::lexical_cast<std::string>(ics_vec[i]));
               }
 
             if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
@@ -569,8 +667,8 @@ namespace transport
             if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
             std::cout << '\n';
 
-            kv_ics.set_tiling(true);
-            kv_ics.write(std::cout);
+            kv.set_tiling(true);
+            kv.write(std::cout);
 
             this->force_newline();
           }

@@ -14,6 +14,11 @@ author "David Seery"
    institute "University of Sussex";
  };
 
+author "David Mulryne"
+ { email     "D.Mulryne@qmul.ac.uk";
+   institute "Queen Mary, University of London";
+ };
+
 % include details of library tags, stepper definitions, etc.
 #include "defaults.model"
 

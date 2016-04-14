@@ -45,10 +45,19 @@ constexpr auto CPPTRANSPORT_REPORT_PACKAGE_N_INIT                 = "N_init";
 constexpr auto CPPTRANSPORT_REPORT_PACKAGE_N_CROSSING             = "N*";
 constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_NAME             = "Model";
 constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHORS          = "Authors";
-constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_TAG              = "Tagline";
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_CITEGUIDE        = "Cite guide";
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_DESCRIPTION      = "Description";
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_LICENSE          = "License";
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_REVISION         = "Revision";
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_REFERENCES       = "References";
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_URLS             = "URLs";
 constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MP                     = "M_Planck";
 constexpr auto CPPTRANSPORT_REPORT_PACKAGE_PARAMETERS             = "Model parameters";
 constexpr auto CPPTRANSPORT_REPORT_PACKAGE_ICS                    = "Initial conditions";
+
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHOR_NAME      = "Name";
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHOR_EMAIL     = "Email";
+constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHOR_INSTITUTE = "Institute";
 
 constexpr auto CPPTRANSPORT_REPORT_TASK_TYPE                      = "Task type";
 constexpr auto CPPTRANSPORT_REPORT_PARENT_TASK                    = "Parent task";

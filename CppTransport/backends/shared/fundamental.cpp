@@ -34,10 +34,15 @@ namespace macro_packages
         pre_package.emplace_back(BIND(replace_guard, "GUARD"));
         pre_package.emplace_back(BIND(replace_date, "DATE"));
         pre_package.emplace_back(BIND(replace_source, "SOURCE"));
-        pre_package.emplace_back(BIND(replace_name, "NAME"));
-        pre_package.emplace_back(BIND(replace_author, "AUTHOR"));
-        pre_package.emplace_back(BIND(replace_citeguide, "CITEGUIDE"));
         pre_package.emplace_back(BIND(replace_model, "MODEL"));
+        pre_package.emplace_back(BIND(replace_name, "NAME"));
+        pre_package.emplace_back(BIND(replace_author, "AUTHORS"));
+        pre_package.emplace_back(BIND(replace_citeguide, "CITEGUIDE"));
+        pre_package.emplace_back(BIND(replace_description, "DESCRIPTION"));
+        pre_package.emplace_back(BIND(replace_license, "LICENSE"));
+        pre_package.emplace_back(BIND(replace_revision, "REVISION"));
+        pre_package.emplace_back(BIND(replace_references, "REFERENCES"));
+        pre_package.emplace_back(BIND(replace_urls, "URLS"));
         pre_package.emplace_back(BIND(replace_uid, "UNIQUE_ID"));
         pre_package.emplace_back(BIND(replace_header, "HEADER"));
         pre_package.emplace_back(BIND(replace_core, "CORE"));
@@ -172,7 +177,7 @@ namespace macro_packages
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_name();
         if(value)
           {
-            return *value;
+            return to_printable(*value);
           }
         else
           {
@@ -191,9 +196,28 @@ namespace macro_packages
         for(const author_table::value_type& item : table)
           {
             const author_declaration& decl = *item.second;
-            std::ostringstream ctor;
-            ctor << record << "(\"" << decl.get_name() << "\", \"" << decl.get_email() << "\", \"" << decl.get_institute() << "\")";
-            init_list.push_back(ctor.str());
+            std::string ctor = record;
+
+            size_t pos;
+            std::string name = to_printable(decl.get_name());
+            while((pos = ctor.find("$NAME")) != std::string::npos)
+              {
+                ctor.replace(pos, 5, name);
+              }
+
+            std::string email = to_printable(decl.get_email());
+            while((pos = ctor.find("$EMAIL")) != std::string::npos)
+              {
+                ctor.replace(pos, 6, email);
+              }
+
+            std::string institute = to_printable(decl.get_institute());
+            while((pos = ctor.find("$INSTITUTE")) != std::string::npos)
+              {
+                ctor.replace(pos, 10, institute);
+              }
+
+            init_list.push_back(ctor);
           }
 
         return this->printer.initialization_list(init_list, false);
@@ -205,7 +229,87 @@ namespace macro_packages
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_citeguide();
         if(value)
           {
-            return *value;
+            return to_printable(*value);
+          }
+        else
+          {
+            return(std::string());
+          }
+      }
+
+
+    std::string replace_description::evaluate(const macro_argument_list& args)
+      {
+        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_description();
+        if(value)
+          {
+            return to_printable(*value);
+          }
+        else
+          {
+            return(std::string());
+          }
+      }
+
+
+    std::string replace_license::evaluate(const macro_argument_list& args)
+      {
+        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_license();
+        if(value)
+          {
+            return to_printable(*value);
+          }
+        else
+          {
+            return(std::string());
+          }
+      }
+
+
+    std::string replace_revision::evaluate(const macro_argument_list& args)
+      {
+        boost::optional< contexted_value<unsigned int>& > value = this->data_payload.get_revision();
+        if(value)
+          {
+            return boost::lexical_cast<std::string>(*value);
+          }
+        else
+          {
+            return(std::string("1"));
+          }
+      }
+
+
+    std::string replace_references::evaluate(const macro_argument_list& args)
+      {
+        boost::optional< std::vector< contexted_value<std::string> >& > value = this->data_payload.get_references();
+        if(value)
+          {
+            std::vector<std::string> list;
+            for(const contexted_value<std::string>& item : *value)
+              {
+                list.push_back(item);
+              }
+            return this->printer.initialization_list(list, true);
+          }
+        else
+          {
+            return(std::string());
+          }
+      }
+
+
+    std::string replace_urls::evaluate(const macro_argument_list& args)
+      {
+        boost::optional< std::vector< contexted_value<std::string> >& > value = this->data_payload.get_urls();
+        if(value)
+          {
+            std::vector<std::string> list;
+            for(const contexted_value<std::string>& item : *value)
+              {
+                list.push_back(item);
+              }
+            return this->printer.initialization_list(list, true);
           }
         else
           {
