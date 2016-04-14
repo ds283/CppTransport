@@ -56,30 +56,31 @@ namespace cpp
         //     size is adjusted during integration according to error control. Dense output is used
         //     to obtain the states x(t) at the time points from the sequence. [runge_kutta_dopri5, bulirsch_stoer]
 
-        if(s.name == "runge_kutta_dopri5")
+        const std::string name = s.get_name();
+        if(name == "runge_kutta_dopri5")
           {
-            out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
+            out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< " << state_name << " > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
           }
-        else if(s.name == "bulirsch_stoer_dense_out")
+        else if(name == "bulirsch_stoer_dense_out")
           {
-            out << "boost::numeric::odeint::bulirsch_stoer_dense_out< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
+            out << "boost::numeric::odeint::bulirsch_stoer_dense_out< " << state_name << " >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
           }
-        else if(s.name == "bulirsch_stoer")
+        else if(name == "bulirsch_stoer")
 	        {
-						out << "boost::numeric::odeint::bulirsch_stoer< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
+						out << "boost::numeric::odeint::bulirsch_stoer< " << state_name << " >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
 	        }
-        else if(s.name == "runge_kutta_fehlberg78")
+        else if(name == "runge_kutta_fehlberg78")
           {
-            out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
+            out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< " << state_name << " > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
           }
-        else if(s.name == "runge_kutta_cash_karp45")
+        else if(name == "runge_kutta_cash_karp45")
           {
-            out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
+            out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< " << state_name << " > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
           }
         else
           {
             std::ostringstream msg;
-            msg << ERROR_UNKNOWN_STEPPER << " '" << s.name << "'";
+            msg << ERROR_UNKNOWN_STEPPER << " '" << name << "'";
             throw macro_packages::rule_apply_fail(msg.str());
           }
 

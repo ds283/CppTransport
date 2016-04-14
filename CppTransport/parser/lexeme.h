@@ -137,8 +137,8 @@ namespace lexeme    // package in a unique namespace
 
         // cache keyword and character tables;
         // these are technically needed only during construction, but we keep a copy
-        // in order that we can use them if we write out the value of the lexeme
-        // we take references, so the object referenced should not be invalidated
+        // in order that we can use them if we write out the value of the lexeme.
+        // We take references, so the object referenced should not be invalidated
         // during the lifetime of the lexeme
         const std::vector<std::string>& ktable;
         const std::vector<Keywords>&    kmap;
@@ -300,10 +300,7 @@ namespace lexeme    // package in a unique namespace
               {
                 stream << "keyword ";
 
-                assert(this->k >= 0);
-                assert(this->k < this->ktable.size());
-
-                stream << "'" << this->ktable[(int) this->k] << "'" << '\n';
+                stream << "'" << this->ktable[static_cast<int>(this->k)] << "'" << '\n';
                 break;
               }
 
@@ -311,10 +308,7 @@ namespace lexeme    // package in a unique namespace
               {
                 stream << "symbol ";
 
-                assert(this->s >= 0);
-                assert(this->s < this->ctable.size());
-
-                stream << "'" << this->ctable[(int) this->s] << "'" << '\n';
+                stream << "'" << this->ctable[static_cast<int>(this->s)] << "'" << '\n';
                 break;
               }
 

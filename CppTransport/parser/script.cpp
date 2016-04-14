@@ -115,6 +115,39 @@ void subexpr_declaration::print(std::ostream& stream) const
 	}
 
 
+// ******************************************************************
+
+
+author_declaration::author_declaration(const std::string& n, const y::lexeme_type& l, author* a)
+  : declaration_point(l)
+  {
+    auth = std::make_unique<author>(*a);
+  }
+
+
+std::string author_declaration::get_name() const
+  {
+    return this->auth->get_name();
+  }
+
+
+std::string author_declaration::get_email() const
+  {
+    return this->auth->get_email();
+  }
+
+
+std::string author_declaration::get_institute() const
+  {
+    return this->auth->get_institute();
+  }
+
+
+void author_declaration::print(std::ostream& stream) const
+  {
+    stream << "Author declaration for '" << this->get_name() << "', email = '" << this->get_email() << "', institute = '" << this->get_institute() << "'" << '\n';
+  }
+
 
 // ******************************************************************
 
@@ -135,11 +168,7 @@ script::script(symbol_factory& s, error_context err_ctx)
 		// set up reserved symbol for Planck mass
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
 
-    // set up attributes for Planck mass symbol
-		attributes Mp_attrs;
-		Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL);
-
-    // manufacture fake lexeme
+    // manufacture fake lexeme representing 'location' of Planck mass decalaration
     std::string MPlanck_buffer(MPLANCK_TEXT_NAME);
     lexeme::minus_context mctx = lexeme::minus_context::unary;
     fake_MPlanck_lexeme = std::make_unique<y::lexeme_type>(MPlanck_buffer, lexeme::buffer_type::string_literal, mctx,
@@ -147,17 +176,12 @@ script::script(symbol_factory& s, error_context err_ctx)
                                                            fake_keyword_table, fake_keyword_map, fake_character_table,
                                                            fake_character_map, fake_context_table);
 
+    // set up attributes for Planck mass symbol
+    attributes Mp_attrs;
+    Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL, *fake_MPlanck_lexeme);
+
     // emplace faked symbol table entry
 		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, *fake_MPlanck_lexeme, &Mp_attrs)));
-
-    // set up default values for the steppers
-    this->background_stepper.abserr    = DEFAULT_ABS_ERR;
-    this->background_stepper.relerr    = DEFAULT_REL_ERR;
-    this->background_stepper.name      = DEFAULT_STEPPER;
-
-    this->perturbations_stepper.abserr = DEFAULT_ABS_ERR;
-    this->perturbations_stepper.relerr = DEFAULT_REL_ERR;
-    this->perturbations_stepper.name   = DEFAULT_STEPPER;
   }
 
 
@@ -191,54 +215,85 @@ void script::set_name(const std::string n, const y::lexeme_type& l)
 
 boost::optional< contexted_value<std::string>& > script::get_name() const
   {
-    if(this->name)
-      {
-        return(*this->name);
-      }
-    else
-      {
-        return(boost::none);
-      }
+    if(this->name) return(*this->name); else return(boost::none);
   }
 
 
-void script::set_author(const std::string a, const y::lexeme_type& l)
+void script::set_citeguide(const std::string t, const y::lexeme_type& l)
   {
-    this->author.release();
-    this->author = std::make_unique< contexted_value<std::string> >(a, l.get_error_context());
+    this->citeguide.release();
+    this->citeguide = std::make_unique< contexted_value<std::string> >(t, l.get_error_context());
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_author() const
+boost::optional< contexted_value<std::string>& > script::get_citeguide() const
   {
-    if(this->author)
-      {
-        return(*this->author);
-      }
-    else
-      {
-        return(boost::none);
-      }
+    if(this->citeguide) return(*this->citeguide); else return(boost::none);
   }
 
 
-void script::set_tag(const std::string t, const y::lexeme_type& l)
+void script::set_description(const std::string d, const y::lexeme_type& l)
   {
-    this->tag.release();
-    this->tag = std::make_unique< contexted_value<std::string> >(t, l.get_error_context());
+    this->description.release();
+    this->description = std::make_unique< contexted_value<std::string> >(d, l.get_error_context());
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_tag() const
+boost::optional< contexted_value<std::string>& > script::get_description() const
   {
-    if(this->tag)
-      {
-        return(*this->tag);
-      }
-    else
-      {
-        return(boost::none);
-      }
+    if(this->description) return *this->description; else return boost::none;
+  }
+
+
+void script::set_revision(int r, const y::lexeme_type& l)
+  {
+    this->revision.release();
+    this->revision = std::make_unique< contexted_value<unsigned int> >(static_cast<unsigned int>(r), l.get_error_context());
+  }
+
+
+boost::optional< contexted_value<unsigned int>& > script::get_revision() const
+  {
+    if(this->revision) return *this->revision; else return boost::none;
+  }
+
+
+void script::set_license(const std::string lic, const y::lexeme_type& l)
+  {
+    this->license.release();
+    this->license = std::make_unique< contexted_value<std::string> >(lic, l.get_error_context());
+  }
+
+
+boost::optional< contexted_value<std::string>& > script::get_license() const
+  {
+    if(this->license) return *this->license; else return boost::none;
+  }
+
+
+void script::set_references(const std::vector< contexted_value<std::string> >& refs)
+  {
+    this->references.release();
+    this->references = std::make_unique< std::vector< contexted_value<std::string> > >(refs);
+  }
+
+
+boost::optional< std::vector< contexted_value<std::string> >& > script::get_references() const
+  {
+    if(this->references) return *this->references; else return boost::none;
+  }
+
+
+void script::set_urls(const std::vector< contexted_value<std::string> >& urls)
+  {
+    this->urls.release();
+    this->urls = std::make_unique< std::vector< contexted_value<std::string> > >(urls);
+  }
+
+
+boost::optional< std::vector< contexted_value<std::string> >& > script::get_urls() const
+  {
+    if(this->urls) return *this->urls; else return boost::none;
   }
 
 
@@ -251,14 +306,7 @@ void script::set_core(const std::string c, const y::lexeme_type& l)
 
 boost::optional< contexted_value<std::string>& > script::get_core() const
   {
-    if(this->core)
-      {
-        return(*this->core);
-      }
-    else
-      {
-        return(boost::none);
-      }
+    if(this->core) return(*this->core); else return(boost::none);
   }
 
 
@@ -271,14 +319,7 @@ void script::set_implementation(const std::string i, const y::lexeme_type& l)
 
 boost::optional< contexted_value<std::string>& > script::get_implementation() const
   {
-    if(this->implementation)
-      {
-        return(*this->implementation);
-      }
-    else
-      {
-        return(boost::none);
-      }
+    if(this->implementation) return(*this->implementation); else return(boost::none);
   }
 
 
@@ -291,14 +332,7 @@ void script::set_model(const std::string m, const y::lexeme_type& l)
 
 boost::optional< contexted_value<std::string>& > script::get_model() const
   {
-    if(this->model)
-      {
-        return(*this->model);
-      }
-    else
-      {
-        return(boost::none);
-      }
+    if(this->model) return(*this->model); else return(boost::none);
   }
 
 
@@ -316,21 +350,46 @@ enum index_order script::get_indexorder() const
 
 void script::print(std::ostream& stream) const
   {
-    std::string name = this->name ? *this->name : std::string();
-    std::string author = this->author ? *this->author : std::string();
-    std::string tag = this->tag ? *this->tag : std::string();
-    std::string model = this->model ? *this->model : std::string();
-    std::string core = this->core ? *this->core : std::string();
-    std::string impl = this->implementation ? *this->implementation : std::string();
-
     stream << "Script summary:" << '\n';
     stream << "===============" << '\n';
-    stream << "  Name           = '" << name << "'" << '\n';
-    stream << "  Model          = '" << model << "'" << '\n';
-    stream << "  Author         = '" << author << "'" << '\n';
-    stream << "  Tag            = '" << tag << "'" << '\n';
-    stream << "  Core           = '" << core << "'" << '\n';
-    stream << "  Implementation = '" << impl << "'" << '\n';
+    if(this->name)           stream << "  Name           = '" << static_cast<std::string>(*this->name) << "'" << '\n';
+    if(this->model)          stream << "  Model          = '" << static_cast<std::string>(*this->model) << "'" << '\n';
+
+    if(this->citeguide)      stream << "  Citeguide      = '" << static_cast<std::string>(*this->citeguide) << "'" << '\n';
+    if(this->description)    stream << "  Description    = '" << static_cast<std::string>(*this->description) << "'" << '\n';
+    if(this->license)        stream << "  License        = '" << static_cast<std::string>(*this->license) << "'" << '\n';
+    if(this->revision)       stream << "  Revision       = '" << static_cast<unsigned int>(*this->revision) << "'" << '\n';
+
+    if(!this->authors.empty())
+      {
+        stream << "  Authors:" << '\n';
+        for(const author_table::value_type& item : this->authors)
+          {
+            const author_declaration& decl = *item.second;
+            stream << "    " << decl.get_name() << ": <" << decl.get_email() << "> " << decl.get_institute() << '\n';
+          }
+      }
+
+    if(this->references)
+      {
+        stream << "  References:" << '\n';
+        for(const contexted_value<std::string>& v : *this->references)
+          {
+            stream << "    '" << static_cast<std::string>(v) << "'" << '\n';
+          }
+      }
+
+    if(this->urls)
+      {
+        stream << "  URLs:" << '\n';
+        for(const contexted_value<std::string>& v : *this->urls)
+          {
+            stream << "    '" << static_cast<std::string>(v) << "'" << '\n';
+          }
+      }
+
+    if(this->core)           stream << "  Core           = '" << static_cast<std::string>(*this->core) << "'" << '\n';
+    if(this->implementation) stream << "  Implementation = '" << static_cast<std::string>(*this->implementation) << "'" << '\n';
     stream << '\n';
 
     stream << "Fields:" << '\n';
@@ -451,6 +510,38 @@ bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme
 
 		return(!record);
 	}
+
+
+bool script::add_author(const std::string& n, const y::lexeme_type& l, author* a)
+  {
+    author_table::const_iterator t = this->authors.find(n);
+
+    bool exists = (t != this->authors.end());
+    if(exists)
+      {
+        std::ostringstream msg;
+        msg << ERROR_AUTHOR_EXISTS << " '" << n << "'";
+        l.error(msg.str());
+
+        std::ostringstream orig_decl;
+        orig_decl << NOTIFY_DEUPLICATE_AUTHOR_WAS << " '" << n << "'";
+        t->second->get_declaration_point().warn(orig_decl.str());
+
+        this->errors_encountered = true;
+      }
+    else
+      {
+        this->authors.emplace(std::make_pair(n, std::make_unique<author_declaration>(n, l, a)));
+      }
+
+    return(!exists);
+  }
+
+
+const author_table& script::get_author() const
+  {
+    return this->authors;
+  }
 
 
 void script::set_background_stepper(stepper*s)

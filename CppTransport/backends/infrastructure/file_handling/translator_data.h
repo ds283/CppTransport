@@ -101,11 +101,21 @@ class translator_data
 
     boost::optional< contexted_value<std::string>& > get_name() const;
 
-    boost::optional< contexted_value<std::string>& > get_author() const;
+    const author_table& get_author() const;
 
     boost::optional< contexted_value<std::string>& > get_model() const;
 
-    boost::optional< contexted_value<std::string>& > get_tag() const;
+    boost::optional< contexted_value<std::string>& > get_citeguide() const;
+
+    boost::optional< contexted_value<std::string>& > get_description() const;
+
+    boost::optional< contexted_value<std::string>& > get_license() const;
+
+    boost::optional< contexted_value<unsigned int>& > get_revision() const;
+
+    boost::optional< std::vector< contexted_value<std::string> >& > get_references() const;
+
+    boost::optional< std::vector< contexted_value<std::string> >& > get_urls() const;
 
     unsigned int     get_number_fields() const;
 

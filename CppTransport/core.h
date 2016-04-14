@@ -34,7 +34,6 @@ constexpr auto ZETA2_P_SYMBOL_NAME                   = "__InternalZ2p";
 
 constexpr auto DEFAULT_RECURSION_DEPTH               = (127);
 constexpr auto DEFAULT_MODEL_NAME                    = "UNKNOWN_MODEL";
-constexpr auto DEFAULT_AUTHOR                        = "Anonymous";
 
 constexpr auto CPPTRANSPORT_PATH_ENV                 = "CPPTRANSPORT_PATH";
 constexpr auto CPPTRANSPORT_TEMPLATE_PATH            = "cpptransport-templates";

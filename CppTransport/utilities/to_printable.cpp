@@ -14,10 +14,9 @@ std::string to_printable(const std::string& input, bool quote, bool allow_newlin
     std::back_insert_iterator<std::string> out = std::back_inserter(result);
 
     if(quote) *out++ = '"';
-    for(std::string::const_iterator i = input.begin(); i != input.end(); ++i)
+    for(const char c : input)
       {
-        unsigned char c = *i;
-        if((' ' <= c and c <= '~' and c != '\\' and c != '"') || (c == '\n' and allow_newlines))
+        if(!quote or (' ' <= c and c <= '~' and c != '\\' and c != '"') or (c == '\n' and allow_newlines))
           {
             *out++ = c;
           }

@@ -41,17 +41,17 @@ namespace vexcl
         const struct stepper& s = this->data_payload.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
-        if(s.name != VEXCL_STEPPER)
+        if(s.get_name() != VEXCL_STEPPER)
           {
             std::ostringstream msg;
-            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.name << "')";
+            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.get_name() << "')";
 
             error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
             err_context.warn(msg.str());
           }
 
         std::ostringstream out;
-        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.abserr << ", " << s.relerr << ")";
+        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
 
         return(out.str());
       }
@@ -62,17 +62,17 @@ namespace vexcl
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
-        if(s.name != VEXCL_STEPPER)
+        if(s.get_name() != VEXCL_STEPPER)
           {
             std::ostringstream msg;
-            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.name << "')";
+            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.get_name() << "')";
 
             error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
             err_context.warn(msg.str());
           }
 
         std::ostringstream out;
-        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.abserr << ", " << s.relerr << ")";
+        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
 
         return(out.str());
       }

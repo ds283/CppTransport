@@ -86,15 +86,15 @@ namespace transport
 
             //! write integration tasks tab
             template <typename number>
-            void write_integration(HTML_report_bundle<number>& bundle, HTML_node& parent);
+            void write_integration(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent);
 
             //! write postintegration tasks tab
             template <typename number>
-            void write_postintegration(HTML_report_bundle<number>& bundle, HTML_node& parent);
+            void write_postintegration(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent);
 
             //! write output tasks tab
             template <typename number>
-            void write_output(HTML_report_bundle<number>& bundle, HTML_node& parent);
+            void write_output(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent);
 
             //! write derived products tab
             template <typename number>
@@ -414,7 +414,7 @@ namespace transport
 
             //! write a link-to-package button
             template <typename number>
-            void write_package_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& element, HTML_node& parent);
+            void write_package_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& pane, HTML_node& parent);
 
             //! write a link-to-derived product button
             template <typename number>
@@ -498,7 +498,8 @@ namespace transport
 
             //! build a content-group menu tab
             template <typename number, typename DatabaseType>
-            HTML_node make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name);
+            HTML_node make_dropdown_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle,
+                                             std::string name);
 
             //! write a grid data element
             void make_data_element(std::string l, std::string v, HTML_node& parent);
@@ -664,6 +665,35 @@ namespace transport
           }
 
 
+        namespace HTML_report_impl
+          {
+
+            // duplicate a database record
+            // (such records are not copyable because of std::unique_ptr<>'s disabled copy constructor)
+            template <typename Iterator, typename DestinationContainer, typename Predicate>
+            void duplicate_if(Iterator current, Iterator end, DestinationContainer& ctr, Predicate pred)
+              {
+                while(current != end)
+                  {
+                    // curent points to a std::pair< const std::string, std::unique_ptr<RecordType> >
+                    if(pred(*current))
+                      {
+                        const typename DestinationContainer::value_type::second_type::element_type& record = *(current->second);
+
+                        std::unique_ptr<typename DestinationContainer::value_type::second_type::element_type> new_ptr(dynamic_cast<typename DestinationContainer::value_type::second_type::element_type*>(record.clone()));
+
+                        ctr.emplace(std::make_pair(current->first, std::move(new_ptr)));
+                      }
+
+                    ++current;
+                  }
+              }
+
+          }   // namespace HTML_report_impl
+
+        using namespace HTML_report_impl;
+
+
         template <typename number>
         void HTML_report::generate_report_body(HTML_report_bundle<number>& bundle, HTML_node& parent)
           {
@@ -688,30 +718,38 @@ namespace transport
             tablist.add_attribute("id", "tabs").add_attribute("class", "nav navbar-nav").add_attribute("role", "tablist");
 
             // Package tab
-            HTML_node package_tab = this->make_menu_tab("packages", "Packages");
-            // mark this tab as active by default
-            package_tab.add_attribute("class", "active");
+            HTML_node package_tab = this->make_dropdown_menu_tab(bundle.get_package_db(), bundle, "Packages");
+
+            typename task_db<number>::type i_tasks;
+            typename task_db<number>::type p_tasks;
+            typename task_db<number>::type o_tasks;
+
+            const typename task_db<number>::type & tasks = bundle.get_task_db();
+
+            duplicate_if(tasks.begin(), tasks.end(), i_tasks, [&](const typename task_db<number>::type::value_type& t) -> bool { return(t.second && t.second->get_type() == task_type::integration); });
+            duplicate_if(tasks.begin(), tasks.end(), p_tasks, [&](const typename task_db<number>::type::value_type& t) -> bool { return(t.second && t.second->get_type() == task_type::postintegration); } );
+            duplicate_if(tasks.begin(), tasks.end(), o_tasks, [&](const typename task_db<number>::type::value_type& t) -> bool { return(t.second && t.second->get_type() == task_type::output); } );
 
             // Integration tasks tab
-            HTML_node integration_tasks_tab = this->make_menu_tab("integration", "Integration tasks");
+            HTML_node integration_tasks_tab = this->make_dropdown_menu_tab(i_tasks, bundle, "Integration tasks");
 
             // Integration content tab
-            HTML_node integration_content_tab = this->make_content_menu_tab<number>(bundle.get_integration_content_db(), bundle, "Integration content");
+            HTML_node integration_content_tab = this->make_dropdown_menu_tab<number>(bundle.get_integration_content_db(), bundle, "Integration content");
 
             // Postintegration tasks tab
-            HTML_node postintegration_tasks_tab = this->make_menu_tab("postintegration", "Postintegration tasks");
+            HTML_node postintegration_tasks_tab = this->make_dropdown_menu_tab(p_tasks, bundle, "Postintegration tasks");
 
             // Postintegration content tab
-            HTML_node postintegration_content_tab = this->make_content_menu_tab<number>(bundle.get_postintegration_content_db(), bundle, "Postintegration content");
+            HTML_node postintegration_content_tab = this->make_dropdown_menu_tab<number>(bundle.get_postintegration_content_db(), bundle, "Postintegration content");
 
             // Output tasks tab
-            HTML_node output_tasks_tab = this->make_menu_tab("output", "Output tasks");
+            HTML_node output_tasks_tab = this->make_dropdown_menu_tab(o_tasks, bundle, "Output tasks");
 
             // Output content tab
-            HTML_node output_content_tab = this->make_content_menu_tab<number>(bundle.get_output_content_db(), bundle, "Output content");
+            HTML_node output_content_tab = this->make_dropdown_menu_tab<number>(bundle.get_output_content_db(), bundle, "Output content");
 
             // Derived products tab
-            HTML_node derived_products_tab = this->make_content_menu_tab<number>(bundle.get_derived_product_db(), bundle, "Derived products");
+            HTML_node derived_products_tab = this->make_dropdown_menu_tab<number>(bundle.get_derived_product_db(), bundle, "Derived products");
 
             tablist.add_element(package_tab);
             tablist.add_element(integration_tasks_tab);
@@ -731,32 +769,13 @@ namespace transport
             HTML_node tab_panes("div");
             tab_panes.add_attribute("class", "tab-content");
 
-            HTML_node package_pane("div");
-            package_pane.add_attribute("id", "packages").add_attribute("class", "tab-pane fade in active");
-            this->write_packages(bundle, package_pane);
-            tab_panes.add_element(package_pane);
-
-            HTML_node integration_task_pane("div");
-            integration_task_pane.add_attribute("id", "integration").add_attribute("class", "tab-pane fade");
-            this->write_integration(bundle, integration_task_pane);
-            tab_panes.add_element(integration_task_pane);
-
+            this->write_packages(bundle, tab_panes);
+            this->write_integration(bundle, i_tasks, tab_panes);
             this->write_integration_content(bundle, tab_panes);
-
-            HTML_node postintegration_task_pane("div");
-            postintegration_task_pane.add_attribute("id", "postintegration").add_attribute("class", "tab-pane fade");
-            this->write_postintegration(bundle, postintegration_task_pane);
-            tab_panes.add_element(postintegration_task_pane);
-
+            this->write_postintegration(bundle, p_tasks, tab_panes);
             this->write_postintegration_content(bundle, tab_panes);
-
-            HTML_node output_task_pane("div");
-            output_task_pane.add_attribute("id", "output").add_attribute("class", "tab-pane fade");
-            this->write_output(bundle, output_task_pane);
-            tab_panes.add_element(output_task_pane);
-
+            this->write_output(bundle, o_tasks, tab_panes);
             this->write_output_content(bundle, tab_panes);
-
             this->write_derived_products(bundle, tab_panes);
 
             parent.add_element(navbar);
@@ -777,7 +796,8 @@ namespace transport
 
 
         template <typename number, typename DatabaseType>
-        HTML_node HTML_report::make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name)
+        HTML_node HTML_report::make_dropdown_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle,
+                                                      std::string name)
           {
             HTML_node tab("li");
             HTML_node anchor("a", name);
@@ -826,9 +846,19 @@ namespace transport
           {
             HTML_node label("dt", l);
 
-            HTML_node value("dd", v);
-
-            parent.add_element(label).add_element(value);
+            if(!v.empty())
+              {
+                HTML_node value("dd", v);
+                parent.add_element(label).add_element(value);
+              }
+            else
+              {
+                HTML_node value("dd");
+                HTML_node lbl("span", "UNSET");
+                lbl.add_attribute("class", "label label-default");
+                value.add_element(lbl);
+                parent.add_element(label).add_element(value);
+              }
           }
 
 
@@ -865,18 +895,35 @@ namespace transport
           {
             typename package_db<number>::type& db = bundle.get_package_db();
 
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
+            bool marked_active = false;
 
             // step through all packages, writing them out as list elements
             for(const typename package_db<number>::value_type& pkg : db)
               {
                 const package_record<number>& rec = *pkg.second;
+                const initial_conditions<number>& ics = rec.get_ics();
+                model<number>* mdl = ics.get_model();
 
-                HTML_node item("a");
-                item.add_attribute("href", "#" + bundle.get_id(rec)).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                std::string tag = bundle.get_id(rec);
+
+                HTML_node pane("div");
+                pane.add_attribute("id", tag);
+                if(!marked_active)
+                  {
+                    // mark first tab as active by default
+                    pane.add_attribute("class", "tab-pane active");
+                    marked_active = true;
+                  }
+                else
+                  {
+                    pane.add_attribute("class", "tab-pane fade");
+                  }
+
+                HTML_node list("ul");
+                list.add_attribute("class", "list-group");
+
+                HTML_node item("li");
+                item.add_attribute("class", "list-group-item");
                 this->make_list_item_label(rec.get_name(), item);
 
                 // write generic repository information for this record
@@ -890,7 +937,15 @@ namespace transport
 
                 HTML_node panel_body("div");
                 panel_body.add_attribute("class", "panel-body");
-                
+
+                const std::string& description = mdl->get_description();
+                if(!description.empty())
+                  {
+                    HTML_node well("div", description);
+                    well.add_attribute("class", "well");
+                    panel_body.add_element(well);
+                  }
+
                 HTML_node row("div");
                 row.add_attribute("class", "row");
                 
@@ -899,34 +954,90 @@ namespace transport
                 HTML_node col1_list("dl");
                 col1_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Model", rec.get_ics().get_model()->get_name(), col1_list);
-                this->make_data_element("Authors", rec.get_ics().get_model()->get_author(), col1_list);
-
-                col1.add_element(col1_list);
-
                 HTML_node col2("div");
                 col2.add_attribute("class", "col-md-4");
                 HTML_node col2_list("dl");
                 col2_list.add_attribute("class", "dl-horizontal");
-
-                this->make_data_element("Initial time", format_number(rec.get_ics().get_N_initial(), this->efolds_precision) + " e-folds", col2_list);
-                this->make_data_element("Horizon-crossing time", format_number(rec.get_ics().get_N_horizon_crossing(), this->efolds_precision) + " e-folds", col2_list);
-
-                col2.add_element(col2_list);
 
                 HTML_node col3("div");
                 col3.add_attribute("class", "col-md-4");
                 HTML_node col3_list("dl");
                 col3_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Citation data", rec.get_ics().get_model()->get_tag(), col3_list);
+                this->make_data_element("Model", mdl->get_name(), col1_list);
+                this->make_data_element("License", mdl->get_license(), col1_list);
 
+                this->make_data_element("Initial time", format_number(ics.get_N_initial(), this->efolds_precision) + " e-folds", col2_list);
+                this->make_data_element("Horizon-crossing time", format_number(ics.get_N_horizon_crossing(), this->efolds_precision) + " e-folds", col2_list);
+
+                this->make_data_element("Citation data", mdl->get_citeguide(), col3_list);
+                this->make_data_element("Revision", boost::lexical_cast<std::string>(mdl->get_revision()), col3_list);
+
+                col1.add_element(col1_list);
+                col2.add_element(col2_list);
                 col3.add_element(col3_list);
 
                 row.add_element(col1).add_element(col2).add_element(col3);
                 panel_body.add_element(row);
                 panel.add_element(panel_heading).add_element(panel_body);
                 item.add_element(panel);
+
+                const author_db& authors = mdl->get_authors();
+                if(!authors.empty())
+                  {
+                    HTML_node author_panel("div");
+                    author_panel.add_attribute("class", "panel panel-default topskip");
+
+                    HTML_node heading("div", "Authors");
+                    heading.add_attribute("class", "panel-heading");
+
+                    HTML_node table_wrapper("div");
+                    HTML_node table("table");
+
+                    if(authors.size() > CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE)
+                      {
+                        table_wrapper.add_attribute("class", "table-responsive padded");
+                        table.add_attribute("class", "table table-striped table-condensed sortable-pageable");
+                      }
+                    else
+                      {
+                        table_wrapper.add_attribute("class", "table-responsive");
+                        table.add_attribute("class", "table table-striped table-condensed sortable");
+                      }
+
+                    HTML_node head("thead");
+                    HTML_node hrow("tr");
+
+                    HTML_node name_label("th", "Name");
+                    HTML_node email_label("th", "Email");
+                    HTML_node institute_label("th", "Institute");
+                    hrow.add_element(name_label).add_element(email_label).add_element(institute_label);
+                    head.add_element(hrow);
+
+                    HTML_node body("tbody");
+                    for(const author_db::value_type& author : authors)
+                      {
+                        if(author.second)
+                          {
+                            const author_record& record = *author.second;
+
+                            HTML_node brow("tr");
+                            HTML_node name("td", record.get_name());
+                            HTML_node email("td");
+                            HTML_node email_anchor("a", record.get_email());
+                            email_anchor.add_attribute("href", record.format_email());
+                            email.add_element(email_anchor);
+                            HTML_node institute("td", record.get_institute());
+                            brow.add_element(name).add_element(email).add_element(institute);
+                            body.add_element(brow);
+                          }
+                      }
+
+                    table.add_element(head).add_element(body);
+                    table_wrapper.add_element(table);
+                    author_panel.add_element(heading).add_element(table_wrapper);
+                    item.add_element(author_panel);
+                  }
 
                 HTML_node params_column("div");
                 params_column.add_attribute("class", "col-md-6 topskip");
@@ -1054,23 +1165,83 @@ namespace transport
                 data_grid.add_element(params_column).add_element(ics_column);
                 item.add_element(data_grid);
 
-                list.add_element(item);
-              }
+                const std::vector<std::string>& references = mdl->get_references();
+                if(!references.empty())
+                  {
+                    HTML_node button("button");
+                    button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "references");
+                    button.add_attribute("type", "button").add_attribute("class", "btn btn-info topskip");
+                    this->make_badged_text("References", references.size(), button);
 
-            parent.add_element(list);
+                    HTML_node group_list("div");
+                    group_list.add_attribute("id", tag + "references").add_attribute("class", "collapse");
+
+                    HTML_node tbl_panel("div");
+                    tbl_panel.add_attribute("class", "panel panel-info scrollable-panel topskip");
+
+                    HTML_node panel_head("div", "References associated with this model");
+                    panel_head.add_attribute("class", "panel-heading");
+
+                    HTML_node item_list("ul");
+                    item_list.add_attribute("class", "list-group");
+
+                    for(const std::string& s : references)
+                      {
+                        HTML_node list_item("li", s);
+                        list_item.add_attribute("class", "list-group-item");
+                        item_list.add_element(list_item);
+                      }
+
+                    tbl_panel.add_element(panel_head).add_element(item_list);
+                    group_list.add_element(tbl_panel);
+                    item.add_element(button).add_element(group_list);
+                  }
+
+                const std::vector<std::string>& urls = mdl->get_urls();
+                if(!urls.empty())
+                  {
+                    HTML_node button("button");
+                    button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "urls");
+                    button.add_attribute("type", "button").add_attribute("class", "btn btn-info topskip");
+                    this->make_badged_text("URLs", urls.size(), button);
+
+                    HTML_node group_list("div");
+                    group_list.add_attribute("id", tag + "urls").add_attribute("class", "collapse");
+
+                    HTML_node tbl_panel("div");
+                    tbl_panel.add_attribute("class", "panel panel-info scrollable-panel topskip");
+
+                    HTML_node panel_head("div", "URLs associated with this model");
+                    panel_head.add_attribute("class", "panel-heading");
+
+                    HTML_node item_list("ul");
+                    item_list.add_attribute("class", "list-group");
+
+                    for(const std::string& s : urls)
+                      {
+                        HTML_node list_item("li");
+                        list_item.add_attribute("class", "list-group-item");
+                        HTML_node anchor("a", s);
+                        anchor.add_attribute("href", s);
+                        list_item.add_element(anchor);
+                        item_list.add_element(list_item);
+                      }
+
+                    tbl_panel.add_element(panel_head).add_element(item_list);
+                    group_list.add_element(tbl_panel);
+                    item.add_element(button).add_element(group_list);
+                  }
+
+                list.add_element(item);
+                pane.add_element(list);
+                parent.add_element(pane);
+              }
           }
 
 
         template <typename number>
-        void HTML_report::write_integration(HTML_report_bundle<number>& bundle, HTML_node& parent)
+        void HTML_report::write_integration(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent)
           {
-            typename task_db<number>::type& db = bundle.get_task_db();
-
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
-
             for(const typename task_db<number>::value_type& task : db)
               {
                 const task_record<number>& pre_rec = *task.second;
@@ -1080,8 +1251,14 @@ namespace transport
                     const integration_task_record<number>& rec = dynamic_cast< const integration_task_record<number>& >(pre_rec);
                     const std::string tag = bundle.get_id(rec);
 
-                    HTML_node item("a");
-                    item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                    HTML_node pane("div");
+                    pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
+
+                    HTML_node list("ul");
+                    list.add_attribute("class", "list-group");
+
+                    HTML_node item("li");
+                    item.add_attribute("class", "list-group-item");
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
@@ -1239,10 +1416,10 @@ namespace transport
                       }
 
                     list.add_element(item);
+                    pane.add_element(list);
+                    parent.add_element(pane);
                   }
               }
-
-            parent.add_element(list);
           }
 
 
@@ -1287,7 +1464,7 @@ namespace transport
 
             this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation(), this->efolds_precision) + " e-folds", col2_list);
             this->make_data_element("ln <var>a</var><sub>*</sub>", format_number(tk.get_astar_normalization(), this->misc_precision), col2_list);
-            this->make_data_element("Adaptive ICs", tk.get_fast_forward() ? format_number(tk.get_fast_forward_efolds(), this->efolds_precision) + " e-folds" : "No", col2_list);
+            this->make_data_element("Adaptive ICs", tk.get_adaptive_ics() ? format_number(tk.get_adaptive_ics_efolds(), this->efolds_precision) + " e-folds" : "No", col2_list);
             this->make_data_element("Collect ICs", tk.get_collect_initial_conditions() ? "Yes" : "No", col2_list);
 
             const time_config_database& time_db = tk.get_stored_time_config_database();
@@ -1600,15 +1777,8 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_postintegration(HTML_report_bundle<number>& bundle, HTML_node& parent)
+        void HTML_report::write_postintegration(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent)
           {
-            typename task_db<number>::type& db = bundle.get_task_db();
-
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
-
             for(const typename task_db<number>::value_type& task : db)
               {
                 const task_record<number>& pre_rec = *task.second;
@@ -1618,8 +1788,14 @@ namespace transport
                     const postintegration_task_record<number>& rec = dynamic_cast< const postintegration_task_record<number>& >(pre_rec);
                     const std::string tag = bundle.get_id(rec);
 
-                    HTML_node item("a");
-                    item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                    HTML_node pane("div");
+                    pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
+
+                    HTML_node list("ul");
+                    list.add_attribute("class", "list-group");
+
+                    HTML_node item("li");
+                    item.add_attribute("class", "list-group-item");
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
@@ -1759,23 +1935,16 @@ namespace transport
                       }
 
                     list.add_element(item);
+                    pane.add_element(list);
+                    parent.add_element(pane);
                   }
               }
-
-            parent.add_element(list);
           }
 
 
         template <typename number>
-        void HTML_report::write_output(HTML_report_bundle<number>& bundle, HTML_node& parent)
+        void HTML_report::write_output(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent)
           {
-            typename task_db<number>::type& db = bundle.get_task_db();
-
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
-
             for(const typename task_db<number>::value_type& task : db)
               {
                 const task_record<number>& pre_rec = *task.second;
@@ -1785,8 +1954,14 @@ namespace transport
                     const output_task_record<number>& rec = dynamic_cast< const output_task_record<number>& >(pre_rec);
                     const std::string tag = bundle.get_id(rec);
 
-                    HTML_node item("a");
-                    item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                    HTML_node pane("div");
+                    pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
+
+                    HTML_node list("ul");
+                    list.add_attribute("class", "list-group");
+
+                    HTML_node item("li");
+                    item.add_attribute("class", "list-group-item");
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
@@ -1949,10 +2124,10 @@ namespace transport
                       }
 
                     list.add_element(item);
+                    pane.add_element(list);
+                    parent.add_element(pane);
                   }
               }
-
-            parent.add_element(list);
           }
 
 
@@ -1970,11 +2145,11 @@ namespace transport
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                HTML_node list("div");
+                HTML_node list("ul");
                 list.add_attribute("class", "list-group");
 
-                HTML_node anchor("a");
-                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node anchor("li");
+                anchor.add_attribute("class", "list-group-item");
 
                 this->make_list_item_label(rec.get_name(), anchor);
                 this->write_generic_record(bundle, rec, anchor);
@@ -2277,7 +2452,7 @@ namespace transport
             for(const std::unique_ptr< derived_data::derived_line<number> >& line : lines)
               {
                 HTML_node item("li");
-                item.add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                item.add_attribute("class", "list-group-item");
 
                 std::ostringstream lbl_text;
                 lbl_text << "Line " << ++count;
@@ -3091,11 +3266,11 @@ namespace transport
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                HTML_node list("div");
+                HTML_node list("ul");
                 list.add_attribute("class", "list-group");
 
-                HTML_node anchor("a");
-                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node anchor("li");
+                anchor.add_attribute("class", "list-group-item");
 
                 this->make_list_item_label(rec.get_name(), anchor);
                 this->write_generic_output_record(bundle, rec, anchor);
@@ -3805,11 +3980,11 @@ namespace transport
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                HTML_node list("div");
+                HTML_node list("ul");
                 list.add_attribute("class", "list-group");
 
-                HTML_node anchor("a");
-                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node anchor("li");
+                anchor.add_attribute("class", "list-group-item");
 
                 this->make_list_item_label(rec.get_name(), anchor);
                 this->write_generic_output_record(bundle, rec, anchor);
@@ -3901,11 +4076,11 @@ namespace transport
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                HTML_node list("div");
+                HTML_node list("ul");
                 list.add_attribute("class", "list-group");
 
-                HTML_node anchor("a");
-                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node anchor("li");
+                anchor.add_attribute("class", "list-group-item");
 
                 this->make_list_item_label(rec.get_name(), anchor);
                 this->write_generic_output_record(bundle, rec, anchor);
@@ -3928,7 +4103,7 @@ namespace transport
                         boost::filesystem::path extension = filename.extension();
 
                         HTML_node it("li");
-                        it.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                        it.add_attribute("class", "list-group-item");
                         HTML_node title("h4", filename.string());
                         title.add_attribute("class", "list-group-item-text lead");
                         it.add_element(title);
@@ -4344,7 +4519,7 @@ namespace transport
             if(t != tk_db.end())
               {
                 // find task tag
-                std::string element_id = bundle.get_id(*t->second);
+                std::string pane_id = bundle.get_id(*t->second);
                 std::string button_id = this->make_button_tag();
 
                 HTML_node button("button");
@@ -4352,30 +4527,7 @@ namespace transport
                 this->make_badged_text(name, t->second->get_content_groups().size(), button);
 
                 parent.add_element(button);
-
-                std::string pane;
-                switch(t->second->get_type())
-                  {
-                    case task_type::integration:
-                      {
-                        pane = "integration";
-                        break;
-                      }
-
-                    case task_type::postintegration:
-                      {
-                        pane = "postintegration";
-                        break;
-                      }
-
-                    case task_type::output:
-                      {
-                        pane = "output";
-                        break;
-                      }
-                  }
-
-                this->write_JavaScript_button(bundle, button_id, pane, element_id);
+                this->write_JavaScript_button(bundle, button_id, pane_id);
               }
             else
               {
@@ -4445,9 +4597,9 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_package_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& element, HTML_node& parent)
+        void HTML_report::write_package_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& pane, HTML_node& parent)
           {
-            if(!element.empty())
+            if(!pane.empty())
               {
                 std::string button_id = this->make_button_tag();
 
@@ -4456,7 +4608,7 @@ namespace transport
 
                 parent.add_element(button);
 
-                this->write_JavaScript_button(bundle, button_id, "packages", element);
+                this->write_JavaScript_button(bundle, button_id, pane);
               }
             else
               {

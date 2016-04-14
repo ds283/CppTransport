@@ -60,17 +60,27 @@ namespace y
 
 		    void add_subexpr(lexeme_type* lex, subexpr* e);
 
+        void set_model(lexeme_type* lex);
+
         void set_name(lexeme_type* lex);
 
-        void set_author(lexeme_type* lex);
+        void add_author(lexeme_type* lex, author* a);
 
-        void set_tag(lexeme_type* lex);
+        void set_citeguide(lexeme_type* lex);
+
+        void set_description(lexeme_type* lex);
+
+        void set_revision(lexeme_type* lex);
+
+        void set_license(lexeme_type* lex);
+
+        void set_references(string_array* a);
+
+        void set_urls(string_array* a);
 
         void set_core(lexeme_type* lex);
 
         void set_implementation(lexeme_type* lex);
-
-        void set_model(lexeme_type* lex);
 
         void set_potential(GiNaC::ex* V);
 
@@ -79,6 +89,12 @@ namespace y
         void set_indexorder_right();
 
         void add_latex_attribute(attributes* a, lexeme_type* lex);
+
+        void add_string(string_array* a, lexeme_type* lex);
+
+        void add_email(author* a, lexeme_type* lex);
+
+        void add_institute(author* a, lexeme_type* institute);
 		    
 		    void add_latex_attribute(subexpr* e, lexeme_type* lex);
 

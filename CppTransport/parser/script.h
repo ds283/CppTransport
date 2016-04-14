@@ -12,6 +12,7 @@
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <map>
 
 #include "stepper.h"
 #include "model_settings.h"
@@ -22,6 +23,8 @@
 #include "input_stack.h"
 #include "error_context.h"
 #include "contexted_value.h"
+
+#include "defaults.h"
 
 #include "y_common.h"
 
@@ -210,16 +213,14 @@ class subexpr_declaration : public declaration
 	};
 
 
-constexpr double DEFAULT_ABS_ERR   = 1E-6;
-constexpr double DEFAULT_REL_ERR   = 1E-6;
-constexpr double DEFAULT_STEP_SIZE = 1E-2;
-constexpr auto   DEFAULT_STEPPER   = "runge_kutta_dopri5";
-
-constexpr unsigned int SYMBOL_TABLE_SIZE = 1024;
-
-
 class script
 	{
+
+    // ASSOCIATED TYPES
+
+  public:
+
+
 
     // CONSTRUCTOR, DESTRUCTOR
 
@@ -315,14 +316,39 @@ class script
     boost::optional< contexted_value<std::string>& > get_name() const;
 
 
-    void set_author(const std::string a, const y::lexeme_type& l);
+    bool add_author(const std::string& n, const y::lexeme_type& l, author* a);
 
-    boost::optional< contexted_value<std::string>& > get_author() const;
+    const author_table& get_author() const;
 
 
-    void set_tag(const std::string t, const y::lexeme_type& l);
+    void set_citeguide(const std::string t, const y::lexeme_type& l);
 
-    boost::optional< contexted_value<std::string>& > get_tag() const;
+    boost::optional< contexted_value<std::string>& > get_citeguide() const;
+
+
+    void set_description(const std::string t, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_description() const;
+
+
+    void set_revision(int r, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<unsigned int>& > get_revision() const;
+
+
+    void set_license(const std::string t, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_license() const;
+
+
+    void set_references(const std::vector< contexted_value<std::string> >& refs);
+
+    boost::optional< std::vector< contexted_value<std::string> >& > get_references() const;
+
+
+    void set_urls(const std::vector< contexted_value<std::string> >& urls);
+
+    boost::optional< std::vector< contexted_value<std::string> >& > get_urls() const;
 
 
     void set_core(const std::string c, const y::lexeme_type& l);
@@ -360,12 +386,24 @@ class script
     //! flag to indicate errors encountered during processing
     bool errors_encountered;
 
-    std::unique_ptr< contexted_value<std::string> > name;
-    std::unique_ptr< contexted_value<std::string> > author;
-    std::unique_ptr< contexted_value<std::string> > tag;
-    std::unique_ptr< contexted_value<std::string> > core;
-    std::unique_ptr< contexted_value<std::string> > implementation;
-    std::unique_ptr< contexted_value<std::string> > model;
+    //! 'model' is the C++ name
+    std::unique_ptr< contexted_value<std::string> >                model;
+
+    //! 'name' is a human-readable name
+    std::unique_ptr< contexted_value<std::string> >                name;
+
+    std::unique_ptr< contexted_value<std::string> >                citeguide;
+    std::unique_ptr< contexted_value<std::string> >                description;
+    std::unique_ptr< contexted_value<unsigned int> >               revision;
+    std::unique_ptr< contexted_value<std::string> >                license;
+
+    std::unique_ptr< std::vector< contexted_value<std::string> > > references;
+    std::unique_ptr< std::vector< contexted_value<std::string> > > urls;
+
+    std::unique_ptr< contexted_value<std::string> >                core;
+    std::unique_ptr< contexted_value<std::string> >                implementation;
+
+    author_table authors;
 
     enum index_order order;
 

@@ -46,6 +46,62 @@ namespace transport
 
     // MODEL OBJECTS -- objects representing inflationary models
 
+    class author_record
+      {
+
+        // CONSTRUCTOR
+
+      public:
+
+        //! constructor
+        author_record(const std::string n, const std::string e, const std::string i)
+          : name(n),
+            email(e),
+            institute(i)
+          {
+          }
+
+        //! destructor is default
+        ~author_record() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! query name of author
+        const std::string& get_name() const { return(this->name); }
+
+        //! query email address of author
+        const std::string& get_email() const { return(this->email); }
+
+        //! format email address as a link
+        const std::string format_email() const { return("mailto:" + this->email); }
+
+        //! query institute of author
+        const std::string& get_institute() const { return(this->institute); }
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! name of author
+        const std::string name;
+
+        //! email address of author
+        const std::string email;
+
+        //! institute of author
+        const std::string institute;
+
+      };
+
+
+    // set up a typedef for the author database
+    typedef std::map< std::string, std::unique_ptr<author_record> > author_db;
+
+
     // basic class from which all other model representations are derived
     template <typename number>
     class model: public abstract_flattener
@@ -78,34 +134,61 @@ namespace transport
 
         //! Return name of the model implemented by this object
         virtual const std::string&              get_name() const = 0;
+
         //! Return authors of the model implemented by this object
-        virtual const std::string&              get_author() const = 0;
-        //! Return tagline for the model implemented by this object
-        virtual const std::string&              get_tag() const = 0;
+        virtual const author_db&                get_authors() const = 0;
+
+        //! Return citation guideance for the model implemented by this object
+        virtual const std::string&              get_citeguide() const = 0;
+
+        //! Return description for the model implemented by this object
+        virtual const std::string&              get_description() const = 0;
+
+        //! Return license for the model implemented by this object
+        virtual const std::string&              get_license() const = 0;
+
+        //! Return revision for the model implemented by this object
+        virtual unsigned int                    get_revision() const = 0;
+
+        //! Return reference list for the model implemented by this object
+        virtual const std::vector<std::string>& get_references() const = 0;
+
+        //! Return URL list for the model implemented by this object
+        virtual const std::vector<std::string>& get_urls() const = 0;
+
         //! Return name of backend used to do the computation
         virtual const std::string&              get_backend() const = 0;
+
         //! Return name of stepper used to do background evolution in the computation
         virtual const std::string&              get_back_stepper() const = 0;
+
         //! Return name of stepper used to do perturbation evolution in the computation
         virtual const std::string&              get_pert_stepper() const = 0;
+
         //! Return (abs, rel) tolerance of stepper used to do background evolution
         virtual std::pair< double, double >     get_back_tol() const = 0;
+
         //! Return (abs, rel) tolerance of stepper used to do perturbation evolution
         virtual std::pair< double, double >     get_pert_tol() const = 0;
 
         //! Return number of fields belonging to the model implemented by this object
         virtual unsigned int                    get_N_fields() const = 0;
+
         //! Return number of parameters required by the model implemented by this object
         virtual unsigned int                    get_N_params() const = 0;
 
         //! Return vector of field names for the model implemented by this object
         virtual const std::vector<std::string>& get_field_names() const = 0;
+
         //! Return vector of LaTeX names for the fields of the model implemented by this object
         virtual const std::vector<std::string>& get_f_latex_names() const = 0;
+
         //! Return vector of parameter names for the model implemented by this object
         virtual const std::vector<std::string>& get_param_names() const = 0;
+
         //! Return vector of LaTeX names for the parameters of the model implemented by this object
         virtual const std::vector<std::string>& get_p_latex_names() const = 0;
+
         //! Return vector of names for the phase-space coordinates (fields+momenta) of the model implemented by this object
         virtual const std::vector<std::string>& get_state_names() const = 0;
 
@@ -116,6 +199,7 @@ namespace transport
 
         //! Compute Hubble rate H given a phase-space configuration
         virtual number H(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
+
         //! Compute slow-roll parameter epsilon given a phase-space configuration
         virtual number epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
 

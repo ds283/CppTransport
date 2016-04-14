@@ -111,7 +111,7 @@ class language_printer
   public:
 
     //! generate initialization list from a set of strings
-    virtual std::string initialization_list(const std::vector<std::string>& list) const = 0;
+    virtual std::string initialization_list(const std::vector<std::string>& list, bool quote) const = 0;
 
 
     // INTERFACE -- LAMBDAS

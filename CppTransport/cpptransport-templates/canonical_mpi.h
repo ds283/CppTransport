@@ -835,7 +835,7 @@ namespace transport
         x.resize($MODEL_pool::threepf_state_size);
 
         // fix initial conditions - background
-        // use fast-forwarding if enabled
+        // use adaptive ics if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$MODEL_pool::backg_start + $A] = ics[$A];

@@ -30,9 +30,9 @@
 namespace transport
 	{
 
-    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR = "kstar";
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR         = "kstar";
     constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION = "normalization";
-    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS = "collect-ics";
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   = "collect-ics";
 
     namespace task_impl
       {
@@ -209,21 +209,21 @@ namespace transport
         double get_astar_normalization() const { return(this->astar_normalization); }
 
 
-        // INTERFACE - FAST-FORWARD MANAGEMENT
+        // INTERFACE - ADAPTIVE INITIAL CONDITIONS
 
       public:
 
-        //! Get fast-forward integration setting
-        bool get_fast_forward() const { return(this->fast_forward); }
+        //! Get adaptive ics setting
+        bool get_adaptive_ics() const { return(this->adaptive_ics); }
 
-        //! Set fast-forward integration setting
-        virtual void set_fast_forward(bool g) { this->fast_forward = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
+        //! Set adaptive ics setting
+        virtual void set_adaptive_ics(bool g) { this->adaptive_ics = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
 
-        //! Get number of fast-forward e-folds
-        double get_fast_forward_efolds() const { return(this->ff_efolds); }
+        //! Get number of adaptive e-folds
+        double get_adaptive_ics_efolds() const { return(this->adaptive_efolds); }
 
-        //! Set number of fast-forward e-folds
-        virtual void set_fast_forward_efolds(double N) { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
+        //! Set adaptive e-folds
+        virtual void set_adaptive_ics_efolds(double N) { this->adaptive_ics = true; this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
 
         //! Get start time for a twopf configuration
         double get_initial_time(const twopf_kconfig& config) const;
@@ -256,8 +256,8 @@ namespace transport
       protected:
 
         //! override cache_stored_time_config_database()
-        //! supplied by integration_task<> in order to account for fast-forward integration
-        //! if it is being used
+        //! supplied by integration_task<> in order to account for adaptive ics
+        //! if they are being used
         virtual void cache_stored_time_config_database(double largest_conventional_k) override;
 
 
@@ -268,7 +268,7 @@ namespace transport
         //! output advisory information about horizon crossing times and number of subhorizon efolds
         void write_time_details();
 
-        //! validate intended number of subhorizon efolds (if fast-forward integration is being used),
+        //! validate intended number of subhorizon efolds (if adaptive ics are being used),
         //! or check that initial conditions allow all modes to be subhorizon at the initial time otherwise
         void validate_subhorizon_efolds();
 
@@ -308,13 +308,13 @@ namespace transport
         double astar_normalization;
 
 
-        // FAST FORWARD INTEGRATION
+        // ADAPTIVE INITIAL CONDITIONS
 
-        //! Whether to use fast-forward integration
-        bool fast_forward;
+        //! Whether to use adaptive ics
+        bool adaptive_ics;
 
-        //! Number of e-folds to use in fast-forward integration
-        double ff_efolds;
+        //! Number of e-folds to use in adaptive initial conditions
+        double adaptive_efolds;
 
 
         // TIME STEP REFINEMENT
@@ -351,8 +351,8 @@ namespace transport
     twopf_db_task<number>::twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
                                              bool ff, double ast)
 	    : integration_task<number>(nm, i, t),
-        fast_forward(ff),
-        ff_efolds(CPPTRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
+        adaptive_ics(ff),
+        adaptive_efolds(CPPTRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
         max_refinements(CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
         collect_initial_conditions(CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
@@ -369,8 +369,8 @@ namespace transport
         kstar    = reader[CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble();
         twopf_db = std::make_shared<twopf_kconfig_database>(kstar, handle);
 
-        fast_forward               = reader[CPPTRANSPORT_NODE_FAST_FORWARD].asBool();
-        ff_efolds                  = reader[CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
+        adaptive_ics               = reader[CPPTRANSPORT_NODE_ADAPTIVE_ICS].asBool();
+        adaptive_efolds            = reader[CPPTRANSPORT_NODE_ADAPTIVE_ICS_EFOLDS].asDouble();
         max_refinements            = reader[CPPTRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
         astar_normalization        = reader[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
         collect_initial_conditions = reader[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS].asBool();
@@ -380,8 +380,8 @@ namespace transport
     template <typename number>
     void twopf_db_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[CPPTRANSPORT_NODE_FAST_FORWARD]             = this->fast_forward;
-        writer[CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS]      = this->ff_efolds;
+        writer[CPPTRANSPORT_NODE_ADAPTIVE_ICS]             = this->adaptive_ics;
+        writer[CPPTRANSPORT_NODE_ADAPTIVE_ICS_EFOLDS]      = this->adaptive_efolds;
         writer[CPPTRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
         writer[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
         writer[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
@@ -411,9 +411,9 @@ namespace transport
     template <typename number>
     double twopf_db_task<number>::get_initial_time(const twopf_kconfig& config) const
       {
-        if(this->fast_forward)
+        if(this->adaptive_ics)
           {
-            return(config.t_massless - this->ff_efolds);
+            return(config.t_massless - this->adaptive_efolds);
           }
         else
           {
@@ -425,7 +425,7 @@ namespace transport
     template <typename number>
     std::vector<number> twopf_db_task<number>::get_ics_vector(const twopf_kconfig& config) const
 	    {
-        if(this->fast_forward)
+        if(this->adaptive_ics)
           {
             return this->integration_task<number>::get_ics_vector(this->get_initial_time(config));
           }
@@ -540,7 +540,7 @@ namespace transport
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        if(!this->fast_forward && earliest_tmassless - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+        if(!this->adaptive_ics && earliest_tmassless - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
           {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
@@ -620,7 +620,7 @@ namespace transport
       {
         this->stored_time_db.clear();
 
-        // check for fast-forward integration, and push only those sample times which are
+        // check for adaptive initial conditions, and push only those sample times which are
         // guaranteed to be available for all k-configurations into the database
         double earliest_recordable = this->get_earliest_recordable_time(largest_conventional_k);
 
@@ -781,8 +781,8 @@ namespace transport
     template <typename Stream>
     void twopf_db_task<number>::write(Stream& out) const
       {
-        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (this->get_fast_forward() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO);
-        out << " " << CPPTRANSPORT_WITH << " " << this->ff_efolds << " " << CPPTRANSPORT_EFOLDS << ", ";
+        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (this->get_adaptive_ics() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO);
+        out << " " << CPPTRANSPORT_WITH << " " << this->adaptive_efolds << " " << CPPTRANSPORT_EFOLDS << ", ";
         out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << this->get_max_refinements() << '\n';
         out << static_cast< const integration_task<number>& >(*this);
       }

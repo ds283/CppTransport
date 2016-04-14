@@ -10,6 +10,7 @@
 #include <vector>
 #include "ginac/ginac.h"
 
+
 typedef std::vector<GiNaC::symbol> symbol_list;
 
 

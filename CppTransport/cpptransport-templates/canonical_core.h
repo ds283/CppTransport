@@ -41,9 +41,18 @@ namespace transport
         static std::vector<std::string> platx_names = $PLATX_NAME_LIST;
         static std::vector<std::string> state_names = $STATE_NAME_LIST;
 
-        static std::string              name        = "$NAME";
-        static std::string              author      = "$AUTHOR";
-        static std::string              tag         = "$TAG";
+        static std::string              name        = $NAME;
+        static std::string              citeguide   = $CITEGUIDE;
+        static std::string              description = $DESCRIPTION;
+        static std::string              license     = $LICENSE;
+        static unsigned int             revision    = $REVISION;
+
+        static std::vector<std::string> references  = $REFERENCES;
+        static std::vector<std::string> urls        = $URLS;
+
+        static author_db::value_type    auth_arr[]  = $AUTHORS{"{ $NAME, std::make_unique<author_record>($NAME, $EMAIL, $INSTITUTE) }"};
+        static author_db                author(std::make_move_iterator(std::begin(auth_arr)), std::make_move_iterator(std::end(auth_arr)));
+
         static std::string              unique_id   = "$UNIQUE_ID";
 
         constexpr unsigned int backg_size         = (2*$NUMBER_FIELDS);
@@ -125,9 +134,19 @@ namespace transport
 
         const std::string& get_name() const override { return($MODEL_pool::name); }
 
-        const std::string& get_author() const override { return($MODEL_pool::author); }
+        const author_db& get_authors() const override { return($MODEL_pool::author); }
 
-        const std::string& get_tag() const override { return($MODEL_pool::tag); }
+        const std::string& get_citeguide() const override { return($MODEL_pool::citeguide); }
+
+        const std::string& get_description() const override { return($MODEL_pool::description); }
+
+        const std::string& get_license() const override { return($MODEL_pool::license); }
+
+        unsigned int get_revision() const override { return($MODEL_pool::revision); }
+
+        const std::vector<std::string>& get_references() const override { return($MODEL_pool::references); }
+
+        const std::vector<std::string>& get_urls() const override { return($MODEL_pool::urls); }
 
         unsigned int get_N_fields() const override { return($NUMBER_FIELDS); }
 

@@ -123,11 +123,11 @@ namespace transport
         //! Get start time for a threepf configuration
         double get_initial_time(const threepf_kconfig& config) const;
 
-        //! Set fast-forward integration setting
-        virtual void set_fast_forward(bool g) override { this->fast_forward = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
+        //! Set adaptics ics setting
+        virtual void set_adaptive_ics(bool g) override { this->adaptive_ics = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
 
-        //! Set number of fast-forward e-folds
-        virtual void set_fast_forward_efolds(double N) override { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
+        //! Set number of adaptive e-folds
+        virtual void set_adaptive_ics_efolds(double N) override { this->adaptive_ics = true; this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
 
 
         // SERIALIZATION -- implements a 'serialiazble' interface
@@ -228,9 +228,9 @@ namespace transport
     template <typename number>
     double threepf_task<number>::get_initial_time(const threepf_kconfig& config) const
       {
-        if(this->fast_forward)
+        if(this->adaptive_ics)
           {
-            return(config.t_massless - this->ff_efolds);
+            return(config.t_massless - this->adaptive_efolds);
           }
         else
           {
@@ -242,7 +242,7 @@ namespace transport
     template <typename number>
     std::vector<number> threepf_task<number>::get_ics_vector(const threepf_kconfig& config) const
 	    {
-        if(this->fast_forward)
+        if(this->adaptive_ics)
           {
             return this->integration_task<number>::get_ics_vector(this->get_initial_time(config));
           }
