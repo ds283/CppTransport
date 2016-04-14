@@ -86,15 +86,15 @@ namespace transport
 
             //! write integration tasks tab
             template <typename number>
-            void write_integration(HTML_report_bundle<number>& bundle, HTML_node& parent);
+            void write_integration(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent);
 
             //! write postintegration tasks tab
             template <typename number>
-            void write_postintegration(HTML_report_bundle<number>& bundle, HTML_node& parent);
+            void write_postintegration(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent);
 
             //! write output tasks tab
             template <typename number>
-            void write_output(HTML_report_bundle<number>& bundle, HTML_node& parent);
+            void write_output(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent);
 
             //! write derived products tab
             template <typename number>
@@ -414,7 +414,7 @@ namespace transport
 
             //! write a link-to-package button
             template <typename number>
-            void write_package_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& element, HTML_node& parent);
+            void write_package_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& pane, HTML_node& parent);
 
             //! write a link-to-derived product button
             template <typename number>
@@ -498,7 +498,8 @@ namespace transport
 
             //! build a content-group menu tab
             template <typename number, typename DatabaseType>
-            HTML_node make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name);
+            HTML_node make_dropdown_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle,
+                                             std::string name);
 
             //! write a grid data element
             void make_data_element(std::string l, std::string v, HTML_node& parent);
@@ -664,6 +665,35 @@ namespace transport
           }
 
 
+        namespace HTML_report_impl
+          {
+
+            // duplicate a database record
+            // (such records are not copyable because of std::unique_ptr<>'s disabled copy constructor)
+            template <typename Iterator, typename DestinationContainer, typename Predicate>
+            void duplicate_if(Iterator current, Iterator end, DestinationContainer& ctr, Predicate pred)
+              {
+                while(current != end)
+                  {
+                    // curent points to a std::pair< const std::string, std::unique_ptr<RecordType> >
+                    if(pred(*current))
+                      {
+                        const typename DestinationContainer::value_type::second_type::element_type& record = *(current->second);
+
+                        std::unique_ptr<typename DestinationContainer::value_type::second_type::element_type> new_ptr(dynamic_cast<typename DestinationContainer::value_type::second_type::element_type*>(record.clone()));
+
+                        ctr.emplace(std::make_pair(current->first, std::move(new_ptr)));
+                      }
+
+                    ++current;
+                  }
+              }
+
+          }   // namespace HTML_report_impl
+
+        using namespace HTML_report_impl;
+
+
         template <typename number>
         void HTML_report::generate_report_body(HTML_report_bundle<number>& bundle, HTML_node& parent)
           {
@@ -688,30 +718,38 @@ namespace transport
             tablist.add_attribute("id", "tabs").add_attribute("class", "nav navbar-nav").add_attribute("role", "tablist");
 
             // Package tab
-            HTML_node package_tab = this->make_menu_tab("packages", "Packages");
-            // mark this tab as active by default
-            package_tab.add_attribute("class", "active");
+            HTML_node package_tab = this->make_dropdown_menu_tab(bundle.get_package_db(), bundle, "Packages");
+
+            typename task_db<number>::type i_tasks;
+            typename task_db<number>::type p_tasks;
+            typename task_db<number>::type o_tasks;
+
+            const typename task_db<number>::type & tasks = bundle.get_task_db();
+
+            duplicate_if(tasks.begin(), tasks.end(), i_tasks, [&](const typename task_db<number>::type::value_type& t) -> bool { return(t.second && t.second->get_type() == task_type::integration); });
+            duplicate_if(tasks.begin(), tasks.end(), p_tasks, [&](const typename task_db<number>::type::value_type& t) -> bool { return(t.second && t.second->get_type() == task_type::postintegration); } );
+            duplicate_if(tasks.begin(), tasks.end(), o_tasks, [&](const typename task_db<number>::type::value_type& t) -> bool { return(t.second && t.second->get_type() == task_type::output); } );
 
             // Integration tasks tab
-            HTML_node integration_tasks_tab = this->make_menu_tab("integration", "Integration tasks");
+            HTML_node integration_tasks_tab = this->make_dropdown_menu_tab(i_tasks, bundle, "Integration tasks");
 
             // Integration content tab
-            HTML_node integration_content_tab = this->make_content_menu_tab<number>(bundle.get_integration_content_db(), bundle, "Integration content");
+            HTML_node integration_content_tab = this->make_dropdown_menu_tab<number>(bundle.get_integration_content_db(), bundle, "Integration content");
 
             // Postintegration tasks tab
-            HTML_node postintegration_tasks_tab = this->make_menu_tab("postintegration", "Postintegration tasks");
+            HTML_node postintegration_tasks_tab = this->make_dropdown_menu_tab(p_tasks, bundle, "Postintegration tasks");
 
             // Postintegration content tab
-            HTML_node postintegration_content_tab = this->make_content_menu_tab<number>(bundle.get_postintegration_content_db(), bundle, "Postintegration content");
+            HTML_node postintegration_content_tab = this->make_dropdown_menu_tab<number>(bundle.get_postintegration_content_db(), bundle, "Postintegration content");
 
             // Output tasks tab
-            HTML_node output_tasks_tab = this->make_menu_tab("output", "Output tasks");
+            HTML_node output_tasks_tab = this->make_dropdown_menu_tab(o_tasks, bundle, "Output tasks");
 
             // Output content tab
-            HTML_node output_content_tab = this->make_content_menu_tab<number>(bundle.get_output_content_db(), bundle, "Output content");
+            HTML_node output_content_tab = this->make_dropdown_menu_tab<number>(bundle.get_output_content_db(), bundle, "Output content");
 
             // Derived products tab
-            HTML_node derived_products_tab = this->make_content_menu_tab<number>(bundle.get_derived_product_db(), bundle, "Derived products");
+            HTML_node derived_products_tab = this->make_dropdown_menu_tab<number>(bundle.get_derived_product_db(), bundle, "Derived products");
 
             tablist.add_element(package_tab);
             tablist.add_element(integration_tasks_tab);
@@ -731,32 +769,13 @@ namespace transport
             HTML_node tab_panes("div");
             tab_panes.add_attribute("class", "tab-content");
 
-            HTML_node package_pane("div");
-            package_pane.add_attribute("id", "packages").add_attribute("class", "tab-pane fade in active");
-            this->write_packages(bundle, package_pane);
-            tab_panes.add_element(package_pane);
-
-            HTML_node integration_task_pane("div");
-            integration_task_pane.add_attribute("id", "integration").add_attribute("class", "tab-pane fade");
-            this->write_integration(bundle, integration_task_pane);
-            tab_panes.add_element(integration_task_pane);
-
+            this->write_packages(bundle, tab_panes);
+            this->write_integration(bundle, i_tasks, tab_panes);
             this->write_integration_content(bundle, tab_panes);
-
-            HTML_node postintegration_task_pane("div");
-            postintegration_task_pane.add_attribute("id", "postintegration").add_attribute("class", "tab-pane fade");
-            this->write_postintegration(bundle, postintegration_task_pane);
-            tab_panes.add_element(postintegration_task_pane);
-
+            this->write_postintegration(bundle, p_tasks, tab_panes);
             this->write_postintegration_content(bundle, tab_panes);
-
-            HTML_node output_task_pane("div");
-            output_task_pane.add_attribute("id", "output").add_attribute("class", "tab-pane fade");
-            this->write_output(bundle, output_task_pane);
-            tab_panes.add_element(output_task_pane);
-
+            this->write_output(bundle, o_tasks, tab_panes);
             this->write_output_content(bundle, tab_panes);
-
             this->write_derived_products(bundle, tab_panes);
 
             parent.add_element(navbar);
@@ -777,7 +796,8 @@ namespace transport
 
 
         template <typename number, typename DatabaseType>
-        HTML_node HTML_report::make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name)
+        HTML_node HTML_report::make_dropdown_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle,
+                                                      std::string name)
           {
             HTML_node tab("li");
             HTML_node anchor("a", name);
@@ -875,10 +895,7 @@ namespace transport
           {
             typename package_db<number>::type& db = bundle.get_package_db();
 
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
+            bool marked_active = false;
 
             // step through all packages, writing them out as list elements
             for(const typename package_db<number>::value_type& pkg : db)
@@ -889,8 +906,24 @@ namespace transport
 
                 std::string tag = bundle.get_id(rec);
 
-                HTML_node item("a");
-                item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node pane("div");
+                pane.add_attribute("id", tag);
+                if(!marked_active)
+                  {
+                    // mark first tab as active by default
+                    pane.add_attribute("class", "tab-pane active");
+                    marked_active = true;
+                  }
+                else
+                  {
+                    pane.add_attribute("class", "tab-pane fade");
+                  }
+
+                HTML_node list("ul");
+                list.add_attribute("class", "list-group");
+
+                HTML_node item("li");
+                item.add_attribute("class", "list-group-item");
                 this->make_list_item_label(rec.get_name(), item);
 
                 // write generic repository information for this record
@@ -1155,7 +1188,7 @@ namespace transport
                     for(const std::string& s : references)
                       {
                         HTML_node list_item("li", s);
-                        list_item.add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                        list_item.add_attribute("class", "list-group-item");
                         item_list.add_element(list_item);
                       }
 
@@ -1186,11 +1219,11 @@ namespace transport
 
                     for(const std::string& s : urls)
                       {
-                        HTML_node list_item("li", s);
-                        list_item.add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
-//                        HTML_node anchor("a", s);
-//                        anchor.add_attribute("href", s);
-//                        list_item.add_element(anchor);
+                        HTML_node list_item("li");
+                        list_item.add_attribute("class", "list-group-item");
+                        HTML_node anchor("a", s);
+                        anchor.add_attribute("href", s);
+                        list_item.add_element(anchor);
                         item_list.add_element(list_item);
                       }
 
@@ -1200,22 +1233,15 @@ namespace transport
                   }
 
                 list.add_element(item);
+                pane.add_element(list);
+                parent.add_element(pane);
               }
-
-            parent.add_element(list);
           }
 
 
         template <typename number>
-        void HTML_report::write_integration(HTML_report_bundle<number>& bundle, HTML_node& parent)
+        void HTML_report::write_integration(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent)
           {
-            typename task_db<number>::type& db = bundle.get_task_db();
-
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
-
             for(const typename task_db<number>::value_type& task : db)
               {
                 const task_record<number>& pre_rec = *task.second;
@@ -1225,8 +1251,14 @@ namespace transport
                     const integration_task_record<number>& rec = dynamic_cast< const integration_task_record<number>& >(pre_rec);
                     const std::string tag = bundle.get_id(rec);
 
-                    HTML_node item("a");
-                    item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                    HTML_node pane("div");
+                    pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
+
+                    HTML_node list("ul");
+                    list.add_attribute("class", "list-group");
+
+                    HTML_node item("li");
+                    item.add_attribute("class", "list-group-item");
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
@@ -1384,10 +1416,10 @@ namespace transport
                       }
 
                     list.add_element(item);
+                    pane.add_element(list);
+                    parent.add_element(pane);
                   }
               }
-
-            parent.add_element(list);
           }
 
 
@@ -1745,15 +1777,8 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_postintegration(HTML_report_bundle<number>& bundle, HTML_node& parent)
+        void HTML_report::write_postintegration(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent)
           {
-            typename task_db<number>::type& db = bundle.get_task_db();
-
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
-
             for(const typename task_db<number>::value_type& task : db)
               {
                 const task_record<number>& pre_rec = *task.second;
@@ -1763,8 +1788,14 @@ namespace transport
                     const postintegration_task_record<number>& rec = dynamic_cast< const postintegration_task_record<number>& >(pre_rec);
                     const std::string tag = bundle.get_id(rec);
 
-                    HTML_node item("a");
-                    item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                    HTML_node pane("div");
+                    pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
+
+                    HTML_node list("ul");
+                    list.add_attribute("class", "list-group");
+
+                    HTML_node item("li");
+                    item.add_attribute("class", "list-group-item");
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
@@ -1904,23 +1935,16 @@ namespace transport
                       }
 
                     list.add_element(item);
+                    pane.add_element(list);
+                    parent.add_element(pane);
                   }
               }
-
-            parent.add_element(list);
           }
 
 
         template <typename number>
-        void HTML_report::write_output(HTML_report_bundle<number>& bundle, HTML_node& parent)
+        void HTML_report::write_output(HTML_report_bundle<number>& bundle, const typename task_db<number>::type& db, HTML_node& parent)
           {
-            typename task_db<number>::type& db = bundle.get_task_db();
-
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
-
             for(const typename task_db<number>::value_type& task : db)
               {
                 const task_record<number>& pre_rec = *task.second;
@@ -1930,8 +1954,14 @@ namespace transport
                     const output_task_record<number>& rec = dynamic_cast< const output_task_record<number>& >(pre_rec);
                     const std::string tag = bundle.get_id(rec);
 
-                    HTML_node item("a");
-                    item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                    HTML_node pane("div");
+                    pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
+
+                    HTML_node list("ul");
+                    list.add_attribute("class", "list-group");
+
+                    HTML_node item("li");
+                    item.add_attribute("class", "list-group-item");
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
@@ -2094,10 +2124,10 @@ namespace transport
                       }
 
                     list.add_element(item);
+                    pane.add_element(list);
+                    parent.add_element(pane);
                   }
               }
-
-            parent.add_element(list);
           }
 
 
@@ -2115,11 +2145,11 @@ namespace transport
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                HTML_node list("div");
+                HTML_node list("ul");
                 list.add_attribute("class", "list-group");
 
-                HTML_node anchor("a");
-                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node anchor("li");
+                anchor.add_attribute("class", "list-group-item");
 
                 this->make_list_item_label(rec.get_name(), anchor);
                 this->write_generic_record(bundle, rec, anchor);
@@ -2422,7 +2452,7 @@ namespace transport
             for(const std::unique_ptr< derived_data::derived_line<number> >& line : lines)
               {
                 HTML_node item("li");
-                item.add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                item.add_attribute("class", "list-group-item");
 
                 std::ostringstream lbl_text;
                 lbl_text << "Line " << ++count;
@@ -3236,11 +3266,11 @@ namespace transport
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                HTML_node list("div");
+                HTML_node list("ul");
                 list.add_attribute("class", "list-group");
 
-                HTML_node anchor("a");
-                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node anchor("li");
+                anchor.add_attribute("class", "list-group-item");
 
                 this->make_list_item_label(rec.get_name(), anchor);
                 this->write_generic_output_record(bundle, rec, anchor);
@@ -3950,11 +3980,11 @@ namespace transport
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                HTML_node list("div");
+                HTML_node list("ul");
                 list.add_attribute("class", "list-group");
 
-                HTML_node anchor("a");
-                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node anchor("li");
+                anchor.add_attribute("class", "list-group-item");
 
                 this->make_list_item_label(rec.get_name(), anchor);
                 this->write_generic_output_record(bundle, rec, anchor);
@@ -4046,11 +4076,11 @@ namespace transport
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                HTML_node list("div");
+                HTML_node list("ul");
                 list.add_attribute("class", "list-group");
 
-                HTML_node anchor("a");
-                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                HTML_node anchor("li");
+                anchor.add_attribute("class", "list-group-item");
 
                 this->make_list_item_label(rec.get_name(), anchor);
                 this->write_generic_output_record(bundle, rec, anchor);
@@ -4073,7 +4103,7 @@ namespace transport
                         boost::filesystem::path extension = filename.extension();
 
                         HTML_node it("li");
-                        it.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                        it.add_attribute("class", "list-group-item");
                         HTML_node title("h4", filename.string());
                         title.add_attribute("class", "list-group-item-text lead");
                         it.add_element(title);
@@ -4489,7 +4519,7 @@ namespace transport
             if(t != tk_db.end())
               {
                 // find task tag
-                std::string element_id = bundle.get_id(*t->second);
+                std::string pane_id = bundle.get_id(*t->second);
                 std::string button_id = this->make_button_tag();
 
                 HTML_node button("button");
@@ -4497,30 +4527,7 @@ namespace transport
                 this->make_badged_text(name, t->second->get_content_groups().size(), button);
 
                 parent.add_element(button);
-
-                std::string pane;
-                switch(t->second->get_type())
-                  {
-                    case task_type::integration:
-                      {
-                        pane = "integration";
-                        break;
-                      }
-
-                    case task_type::postintegration:
-                      {
-                        pane = "postintegration";
-                        break;
-                      }
-
-                    case task_type::output:
-                      {
-                        pane = "output";
-                        break;
-                      }
-                  }
-
-                this->write_JavaScript_button(bundle, button_id, pane, element_id);
+                this->write_JavaScript_button(bundle, button_id, pane_id);
               }
             else
               {
@@ -4590,9 +4597,9 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_package_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& element, HTML_node& parent)
+        void HTML_report::write_package_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& pane, HTML_node& parent)
           {
-            if(!element.empty())
+            if(!pane.empty())
               {
                 std::string button_id = this->make_button_tag();
 
@@ -4601,7 +4608,7 @@ namespace transport
 
                 parent.add_element(button);
 
-                this->write_JavaScript_button(bundle, button_id, "packages", element);
+                this->write_JavaScript_button(bundle, button_id, pane);
               }
             else
               {
