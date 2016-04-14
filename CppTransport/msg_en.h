@@ -63,6 +63,9 @@
 #define ERROR_DECIMAL_LOOKUP                  "Lookup of decimal literal value failed"
 #define ERROR_UNKNOWN_IDENTIFIER              "Undeclared identifier"
 
+#define ERROR_AUTHOR_EXISTS                   "Redeclaration of existing author"
+#define NOTIFY_DEUPLICATE_AUTHOR_WAS          "Location of original declaration for author"
+
 #define ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   "Internal error: increment or decrement of unattached assignment set iterator"
 #define ERROR_ASSIGNMENT_ITERATOR_DECREMENT   "Internal error: attempt to decrement assignment iterator before first element"
 #define ERROR_ASSIGNMENT_ITERATOR_INCREMENT   "Internal error: attempt to increment assignment iterator after last element"

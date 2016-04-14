@@ -36,7 +36,7 @@ namespace macro_packages
         pre_package.emplace_back(BIND(replace_source, "SOURCE"));
         pre_package.emplace_back(BIND(replace_name, "NAME"));
         pre_package.emplace_back(BIND(replace_author, "AUTHOR"));
-        pre_package.emplace_back(BIND(replace_tag, "TAG"));
+        pre_package.emplace_back(BIND(replace_citeguide, "CITEGUIDE"));
         pre_package.emplace_back(BIND(replace_model, "MODEL"));
         pre_package.emplace_back(BIND(replace_uid, "UNIQUE_ID"));
         pre_package.emplace_back(BIND(replace_header, "HEADER"));
@@ -115,21 +115,53 @@ namespace macro_packages
 
     std::string replace_uid::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
-        std::string name = nm_value ? *nm_value : std::string();
-
-        boost::optional< contexted_value<std::string>& > au_value = this->data_payload.get_author();
-        std::string author = au_value ? *au_value : std::string();
-
-        boost::optional< contexted_value<std::string>& > tg_value = this->data_payload.get_tag();
-        std::string tag = tg_value ? *tg_value : std::string();
+        std::ostringstream uid_str;
 
         boost::optional< contexted_value<std::string>& > md_value = this->data_payload.get_model();
-        std::string model = md_value ? *md_value : std::string();
+        if(md_value) uid_str << static_cast<std::string>(*md_value);
 
-        std::string unique_string = name + author + tag + model + CPPTRANSPORT_VERSION;
+        boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
+        if(nm_value) uid_str << static_cast<std::string>(*nm_value);
+
+        const author_table& au_table = this->data_payload.get_author();
+        for(const author_table::value_type& item : au_table)
+          {
+            const author_declaration& decl = *item.second;
+            uid_str << decl.get_name() << decl.get_email() << decl.get_institute();
+          }
+
+        boost::optional< contexted_value<std::string>& > tg_value = this->data_payload.get_citeguide();
+        if(tg_value) uid_str << static_cast<std::string>(*tg_value);
+
+        boost::optional< contexted_value<std::string>& > dc_value = this->data_payload.get_description();
+        if(dc_value) uid_str << static_cast<std::string>(*dc_value);
+
+        boost::optional< contexted_value<std::string>& > lc_value = this->data_payload.get_license();
+        if(lc_value) uid_str << static_cast<std::string>(*lc_value);
+
+        boost::optional< contexted_value<unsigned int>& > rv_value = this->data_payload.get_revision();
+        if(rv_value) uid_str << static_cast<unsigned int>(*rv_value);
+
+        boost::optional< std::vector< contexted_value<std::string> >& > rf_value = this->data_payload.get_references();
+        if(rf_value)
+          {
+            for(const contexted_value<std::string>& v : *rf_value)
+              {
+                uid_str << static_cast<std::string>(v);
+              }
+          }
+
+        boost::optional< std::vector< contexted_value<std::string> >& > ul_value = this->data_payload.get_urls();
+        if(ul_value)
+          {
+            for(const contexted_value<std::string>& v : *ul_value)
+              {
+                uid_str << static_cast<std::string>(v);
+              }
+          }
+
         boost::uuids::string_generator gen;
-        boost::uuids::uuid id = gen(unique_string);
+        boost::uuids::uuid id = gen(uid_str.str());
 
         return(boost::uuids::to_string(id));
       }
@@ -151,21 +183,26 @@ namespace macro_packages
 
     std::string replace_author::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_author();
-        if(value)
+        std::string record = args[AUTHOR_RECORD_CLASS_ARGUMENT];
+
+        // convert author table into a suitable initialization list
+        const author_table& table = this->data_payload.get_author();
+        std::vector<std::string> init_list;
+        for(const author_table::value_type& item : table)
           {
-            return *value;
+            const author_declaration& decl = *item.second;
+            std::ostringstream ctor;
+            ctor << record << "(\"" << decl.get_name() << "\", \"" << decl.get_email() << "\", \"" << decl.get_institute() << "\")";
+            init_list.push_back(ctor.str());
           }
-        else
-          {
-            return(std::string(DEFAULT_AUTHOR));
-          }
+
+        return this->printer.initialization_list(init_list, false);
       }
 
 
-    std::string replace_tag::evaluate(const macro_argument_list& args)
+    std::string replace_citeguide::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_tag();
+        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_citeguide();
         if(value)
           {
             return *value;
@@ -227,7 +264,7 @@ namespace macro_packages
       {
         std::vector<std::string> list = this->data_payload.get_field_list();
 
-        return this->printer.initialization_list(list);
+        return this->printer.initialization_list(list, true);
       }
 
 
@@ -235,7 +272,7 @@ namespace macro_packages
       {
         std::vector<std::string> list = this->data_payload.get_latex_list();
 
-        return this->printer.initialization_list(list);
+        return this->printer.initialization_list(list, true);
       }
 
 
@@ -243,7 +280,7 @@ namespace macro_packages
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
-        return this->printer.initialization_list(list);
+        return this->printer.initialization_list(list, true);
       }
 
 
@@ -251,7 +288,7 @@ namespace macro_packages
       {
         std::vector<std::string> list = this->data_payload.get_platx_list();
 
-        return this->printer.initialization_list(list);
+        return this->printer.initialization_list(list, true);
       }
 
 
@@ -271,7 +308,7 @@ namespace macro_packages
             list.push_back(d_list[i].get_name());
           }
 
-        return this->printer.initialization_list(list);
+        return this->printer.initialization_list(list, true);
       }
 
 
@@ -279,7 +316,7 @@ namespace macro_packages
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
-        return boost::lexical_cast<std::string>(s.abserr);
+        return boost::lexical_cast<std::string>(s.get_abserr());
       }
 
 
@@ -287,7 +324,7 @@ namespace macro_packages
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
-        return boost::lexical_cast<std::string>(s.relerr);
+        return boost::lexical_cast<std::string>(s.get_relerr());
       }
 
 
@@ -295,7 +332,7 @@ namespace macro_packages
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
-        return boost::lexical_cast<std::string>(s.stepsize);
+        return boost::lexical_cast<std::string>(s.get_stepsize());
       }
 
 
@@ -303,7 +340,7 @@ namespace macro_packages
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
-        return(s.name);
+        return(s.get_name());
       }
 
 
@@ -311,7 +348,7 @@ namespace macro_packages
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
-        return boost::lexical_cast<std::string>(s.abserr);
+        return boost::lexical_cast<std::string>(s.get_abserr());
       }
 
 
@@ -319,7 +356,7 @@ namespace macro_packages
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
-        return boost::lexical_cast<std::string>(s.relerr);
+        return boost::lexical_cast<std::string>(s.get_relerr());
       }
 
 
@@ -327,7 +364,7 @@ namespace macro_packages
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
-        return boost::lexical_cast<std::string>(s.stepsize);
+        return boost::lexical_cast<std::string>(s.get_stepsize());
       }
 
 
@@ -335,7 +372,7 @@ namespace macro_packages
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
-        return(s.name);
+        return(s.get_name());
       }
 
 

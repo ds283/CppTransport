@@ -54,7 +54,7 @@ boost::optional< contexted_value<std::string>& > translator_data::get_name() con
   }
 
 
-boost::optional< contexted_value<std::string>& > translator_data::get_author() const
+const author_table& translator_data::get_author() const
   {
     return(this->driver.get_script().get_author());
   }
@@ -66,9 +66,39 @@ boost::optional< contexted_value<std::string>& > translator_data::get_model() co
   }
 
 
-boost::optional< contexted_value<std::string>& > translator_data::get_tag() const
+boost::optional< contexted_value<std::string>& > translator_data::get_citeguide() const
   {
-    return(this->driver.get_script().get_tag());
+    return(this->driver.get_script().get_citeguide());
+  }
+
+
+boost::optional< contexted_value<std::string>& > translator_data::get_description() const
+  {
+    return(this->driver.get_script().get_description());
+  }
+
+
+boost::optional< contexted_value<std::string>& > translator_data::get_license() const
+  {
+    return(this->driver.get_script().get_license());
+  }
+
+
+boost::optional< contexted_value<unsigned int>& > translator_data::get_revision() const
+  {
+    return(this->driver.get_script().get_revision());
+  }
+
+
+boost::optional< std::vector< contexted_value<std::string> >& > translator_data::get_references() const
+  {
+    return(this->driver.get_script().get_references());
+  }
+
+
+boost::optional< std::vector< contexted_value<std::string> >& > translator_data::get_urls() const
+  {
+    return(this->driver.get_script().get_urls());
   }
 
 

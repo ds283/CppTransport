@@ -24,8 +24,9 @@ namespace macro_packages
     constexpr unsigned int DATE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int SOURCE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int NAME_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int AUTHOR_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int TAG_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int AUTHOR_RECORD_CLASS_ARGUMENT = 0;
+    constexpr unsigned int AUTHOR_TOTAL_ARGUMENTS = 1;
+    constexpr unsigned int CITEGUIDE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int MODEL_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int UUID_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int HEADER_TOTAL_ARGUMENTS = 0;
@@ -378,7 +379,7 @@ namespace macro_packages
       };
 
 
-    class replace_tag : public replacement_rule_simple
+    class replace_citeguide : public replacement_rule_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -386,15 +387,15 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_tag(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n), TAG_TOTAL_ARGUMENTS),
+        replace_citeguide(std::string n, translator_data& p, language_printer& prn)
+          : replacement_rule_simple(std::move(n), CITEGUIDE_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
           }
 
         //! destructor
-        virtual ~replace_tag() = default;
+        virtual ~replace_citeguide() = default;
 
 
         // INTERNAL API

@@ -116,7 +116,6 @@ ADD_EXECUTABLE(CppTransport
   parser/input_stack.cpp
   parser/lexfile.cpp
   parser/script.cpp
-  parser/semantic_data.cpp
   parser/y_driver.cpp
   parser/y_lexer.cpp
   transport-objects/canonical/resources.cpp
@@ -370,7 +369,6 @@ set(PARSER_FILES
   parser/lexstream.h
   parser/script.cpp
   parser/script.h
-  parser/semantic_data.cpp
   parser/semantic_data.h
   parser/y_common.h
   parser/y_driver.cpp
@@ -386,6 +384,7 @@ set(TOP_LEVEL_FILES
   main.cpp
   msg_en.h
   switches.h
+  defaults.h
   )
 
 set(TRANSPORT_OBJECTS_CANONICAL_FILES

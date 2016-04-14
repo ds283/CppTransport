@@ -201,7 +201,7 @@ class C_style_printer: public language_printer
   public:
 
     //! generate initialization list frmo a set of strings
-    virtual std::string initialization_list(const std::vector<std::string>& list) const override;
+    virtual std::string initialization_list(const std::vector<std::string>& list, bool quote) const override;
 
 
     // INTERFACE -- LAMBDAS

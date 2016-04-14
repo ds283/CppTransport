@@ -149,7 +149,7 @@ std::string C_style_printer::array_subscript(const std::string& kernel, const ab
   }
 
 
-std::string C_style_printer::initialization_list(const std::vector<std::string>& list) const
+std::string C_style_printer::initialization_list(const std::vector<std::string>& list, bool quote) const
   {
     std::ostringstream stmt;
     stmt << this->initializer_open << " ";
@@ -158,7 +158,7 @@ std::string C_style_printer::initialization_list(const std::vector<std::string>&
     for(const std::string& ele : list)
       {
         if(count > 0) stmt << this->initializer_sep << " ";
-        stmt << to_printable(ele);
+        stmt << to_printable(ele, quote);
         ++count;
       }
 

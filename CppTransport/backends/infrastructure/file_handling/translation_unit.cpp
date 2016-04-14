@@ -24,7 +24,10 @@
 
 const std::vector<std::string> keyword_table =
   {
-    "name", "author", "tag", "field", "potential", "subexpr", "value",
+    "name", "author", "citeguide",
+    "description", "license", "revision",
+    "references", "urls", "email", "institute",
+    "field", "potential", "subexpr", "value",
     "parameter", "latex", "core", "implementation", "model",
     "abserr", "relerr", "stepper", "stepsize",
     "background", "perturbations",
@@ -35,32 +38,27 @@ const std::vector<std::string> keyword_table =
     "H_func",
     "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func",
     "factorial", "binomial"
-                                 };
+  };
 
 const std::vector<enum keyword_type> keyword_map =
   {
-    keyword_type::name, keyword_type::author, keyword_type::tag,
-    keyword_type::field, keyword_type::potential, keyword_type::subexpr,
-    keyword_type::value,
-    keyword_type::parameter, keyword_type::latex,
-    keyword_type::core, keyword_type::impl, keyword_type::model,
-    keyword_type::abserr, keyword_type::relerr, keyword_type::k_stepper,
-    keyword_type::stepsize,
+    keyword_type::name, keyword_type::author, keyword_type::citeguide,
+    keyword_type::description, keyword_type::license, keyword_type::revision,
+    keyword_type::references, keyword_type::urls, keyword_type::email, keyword_type::institute,
+    keyword_type::field, keyword_type::potential, keyword_type::subexpr, keyword_type::value,
+    keyword_type::parameter, keyword_type::latex, keyword_type::core, keyword_type::impl, keyword_type::model,
+    keyword_type::abserr, keyword_type::relerr, keyword_type::stepper, keyword_type::stepsize,
     keyword_type::background, keyword_type::perturbations,
     keyword_type::indexorder, keyword_type::left, keyword_type::right,
-    keyword_type::f_abs, keyword_type::f_step, keyword_type::f_sqrt,
-    keyword_type::f_sin, keyword_type::f_cos, keyword_type::f_tan,
-    keyword_type::f_asin, keyword_type::f_acos, keyword_type::f_atan,
-    keyword_type::f_atan2,
-    keyword_type::f_sinh, keyword_type::f_cosh, keyword_type::f_tanh,
-    keyword_type::f_asinh, keyword_type::f_acosh, keyword_type::f_atanh,
-    keyword_type::f_exp, keyword_type::f_log, keyword_type::f_pow,
-    keyword_type::f_Li2,
-    keyword_type::f_Li, keyword_type::f_G, keyword_type::f_S, keyword_type::f_H,
-    keyword_type::f_zeta, keyword_type::f_zetaderiv, keyword_type::f_tgamma,
-    keyword_type::f_lgamma,
-    keyword_type::f_beta, keyword_type::f_psi, keyword_type::f_factorial,
-    keyword_type::f_binomial
+    keyword_type::abs, keyword_type::step, keyword_type::sqrt,
+    keyword_type::sin, keyword_type::cos, keyword_type::tan,
+    keyword_type::asin, keyword_type::acos, keyword_type::atan, keyword_type::atan2,
+    keyword_type::sinh, keyword_type::cosh, keyword_type::tanh,
+    keyword_type::asinh, keyword_type::acosh, keyword_type::atanh,
+    keyword_type::exp, keyword_type::log, keyword_type::pow, keyword_type::Li2,
+    keyword_type::Li, keyword_type::G, keyword_type::S, keyword_type::H,
+    keyword_type::zeta, keyword_type::zetaderiv, keyword_type::tgamma, keyword_type::lgamma,
+    keyword_type::beta, keyword_type::psi, keyword_type::factorial, keyword_type::binomial
   };
 
 const std::vector<std::string> character_table =
@@ -134,7 +132,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     // therefore the lexeme list should be persistent while all transactions involving this unit are active
 
     // dump lexeme stream to output -- for debugging
-    // stream->print(std::cerr);
+    // instream.print(std::cerr);
 
     // construction of lexer, driver and parser performs syntactic analysis
 

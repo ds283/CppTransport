@@ -15,6 +15,8 @@
 
 #include "filestack.h"
 #include "lexeme.h"
+#include "contexted_value.h"
+#include "y_common.h"
 
 #include "ginac/ginac.h"
 
@@ -26,7 +28,7 @@ class attributes
 
   public:
 
-    attributes();
+    attributes() = default;
 
     ~attributes() = default;
 
@@ -35,19 +37,18 @@ class attributes
 
   public:
 
-    const std::string& get_latex() const;
+    const std::string get_latex() const { if(this->latex) return *this->latex; else return std::string(); }
 
-    void set_latex(const std::string& l);
-
-    void unset_latex();
+    void set_latex(const std::string& ltx, const y::lexeme_type& l) { this->latex.reset(); this->latex = std::make_unique< contexted_value<std::string> >(ltx, l.get_error_context()); }
 
 
 		// INTERNAL DATA
 
   private:
 
-    bool        latex_set;
-    std::string latex;
+    // storage is via shared_ptr<> because we sometimes copy attribute blocks
+
+    std::shared_ptr< contexted_value<std::string> > latex;
 
 	};
 
@@ -59,7 +60,10 @@ class subexpr
 
   public:
 
-		subexpr();
+		subexpr()
+      : value(0)    // initialize value to sensible choice
+      {
+      }
 
 		~subexpr() = default;
 
@@ -68,29 +72,99 @@ class subexpr
 
   public:
 
-		const std::string& get_latex() const;
+		const std::string get_latex() const { if(this->latex) return *this->latex; else return std::string(); }
 
-		void set_latex(const std::string& l);
+		void set_latex(const std::string& ltx, const y::lexeme_type& l) { this->latex.reset(); this->latex = std::make_unique< contexted_value<std::string> >(ltx, l.get_error_context()); }
 
-		void unset_latex();
+		GiNaC::ex get_value() const { return this->value; }
 
-		GiNaC::ex get_value() const;
-
-		void set_value(GiNaC::ex v);
-
-		void unset_value();
+		void set_value(GiNaC::ex v) { this->value = v; }
 
 
 		// INTERNAL DATA
 
   private:
 
-    bool        latex_set;
-    std::string latex;
+    // storage is via shared_ptr<> because we sometimes copy a subexpr block
 
-    GiNaC::ex   value;
-    bool        value_set;
+    std::shared_ptr< contexted_value<std::string> > latex;
+
+    GiNaC::ex value;
 	};
+
+
+class author
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    author() = default;
+
+    ~author() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    const std::string get_name() const { if(this->name) return *this->name; else return std::string(); }
+
+    void set_name(const std::string& n, const y::lexeme_type& l) { this->name.reset(); this->name = std::make_unique< contexted_value<std::string> >(n, l.get_error_context()); }
+
+    const std::string get_email() const { if(this->email) return *this->email; else return std::string(); }
+
+    void set_email(const std::string& e, const y::lexeme_type& l) { this->email.reset(); this->email = std::make_unique< contexted_value<std::string> >(e, l.get_error_context()); }
+
+    const std::string get_institute() const { if(this->institute) return *this->institute; else return std::string(); }
+
+    void set_institute(const std::string& i, const y::lexeme_type& l) { this->institute.reset(); this->institute = std::make_unique< contexted_value<std::string> >(i, l.get_error_context()); }
+
+
+    // INTERNAL DATA
+
+  private:
+
+    // storage is via shared_ptr<> because we sometimes copy an author block
+
+    std::shared_ptr< contexted_value<std::string> > name;
+
+    std::shared_ptr< contexted_value<std::string> > email;
+
+    std::shared_ptr< contexted_value<std::string> > institute;
+
+  };
+
+
+class string_array
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    string_array() = default;
+
+    ~string_array() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    const std::vector< contexted_value<std::string> >& get_array() const { return(this->array); }
+
+    void push_element(const std::string& s, const y::lexeme_type& l) { this->array.emplace_back(s, l.get_error_context()); }
+
+
+    // INTERNAL DATA
+
+  private:
+
+    std::vector< contexted_value<std::string> > array;
+
+  };
 
 
 #endif //CPPTRANSPORT_SEMANTIC_DATA_H

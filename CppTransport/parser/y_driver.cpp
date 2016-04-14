@@ -104,13 +104,64 @@ namespace y
 
         if(ok)
 	        {
-            a->set_latex(latex_name);
+            a->set_latex(latex_name, *lex);
 	        }
         else
 	        {
             lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
+
+
+    void y_driver::add_string(string_array* a, lexeme_type* lex)
+      {
+        // extract string from lexeme
+        std::string value;
+        bool        ok = lex->get_string(value);
+
+        if(ok)
+          {
+            a->push_element(value, *lex);
+          }
+        else
+          {
+            lex->error(ERROR_STRING_LOOKUP);
+          }
+      }
+
+
+    void y_driver::add_email(author* a, lexeme_type* lex)
+      {
+        // extract string from lexeme
+        std::string value;
+        bool        ok = lex->get_string(value);
+
+        if(ok)
+          {
+            a->set_email(value, *lex);
+          }
+        else
+          {
+            lex->error(ERROR_STRING_LOOKUP);
+          }
+      }
+
+
+    void y_driver::add_institute(author* a, lexeme_type* lex)
+      {
+        // extract string from lexeme
+        std::string value;
+        bool        ok = lex->get_string(value);
+
+        if(ok)
+          {
+            a->set_institute(value, *lex);
+          }
+        else
+          {
+            lex->error(ERROR_STRING_LOOKUP);
+          }
+      }
 
 
 		void y_driver::add_latex_attribute(subexpr* e, lexeme_type* lex)
@@ -121,7 +172,7 @@ namespace y
 
 				if(ok)
 					{
-						e->set_latex(latex_name);
+						e->set_latex(latex_name, *lex);
 					}
 				else
 					{
@@ -144,7 +195,7 @@ namespace y
 
         if(ok)
 	        {
-            s->abserr = std::abs(d);
+            s->set_abserr(std::abs(d), *lex);
 	        }
         else
 	        {
@@ -161,7 +212,7 @@ namespace y
 
         if(ok)
 	        {
-            s->relerr = std::abs(d);
+            s->set_relerr(std::abs(d), *lex);
 	        }
         else
 	        {
@@ -178,7 +229,7 @@ namespace y
 
         if(ok)
 	        {
-            s->name = stepper_name;
+            s->set_name(stepper_name, *lex);
 	        }
         else
 	        {
@@ -195,7 +246,7 @@ namespace y
 
         if(ok)
 	        {
-            s->stepsize = d;
+            s->set_stepsize(d, *lex);
 	        }
         else
 	        {
@@ -204,7 +255,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_background_stepper(struct stepper* s)
+    void y_driver::set_background_stepper(stepper* s)
 	    {
         this->root.set_background_stepper(s);
 
@@ -212,7 +263,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_perturbations_stepper(struct stepper* s)
+    void y_driver::set_perturbations_stepper(stepper* s)
 	    {
         this->root.set_perturbations_stepper(s);
 
@@ -236,14 +287,15 @@ namespace y
 	    }
 
 
-    void y_driver::set_author(lexeme_type* lex)
+    void y_driver::add_author(lexeme_type* lex, author* a)
 	    {
         std::string str;
         bool        ok = lex->get_string(str);
 
         if(ok)
 	        {
-            this->root.set_author(str, *lex);
+            a->set_name(str, *lex);
+            this->root.add_author(str, *lex, a);
 	        }
         else
 	        {
@@ -252,20 +304,80 @@ namespace y
 	    }
 
 
-    void y_driver::set_tag(lexeme_type* lex)
+    void y_driver::set_citeguide(lexeme_type* lex)
 	    {
         std::string str;
         bool        ok = lex->get_string(str);
 
         if(ok)
 	        {
-            this->root.set_tag(str, *lex);
+            this->root.set_citeguide(str, *lex);
 	        }
         else
 	        {
             lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
+
+
+    void y_driver::set_description(lexeme_type* lex)
+      {
+        std::string str;
+        bool        ok = lex->get_string(str);
+
+        if(ok)
+          {
+            this->root.set_description(str, *lex);
+          }
+        else
+          {
+            lex->error(ERROR_STRING_LOOKUP);
+          }
+      }
+
+
+    void y_driver::set_revision(lexeme_type* lex)
+      {
+        int  d = 1;
+        bool ok = lex->get_integer(d);
+
+        if(ok)
+          {
+            this->root.set_revision(d, *lex);
+          }
+        else
+          {
+            lex->error(ERROR_INTEGER_LOOKUP);
+          }
+      }
+
+
+    void y_driver::set_license(lexeme_type* lex)
+      {
+        std::string str;
+        bool        ok = lex->get_string(str);
+
+        if(ok)
+          {
+            this->root.set_license(str, *lex);
+          }
+        else
+          {
+            lex->error(ERROR_STRING_LOOKUP);
+          }
+      }
+
+
+    void y_driver::set_references(string_array* a)
+      {
+        this->root.set_references(a->get_array());
+      }
+
+
+    void y_driver::set_urls(string_array* a)
+      {
+        this->root.set_urls(a->get_array());
+      }
 
 
     void y_driver::set_core(lexeme_type* lex)

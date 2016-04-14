@@ -12,19 +12,22 @@
 
 enum class keyword_type
   {
-    name, author, tag, field, potential, subexpr, value,
+    name, author, citeguide,
+    description, license, revision,
+    references, urls, email, institute,
+    field, potential, subexpr, value,
     parameter, latex, core, impl, model,
-    abserr, relerr, k_stepper, stepsize,
+    abserr, relerr, stepper, stepsize,
     background, perturbations,
     indexorder, left, right,
-    f_abs, f_step, f_sqrt,
-    f_sin, f_cos, f_tan,
-    f_asin, f_acos, f_atan, f_atan2,
-    f_sinh, f_cosh, f_tanh,
-    f_asinh, f_acosh, f_atanh,
-    f_exp, f_log, f_pow, f_Li2, f_Li, f_G, f_S, f_H,
-    f_zeta, f_zetaderiv, f_tgamma, f_lgamma,
-    f_beta, f_psi, f_factorial, f_binomial
+    abs, step, sqrt,
+    sin, cos, tan,
+    asin, acos, atan, atan2,
+    sinh, cosh, tanh,
+    asinh, acosh, atanh,
+    exp, log, pow, Li2, Li, G, S, H,
+    zeta, zetaderiv, tgamma, lgamma,
+    beta, psi, factorial, binomial
   };
 
 
