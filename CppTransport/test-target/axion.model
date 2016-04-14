@@ -19,6 +19,16 @@ author "David Mulryne"
    institute "Queen Mary, University of London";
  };
 
+author "Mafalda Dias"
+ { email     "M.Dias@desy.de";
+   institute "DESY, Hamburg";
+ };
+
+author "Jonathan Frazer"
+ { email     "J.Frazer@desy.de";
+   institute "DESY, Hamburg";
+ };
+
 % include details of library tags, stepper definitions, etc.
 #include "defaults.model"
 
