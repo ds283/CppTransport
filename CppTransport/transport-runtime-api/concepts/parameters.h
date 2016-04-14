@@ -30,7 +30,6 @@
 #define CPPTRANSPORT_NODE_PARAMS_VALUES    "values"
 #define CPPTRANSPORT_NODE_PARAMS_VALUE     "value"
 #define CPPTRANSPORT_NODE_PARAMS_NAME      "name"
-#define CPPTRANSPORT_NODE_PARAMS_MODEL_UID "model-uid"
 
 
 namespace transport
@@ -55,7 +54,7 @@ namespace transport
         }
 
         //! Deserialization constructor
-        parameters(Json::Value& reader, model_manager <number>& f);
+        parameters(Json::Value& reader, model<number>* m);
 
         virtual ~parameters() = default;
 
@@ -122,11 +121,9 @@ namespace transport
 
 
     template <typename number>
-    parameters<number>::parameters(Json::Value& reader, model_manager <number>& f)
+    parameters<number>::parameters(Json::Value& reader, model<number>* m)
       {
-		    // construct model object
-        std::string uid = reader[CPPTRANSPORT_NODE_PARAMS_MODEL_UID].asString();
-		    mdl = f(uid);
+		    mdl = m;
 
         // deserialize value of Planck mass
 		    M_Planck = static_cast<number>(reader[CPPTRANSPORT_NODE_PARAMS_MPLANCK].asDouble());
@@ -165,9 +162,6 @@ namespace transport
     template <typename number>
     void parameters<number>::serialize(Json::Value& writer) const
       {
-		    // serialize model UID
-		    writer[CPPTRANSPORT_NODE_PARAMS_MODEL_UID] = this->mdl->get_identity_string();
-
         // serialize value of Planck mass
         writer[CPPTRANSPORT_NODE_PARAMS_MPLANCK] = static_cast<double>(this->M_Planck);
 

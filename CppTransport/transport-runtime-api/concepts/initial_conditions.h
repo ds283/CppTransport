@@ -29,13 +29,15 @@
 #include "boost/log/utility/formatting_ostream.hpp"
 
 
-#define CPPTRANSPORT_NODE_ICS_VALUE         "value"
-#define CPPTRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
-#define CPPTRANSPORT_NODE_ICS_NAME          "name"
-#define CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON "sub-horizon-efolds"
-#define CPPTRANSPORT_NODE_ICS_N_INIT        "initial-time"
-#define CPPTRANSPORT_NODE_ICS_VALUES        "values"
-#define CPPTRANSPORT_NODE_ICS_PARAMETERS    "parameters"
+#define CPPTRANSPORT_NODE_ICS_VALUE          "value"
+#define CPPTRANSPORT_NODE_ICS_MODEL          "model"
+#define CPPTRANSPORT_NODE_ICS_MODEL_UID      "uid"
+#define CPPTRANSPORT_NODE_ICS_MODEL_REVISION "revision"
+#define CPPTRANSPORT_NODE_ICS_NAME           "name"
+#define CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON  "sub-horizon-efolds"
+#define CPPTRANSPORT_NODE_ICS_N_INIT         "initial-time"
+#define CPPTRANSPORT_NODE_ICS_VALUES         "values"
+#define CPPTRANSPORT_NODE_ICS_PARAMETERS     "parameters"
 
 
 namespace transport
@@ -254,12 +256,11 @@ namespace transport
 
     template <typename number>
     initial_conditions<number>::initial_conditions(const std::string& nm, Json::Value& reader, model_manager<number>& f)
-      : name(nm), params(reader[CPPTRANSPORT_NODE_ICS_PARAMETERS], f)
+      : name(nm),
+        mdl(f(reader[CPPTRANSPORT_NODE_ICS_MODEL][CPPTRANSPORT_NODE_ICS_MODEL_UID].asString(),
+              reader[CPPTRANSPORT_NODE_ICS_MODEL][CPPTRANSPORT_NODE_ICS_MODEL_REVISION].asUInt())),
+        params(reader[CPPTRANSPORT_NODE_ICS_PARAMETERS], mdl)   // mdl will have been constructed by this point
       {
-		    // construct model object
-        std::string uid = reader[CPPTRANSPORT_NODE_ICS_MODEL_UID].asString();
-		    mdl = f(uid);
-
         // deserialize time parameters
         N_init        = reader[CPPTRANSPORT_NODE_ICS_N_INIT].asDouble();
         N_sub_horizon = reader[CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON].asDouble();
@@ -325,8 +326,13 @@ namespace transport
     template <typename number>
     void initial_conditions<number>::serialize(Json::Value& writer) const
       {
-		    // serialize model UID
-		    writer[CPPTRANSPORT_NODE_ICS_MODEL_UID] = this->mdl->get_identity_string();
+		    // serialize model
+        // this is the unique point where model details are serialized
+        // we store both the UID, which is used to identify which model is under discussion,
+        // and the revision number
+        // on deserialization we ask the the available revision number is no smaller than the serialized value
+		    writer[CPPTRANSPORT_NODE_ICS_MODEL][CPPTRANSPORT_NODE_ICS_MODEL_UID] = this->mdl->get_identity_string();
+        writer[CPPTRANSPORT_NODE_ICS_MODEL][CPPTRANSPORT_NODE_ICS_MODEL_REVISION] = this->mdl->get_revision();
 
         // serialize time parameters
         writer[CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON] = this->N_sub_horizon;

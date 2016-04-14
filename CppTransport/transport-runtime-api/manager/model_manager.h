@@ -58,6 +58,7 @@ namespace transport
               tver(v)
               {
                 assert(m != nullptr);
+                if(m != nullptr) revision = m->get_revision();
               }
 
 
@@ -70,6 +71,9 @@ namespace transport
 
             //! Get uid of stored model
             const std::string& get_uid() const { return(this->uid); }
+
+            //! Get revision number of stored model
+            unsigned int get_revision() const { return(this->revision); }
 
 
             // COMPARISON OPERATOR
@@ -93,6 +97,9 @@ namespace transport
             //! runtime API version expected by this model
             unsigned int tver;
 
+            //! revision number for this model definition
+            unsigned int revision;
+
           };
 
 
@@ -114,8 +121,9 @@ namespace transport
           public:
 
             //! constructor captures UID for comparison
-            ModelInstanceComparator(const std::string& u)
-              : uid(u)
+            ModelInstanceComparator(const std::string& u, unsigned int r)
+              : uid(u),
+                min_revision(r)
               {
               }
 
@@ -129,7 +137,7 @@ namespace transport
 
             bool operator()(const model_instance<number>& m)
               {
-                return(m.get_uid() == this->uid);
+                return(m.get_uid() == this->uid && m.get_revision() >= this->min_revision);
               }
 
 
@@ -139,6 +147,9 @@ namespace transport
 
             //! UID for comparison
             const std::string& uid;
+
+            //! minimum revision number requested
+            unsigned int min_revision;
 
           };
 
@@ -191,8 +202,8 @@ namespace transport
 
       public:
 
-        //! Search for a model by uid
-        model<number>* operator()(const std::string& uid) const;
+        //! Search for a model by uid and minimum revision number
+        model<number>* operator()(const std::string& uid, unsigned int min_revision) const;
 
 
         // INTERFACE -- WRITE DETAILS TO STREAM
@@ -224,14 +235,14 @@ namespace transport
 
 
     template <typename number>
-    model<number>* model_manager<number>::operator()(const std::string& uid) const
+    model<number>* model_manager<number>::operator()(const std::string& uid, unsigned int min_revision) const
       {
-        typename model_db::const_iterator t = std::find_if(this->models.begin(), this->models.end(), ModelInstanceComparator<number>(uid));
+        typename model_db::const_iterator t = std::find_if(this->models.begin(), this->models.end(), ModelInstanceComparator<number>(uid, min_revision));
 
         if(t == this->models.end())
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_INSTANCES_MISSING << " '" << uid << "'";
+            msg << CPPTRANSPORT_INSTANCES_MISSING_A << " '" << uid << "' " << CPPTRANSPORT_INSTANCES_MISSING_B << " " << min_revision;
             throw runtime_exception(exception_type::MISSING_MODEL_INSTANCE, msg.str());
           }
         else
@@ -271,6 +282,7 @@ namespace transport
 
         const std::string& uid = m->get_identity_string();
         unsigned int version = m->get_translator_version();
+        unsigned int revision = m->get_revision();
 
         if(version > CPPTRANSPORT_RUNTIME_API_VERSION)
           {
@@ -280,7 +292,7 @@ namespace transport
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        typename model_db::const_iterator t = std::find_if(this->models.begin(), this->models.end(), ModelInstanceComparator<number>(uid));
+        typename model_db::const_iterator t = std::find_if(this->models.begin(), this->models.end(), ModelInstanceComparator<number>(uid, revision));
         if(t == this->models.end())
           {
             this->models.emplace_back(m, uid, version);
