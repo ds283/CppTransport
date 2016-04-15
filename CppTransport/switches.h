@@ -42,7 +42,7 @@
 #define INPUT_FILE_HELP               "do not use"
 
 #define NO_ENV_SEARCH_SWITCH          "no-search-env"
-#define NO_ENV_SEARCH_HELP            "do not search CPPTRANSPORT_TEMPLATE_PATH"
+#define NO_ENV_SEARCH_HELP            "do not search CPPTRANSPORT_PATH"
 
 #define ANNOTATE_SWITCH               "annotate"
 #define ANNOTATE_HELP                 "annotate generated header files"
