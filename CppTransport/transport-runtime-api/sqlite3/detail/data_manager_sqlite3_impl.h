@@ -1648,7 +1648,7 @@ namespace transport
 
         sqlite3_close(db);
 
-        return(worker_db);
+        return(std::move(worker_db));
       }
 
 
@@ -1661,7 +1661,7 @@ namespace transport
 
         sqlite3_close(db);
 
-        return(timing_data);
+        return(std::move(timing_data));
       }
 
 

@@ -756,7 +756,7 @@ namespace transport
         // run Floyd-Warshall algorithm
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
 
-        return(dmat);
+        return(std::move(dmat));
       }
 
 
@@ -827,7 +827,7 @@ namespace transport
         // run Floyd-Warshall algorithm
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
 
-        return(dmat);
+        return(std::move(dmat));
       }
 
 
