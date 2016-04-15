@@ -44,7 +44,6 @@ namespace transport
           : name(std::move(n)),
             just(j),
             bold(b),
-            prev_flags(0),
             prev_width(0),
             prev_prec(0)
           {
