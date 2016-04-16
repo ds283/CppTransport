@@ -3486,7 +3486,7 @@ namespace transport
                 if(has_statistics)
                   {
                     unsigned int count = (*counts)[std::make_pair(info.get_workgroup(), info.get_worker())];
-                    double percent = 100.0 * static_cast<double>(count) / static_cast<double>(configurations);
+                    double percent = configurations > 0 ? (100.0 * static_cast<double>(count) / static_cast<double>(configurations)) : 0.0;
 
                     HTML_node configs("td", boost::lexical_cast<std::string>(count) + " (" + format_number(percent) + "%)");
                     table_row.add_element(configs);
