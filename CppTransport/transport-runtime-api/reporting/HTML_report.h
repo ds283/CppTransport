@@ -3337,7 +3337,14 @@ namespace transport
                 this->make_data_element("Size", format_memory(payload.get_size()), col3_list);
                 this->make_data_element("Shortest integration", format_time(metadata.global_min_integration_time), col3_list);
                 this->make_data_element("Longest integration", format_time(metadata.global_max_integration_time), col3_list);
-                this->make_data_element("Mean integration", format_time(metadata.total_integration_time / metadata.total_configurations), col3_list);
+                if(metadata.total_configurations > 0)
+                  {
+                    this->make_data_element("Mean integration", format_time(metadata.total_integration_time / metadata.total_configurations), col3_list);
+                  }
+                else
+                  {
+                    this->make_data_element("Mean integration", "", col3_list);
+                  }
 
                 col3.add_element(col3_list);
 
@@ -4468,7 +4475,7 @@ namespace transport
           {
             if(payload.is_seeded())
               {
-                this->write_task_button(bundle, payload.get_seed_group(), parent);
+                this->write_content_button(bundle, payload.get_seed_group(), parent);
               }
             else
               {
