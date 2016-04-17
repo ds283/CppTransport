@@ -325,7 +325,7 @@ namespace transport
         // get name of temporary file
         boost::filesystem::path temp_mpl = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 
-        std::fstream outf(temp_mpl.string(), std::ios_base::out | std::ios_base::trunc);
+        std::ofstream outf(temp_mpl.string(), std::ios_base::out | std::ios_base::trunc);
         outf << "import matplotlib.pyplot as plt" << '\n';
         outf.close();
 
@@ -336,7 +336,7 @@ namespace transport
         // get name of second temporary file
         boost::filesystem::path temp_sheets = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 
-        std::fstream outf2(temp_sheets.string(), std::ios_base::out | std::ios_base::trunc);
+        std::ofstream outf2(temp_sheets.string(), std::ios_base::out | std::ios_base::trunc);
         outf2 << "import matplotlib.pyplot as plt" << '\n';
         outf2 << "plt.style.use('ggplot')" << '\n';
         outf2.close();
@@ -358,7 +358,7 @@ namespace transport
         // get name of temporary file
         boost::filesystem::path temp_sns = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 
-        std::fstream outf(temp_sns.string(), std::ios_base::out | std::ios_base::trunc);
+        std::ofstream outf(temp_sns.string(), std::ios_base::out | std::ios_base::trunc);
         outf << "import seaborn as sns" << '\n';
         outf.close();
 
