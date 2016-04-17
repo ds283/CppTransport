@@ -1649,8 +1649,8 @@ namespace transport
 
                 if(max_integration == 0 || record.get_integration_time() > max_integration) max_integration = record.get_integration_time();
                 if(min_integration == 0 || record.get_integration_time() < min_integration) min_integration = record.get_integration_time();
-                if(max_batching == 0    || record.get_batch_time() > max_batching)       max_batching = record.get_batch_time();
-                if(min_batching == 0    || record.get_batch_time() < min_batching)       min_batching = record.get_batch_time();
+                if(max_batching == 0    || record.get_batch_time() > max_batching)          max_batching = record.get_batch_time();
+                if(min_batching == 0    || record.get_batch_time() < min_batching)          min_batching = record.get_batch_time();
 
                 total_integration += record.get_integration_time();
                 total_batching += record.get_batch_time();
@@ -1757,6 +1757,10 @@ namespace transport
             p_writer->check_integrity(p_rec.get_task());
 
             data_mgr.synchronize_missing_serials(*i_writer, *p_writer, i_rec.get_task(), p_rec.get_task());
+
+            // metadata for the writer are likely to be inconsistent
+            // try to recover correct metadata directly from the container
+            this->recover_integration_metadata(data_mgr, *i_writer);
 
             // close writers
             data_mgr.close_writer(*i_writer);
