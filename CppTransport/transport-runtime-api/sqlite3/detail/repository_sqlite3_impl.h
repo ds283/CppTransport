@@ -1589,6 +1589,7 @@ namespace transport
 
             // carry out an integrity check; this updates the writer with all missing serial numbers
             // if any are missing, the writer will be marked as failed
+            // also updates writer's metadata with correct number of configurations stored in the container
             writer->check_integrity(rec->get_task());
 
             // close writer

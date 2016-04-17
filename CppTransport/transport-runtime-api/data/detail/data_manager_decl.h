@@ -262,10 +262,15 @@ namespace transport
 
       protected:
 
-        //! log missing data from a container, checking against a list provided by the backend if one is provided.
+        //!
+        template <typename WriterObject, typename Database>
+        void advise_missing_content(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db);
+
+        //! compare list of missing serials numbers against a list of failed serial numbers, provided by the backend
+        //! (not all backends may make this information available)
         //! returns: serial numbers of any further configurations that should be dropped (they were in the list provided by the backend, but not already missing)
         template <typename WriterObject, typename Database>
-        std::set<unsigned int> advise_missing_content(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db);
+        std::set<unsigned int> find_failed_but_undropped_serials(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db);
 
         //! compute the twopf configurations which should be dropped to match a give list of threepf serials
         std::set<unsigned int> compute_twopf_drop_list(const std::set<unsigned int>& serials, const threepf_kconfig_database& configs);

@@ -260,7 +260,11 @@ namespace transport
         const std::set<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
 
         //! set list of missing k-configuration serials
-        void set_missing_serials(const std::set<unsigned int>& s) { this->missing_serials = s; }
+        template <typename Database>
+        void set_missing_serials(const std::set<unsigned int>& s, const Database& db)
+          {
+            this->missing_serials = s;
+          }
 
 
 		    // CONTENT
