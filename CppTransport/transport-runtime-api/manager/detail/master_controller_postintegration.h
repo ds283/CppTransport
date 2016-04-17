@@ -341,7 +341,7 @@ namespace transport
 
         // aggregate cache information
         integration_metadata   i_metadata;  // unused
-        output_metadata        o_metadata;
+        output_metadata        o_metadata = writer.get_metadata();
         std::list<std::string> content_groups;
 
         // get paths the workers will need
@@ -390,9 +390,12 @@ namespace transport
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate cache information
-        integration_metadata   i_metadata;
-        output_metadata        o_metadata;
+        integration_metadata   i_metadata = i_writer.get_metadata();
+        output_metadata        o_metadata = p_writer.get_metadata();
         std::list<std::string> content_groups;  // unused
+
+        // reset count of failed configurations (can be nonzero if inherited from a seed group)
+        i_metadata.total_failures = 0;
 
         // get paths needed by different batchers on each worker
         boost::filesystem::path i_tempdir_path = i_writer.get_abs_tempdir_path();

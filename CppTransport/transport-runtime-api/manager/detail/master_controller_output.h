@@ -79,7 +79,7 @@ namespace transport
 
         // aggregate cache information
         integration_metadata   i_metadata;      // unused
-        output_metadata        o_metadata;
+        output_metadata        o_metadata = writer.get_metadata();
         std::list<std::string> content_groups;
 
         // get paths the workers will need

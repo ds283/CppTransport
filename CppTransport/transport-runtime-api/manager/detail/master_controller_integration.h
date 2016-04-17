@@ -152,9 +152,12 @@ namespace transport
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate integration data reported by worker processes
-        integration_metadata   i_metadata;
+        integration_metadata   i_metadata = writer.get_metadata();
         output_metadata        o_metadata;      // unused
         std::list<std::string> content_groups;  // unused
+
+        // reset count of failed configurations (can be nonzero if inherited from a seed group)
+        i_metadata.total_failures = 0;
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer.get_abs_tempdir_path();
