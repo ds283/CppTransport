@@ -492,6 +492,9 @@ namespace transport
         std::unique_ptr< integration_writer<number> > get_integration_recovery_writer(const inflight_integration& data, data_manager<number>& data_mgr,
                                                                                       integration_task_record<number>& rec, unsigned int worker);
 
+        //! recover integration metadata directly from a data container
+        void recover_integration_metadata(data_manager<number>& data_mgr, integration_writer<number>& writer);
+
         //! construct a postintegration_writer in recovery mode
         std::unique_ptr< postintegration_writer<number> > get_postintegration_recovery_writer(const inflight_postintegration& data, data_manager<number>& data_mgr,
                                                                                               postintegration_task_record<number>& rec, unsigned int worker);

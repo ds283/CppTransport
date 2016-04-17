@@ -245,12 +245,14 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
-            this->warn(msg.str());
-            return std::set<unsigned int>();
+            throw runtime_exception(exception_type::SEEDING_ERROR, msg.str());
           };
 
         // mark writer as seeded
         writer.set_seed(seed_group);
+
+        // seeded writer inherits metadata from its seed content group
+        writer.set_metadata(t->second->get_payload().get_metadata());
 
         this->data_mgr->seed_writer(writer, tk, *(t->second));
         this->work_scheduler.prepare_queue(t->second->get_payload().get_failed_serials());
@@ -275,8 +277,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
-            this->warn(msg.str());
-            return std::set<unsigned int>();
+            throw runtime_exception(exception_type::SEEDING_ERROR, msg.str());
           }
 
         // find parent content group for the seed
@@ -285,6 +286,7 @@ namespace transport
         // check that same k-configurations are missing from both content groups in the pair
         // currently we assume this to be true, although the integrity check for paired writers
         // doesn't enforce it (yet)
+        // note, this->seed_writer() will make i_writer inherit metadata from the seed content group
         std::set<unsigned int> integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
 
         if(i_writer.is_seeded())
@@ -316,6 +318,10 @@ namespace transport
               }
 
             p_writer.set_seed(seed_group);
+
+            // seeded writer inherits metadata from its seed content group
+            p_writer.set_metadata(t->second->get_payload().get_metadata());
+
             this->data_mgr->seed_writer(p_writer, tk, *(t->second));
           }
 

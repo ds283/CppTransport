@@ -1592,6 +1592,10 @@ namespace transport
             // also updates writer's metadata with correct number of configurations stored in the container
             writer->check_integrity(rec->get_task());
 
+            // metadata for the writer are likely to be inconsistent
+            // try to recover correct metadata directly from the container
+            this->recover_integration_metadata(data_mgr, *writer);
+
             // close writer
             // (closing the writer will remove it from the list of active integrations)
             data_mgr.close_writer(*writer);
@@ -1619,6 +1623,50 @@ namespace transport
         writer->set_collecting_initial_conditions(data.is_collecting_ics);
 
         return(writer);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::recover_integration_metadata(data_manager<number>& data_mgr, integration_writer<number>& writer)
+      {
+        integration_metadata metadata = writer.get_metadata();
+
+        timing_db timing_data = data_mgr.read_timing_information(writer.get_abs_container_path());
+
+        boost::timer::nanosecond_type max_integration = 0;
+        boost::timer::nanosecond_type min_integration = 0;
+        boost::timer::nanosecond_type max_batching = 0;
+        boost::timer::nanosecond_type min_batching = 0;
+
+        boost::timer::nanosecond_type total_integration = 0;
+        boost::timer::nanosecond_type total_batching = 0;
+
+        for(const timing_db::value_type& item : timing_data)
+          {
+            if(item.second)
+              {
+                const timing_record& record = *item.second;
+
+                if(max_integration == 0 || record.get_integration_time() > max_integration) max_integration = record.get_integration_time();
+                if(min_integration == 0 || record.get_integration_time() < min_integration) min_integration = record.get_integration_time();
+                if(max_batching == 0    || record.get_batch_time() > max_batching)       max_batching = record.get_batch_time();
+                if(min_batching == 0    || record.get_batch_time() < min_batching)       min_batching = record.get_batch_time();
+
+                total_integration += record.get_integration_time();
+                total_batching += record.get_batch_time();
+              }
+          }
+
+        metadata.total_integration_time = total_integration;
+        metadata.global_min_integration_time = min_integration;
+        metadata.global_max_integration_time = max_integration;
+
+        metadata.total_batching_time = total_batching;
+        metadata.global_min_batching_time = min_batching;
+        metadata.global_max_batching_time = max_batching;
+
+        // leave total_wallclock_time, total_aggregation_time and total_refinements unchanged
+        writer.set_metadata(metadata);
       }
 
 

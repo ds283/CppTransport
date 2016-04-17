@@ -121,8 +121,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
-            this->warn(msg.str());
-            return std::set<unsigned int>();
+            throw runtime_exception(exception_type::SEEDING_ERROR, msg.str());
           }
 
         // mark writer as seeded
@@ -131,6 +130,9 @@ namespace transport
         // get workgroup number used by seed
         unsigned int seed_workgroup = t->second->get_payload().get_workgroup_number();
         writer.set_workgroup_number(seed_workgroup+1);
+
+        // seeded writer inherits metadata from its seed content group
+        writer.set_metadata(t->second->get_payload().get_metadata());
 
         this->data_mgr->seed_writer(writer, tk, *t->second);
         this->work_scheduler.prepare_queue(t->second->get_payload().get_failed_serials());

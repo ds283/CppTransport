@@ -36,7 +36,8 @@ namespace transport
           DERIVED_PRODUCT_ERROR,                             // error encountered when generating a derived product
           JOURNAL_ERROR,                                     // error in work journal
           SPLINE_ERROR,                                      // error while performing a spline
-          REPORTING_ERROR                                    // error while constructing a report
+          REPORTING_ERROR,                                   // error while constructing a report
+          SEEDING_ERROR                                      // error while seeding a writer from a previous content group
       };
 
 
