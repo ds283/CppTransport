@@ -12,6 +12,8 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <set>
+#include <list>
 
 #include "transport-runtime-api/serialization/serializable.h"
 

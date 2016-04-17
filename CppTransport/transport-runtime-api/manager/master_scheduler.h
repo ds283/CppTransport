@@ -353,7 +353,7 @@ namespace transport
 		    void prepare_queue(output_task<number>& task);
 
         //! build a work queue using specified serial numbers (used when seeding tasks)
-        void prepare_queue(const std::list<unsigned int>& list);
+        void prepare_queue(const std::set<unsigned int>& list);
 
 		    //! current queue exhausted? ie., finished all current work?
 		    bool is_finished() const { return(this->queue.size() == 0); }
@@ -684,17 +684,19 @@ namespace transport
       }
 
 
-    void master_scheduler::prepare_queue(const std::list<unsigned int>& list)
+    void master_scheduler::prepare_queue(const std::set<unsigned int>& list)
       {
-        this->queue = list;
+        // copy serial numbers from list into temporary vector
+        std::vector<unsigned int> temp;
+        temp.reserve(list.size());
+        std::copy(list.begin(), list.end(), std::back_inserter(temp));
 
-        this->queue.sort();
-        this->queue.unique();
-
-        std::vector<unsigned int> temp(this->queue.size());
-        std::copy(this->queue.begin(), this->queue.end(), temp.begin());
+        // shuffle
         std::shuffle(temp.begin(), temp.end(), this->urng);
-        std::copy(temp.begin(), temp.end(), this->queue.begin());
+
+        // copy shuffled numbers back into queue
+        this->queue.clear();
+        std::copy(temp.begin(), temp.end(), std::back_inserter(this->queue));
       }
 
 

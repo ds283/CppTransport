@@ -9,6 +9,7 @@
 
 
 #include <vector>
+#include <set>
 #include <functional>
 
 #include "transport-runtime-api/enumerations.h"
@@ -147,7 +148,7 @@ namespace transport
         unsigned int get_reported_failures() const { return(this->failures); }
 
         //! Query a list of failed serial numbers (not all backends may support this)
-        const std::list< unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+        const std::set< unsigned int>& get_failed_serials() const { return(this->failed_serials); }
 
 
         //! Prepare for new work assignment
@@ -245,7 +246,7 @@ namespace transport
         unsigned int failures;
 
         //! list of failed k-configuration serial numbers (not all backends may support tracking this)
-        std::list< unsigned int > failed_serials;
+        std::set< unsigned int > failed_serials;
 
         //! number of integrations which required refinement
         unsigned int refinements;
@@ -740,7 +741,7 @@ namespace transport
     template <typename number>
     void integration_batcher<number>::report_integration_failure(unsigned int kserial)
       {
-        this->failed_serials.push_back(kserial);
+        this->failed_serials.insert(kserial);
         this->report_integration_failure();
       }
 

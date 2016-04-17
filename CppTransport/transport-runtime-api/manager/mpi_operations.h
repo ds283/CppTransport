@@ -4,12 +4,13 @@
 //
 
 
-#ifndef __mpi_operations_H_
-#define __mpi_operations_H_
+#ifndef CPPTRANSPORT_MPI_OPERATIONS_H
+#define CPPTRANSPORT_MPI_OPERATIONS_H
 
 #include "boost/mpi.hpp"
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/list.hpp"
+#include "boost/serialization/set.hpp"
 #include "boost/date_time/posix_time/time_serialize.hpp"
 #include "boost/timer/timer.hpp"
 
@@ -358,7 +359,7 @@ namespace transport
                                              const boost::timer::nanosecond_type& max_b, const boost::timer::nanosecond_type& min_b,
                                              const boost::timer::nanosecond_type& w,
                                              const unsigned int& n, const unsigned int& nr, const unsigned int& nf,
-                                             const std::list<unsigned int>& fs)
+                                             const std::set<unsigned int>& fs)
                   : integration_time(i),
                     max_integration_time(max_i),
                     min_integration_time(min_i),
@@ -405,7 +406,7 @@ namespace transport
                 unsigned int                    get_num_failures()         const { return(this->num_failures); }
 
                 //! Get list of failed serial numbers (if supported by the backend)
-                const std::list< unsigned int>& get_failed_serials()       const { return(this->failed_serials); }
+                const std::set<unsigned int>&   get_failed_serials()       const { return(this->failed_serials); }
 
 		            //! Get timestamp
 		            boost::posix_time::ptime        get_timestamp()            const { return(this->timestamp); }
@@ -443,7 +444,7 @@ namespace transport
                 boost::timer::nanosecond_type wallclock_time;
 
                 //! List of failed serial numbers (not all backends may support collection of this data)
-                std::list< unsigned int > failed_serials;
+                std::set<unsigned int> failed_serials;
 
 		            //! Timestamp
 		            boost::posix_time::ptime timestamp;
@@ -1131,4 +1132,4 @@ namespace transport
   } // namespace transport
 
 
-#endif //__mpi_operations_H_
+#endif //CPPTRANSPORT_MPI_OPERATIONS_H

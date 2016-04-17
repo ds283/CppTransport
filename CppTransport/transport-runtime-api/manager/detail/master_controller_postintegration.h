@@ -233,7 +233,7 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    std::list<unsigned int> master_controller<number>::seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
+    std::set<unsigned int> master_controller<number>::seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
         postintegration_content_db db = this->repo->enumerate_postintegration_task_content(tk->get_name());
@@ -246,7 +246,7 @@ namespace transport
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warn(msg.str());
-            return std::list<unsigned int>{};
+            return std::set<unsigned int>();
           };
 
         // mark writer as seeded
@@ -261,7 +261,7 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
-    std::list<unsigned int> master_controller<number>::seed_writer_pair(integration_writer<number>& i_writer,
+    std::set<unsigned int> master_controller<number>::seed_writer_pair(integration_writer<number>& i_writer,
                                                                         postintegration_writer<number>& p_writer,
                                                                         TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group)
       {
@@ -276,7 +276,7 @@ namespace transport
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warn(msg.str());
-            return std::list<unsigned int>{};
+            return std::set<unsigned int>();
           }
 
         // find parent content group for the seed
@@ -285,11 +285,11 @@ namespace transport
         // check that same k-configurations are missing from both content groups in the pair
         // currently we assume this to be true, although the integrity check for paired writers
         // doesn't enforce it (yet)
-        std::list<unsigned int> integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
+        std::set<unsigned int> integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
 
         if(i_writer.is_seeded())
           {
-            std::list<unsigned int> postintegration_serials = t->second->get_payload().get_failed_serials();
+            std::set<unsigned int> postintegration_serials = t->second->get_payload().get_failed_serials();
 
             // minimal check is that each content group is missing the same number of serial numbers
             if(postintegration_serials.size() != integration_serials.size())
@@ -302,9 +302,9 @@ namespace transport
               }
 
             // now check more carefully that the missing serial numbers are the same
-            std::list<unsigned int> diff;
+            std::set<unsigned int> diff;
             std::set_difference(integration_serials.begin(), integration_serials.end(),
-                                postintegration_serials.begin(), postintegration_serials.end(), std::back_inserter(diff));
+                                postintegration_serials.begin(), postintegration_serials.end(), std::inserter(diff, diff.begin()));
 
             if(diff.size() > 0)
               {

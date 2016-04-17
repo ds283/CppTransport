@@ -194,44 +194,44 @@ namespace transport
         // CALCULATE MISSING SERIAL NUMBERS
 
         //! get missing serial numbers from a twopf-re table; should be provided by implementation
-        virtual std::list<unsigned int> get_missing_twopf_re_serials(integration_writer<number>& writer) override;
+        virtual std::set<unsigned int> get_missing_twopf_re_serials(integration_writer<number>& writer) override;
 
         //! get missing serial numbers from a twopf-im table; should be provided by implementation
-        virtual std::list<unsigned int> get_missing_twopf_im_serials(integration_writer<number>& writer) override;
+        virtual std::set<unsigned int> get_missing_twopf_im_serials(integration_writer<number>& writer) override;
 
         //! get missing serial numbers from a threepf table; should be provided by implementation
-        virtual std::list<unsigned int> get_missing_threepf_serials(integration_writer<number>& writer) override;
+        virtual std::set<unsigned int> get_missing_threepf_serials(integration_writer<number>& writer) override;
 
         //! get missing serial numbers from a zeta twopf table; should be provided by implementation
-        virtual std::list<unsigned int> get_missing_zeta_twopf_serials(postintegration_writer<number>& writer) override;
+        virtual std::set<unsigned int> get_missing_zeta_twopf_serials(postintegration_writer<number>& writer) override;
 
         //! get missing serial numbers from a zeta threepf table; should be provided by implementation
-        virtual std::list<unsigned int> get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) override;
+        virtual std::set<unsigned int> get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) override;
 
         // DROP GROUPS OF SERIAL NUMBERS
 
         //! drop a set of k-configurations from a twopf-re table; should be provided by implementation
-        virtual void drop_twopf_re_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_twopf_re_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a twopf-im table; should be provided by implementation
-        virtual void drop_twopf_im_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_twopf_im_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a threepf table; should be provided by implementation
-        virtual void drop_threepf_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_threepf_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a zeta twopf table; should be provided by implementation
-        virtual void drop_zeta_twopf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_zeta_twopf_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
-        virtual void drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
         //! drop statistics for a set of k-configurations
-        virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
-        virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
         //! drop initial conditions for a sset of k-configurations
-        virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
-        virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
 
         friend class sqlite3_twopf_writer_integrity<number>;

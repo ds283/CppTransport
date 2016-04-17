@@ -109,7 +109,7 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    std::list<unsigned int> master_controller<number>::seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
+    std::set<unsigned int> master_controller<number>::seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
         integration_content_db db = this->repo->enumerate_integration_task_content(tk->get_name());
@@ -122,7 +122,7 @@ namespace transport
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warn(msg.str());
-            return std::list<unsigned int>{};
+            return std::set<unsigned int>();
           }
 
         // mark writer as seeded

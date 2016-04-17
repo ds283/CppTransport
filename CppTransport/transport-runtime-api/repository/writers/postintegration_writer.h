@@ -12,6 +12,7 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <set>
 
 #include "transport-runtime-api/serialization/serializable.h"
 
@@ -246,16 +247,20 @@ namespace transport
       public:
 
         //! Add list of serial numbers which the backend (or a paired integrator) advises have failed (not all backends may support this)
-        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); this->failed_serials.unique(); }
+        void merge_failure_list(const std::set<unsigned int>& failed)
+          {
+            this->failed_serials.insert(failed.begin(), failed.end());
+            this->set_fail(!this->failed_serials.empty());
+          }
 
         //! Get list of serial numbers which the backend (or a paired integrator) advises have failed
-        const std::list<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+        const std::set<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
 
         //! get list of missing k-configuration serials
-        const std::list<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
+        const std::set<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
 
         //! set list of missing k-configuration serials
-        void set_missing_serials(const std::list<unsigned int>& s) { this->missing_serials = s; this->missing_serials.sort(); this->missing_serials.unique(); }
+        void set_missing_serials(const std::set<unsigned int>& s) { this->missing_serials = s; }
 
 
 		    // CONTENT
@@ -318,7 +323,7 @@ namespace transport
         // FAILURE STATUS
 
         //! List of failed serial numbers
-        std::list<unsigned int> failed_serials;
+        std::set<unsigned int> failed_serials;
 
 
         // INTEGRITY STATUS
@@ -326,7 +331,7 @@ namespace transport
         //! List of missing serial numbers
         //! (this isn't the same as the list of failed serials reported by the backend; we compute this by testing the
         //! integrity of the database directly and cross-check with failures reported by the backend)
-        std::list<unsigned int> missing_serials;
+        std::set<unsigned int> missing_serials;
 
 
 		    // CONTENT TAGS

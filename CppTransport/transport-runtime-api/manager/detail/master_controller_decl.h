@@ -206,7 +206,7 @@ namespace transport
         //! Master node: Seed an integration writer using a previous integration
         //! returns list of serial numbers which remain to be integrated
         template <typename TaskObject>
-        std::list<unsigned int> seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group);
+        std::set<unsigned int> seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group);
 
         //! Master node: Pass new integration task to the workers
         bool integration_task_to_workers(integration_writer<number>& writer,
@@ -246,11 +246,11 @@ namespace transport
 
         //! Master node: Seed an integration writer using a previous integration
         template <typename TaskObject>
-        std::list<unsigned int> seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group);
+        std::set<unsigned int> seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group);
 
         //! Master node: Seed a pair of integration & postintegration writers using a previous integration/postintegration output
         template <typename TaskObject, typename ParentTaskObject>
-        std::list<unsigned int> seed_writer_pair(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
+        std::set<unsigned int> seed_writer_pair(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                                  TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group);
 
         //! Master node: Pass new postintegration task to workers

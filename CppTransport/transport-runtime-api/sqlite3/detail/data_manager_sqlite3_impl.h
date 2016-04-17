@@ -1023,7 +1023,7 @@ namespace transport
 
 
     template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_twopf_re_serials(integration_writer<number>& writer)
+    std::set<unsigned int> data_manager_sqlite3<number>::get_missing_twopf_re_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1034,7 +1034,7 @@ namespace transport
 
 
     template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_twopf_im_serials(integration_writer<number>& writer)
+    std::set<unsigned int> data_manager_sqlite3<number>::get_missing_twopf_im_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1045,7 +1045,7 @@ namespace transport
 
 
     template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_threepf_serials(integration_writer<number>& writer)
+    std::set<unsigned int> data_manager_sqlite3<number>::get_missing_threepf_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1056,7 +1056,7 @@ namespace transport
 
 
     template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_zeta_twopf_serials(postintegration_writer<number>& writer)
+    std::set<unsigned int> data_manager_sqlite3<number>::get_missing_zeta_twopf_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1067,7 +1067,7 @@ namespace transport
 
 
     template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_zeta_threepf_serials(postintegration_writer<number>& writer)
+    std::set<unsigned int> data_manager_sqlite3<number>::get_missing_zeta_threepf_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1078,7 +1078,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_twopf_re_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_twopf_re_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1090,7 +1090,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_twopf_im_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_twopf_im_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1102,7 +1102,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_threepf_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_threepf_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1114,7 +1114,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_zeta_twopf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_zeta_twopf_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1126,7 +1126,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1138,7 +1138,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_statistics_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1149,7 +1149,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_statistics_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1160,7 +1160,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -1171,7 +1171,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;

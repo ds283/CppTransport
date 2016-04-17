@@ -323,7 +323,7 @@ namespace transport
         failed_serials.clear();
         for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); ++t)
           {
-            failed_serials.push_back(t->asUInt());
+            failed_serials.insert(t->asUInt());
           }
       }
 
@@ -340,9 +340,9 @@ namespace transport
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE]       = this->size;
 
         Json::Value failure_array(Json::arrayValue);
-        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)
+        for(unsigned int n : this->failed_serials)
           {
-            Json::Value element = *t;
+            Json::Value element = n;
             failure_array.append(element);
           }
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS] = failure_array;
@@ -375,7 +375,7 @@ namespace transport
         failed_serials.clear();
         for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); ++t)
           {
-            failed_serials.push_back(t->asUInt());
+            failed_serials.insert(t->asUInt());
           }
       }
 
@@ -391,9 +391,9 @@ namespace transport
         writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SIZE]         = this->size;
 
         Json::Value failure_array(Json::arrayValue);
-        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)
+        for(unsigned int n : this->failed_serials)
           {
-            Json::Value element = *t;
+            Json::Value element = n;
             failure_array.append(element);
           }
         writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS] = failure_array;
