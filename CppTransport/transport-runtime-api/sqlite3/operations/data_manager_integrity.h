@@ -141,7 +141,7 @@ namespace transport
 
 				        if(u != dbase.config_end())
 					        {
-				            if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** " << *u;
+//				            if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** " << *u;
 
 				            std::ostringstream drop_stmt;
 				            drop_stmt << "DELETE FROM " << table << " WHERE kserial=" << drop_serial << ";";

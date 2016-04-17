@@ -171,31 +171,41 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for twopf container '" << writer.get_abs_container_path().string() << "'";
 
         // extract list of twopf kconfigurations which have no entry in the database
-        std::set<unsigned int> serials = this->get_missing_twopf_re_serials(writer);
+        // note that we allow the possibility that there are configurations which are present in the data tables, but missing
+        // in the statistics or ics tables.
+        // In this case we don't drop the corresponding data; we just live with the missing metadata
+        std::set<unsigned int> twopf_serials = this->get_missing_twopf_re_serials(writer);
+        std::set<unsigned int> tensor_serials = this->get_missing_tensor_twopf_serials(writer);
+
+        // merge
+        std::set<unsigned int> total_serials;
+        total_serials.insert(twopf_serials.begin(), twopf_serials.end());
+        total_serials.insert(tensor_serials.begin(), tensor_serials.end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, serials, tk->get_twopf_database());
+        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk->get_twopf_database());
         if(failed.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
-            this->drop_twopf_re_configurations(writer, failed, tk->get_twopf_database());
 
             // merge any remainder with our own list of auto-detected missing serials
-            serials.insert(failed.begin(), failed.end());
+            total_serials.insert(failed.begin(), failed.end());
           }
 
         // if any serial numbers are missing, advise the user
-        if(serials.size() > 0)
+        if(total_serials.size() > 0)
           {
             // advise the user that content is missing; marks set_fail() for writer
-            this->advise_missing_content(writer, serials, tk->get_twopf_database());
+            this->advise_missing_content(writer, total_serials, tk->get_twopf_database());
 
             // push list of missing serial numbers to writer and update metadata suitably
-            writer.set_missing_serials(serials, tk->get_twopf_database());
+            writer.set_missing_serials(total_serials, tk->get_twopf_database());
 
-            // ensure statistics and initial-conditions tables are consistent
-            if(writer.is_collecting_statistics()) this->drop_statistics_configurations(writer, serials, tk->get_twopf_database());
-            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, serials, tk->get_twopf_database());
+            // ensure all tables are consistent
+            this->drop_twopf_re_configurations(writer, total_serials, tk->get_twopf_database());
+            this->drop_tensor_twopf_configurations(writer, total_serials, tk->get_twopf_database());
+            if(writer.is_collecting_statistics()) this->drop_statistics_configurations(writer, total_serials, tk->get_twopf_database());
+            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, total_serials, tk->get_twopf_database());
           }
       }
 
@@ -208,84 +218,67 @@ namespace transport
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for threepf container '" << writer.get_abs_container_path().string() << "'";
 
-        // get lists of missing serial numbers for threepf, real twopf and imaginary twopf
-        std::set<unsigned int> twopf_re_serials = this->get_missing_twopf_re_serials(writer);
-        std::set<unsigned int> twopf_im_serials = this->get_missing_twopf_im_serials(writer);
-        std::set<unsigned int> threepf_serials  = this->get_missing_threepf_serials(writer);
+        // note that we allow the possibility that there are configurations which are present in the data tables, but missing
+        // in the statistics or ics tables.
+        // In this case we don't drop the corresponding data; we just live with the missing metadata
+
+        // get lists of missing serial numbers for threepf configurations
+        std::set<unsigned int> threepf_momentum_serials  = this->get_missing_threepf_momentum_serials(writer);
+        std::set<unsigned int> threepf_deriv_serials     = this->get_missing_threepf_deriv_serials(writer);
+
+        // get lists of missing serial numbers for twopf configurations
+        std::set<unsigned int> twopf_re_serials          = this->get_missing_twopf_re_serials(writer);
+        std::set<unsigned int> twopf_im_serials          = this->get_missing_twopf_im_serials(writer);
+        std::set<unsigned int> tensor_serials            = this->get_missing_tensor_twopf_serials(writer);
+
+        // merge missing threepf lists into a single one
+        std::set<unsigned int> threepf_total_serials;
+        threepf_total_serials.insert(threepf_momentum_serials.begin(), threepf_momentum_serials.end());
+        threepf_total_serials.insert(threepf_deriv_serials.begin(), threepf_deriv_serials.end());
 
         // merge missing twopf lists into a single one
         std::set<unsigned int> twopf_total_serials;
         twopf_total_serials.insert(twopf_re_serials.begin(), twopf_re_serials.end());
         twopf_total_serials.insert(twopf_im_serials.begin(), twopf_im_serials.end());
-        twopf_total_serials.insert(threepf_serials.begin(), threepf_serials.end());
+        twopf_total_serials.insert(tensor_serials.begin(), tensor_serials.end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_serials, tk->get_threepf_database());
+        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk->get_threepf_database());
         if(failed.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra threepf configurations not missing from container, but advised as failed by backend:";
-            this->drop_threepf_configurations(writer, failed, tk->get_threepf_database());
 
             // merge any remainder with our list of auto-detected missing serials
-            threepf_serials.insert(failed.begin(), failed.end());
+            threepf_total_serials.insert(failed.begin(), failed.end());
           }
 
         // now check whether any missing twopf configurations might require further threepfs to be dropped for consistency
-        // -- first, map missing twopf serials into threepf serials
         std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk->get_threepf_database());
-
-        // -- second, drop threepf configurations if required
-        std::set<unsigned int> undropped;
-        std::set_difference(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end(),
-                            threepf_serials.begin(), threepf_serials.end(), std::inserter(undropped, undropped.begin()));
-
-        if(undropped.size() > 0)
-          {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
-            this->drop_threepf_configurations(writer, undropped, tk->get_threepf_database());
-
-            // merge any serials numbers of this type with our list
-            threepf_serials.insert(undropped.begin(), undropped.end());
-          }
+        threepf_total_serials.insert(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end());
 
         // if any serial numbers are missing, advise the user
         // then ensure that corresponding twopf configurations are missing for consistency
-        if(threepf_serials.size() > 0)
+        if(threepf_total_serials.size() > 0)
           {
             // advise the user that content is missing; marks set_fail() for writer
-            this->advise_missing_content(writer, threepf_serials, tk->get_threepf_database());
+            this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());
 
             // push list of missing serial numbers to writer and update metadata suitably
-            writer.set_missing_serials(threepf_serials, tk->get_threepf_database());
+            writer.set_missing_serials(threepf_total_serials, tk->get_threepf_database());
 
-            // ensure statistics and initial-conditions tables are consistent
-            if(writer.is_collecting_statistics())         this->drop_statistics_configurations(writer, threepf_serials, tk->get_threepf_database());
-            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, threepf_serials, tk->get_threepf_database());
+            // ensure all threepf-indexed tables are consistent
+            this->drop_threepf_momentum_configurations(writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_threepf_deriv_configurations(writer, threepf_total_serials, tk->get_threepf_database());
+            if(writer.is_collecting_statistics())         this->drop_statistics_configurations(writer, threepf_total_serials, tk->get_threepf_database());
+            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, threepf_total_serials, tk->get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_serials, tk->get_threepf_database());
+            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
 
-            // compute real twopf configurations which should be dropped.
-            undropped.clear();
-            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
-                                twopf_re_serials.begin(), twopf_re_serials.end(), std::inserter(undropped, undropped.begin()));
-
-            if(undropped.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
-                this->drop_twopf_re_configurations(writer, undropped, tk->get_twopf_database());
-              }
-
-            // compute imaginary twopf configurations which should be dropped
-            undropped.clear();
-            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
-                                twopf_im_serials.begin(), twopf_im_serials.end(), std::inserter(undropped, undropped.begin()));
-
-            if(undropped.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping imaginary twopf configurations entailed by these threepf configurations, but present in the container";
-                this->drop_twopf_im_configurations(writer, undropped, tk->get_twopf_database());
-              }
+            // ensure all twopf-indexed tables are consistent
+            this->drop_twopf_re_configurations(writer, twopf_drop, tk->get_twopf_database());
+            this->drop_twopf_im_configurations(writer, twopf_drop, tk->get_twopf_database());
+            this->drop_tensor_twopf_configurations(writer, twopf_drop, tk->get_twopf_database());
           }
       }
 
@@ -299,27 +292,39 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
 
         // extract list of twopf kconfigurations which have no entry in the database
-        std::set<unsigned int> serials = this->get_missing_zeta_twopf_serials(writer);
+        // note that we allow the possibility that there are configurations which are present in the data tables, but missing
+        // in the statistics or ics tables.
+        // In this case we don't drop the corresponding data; we just live with the missing metadata
+        std::set<unsigned int> twopf_serials  = this->get_missing_zeta_twopf_serials(writer);
+        std::set<unsigned int> xfm1_serials   = this->get_missing_gauge_xfm1_serials(writer);
+
+        // merge
+        std::set<unsigned int> total_serials;
+        total_serials.insert(twopf_serials.begin(), twopf_serials.end());
+        total_serials.insert(xfm1_serials.begin(), xfm1_serials.end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, serials, tk->get_twopf_database());
+        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk->get_twopf_database());
         if(failed.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
-            this->drop_zeta_twopf_configurations(writer, failed, tk->get_twopf_database());
 
             // merge any remainder with auto-detected list
-            serials.insert(failed.begin(), failed.end());
+            total_serials.insert(failed.begin(), failed.end());
           }
 
         // if any serial numbers are missing, advise the user
-        if(serials.size() > 0)
+        if(total_serials.size() > 0)
           {
             // advise the user that content is missing; marks set_fail() for writer
-            this->advise_missing_content(writer, serials, tk->get_twopf_database());
+            this->advise_missing_content(writer, total_serials, tk->get_twopf_database());
 
             // push list of missing serial numbers to writer and update metadata suitably
-            writer.set_missing_serials(serials, tk->get_twopf_database());
+            writer.set_missing_serials(total_serials, tk->get_twopf_database());
+
+            // ensure all tables are consistent
+            this->drop_zeta_twopf_configurations(writer, total_serials, tk->get_twopf_database());
+            this->drop_gauge_xfm1_configurations(writer, total_serials, tk->get_twopf_database());
           }
       }
 
@@ -332,64 +337,70 @@ namespace transport
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
 
-        // get lists of missing serial numbers for threepf and twopf
+        // note that we allow the possibility that there are configurations which are present in the data tables, but missing
+        // in the statistics or ics tables.
+        // In this case we don't drop the corresponding data; we just live with the missing metadata
+
+        // get lists of missing serial numbers for threepf-configurations
         // (threepf rows store both threepf data and reduced bispectrum data, so the reduced bispectrum
         // does not need to be handled separately)
-        std::set<unsigned int> threepf_serials = this->get_missing_zeta_threepf_serials(writer);
-        std::set<unsigned int> twopf_serials   = this->get_missing_zeta_twopf_serials(writer);
+        std::set<unsigned int> threepf_serials        = this->get_missing_zeta_threepf_serials(writer);
+        std::set<unsigned int> gauge_xfm2_123_serials = this->get_missing_gauge_xfm2_123_serials(writer);
+        std::set<unsigned int> gauge_xfm2_213_serials = this->get_missing_gauge_xfm2_213_serials(writer);
+        std::set<unsigned int> gauge_xfm2_312_serials = this->get_missing_gauge_xfm2_312_serials(writer);
+
+        // get lists of missing serial numbers for twopf-configurations
+        std::set<unsigned int> twopf_serials          = this->get_missing_zeta_twopf_serials(writer);
+        std::set<unsigned int> gauge_xfm1_serials     = this->get_missing_gauge_xfm1_serials(writer);
+
+        // merge missing threepf lists
+        std::set<unsigned int> threepf_total_serials;
+        threepf_total_serials.insert(threepf_serials.begin(), threepf_serials.end());
+        threepf_total_serials.insert(gauge_xfm2_123_serials.begin(), gauge_xfm2_123_serials.end());
+        threepf_total_serials.insert(gauge_xfm2_213_serials.begin(), gauge_xfm2_213_serials.end());
+        threepf_total_serials.insert(gauge_xfm2_312_serials.begin(), gauge_xfm2_312_serials.end());
+
+        // merge missing twopf lists
+        std::set<unsigned int> twopf_total_serials;
+        twopf_total_serials.insert(twopf_serials.begin(), twopf_serials.end());
+        twopf_total_serials.insert(gauge_xfm1_serials.begin(), gauge_xfm1_serials.end());
 
         // compare against backend-supplied list of failed configurations if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_serials, tk->get_threepf_database());
+        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk->get_threepf_database());
         if(failed.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
-            this->drop_zeta_threepf_configurations(writer, failed, tk->get_threepf_database());
 
             // merge any remainder with our auto-detected list of missing serials
-            threepf_serials.insert(failed.begin(), failed.end());
+            threepf_total_serials.insert(failed.begin(), failed.end());
           }
 
         // now check whether any missing twopf configurations might require even further threepfs to be dropped for consistency
-        // -- first, map missing twopf serials into threepf serials
-        std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_serials, tk->get_threepf_database());
-
-        // -- second, drop threepf configurations if required
-        std::set<unsigned int> undropped;
-        std::set_difference(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end(),
-                            threepf_serials.begin(), threepf_serials.end(), std::inserter(undropped, undropped.begin()));
-
-        if(undropped.size() > 0)
-          {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
-            this->drop_zeta_threepf_configurations(writer, undropped, tk->get_threepf_database());
-
-            // merge any serials with our auto-detected list
-            threepf_serials.insert(undropped.begin(), undropped.end());
-          }
+        std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk->get_threepf_database());
+        threepf_total_serials.insert(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end());
 
         // if any serial numbers are missing, advise the user
         // then ensure that corresponding twopf configurations are missing for consistency
-        if(threepf_serials.size() > 0)
+        if(threepf_total_serials.size() > 0)
           {
             // advise the user that content is missing; marks set_fail() for writer
-            this->advise_missing_content(writer, threepf_serials, tk->get_threepf_database());
+            this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());
 
             // push list of missing serial numbers to writer and update metadata suitably
-            writer.set_missing_serials(threepf_serials, tk->get_threepf_database());
+            writer.set_missing_serials(threepf_total_serials, tk->get_threepf_database());
+
+            // ensure all threepf-indexed tables are consistent
+            this->drop_zeta_threepf_configurations(writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_123_configurations(writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_213_configurations(writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_312_configurations(writer, threepf_total_serials, tk->get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_serials, tk->get_threepf_database());
+            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
 
-            // compute twopf configurations which should be dropped
-            undropped.clear();
-            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
-                                twopf_serials.begin(), twopf_serials.end(), std::inserter(undropped, undropped.begin()));
-
-            if(undropped.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
-                this->drop_zeta_twopf_configurations(writer, undropped, tk->get_twopf_database());
-              }
+            // ensure all twopf-indexed tables are consistent
+            this->drop_zeta_twopf_configurations(writer, twopf_drop, tk->get_twopf_database());
+            this->drop_gauge_xfm1_configurations(writer, twopf_drop, tk->get_twopf_database());
           }
       }
 
