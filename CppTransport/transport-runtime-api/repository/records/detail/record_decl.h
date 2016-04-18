@@ -8,7 +8,7 @@
 
 
 #include "transport-runtime-api/repository/detail/repository_mode.h"
-#include "transport-runtime-api/repository/transaction_manager.h"
+#include "transport-runtime-api/transactions/transaction_manager.h"
 #include "transport-runtime-api/manager/environment.h"
 
 #include "boost/optional.hpp"

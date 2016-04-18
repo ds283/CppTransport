@@ -43,6 +43,8 @@
 #include "transport-runtime-api/localizations/messages_en/repository_sqlite3.h"
 #include "transport-runtime-api/localizations/messages_en/repository_toolkit.h"
 
+#include "transport-runtime-api/localizations/messages_en/transaction_manager.h"
+
 #include "transport-runtime-api/localizations/messages_en/sqlite3_utility.h"
 
 #include "transport-runtime-api/localizations/messages_en/named_list.h"

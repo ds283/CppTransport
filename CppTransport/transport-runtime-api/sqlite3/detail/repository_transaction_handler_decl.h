@@ -3,11 +3,11 @@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_SQLITE3_TRANSACTION_HANDLER_DECL_H
-#define CPPTRANSPORT_SQLITE3_TRANSACTION_HANDLER_DECL_H
+#ifndef CPPTRANSPORT_REPOSITORY_SQLITE3_TRANSACTION_HANDLER_DECL_H
+#define CPPTRANSPORT_REPOSITORY_SQLITE3_TRANSACTION_HANDLER_DECL_H
 
 
-#include "transport-runtime-api/repository/transaction_manager.h"
+#include "transport-runtime-api/transactions/transaction_manager.h"
 
 
 namespace transport
@@ -17,7 +17,7 @@ namespace transport
     template <typename number> class repository_sqlite3;
 
     template <typename number>
-    class sqlite3_transaction_handler: public transaction_handler
+    class repository_sqlite3_transaction_handler: public transaction_handler
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -25,13 +25,13 @@ namespace transport
       public:
 
         //! constructor captures repository instance
-        sqlite3_transaction_handler(repository_sqlite3<number>& r)
+        repository_sqlite3_transaction_handler(repository_sqlite3<number>& r)
           : repo(r)
           {
           }
 
         //! destructor is default
-        ~sqlite3_transaction_handler() = default;
+        ~repository_sqlite3_transaction_handler() = default;
 
 
         // INTERFACE
@@ -63,4 +63,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_SQLITE3_TRANSACTION_HANDLER_DECL_H
+#endif //CPPTRANSPORT_REPOSITORY_SQLITE3_TRANSACTION_HANDLER_DECL_H

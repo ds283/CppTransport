@@ -284,7 +284,7 @@ namespace transport
               }
           }
 
-        if(!locked) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_NO_LOCK);
+        if(!locked) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_NO_LOCK);
 
         // no lockfile is present, so make one -- then we have exclusive access to the database until
         // the lockfile is removed
@@ -332,7 +332,7 @@ namespace transport
           {
             this->handler->rollback();
             this->handler->release();
-            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+            throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_LOST_LOCK);
           }
 
         // read magic string from lockfile, and check it matches what we expect
@@ -346,7 +346,7 @@ namespace transport
           {
             this->handler->rollback();
             this->handler->release();
-            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+            throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_LOST_LOCK);
           }
 
         // all is well with the locking, so proceed to commit
@@ -385,7 +385,7 @@ namespace transport
 
         if(!boost::filesystem::exists(this->lockfile))
           {
-            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+            throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_LOST_LOCK);
           }
 
         // read magic string from lockfile, and check it matches what we expect
@@ -396,7 +396,7 @@ namespace transport
 
         if(read_magic != this->magic_string)
           {
-            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+            throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_LOST_LOCK);
           }
 
         // remove lockfile if exists, releasing our exclusive lock on the database
@@ -409,8 +409,8 @@ namespace transport
 
 		void transaction_manager::journal_deposit(const boost::filesystem::path& journal, const boost::filesystem::path& target)
 			{
-				if(this->committed) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_COMMITTED);
-				if(this->dead)      throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_DEAD);
+				if(this->committed) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_COMMITTED);
+				if(this->dead)      throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_DEAD);
 
 				this->journal.push_back(std::make_unique<emplace_record>(journal, target));
 			}
@@ -418,8 +418,8 @@ namespace transport
 
     void transaction_manager::journal_move(const boost::filesystem::path& source, const boost::filesystem::path& target)
       {
-        if(this->committed) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_COMMITTED);
-        if(this->dead)      throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_DEAD);
+        if(this->committed) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_COMMITTED);
+        if(this->dead)      throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_DEAD);
 
         this->journal.push_back(std::make_unique<move_record>(source, target));
       }

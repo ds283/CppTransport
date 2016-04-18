@@ -708,6 +708,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/report_HTML.h
   transport-runtime-api/localizations/messages_en/repository_toolkit.h
   transport-runtime-api/localizations/messages_en/repository_records.h
+  transport-runtime-api/localizations/messages_en/transaction_manager.h
   )
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
@@ -781,7 +782,6 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   transport-runtime-api/repository/inflight.h
   transport-runtime-api/repository/json_repository.h
   transport-runtime-api/repository/repository.h
-  transport-runtime-api/repository/transaction_manager.h
   transport-runtime-api/repository/repository_toolkit.h
   transport-runtime-api/repository/repository_cache.h
   )
@@ -839,8 +839,8 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES
   transport-runtime-api/sqlite3/detail/data_manager_sqlite3_impl.h
   transport-runtime-api/sqlite3/detail/repository_sqlite3_decl.h
   transport-runtime-api/sqlite3/detail/repository_sqlite3_impl.h
-  transport-runtime-api/sqlite3/detail/transaction_handler_decl.h
-  transport-runtime-api/sqlite3/detail/transaction_handler_impl.h
+  transport-runtime-api/sqlite3/detail/repository_transaction_handler_decl.h
+  transport-runtime-api/sqlite3/detail/repository_transaction_handler_impl.h
   transport-runtime-api/sqlite3/detail/writer_data_mgr_decl.h
   transport-runtime-api/sqlite3/detail/writer_data_mgr_impl.h
   )
@@ -911,6 +911,10 @@ set(TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES
   transport-runtime-api/tasks/postintegration_detail/zeta_threepf_task.h
   transport-runtime-api/tasks/postintegration_detail/zeta_twopf_list_task.h
   transport-runtime-api/tasks/postintegration_detail/zeta_twopf_task.h
+  )
+
+set(TRANSPORT_RUNTIME_API_TRANSACTIONS_FILES
+  transport-runtime-api/transactions/transaction_manager.h
   )
 
 set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
@@ -1017,6 +1021,7 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_FILES}
   ${TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_API_TRANSACTIONS_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${UTILITIES_FILES}
   )

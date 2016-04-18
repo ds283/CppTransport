@@ -33,13 +33,13 @@
 
 
 // DECLARE SQLITE3_TRANSACTION_HANDLER
-#include "transport-runtime-api/sqlite3/detail/transaction_handler_decl.h"
+#include "transport-runtime-api/sqlite3/detail/repository_transaction_handler_decl.h"
 
 // DECLARE REPOSITORY_SQLITE3
 #include "transport-runtime-api/sqlite3/detail/repository_sqlite3_decl.h"
 
 // DEFINE SQLITE3_TRANSACTION_HANDLER
-#include "transport-runtime-api/sqlite3/detail/transaction_handler_impl.h"
+#include "transport-runtime-api/sqlite3/detail/repository_transaction_handler_impl.h"
 
 // DEFINE REPOSITORY SQLITE3
 #include "transport-runtime-api/sqlite3/detail/repository_sqlite3_impl.h"

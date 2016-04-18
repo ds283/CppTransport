@@ -44,7 +44,7 @@
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
 #include "transport-runtime-api/repository/writers/writers.h"
-#include "transport-runtime-api/repository/transaction_manager.h"
+#include "transport-runtime-api/transactions/transaction_manager.h"
 
 // need data_manager definition
 #include "transport-runtime-api/data/data_manager.h"

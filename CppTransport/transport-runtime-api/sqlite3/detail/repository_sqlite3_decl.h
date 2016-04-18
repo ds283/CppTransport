@@ -22,7 +22,7 @@ namespace transport
 
 
     // forward-declare transaction handler
-    template <typename number> class sqlite3_transaction_handler;
+    template <typename number> class repository_sqlite3_transaction_handler;
 
 
     //! repository_sqlite3<> implements the repository interface using
@@ -91,7 +91,7 @@ namespace transport
         void release_transaction();
 
 
-        friend class sqlite3_transaction_handler<number>;
+        friend class repository_sqlite3_transaction_handler<number>;
 
 
         // CREATE RECORDS -- implements a 'repository' interface

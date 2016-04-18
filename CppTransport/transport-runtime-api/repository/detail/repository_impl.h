@@ -128,7 +128,7 @@ namespace transport
     template <typename number>
     transaction_manager repository<number>::generate_transaction_manager(std::unique_ptr<transaction_handler> handle)
       {
-        if(this->transactions > 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_UNDERWAY);
+        if(this->transactions > 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_UNDERWAY);
         this->transactions++;
 
         return transaction_manager(this->root_path / CPPTRANSPORT_REPO_LOCKFILE_LEAF, std::move(handle));
@@ -138,7 +138,7 @@ namespace transport
     template <typename number>
     void repository<number>::release_transaction()
       {
-        if(this->transactions == 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_OVER_RELEASE);
+        if(this->transactions == 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_OVER_RELEASE);
         this->transactions--;
       }
 

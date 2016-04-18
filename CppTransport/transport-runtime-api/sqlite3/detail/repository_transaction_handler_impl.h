@@ -7,35 +7,35 @@
 #define CPPTRANSPORT_TRANSACTION_HANDLER_IMPL_H
 
 
-#include "transport-runtime-api/sqlite3/detail/transaction_handler_decl.h"
+#include "transport-runtime-api/sqlite3/detail/repository_transaction_handler_decl.h"
 
 
 namespace transport
   {
 
     template <typename number>
-    void sqlite3_transaction_handler<number>::open()
+    void repository_sqlite3_transaction_handler<number>::open()
       {
         this->repo.begin_transaction();
       }
 
 
     template <typename number>
-    void sqlite3_transaction_handler<number>::commit()
+    void repository_sqlite3_transaction_handler<number>::commit()
       {
         this->repo.commit_transaction();
       }
 
 
     template <typename number>
-    void sqlite3_transaction_handler<number>::rollback()
+    void repository_sqlite3_transaction_handler<number>::rollback()
       {
         this->repo.abort_transaction();
       }
 
 
     template <typename number>
-    void sqlite3_transaction_handler<number>::release()
+    void repository_sqlite3_transaction_handler<number>::release()
       {
         this->repo.release_transaction();
       }

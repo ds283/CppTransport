@@ -201,7 +201,7 @@ namespace transport
     transaction_manager repository_sqlite3<number>::transaction_factory()
       {
         // generate a transaction handler for SQLite
-        std::unique_ptr< sqlite3_transaction_handler<number> > handle = std::make_unique< sqlite3_transaction_handler<number> >(*this);
+        std::unique_ptr< repository_sqlite3_transaction_handler<number> > handle = std::make_unique< repository_sqlite3_transaction_handler<number> >(*this);
 
         // construct transaction manager with the SQLite handler
         return this->repository<number>::generate_transaction_manager(std::move(handle));
@@ -1533,7 +1533,7 @@ namespace transport
     void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr, unsigned int worker)
       {
         // ensure no transactions are in progress
-        if(this->transactions != 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_RECOVER_WHILE_TRANSACTIONS);
+        if(this->transactions != 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_RECOVER_WHILE_TRANSACTIONS);
 
         // detect if lockfile is still present in the repository; if so, forcibly remove it.
         // this will cause any concurrent process which has locked the repository to fail,

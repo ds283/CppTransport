@@ -15,7 +15,7 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
-#include "transport-runtime-api/repository/transaction_manager.h"
+#include "transport-runtime-api/transactions/transaction_manager.h"
 
 #include "sqlite3.h"
 
