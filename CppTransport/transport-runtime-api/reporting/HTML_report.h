@@ -1273,6 +1273,14 @@ namespace transport
                     HTML_node panel_body("div");
                     panel_body.add_attribute("class", "panel-body");
 
+                    const std::string& description = rec.get_task()->get_description();
+                    if(!description.empty())
+                      {
+                        HTML_node well("div", description);
+                        well.add_attribute("class", "well");
+                        panel_body.add_element(well);
+                      }
+
                     HTML_node row("div");
                     row.add_attribute("class", "row");
 
@@ -1810,6 +1818,14 @@ namespace transport
                     HTML_node panel_body("div");
                     panel_body.add_attribute("class", "panel-body");
 
+                    const std::string& description = rec.get_task()->get_description();
+                    if(!description.empty())
+                      {
+                        HTML_node well("div", description);
+                        well.add_attribute("class", "well");
+                        panel_body.add_element(well);
+                      }
+
                     HTML_node row("div");
                     row.add_attribute("class", "row");
 
@@ -1966,6 +1982,14 @@ namespace transport
 
                     // write generic repository information for this record
                     this->write_generic_record(bundle, rec, item);
+
+                    const std::string& description = rec.get_task()->get_description();
+                    if(!description.empty())
+                      {
+                        HTML_node well("div", description);
+                        well.add_attribute("class", "well");
+                        item.add_element(well);
+                      }
 
                     // write elements
                     const typename std::vector< output_task_element<number> >& elements = rec.get_task()->get_elements();
@@ -2162,6 +2186,14 @@ namespace transport
 
                 HTML_node panel_body("div");
                 panel_body.add_attribute("class", "panel-body");
+
+                const std::string& description = rec.get_product()->get_description();
+                if(!description.empty())
+                  {
+                    HTML_node well("div", description);
+                    well.add_attribute("class", "well");
+                    panel_body.add_element(well);
+                  }
 
                 switch(rec.get_product()->get_type())
                   {

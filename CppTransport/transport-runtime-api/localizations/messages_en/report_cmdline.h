@@ -60,6 +60,7 @@ constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHOR_EMAIL     = "Email";
 constexpr auto CPPTRANSPORT_REPORT_PACKAGE_MODEL_AUTHOR_INSTITUTE = "Institute";
 
 constexpr auto CPPTRANSPORT_REPORT_TASK_TYPE                      = "Task type";
+constexpr auto CPPTRANSPORT_REPORT_TASK_DESCRIPTION               = "Task description";
 constexpr auto CPPTRANSPORT_REPORT_PARENT_TASK                    = "Parent task";
 constexpr auto CPPTRANSPORT_REPORT_KCONFIG_DB                     = "k-config database";
 constexpr auto CPPTRANSPORT_REPORT_USES_PACKAGE                   = "Initial conditions package";
@@ -77,6 +78,7 @@ constexpr auto CPPTRANSPORT_REPORT_OUTPUT_TAGS                    = "Tags";
 constexpr auto CPPTRANSPORT_REPORT_OUTPUT_NOTES                   = "Notes";
 
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_NAME                   = "Derived product";
+constexpr auto CPPTRANSPORT_REPORT_PRODUCT_DESCRIPTION            = "Product description";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TYPE                   = "Type";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TAGS                   = "Matches tags";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TAG_SET                = "Tags";

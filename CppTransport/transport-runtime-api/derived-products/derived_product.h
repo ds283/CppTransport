@@ -55,6 +55,7 @@ namespace transport
         constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      = "line-asciitable";
 
         constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             = "filename";
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_DESCRIPTION          = "description";
 
 
 		    //! A derived product represents some particular post-processing
@@ -74,13 +75,11 @@ namespace transport
 			        {
 			        }
 
-				    //! Deserialization constructor
-				    derived_product(const std::string& nm, Json::Value& reader)
-				      : name(nm)
-					    {
-						    filename = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME].asString();
-					    }
 
+            //! deserialization constructor
+            derived_product(const std::string& nm, Json::Value& reader);
+
+            //! destructor is default
 		        virtual ~derived_product() = default;
 
 
@@ -90,6 +89,12 @@ namespace transport
 
 				    //! Get name of this derived data product
 				    const std::string& get_name() const { return(this->name); }
+
+            //! Set description
+            void set_description(std::string d) { this->description = std::move(d); }
+
+            //! Get description
+            const std::string& get_description() const { return(this->description); }
 
             //! Get type of this derived data product
             virtual derived_product_type get_type() const = 0;
@@ -139,6 +144,9 @@ namespace transport
 		        //! Name of this derived product
 		        const std::string name;
 
+            //! Description for this derived product
+            std::string description;
+
 		        //! Standardized filename
 		        boost::filesystem::path filename;
 
@@ -148,9 +156,19 @@ namespace transport
 			    };
 
 
-				template <typename number>
+        template <typename number>
+        derived_product<number>::derived_product(const std::string& nm, Json::Value& reader)
+          : name(nm),
+            description(reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_DESCRIPTION].asString())
+          {
+            filename = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME].asString();
+          }
+
+
+        template <typename number>
 				void derived_product<number>::serialize(Json::Value& writer) const
 					{
+            writer[CPPTRANSPORT_NODE_DERIVED_PRODUCT_DESCRIPTION] = this->description;
 						writer[CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME] = this->filename.string();
 					}
 

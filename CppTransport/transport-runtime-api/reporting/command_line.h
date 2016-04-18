@@ -715,6 +715,18 @@ namespace transport
 
             kv.write(std::cout);
 
+            const std::string& description = rec.get_task()->get_description();
+            if(!description.empty())
+              {
+                std::cout << '\n';
+
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_TASK_DESCRIPTION;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+                std::cout << description << '\n';
+              }
+
             // write table of content groups
             const std::list<std::string>& content_groups = rec.get_content_groups();
 
@@ -787,6 +799,18 @@ namespace transport
 
             kv.write(std::cout);
 
+            const std::string& description = rec.get_task()->get_description();
+            if(!description.empty())
+              {
+                std::cout << '\n';
+
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_TASK_DESCRIPTION;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+                std::cout << description << '\n';
+              }
+
             // write table of content groups
             const std::list<std::string>& content_groups = rec.get_content_groups();
 
@@ -852,6 +876,18 @@ namespace transport
 
             this->report_record_title(rec);
             this->report_record_generic(rec);
+
+            const std::string& description = rec.get_task()->get_description();
+            if(!description.empty())
+              {
+                std::cout << '\n';
+
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_TASK_DESCRIPTION;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+                std::cout << description << '\n';
+              }
 
             // write table of derived products in this output task
             const typename std::vector< output_task_element<number> >& elements = rec.get_task()->get_elements();
@@ -956,6 +992,19 @@ namespace transport
             kv.insert_back(CPPTRANSPORT_REPORT_PRODUCT_FILENAME, rec.get_product()->get_filename().string());
 
             kv.write(std::cout);
+
+            const std::string& description = rec.get_product()->get_description();
+            if(!description.empty())
+              {
+                std::cout << '\n';
+
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_PRODUCT_DESCRIPTION;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+                std::cout << description << '\n';
+              }
+
             this->force_newline();
 
             typename std::list< derivable_task<number>* > task_list;

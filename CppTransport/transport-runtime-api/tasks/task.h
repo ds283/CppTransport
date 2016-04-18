@@ -24,7 +24,10 @@
 #include "transport-runtime-api/tasks/task_types.h"
 
 
+#define CPPTRANSPORT_NODE_TASK_DESCRIPTION        "description"
+
 #define CPPTRANSPORT_NODE_TASK_TYPE               "task-type"
+
 #define CPPTRANSPORT_NODE_TASK_TYPE_TWOPF         "twopf-task"
 #define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC "threepf-cubic-task"
 #define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_FLS   "threepf-fls-task"
@@ -65,6 +68,12 @@ namespace transport
 		    //! Get name
 		    const std::string& get_name() const { return(this->name); }
 
+        //! Set description
+        void set_description(std::string d) { this->description = std::move(d); }
+
+        //! Get description
+        const std::string& get_description() const { return(this->description); }
+
 
 				// CLONE
 
@@ -91,6 +100,9 @@ namespace transport
 		    //! Name of this task (left without const qualifier because we want to allow copy assignment)
 		    std::string name;
 
+        //! Description for this task
+        std::string description;
+
 			};
 
 
@@ -103,7 +115,8 @@ namespace transport
 
 		template <typename number>
 		task<number>::task(const std::string& nm, Json::Value& reader)
-			: name(nm)
+			: name(nm),
+        description(reader[CPPTRANSPORT_NODE_TASK_DESCRIPTION].asString())
 			{
 			}
 
@@ -111,6 +124,7 @@ namespace transport
 		template <typename number>
 		void task<number>::serialize(Json::Value& writer) const
 			{
+        writer[CPPTRANSPORT_NODE_TASK_DESCRIPTION] = this->description;
 			}
 
 
