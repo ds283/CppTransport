@@ -170,6 +170,8 @@ namespace transport
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for twopf container '" << writer.get_abs_container_path().string() << "'";
 
+        boost::timer::cpu_timer timer;
+
         // extract list of twopf kconfigurations which have no entry in the database
         // note that we allow the possibility that there are configurations which are present in the data tables, but missing
         // in the statistics or ics tables.
@@ -207,6 +209,9 @@ namespace transport
             if(writer.is_collecting_statistics()) this->drop_statistics_configurations(writer, total_serials, tk->get_twopf_database());
             if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, total_serials, tk->get_twopf_database());
           }
+
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -217,6 +222,8 @@ namespace transport
         assert(tk != nullptr);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for threepf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
 
         // note that we allow the possibility that there are configurations which are present in the data tables, but missing
         // in the statistics or ics tables.
@@ -280,6 +287,9 @@ namespace transport
             this->drop_twopf_im_configurations(writer, twopf_drop, tk->get_twopf_database());
             this->drop_tensor_twopf_configurations(writer, twopf_drop, tk->get_twopf_database());
           }
+
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -290,6 +300,8 @@ namespace transport
         assert(tk != nullptr);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
 
         // extract list of twopf kconfigurations which have no entry in the database
         // note that we allow the possibility that there are configurations which are present in the data tables, but missing
@@ -326,6 +338,9 @@ namespace transport
             this->drop_zeta_twopf_configurations(writer, total_serials, tk->get_twopf_database());
             this->drop_gauge_xfm1_configurations(writer, total_serials, tk->get_twopf_database());
           }
+
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -336,6 +351,8 @@ namespace transport
         assert(tk != nullptr);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
 
         // note that we allow the possibility that there are configurations which are present in the data tables, but missing
         // in the statistics or ics tables.
@@ -402,6 +419,9 @@ namespace transport
             this->drop_zeta_twopf_configurations(writer, twopf_drop, tk->get_twopf_database());
             this->drop_gauge_xfm1_configurations(writer, twopf_drop, tk->get_twopf_database());
           }
+
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
 
 
