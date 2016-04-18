@@ -50,6 +50,7 @@ namespace transport
 		        const unsigned int NEW_WORK_ASSIGNMENT        = 92;
 		        const unsigned int NEW_WORK_ACKNOWLEDGMENT    = 93;
             const unsigned int REPORT_ERROR               = 94;
+            const unsigned int RESET_CHECKPOINT           = 95;
 		        const unsigned int END_OF_WORK                = 97;
 		        const unsigned int WORKER_CLOSE_DOWN          = 98;
             const unsigned int TERMINATE                  = 99;

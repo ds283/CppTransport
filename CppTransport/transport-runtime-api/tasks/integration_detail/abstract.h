@@ -22,14 +22,16 @@
 namespace transport
 	{
 
-    constexpr auto CPPTRANSPORT_NODE_ADAPTIVE_ICS         = "adaptive-ics";
-    constexpr auto CPPTRANSPORT_NODE_ADAPTIVE_ICS_EFOLDS  = "adaptive-ics-efolds";
-    constexpr auto CPPTRANSPORT_NODE_MESH_REFINEMENTS     = "mesh-refinements";
-    constexpr auto CPPTRANSPORT_NODE_END_OF_INFLATION     = "end-of-inflation";
+    constexpr auto CPPTRANSPORT_NODE_ADAPTIVE_ICS           = "adaptive-ics";
+    constexpr auto CPPTRANSPORT_NODE_ADAPTIVE_ICS_EFOLDS    = "adaptive-ics-efolds";
+    constexpr auto CPPTRANSPORT_NODE_MESH_REFINEMENTS       = "mesh-refinements";
+    constexpr auto CPPTRANSPORT_NODE_END_OF_INFLATION       = "end-of-inflation";
+    constexpr auto CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT     = "default-checkpoint";
+    constexpr auto CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT_SET = "default-checkpoint";
 
-    constexpr auto CPPTRANSPORT_NODE_TIME_RANGE           = "integration-range";
+    constexpr auto CPPTRANSPORT_NODE_TIME_RANGE             = "integration-range";
 
-    constexpr auto CPPTRANSPORT_NODE_PACKAGE_NAME         = "package";
+    constexpr auto CPPTRANSPORT_NODE_PACKAGE_NAME           = "package";
 
     //! An 'integration_task' is a specialization of 'task'. It contains the basic information
     //! needed to carry out an integration. The more specialized two- and three-pf integration
@@ -122,6 +124,23 @@ namespace transport
         double get_N_end_of_inflation() const;
 
 
+        // INTERFACE - INTEGRATION MANAGEMENT
+
+      public:
+
+        //! has a default checkpoint been set?
+        bool has_default_checkpoint() const { return(this->default_checkpoint_set); }
+
+        //! get default checkpoint
+        boost::optional<unsigned int> get_default_checkpoint() const { if(this->default_checkpoint_set) return this->default_checkpoint; else return boost::none; }
+
+        //! set default checkpoint
+        void set_default_checkpoint(unsigned int t) { this->default_checkpoint = t; this->default_checkpoint_set = (t > 0); }
+
+        //! unset default checkpoint
+        void unset_default_checkpoint() { this->default_checkpoint = 0; this->default_checkpoint_set = false; }
+
+
         // TIME CONFIGURATION DATABASE
 
       protected:
@@ -178,6 +197,12 @@ namespace transport
 		    //! flag to indicate whether end-of-inflation time has been cached
         bool cached_end_of_inflation;
 
+        //! flag to indicate whether a default checkpoint has been set
+        bool default_checkpoint_set;
+
+        //! default checkpoint interval in minutes, if used
+        unsigned int default_checkpoint;
+
 
         // STORED TIME CONFIGURATION DATABASE
 
@@ -193,7 +218,9 @@ namespace transport
 	      ics(i),
 	      times(t.clone()),
         end_of_inflation(0.0),
-        cached_end_of_inflation(false)
+        cached_end_of_inflation(false),
+        default_checkpoint(0),
+        default_checkpoint_set(false)
 	    {
         // validate relation between Nstar and the sampling time
         assert(times->size() > 0);
@@ -234,6 +261,9 @@ namespace transport
 			    {
 				    cached_end_of_inflation = false;
 			    }
+
+        default_checkpoint_set = reader[CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT_SET].asBool();
+        default_checkpoint = reader[CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT].asUInt();
 	    }
 
 
@@ -275,6 +305,9 @@ namespace transport
         Json::Value time_data(Json::objectValue);
         this->times->serialize(time_data);
         writer[CPPTRANSPORT_NODE_TIME_RANGE] = time_data;
+
+        writer[CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT_SET] = this->default_checkpoint_set;
+        writer[CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT] = this->default_checkpoint;
 
         // note that we do not serialize the initial conditions;
         // these are handled separately by the repository layer

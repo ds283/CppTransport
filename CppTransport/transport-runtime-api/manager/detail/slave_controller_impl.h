@@ -77,6 +77,14 @@ namespace transport
                     break;
                   }
 
+                case MPI::RESET_CHECKPOINT:
+                  {
+                    unsigned int payload;
+                    this->world.recv(MPI::RANK_MASTER, MPI::RESET_CHECKPOINT, payload);
+                    if(this->data_mgr) this->data_mgr->set_checkpoint_interval(payload);
+                    break;
+                  }
+
                 case MPI::TERMINATE:
                   {
                     this->world.recv(MPI::RANK_MASTER, MPI::TERMINATE);

@@ -19,6 +19,51 @@
 namespace transport
   {
 
+    namespace master_controller_impl
+      {
+
+        template <typename number>
+        class CheckpointContext
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            CheckpointContext(master_controller<number>& c)
+              : controller(c)
+              {
+              }
+
+            ~CheckpointContext();
+
+
+            // INTERFACE
+
+          public:
+
+            void reset_value(unsigned int t) { this->reset_time = t; }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            master_controller<number>& controller;
+
+            boost::optional<unsigned int> reset_time;
+
+          };
+
+
+        template <typename number>
+        CheckpointContext<number>::~CheckpointContext()
+          {
+            if(this->reset_time) controller.reset_checkpoint_interval(*this->reset_time);
+          }
+
+      }
+
     using namespace master_controller_impl;
 
     template <typename number>
@@ -30,6 +75,19 @@ namespace transport
 
         integration_task<number>* tk = rec.get_task();
         model<number>* m = rec.get_task()->get_model();
+
+        // check whether this task has a default checkpoint interval
+        // if so, instruct workers to change their interval unless we have been overriden by the command line
+        CheckpointContext<number> checkpoint_context(*this);
+        if(tk->has_default_checkpoint() && this->arg_cache.get_checkpoint_interval() > 0)
+          {
+            boost::optional<unsigned int> interval = tk->get_default_checkpoint();
+            if(interval)
+              {
+                checkpoint_context.reset_value(this->arg_cache.get_checkpoint_interval());
+                this->reset_checkpoint_interval(*interval);
+              }
+          }
 
         twopf_task<number>* tka = nullptr;
         threepf_task<number>* tkb = nullptr;

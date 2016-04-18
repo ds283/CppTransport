@@ -10,7 +10,6 @@
 #include "transport-runtime-api/manager/detail/master_controller_decl.h"
 #include "transport-runtime-api/repository/repository_toolkit.h"
 
-
 #include "boost/timer/timer.hpp"
 
 
@@ -114,7 +113,6 @@ namespace transport
             // wait for all messages to be received, then exit ourselves
             boost::mpi::wait_all(requests.begin(), requests.end());
           }
-
 
       }
 
@@ -1053,6 +1051,21 @@ namespace transport
                                                                                      << ", mean time per item = " << (t.get_total_items_processed() > 0 ? format_time(t.get_total_elapsed_time() / t.get_total_items_processed()) : "n/a")
                                                                                      << ", last contact at " << boost::posix_time::to_simple_string(t.get_last_contact_time());
           }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::reset_checkpoint_interval(unsigned int m)
+      {
+        std::vector<boost::mpi::request> requests(world.size()-1);
+
+        for(unsigned int i = 0; i < world.size()-1; ++i)
+          {
+            requests[i] = world.isend(this->worker_rank(i), MPI::RESET_CHECKPOINT, m*60);
+          }
+
+        boost::mpi::wait_all(requests.begin(), requests.end());
+        this->data_mgr->set_checkpoint_interval(m*60);
       }
 
 

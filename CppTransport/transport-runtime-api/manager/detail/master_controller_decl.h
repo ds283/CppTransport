@@ -46,6 +46,11 @@
 namespace transport
   {
 
+    namespace master_controller_impl
+      {
+        template <typename number> class CheckpointContext;
+      }
+
     // aggregator classes forward-declared in aggregation_forward_declare.h
     using namespace master_controller_impl;
 
@@ -187,6 +192,11 @@ namespace transport
         //! Master node: log current worker metadata
         template <typename WriterObject>
         void log_worker_metadata(WriterObject& writer);
+
+        //! Master node: instruct workers to change their checkpoint interval
+        void reset_checkpoint_interval(unsigned int m);
+
+        friend class CheckpointContext<number>;
 
 
         // MASTER INTEGRATION TASKS
