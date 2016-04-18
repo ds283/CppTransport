@@ -45,6 +45,38 @@ namespace transport
         ~data_manager_sqlite3();
 
 
+        // TRANSACTIONS
+
+      public:
+
+        //! Generate transaction management object
+        transaction_manager transaction_factory(integration_writer<number>& writer) override final;
+
+        //! Generate transaction management object
+        transaction_manager transaction_factory(postintegration_writer<number>& writer) override final;
+
+      protected:
+
+        //! Internal implementation of transaction factory
+        template <typename WriterObject>
+        transaction_manager internal_transaction_factory(WriterObject& writer);
+
+        //! Begin a transaction on the database.
+        void begin_transaction(sqlite3* db);
+
+        //! Commit a transaction to the database.
+        void commit_transaction(sqlite3* db);
+
+        //! Rollback database to beginning of last transaction
+        void abort_transaction(sqlite3* db);
+
+        //! Release a transaction on the database
+        void release_transaction();
+
+
+        friend class data_manager_sqlite3_transaction_handler<number>;
+
+
         // WRITER HANDLONG -- implements a 'data_manager' interface
 
       public:

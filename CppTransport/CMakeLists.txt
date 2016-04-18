@@ -841,6 +841,8 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES
   transport-runtime-api/sqlite3/detail/repository_sqlite3_impl.h
   transport-runtime-api/sqlite3/detail/repository_transaction_handler_decl.h
   transport-runtime-api/sqlite3/detail/repository_transaction_handler_impl.h
+  transport-runtime-api/sqlite3/detail/data_manager_transaction_handler_decl.h
+  transport-runtime-api/sqlite3/detail/data_manager_transaction_handler_impl.h
   transport-runtime-api/sqlite3/detail/writer_data_mgr_decl.h
   transport-runtime-api/sqlite3/detail/writer_data_mgr_impl.h
   )

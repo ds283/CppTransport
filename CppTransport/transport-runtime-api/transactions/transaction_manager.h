@@ -34,7 +34,7 @@ namespace transport
         transaction_handler() = default;
 
         //! destructor is default
-        ~transaction_handler() = default;
+        virtual ~transaction_handler() = default;
 
 
         // INTERFACE

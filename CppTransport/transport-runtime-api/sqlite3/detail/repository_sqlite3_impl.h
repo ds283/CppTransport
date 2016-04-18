@@ -162,7 +162,7 @@ namespace transport
       {
         assert(this->db != nullptr);
 
-        sqlite3_operations::exec(this->db, "BEGIN TRANSACTION");
+        sqlite3_operations::exec(this->db, "BEGIN TRANSACTION;");
       }
 
 
@@ -182,7 +182,7 @@ namespace transport
       {
         assert(this->db != nullptr);
 
-        sqlite3_operations::exec(this->db, "ROLLBACK");
+        sqlite3_operations::exec(this->db, "ROLLBACK;");
       }
 
 
@@ -200,7 +200,7 @@ namespace transport
     template <typename number>
     transaction_manager repository_sqlite3<number>::transaction_factory()
       {
-        // generate a transaction handler for SQLite
+        // generate a transaction handler bundle
         std::unique_ptr< repository_sqlite3_transaction_handler<number> > handle = std::make_unique< repository_sqlite3_transaction_handler<number> >(*this);
 
         // construct transaction manager with the SQLite handler

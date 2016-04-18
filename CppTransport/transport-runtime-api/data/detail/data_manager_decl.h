@@ -12,6 +12,8 @@
 namespace transport
   {
 
+    constexpr auto CPPTRANSPORT_DATAMGR_LOCKFILE_LEAF = "lockfile";
+
     template <typename number>
     class data_manager
       {
@@ -24,7 +26,8 @@ namespace transport
         data_manager(unsigned int bcap, unsigned int dcap, unsigned int ckp)
           : batcher_capacity(bcap),
             pipe_capacity(dcap),
-            checkpoint_interval(ckp)
+            checkpoint_interval(ckp),
+            transactions(0)
           {
           }
 
@@ -40,31 +43,16 @@ namespace transport
       public:
 
         //! Return the maximum memory available for batchers on this worker
-        size_t get_batcher_capacity() const
-          {
-            return (this->batcher_capacity);
-          }
-
+        size_t get_batcher_capacity() const { return (this->batcher_capacity); }
 
         //! Set the maximum memory avilable for batchers on this worker
-        void set_batcher_capacity(size_t size)
-          {
-            this->batcher_capacity = size;
-          }
-
+        void set_batcher_capacity(size_t size) { this->batcher_capacity = size; }
 
         //! Return the maximum memory available for data cache on this worker
-        size_t get_pipe_capacity() const
-          {
-            return (this->pipe_capacity);
-          }
-
+        size_t get_pipe_capacity() const { return (this->pipe_capacity); }
 
         //! Set capacity available for data cache on this worker
-        void set_pipe_capacity(size_t size)
-          {
-            this->pipe_capacity = size;
-          }
+        void set_pipe_capacity(size_t size) { this->pipe_capacity = size; }
 
 
         // CHECKPOINTING ADMIN
@@ -72,17 +60,30 @@ namespace transport
       public:
 
         //! Return checkpointing interval, measured in seconds
-        unsigned int get_checkpoint_interval() const
-          {
-            return (this->checkpoint_interval);
-          }
-
+        unsigned int get_checkpoint_interval() const { return (this->checkpoint_interval); }
 
         //! Set checkpointing interval in seconds. Setting a value of 0 disables checkpointing
-        void set_checkpoint_interval(unsigned int interval)
-          {
-            this->checkpoint_interval = interval;
-          }
+        void set_checkpoint_interval(unsigned int interval) { this->checkpoint_interval = interval; }
+
+
+        // TRANSACTIONS
+
+      public:
+
+        //! Generate a transaction management object -- supplied by implementation class
+        virtual transaction_manager transaction_factory(integration_writer<number>& writer) = 0;
+
+        //! Generate a transaction management object -- supplied by implementation class
+        virtual transaction_manager transaction_factory(postintegration_writer<number>& writer) = 0;
+
+      protected:
+
+        //! Generate a transaction management object
+        template <typename WriterObject>
+        transaction_manager generate_transaction_manager(WriterObject& writer, std::unique_ptr<transaction_handler> handle);
+
+        //! Release resources after end of transaction
+        void release_transaction();
 
 
         // WRITER HANDLING
@@ -459,6 +460,12 @@ namespace transport
 
         //! Checkpointing interval. 0 indicates that checkpointing is disabled
         unsigned int checkpoint_interval;
+
+
+        // TRANSACTIONS
+
+        //! number of active transactions
+        unsigned int transactions;
 
       };
 

@@ -65,6 +65,34 @@ namespace transport
     using namespace integrity_check_impl;
 
 
+    // TRANSACTIONS
+
+
+    template <typename number>
+    template <typename WriterObject>
+    transaction_manager data_manager<number>::generate_transaction_manager(WriterObject& writer, std::unique_ptr<transaction_handler> handle)
+      {
+        if(this->transactions > 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_UNDERWAY);
+        this->transactions++;
+
+        // extract location of container and convert to location of lockfile
+        boost::filesystem::path ctr_path = writer.get_abs_container_path();
+
+        return transaction_manager(ctr_path.parent_path() / CPPTRANSPORT_DATAMGR_LOCKFILE_LEAF, std::move(handle));
+      }
+
+
+    template <typename number>
+    void data_manager<number>::release_transaction()
+      {
+        if(this->transactions == 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_OVER_RELEASE);
+        this->transactions--;
+      }
+
+
+    // INTEGRITY CHECK
+
+
     template <typename number>
     template <typename WriterObject, typename Database>
     void data_manager<number>::advise_missing_content(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db)

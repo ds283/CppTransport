@@ -3,8 +3,8 @@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_TRANSACTION_HANDLER_IMPL_H
-#define CPPTRANSPORT_TRANSACTION_HANDLER_IMPL_H
+#ifndef CPPTRANSPORT_REPOSITORY_TRANSACTION_HANDLER_IMPL_H
+#define CPPTRANSPORT_REPOSITORY_TRANSACTION_HANDLER_IMPL_H
 
 
 #include "transport-runtime-api/sqlite3/detail/repository_transaction_handler_decl.h"
@@ -43,4 +43,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_TRANSACTION_HANDLER_IMPL_H
+#endif //CPPTRANSPORT_REPOSITORY_TRANSACTION_HANDLER_IMPL_H

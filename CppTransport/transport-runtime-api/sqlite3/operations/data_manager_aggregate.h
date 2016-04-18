@@ -41,6 +41,7 @@ namespace transport
 
               public:
 
+                //! commit
                 void commit();
 
 
@@ -165,7 +166,7 @@ namespace transport
 
             std::ostringstream copy_stmt;
             copy_stmt
-              << " INSERT OR REPLACE INTO main." << fNL_table_name(type)
+              << "INSERT OR REPLACE INTO main." << fNL_table_name(type)
               << " SELECT tserial AS tserial,"
               << " new_BB AS BB,"
               << " new_BT AS BT,"

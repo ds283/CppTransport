@@ -36,13 +36,13 @@ namespace transport
       private:
 
         //! record count callback, used when committing to the database
-        typedef std::function <unsigned int(sqlite3*, const std::string&)>                                   count_function;
+        typedef std::function<unsigned int(sqlite3*, const std::string&)> count_function;
 
         //! record store callback, used when committing to the database
-        typedef std::function <void(transaction_manager&, sqlite3*, const std::string&, const std::string&)> store_function;
+        typedef std::function<void(transaction_manager&, sqlite3*, const std::string&, const std::string&)> store_function;
 
         //! record find function, used when replacing records in the database
-        typedef std::function<std::string(sqlite3*, const std::string&)>                                     find_function;
+        typedef std::function<std::string(sqlite3*, const std::string&)> find_function;
 
 
         // CONSTRUCTOR, DESTRUCTOR

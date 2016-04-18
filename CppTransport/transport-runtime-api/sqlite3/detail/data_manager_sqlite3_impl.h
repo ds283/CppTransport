@@ -37,6 +37,80 @@ namespace transport
       }
 
 
+    // TRANSACTION MANAGEMENT
+
+
+    // Begin transaction on SQLite3 container
+    template <typename number>
+    void data_manager_sqlite3<number>::begin_transaction(sqlite3* db)
+      {
+        assert(db != nullptr);
+
+        sqlite3_operations::exec(db, "BEGIN TRANSACTION;");
+      }
+
+
+    // End transaction on SQLite3 container
+    template <typename number>
+    void data_manager_sqlite3<number>::commit_transaction(sqlite3* db)
+      {
+        assert(db != nullptr);
+
+        sqlite3_operations::exec(db, "COMMIT;");
+      }
+
+
+    // Abort transaction on SQLite3 container
+    template <typename number>
+    void data_manager_sqlite3<number>::abort_transaction(sqlite3* db)
+      {
+        assert(db != nullptr);
+
+        sqlite3_operations::exec(db, "ROLLBACK;");
+      }
+
+
+    // Release transaction; nothing specific for us to do here except pass control
+    // to the underlying data_manager<> interface
+    template <typename number>
+    void data_manager_sqlite3<number>::release_transaction()
+      {
+        this->data_manager<number>::release_transaction();
+      }
+
+
+    template <typename number>
+    transaction_manager data_manager_sqlite3<number>::transaction_factory(integration_writer<number>& writer)
+      {
+        return this->internal_transaction_factory(writer);
+      }
+
+
+    template <typename number>
+    transaction_manager data_manager_sqlite3<number>::transaction_factory(postintegration_writer<number>& writer)
+      {
+        return this->internal_transaction_factory(writer);
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    transaction_manager data_manager_sqlite3<number>::internal_transaction_factory(WriterObject& writer)
+      {
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        // generate a transaction handler bundle
+        std::unique_ptr< data_manager_sqlite3_transaction_handler<number> > handle = std::make_unique< data_manager_sqlite3_transaction_handler<number> >(*this, db);
+
+        // construct transaction manager
+        return this->data_manager<number>::generate_transaction_manager(writer, std::move(handle));
+      }
+
+
+    // WRITER MANAGEMENT
+
+
     // Create data files for a new integration_writer object
     template <typename number>
     void data_manager_sqlite3<number>::initialize_writer(integration_writer<number>& writer, bool recovery_mode)
