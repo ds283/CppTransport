@@ -95,7 +95,7 @@ namespace transport
 
 
         template <typename Database>
-        void drop_statistics(sqlite3* db, const std::set<unsigned int>& drop_list, const Database& dbase)
+        void drop_statistics(transaction_manager& mgr, sqlite3* db, const std::set<unsigned int>& drop_list, const Database& dbase)
 	        {
             for(unsigned int drop_serial : drop_list)
 	            {
@@ -109,11 +109,11 @@ namespace transport
                     exec(db, drop_stmt.str());
 	                }
 	            }
-	        }
+          }
 
 
         template <typename number, typename ValueType, typename Database>
-        void drop_ics(sqlite3* db, const std::set<unsigned int>& drop_list, const Database& dbase)
+        void drop_ics(transaction_manager& mgr, sqlite3* db, const std::set<unsigned int>& drop_list, const Database& dbase)
 	        {
             for(unsigned int drop_serial : drop_list)
 	            {
@@ -130,8 +130,9 @@ namespace transport
 	        }
 
 
+        // should be wrapped in an outer transaction
 		    template <typename WriterObject, typename Database>
-		    void drop_k_configurations(sqlite3* db, WriterObject& writer, const std::set<unsigned int>& drop_list, const Database& dbase,
+		    void drop_k_configurations(transaction_manager& mgr, sqlite3* db, WriterObject& writer, const std::set<unsigned int>& drop_list, const Database& dbase,
 		                               std::string table, bool silent=false)
 			    {
             for(unsigned int drop_serial : drop_list)

@@ -1226,179 +1226,194 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_twopf_re_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                                    const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_twopf_im_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                                    const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_im_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_tensor_twopf_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                                        const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::tensor_twopf_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_threepf_momentum_configurations(integration_writer <number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer,
+                                                                            const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_momentum_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_threepf_deriv_configurations(integration_writer <number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer,
+                                                                         const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_Nderiv_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_zeta_twopf_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                                      const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                                        const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_gauge_xfm1_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                                      const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::gauge_xfm1_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_gauge_xfm2_123_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                                          const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::gauge_xfm2_123_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_gauge_xfm2_213_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                                          const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::gauge_xfm2_213_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_gauge_xfm2_312_configurations(postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                                          const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::gauge_xfm2_312_item>::sqlite_table());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_statistics_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                                      const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_statistics(db, serials, dbase);
+        sqlite3_operations::drop_statistics(mgr, db, serials, dbase);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_statistics_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                                      const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_statistics(db, serials, dbase);
+        sqlite3_operations::drop_statistics(mgr, db, serials, dbase);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                                              const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(db, serials, dbase);
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(mgr, db, serials, dbase);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                                              const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(db, serials, dbase);
-        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(db, serials, dbase);
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(mgr, db, serials, dbase);
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(mgr, db, serials, dbase);
       }
 
 

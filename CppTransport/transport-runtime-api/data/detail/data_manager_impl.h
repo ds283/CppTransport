@@ -193,6 +193,8 @@ namespace transport
     template <typename number>
     void data_manager<number>::check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* itk)
       {
+        transaction_manager mgr = this->transaction_factory(writer);
+
         twopf_task<number>* tk = dynamic_cast< twopf_task<number>* >(itk);
         assert(tk != nullptr);
 
@@ -232,12 +234,13 @@ namespace transport
             writer.set_missing_serials(total_serials, tk->get_twopf_database());
 
             // ensure all tables are consistent
-            this->drop_twopf_re_configurations(writer, total_serials, tk->get_twopf_database());
-            this->drop_tensor_twopf_configurations(writer, total_serials, tk->get_twopf_database());
-            if(writer.is_collecting_statistics()) this->drop_statistics_configurations(writer, total_serials, tk->get_twopf_database());
-            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, total_serials, tk->get_twopf_database());
+            this->drop_twopf_re_configurations(mgr, writer, total_serials, tk->get_twopf_database());
+            this->drop_tensor_twopf_configurations(mgr, writer, total_serials, tk->get_twopf_database());
+            if(writer.is_collecting_statistics()) this->drop_statistics_configurations(mgr, writer, total_serials, tk->get_twopf_database());
+            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, total_serials, tk->get_twopf_database());
           }
 
+        mgr.commit();
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
@@ -246,6 +249,8 @@ namespace transport
     template <typename number>
     void data_manager<number>::check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>* itk)
       {
+        transaction_manager mgr = this->transaction_factory(writer);
+
         threepf_task<number>* tk = dynamic_cast< threepf_task<number>* >(itk);
         assert(tk != nullptr);
 
@@ -302,20 +307,21 @@ namespace transport
             writer.set_missing_serials(threepf_total_serials, tk->get_threepf_database());
 
             // ensure all threepf-indexed tables are consistent
-            this->drop_threepf_momentum_configurations(writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_threepf_deriv_configurations(writer, threepf_total_serials, tk->get_threepf_database());
-            if(writer.is_collecting_statistics())         this->drop_statistics_configurations(writer, threepf_total_serials, tk->get_threepf_database());
-            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_threepf_momentum_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_threepf_deriv_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            if(writer.is_collecting_statistics())         this->drop_statistics_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
             std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
 
             // ensure all twopf-indexed tables are consistent
-            this->drop_twopf_re_configurations(writer, twopf_drop, tk->get_twopf_database());
-            this->drop_twopf_im_configurations(writer, twopf_drop, tk->get_twopf_database());
-            this->drop_tensor_twopf_configurations(writer, twopf_drop, tk->get_twopf_database());
+            this->drop_twopf_re_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
+            this->drop_twopf_im_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
+            this->drop_tensor_twopf_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
           }
 
+        mgr.commit();
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
@@ -324,6 +330,8 @@ namespace transport
     template <typename number>
     void data_manager<number>::check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* ptk)
       {
+        transaction_manager mgr = this->transaction_factory(writer);
+
         zeta_twopf_task<number>* tk = dynamic_cast< zeta_twopf_task<number>* >(ptk);
         assert(tk != nullptr);
 
@@ -363,10 +371,11 @@ namespace transport
             writer.set_missing_serials(total_serials, tk->get_twopf_database());
 
             // ensure all tables are consistent
-            this->drop_zeta_twopf_configurations(writer, total_serials, tk->get_twopf_database());
-            this->drop_gauge_xfm1_configurations(writer, total_serials, tk->get_twopf_database());
+            this->drop_zeta_twopf_configurations(mgr, writer, total_serials, tk->get_twopf_database());
+            this->drop_gauge_xfm1_configurations(mgr, writer, total_serials, tk->get_twopf_database());
           }
 
+        mgr.commit();
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
@@ -375,6 +384,8 @@ namespace transport
     template <typename number>
     void data_manager<number>::check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* ptk)
       {
+        transaction_manager mgr = this->transaction_factory(writer);
+
         zeta_threepf_task<number>* tk = dynamic_cast< zeta_threepf_task<number>* >(ptk);
         assert(tk != nullptr);
 
@@ -435,19 +446,20 @@ namespace transport
             writer.set_missing_serials(threepf_total_serials, tk->get_threepf_database());
 
             // ensure all threepf-indexed tables are consistent
-            this->drop_zeta_threepf_configurations(writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_123_configurations(writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_213_configurations(writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_312_configurations(writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_zeta_threepf_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_123_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_213_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_312_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
             std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
 
             // ensure all twopf-indexed tables are consistent
-            this->drop_zeta_twopf_configurations(writer, twopf_drop, tk->get_twopf_database());
-            this->drop_gauge_xfm1_configurations(writer, twopf_drop, tk->get_twopf_database());
+            this->drop_zeta_twopf_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
+            this->drop_gauge_xfm1_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
           }
 
+        mgr.commit();
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }

@@ -27,6 +27,8 @@
 
 #include "boost/lexical_cast.hpp"
 
+#include "transport-runtime-api/transactions/transaction_manager.h"
+
 #include "sqlite3.h"
 
 #include "transport-runtime-api/sqlite3/operations/sqlite3_utility.h"
