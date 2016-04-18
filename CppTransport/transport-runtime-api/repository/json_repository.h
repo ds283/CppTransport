@@ -166,20 +166,19 @@ namespace transport
         if(!boost::filesystem::is_regular_file(abs_record))
 	        {
             std::stringstream msg;
-            msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_DESERIALIZE_CANT_OPEN << " '" << path.string() << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
-        std::ifstream in;
-        in.open(abs_record.string().c_str(), std::ios_base::in);
-        if(in.is_open() && !in.fail())
+        std::ifstream in(abs_record.string().c_str(), std::ios_base::in);
+        if(in)
 	        {
             in >> root;
 	        }
         else
 	        {
             std::stringstream msg;
-            msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path.string() << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 

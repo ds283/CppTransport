@@ -513,8 +513,7 @@ namespace transport
 								script_file.replace_extension(".py");
 							}
 
-				    std::ofstream out;
-						out.open(script_file.string().c_str(), std::ios_base::trunc | std::ios_base::out);
+				    std::ofstream out(script_file.string().c_str(), std::ios_base::trunc | std::ios_base::out);
 
 						if(!out.is_open() || out.fail())
 					    {

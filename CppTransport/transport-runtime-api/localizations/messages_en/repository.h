@@ -33,6 +33,7 @@
 #define CPPTRANSPORT_REPO_GROUP_IS_LOCKED             "Repository error: attempt to delete locked content group"
 
 #define CPPTRANSPORT_REPO_COMMIT_FAILURE              "Repository error: could not write database record for"
+#define CPPTRANSPORT_REPO_DESERIALIZE_CANT_OPEN       "Repository error: could not locate database record for"
 #define CPPTRANSPORT_REPO_DESERIALIZE_FAILURE         "Repository error: could not read database record for"
 
 #define CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH     "Repository error: Error while attempting to move content group to failure cache"

@@ -282,7 +282,6 @@ namespace transport
     void local_environment::detect_python()
       {
         // TODO: Platform introspection
-        std::string path;
         FILE* f = popen("which python", "r");
 
         if(!f)
@@ -306,7 +305,7 @@ namespace transport
             else
               {
                 this->python_available = false;
-                path = CPPTRANSPORT_DEFAULT_PYTHON_PATH;
+                this->python_location = CPPTRANSPORT_DEFAULT_PYTHON_PATH;
               }
           }
 
