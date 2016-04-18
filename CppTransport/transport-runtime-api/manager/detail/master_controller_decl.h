@@ -49,6 +49,7 @@ namespace transport
     namespace master_controller_impl
       {
         template <typename number> class CheckpointContext;
+        template <typename number> class CloseDownContext;
       }
 
     // aggregator classes forward-declared in aggregation_forward_declare.h
@@ -197,6 +198,7 @@ namespace transport
         void reset_checkpoint_interval(unsigned int m);
 
         friend class CheckpointContext<number>;
+        friend class CloseDownContext<number>;
 
 
         // MASTER INTEGRATION TASKS
@@ -385,6 +387,200 @@ namespace transport
         message_handler msg;
 
       };
+
+
+    namespace master_controller_impl
+      {
+
+        template <typename number>
+        class WorkerBundle
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor
+            WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
+                         repository<number>* r, work_journal& j, argument_cache& a);
+
+            //! destructor
+            ~WorkerBundle();
+
+
+            // INTERNAL FUNCTIONS
+
+          protected:
+
+            //! Map worker number to communicator rank
+            // TODO: replace with a better abstraction
+            constexpr unsigned int worker_rank(unsigned int worker_number) const { return(worker_number+1); }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! reference to MPI environment
+            boost::mpi::environment& env;
+
+            //! reference to MPI communicator
+            boost::mpi::communicator& world;
+
+            //! pointer to repository object
+            repository<number>* repo;
+
+            //! reference to work journal
+            work_journal& journal;
+
+            //! reference to argument cache
+            argument_cache& args;
+
+          };
+
+
+        template <typename number>
+        WorkerBundle<number>::WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
+                                           repository<number>* r, work_journal& j, argument_cache& a)
+          : env(e),
+            world(c),
+            repo(r),
+            journal(j),
+            args(a)
+          {
+            // set up instrument to journal the MPI communication if needed
+            journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
+
+            std::vector<boost::mpi::request> requests(world.size()-1);
+
+            // if repository is initialized, send SETUP message
+            if(repo != nullptr)
+              {
+                // request information from each worker, and pass all necessary setup details
+                MPI::slave_setup_payload payload(this->repo->get_root_path(), args);
+
+                for(unsigned int i = 0; i < world.size()-1; ++i)
+                  {
+                    requests[i] = world.isend(this->worker_rank(i), MPI::INFORMATION_REQUEST, payload);
+                  }
+
+                // wait for all messages to be received, then return
+                boost::mpi::wait_all(requests.begin(), requests.end());
+              }
+          }
+
+
+        template <typename number>
+        WorkerBundle<number>::~WorkerBundle()
+          {
+            // set up instrument to journal the MPI communication if needed
+            journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
+
+            std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+            for(unsigned int i = 0; i < this->world.size()-1; ++i)
+              {
+                requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
+              }
+
+            // wait for all messages to be received, then exit ourselves
+            boost::mpi::wait_all(requests.begin(), requests.end());
+          }
+
+
+        template <typename number>
+        class CheckpointContext
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor accepts and stores reference to controller object
+            CheckpointContext(master_controller<number>& c)
+              : controller(c)
+              {
+              }
+
+            //! destructor arranges for MPI message to reset checkpoint interval, if required
+            ~CheckpointContext();
+
+
+            // INTERFACE
+
+          public:
+
+            //! instruct us to send a reset message on destruction
+            void reset_value(unsigned int t) { this->reset_time = t; }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! reference to controller object
+            master_controller<number>& controller;
+
+            //! optional representing checkpoint interval to reset, if required
+            boost::optional<unsigned int> reset_time;
+
+          };
+
+
+        template <typename number>
+        CheckpointContext<number>::~CheckpointContext()
+          {
+            if(this->reset_time) controller.reset_checkpoint_interval(*this->reset_time);
+          }
+
+
+        template <typename number>
+        class CloseDownContext
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor accepts and stores reference to controller object
+            CloseDownContext(master_controller<number>& c, boost::log::sources::severity_logger< base_writer::log_severity_level >& l)
+              : controller(c),
+                log(l),
+                sent_closedown(false)
+              {
+              }
+
+            //! destructor arranges for MPI closedown message to be sent, if required
+            ~CloseDownContext() { if(!this->sent_closedown) this->send_closedown(); }
+
+
+            // INTERFACE
+
+          public:
+
+            //! check whether close down message has been sent
+            bool operator()() const { return(this->sent_closedown); }
+
+            //! send closedown message
+            void send_closedown() { this->controller.close_down_workers(log); this->sent_closedown = true; }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! reference to controller object
+            master_controller<number>& controller;
+
+            //! flag representing whether closedown message has been sent
+            bool sent_closedown;
+
+            //! reference to logger
+            boost::log::sources::severity_logger< base_writer::log_severity_level >& log;
+
+          };
+
+      }
 
   }   // namespace transport
 

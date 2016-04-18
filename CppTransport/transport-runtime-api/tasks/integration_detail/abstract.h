@@ -27,7 +27,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_NODE_MESH_REFINEMENTS       = "mesh-refinements";
     constexpr auto CPPTRANSPORT_NODE_END_OF_INFLATION       = "end-of-inflation";
     constexpr auto CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT     = "default-checkpoint";
-    constexpr auto CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT_SET = "default-checkpoint";
+    constexpr auto CPPTRANSPORT_NODE_DEFAULT_CHECKPOINT_SET = "default-checkpoint-set";
 
     constexpr auto CPPTRANSPORT_NODE_TIME_RANGE             = "integration-range";
 
@@ -274,7 +274,9 @@ namespace transport
 	      times(obj.times->clone()),
         stored_time_db(obj.stored_time_db),
         end_of_inflation(obj.end_of_inflation),
-        cached_end_of_inflation(obj.cached_end_of_inflation)
+        cached_end_of_inflation(obj.cached_end_of_inflation),
+        default_checkpoint_set(obj.default_checkpoint_set),
+        default_checkpoint(obj.default_checkpoint)
 	    {
 	    }
 

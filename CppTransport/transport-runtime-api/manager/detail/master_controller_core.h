@@ -16,106 +16,6 @@
 namespace transport
   {
 
-    namespace master_controller_impl
-      {
-
-        template <typename number>
-        class WorkerBundle
-          {
-
-            // CONSTRUCTOR, DESTRUCTOR
-
-          public:
-
-            //! constructor
-            WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
-                         repository<number>* r, work_journal& j, argument_cache& a);
-
-            //! destructor
-            ~WorkerBundle();
-
-
-            // INTERNAL FUNCTIONS
-
-          protected:
-
-            //! Map worker number to communicator rank
-            // TODO: replace with a better abstraction
-            constexpr unsigned int worker_rank(unsigned int worker_number) const { return(worker_number+1); }
-
-
-            // INTERNAL DATA
-
-          private:
-
-            //! reference to MPI environment
-            boost::mpi::environment& env;
-
-            //! reference to MPI communicator
-            boost::mpi::communicator& world;
-
-            //! pointer to repository object
-            repository<number>* repo;
-
-            //! reference to work journal
-            work_journal& journal;
-
-            //! reference to argument cache
-            argument_cache& args;
-
-          };
-
-
-        template <typename number>
-        WorkerBundle<number>::WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
-                                           repository<number>* r, work_journal& j, argument_cache& a)
-          : env(e),
-            world(c),
-            repo(r),
-            journal(j),
-            args(a)
-          {
-            // set up instrument to journal the MPI communication if needed
-            journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
-
-            std::vector<boost::mpi::request> requests(world.size()-1);
-
-            // if repository is initialized, send SETUP message
-            if(repo != nullptr)
-              {
-                // request information from each worker, and pass all necessary setup details
-                MPI::slave_setup_payload payload(this->repo->get_root_path(), args);
-
-                for(unsigned int i = 0; i < world.size()-1; ++i)
-                  {
-                    requests[i] = world.isend(this->worker_rank(i), MPI::INFORMATION_REQUEST, payload);
-                  }
-
-                // wait for all messages to be received, then return
-                boost::mpi::wait_all(requests.begin(), requests.end());
-              }
-          }
-
-
-        template <typename number>
-        WorkerBundle<number>::~WorkerBundle()
-          {
-            // set up instrument to journal the MPI communication if needed
-            journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
-
-            std::vector<boost::mpi::request> requests(this->world.size()-1);
-
-            for(unsigned int i = 0; i < this->world.size()-1; ++i)
-              {
-                requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
-              }
-
-            // wait for all messages to be received, then exit ourselves
-            boost::mpi::wait_all(requests.begin(), requests.end());
-          }
-
-      }
-
     using namespace master_controller_impl;
 
     template <typename number>
@@ -1057,6 +957,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::reset_checkpoint_interval(unsigned int m)
       {
+        // set up instrument to journal the MPI communication if needed
+        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
+
         std::vector<boost::mpi::request> requests(world.size()-1);
 
         for(unsigned int i = 0; i < world.size()-1; ++i)
@@ -1122,20 +1025,19 @@ namespace transport
         // wait for workers to report their characteristics
         this->set_up_workers(log);
 
+        // CloseDownContext object is responsible for calling this->close_down_workers()
+        // when needed; should do so even if we exit this function via an exception
+        CloseDownContext<number> closedown_handler(*this, log);
+
         // record time of last-received message, so we can determine for how long we have been idle
         boost::posix_time::ptime last_msg = boost::posix_time::second_clock::universal_time();
         bool emit_agg_queue_msg = true;
 
         // poll workers, scattering work and aggregating the results until work items are exhausted
-        bool sent_closedown = false;
         while(!this->work_scheduler.all_inactive())
           {
             // send closedown instruction if no more work
-            if(this->work_scheduler.is_finished() && !sent_closedown)
-              {
-                sent_closedown = true;
-                this->close_down_workers(log);
-              }
+            if(this->work_scheduler.is_finished() && !closedown_handler()) closedown_handler.send_closedown();
 
             // generate new work assignments if needed, and push them to the workers
             if(this->work_scheduler.assignable())

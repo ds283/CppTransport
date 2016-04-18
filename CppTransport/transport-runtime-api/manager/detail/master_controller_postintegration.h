@@ -172,6 +172,19 @@ namespace transport
         assert(prec != nullptr);
         if(prec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
+        // check whether the parent integration task has a default checkpoint interval
+        // if so, instruct workers to change their interval unless we have been overriden by the command line
+        CheckpointContext<number> checkpoint_context(*this);
+        if(ptk->has_default_checkpoint() && this->arg_cache.get_checkpoint_interval() == 0)
+          {
+            boost::optional<unsigned int> interval = ptk->get_default_checkpoint();
+            if(interval)
+              {
+                checkpoint_context.reset_value(this->arg_cache.get_checkpoint_interval());
+                this->reset_checkpoint_interval(*interval);
+              }
+          }
+
         // create an output writer for the postintegration task
         std::unique_ptr< postintegration_writer<number> > p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
         this->data_mgr->initialize_writer(*p_writer);
