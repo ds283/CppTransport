@@ -486,6 +486,15 @@ namespace transport
         //! recover a list of hot derived-content writers
         void recover_derived_content(data_manager<number>& data_mgr, inflight_derived_content_db& list, unsigned int worker);
 
+        //! break locks on data containers
+        void remove_container_locks();
+
+        //! break locks on data containers enumerated by a database
+        template <typename DatabaseType>
+        void remove_container_locks(const DatabaseType& db);
+
+        // RECOVERY MODE WRITERS
+
       protected:
 
         //! construct an integration_writer in recovery mode

@@ -61,6 +61,9 @@ namespace transport
         template <typename WriterObject>
         transaction_manager internal_transaction_factory(WriterObject& writer);
 
+        //! Make a transaction on a raw SQLite handle
+        transaction_manager transaction_factory(sqlite3* db, const boost::filesystem::path lockfile);
+
         //! Begin a transaction on the database.
         void begin_transaction(sqlite3* db);
 
@@ -186,6 +189,26 @@ namespace transport
                                                               unsigned int worker, model<number>* m,
                                                               std::unique_ptr<container_dispatch_function> dispatcher,
                                                               derived_data::template_type type) override;
+
+      protected:
+
+        //! Create a SQLite container
+        sqlite3* make_temp_container(const boost::filesystem::path& container);
+
+        //! make tables for a temporary 2pf container
+        void make_temp_twopf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields, bool statistics, bool ics);
+
+        //! make tables for a temporary 3pf container
+        void make_temp_threepf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields, bool statistics, bool ics);
+
+        //! make tables for a temporary zeta 2pf container
+        void make_temp_zeta_twopf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields);
+
+        //! make tables for a temporary zeta 3pf container
+        void make_temp_zeta_threepf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields);
+
+        //! make tables for a temporary fNL container
+        void make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::template_type type);
 
 
         // AGGREGATION HANDLERS
@@ -472,6 +495,9 @@ namespace transport
 
         //! Generate the name for a temporary container
         boost::filesystem::path generate_temporary_container_path(const boost::filesystem::path& tempdir, unsigned int worker);
+
+        //! Generate the name for a lockfile
+        boost::filesystem::path generate_lockfile_path(const boost::filesystem::path& tempdir, unsigned int worker);
 
 
         friend class sqlite3_container_replace_twopf<number>;

@@ -22,7 +22,11 @@ namespace transport
         namespace aggregation_impl
           {
 
-            //! RAII-type manager for attaching/detaching temporary databases
+            //! ATTACH does not work inside transactions, so aggregations have to be separate
+            //! from the normal transaction system
+            //! attach_manager is a mini-transaction handler which controls attachment and
+            //! transaction management purely for aggregation tasks
+            //! We have to rely on failures during aggregations being caught by the integrity check
             class attach_manager
               {
 
@@ -41,7 +45,7 @@ namespace transport
 
               public:
 
-                //! commit
+                //! commit transaction
                 void commit();
 
 

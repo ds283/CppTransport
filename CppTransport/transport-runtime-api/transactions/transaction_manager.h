@@ -239,7 +239,7 @@ namespace transport
         // LOCKFILE
 
         //! lockfile location
-        boost::filesystem::path lockfile;
+        const boost::filesystem::path lockfile;
 
         //! magic string written to lockfile to identify ourselves
         std::string magic_string;
@@ -259,7 +259,7 @@ namespace transport
 	    };
 
 
-		transaction_manager::transaction_manager(boost::filesystem::path l, std::unique_ptr<transaction_handler> h)
+		transaction_manager::transaction_manager(const boost::filesystem::path l, std::unique_ptr<transaction_handler> h)
 			: handler(std::move(h)),
         lockfile(std::move(l)),
 			  committed(false),
@@ -332,7 +332,11 @@ namespace transport
           {
             this->handler->rollback();
             this->handler->release();
-            throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_LOST_LOCK);
+
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TRANSACTION_LOST_LOCK << " [" << this->lockfile.string() << "]" << '\n';
+
+            throw runtime_exception(exception_type::TRANSACTION_ERROR, msg.str());
           }
 
         // read magic string from lockfile, and check it matches what we expect

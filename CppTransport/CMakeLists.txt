@@ -859,7 +859,6 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
   transport-runtime-api/sqlite3/operations/data_manager_create.h
   transport-runtime-api/sqlite3/operations/data_manager_integrity.h
   transport-runtime-api/sqlite3/operations/data_manager_pull.h
-  transport-runtime-api/sqlite3/operations/data_manager_temporaries.h
   transport-runtime-api/sqlite3/operations/data_manager_write.h
   transport-runtime-api/sqlite3/operations/data_traits.h
   transport-runtime-api/sqlite3/operations/repository.h

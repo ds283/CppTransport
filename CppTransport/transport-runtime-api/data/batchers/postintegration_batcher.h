@@ -32,26 +32,29 @@ namespace transport
 
 		  public:
 
+        //! Transaction factory
+        typedef std::function<transaction_manager(postintegration_batcher<number>*)> transaction_factory;
+
 		    //! Zeta 2pf writer function
-		    typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_twopf_item >&)> zeta_twopf_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_twopf_item >&)> zeta_twopf_writer;
 
 		    //! Zeta 3pf writer function
-		    typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
 
 		    //! fNL writer function
-		    typedef std::function<void(postintegration_batcher<number>*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::template_type)> fNL_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::template_type)> fNL_writer;
 
         //! linear gauge xfm writer function
-        typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm1_item >&)> gauge_xfm1_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm1_item >&)> gauge_xfm1_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_123_item >&)> gauge_xfm2_123_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_123_item >&)> gauge_xfm2_123_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_213_item >&)> gauge_xfm2_213_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_213_item >&)> gauge_xfm2_213_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_312_item >&)> gauge_xfm2_312_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_312_item >&)> gauge_xfm2_312_writer;
 
 			};
 
@@ -148,8 +151,9 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename postintegration_writers<number>::zeta_twopf_writer twopf;
-            typename postintegration_writers<number>::gauge_xfm1_writer gauge_xfm1;
+            typename postintegration_writers<number>::transaction_factory factory;
+            typename postintegration_writers<number>::zeta_twopf_writer   twopf;
+            typename postintegration_writers<number>::gauge_xfm1_writer   gauge_xfm1;
 	        };
 
 
@@ -218,6 +222,7 @@ namespace transport
         class writer_group
 	        {
           public:
+            typename postintegration_writers<number>::transaction_factory   factory;
             typename postintegration_writers<number>::zeta_twopf_writer     twopf;
             typename postintegration_writers<number>::zeta_threepf_writer   threepf;
             typename postintegration_writers<number>::gauge_xfm1_writer     gauge_xfm1;
@@ -311,7 +316,8 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename postintegration_writers<number>::fNL_writer fNL;
+            typename postintegration_writers<number>::transaction_factory factory;
+            typename postintegration_writers<number>::fNL_writer          fNL;
 	        };
 
 
@@ -497,8 +503,12 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
-        this->writers.twopf(this, this->twopf_batch);
-        this->writers.gauge_xfm1(this, this->gauge_xfm1_batch);
+        transaction_manager mgr = this->writers.factory(this);
+
+        this->writers.twopf(mgr, this, this->twopf_batch);
+        this->writers.gauge_xfm1(mgr, this, this->gauge_xfm1_batch);
+
+        mgr.commit();
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
@@ -658,12 +668,16 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
-        this->writers.twopf(this, this->twopf_batch);
-        this->writers.threepf(this, this->threepf_batch);
-        this->writers.gauge_xfm1(this, this->gauge_xfm1_batch);
-        this->writers.gauge_xfm2_123(this, this->gauge_xfm2_123_batch);
-        this->writers.gauge_xfm2_213(this, this->gauge_xfm2_213_batch);
-        this->writers.gauge_xfm2_312(this, this->gauge_xfm2_312_batch);
+        transaction_manager mgr = this->writers.factory(this);
+
+        this->writers.twopf(mgr, this, this->twopf_batch);
+        this->writers.threepf(mgr, this, this->threepf_batch);
+        this->writers.gauge_xfm1(mgr, this, this->gauge_xfm1_batch);
+        this->writers.gauge_xfm2_123(mgr, this, this->gauge_xfm2_123_batch);
+        this->writers.gauge_xfm2_213(mgr, this, this->gauge_xfm2_213_batch);
+        this->writers.gauge_xfm2_312(mgr, this, this->gauge_xfm2_312_batch);
+
+        mgr.commit();
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
@@ -779,7 +793,11 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
-        this->writers.fNL(this, this->fNL_batch, this->type);
+        transaction_manager mgr = this->writers.factory(this);
+
+        this->writers.fNL(mgr, this, this->fNL_batch, this->type);
+
+        mgr.commit();
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";

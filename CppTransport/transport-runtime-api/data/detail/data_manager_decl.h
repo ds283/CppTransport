@@ -79,8 +79,7 @@ namespace transport
       protected:
 
         //! Generate a transaction management object
-        template <typename WriterObject>
-        transaction_manager generate_transaction_manager(WriterObject& writer, std::unique_ptr<transaction_handler> handle);
+        transaction_manager generate_transaction_manager(boost::filesystem::path lockfile, std::unique_ptr<transaction_handler> handle);
 
         //! Release resources after end of transaction
         void release_transaction();

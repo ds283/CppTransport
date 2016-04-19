@@ -69,16 +69,12 @@ namespace transport
 
 
     template <typename number>
-    template <typename WriterObject>
-    transaction_manager data_manager<number>::generate_transaction_manager(WriterObject& writer, std::unique_ptr<transaction_handler> handle)
+    transaction_manager data_manager<number>::generate_transaction_manager(const boost::filesystem::path lockfile, std::unique_ptr<transaction_handler> handle)
       {
         if(this->transactions > 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_UNDERWAY);
         this->transactions++;
 
-        // extract location of container and convert to location of lockfile
-        boost::filesystem::path ctr_path = writer.get_abs_container_path();
-
-        return transaction_manager(ctr_path.parent_path() / CPPTRANSPORT_DATAMGR_LOCKFILE_LEAF, std::move(handle));
+        return transaction_manager(std::move(lockfile), std::move(handle));
       }
 
 

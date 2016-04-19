@@ -10,7 +10,6 @@
 
 #include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager_create.h"
-#include "transport-runtime-api/sqlite3/operations/data_manager_temporaries.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager_aggregate.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager_write.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager_pull.h"

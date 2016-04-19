@@ -1564,7 +1564,41 @@ namespace transport
         // recover any integrations left over after handling paired integrations
         this->recover_integrations(data_mgr, hot_integrations, worker);
 
+        // recover any output tasks
         this->recover_derived_content(data_mgr, hot_derived_content, worker);
+
+        // break any surviving locks on data containers
+        this->remove_container_locks();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::remove_container_locks()
+      {
+        integration_content_db integration_content = this->enumerate_integration_task_content();
+        postintegration_content_db postintegration_content = this->enumerate_postintegration_task_content();
+
+        this->remove_container_locks(integration_content);
+        this->remove_container_locks(postintegration_content);
+      }
+
+
+    template <typename number>
+    template <typename DatabaseType>
+    void repository_sqlite3<number>::remove_container_locks(const DatabaseType& db)
+      {
+        for(const typename DatabaseType::value_type& item : db)
+          {
+            if(item.second)
+              {
+                const typename DatabaseType::value_type::second_type::element_type& record = *item.second;
+
+                boost::filesystem::path container_path = record.get_abs_repo_path() / record.get_payload().get_container_path();
+                boost::filesystem::path lockfile_path = container_path.parent_path() / CPPTRANSPORT_DATAMGR_LOCKFILE_LEAF;
+
+                if(boost::filesystem::exists(lockfile_path)) boost::filesystem::remove(lockfile_path);
+              }
+          }
       }
 
 
@@ -1741,7 +1775,7 @@ namespace transport
         inflight_integration_db::iterator t = std::find_if(i_list.begin(), i_list.end(),
                                                            repository_sqlite3_impl::FindInFlight<inflight_integration_db_value_type>(data.parent_group));
 
-        if(t == i_list.end()) this->recover_unpaired_postintegration(data, data_mgr, p_rec, worker);
+        if(t == i_list.end()) this->recover_unpaired_postintegration(data, data_mgr, p_rec, worker);    // no match for paired integration, treat as unpaired
         else
           {
             // get task record

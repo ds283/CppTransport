@@ -100,11 +100,21 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
+        // extract location of container and convert to location of lockfile
+        boost::filesystem::path ctr_path = writer.get_abs_container_path();
+
+        return this->transaction_factory(db, ctr_path.parent_path() / CPPTRANSPORT_DATAMGR_LOCKFILE_LEAF);
+      }
+
+
+    template <typename number>
+    transaction_manager data_manager_sqlite3<number>::transaction_factory(sqlite3* db, const boost::filesystem::path lockfile)
+      {
         // generate a transaction handler bundle
         std::unique_ptr< data_manager_sqlite3_transaction_handler<number> > handle = std::make_unique< data_manager_sqlite3_transaction_handler<number> >(*this, db);
 
         // construct transaction manager
-        return this->data_manager<number>::generate_transaction_manager(writer, std::move(handle));
+        return this->data_manager<number>::generate_transaction_manager(std::move(lockfile), std::move(handle));
       }
 
 
@@ -381,6 +391,7 @@ namespace transport
 
     // INDEX TABLE MANAGEMENT
 
+
     template <typename number>
     void data_manager_sqlite3<number>::create_tables(integration_writer<number>& writer, twopf_task<number>* tk)
       {
@@ -389,16 +400,20 @@ namespace transport
 
         unsigned int Nfields = tk->get_model()->get_N_fields();
 
-        sqlite3_operations::create_time_sample_table(db, tk);
-        sqlite3_operations::create_twopf_sample_table(db, tk);
-        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        transaction_manager mgr = this->transaction_factory(writer);
 
-        sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
-        if(writer.is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        sqlite3_operations::create_time_sample_table(mgr, db, tk);
+        sqlite3_operations::create_twopf_sample_table(mgr, db, tk);
+        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
 
-        if(writer.is_collecting_initial_conditions()) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        sqlite3_operations::create_worker_info_table(mgr, db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        if(writer.is_collecting_statistics()) sqlite3_operations::create_stats_table(mgr, db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+
+        if(writer.is_collecting_initial_conditions()) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+
+        mgr.commit();
       }
 
 
@@ -410,24 +425,28 @@ namespace transport
 
         unsigned int Nfields = tk->get_model()->get_N_fields();
 
-        sqlite3_operations::create_time_sample_table(db, tk);
-        sqlite3_operations::create_twopf_sample_table(db, tk);
-        sqlite3_operations::create_threepf_sample_table(db, tk);
-        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_momentum_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_Nderiv_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        transaction_manager mgr = this->transaction_factory(writer);
 
-        sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
-        if(writer.is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        sqlite3_operations::create_time_sample_table(mgr, db, tk);
+        sqlite3_operations::create_twopf_sample_table(mgr, db, tk);
+        sqlite3_operations::create_threepf_sample_table(mgr, db, tk);
+        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_im_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_momentum_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_Nderiv_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+
+        sqlite3_operations::create_worker_info_table(mgr, db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        if(writer.is_collecting_statistics()) sqlite3_operations::create_stats_table(mgr, db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
 
         if(writer.is_collecting_initial_conditions())
           {
-            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
-            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_kt_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
           }
+
+        mgr.commit();
       }
 
 
@@ -444,10 +463,14 @@ namespace transport
 
         unsigned int Nfields = i_ptk->get_model()->get_N_fields();
 
-        sqlite3_operations::create_time_sample_table(db, tk);
-        sqlite3_operations::create_twopf_sample_table(db, tk);
-        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        sqlite3_operations::create_time_sample_table(mgr, db, tk);
+        sqlite3_operations::create_twopf_sample_table(mgr, db, tk);
+        sqlite3_operations::create_zeta_twopf_table(mgr, db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+
+        mgr.commit();
       }
 
 
@@ -464,15 +487,19 @@ namespace transport
 
         unsigned int Nfields = i_ptk->get_model()->get_N_fields();
 
-        sqlite3_operations::create_time_sample_table(db, tk);
-        sqlite3_operations::create_twopf_sample_table(db, tk);
-        sqlite3_operations::create_threepf_sample_table(db, tk);
-        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
-        sqlite3_operations::create_zeta_threepf_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_123_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_213_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_312_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        sqlite3_operations::create_time_sample_table(mgr, db, tk);
+        sqlite3_operations::create_twopf_sample_table(mgr, db, tk);
+        sqlite3_operations::create_threepf_sample_table(mgr, db, tk);
+        sqlite3_operations::create_zeta_twopf_table(mgr, db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_zeta_threepf_table(mgr, db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_123_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_213_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_312_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+
+        mgr.commit();
       }
 
 
@@ -482,8 +509,12 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::create_time_sample_table(db, tk);
-        sqlite3_operations::create_fNL_table(db, tk->get_template(), sqlite3_operations::foreign_keys_type::foreign_keys);
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        sqlite3_operations::create_time_sample_table(mgr, db, tk);
+        sqlite3_operations::create_fNL_table(mgr, db, tk->get_template(), sqlite3_operations::foreign_keys_type::foreign_keys);
+
+        mgr.commit();
       }
 
 
@@ -613,23 +644,57 @@ namespace transport
 
 
     template <typename number>
+    sqlite3* data_manager_sqlite3<number>::make_temp_container(const boost::filesystem::path& container)
+      {
+        sqlite3* db = nullptr;
+        int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+        if(status != SQLITE_OK)
+          {
+            std::ostringstream msg;
+            if(db != nullptr)
+              {
+                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                    << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                sqlite3_close(db);
+              }
+            else
+              {
+                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                    << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+              }
+            throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
+          }
+
+        return(db);
+      }
+
+
+    template <typename number>
     twopf_batcher<number>
     data_manager_sqlite3<number>::create_temp_twopf_container(twopf_task<number>* tk, const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                               unsigned int worker, unsigned int group,
                                                               model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+        boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_twopf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
+        sqlite3* db = this->make_temp_container(container);
+
+        // create the necessary tables
+        transaction_manager mgr = this->transaction_factory(db, lockfile);
+        this->make_temp_twopf_tables(mgr, db, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
+        mgr.commit();
 
         // set up writers
         typename twopf_batcher<number>::writer_group writers;
-        writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
-        writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.ics          = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.backg        = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf        = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.factory      = [this, lockfile](integration_batcher<number>* b) -> transaction_manager { sqlite3* h = nullptr; b->get_manager_handle(&h); return this->transaction_factory(h, lockfile); };
+        writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.ics          = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.backg        = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.twopf        = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up a replacement function
         std::unique_ptr< sqlite3_container_replace_twopf<number> > replacer = std::make_unique< sqlite3_container_replace_twopf<number> >(*this, tempdir, worker, m, tk->get_collect_initial_conditions());
@@ -647,54 +712,50 @@ namespace transport
 
 
     template <typename number>
+    void data_manager_sqlite3<number>::make_temp_twopf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields, bool statistics, bool ics)
+      {
+        sqlite3_operations::create_worker_info_table(mgr, db, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        if(statistics) sqlite3_operations::create_stats_table(mgr, db, sqlite3_operations::foreign_keys_type::no_foreign_keys,
+                                                              sqlite3_operations::kconfiguration_type::twopf_configs);
+        if(ics) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(mgr, db, Nfields,
+                                                                                                           sqlite3_operations::foreign_keys_type::no_foreign_keys,
+                                                                                                           sqlite3_operations::kconfiguration_type::twopf_configs);
+        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+      }
+
+
+    template <typename number>
     threepf_batcher<number>
     data_manager_sqlite3<number>::create_temp_threepf_container(threepf_task<number>* tk, const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                                 unsigned int worker, unsigned int group,
                                                                 model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+        boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_threepf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
+        sqlite3* db = this->make_temp_container(container);
+
+        // create the necessary tables
+        transaction_manager mgr = this->transaction_factory(db, lockfile);
+        this->make_temp_threepf_tables(mgr, db, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
+        mgr.commit();
 
         // set up writers
         typename threepf_batcher<number>::writer_group writers;
 
-        writers.host_info        = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
-
-        writers.stats            = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1,
-                                             std::placeholders::_2);
-
-        writers.ics              = std::bind(
-          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>,
-          std::placeholders::_1, std::placeholders::_2);
-
-        writers.kt_ics           = std::bind(
-          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_kt_item>,
-          std::placeholders::_1, std::placeholders::_2);
-
-        writers.backg            = std::bind(
-          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>,
-          std::placeholders::_1, std::placeholders::_2);
-
-        writers.twopf_re         = std::bind(
-          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>,
-          std::placeholders::_1, std::placeholders::_2);
-
-        writers.twopf_im         = std::bind(
-          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>,
-          std::placeholders::_1, std::placeholders::_2);
-
-        writers.tensor_twopf     = std::bind(
-          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>,
-          std::placeholders::_1, std::placeholders::_2);
-
-        writers.threepf_momentum = std::bind(
-          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_momentum_item>,
-          std::placeholders::_1, std::placeholders::_2);
-
-        writers.threepf_Nderiv   = std::bind(
-          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_Nderiv_item>,
-          std::placeholders::_1, std::placeholders::_2);
+        writers.factory          = [this, lockfile](integration_batcher<number>* b) -> transaction_manager { sqlite3* h = nullptr; b->get_manager_handle(&h); return this->transaction_factory(h, lockfile); };
+        writers.host_info        = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.stats            = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.ics              = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.kt_ics           = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_kt_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.backg            = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.twopf_re         = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.twopf_im         = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.tensor_twopf     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.threepf_momentum = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_momentum_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.threepf_Nderiv   = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_Nderiv_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up a replacement function
         std::unique_ptr< sqlite3_container_replace_threepf<number> > replacer = std::make_unique< sqlite3_container_replace_threepf<number> >(*this, tempdir, worker, m, tk->get_collect_initial_conditions());
@@ -711,18 +772,48 @@ namespace transport
 
 
     template <typename number>
+    void data_manager_sqlite3<number>::make_temp_threepf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields, bool statistics, bool ics)
+      {
+        sqlite3_operations::create_worker_info_table(mgr, db, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        if(statistics) sqlite3_operations::create_stats_table(mgr, db, sqlite3_operations::foreign_keys_type::no_foreign_keys,
+                                                              sqlite3_operations::kconfiguration_type::threepf_configs);
+        if(ics)
+          {
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys,
+                                                                                                       sqlite3_operations::kconfiguration_type::threepf_configs);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_kt_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys,
+                                                                                                          sqlite3_operations::kconfiguration_type::threepf_configs);
+          }
+        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_im_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_momentum_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys,
+                                                                                                                  sqlite3_operations::kconfiguration_type::threepf_configs);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_Nderiv_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys,
+                                                                                                                sqlite3_operations::kconfiguration_type::threepf_configs);
+      }
+
+
+    template <typename number>
     zeta_twopf_batcher<number>
     data_manager_sqlite3<number>::create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
                                                                    model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+        boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_zeta_twopf_container<number>(container, m->get_N_fields());
+        sqlite3* db = this->make_temp_container(container);
+
+        transaction_manager mgr = this->transaction_factory(db, lockfile);
+        this->make_temp_zeta_twopf_tables(mgr, db, m->get_N_fields());
+        mgr.commit();
 
         // set up writers
         typename zeta_twopf_batcher<number>::writer_group writers;
-        writers.twopf      = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher<number>, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.gauge_xfm1 = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm1_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.factory    = [this, lockfile](postintegration_batcher<number>* b) -> transaction_manager { sqlite3* h = nullptr; b->get_manager_handle(&h); return this->transaction_factory(h, lockfile); };
+        writers.twopf      = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher<number>, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.gauge_xfm1 = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm1_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up replacement function
         std::unique_ptr< sqlite3_container_replace_zeta_twopf<number> > replacer = std::make_unique< sqlite3_container_replace_zeta_twopf<number> >(*this, tempdir, worker, m);
@@ -740,22 +831,37 @@ namespace transport
 
 
     template <typename number>
+    void data_manager_sqlite3<number>::make_temp_zeta_twopf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields)
+      {
+        sqlite3_operations::create_zeta_twopf_table(mgr, db, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(mgr, db, Nfields,
+                                                                                                                sqlite3_operations::foreign_keys_type::no_foreign_keys);
+      }
+
+
+    template <typename number>
     zeta_threepf_batcher<number>
     data_manager_sqlite3<number>::create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
                                                                      model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+        boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_zeta_threepf_container<number>(container, m->get_N_fields());
+        sqlite3* db = this->make_temp_container(container);
+
+        transaction_manager mgr = this->transaction_factory(db, lockfile);
+        this->make_temp_zeta_threepf_tables(mgr, db, m->get_N_fields());
+        mgr.commit();
 
         // set up writers
         typename zeta_threepf_batcher<number>::writer_group writers;
-        writers.twopf          = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher<number>, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.threepf        = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher<number>, typename postintegration_items<number>::zeta_threepf_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.gauge_xfm1     = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm1_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.gauge_xfm2_123 = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm2_123_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.gauge_xfm2_213 = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm2_213_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.gauge_xfm2_312 = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm2_312_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.factory        = [this, lockfile](postintegration_batcher<number>* b) -> transaction_manager { sqlite3* h = nullptr; b->get_manager_handle(&h); return this->transaction_factory(h, lockfile); };
+        writers.twopf          = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher<number>, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.threepf        = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher<number>, typename postintegration_items<number>::zeta_threepf_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.gauge_xfm1     = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm1_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.gauge_xfm2_123 = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm2_123_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.gauge_xfm2_213 = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm2_213_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        writers.gauge_xfm2_312 = std::bind(&sqlite3_operations::write_paged_output<number, postintegration_batcher<number>, typename postintegration_items<number>::gauge_xfm2_312_item>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up replacement function
         std::unique_ptr< sqlite3_container_replace_zeta_threepf<number> > replacer = std::make_unique< sqlite3_container_replace_zeta_threepf<number> >(*this, tempdir, worker, m);
@@ -773,17 +879,35 @@ namespace transport
 
 
     template <typename number>
+    void data_manager_sqlite3<number>::make_temp_zeta_threepf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields)
+      {
+        sqlite3_operations::create_zeta_twopf_table(mgr, db, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_zeta_threepf_table(mgr, db, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_123_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_213_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_312_item>(mgr, db, Nfields, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+      }
+
+
+    template <typename number>
     fNL_batcher<number>
     data_manager_sqlite3<number>::create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
                                                             model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher, derived_data::template_type type)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+        boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_fNL_container(container, type);
+        sqlite3* db = this->make_temp_container(container);
+
+        transaction_manager mgr = this->transaction_factory(db, lockfile);
+        this->make_temp_fNL_tables(mgr, db, type);
+        mgr.commit();
 
         // set up writers
         typename fNL_batcher<number>::writer_group writers;
-        writers.fNL = std::bind(&sqlite3_operations::write_fNL<number>, std::placeholders::_1, std::placeholders::_2, type);
+        writers.factory = [this, lockfile](postintegration_batcher<number>* b) -> transaction_manager { sqlite3* h = nullptr; b->get_manager_handle(&h); return this->transaction_factory(h, lockfile); };
+        writers.fNL     = std::bind(&sqlite3_operations::write_fNL<number>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, type);
 
         // set up replacement function
         std::unique_ptr< sqlite3_container_replace_fNL<number> > replacer = std::make_unique< sqlite3_container_replace_fNL<number> >(*this, tempdir, worker, type);
@@ -802,14 +926,21 @@ namespace transport
 
 
     template <typename number>
+    void data_manager_sqlite3<number>::make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::template_type type)
+      {
+        sqlite3_operations::create_fNL_table(mgr, db, type, sqlite3_operations::foreign_keys_type::no_foreign_keys);
+      }
+
+
+    template <typename number>
     void data_manager_sqlite3<number>::replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
                                                                     bool ics, generic_batcher& batcher, replacement_action action)
       {
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-        << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
-        << " temporary twopf container " << batcher.get_container_path();
+          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << " temporary twopf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
         this->open_containers.remove(db);
@@ -820,10 +951,14 @@ namespace transport
         if(action == replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+            boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Opening new twopf container " << container;
 
-            sqlite3* new_db = sqlite3_operations::create_temp_twopf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
+            sqlite3* new_db = this->make_temp_container(container);
+            transaction_manager mgr = this->transaction_factory(new_db, lockfile);
+            this->make_temp_twopf_tables(mgr, new_db, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
+            mgr.commit();
 
             batcher.set_container_path(container);
             batcher.set_manager_handle(new_db);
@@ -840,8 +975,8 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-        << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
-        << " temporary threepf container " << batcher.get_container_path();
+          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << " temporary threepf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
         this->open_containers.remove(db);
@@ -852,10 +987,15 @@ namespace transport
         if(action == replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+            boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Opening new threepf container " << container;
 
-            sqlite3* new_db = sqlite3_operations::create_temp_threepf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
+            sqlite3* new_db = this->make_temp_container(container);
+            transaction_manager mgr = this->transaction_factory(new_db, lockfile);
+            this->make_temp_threepf_tables(mgr, new_db, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
+            mgr.commit();
+
             batcher.set_container_path(container);
             batcher.set_manager_handle(new_db);
 
@@ -871,8 +1011,8 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-        << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
-        << " temporary zeta twopf container " << batcher.get_container_path();
+          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << " temporary zeta twopf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
         this->open_containers.remove(db);
@@ -883,10 +1023,14 @@ namespace transport
         if(action == replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+            boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Opening new zeta twopf container " << container;
 
-            sqlite3* new_db = sqlite3_operations::create_temp_zeta_twopf_container<number>(container, m->get_N_fields());
+            sqlite3* new_db = this->make_temp_container(container);
+            transaction_manager mgr = this->transaction_factory(new_db, lockfile);
+            this->make_temp_zeta_twopf_tables(mgr, new_db, m->get_N_fields());
+            mgr.commit();
 
             batcher.set_container_path(container);
             batcher.set_manager_handle(new_db);
@@ -903,8 +1047,8 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-        << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
-        << " temporary zeta threepf container " << batcher.get_container_path();
+          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << " temporary zeta threepf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
         this->open_containers.remove(db);
@@ -915,10 +1059,14 @@ namespace transport
         if(action == replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+            boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Opening new zeta threepf container " << container;
 
-            sqlite3* new_db = sqlite3_operations::create_temp_zeta_threepf_container<number>(container, m->get_N_fields());
+            sqlite3* new_db = this->make_temp_container(container);
+            transaction_manager mgr = this->transaction_factory(new_db, lockfile);
+            this->make_temp_zeta_threepf_tables(mgr, new_db, m->get_N_fields());
+            mgr.commit();
 
             batcher.set_container_path(container);
             batcher.set_manager_handle(new_db);
@@ -935,8 +1083,8 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-        << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
-        << " temporary " << derived_data::template_type_to_string(type) << " container " << batcher.get_container_path();
+          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << " temporary " << derived_data::template_type_to_string(type) << " container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
         this->open_containers.remove(db);
@@ -947,10 +1095,14 @@ namespace transport
         if(action == replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+            boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
 
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Opening new fNL container " << container;
 
-            sqlite3* new_db = sqlite3_operations::create_temp_fNL_container(container, type);
+            sqlite3* new_db = this->make_temp_container(container);
+            transaction_manager mgr = this->transaction_factory(new_db, lockfile);
+            this->make_temp_fNL_tables(mgr, new_db, type);
+            mgr.commit();
 
             batcher.set_container_path(container);
             batcher.set_manager_handle(new_db);
@@ -966,9 +1118,17 @@ namespace transport
         std::ostringstream container_name;
         container_name << CPPTRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << CPPTRANSPORT_TEMPORARY_CONTAINER_XTN;
 
-        boost::filesystem::path container = tempdir / container_name.str();
+        return(tempdir / container_name.str());
+      }
 
-        return(container);
+
+    template <typename number>
+    boost::filesystem::path data_manager_sqlite3<number>::generate_lockfile_path(const boost::filesystem::path& tempdir, unsigned int worker)
+      {
+        std::ostringstream lockfile_name;
+        lockfile_name << CPPTRANSPORT_DATAMGR_LOCKFILE_LEAF << "_" << worker;
+
+        return(tempdir / lockfile_name.str());
       }
 
 

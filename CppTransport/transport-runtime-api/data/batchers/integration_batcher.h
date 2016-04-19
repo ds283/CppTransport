@@ -38,35 +38,38 @@ namespace transport
 
 		  public:
 
+        //! Transaction factory
+        typedef std::function<transaction_manager(integration_batcher<number>*)> transaction_factory;
+
 		    //! Background writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::backg_item>&)> backg_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::backg_item>&)> backg_writer;
 
 		    //! Two-point function writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_re_item>&)> twopf_re_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_re_item>&)> twopf_re_writer;
 
 		    //! Two-point function writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_im_item>&)> twopf_im_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_im_item>&)> twopf_im_writer;
 
 		    //! Tensor two-point function writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::tensor_twopf_item>&)> tensor_twopf_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::tensor_twopf_item>&)> tensor_twopf_writer;
 
 		    //! Three-point function writer function for momentum insertions
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_momentum_item>&)> threepf_momentum_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_momentum_item>&)> threepf_momentum_writer;
 
         //! Three-point function writer function for derivative insertions
-        typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_Nderiv_item>&)> threepf_Nderiv_writer;
+        typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_Nderiv_item>&)> threepf_Nderiv_writer;
 
 		    //! Per-configuration statistics writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::configuration_statistics>&)> stats_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::configuration_statistics>&)> stats_writer;
 
 				//! Per-configuration initial conditions writer function
-				typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_item>&)> ics_writer;
+				typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_item>&)> ics_writer;
 
 		    //! Per-configuration initial conditions writer function - kt variant
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_kt_item>&)> ics_kt_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_kt_item>&)> ics_kt_writer;
 
 		    //! Host information writer function
-		    typedef std::function<void(integration_batcher<number>*)> host_info_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*)> host_info_writer;
 			};
 
 
@@ -293,6 +296,7 @@ namespace transport
         class writer_group
 	        {
           public:
+            typename integration_writers<number>::transaction_factory factory;
             typename integration_writers<number>::backg_writer        backg;
             typename integration_writers<number>::twopf_re_writer     twopf;
             typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
@@ -427,6 +431,7 @@ namespace transport
         class writer_group
 	        {
           public:
+            typename integration_writers<number>::transaction_factory     factory;
             typename integration_writers<number>::backg_writer            backg;
             typename integration_writers<number>::twopf_re_writer         twopf_re;
             typename integration_writers<number>::twopf_im_writer         twopf_im;
@@ -897,12 +902,16 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
-        this->writers.host_info(this);
-        if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
-		    if(this->collect_initial_conditions) this->writers.ics(this, this->ics_batch);
-        this->writers.backg(this, this->backg_batch);
-        this->writers.twopf(this, this->twopf_batch);
-        this->writers.tensor_twopf(this, this->tensor_twopf_batch);
+        transaction_manager mgr = this->writers.factory(this);
+
+        this->writers.host_info(mgr, this);
+        if(this->collect_statistics) this->writers.stats(mgr, this, this->stats_batch);
+		    if(this->collect_initial_conditions) this->writers.ics(mgr, this, this->ics_batch);
+        this->writers.backg(mgr, this, this->backg_batch);
+        this->writers.twopf(mgr, this, this->twopf_batch);
+        this->writers.tensor_twopf(mgr, this, this->tensor_twopf_batch);
+
+        mgr.commit();
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
@@ -1199,16 +1208,20 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
-        this->writers.host_info(this);
-        if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
-		    if(this->collect_initial_conditions) this->writers.ics(this, this->ics_batch);
-		    if(this->collect_initial_conditions) this->writers.kt_ics(this, this->kt_ics_batch);
-        this->writers.backg(this, this->backg_batch);
-        this->writers.twopf_re(this, this->twopf_re_batch);
-        this->writers.twopf_im(this, this->twopf_im_batch);
-        this->writers.tensor_twopf(this, this->tensor_twopf_batch);
-        this->writers.threepf_momentum(this, this->threepf_momentum_batch);
-        this->writers.threepf_Nderiv(this, this->threepf_Nderiv_batch);
+        transaction_manager mgr = this->writers.factory(this);
+
+        this->writers.host_info(mgr, this);
+        if(this->collect_statistics) this->writers.stats(mgr, this, this->stats_batch);
+		    if(this->collect_initial_conditions) this->writers.ics(mgr, this, this->ics_batch);
+		    if(this->collect_initial_conditions) this->writers.kt_ics(mgr, this, this->kt_ics_batch);
+        this->writers.backg(mgr, this, this->backg_batch);
+        this->writers.twopf_re(mgr, this, this->twopf_re_batch);
+        this->writers.twopf_im(mgr, this, this->twopf_im_batch);
+        this->writers.tensor_twopf(mgr, this, this->tensor_twopf_batch);
+        this->writers.threepf_momentum(mgr, this, this->threepf_momentum_batch);
+        this->writers.threepf_Nderiv(mgr, this, this->threepf_Nderiv_batch);
+
+        mgr.commit();
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";

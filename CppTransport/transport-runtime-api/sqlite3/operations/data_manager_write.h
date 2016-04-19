@@ -20,7 +20,7 @@ namespace transport
 
 		    // Write host information
 		    template <typename number>
-		    void write_host_info(integration_batcher<number>* batcher)
+		    void write_host_info(transaction_manager& mgr, integration_batcher<number>* batcher)
 			    {
 				    sqlite3* db = nullptr;
 				    batcher->get_manager_handle(&db);
@@ -32,8 +32,6 @@ namespace transport
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
-
-				    exec(db, "BEGIN TRANSACTION");
 
 				    // to document the different choice of length in these sqlite3_bind_text() statements compared to sqlite3_prepare_v2,
 				    // the SQLite3 documentation says:
@@ -68,8 +66,6 @@ namespace transport
 
 				    check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
 
-				    exec(db, "END TRANSACTION");
-
 				    check_stmt(db, sqlite3_clear_bindings(stmt));
 				    check_stmt(db, sqlite3_finalize(stmt));
 			    }
@@ -77,7 +73,7 @@ namespace transport
 
         // Write a batch of per-configuration statistics values
         template <typename number>
-        void write_stats(integration_batcher<number>* batcher, const std::vector< typename integration_items<number>::configuration_statistics >& batch)
+        void write_stats(transaction_manager& mgr, integration_batcher<number>* batcher, const std::vector< typename integration_items<number>::configuration_statistics >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -87,8 +83,6 @@ namespace transport
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
-
-            exec(db, "BEGIN TRANSACTION;");
 
             const int kserial_id = sqlite3_bind_parameter_index(stmt, "@kserial");
             const int integration_time_id = sqlite3_bind_parameter_index(stmt, "@integration_time");
@@ -114,13 +108,12 @@ namespace transport
                 check_stmt(db, sqlite3_reset(stmt));
               }
 
-            exec(db, "END TRANSACTION;");
             check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
         template <typename number, typename ValueType>
-        void write_coordinate_output(integration_batcher<number>* batcher, const std::vector<ValueType>& batch)
+        void write_coordinate_output(transaction_manager& mgr, integration_batcher<number>* batcher, const std::vector<ValueType>& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -151,8 +144,6 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            exec(db, "BEGIN TRANSACTION;");
-
             for(const ValueType& item : batch)
               {
                 for(unsigned int page = 0; page < num_pages; ++page)
@@ -177,13 +168,12 @@ namespace transport
 	                }
               }
 
-            exec(db, "END TRANSACTION;");
             check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
 		    template <typename number, typename BatcherType, typename ValueType>
-		    void write_paged_output(BatcherType* batcher, const std::vector<ValueType>& batch)
+		    void write_paged_output(transaction_manager& mgr, BatcherType* batcher, const std::vector<ValueType>& batch)
 			    {
 				    sqlite3* db = nullptr;
 				    batcher->get_manager_handle(&db);
@@ -210,8 +200,6 @@ namespace transport
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-		        exec(db, "BEGIN TRANSACTION;");
-
             for(const ValueType& item : batch)
 			        {
 		            for(unsigned int page = 0; page < num_pages; ++page)
@@ -235,14 +223,13 @@ namespace transport
 			            }
 			        }
 
-		        exec(db, "END TRANSACTION;");
 		        check_stmt(db, sqlite3_finalize(stmt));
 			    }
 
 
         // Write a batch of zeta twopf values
         template <typename number, typename BatcherType, typename ValueType >
-        void write_unpaged(BatcherType* batcher, const std::vector<ValueType>& batch)
+        void write_unpaged(transaction_manager& mgr, BatcherType* batcher, const std::vector<ValueType>& batch)
 	        {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -254,8 +241,6 @@ namespace transport
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
-
-            exec(db, "BEGIN TRANSACTION;");
 
             for(const ValueType& item : batch)
 	            {
@@ -270,7 +255,6 @@ namespace transport
                 check_stmt(db, sqlite3_reset(stmt));
 	            }
 
-            exec(db, "END TRANSACTION;");
             check_stmt(db, sqlite3_finalize(stmt));
 	        }
 
@@ -280,14 +264,12 @@ namespace transport
 		    // tserial then we want to add our new value to it.
 		    // For that purpose we use COALESCE.
         template <typename number>
-        void write_fNL(postintegration_batcher<number>* batcher,
+        void write_fNL(transaction_manager& mgr, postintegration_batcher<number>* batcher,
                        const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >& batch,
                        derived_data::template_type type)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
-
-            exec(db, "BEGIN TRANSACTION;");
 
 		        // first, inject all new BT and TT values into a temporary table
             std::stringstream create_stmt;
@@ -347,7 +329,6 @@ namespace transport
 		          << " DROP TABLE temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
 		        exec(db, drop_stmt.str(), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL);
 
-            exec(db, "END TRANSACTION;");
             check_stmt(db, sqlite3_finalize(stmt));
           }
 
