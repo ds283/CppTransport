@@ -72,6 +72,8 @@
 %token          value
 %token          parameter
 %token          latex
+%token          templates
+%token          settings
 %token          core
 %token          implementation
 %token          abserr
@@ -168,10 +170,8 @@ program: script
 script: script potential equals expression semicolon                                    { driver.set_potential($4); }
         | script model string model_block semicolon                                     { driver.set_model($3); }
         | script author string author_block semicolon                                   { driver.add_author($3, $4); }
-        | script core string semicolon                                                  { driver.set_core($3); }
-        | script implementation string semicolon                                        { driver.set_implementation($3); }
-        | script indexorder left semicolon                                              { driver.set_indexorder_left(); }
-        | script indexorder right semicolon                                             { driver.set_indexorder_right(); }
+        | script templates template_block semicolon
+        | script settings settings_block semicolon
         | script field identifier attribute_block semicolon                             { driver.add_field($3, $4); }
         | script parameter identifier attribute_block semicolon                         { driver.add_parameter($3, $4); }
         | script background stepper_block semicolon                                     { driver.set_background_stepper($3); }
@@ -180,11 +180,25 @@ script: script potential equals expression semicolon                            
         |
         ;
 
+template_block: open_brace template_def close_brace
+
+template_def: template_def core equals string semicolon                                 { driver.set_core($4); }
+        | template_def implementation equals string semicolon                           { driver.set_implementation($4); }
+        |
+        ;
+
+settings_block: open_brace settings_def close_brace
+
+settings_def: settings_def indexorder equals left semicolon                             { driver.set_indexorder_left(); }
+        | settings_def indexorder equals right semicolon                                { driver.set_indexorder_right(); }
+        |
+        ;
+
 attribute_block: open_brace attributes close_brace                                      { $$ = $2; }
         |                                                                               { $$ = new attributes; }
         ;
 
-attributes: attributes latex string semicolon                                           { driver.add_latex_attribute($1, $3); $$ = $1; }
+attributes: attributes latex equals string semicolon                                    { driver.add_latex_attribute($1, $4); $$ = $1; }
         |                                                                               { $$ = new attributes; }
         ;
 
@@ -197,13 +211,13 @@ string_group: string_group comma string                                         
 
 model_block: open_brace model_attributes close_brace
 
-model_attributes: model_attributes name string semicolon                                { driver.set_name($3); }
-        | model_attributes citeguide string semicolon                                   { driver.set_citeguide($3); }
-        | model_attributes description string semicolon                                 { driver.set_description($3); }
-        | model_attributes license string semicolon                                     { driver.set_license($3); }
-        | model_attributes revision integer semicolon                                   { driver.set_revision($3); }
-        | model_attributes references string_array semicolon                            { driver.set_references($3); }
-        | model_attributes urls string_array semicolon                                  { driver.set_urls($3); }
+model_attributes: model_attributes name equals string semicolon                         { driver.set_name($4); }
+        | model_attributes citeguide equals string semicolon                            { driver.set_citeguide($4); }
+        | model_attributes description equals string semicolon                          { driver.set_description($4); }
+        | model_attributes license equals string semicolon                              { driver.set_license($4); }
+        | model_attributes revision equals integer semicolon                            { driver.set_revision($4); }
+        | model_attributes references equals string_array semicolon                     { driver.set_references($4); }
+        | model_attributes urls equals string_array semicolon                           { driver.set_urls($4); }
         |
         ;
 
@@ -211,8 +225,8 @@ author_block: open_brace author_attributes close_brace                          
         |                                                                               { $$ = new author; }
         ;
 
-author_attributes: author_attributes email string semicolon                             { driver.add_email($1, $3); $$ = $1; }
-        | author_attributes institute string semicolon                                  { driver.add_institute($1, $3); $$ = $1; }
+author_attributes: author_attributes email equals string semicolon                      { driver.add_email($1, $4); $$ = $1; }
+        | author_attributes institute equals string semicolon                           { driver.add_institute($1, $4); $$ = $1; }
         |                                                                               { $$ = new author; }
         ;
 
@@ -229,7 +243,7 @@ subexpr_block: open_brace subexpr_def close_brace                               
         |                                                                               { $$ = new subexpr; }
 				;
 
-subexpr_def: subexpr_def latex string semicolon                                         { driver.add_latex_attribute($1, $3); $$ = $1; }
+subexpr_def: subexpr_def latex equals string semicolon                                  { driver.add_latex_attribute($1, $4); $$ = $1; }
         | subexpr_def value equals expression semicolon                                 { driver.add_value_attribute($1, $4); $$ = $1; }
         |                                                                               { $$ = new subexpr; }
         ;

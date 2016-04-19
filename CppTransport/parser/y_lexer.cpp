@@ -30,6 +30,8 @@ std::unordered_map<enum keyword_type, enum y::y_parser::token::yytokentype> keyw
     { keyword_type::value,            y::y_parser::token::value },
     { keyword_type::parameter,        y::y_parser::token::parameter },
     { keyword_type::latex,            y::y_parser::token::latex },
+    { keyword_type::templates,        y::y_parser::token::templates },
+    { keyword_type::settings,         y::y_parser::token::settings },
     { keyword_type::core,             y::y_parser::token::core },
     { keyword_type::impl,             y::y_parser::token::implementation },
     { keyword_type::model,            y::y_parser::token::model },
