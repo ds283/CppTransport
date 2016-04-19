@@ -1,6 +1,8 @@
 % specify which class template should be used with this model
-core           "canonical_core";
-implementation "canonical_mpi";
+templates
+ { core           = "canonical_core";
+   implementation = "canonical_mpi";
+ };
 
 % fix properties of the steppers
 background
