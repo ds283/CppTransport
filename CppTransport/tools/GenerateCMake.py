@@ -53,8 +53,16 @@ cmake_variables = { 'TOP_LEVEL_FILES': top_level_files }
 
 for dir in top_level_dirs:
 
-    if dir[
-    0] != '.' and dir.lower() != 'thirdparty' and dir.lower() != 'cmake' and dir.lower() != 'build-clang' and dir.lower() != 'build-icpc' and dir.lower() != 'build-gcc' and dir.lower() != 'tools' and dir.lower() != 'splinter' and dir.lower() != 'test-target':  # don't descend into thirdparty directories
+    if dir[0] != '.' \
+            and dir.lower() != 'thirdparty' \
+            and dir.lower() != 'cmake' \
+            and dir.lower() != 'build-clang' \
+            and dir.lower() != 'build-icpc' \
+            and dir.lower() != 'build-gcc' \
+            and dir.lower() != 'tools' \
+            and dir.lower() != 'splinter' \
+            and dir.lower() != 'html_assets' \
+            and dir.lower() != 'test-target':  # don't descend into thirdparty directories
 
         add_folder(os.path.join(top_path, dir), dir, dir.upper().replace("-", "_"), cmake_variables)
 
@@ -72,7 +80,7 @@ with open("CMakeLists.txt", "w") as output_file:
 
             output_file.write('  {0}\n'.format(file))
 
-        output_file.write(')\n\n');
+        output_file.write(')\n\n')
 
     output_file.write('set(SOURCE_FILES\n')
 
