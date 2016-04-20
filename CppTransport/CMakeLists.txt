@@ -198,7 +198,7 @@ INSTALL(DIRECTORY thirdparty/jQuery DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/prism DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/DataTables DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
-INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
+INSTALL(DIRECTORY transport-runtime DESTINATION include)
 INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake)
 
 
@@ -222,6 +222,9 @@ set(CPPTRANSPORT_TEMPLATES_VEXCL_OPENCL_FILES
   )
 
 set(TOP_LEVEL_FILES
+  CMakeLists.txt
+  CppTransport.1
+  LICENSE
   )
 
 set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
@@ -502,453 +505,453 @@ set(TRANSLATOR_UTILITIES_FILES
   translator/utilities/to_printable.h
   )
 
-set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
-  transport-runtime-api/concepts/flattener.h
-  transport-runtime-api/concepts/initial_conditions.h
-  transport-runtime-api/concepts/initial_conditions_forward_declare.h
-  transport-runtime-api/concepts/parameters.h
-  transport-runtime-api/concepts/range.h
+set(TRANSPORT_RUNTIME_CONCEPTS_FILES
+  transport-runtime/concepts/flattener.h
+  transport-runtime/concepts/initial_conditions.h
+  transport-runtime/concepts/initial_conditions_forward_declare.h
+  transport-runtime/concepts/parameters.h
+  transport-runtime/concepts/range.h
   )
 
-set(TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES
-  transport-runtime-api/concepts/range_detail/abstract.h
-  transport-runtime-api/concepts/range_detail/aggregation.h
-  transport-runtime-api/concepts/range_detail/common.h
-  transport-runtime-api/concepts/range_detail/helper.h
-  transport-runtime-api/concepts/range_detail/stepping.h
+set(TRANSPORT_RUNTIME_CONCEPTS_RANGE_DETAIL_FILES
+  transport-runtime/concepts/range_detail/abstract.h
+  transport-runtime/concepts/range_detail/aggregation.h
+  transport-runtime/concepts/range_detail/common.h
+  transport-runtime/concepts/range_detail/helper.h
+  transport-runtime/concepts/range_detail/stepping.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
-  transport-runtime-api/data/batchers/batchers.h
-  transport-runtime-api/data/batchers/container_dispatch_function.h
-  transport-runtime-api/data/batchers/container_replace_function.h
-  transport-runtime-api/data/batchers/generic_batcher.h
-  transport-runtime-api/data/batchers/integration_batcher.h
-  transport-runtime-api/data/batchers/integration_items.h
-  transport-runtime-api/data/batchers/postintegration_batcher.h
-  transport-runtime-api/data/batchers/postintegration_items.h
-  transport-runtime-api/data/batchers/postprocess_delegate.h
+set(TRANSPORT_RUNTIME_DATA_BATCHERS_FILES
+  transport-runtime/data/batchers/batchers.h
+  transport-runtime/data/batchers/container_dispatch_function.h
+  transport-runtime/data/batchers/container_replace_function.h
+  transport-runtime/data/batchers/generic_batcher.h
+  transport-runtime/data/batchers/integration_batcher.h
+  transport-runtime/data/batchers/integration_items.h
+  transport-runtime/data/batchers/postintegration_batcher.h
+  transport-runtime/data/batchers/postintegration_items.h
+  transport-runtime/data/batchers/postprocess_delegate.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES
-  transport-runtime-api/data/datapipe/datapipe_decl.h
-  transport-runtime-api/data/datapipe/datapipe_dispatch_function.h
-  transport-runtime-api/data/datapipe/datapipe_forward_declare.h
-  transport-runtime-api/data/datapipe/datapipe_impl.h
-  transport-runtime-api/data/datapipe/linecache_specializations.h
-  transport-runtime-api/data/datapipe/tags.h
-  transport-runtime-api/data/datapipe/tags_forward_declare.h
+set(TRANSPORT_RUNTIME_DATA_DATAPIPE_FILES
+  transport-runtime/data/datapipe/datapipe_decl.h
+  transport-runtime/data/datapipe/datapipe_dispatch_function.h
+  transport-runtime/data/datapipe/datapipe_forward_declare.h
+  transport-runtime/data/datapipe/datapipe_impl.h
+  transport-runtime/data/datapipe/linecache_specializations.h
+  transport-runtime/data/datapipe/tags.h
+  transport-runtime/data/datapipe/tags_forward_declare.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES
-  transport-runtime-api/data/datapipe/tags/config_tags.h
-  transport-runtime-api/data/datapipe/tags/field_tags.h
-  transport-runtime-api/data/datapipe/tags/fNL_tags.h
-  transport-runtime-api/data/datapipe/tags/stats_tags.h
-  transport-runtime-api/data/datapipe/tags/zeta_tags.h
+set(TRANSPORT_RUNTIME_DATA_DATAPIPE_TAGS_FILES
+  transport-runtime/data/datapipe/tags/config_tags.h
+  transport-runtime/data/datapipe/tags/field_tags.h
+  transport-runtime/data/datapipe/tags/fNL_tags.h
+  transport-runtime/data/datapipe/tags/stats_tags.h
+  transport-runtime/data/datapipe/tags/zeta_tags.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_DETAIL_FILES
-  transport-runtime-api/data/detail/data_manager_decl.h
-  transport-runtime-api/data/detail/data_manager_impl.h
+set(TRANSPORT_RUNTIME_DATA_DETAIL_FILES
+  transport-runtime/data/detail/data_manager_decl.h
+  transport-runtime/data/detail/data_manager_impl.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_FILES
-  transport-runtime-api/data/data_manager.h
-  transport-runtime-api/data/metadata.h
+set(TRANSPORT_RUNTIME_DATA_FILES
+  transport-runtime/data/data_manager.h
+  transport-runtime/data/metadata.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES
-  transport-runtime-api/derived-products/convenience/time_series_plot.h
-  transport-runtime-api/derived-products/convenience/time_series_table.h
-  transport-runtime-api/derived-products/convenience/wavenumber_series_plot.h
-  transport-runtime-api/derived-products/convenience/wavenumber_series_table.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_CONVENIENCE_FILES
+  transport-runtime/derived-products/convenience/time_series_plot.h
+  transport-runtime/derived-products/convenience/time_series_table.h
+  transport-runtime/derived-products/convenience/wavenumber_series_plot.h
+  transport-runtime/derived-products/convenience/wavenumber_series_table.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES
-  transport-runtime-api/derived-products/derived-content/background-quantites/background_line.h
-  transport-runtime-api/derived-products/derived-content/background-quantites/largest_u2_line.h
-  transport-runtime-api/derived-products/derived-content/background-quantites/largest_u3_line.h
-  transport-runtime-api/derived-products/derived-content/background-quantites/u2_line.h
-  transport-runtime-api/derived-products/derived-content/background-quantites/u3_line.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES
+  transport-runtime/derived-products/derived-content/background-quantites/background_line.h
+  transport-runtime/derived-products/derived-content/background-quantites/largest_u2_line.h
+  transport-runtime/derived-products/derived-content/background-quantites/largest_u3_line.h
+  transport-runtime/derived-products/derived-content/background-quantites/u2_line.h
+  transport-runtime/derived-products/derived-content/background-quantites/u3_line.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES
-  transport-runtime-api/derived-products/derived-content/concepts/derived_line.h
-  transport-runtime-api/derived-products/derived-content/concepts/derived_line_helper.h
-  transport-runtime-api/derived-products/derived-content/concepts/derived_line_type.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES
+  transport-runtime/derived-products/derived-content/concepts/derived_line.h
+  transport-runtime/derived-products/derived-content/concepts/derived_line_helper.h
+  transport-runtime/derived-products/derived-content/concepts/derived_line_type.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
-  transport-runtime-api/derived-products/derived-content/concepts/lines/fNL_line.h
-  transport-runtime-api/derived-products/derived-content/concepts/lines/r_line.h
-  transport-runtime-api/derived-products/derived-content/concepts/lines/tensor_twopf_line.h
-  transport-runtime-api/derived-products/derived-content/concepts/lines/threepf_line.h
-  transport-runtime-api/derived-products/derived-content/concepts/lines/twopf_line.h
-  transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_reduced_bispectrum_line.h
-  transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_threepf_line.h
-  transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_twopf_line.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
+  transport-runtime/derived-products/derived-content/concepts/lines/fNL_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/r_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/tensor_twopf_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/threepf_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/twopf_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/zeta_reduced_bispectrum_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/zeta_threepf_line.h
+  transport-runtime/derived-products/derived-content/concepts/lines/zeta_twopf_line.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_SERIES_FILES
-  transport-runtime-api/derived-products/derived-content/concepts/series/time_series.h
-  transport-runtime-api/derived-products/derived-content/concepts/series/wavenumber_series.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_SERIES_FILES
+  transport-runtime/derived-products/derived-content/concepts/series/time_series.h
+  transport-runtime/derived-products/derived-content/concepts/series/wavenumber_series.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_COMPUTE_GADGETS_FILES
-  transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/fNL_timeseries_compute.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/zeta_timeseries_compute.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_COMPUTE_GADGETS_FILES
+  transport-runtime/derived-products/derived-content/correlation-functions/compute-gadgets/common.h
+  transport-runtime/derived-products/derived-content/correlation-functions/compute-gadgets/fNL_timeseries_compute.h
+  transport-runtime/derived-products/derived-content/correlation-functions/compute-gadgets/zeta_timeseries_compute.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_FILES
-  transport-runtime-api/derived-products/derived-content/correlation-functions/field_time_series.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/field_wavenumber_series.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/fNL_time_series.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/r_time_series.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/r_wavenumber_series.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/tensor_time_series.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/tensor_wavenumber_series.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/zeta_time_series.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/zeta_wavenumber_series.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_FILES
+  transport-runtime/derived-products/derived-content/correlation-functions/field_time_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/field_wavenumber_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/fNL_time_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/r_time_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/r_wavenumber_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/template_types.h
+  transport-runtime/derived-products/derived-content/correlation-functions/tensor_time_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/tensor_wavenumber_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/zeta_time_series.h
+  transport-runtime/derived-products/derived-content/correlation-functions/zeta_wavenumber_series.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_DEPRECATED_FILES
-  transport-runtime-api/derived-products/derived-content/deprecated/threepf_kconfig_shift.h
-  transport-runtime-api/derived-products/derived-content/deprecated/threepf_time_shift.h
-  transport-runtime-api/derived-products/derived-content/deprecated/zeta_kseries_compute.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_DEPRECATED_FILES
+  transport-runtime/derived-products/derived-content/deprecated/threepf_kconfig_shift.h
+  transport-runtime/derived-products/derived-content/deprecated/threepf_time_shift.h
+  transport-runtime/derived-products/derived-content/deprecated/zeta_kseries_compute.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_INTEGRATION_ANALYSIS_FILES
-  transport-runtime-api/derived-products/derived-content/integration-analysis/cost_metrics.h
-  transport-runtime-api/derived-products/derived-content/integration-analysis/cost_wavenumber.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_INTEGRATION_ANALYSIS_FILES
+  transport-runtime/derived-products/derived-content/integration-analysis/cost_metrics.h
+  transport-runtime/derived-products/derived-content/integration-analysis/cost_wavenumber.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_DETAIL_FILES
-  transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_query.h
-  transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_threepf_query.h
-  transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_time_query.h
-  transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_twopf_query.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_DETAIL_FILES
+  transport-runtime/derived-products/derived-content/SQL_query/detail/SQL_query.h
+  transport-runtime/derived-products/derived-content/SQL_query/detail/SQL_threepf_query.h
+  transport-runtime/derived-products/derived-content/SQL_query/detail/SQL_time_query.h
+  transport-runtime/derived-products/derived-content/SQL_query/detail/SQL_twopf_query.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
-  transport-runtime-api/derived-products/derived-content/SQL_query/SQL_policy.h
-  transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h
-  transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
+  transport-runtime/derived-products/derived-content/SQL_query/SQL_policy.h
+  transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h
+  transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES
-  transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES
+  transport-runtime/derived-products/derived-content/utilities/integration_task_gadget.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES
-  transport-runtime-api/derived-products/data_products.h
-  transport-runtime-api/derived-products/derived_product.h
-  transport-runtime-api/derived-products/derived_product_forward_declare.h
-  transport-runtime-api/derived-products/derived_product_helper.h
-  transport-runtime-api/derived-products/derived_product_type.h
-  transport-runtime-api/derived-products/enumerations.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_FILES
+  transport-runtime/derived-products/data_products.h
+  transport-runtime/derived-products/derived_product.h
+  transport-runtime/derived-products/derived_product_forward_declare.h
+  transport-runtime/derived-products/derived_product_helper.h
+  transport-runtime/derived-products/derived_product_type.h
+  transport-runtime/derived-products/enumerations.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES
-  transport-runtime-api/derived-products/line-collections/data_line.h
-  transport-runtime-api/derived-products/line-collections/line_asciitable.h
-  transport-runtime-api/derived-products/line-collections/line_collection.h
-  transport-runtime-api/derived-products/line-collections/line_plot2d.h
-  transport-runtime-api/derived-products/line-collections/line_values.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES
+  transport-runtime/derived-products/line-collections/data_line.h
+  transport-runtime/derived-products/line-collections/line_asciitable.h
+  transport-runtime/derived-products/line-collections/line_collection.h
+  transport-runtime/derived-products/line-collections/line_plot2d.h
+  transport-runtime/derived-products/line-collections/line_values.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_UTILITIES_FILES
-  transport-runtime-api/derived-products/utilities/extractor.h
-  transport-runtime-api/derived-products/utilities/index_selector.h
-  transport-runtime-api/derived-products/utilities/wrapper.h
+set(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_UTILITIES_FILES
+  transport-runtime/derived-products/utilities/extractor.h
+  transport-runtime/derived-products/utilities/index_selector.h
+  transport-runtime/derived-products/utilities/wrapper.h
   )
 
-set(TRANSPORT_RUNTIME_API_FILES
-  transport-runtime-api/ansi_colour_codes.h
-  transport-runtime-api/default_symbols.h
-  transport-runtime-api/defaults.h
-  transport-runtime-api/enumerations.h
-  transport-runtime-api/exceptions.h
-  transport-runtime-api/messages.h
-  transport-runtime-api/transport.h
-  transport-runtime-api/version.h
+set(TRANSPORT_RUNTIME_FILES
+  transport-runtime/ansi_colour_codes.h
+  transport-runtime/default_symbols.h
+  transport-runtime/defaults.h
+  transport-runtime/enumerations.h
+  transport-runtime/exceptions.h
+  transport-runtime/messages.h
+  transport-runtime/transport.h
+  transport-runtime/version.h
   )
 
-set(TRANSPORT_RUNTIME_API_INSTRUMENTS_FILES
-  transport-runtime-api/instruments/timing_instrument.h
+set(TRANSPORT_RUNTIME_INSTRUMENTS_FILES
+  transport-runtime/instruments/timing_instrument.h
   )
 
-set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES
-  transport-runtime-api/localizations/messages_en.h
+set(TRANSPORT_RUNTIME_LOCALIZATIONS_FILES
+  transport-runtime/localizations/messages_en.h
   )
 
-set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES
-  transport-runtime-api/localizations/messages_en/derived-products/derived_line.h
-  transport-runtime-api/localizations/messages_en/derived-products/derived_product.h
-  transport-runtime-api/localizations/messages_en/derived-products/fNL_line.h
-  transport-runtime-api/localizations/messages_en/derived-products/line_asciitable.h
-  transport-runtime-api/localizations/messages_en/derived-products/line_collection.h
-  transport-runtime-api/localizations/messages_en/derived-products/line_plot2d.h
-  transport-runtime-api/localizations/messages_en/derived-products/line_values.h
-  transport-runtime-api/localizations/messages_en/derived-products/SQL_query.h
-  transport-runtime-api/localizations/messages_en/derived-products/time_series.h
-  transport-runtime-api/localizations/messages_en/derived-products/time_series_convenience.h
-  transport-runtime-api/localizations/messages_en/derived-products/wavenumber_series.h
-  transport-runtime-api/localizations/messages_en/derived-products/wavenumber_series_convenience.h
+set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES
+  transport-runtime/localizations/messages_en/derived-products/derived_line.h
+  transport-runtime/localizations/messages_en/derived-products/derived_product.h
+  transport-runtime/localizations/messages_en/derived-products/fNL_line.h
+  transport-runtime/localizations/messages_en/derived-products/line_asciitable.h
+  transport-runtime/localizations/messages_en/derived-products/line_collection.h
+  transport-runtime/localizations/messages_en/derived-products/line_plot2d.h
+  transport-runtime/localizations/messages_en/derived-products/line_values.h
+  transport-runtime/localizations/messages_en/derived-products/SQL_query.h
+  transport-runtime/localizations/messages_en/derived-products/time_series.h
+  transport-runtime/localizations/messages_en/derived-products/time_series_convenience.h
+  transport-runtime/localizations/messages_en/derived-products/wavenumber_series.h
+  transport-runtime/localizations/messages_en/derived-products/wavenumber_series_convenience.h
   )
 
-set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
-  transport-runtime-api/localizations/messages_en/advisory_classes.h
-  transport-runtime-api/localizations/messages_en/asciitable.h
-  transport-runtime-api/localizations/messages_en/command_line.h
-  transport-runtime-api/localizations/messages_en/data_manager.h
-  transport-runtime-api/localizations/messages_en/initial_conditions.h
-  transport-runtime-api/localizations/messages_en/integration.h
-  transport-runtime-api/localizations/messages_en/json_repository_interface.h
-  transport-runtime-api/localizations/messages_en/labels.h
-  transport-runtime-api/localizations/messages_en/manager.h
-  transport-runtime-api/localizations/messages_en/master_scheduler.h
-  transport-runtime-api/localizations/messages_en/model_list.h
-  transport-runtime-api/localizations/messages_en/model_manager.h
-  transport-runtime-api/localizations/messages_en/models.h
-  transport-runtime-api/localizations/messages_en/named_list.h
-  transport-runtime-api/localizations/messages_en/parameters.h
-  transport-runtime-api/localizations/messages_en/range.h
-  transport-runtime-api/localizations/messages_en/report_cmdline.h
-  transport-runtime-api/localizations/messages_en/report_HTML.h
-  transport-runtime-api/localizations/messages_en/repository.h
-  transport-runtime-api/localizations/messages_en/repository_records.h
-  transport-runtime-api/localizations/messages_en/repository_sqlite3.h
-  transport-runtime-api/localizations/messages_en/repository_toolkit.h
-  transport-runtime-api/localizations/messages_en/runtimeapi.h
-  transport-runtime-api/localizations/messages_en/scheduler.h
-  transport-runtime-api/localizations/messages_en/serialization.h
-  transport-runtime-api/localizations/messages_en/sqlite3_utility.h
-  transport-runtime-api/localizations/messages_en/task_manager.h
-  transport-runtime-api/localizations/messages_en/transaction_manager.h
-  transport-runtime-api/localizations/messages_en/work_journal.h
+set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
+  transport-runtime/localizations/messages_en/advisory_classes.h
+  transport-runtime/localizations/messages_en/asciitable.h
+  transport-runtime/localizations/messages_en/command_line.h
+  transport-runtime/localizations/messages_en/data_manager.h
+  transport-runtime/localizations/messages_en/initial_conditions.h
+  transport-runtime/localizations/messages_en/integration.h
+  transport-runtime/localizations/messages_en/json_repository_interface.h
+  transport-runtime/localizations/messages_en/labels.h
+  transport-runtime/localizations/messages_en/manager.h
+  transport-runtime/localizations/messages_en/master_scheduler.h
+  transport-runtime/localizations/messages_en/model_list.h
+  transport-runtime/localizations/messages_en/model_manager.h
+  transport-runtime/localizations/messages_en/models.h
+  transport-runtime/localizations/messages_en/named_list.h
+  transport-runtime/localizations/messages_en/parameters.h
+  transport-runtime/localizations/messages_en/range.h
+  transport-runtime/localizations/messages_en/report_cmdline.h
+  transport-runtime/localizations/messages_en/report_HTML.h
+  transport-runtime/localizations/messages_en/repository.h
+  transport-runtime/localizations/messages_en/repository_records.h
+  transport-runtime/localizations/messages_en/repository_sqlite3.h
+  transport-runtime/localizations/messages_en/repository_toolkit.h
+  transport-runtime/localizations/messages_en/runtimeapi.h
+  transport-runtime/localizations/messages_en/scheduler.h
+  transport-runtime/localizations/messages_en/serialization.h
+  transport-runtime/localizations/messages_en/sqlite3_utility.h
+  transport-runtime/localizations/messages_en/task_manager.h
+  transport-runtime/localizations/messages_en/transaction_manager.h
+  transport-runtime/localizations/messages_en/work_journal.h
   )
 
-set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
-  transport-runtime-api/localizations/messages_en/tasks/tasks.h
-  transport-runtime-api/localizations/messages_en/tasks/threepf_config_database.h
-  transport-runtime-api/localizations/messages_en/tasks/twopf_config_database.h
+set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
+  transport-runtime/localizations/messages_en/tasks/tasks.h
+  transport-runtime/localizations/messages_en/tasks/threepf_config_database.h
+  transport-runtime/localizations/messages_en/tasks/twopf_config_database.h
   )
 
-set(TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES
-  transport-runtime-api/manager/detail/aggregation.h
-  transport-runtime-api/manager/detail/aggregation_forward_declare.h
-  transport-runtime-api/manager/detail/job_descriptors.h
-  transport-runtime-api/manager/detail/master_controller_core.h
-  transport-runtime-api/manager/detail/master_controller_decl.h
-  transport-runtime-api/manager/detail/master_controller_integration.h
-  transport-runtime-api/manager/detail/master_controller_output.h
-  transport-runtime-api/manager/detail/master_controller_postintegration.h
-  transport-runtime-api/manager/detail/slave_container_dispatch_decl.h
-  transport-runtime-api/manager/detail/slave_container_dispatch_impl.h
-  transport-runtime-api/manager/detail/slave_controller_decl.h
-  transport-runtime-api/manager/detail/slave_controller_impl.h
-  transport-runtime-api/manager/detail/slave_datapipe_dispatch_decl.h
-  transport-runtime-api/manager/detail/slave_datapipe_dispatch_impl.h
-  transport-runtime-api/manager/detail/slave_message_buffer.h
+set(TRANSPORT_RUNTIME_MANAGER_DETAIL_FILES
+  transport-runtime/manager/detail/aggregation.h
+  transport-runtime/manager/detail/aggregation_forward_declare.h
+  transport-runtime/manager/detail/job_descriptors.h
+  transport-runtime/manager/detail/master_controller_core.h
+  transport-runtime/manager/detail/master_controller_decl.h
+  transport-runtime/manager/detail/master_controller_integration.h
+  transport-runtime/manager/detail/master_controller_output.h
+  transport-runtime/manager/detail/master_controller_postintegration.h
+  transport-runtime/manager/detail/slave_container_dispatch_decl.h
+  transport-runtime/manager/detail/slave_container_dispatch_impl.h
+  transport-runtime/manager/detail/slave_controller_decl.h
+  transport-runtime/manager/detail/slave_controller_impl.h
+  transport-runtime/manager/detail/slave_datapipe_dispatch_decl.h
+  transport-runtime/manager/detail/slave_datapipe_dispatch_impl.h
+  transport-runtime/manager/detail/slave_message_buffer.h
   )
 
-set(TRANSPORT_RUNTIME_API_MANAGER_FILES
-  transport-runtime-api/manager/argument_cache.h
-  transport-runtime-api/manager/environment.h
-  transport-runtime-api/manager/master_controller.h
-  transport-runtime-api/manager/master_scheduler.h
-  transport-runtime-api/manager/message_handlers.h
-  transport-runtime-api/manager/model_manager.h
-  transport-runtime-api/manager/mpi_operations.h
-  transport-runtime-api/manager/slave_controller.h
-  transport-runtime-api/manager/slave_work_handler.h
-  transport-runtime-api/manager/task_gallery.h
-  transport-runtime-api/manager/task_manager.h
-  transport-runtime-api/manager/work_journal.h
+set(TRANSPORT_RUNTIME_MANAGER_FILES
+  transport-runtime/manager/argument_cache.h
+  transport-runtime/manager/environment.h
+  transport-runtime/manager/master_controller.h
+  transport-runtime/manager/master_scheduler.h
+  transport-runtime/manager/message_handlers.h
+  transport-runtime/manager/model_manager.h
+  transport-runtime/manager/mpi_operations.h
+  transport-runtime/manager/slave_controller.h
+  transport-runtime/manager/slave_work_handler.h
+  transport-runtime/manager/task_gallery.h
+  transport-runtime/manager/task_manager.h
+  transport-runtime/manager/work_journal.h
   )
 
-set(TRANSPORT_RUNTIME_API_MODELS_FILES
-  transport-runtime-api/models/advisory_classes.h
-  transport-runtime-api/models/canonical_model.h
-  transport-runtime-api/models/model.h
-  transport-runtime-api/models/model_forward_declare.h
-  transport-runtime-api/models/observers.h
+set(TRANSPORT_RUNTIME_MODELS_FILES
+  transport-runtime/models/advisory_classes.h
+  transport-runtime/models/canonical_model.h
+  transport-runtime/models/model.h
+  transport-runtime/models/model_forward_declare.h
+  transport-runtime/models/observers.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPORTING_FILES
-  transport-runtime-api/reporting/command_line.h
-  transport-runtime-api/reporting/content_group_data.h
-  transport-runtime-api/reporting/CSS_writer.h
-  transport-runtime-api/reporting/HTML_report.h
-  transport-runtime-api/reporting/HTML_report_bundle.h
-  transport-runtime-api/reporting/HTML_writer.h
-  transport-runtime-api/reporting/JavaScript_writer.h
-  transport-runtime-api/reporting/key_value.h
-  transport-runtime-api/reporting/unique_tags.h
+set(TRANSPORT_RUNTIME_REPORTING_FILES
+  transport-runtime/reporting/command_line.h
+  transport-runtime/reporting/content_group_data.h
+  transport-runtime/reporting/CSS_writer.h
+  transport-runtime/reporting/HTML_report.h
+  transport-runtime/reporting/HTML_report_bundle.h
+  transport-runtime/reporting/HTML_writer.h
+  transport-runtime/reporting/JavaScript_writer.h
+  transport-runtime/reporting/key_value.h
+  transport-runtime/reporting/unique_tags.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES
-  transport-runtime-api/repository/detail/repository_decl.h
-  transport-runtime-api/repository/detail/repository_impl.h
-  transport-runtime-api/repository/detail/repository_mode.h
-  transport-runtime-api/repository/detail/writer_repo_decl.h
-  transport-runtime-api/repository/detail/writer_repo_impl.h
+set(TRANSPORT_RUNTIME_REPOSITORY_DETAIL_FILES
+  transport-runtime/repository/detail/repository_decl.h
+  transport-runtime/repository/detail/repository_impl.h
+  transport-runtime/repository/detail/repository_mode.h
+  transport-runtime/repository/detail/writer_repo_decl.h
+  transport-runtime/repository/detail/writer_repo_impl.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
-  transport-runtime-api/repository/inflight.h
-  transport-runtime-api/repository/json_repository.h
-  transport-runtime-api/repository/repository.h
-  transport-runtime-api/repository/repository_cache.h
-  transport-runtime-api/repository/repository_toolkit.h
+set(TRANSPORT_RUNTIME_REPOSITORY_FILES
+  transport-runtime/repository/inflight.h
+  transport-runtime/repository/json_repository.h
+  transport-runtime/repository/repository.h
+  transport-runtime/repository/repository_cache.h
+  transport-runtime/repository/repository_toolkit.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES
-  transport-runtime-api/repository/records/detail/content_group_decl.h
-  transport-runtime-api/repository/records/detail/content_group_impl.h
-  transport-runtime-api/repository/records/detail/content_group_metadata_decl.h
-  transport-runtime-api/repository/records/detail/content_group_metadata_impl.h
-  transport-runtime-api/repository/records/detail/derived_product_decl.h
-  transport-runtime-api/repository/records/detail/derived_product_impl.h
-  transport-runtime-api/repository/records/detail/metadata_decl.h
-  transport-runtime-api/repository/records/detail/metadata_impl.h
-  transport-runtime-api/repository/records/detail/notes.h
-  transport-runtime-api/repository/records/detail/package_decl.h
-  transport-runtime-api/repository/records/detail/package_impl.h
-  transport-runtime-api/repository/records/detail/record_decl.h
-  transport-runtime-api/repository/records/detail/record_impl.h
-  transport-runtime-api/repository/records/detail/task_decl.h
-  transport-runtime-api/repository/records/detail/task_impl.h
+set(TRANSPORT_RUNTIME_REPOSITORY_RECORDS_DETAIL_FILES
+  transport-runtime/repository/records/detail/content_group_decl.h
+  transport-runtime/repository/records/detail/content_group_impl.h
+  transport-runtime/repository/records/detail/content_group_metadata_decl.h
+  transport-runtime/repository/records/detail/content_group_metadata_impl.h
+  transport-runtime/repository/records/detail/derived_product_decl.h
+  transport-runtime/repository/records/detail/derived_product_impl.h
+  transport-runtime/repository/records/detail/metadata_decl.h
+  transport-runtime/repository/records/detail/metadata_impl.h
+  transport-runtime/repository/records/detail/notes.h
+  transport-runtime/repository/records/detail/package_decl.h
+  transport-runtime/repository/records/detail/package_impl.h
+  transport-runtime/repository/records/detail/record_decl.h
+  transport-runtime/repository/records/detail/record_impl.h
+  transport-runtime/repository/records/detail/task_decl.h
+  transport-runtime/repository/records/detail/task_impl.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES
-  transport-runtime-api/repository/records/content_finder_decl.h
-  transport-runtime-api/repository/records/content_finder_impl.h
-  transport-runtime-api/repository/records/record_finder_decl.h
-  transport-runtime-api/repository/records/record_finder_impl.h
-  transport-runtime-api/repository/records/repository_records_decl.h
-  transport-runtime-api/repository/records/repository_records_forward_declare.h
-  transport-runtime-api/repository/records/repository_records_impl.h
+set(TRANSPORT_RUNTIME_REPOSITORY_RECORDS_FILES
+  transport-runtime/repository/records/content_finder_decl.h
+  transport-runtime/repository/records/content_finder_impl.h
+  transport-runtime/repository/records/record_finder_decl.h
+  transport-runtime/repository/records/record_finder_impl.h
+  transport-runtime/repository/records/repository_records_decl.h
+  transport-runtime/repository/records/repository_records_forward_declare.h
+  transport-runtime/repository/records/repository_records_impl.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES
-  transport-runtime-api/repository/writers/derived_content_writer.h
-  transport-runtime-api/repository/writers/generic_writer.h
-  transport-runtime-api/repository/writers/integration_writer.h
-  transport-runtime-api/repository/writers/postintegration_writer.h
-  transport-runtime-api/repository/writers/writers.h
+set(TRANSPORT_RUNTIME_REPOSITORY_WRITERS_FILES
+  transport-runtime/repository/writers/derived_content_writer.h
+  transport-runtime/repository/writers/generic_writer.h
+  transport-runtime/repository/writers/integration_writer.h
+  transport-runtime/repository/writers/postintegration_writer.h
+  transport-runtime/repository/writers/writers.h
   )
 
-set(TRANSPORT_RUNTIME_API_SCHEDULER_FILES
-  transport-runtime-api/scheduler/context.h
-  transport-runtime-api/scheduler/scheduler.h
-  transport-runtime-api/scheduler/work_queue.h
+set(TRANSPORT_RUNTIME_SCHEDULER_FILES
+  transport-runtime/scheduler/context.h
+  transport-runtime/scheduler/scheduler.h
+  transport-runtime/scheduler/work_queue.h
   )
 
-set(TRANSPORT_RUNTIME_API_SERIALIZATION_FILES
-  transport-runtime-api/serialization/serializable.h
+set(TRANSPORT_RUNTIME_SERIALIZATION_FILES
+  transport-runtime/serialization/serializable.h
   )
 
-set(TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES
-  transport-runtime-api/sqlite3/detail/container_replace_decl.h
-  transport-runtime-api/sqlite3/detail/container_replace_impl.h
-  transport-runtime-api/sqlite3/detail/data_manager_sqlite3_decl.h
-  transport-runtime-api/sqlite3/detail/data_manager_sqlite3_impl.h
-  transport-runtime-api/sqlite3/detail/data_manager_transaction_handler_decl.h
-  transport-runtime-api/sqlite3/detail/data_manager_transaction_handler_impl.h
-  transport-runtime-api/sqlite3/detail/repository_sqlite3_decl.h
-  transport-runtime-api/sqlite3/detail/repository_sqlite3_impl.h
-  transport-runtime-api/sqlite3/detail/repository_transaction_handler_decl.h
-  transport-runtime-api/sqlite3/detail/repository_transaction_handler_impl.h
-  transport-runtime-api/sqlite3/detail/writer_data_mgr_decl.h
-  transport-runtime-api/sqlite3/detail/writer_data_mgr_impl.h
+set(TRANSPORT_RUNTIME_SQLITE3_DETAIL_FILES
+  transport-runtime/sqlite3/detail/container_replace_decl.h
+  transport-runtime/sqlite3/detail/container_replace_impl.h
+  transport-runtime/sqlite3/detail/data_manager_sqlite3_decl.h
+  transport-runtime/sqlite3/detail/data_manager_sqlite3_impl.h
+  transport-runtime/sqlite3/detail/data_manager_transaction_handler_decl.h
+  transport-runtime/sqlite3/detail/data_manager_transaction_handler_impl.h
+  transport-runtime/sqlite3/detail/repository_sqlite3_decl.h
+  transport-runtime/sqlite3/detail/repository_sqlite3_impl.h
+  transport-runtime/sqlite3/detail/repository_transaction_handler_decl.h
+  transport-runtime/sqlite3/detail/repository_transaction_handler_impl.h
+  transport-runtime/sqlite3/detail/writer_data_mgr_decl.h
+  transport-runtime/sqlite3/detail/writer_data_mgr_impl.h
   )
 
-set(TRANSPORT_RUNTIME_API_SQLITE3_FILES
-  transport-runtime-api/sqlite3/data_manager_sqlite3.h
-  transport-runtime-api/sqlite3/repository_sqlite3.h
+set(TRANSPORT_RUNTIME_SQLITE3_FILES
+  transport-runtime/sqlite3/data_manager_sqlite3.h
+  transport-runtime/sqlite3/repository_sqlite3.h
   )
 
-set(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
-  transport-runtime-api/sqlite3/operations/data_manager.h
-  transport-runtime-api/sqlite3/operations/data_manager_aggregate.h
-  transport-runtime-api/sqlite3/operations/data_manager_common.h
-  transport-runtime-api/sqlite3/operations/data_manager_create.h
-  transport-runtime-api/sqlite3/operations/data_manager_integrity.h
-  transport-runtime-api/sqlite3/operations/data_manager_pull.h
-  transport-runtime-api/sqlite3/operations/data_manager_read.h
-  transport-runtime-api/sqlite3/operations/data_manager_write.h
-  transport-runtime-api/sqlite3/operations/data_traits.h
-  transport-runtime-api/sqlite3/operations/repository.h
-  transport-runtime-api/sqlite3/operations/repository_admin.h
-  transport-runtime-api/sqlite3/operations/repository_common.h
-  transport-runtime-api/sqlite3/operations/repository_count.h
-  transport-runtime-api/sqlite3/operations/repository_create.h
-  transport-runtime-api/sqlite3/operations/repository_delete.h
-  transport-runtime-api/sqlite3/operations/repository_inflight.h
-  transport-runtime-api/sqlite3/operations/repository_store.h
-  transport-runtime-api/sqlite3/operations/sqlite3_utility.h
+set(TRANSPORT_RUNTIME_SQLITE3_OPERATIONS_FILES
+  transport-runtime/sqlite3/operations/data_manager.h
+  transport-runtime/sqlite3/operations/data_manager_aggregate.h
+  transport-runtime/sqlite3/operations/data_manager_common.h
+  transport-runtime/sqlite3/operations/data_manager_create.h
+  transport-runtime/sqlite3/operations/data_manager_integrity.h
+  transport-runtime/sqlite3/operations/data_manager_pull.h
+  transport-runtime/sqlite3/operations/data_manager_read.h
+  transport-runtime/sqlite3/operations/data_manager_write.h
+  transport-runtime/sqlite3/operations/data_traits.h
+  transport-runtime/sqlite3/operations/repository.h
+  transport-runtime/sqlite3/operations/repository_admin.h
+  transport-runtime/sqlite3/operations/repository_common.h
+  transport-runtime/sqlite3/operations/repository_count.h
+  transport-runtime/sqlite3/operations/repository_create.h
+  transport-runtime/sqlite3/operations/repository_delete.h
+  transport-runtime/sqlite3/operations/repository_inflight.h
+  transport-runtime/sqlite3/operations/repository_store.h
+  transport-runtime/sqlite3/operations/sqlite3_utility.h
   )
 
-set(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES
-  transport-runtime-api/tasks/configuration-database/generic_config_iterator.h
-  transport-runtime-api/tasks/configuration-database/generic_record_iterator.h
-  transport-runtime-api/tasks/configuration-database/generic_value_iterator.h
-  transport-runtime-api/tasks/configuration-database/threepf_config_database.h
-  transport-runtime-api/tasks/configuration-database/time_config_database.h
-  transport-runtime-api/tasks/configuration-database/twopf_config_database.h
+set(TRANSPORT_RUNTIME_TASKS_CONFIGURATION_DATABASE_FILES
+  transport-runtime/tasks/configuration-database/generic_config_iterator.h
+  transport-runtime/tasks/configuration-database/generic_record_iterator.h
+  transport-runtime/tasks/configuration-database/generic_value_iterator.h
+  transport-runtime/tasks/configuration-database/threepf_config_database.h
+  transport-runtime/tasks/configuration-database/time_config_database.h
+  transport-runtime/tasks/configuration-database/twopf_config_database.h
   )
 
-set(TRANSPORT_RUNTIME_API_TASKS_FILES
-  transport-runtime-api/tasks/derivable_task.h
-  transport-runtime-api/tasks/integration_tasks.h
-  transport-runtime-api/tasks/output_tasks.h
-  transport-runtime-api/tasks/postintegration_tasks.h
-  transport-runtime-api/tasks/task.h
-  transport-runtime-api/tasks/task_configurations.h
-  transport-runtime-api/tasks/task_configurations_forward_declare.h
-  transport-runtime-api/tasks/task_helper.h
-  transport-runtime-api/tasks/task_types.h
-  transport-runtime-api/tasks/tasks_forward_declare.h
+set(TRANSPORT_RUNTIME_TASKS_FILES
+  transport-runtime/tasks/derivable_task.h
+  transport-runtime/tasks/integration_tasks.h
+  transport-runtime/tasks/output_tasks.h
+  transport-runtime/tasks/postintegration_tasks.h
+  transport-runtime/tasks/task.h
+  transport-runtime/tasks/task_configurations.h
+  transport-runtime/tasks/task_configurations_forward_declare.h
+  transport-runtime/tasks/task_helper.h
+  transport-runtime/tasks/task_types.h
+  transport-runtime/tasks/tasks_forward_declare.h
   )
 
-set(TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES
-  transport-runtime-api/tasks/integration_detail/abstract.h
-  transport-runtime-api/tasks/integration_detail/background_task.h
-  transport-runtime-api/tasks/integration_detail/common.h
-  transport-runtime-api/tasks/integration_detail/default_policies.h
-  transport-runtime-api/tasks/integration_detail/threepf_task.h
-  transport-runtime-api/tasks/integration_detail/twopf_db_task.h
-  transport-runtime-api/tasks/integration_detail/twopf_task.h
+set(TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES
+  transport-runtime/tasks/integration_detail/abstract.h
+  transport-runtime/tasks/integration_detail/background_task.h
+  transport-runtime/tasks/integration_detail/common.h
+  transport-runtime/tasks/integration_detail/default_policies.h
+  transport-runtime/tasks/integration_detail/threepf_task.h
+  transport-runtime/tasks/integration_detail/twopf_db_task.h
+  transport-runtime/tasks/integration_detail/twopf_task.h
   )
 
-set(TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES
-  transport-runtime-api/tasks/postintegration_detail/abstract.h
-  transport-runtime-api/tasks/postintegration_detail/common.h
-  transport-runtime-api/tasks/postintegration_detail/fNL_task.h
-  transport-runtime-api/tasks/postintegration_detail/zeta_threepf_task.h
-  transport-runtime-api/tasks/postintegration_detail/zeta_twopf_list_task.h
-  transport-runtime-api/tasks/postintegration_detail/zeta_twopf_task.h
+set(TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES
+  transport-runtime/tasks/postintegration_detail/abstract.h
+  transport-runtime/tasks/postintegration_detail/common.h
+  transport-runtime/tasks/postintegration_detail/fNL_task.h
+  transport-runtime/tasks/postintegration_detail/zeta_threepf_task.h
+  transport-runtime/tasks/postintegration_detail/zeta_twopf_list_task.h
+  transport-runtime/tasks/postintegration_detail/zeta_twopf_task.h
   )
 
-set(TRANSPORT_RUNTIME_API_TRANSACTIONS_FILES
-  transport-runtime-api/transactions/transaction_manager.h
+set(TRANSPORT_RUNTIME_TRANSACTIONS_FILES
+  transport-runtime/transactions/transaction_manager.h
   )
 
-set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
-  transport-runtime-api/utilities/asciitable.h
-  transport-runtime-api/utilities/formatter.h
-  transport-runtime-api/utilities/host_information.h
-  transport-runtime-api/utilities/latex_output.h
-  transport-runtime-api/utilities/linecache.h
-  transport-runtime-api/utilities/match.h
-  transport-runtime-api/utilities/named_list.h
-  transport-runtime-api/utilities/plot_environment.h
-  transport-runtime-api/utilities/random_string.h
-  transport-runtime-api/utilities/spline1d.h
+set(TRANSPORT_RUNTIME_UTILITIES_FILES
+  transport-runtime/utilities/asciitable.h
+  transport-runtime/utilities/formatter.h
+  transport-runtime/utilities/host_information.h
+  transport-runtime/utilities/latex_output.h
+  transport-runtime/utilities/linecache.h
+  transport-runtime/utilities/match.h
+  transport-runtime/utilities/named_list.h
+  transport-runtime/utilities/plot_environment.h
+  transport-runtime/utilities/random_string.h
+  transport-runtime/utilities/spline1d.h
   )
 
 set(SOURCE_FILES
@@ -979,54 +982,54 @@ set(SOURCE_FILES
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
   ${TRANSLATOR_UTILITIES_FILES}
-  ${TRANSPORT_RUNTIME_API_CONCEPTS_FILES}
-  ${TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES}
-  ${TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES}
-  ${TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES}
-  ${TRANSPORT_RUNTIME_API_DATA_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_DATA_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_SERIES_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_COMPUTE_GADGETS_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_DEPRECATED_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_INTEGRATION_ANALYSIS_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES}
-  ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_UTILITIES_FILES}
-  ${TRANSPORT_RUNTIME_API_FILES}
-  ${TRANSPORT_RUNTIME_API_INSTRUMENTS_FILES}
-  ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES}
-  ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES}
-  ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES}
-  ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES}
-  ${TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_MANAGER_FILES}
-  ${TRANSPORT_RUNTIME_API_MODELS_FILES}
-  ${TRANSPORT_RUNTIME_API_REPORTING_FILES}
-  ${TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_REPOSITORY_FILES}
-  ${TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES}
-  ${TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES}
-  ${TRANSPORT_RUNTIME_API_SCHEDULER_FILES}
-  ${TRANSPORT_RUNTIME_API_SERIALIZATION_FILES}
-  ${TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_SQLITE3_FILES}
-  ${TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES}
-  ${TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES}
-  ${TRANSPORT_RUNTIME_API_TASKS_FILES}
-  ${TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_API_TRANSACTIONS_FILES}
-  ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
+  ${TRANSPORT_RUNTIME_CONCEPTS_FILES}
+  ${TRANSPORT_RUNTIME_CONCEPTS_RANGE_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_DATA_BATCHERS_FILES}
+  ${TRANSPORT_RUNTIME_DATA_DATAPIPE_FILES}
+  ${TRANSPORT_RUNTIME_DATA_DATAPIPE_TAGS_FILES}
+  ${TRANSPORT_RUNTIME_DATA_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_DATA_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_CONVENIENCE_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_SERIES_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_COMPUTE_GADGETS_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_DEPRECATED_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_INTEGRATION_ANALYSIS_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES}
+  ${TRANSPORT_RUNTIME_DERIVED_PRODUCTS_UTILITIES_FILES}
+  ${TRANSPORT_RUNTIME_FILES}
+  ${TRANSPORT_RUNTIME_INSTRUMENTS_FILES}
+  ${TRANSPORT_RUNTIME_LOCALIZATIONS_FILES}
+  ${TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES}
+  ${TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES}
+  ${TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES}
+  ${TRANSPORT_RUNTIME_MANAGER_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_MANAGER_FILES}
+  ${TRANSPORT_RUNTIME_MODELS_FILES}
+  ${TRANSPORT_RUNTIME_REPORTING_FILES}
+  ${TRANSPORT_RUNTIME_REPOSITORY_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_REPOSITORY_FILES}
+  ${TRANSPORT_RUNTIME_REPOSITORY_RECORDS_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_REPOSITORY_RECORDS_FILES}
+  ${TRANSPORT_RUNTIME_REPOSITORY_WRITERS_FILES}
+  ${TRANSPORT_RUNTIME_SCHEDULER_FILES}
+  ${TRANSPORT_RUNTIME_SERIALIZATION_FILES}
+  ${TRANSPORT_RUNTIME_SQLITE3_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_SQLITE3_FILES}
+  ${TRANSPORT_RUNTIME_SQLITE3_OPERATIONS_FILES}
+  ${TRANSPORT_RUNTIME_TASKS_CONFIGURATION_DATABASE_FILES}
+  ${TRANSPORT_RUNTIME_TASKS_FILES}
+  ${TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES}
+  ${TRANSPORT_RUNTIME_TRANSACTIONS_FILES}
+  ${TRANSPORT_RUNTIME_UTILITIES_FILES}
   )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})
