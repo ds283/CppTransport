@@ -7,7 +7,7 @@
 
 #include "error_context.h"
 
-#include "msg_en.h"
+#include "translator/msg_en.h"
 
 
 error_context::error_context(filestack& p, std::shared_ptr<std::string> ln, unsigned int cpos,

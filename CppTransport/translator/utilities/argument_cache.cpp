@@ -8,8 +8,8 @@
 
 #include "argument_cache.h"
 
-#include "core.h"
-#include "switches.h"
+#include "translator/core.h"
+#include "translator/switches.h"
 
 
 argument_cache::argument_cache(int argc, const char** argv, local_environment& env)

@@ -10,7 +10,7 @@
 #include <deque>
 #include <memory>
 
-#include "core.h"
+#include "translator/core.h"
 #include "error_context.h"
 #include "argument_cache.h"
 #include "local_environment.h"

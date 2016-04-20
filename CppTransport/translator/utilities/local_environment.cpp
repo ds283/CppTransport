@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "core.h"
+#include "translator/core.h"
 #include "local_environment.h"
 
 #include "boost/range.hpp"

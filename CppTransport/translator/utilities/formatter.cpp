@@ -8,7 +8,7 @@
 #include <sstream>
 
 #include "formatter.h"
-#include "msg_en.h"
+#include "translator/msg_en.h"
 
 
 std::string format_time(boost::timer::nanosecond_type time, unsigned int precision)

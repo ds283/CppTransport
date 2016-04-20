@@ -64,93 +64,93 @@ FIND_PACKAGE(GiNaC 1.6 REQUIRED)
 
 
 # build parser
-BISON_TARGET(parser parser/bison/y_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/y_parser.cpp)
+BISON_TARGET(translator/parser translator/parser/bison/y_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/y_parser.cpp)
 
 
 ADD_EXECUTABLE(CppTransport
-  main.cpp
-  backends/infrastructure/file_handling/backend_data.cpp
-  backends/infrastructure/file_handling/buffer.cpp
-  backends/infrastructure/file_handling/output_stack.cpp
-  backends/infrastructure/file_handling/translation_unit.cpp
-  backends/infrastructure/file_handling/translator.cpp
-  backends/infrastructure/file_handling/translator_data.cpp
-  backends/infrastructure/file_handling/lexstream_data.cpp
-  backends/infrastructure/language_concepts/cse.cpp
-  backends/infrastructure/language_concepts/cse_map.cpp
-  backends/infrastructure/language_concepts/lambdas.cpp
-  backends/infrastructure/language_concepts/lambda_manager.cpp
-  backends/infrastructure/macro_substitution/index_assignment.cpp
-  backends/infrastructure/macro_substitution/macro.cpp
-  backends/infrastructure/macro_substitution/macro_tokenizer.cpp
-  backends/infrastructure/macro_substitution/abstract_index.cpp
-  backends/infrastructure/macro_substitution/index_class.cpp
-  backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
-  backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
-  backends/infrastructure/replacement_rules/package_group.cpp
-  backends/infrastructure/replacement_rules/package_group_factory.cpp
-  backends/infrastructure/replacement_rules/replacement_rule_package.cpp
-  backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
-  backends/languages/cpp/core/cpp_group.cpp
-  backends/languages/cpp/core/cpp_steppers.cpp
-  backends/languages/cpp/vexcl/vexcl_group.cpp
-  backends/languages/cpp/vexcl/vexcl_kernels.cpp
-  backends/languages/cpp/vexcl/vexcl_steppers.cpp
-  backends/languages/cpp/cpp_cse.cpp
-  backends/languages/cpp/cpp_printer.cpp
-  backends/languages/cuda/cuda_group.cpp
-  backends/languages/cuda/cuda_printer.cpp
-  backends/languages/opencl/opencl_group.cpp
-  backends/languages/opencl/opencl_printer.cpp
-  backends/languages/shared/C_style_printer.cpp
-  backends/languages/shared/kernel_argument_macros.cpp
-  backends/shared/directives.cpp
-  backends/shared/flow_tensors.cpp
-  backends/shared/fundamental.cpp
-  backends/shared/gauge_xfm.cpp
-  backends/shared/lagrangian_tensors.cpp
-  backends/shared/resources.cpp
-  backends/shared/temporary_pool.cpp
-  backends/shared/utensors.cpp
+  translator/main.cpp
+  translator/backends/infrastructure/file_handling/backend_data.cpp
+  translator/backends/infrastructure/file_handling/buffer.cpp
+  translator/backends/infrastructure/file_handling/output_stack.cpp
+  translator/backends/infrastructure/file_handling/translation_unit.cpp
+  translator/backends/infrastructure/file_handling/translator.cpp
+  translator/backends/infrastructure/file_handling/translator_data.cpp
+  translator/backends/infrastructure/file_handling/lexstream_data.cpp
+  translator/backends/infrastructure/language_concepts/cse.cpp
+  translator/backends/infrastructure/language_concepts/cse_map.cpp
+  translator/backends/infrastructure/language_concepts/lambdas.cpp
+  translator/backends/infrastructure/language_concepts/lambda_manager.cpp
+  translator/backends/infrastructure/macro_substitution/index_assignment.cpp
+  translator/backends/infrastructure/macro_substitution/macro.cpp
+  translator/backends/infrastructure/macro_substitution/macro_tokenizer.cpp
+  translator/backends/infrastructure/macro_substitution/abstract_index.cpp
+  translator/backends/infrastructure/macro_substitution/index_class.cpp
+  translator/backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
+  translator/backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
+  translator/backends/infrastructure/replacement_rules/package_group.cpp
+  translator/backends/infrastructure/replacement_rules/package_group_factory.cpp
+  translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
+  translator/backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
+  translator/backends/languages/cpp/core/cpp_group.cpp
+  translator/backends/languages/cpp/core/cpp_steppers.cpp
+  translator/backends/languages/cpp/vexcl/vexcl_group.cpp
+  translator/backends/languages/cpp/vexcl/vexcl_kernels.cpp
+  translator/backends/languages/cpp/vexcl/vexcl_steppers.cpp
+  translator/backends/languages/cpp/cpp_cse.cpp
+  translator/backends/languages/cpp/cpp_printer.cpp
+  translator/backends/languages/cuda/cuda_group.cpp
+  translator/backends/languages/cuda/cuda_printer.cpp
+  translator/backends/languages/opencl/opencl_group.cpp
+  translator/backends/languages/opencl/opencl_printer.cpp
+  translator/backends/languages/shared/C_style_printer.cpp
+  translator/backends/languages/shared/kernel_argument_macros.cpp
+  translator/backends/shared/directives.cpp
+  translator/backends/shared/flow_tensors.cpp
+  translator/backends/shared/fundamental.cpp
+  translator/backends/shared/gauge_xfm.cpp
+  translator/backends/shared/lagrangian_tensors.cpp
+  translator/backends/shared/resources.cpp
+  translator/backends/shared/temporary_pool.cpp
+  translator/backends/shared/utensors.cpp
   ${BISON_parser_OUTPUTS}
-  parser/input_stack.cpp
-  parser/lexfile.cpp
-  parser/script.cpp
-  parser/y_driver.cpp
-  parser/y_lexer.cpp
-  transport-objects/canonical/resources.cpp
-  transport-objects/canonical/Hubble.cpp
-  transport-objects/canonical/dV.cpp
-  transport-objects/canonical/ddV.cpp
-  transport-objects/canonical/dddV.cpp
-  transport-objects/canonical/SR_velocity.cpp
-  transport-objects/canonical/A.cpp
-  transport-objects/canonical/B.cpp
-  transport-objects/canonical/C.cpp
-  transport-objects/canonical/M.cpp
-  transport-objects/canonical/u1.cpp
-  transport-objects/canonical/u2.cpp
-  transport-objects/canonical/u3.cpp
-  transport-objects/canonical/zeta1.cpp
-  transport-objects/canonical/zeta2.cpp
-  transport-objects/canonical/dN1.cpp
-  transport-objects/canonical/dN2.cpp
-  transport-objects/canonical/tensor_factory.cpp
-  transport-objects/resource_manager.cpp
-  transport-objects/concepts/transport_tensor.cpp
-  transport-objects/indices/indices.cpp
-  transport-objects/indices/index_flatten.cpp
-  transport-objects/indices/index_traits.cpp
-  transport-objects/utilities/symbol_factory.cpp
-  transport-objects/utilities/shared_resources.cpp
-  utilities/error.cpp
-  utilities/error_context.cpp
-  utilities/finder.cpp
-  utilities/formatter.cpp
-  utilities/ginac_print_indexed.cpp
-  utilities/to_printable.cpp
-  utilities/local_environment.cpp
-  utilities/argument_cache.cpp
+  translator/parser/input_stack.cpp
+  translator/parser/lexfile.cpp
+  translator/parser/script.cpp
+  translator/parser/y_driver.cpp
+  translator/parser/y_lexer.cpp
+  translator/transport-objects/canonical/resources.cpp
+  translator/transport-objects/canonical/Hubble.cpp
+  translator/transport-objects/canonical/dV.cpp
+  translator/transport-objects/canonical/ddV.cpp
+  translator/transport-objects/canonical/dddV.cpp
+  translator/transport-objects/canonical/SR_velocity.cpp
+  translator/transport-objects/canonical/A.cpp
+  translator/transport-objects/canonical/B.cpp
+  translator/transport-objects/canonical/C.cpp
+  translator/transport-objects/canonical/M.cpp
+  translator/transport-objects/canonical/u1.cpp
+  translator/transport-objects/canonical/u2.cpp
+  translator/transport-objects/canonical/u3.cpp
+  translator/transport-objects/canonical/zeta1.cpp
+  translator/transport-objects/canonical/zeta2.cpp
+  translator/transport-objects/canonical/dN1.cpp
+  translator/transport-objects/canonical/dN2.cpp
+  translator/transport-objects/canonical/tensor_factory.cpp
+  translator/transport-objects/resource_manager.cpp
+  translator/transport-objects/concepts/transport_tensor.cpp
+  translator/transport-objects/indices/indices.cpp
+  translator/transport-objects/indices/index_flatten.cpp
+  translator/transport-objects/indices/index_traits.cpp
+  translator/transport-objects/utilities/symbol_factory.cpp
+  translator/transport-objects/utilities/shared_resources.cpp
+  translator/utilities/error.cpp
+  translator/utilities/error_context.cpp
+  translator/utilities/finder.cpp
+  translator/utilities/formatter.cpp
+  translator/utilities/ginac_print_indexed.cpp
+  translator/utilities/to_printable.cpp
+  translator/utilities/local_environment.cpp
+  translator/utilities/argument_cache.cpp
   )
 
 TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
@@ -158,27 +158,27 @@ TARGET_COMPILE_OPTIONS(CppTransport PRIVATE -std=c++14)
 
 TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   ./
-  backends
-  backends/infrastructure
-  backends/infrastructure/file_handling
-  backends/infrastructure/language_concepts
-  backends/infrastructure/macro_substitution
-  backends/infrastructure/replacement_rules
-  backends/languages
-  backends/languages/cpp
-  backends/languages/cpp/core
-  backends/languages/cpp/vexcl
-  backends/languages/cuda
-  backends/languages/opencl
-  backends/languages/shared
-  backends/shared
-  concepts
-  instruments
-  parser
-  transport-objects
-  transport-objects/indices
-  transport-objects/utilities
-  utilities
+  translator/backends
+  translator/backends/infrastructure
+  translator/backends/infrastructure/file_handling
+  translator/backends/infrastructure/language_concepts
+  translator/backends/infrastructure/macro_substitution
+  translator/backends/infrastructure/replacement_rules
+  translator/backends/languages
+  translator/backends/languages/cpp
+  translator/backends/languages/cpp/core
+  translator/backends/languages/cpp/vexcl
+  translator/backends/languages/cuda
+  translator/backends/languages/opencl
+  translator/backends/languages/shared
+  translator/backends/shared
+  translator/concepts
+  translator/instruments
+  translator/parser
+  translator/transport-objects
+  translator/transport-objects/indices
+  translator/transport-objects/utilities
+  translator/utilities
   ${Boost_INCLUDE_DIRS}
   ${GINAC_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
@@ -204,136 +204,6 @@ INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake)
 
 ## FILL IN DUMMY TARGETS FOR CLION
 
-set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
-  backends/infrastructure/file_handling/backend_data.cpp
-  backends/infrastructure/file_handling/backend_data.h
-  backends/infrastructure/file_handling/buffer.cpp
-  backends/infrastructure/file_handling/buffer.h
-  backends/infrastructure/file_handling/contexted_value.h
-  backends/infrastructure/file_handling/filestack.h
-  backends/infrastructure/file_handling/lexstream_data.cpp
-  backends/infrastructure/file_handling/lexstream_data.h
-  backends/infrastructure/file_handling/output_stack.cpp
-  backends/infrastructure/file_handling/output_stack.h
-  backends/infrastructure/file_handling/translation_unit.cpp
-  backends/infrastructure/file_handling/translation_unit.h
-  backends/infrastructure/file_handling/translator.cpp
-  backends/infrastructure/file_handling/translator.h
-  backends/infrastructure/file_handling/translator_data.cpp
-  backends/infrastructure/file_handling/translator_data.h
-  )
-
-set(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
-  backends/infrastructure/language_concepts/cse.cpp
-  backends/infrastructure/language_concepts/cse.h
-  backends/infrastructure/language_concepts/cse_map.cpp
-  backends/infrastructure/language_concepts/cse_map.h
-  backends/infrastructure/language_concepts/lambda_manager.cpp
-  backends/infrastructure/language_concepts/lambda_manager.h
-  backends/infrastructure/language_concepts/lambdas.cpp
-  backends/infrastructure/language_concepts/lambdas.h
-  backends/infrastructure/language_concepts/language_printer.h
-  )
-
-set(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
-  backends/infrastructure/macro_substitution/abstract_index.cpp
-  backends/infrastructure/macro_substitution/abstract_index.h
-  backends/infrastructure/macro_substitution/index_assignment.cpp
-  backends/infrastructure/macro_substitution/index_assignment.h
-  backends/infrastructure/macro_substitution/index_class.cpp
-  backends/infrastructure/macro_substitution/index_class.h
-  backends/infrastructure/macro_substitution/index_database.h
-  backends/infrastructure/macro_substitution/macro.cpp
-  backends/infrastructure/macro_substitution/macro.h
-  backends/infrastructure/macro_substitution/macro_tokenizer.cpp
-  backends/infrastructure/macro_substitution/macro_tokenizer.h
-  backends/infrastructure/macro_substitution/macro_types.h
-  )
-
-set(BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
-  backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
-  backends/infrastructure/replacement_rules/cse_map_field_indices.h
-  backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
-  backends/infrastructure/replacement_rules/cse_map_phase_indices.h
-  backends/infrastructure/replacement_rules/package_group.cpp
-  backends/infrastructure/replacement_rules/package_group.h
-  backends/infrastructure/replacement_rules/package_group_factory.cpp
-  backends/infrastructure/replacement_rules/package_group_factory.h
-  backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
-  backends/infrastructure/replacement_rules/replacement_rule_definitions.h
-  backends/infrastructure/replacement_rules/replacement_rule_package.cpp
-  backends/infrastructure/replacement_rules/replacement_rule_package.h
-  )
-
-set(BACKENDS_LANGUAGES_CPP_CORE_FILES
-  backends/languages/cpp/core/cpp_group.cpp
-  backends/languages/cpp/core/cpp_group.h
-  backends/languages/cpp/core/cpp_steppers.cpp
-  backends/languages/cpp/core/cpp_steppers.h
-  )
-
-set(BACKENDS_LANGUAGES_CPP_FILES
-  backends/languages/cpp/cpp_cse.cpp
-  backends/languages/cpp/cpp_cse.h
-  backends/languages/cpp/cpp_printer.cpp
-  backends/languages/cpp/cpp_printer.h
-  )
-
-set(BACKENDS_LANGUAGES_CPP_VEXCL_FILES
-  backends/languages/cpp/vexcl/vexcl_group.cpp
-  backends/languages/cpp/vexcl/vexcl_group.h
-  backends/languages/cpp/vexcl/vexcl_kernels.cpp
-  backends/languages/cpp/vexcl/vexcl_kernels.h
-  backends/languages/cpp/vexcl/vexcl_steppers.cpp
-  backends/languages/cpp/vexcl/vexcl_steppers.h
-  )
-
-set(BACKENDS_LANGUAGES_CUDA_FILES
-  backends/languages/cuda/cuda_group.cpp
-  backends/languages/cuda/cuda_group.h
-  backends/languages/cuda/cuda_printer.cpp
-  backends/languages/cuda/cuda_printer.h
-  )
-
-set(BACKENDS_LANGUAGES_OPENCL_FILES
-  backends/languages/opencl/opencl_group.cpp
-  backends/languages/opencl/opencl_group.h
-  backends/languages/opencl/opencl_printer.cpp
-  backends/languages/opencl/opencl_printer.h
-  )
-
-set(BACKENDS_LANGUAGES_SHARED_FILES
-  backends/languages/shared/C_style_printer.cpp
-  backends/languages/shared/C_style_printer.h
-  backends/languages/shared/kernel_argument_macros.cpp
-  backends/languages/shared/kernel_argument_macros.h
-  )
-
-set(BACKENDS_SHARED_FILES
-  backends/shared/directives.cpp
-  backends/shared/directives.h
-  backends/shared/flow_tensors.cpp
-  backends/shared/flow_tensors.h
-  backends/shared/fundamental.cpp
-  backends/shared/fundamental.h
-  backends/shared/gauge_xfm.cpp
-  backends/shared/gauge_xfm.h
-  backends/shared/lagrangian_tensors.cpp
-  backends/shared/lagrangian_tensors.h
-  backends/shared/resources.cpp
-  backends/shared/resources.h
-  backends/shared/temporary_pool.cpp
-  backends/shared/temporary_pool.h
-  backends/shared/utensors.cpp
-  backends/shared/utensors.h
-  )
-
-set(CONCEPTS_FILES
-  concepts/model_settings.h
-  concepts/stepper.h
-  concepts/symbol_list.h
-  )
-
 set(CPPTRANSPORT_TEMPLATES_FILES
   cpptransport-templates/canonical_core.h
   cpptransport-templates/canonical_mpi.h
@@ -351,135 +221,285 @@ set(CPPTRANSPORT_TEMPLATES_VEXCL_OPENCL_FILES
   cpptransport-templates/vexcl-opencl/twopf.cl
   )
 
-set(INSTRUMENTS_FILES
-  instruments/timing_instrument.h
-  )
-
-set(PARSER_BISON_FILES
-  parser/bison/y_parser.yy
-  )
-
-set(PARSER_FILES
-  parser/input_stack.cpp
-  parser/input_stack.h
-  parser/lexeme.h
-  parser/lexfile.cpp
-  parser/lexfile.h
-  parser/lexical.h
-  parser/lexstream.h
-  parser/script.cpp
-  parser/script.h
-  parser/semantic_data.h
-  parser/y_common.h
-  parser/y_driver.cpp
-  parser/y_driver.h
-  parser/y_lexer.cpp
-  parser/y_lexer.h
-  )
-
 set(TOP_LEVEL_FILES
-  CMakeLists.txt
-  core.h
-  CppTransport.1
-  main.cpp
-  msg_en.h
-  switches.h
-  defaults.h
   )
 
-set(TRANSPORT_OBJECTS_CANONICAL_FILES
-  transport-objects/canonical/A.cpp
-  transport-objects/canonical/A.h
-  transport-objects/canonical/B.cpp
-  transport-objects/canonical/B.h
-  transport-objects/canonical/C.cpp
-  transport-objects/canonical/C.h
-  transport-objects/canonical/dddV.cpp
-  transport-objects/canonical/dddV.h
-  transport-objects/canonical/ddV.cpp
-  transport-objects/canonical/ddV.h
-  transport-objects/canonical/dN1.cpp
-  transport-objects/canonical/dN1.h
-  transport-objects/canonical/dN2.cpp
-  transport-objects/canonical/dN2.h
-  transport-objects/canonical/dV.cpp
-  transport-objects/canonical/dV.h
-  transport-objects/canonical/Hubble.cpp
-  transport-objects/canonical/Hubble.h
-  transport-objects/canonical/M.cpp
-  transport-objects/canonical/M.h
-  transport-objects/canonical/resources.cpp
-  transport-objects/canonical/resources.h
-  transport-objects/canonical/SR_velocity.cpp
-  transport-objects/canonical/SR_velocity.h
-  transport-objects/canonical/tensor_factory.cpp
-  transport-objects/canonical/tensor_factory.h
-  transport-objects/canonical/u1.cpp
-  transport-objects/canonical/u1.h
-  transport-objects/canonical/u2.cpp
-  transport-objects/canonical/u2.h
-  transport-objects/canonical/u3.cpp
-  transport-objects/canonical/u3.h
-  transport-objects/canonical/zeta1.cpp
-  transport-objects/canonical/zeta1.h
-  transport-objects/canonical/zeta2.cpp
-  transport-objects/canonical/zeta2.h
+set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
+  translator/backends/infrastructure/file_handling/backend_data.cpp
+  translator/backends/infrastructure/file_handling/backend_data.h
+  translator/backends/infrastructure/file_handling/buffer.cpp
+  translator/backends/infrastructure/file_handling/buffer.h
+  translator/backends/infrastructure/file_handling/contexted_value.h
+  translator/backends/infrastructure/file_handling/filestack.h
+  translator/backends/infrastructure/file_handling/lexstream_data.cpp
+  translator/backends/infrastructure/file_handling/lexstream_data.h
+  translator/backends/infrastructure/file_handling/output_stack.cpp
+  translator/backends/infrastructure/file_handling/output_stack.h
+  translator/backends/infrastructure/file_handling/translation_unit.cpp
+  translator/backends/infrastructure/file_handling/translation_unit.h
+  translator/backends/infrastructure/file_handling/translator.cpp
+  translator/backends/infrastructure/file_handling/translator.h
+  translator/backends/infrastructure/file_handling/translator_data.cpp
+  translator/backends/infrastructure/file_handling/translator_data.h
   )
 
-set(TRANSPORT_OBJECTS_CONCEPTS_FILES
-  transport-objects/concepts/A.h
-  transport-objects/concepts/B.h
-  transport-objects/concepts/C.h
-  transport-objects/concepts/dddV.h
-  transport-objects/concepts/ddV.h
-  transport-objects/concepts/dN1.h
-  transport-objects/concepts/dN2.h
-  transport-objects/concepts/dV.h
-  transport-objects/concepts/flattened_tensor.h
-  transport-objects/concepts/Hubble.h
-  transport-objects/concepts/M.h
-  transport-objects/concepts/SR_velocity.h
-  transport-objects/concepts/tensor_factory.h
-  transport-objects/concepts/transport_tensor.cpp
-  transport-objects/concepts/transport_tensor.h
-  transport-objects/concepts/u1.h
-  transport-objects/concepts/u2.h
-  transport-objects/concepts/u3.h
-  transport-objects/concepts/zeta1.h
-  transport-objects/concepts/zeta2.h
+set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
+  translator/backends/infrastructure/language_concepts/cse.cpp
+  translator/backends/infrastructure/language_concepts/cse.h
+  translator/backends/infrastructure/language_concepts/cse_map.cpp
+  translator/backends/infrastructure/language_concepts/cse_map.h
+  translator/backends/infrastructure/language_concepts/lambda_manager.cpp
+  translator/backends/infrastructure/language_concepts/lambda_manager.h
+  translator/backends/infrastructure/language_concepts/lambdas.cpp
+  translator/backends/infrastructure/language_concepts/lambdas.h
+  translator/backends/infrastructure/language_concepts/language_printer.h
   )
 
-set(TRANSPORT_OBJECTS_DEPRECATED_FILES
-  transport-objects/deprecated/canonical_u_tensor_factory.cpp
-  transport-objects/deprecated/canonical_u_tensor_factory.h
-  transport-objects/deprecated/flatten.h
-  transport-objects/deprecated/make_u_tensor_factory.h
-  transport-objects/deprecated/u_tensor_factory.cpp
-  transport-objects/deprecated/u_tensor_factory.h
+set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
+  translator/backends/infrastructure/macro_substitution/abstract_index.cpp
+  translator/backends/infrastructure/macro_substitution/abstract_index.h
+  translator/backends/infrastructure/macro_substitution/index_assignment.cpp
+  translator/backends/infrastructure/macro_substitution/index_assignment.h
+  translator/backends/infrastructure/macro_substitution/index_class.cpp
+  translator/backends/infrastructure/macro_substitution/index_class.h
+  translator/backends/infrastructure/macro_substitution/index_database.h
+  translator/backends/infrastructure/macro_substitution/macro.cpp
+  translator/backends/infrastructure/macro_substitution/macro.h
+  translator/backends/infrastructure/macro_substitution/macro_tokenizer.cpp
+  translator/backends/infrastructure/macro_substitution/macro_tokenizer.h
+  translator/backends/infrastructure/macro_substitution/macro_types.h
   )
 
-set(TRANSPORT_OBJECTS_FILES
-  transport-objects/make_tensor_factory.h
-  transport-objects/resource_manager.cpp
-  transport-objects/resource_manager.h
+set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
+  translator/backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
+  translator/backends/infrastructure/replacement_rules/cse_map_field_indices.h
+  translator/backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
+  translator/backends/infrastructure/replacement_rules/cse_map_phase_indices.h
+  translator/backends/infrastructure/replacement_rules/package_group.cpp
+  translator/backends/infrastructure/replacement_rules/package_group.h
+  translator/backends/infrastructure/replacement_rules/package_group_factory.cpp
+  translator/backends/infrastructure/replacement_rules/package_group_factory.h
+  translator/backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/replacement_rule_definitions.h
+  translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
+  translator/backends/infrastructure/replacement_rules/replacement_rule_package.h
   )
 
-set(TRANSPORT_OBJECTS_INDICES_FILES
-  transport-objects/indices/index_flatten.cpp
-  transport-objects/indices/index_flatten.h
-  transport-objects/indices/index_traits.cpp
-  transport-objects/indices/index_traits.h
-  transport-objects/indices/indices.cpp
-  transport-objects/indices/indices.h
+set(TRANSLATOR_BACKENDS_LANGUAGES_CPP_CORE_FILES
+  translator/backends/languages/cpp/core/cpp_group.cpp
+  translator/backends/languages/cpp/core/cpp_group.h
+  translator/backends/languages/cpp/core/cpp_steppers.cpp
+  translator/backends/languages/cpp/core/cpp_steppers.h
   )
 
-set(TRANSPORT_OBJECTS_UTILITIES_FILES
-  transport-objects/utilities/expression_cache.h
-  transport-objects/utilities/ginac_cache.h
-  transport-objects/utilities/shared_resources.cpp
-  transport-objects/utilities/shared_resources.h
-  transport-objects/utilities/symbol_factory.cpp
-  transport-objects/utilities/symbol_factory.h
+set(TRANSLATOR_BACKENDS_LANGUAGES_CPP_FILES
+  translator/backends/languages/cpp/cpp_cse.cpp
+  translator/backends/languages/cpp/cpp_cse.h
+  translator/backends/languages/cpp/cpp_printer.cpp
+  translator/backends/languages/cpp/cpp_printer.h
+  )
+
+set(TRANSLATOR_BACKENDS_LANGUAGES_CPP_VEXCL_FILES
+  translator/backends/languages/cpp/vexcl/vexcl_group.cpp
+  translator/backends/languages/cpp/vexcl/vexcl_group.h
+  translator/backends/languages/cpp/vexcl/vexcl_kernels.cpp
+  translator/backends/languages/cpp/vexcl/vexcl_kernels.h
+  translator/backends/languages/cpp/vexcl/vexcl_steppers.cpp
+  translator/backends/languages/cpp/vexcl/vexcl_steppers.h
+  )
+
+set(TRANSLATOR_BACKENDS_LANGUAGES_CUDA_FILES
+  translator/backends/languages/cuda/cuda_group.cpp
+  translator/backends/languages/cuda/cuda_group.h
+  translator/backends/languages/cuda/cuda_printer.cpp
+  translator/backends/languages/cuda/cuda_printer.h
+  )
+
+set(TRANSLATOR_BACKENDS_LANGUAGES_OPENCL_FILES
+  translator/backends/languages/opencl/opencl_group.cpp
+  translator/backends/languages/opencl/opencl_group.h
+  translator/backends/languages/opencl/opencl_printer.cpp
+  translator/backends/languages/opencl/opencl_printer.h
+  )
+
+set(TRANSLATOR_BACKENDS_LANGUAGES_SHARED_FILES
+  translator/backends/languages/shared/C_style_printer.cpp
+  translator/backends/languages/shared/C_style_printer.h
+  translator/backends/languages/shared/kernel_argument_macros.cpp
+  translator/backends/languages/shared/kernel_argument_macros.h
+  )
+
+set(TRANSLATOR_BACKENDS_SHARED_FILES
+  translator/backends/shared/directives.cpp
+  translator/backends/shared/directives.h
+  translator/backends/shared/flow_tensors.cpp
+  translator/backends/shared/flow_tensors.h
+  translator/backends/shared/fundamental.cpp
+  translator/backends/shared/fundamental.h
+  translator/backends/shared/gauge_xfm.cpp
+  translator/backends/shared/gauge_xfm.h
+  translator/backends/shared/lagrangian_tensors.cpp
+  translator/backends/shared/lagrangian_tensors.h
+  translator/backends/shared/resources.cpp
+  translator/backends/shared/resources.h
+  translator/backends/shared/temporary_pool.cpp
+  translator/backends/shared/temporary_pool.h
+  translator/backends/shared/utensors.cpp
+  translator/backends/shared/utensors.h
+  )
+
+set(TRANSLATOR_CONCEPTS_FILES
+  translator/concepts/model_settings.h
+  translator/concepts/stepper.h
+  translator/concepts/symbol_list.h
+  )
+
+set(TRANSLATOR_FILES
+  translator/core.h
+  translator/defaults.h
+  translator/main.cpp
+  translator/msg_en.h
+  translator/switches.h
+  )
+
+set(TRANSLATOR_INSTRUMENTS_FILES
+  translator/instruments/timing_instrument.h
+  )
+
+set(TRANSLATOR_PARSER_BISON_FILES
+  translator/parser/bison/y_parser.yy
+  )
+
+set(TRANSLATOR_PARSER_FILES
+  translator/parser/input_stack.cpp
+  translator/parser/input_stack.h
+  translator/parser/lexeme.h
+  translator/parser/lexfile.cpp
+  translator/parser/lexfile.h
+  translator/parser/lexical.h
+  translator/parser/lexstream.h
+  translator/parser/script.cpp
+  translator/parser/script.h
+  translator/parser/semantic_data.h
+  translator/parser/y_common.h
+  translator/parser/y_driver.cpp
+  translator/parser/y_driver.h
+  translator/parser/y_lexer.cpp
+  translator/parser/y_lexer.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
+  translator/transport-objects/canonical/A.cpp
+  translator/transport-objects/canonical/A.h
+  translator/transport-objects/canonical/B.cpp
+  translator/transport-objects/canonical/B.h
+  translator/transport-objects/canonical/C.cpp
+  translator/transport-objects/canonical/C.h
+  translator/transport-objects/canonical/dddV.cpp
+  translator/transport-objects/canonical/dddV.h
+  translator/transport-objects/canonical/ddV.cpp
+  translator/transport-objects/canonical/ddV.h
+  translator/transport-objects/canonical/dN1.cpp
+  translator/transport-objects/canonical/dN1.h
+  translator/transport-objects/canonical/dN2.cpp
+  translator/transport-objects/canonical/dN2.h
+  translator/transport-objects/canonical/dV.cpp
+  translator/transport-objects/canonical/dV.h
+  translator/transport-objects/canonical/Hubble.cpp
+  translator/transport-objects/canonical/Hubble.h
+  translator/transport-objects/canonical/M.cpp
+  translator/transport-objects/canonical/M.h
+  translator/transport-objects/canonical/resources.cpp
+  translator/transport-objects/canonical/resources.h
+  translator/transport-objects/canonical/SR_velocity.cpp
+  translator/transport-objects/canonical/SR_velocity.h
+  translator/transport-objects/canonical/tensor_factory.cpp
+  translator/transport-objects/canonical/tensor_factory.h
+  translator/transport-objects/canonical/u1.cpp
+  translator/transport-objects/canonical/u1.h
+  translator/transport-objects/canonical/u2.cpp
+  translator/transport-objects/canonical/u2.h
+  translator/transport-objects/canonical/u3.cpp
+  translator/transport-objects/canonical/u3.h
+  translator/transport-objects/canonical/zeta1.cpp
+  translator/transport-objects/canonical/zeta1.h
+  translator/transport-objects/canonical/zeta2.cpp
+  translator/transport-objects/canonical/zeta2.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
+  translator/transport-objects/concepts/A.h
+  translator/transport-objects/concepts/B.h
+  translator/transport-objects/concepts/C.h
+  translator/transport-objects/concepts/dddV.h
+  translator/transport-objects/concepts/ddV.h
+  translator/transport-objects/concepts/dN1.h
+  translator/transport-objects/concepts/dN2.h
+  translator/transport-objects/concepts/dV.h
+  translator/transport-objects/concepts/flattened_tensor.h
+  translator/transport-objects/concepts/Hubble.h
+  translator/transport-objects/concepts/M.h
+  translator/transport-objects/concepts/SR_velocity.h
+  translator/transport-objects/concepts/tensor_factory.h
+  translator/transport-objects/concepts/transport_tensor.cpp
+  translator/transport-objects/concepts/transport_tensor.h
+  translator/transport-objects/concepts/u1.h
+  translator/transport-objects/concepts/u2.h
+  translator/transport-objects/concepts/u3.h
+  translator/transport-objects/concepts/zeta1.h
+  translator/transport-objects/concepts/zeta2.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_DEPRECATED_FILES
+  translator/transport-objects/deprecated/canonical_u_tensor_factory.cpp
+  translator/transport-objects/deprecated/canonical_u_tensor_factory.h
+  translator/transport-objects/deprecated/flatten.h
+  translator/transport-objects/deprecated/make_u_tensor_factory.h
+  translator/transport-objects/deprecated/u_tensor_factory.cpp
+  translator/transport-objects/deprecated/u_tensor_factory.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_FILES
+  translator/transport-objects/make_tensor_factory.h
+  translator/transport-objects/resource_manager.cpp
+  translator/transport-objects/resource_manager.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES
+  translator/transport-objects/indices/index_flatten.cpp
+  translator/transport-objects/indices/index_flatten.h
+  translator/transport-objects/indices/index_traits.cpp
+  translator/transport-objects/indices/index_traits.h
+  translator/transport-objects/indices/indices.cpp
+  translator/transport-objects/indices/indices.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES
+  translator/transport-objects/utilities/expression_cache.h
+  translator/transport-objects/utilities/ginac_cache.h
+  translator/transport-objects/utilities/shared_resources.cpp
+  translator/transport-objects/utilities/shared_resources.h
+  translator/transport-objects/utilities/symbol_factory.cpp
+  translator/transport-objects/utilities/symbol_factory.h
+  )
+
+set(TRANSLATOR_UTILITIES_FILES
+  translator/utilities/argument_cache.cpp
+  translator/utilities/argument_cache.h
+  translator/utilities/error.cpp
+  translator/utilities/error.h
+  translator/utilities/error_context.cpp
+  translator/utilities/error_context.h
+  translator/utilities/finder.cpp
+  translator/utilities/finder.h
+  translator/utilities/formatter.cpp
+  translator/utilities/formatter.h
+  translator/utilities/ginac_print_indexed.cpp
+  translator/utilities/ginac_print_indexed.h
+  translator/utilities/local_environment.cpp
+  translator/utilities/local_environment.h
+  translator/utilities/to_printable.cpp
+  translator/utilities/to_printable.h
   )
 
 set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
@@ -627,8 +647,8 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES
   transport-runtime-api/derived-products/derived_product.h
   transport-runtime-api/derived-products/derived_product_forward_declare.h
   transport-runtime-api/derived-products/derived_product_helper.h
+  transport-runtime-api/derived-products/derived_product_type.h
   transport-runtime-api/derived-products/enumerations.h
-  transport-runtime-api/derived-products/derived_product_type
   )
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES
@@ -697,18 +717,18 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/parameters.h
   transport-runtime-api/localizations/messages_en/range.h
   transport-runtime-api/localizations/messages_en/report_cmdline.h
+  transport-runtime-api/localizations/messages_en/report_HTML.h
   transport-runtime-api/localizations/messages_en/repository.h
+  transport-runtime-api/localizations/messages_en/repository_records.h
   transport-runtime-api/localizations/messages_en/repository_sqlite3.h
+  transport-runtime-api/localizations/messages_en/repository_toolkit.h
   transport-runtime-api/localizations/messages_en/runtimeapi.h
   transport-runtime-api/localizations/messages_en/scheduler.h
   transport-runtime-api/localizations/messages_en/serialization.h
   transport-runtime-api/localizations/messages_en/sqlite3_utility.h
   transport-runtime-api/localizations/messages_en/task_manager.h
-  transport-runtime-api/localizations/messages_en/work_journal.h
-  transport-runtime-api/localizations/messages_en/report_HTML.h
-  transport-runtime-api/localizations/messages_en/repository_toolkit.h
-  transport-runtime-api/localizations/messages_en/repository_records.h
   transport-runtime-api/localizations/messages_en/transaction_manager.h
+  transport-runtime-api/localizations/messages_en/work_journal.h
   )
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
@@ -760,48 +780,48 @@ set(TRANSPORT_RUNTIME_API_MODELS_FILES
 
 set(TRANSPORT_RUNTIME_API_REPORTING_FILES
   transport-runtime-api/reporting/command_line.h
-  transport-runtime-api/reporting/key_value.h
   transport-runtime-api/reporting/content_group_data.h
+  transport-runtime-api/reporting/CSS_writer.h
   transport-runtime-api/reporting/HTML_report.h
-  transport-runtime-api/reporting/unique_tags.h
+  transport-runtime-api/reporting/HTML_report_bundle.h
   transport-runtime-api/reporting/HTML_writer.h
   transport-runtime-api/reporting/JavaScript_writer.h
-  transport-runtime-api/reporting/CSS_writer.h
-  transport-runtime-api/reporting/HTML_report_bundle.h
+  transport-runtime-api/reporting/key_value.h
+  transport-runtime-api/reporting/unique_tags.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES
   transport-runtime-api/repository/detail/repository_decl.h
   transport-runtime-api/repository/detail/repository_impl.h
+  transport-runtime-api/repository/detail/repository_mode.h
   transport-runtime-api/repository/detail/writer_repo_decl.h
   transport-runtime-api/repository/detail/writer_repo_impl.h
-  transport-runtime-api/repository/detail/repository_mode.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   transport-runtime-api/repository/inflight.h
   transport-runtime-api/repository/json_repository.h
   transport-runtime-api/repository/repository.h
-  transport-runtime-api/repository/repository_toolkit.h
   transport-runtime-api/repository/repository_cache.h
+  transport-runtime-api/repository/repository_toolkit.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES
-  transport-runtime-api/repository/records/detail/derived_product_decl.h
-  transport-runtime-api/repository/records/detail/derived_product_impl.h
-  transport-runtime-api/repository/records/detail/metadata_decl.h
-  transport-runtime-api/repository/records/detail/metadata_impl.h
   transport-runtime-api/repository/records/detail/content_group_decl.h
   transport-runtime-api/repository/records/detail/content_group_impl.h
   transport-runtime-api/repository/records/detail/content_group_metadata_decl.h
   transport-runtime-api/repository/records/detail/content_group_metadata_impl.h
+  transport-runtime-api/repository/records/detail/derived_product_decl.h
+  transport-runtime-api/repository/records/detail/derived_product_impl.h
+  transport-runtime-api/repository/records/detail/metadata_decl.h
+  transport-runtime-api/repository/records/detail/metadata_impl.h
+  transport-runtime-api/repository/records/detail/notes.h
   transport-runtime-api/repository/records/detail/package_decl.h
   transport-runtime-api/repository/records/detail/package_impl.h
   transport-runtime-api/repository/records/detail/record_decl.h
   transport-runtime-api/repository/records/detail/record_impl.h
   transport-runtime-api/repository/records/detail/task_decl.h
   transport-runtime-api/repository/records/detail/task_impl.h
-  transport-runtime-api/repository/records/detail/notes.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES
@@ -837,12 +857,12 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES
   transport-runtime-api/sqlite3/detail/container_replace_impl.h
   transport-runtime-api/sqlite3/detail/data_manager_sqlite3_decl.h
   transport-runtime-api/sqlite3/detail/data_manager_sqlite3_impl.h
+  transport-runtime-api/sqlite3/detail/data_manager_transaction_handler_decl.h
+  transport-runtime-api/sqlite3/detail/data_manager_transaction_handler_impl.h
   transport-runtime-api/sqlite3/detail/repository_sqlite3_decl.h
   transport-runtime-api/sqlite3/detail/repository_sqlite3_impl.h
   transport-runtime-api/sqlite3/detail/repository_transaction_handler_decl.h
   transport-runtime-api/sqlite3/detail/repository_transaction_handler_impl.h
-  transport-runtime-api/sqlite3/detail/data_manager_transaction_handler_decl.h
-  transport-runtime-api/sqlite3/detail/data_manager_transaction_handler_impl.h
   transport-runtime-api/sqlite3/detail/writer_data_mgr_decl.h
   transport-runtime-api/sqlite3/detail/writer_data_mgr_impl.h
   )
@@ -859,6 +879,7 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
   transport-runtime-api/sqlite3/operations/data_manager_create.h
   transport-runtime-api/sqlite3/operations/data_manager_integrity.h
   transport-runtime-api/sqlite3/operations/data_manager_pull.h
+  transport-runtime-api/sqlite3/operations/data_manager_read.h
   transport-runtime-api/sqlite3/operations/data_manager_write.h
   transport-runtime-api/sqlite3/operations/data_traits.h
   transport-runtime-api/sqlite3/operations/repository.h
@@ -866,11 +887,10 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
   transport-runtime-api/sqlite3/operations/repository_common.h
   transport-runtime-api/sqlite3/operations/repository_count.h
   transport-runtime-api/sqlite3/operations/repository_create.h
+  transport-runtime-api/sqlite3/operations/repository_delete.h
   transport-runtime-api/sqlite3/operations/repository_inflight.h
   transport-runtime-api/sqlite3/operations/repository_store.h
   transport-runtime-api/sqlite3/operations/sqlite3_utility.h
-  transport-runtime-api/sqlite3/operations/data_manager_read.h
-  transport-runtime-api/sqlite3/operations/repository_delete.h
   )
 
 set(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES
@@ -924,58 +944,41 @@ set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
   transport-runtime-api/utilities/host_information.h
   transport-runtime-api/utilities/latex_output.h
   transport-runtime-api/utilities/linecache.h
+  transport-runtime-api/utilities/match.h
   transport-runtime-api/utilities/named_list.h
   transport-runtime-api/utilities/plot_environment.h
   transport-runtime-api/utilities/random_string.h
   transport-runtime-api/utilities/spline1d.h
-  transport-runtime-api/utilities/match.h
-  )
-
-set(UTILITIES_FILES
-  utilities/argument_cache.cpp
-  utilities/argument_cache.h
-  utilities/error.cpp
-  utilities/error.h
-  utilities/error_context.cpp
-  utilities/error_context.h
-  utilities/finder.cpp
-  utilities/finder.h
-  utilities/formatter.cpp
-  utilities/formatter.h
-  utilities/ginac_print_indexed.cpp
-  utilities/ginac_print_indexed.h
-  utilities/local_environment.cpp
-  utilities/local_environment.h
-  utilities/to_printable.cpp
-  utilities/to_printable.h
   )
 
 set(SOURCE_FILES
-  ${BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES}
-  ${BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES}
-  ${BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES}
-  ${BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES}
-  ${BACKENDS_LANGUAGES_CPP_CORE_FILES}
-  ${BACKENDS_LANGUAGES_CPP_FILES}
-  ${BACKENDS_LANGUAGES_CPP_VEXCL_FILES}
-  ${BACKENDS_LANGUAGES_CUDA_FILES}
-  ${BACKENDS_LANGUAGES_OPENCL_FILES}
-  ${BACKENDS_LANGUAGES_SHARED_FILES}
-  ${BACKENDS_SHARED_FILES}
-  ${CONCEPTS_FILES}
   ${CPPTRANSPORT_TEMPLATES_FILES}
   ${CPPTRANSPORT_TEMPLATES_VEXCL_CUDA_FILES}
   ${CPPTRANSPORT_TEMPLATES_VEXCL_OPENCL_FILES}
-  ${INSTRUMENTS_FILES}
-  ${PARSER_BISON_FILES}
-  ${PARSER_FILES}
   ${TOP_LEVEL_FILES}
-  ${TRANSPORT_OBJECTS_CANONICAL_FILES}
-  ${TRANSPORT_OBJECTS_CONCEPTS_FILES}
-  ${TRANSPORT_OBJECTS_DEPRECATED_FILES}
-  ${TRANSPORT_OBJECTS_FILES}
-  ${TRANSPORT_OBJECTS_INDICES_FILES}
-  ${TRANSPORT_OBJECTS_UTILITIES_FILES}
+  ${TRANSLATOR_BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES}
+  ${TRANSLATOR_BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES}
+  ${TRANSLATOR_BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES}
+  ${TRANSLATOR_BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES}
+  ${TRANSLATOR_BACKENDS_LANGUAGES_CPP_CORE_FILES}
+  ${TRANSLATOR_BACKENDS_LANGUAGES_CPP_FILES}
+  ${TRANSLATOR_BACKENDS_LANGUAGES_CPP_VEXCL_FILES}
+  ${TRANSLATOR_BACKENDS_LANGUAGES_CUDA_FILES}
+  ${TRANSLATOR_BACKENDS_LANGUAGES_OPENCL_FILES}
+  ${TRANSLATOR_BACKENDS_LANGUAGES_SHARED_FILES}
+  ${TRANSLATOR_BACKENDS_SHARED_FILES}
+  ${TRANSLATOR_CONCEPTS_FILES}
+  ${TRANSLATOR_FILES}
+  ${TRANSLATOR_INSTRUMENTS_FILES}
+  ${TRANSLATOR_PARSER_BISON_FILES}
+  ${TRANSLATOR_PARSER_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_DEPRECATED_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
+  ${TRANSLATOR_UTILITIES_FILES}
   ${TRANSPORT_RUNTIME_API_CONCEPTS_FILES}
   ${TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES}
@@ -1024,7 +1027,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_TRANSACTIONS_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
-  ${UTILITIES_FILES}
   )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})
