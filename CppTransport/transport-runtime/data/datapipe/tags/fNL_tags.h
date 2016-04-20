@@ -13,9 +13,9 @@
 #include <functional>
 #include <memory>
 
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 
-#include "transport-runtime-api/instruments/timing_instrument.h"
+#include "transport-runtime/instruments/timing_instrument.h"
 
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"

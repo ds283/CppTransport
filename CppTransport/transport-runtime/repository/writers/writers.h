@@ -8,9 +8,9 @@
 #define __writers_H_
 
 
-#include "transport-runtime-api/repository/writers/integration_writer.h"
-#include "transport-runtime-api/repository/writers/postintegration_writer.h"
-#include "transport-runtime-api/repository/writers/derived_content_writer.h"
+#include "transport-runtime/repository/writers/integration_writer.h"
+#include "transport-runtime/repository/writers/postintegration_writer.h"
+#include "transport-runtime/repository/writers/derived_content_writer.h"
 
 
 #endif //__writers_H_

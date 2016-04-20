@@ -8,7 +8,7 @@
 #define CPPTRANSPORT_REPOSITORY_ADMIN_H
 
 
-#include "transport-runtime-api/sqlite3/operations/repository_common.h"
+#include "transport-runtime/sqlite3/operations/repository_common.h"
 
 
 namespace transport

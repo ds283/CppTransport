@@ -17,12 +17,12 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "transport-runtime-api/serialization/serializable.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/serialization/serializable.h"
+#include "transport-runtime/messages.h"
 
-#include "transport-runtime-api/tasks/task.h"
-#include "transport-runtime-api/tasks/task_configurations.h"
-#include "transport-runtime-api/tasks/configuration-database/time_config_database.h"
+#include "transport-runtime/tasks/task.h"
+#include "transport-runtime/tasks/task_configurations.h"
+#include "transport-runtime/tasks/configuration-database/time_config_database.h"
 
 
 namespace transport

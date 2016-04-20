@@ -16,9 +16,9 @@
 #include <array>
 #include <stdexcept>
 
-#include "transport-runtime-api/derived-products/line-collections/data_line.h"
-#include "transport-runtime-api/derived-products/derived-content/concepts/series/wavenumber_series.h"
-#include "transport-runtime-api/derived-products/derived-content/concepts/lines/r_line.h"
+#include "transport-runtime/derived-products/line-collections/data_line.h"
+#include "transport-runtime/derived-products/derived-content/concepts/series/wavenumber_series.h"
+#include "transport-runtime/derived-products/derived-content/concepts/lines/r_line.h"
 
 
 namespace transport

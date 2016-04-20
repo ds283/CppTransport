@@ -15,9 +15,9 @@
 #include <stdexcept>
 
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/scheduler/context.h"
-#include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/scheduler/context.h"
+#include "transport-runtime/utilities/formatter.h"
 
 
 namespace transport

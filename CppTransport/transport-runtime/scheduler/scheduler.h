@@ -16,11 +16,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "transport-runtime-api/tasks/task.h"
-#include "transport-runtime-api/tasks/integration_tasks.h"
-#include "transport-runtime-api/tasks/output_tasks.h"
-#include "transport-runtime-api/scheduler/context.h"
-#include "transport-runtime-api/scheduler/work_queue.h"
+#include "transport-runtime/tasks/task.h"
+#include "transport-runtime/tasks/integration_tasks.h"
+#include "transport-runtime/tasks/output_tasks.h"
+#include "transport-runtime/scheduler/context.h"
+#include "transport-runtime/scheduler/work_queue.h"
 
 
 namespace transport

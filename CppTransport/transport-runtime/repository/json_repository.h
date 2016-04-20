@@ -16,11 +16,11 @@
 #include <functional>
 #include <utility>
 
-#include "transport-runtime-api/repository/repository.h"
+#include "transport-runtime/repository/repository.h"
 
-#include "transport-runtime-api/version.h"
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/version.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"

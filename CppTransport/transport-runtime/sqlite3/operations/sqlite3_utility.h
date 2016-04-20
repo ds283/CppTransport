@@ -8,7 +8,7 @@
 #define __sqlite3_utility_H_
 
 
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/messages.h"
 
 
 namespace transport

@@ -10,15 +10,15 @@
 
 #include <memory>
 
-#include "transport-runtime-api/tasks/integration_detail/common.h"
-#include "transport-runtime-api/tasks/integration_detail/abstract.h"
-#include "transport-runtime-api/tasks/integration_detail/twopf_db_task.h"
-#include "transport-runtime-api/tasks/integration_detail/default_policies.h"
-#include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
+#include "transport-runtime/tasks/integration_detail/common.h"
+#include "transport-runtime/tasks/integration_detail/abstract.h"
+#include "transport-runtime/tasks/integration_detail/twopf_db_task.h"
+#include "transport-runtime/tasks/integration_detail/default_policies.h"
+#include "transport-runtime/tasks/configuration-database/threepf_config_database.h"
 
-#include "transport-runtime-api/utilities/spline1d.h"
+#include "transport-runtime/utilities/spline1d.h"
 
-#include "transport-runtime-api/defaults.h"
+#include "transport-runtime/defaults.h"
 
 #include "boost/math/tools/roots.hpp"
 

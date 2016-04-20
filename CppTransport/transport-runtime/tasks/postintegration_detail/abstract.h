@@ -8,7 +8,7 @@
 #define CPPTRANSPORT_POSTINTEGRATION_ABSTRACT_TASK_H
 
 
-#include "transport-runtime-api/tasks/postintegration_detail/common.h"
+#include "transport-runtime/tasks/postintegration_detail/common.h"
 
 #include "boost/log/utility/formatting_ostream.hpp"
 

@@ -7,13 +7,13 @@
 #define CPPTRANSPORT_MANAGER_DETAIL_MASTER_CONTROLLER_INTEGRATION_H
 
 
-#include "transport-runtime-api/manager/detail/master_controller_decl.h"
+#include "transport-runtime/manager/detail/master_controller_decl.h"
 
-#include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime/utilities/formatter.h"
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 
 namespace transport

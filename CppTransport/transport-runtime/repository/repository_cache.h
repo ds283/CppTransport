@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_REPOSITORY_CACHE_H
 
 
-#include "transport-runtime-api/repository/repository.h"
+#include "transport-runtime/repository/repository.h"
 
 #include "boost/optional.hpp"
 

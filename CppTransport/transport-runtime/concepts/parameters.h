@@ -13,14 +13,14 @@
 #include <functional>
 #include <stdexcept>
 
-#include "transport-runtime-api/serialization/serializable.h"
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/serialization/serializable.h"
+#include "transport-runtime/exceptions.h"
+#include "transport-runtime/messages.h"
 
-#include "transport-runtime-api/utilities/named_list.h"
+#include "transport-runtime/utilities/named_list.h"
 
 // forward-declare model class if needed
-#include "transport-runtime-api/models/model_forward_declare.h"
+#include "transport-runtime/models/model_forward_declare.h"
 
 #include "boost/lexical_cast.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"

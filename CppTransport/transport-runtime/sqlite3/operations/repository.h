@@ -7,13 +7,13 @@
 #define CPPTRANSPORT_REPOSITORY_OPERATIONS_H
 
 
-#include "transport-runtime-api/sqlite3/operations/repository_common.h"
-#include "transport-runtime-api/sqlite3/operations/repository_create.h"
-#include "transport-runtime-api/sqlite3/operations/repository_admin.h"
-#include "transport-runtime-api/sqlite3/operations/repository_count.h"
-#include "transport-runtime-api/sqlite3/operations/repository_store.h"
-#include "transport-runtime-api/sqlite3/operations/repository_delete.h"
-#include "transport-runtime-api/sqlite3/operations/repository_inflight.h"
+#include "transport-runtime/sqlite3/operations/repository_common.h"
+#include "transport-runtime/sqlite3/operations/repository_create.h"
+#include "transport-runtime/sqlite3/operations/repository_admin.h"
+#include "transport-runtime/sqlite3/operations/repository_count.h"
+#include "transport-runtime/sqlite3/operations/repository_store.h"
+#include "transport-runtime/sqlite3/operations/repository_delete.h"
+#include "transport-runtime/sqlite3/operations/repository_inflight.h"
 
 
 #endif //CPPTRANSPORT_REPOSITORY_OPERATIONS_H

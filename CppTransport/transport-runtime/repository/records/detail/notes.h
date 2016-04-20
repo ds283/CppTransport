@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include "transport-runtime-api/serialization/serializable.h"
+#include "transport-runtime/serialization/serializable.h"
 
 #include "boost/date_time.hpp"
 

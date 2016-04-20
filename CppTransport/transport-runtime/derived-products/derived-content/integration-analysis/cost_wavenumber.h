@@ -16,15 +16,15 @@
 #include <array>
 #include <stdexcept>
 
-#include "transport-runtime-api/derived-products/derived-content/integration-analysis/cost_metrics.h"
+#include "transport-runtime/derived-products/derived-content/integration-analysis/cost_metrics.h"
 
-#include "transport-runtime-api/derived-products/line-collections/data_line.h"
-#include "transport-runtime-api/derived-products/derived-content/concepts/derived_line.h"
-#include "transport-runtime-api/derived-products/derived-content/concepts/series/wavenumber_series.h"
-#include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
+#include "transport-runtime/derived-products/line-collections/data_line.h"
+#include "transport-runtime/derived-products/derived-content/concepts/derived_line.h"
+#include "transport-runtime/derived-products/derived-content/concepts/series/wavenumber_series.h"
+#include "transport-runtime/derived-products/derived-content/utilities/integration_task_gadget.h"
 
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
 #define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE    "type"

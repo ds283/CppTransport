@@ -18,17 +18,17 @@
 
 #include <memory>
 
-#include "transport-runtime-api/manager/argument_cache.h"
-#include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime/manager/argument_cache.h"
+#include "transport-runtime/manager/environment.h"
 
-#include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime/manager/message_handlers.h"
 
 // forward-declare model class if needed
-#include "transport-runtime-api/models/model_forward_declare.h"
+#include "transport-runtime/models/model_forward_declare.h"
 
-#include "transport-runtime-api/version.h"
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/version.h"
+#include "transport-runtime/exceptions.h"
+#include "transport-runtime/messages.h"
 
 
 namespace transport

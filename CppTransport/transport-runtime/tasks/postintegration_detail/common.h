@@ -19,15 +19,15 @@
 #include <functional>
 
 
-#include "transport-runtime-api/tasks/task.h"
-#include "transport-runtime-api/tasks/derivable_task.h"
-#include "transport-runtime-api/tasks/integration_tasks.h"
-#include "transport-runtime-api/tasks/task_configurations.h"
+#include "transport-runtime/tasks/task.h"
+#include "transport-runtime/tasks/derivable_task.h"
+#include "transport-runtime/tasks/integration_tasks.h"
+#include "transport-runtime/tasks/task_configurations.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
+#include "transport-runtime/derived-products/derived-content/correlation-functions/template_types.h"
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/defaults.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/defaults.h"
 
 
 #endif //__postintegration_task_common_H_

@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
+#include "transport-runtime/derived-products/derived_product_forward_declare.h"
 
 
 namespace transport

@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include "transport-runtime-api/repository/repository_cache.h"
+#include "transport-runtime/repository/repository_cache.h"
 
 #include "boost/date_time.hpp"
 

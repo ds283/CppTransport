@@ -7,7 +7,7 @@
 #ifndef CPPTRANSPORT_TEMPLATE_TYPES_H
 #define CPPTRANSPORT_TEMPLATE_TYPES_H
 
-#include "transport-runtime-api/localizations/messages_en.h"
+#include "transport-runtime/localizations/messages_en.h"
 
 
 namespace transport

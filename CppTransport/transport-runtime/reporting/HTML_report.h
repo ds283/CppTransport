@@ -7,21 +7,21 @@
 #define CPPTRANSPORT_REPORTING_HTML_REPORT_H
 
 
-#include "transport-runtime-api/repository/repository.h"
-#include "transport-runtime-api/data/data_manager.h"
-#include "transport-runtime-api/derived-products/derived_product_type.h"
+#include "transport-runtime/repository/repository.h"
+#include "transport-runtime/data/data_manager.h"
+#include "transport-runtime/derived-products/derived_product_type.h"
 
-#include "transport-runtime-api/reporting/content_group_data.h"
-#include "transport-runtime-api/reporting/HTML_report_bundle.h"
+#include "transport-runtime/reporting/content_group_data.h"
+#include "transport-runtime/reporting/HTML_report_bundle.h"
 
-#include "transport-runtime-api/manager/environment.h"
-#include "transport-runtime-api/manager/argument_cache.h"
-#include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/argument_cache.h"
+#include "transport-runtime/manager/message_handlers.h"
 
-#include "transport-runtime-api/utilities/formatter.h"
-#include "transport-runtime-api/utilities/plot_environment.h"
+#include "transport-runtime/utilities/formatter.h"
+#include "transport-runtime/utilities/plot_environment.h"
 
-#include "transport-runtime-api/defaults.h"
+#include "transport-runtime/defaults.h"
 
 
 namespace transport
@@ -931,7 +931,7 @@ namespace transport
 
                 HTML_node panel("div");
                 panel.add_attribute("class", "panel panel-default");
-                
+
                 HTML_node panel_heading("div", "Model, parameters and initial conditions");
                 panel_heading.add_attribute("class", "panel-heading");
 
@@ -948,7 +948,7 @@ namespace transport
 
                 HTML_node row("div");
                 row.add_attribute("class", "row");
-                
+
                 HTML_node col1("div");
                 col1.add_attribute("class", "col-md-4");
                 HTML_node col1_list("dl");

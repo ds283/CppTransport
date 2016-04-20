@@ -12,7 +12,7 @@
 #include <vector>
 #include <memory>
 
-#include "transport-runtime-api/models/model.h"
+#include "transport-runtime/models/model.h"
 
 
 namespace transport

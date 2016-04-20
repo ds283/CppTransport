@@ -14,9 +14,9 @@
 #include "boost/date_time/posix_time/time_serialize.hpp"
 #include "boost/timer/timer.hpp"
 
-#include "transport-runtime-api/manager/argument_cache.h"
+#include "transport-runtime/manager/argument_cache.h"
 
-#include "transport-runtime-api/enumerations.h"
+#include "transport-runtime/enumerations.h"
 
 
 namespace transport

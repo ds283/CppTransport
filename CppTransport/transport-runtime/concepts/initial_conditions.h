@@ -13,18 +13,18 @@
 #include <functional>
 #include <stdexcept>
 
-#include "transport-runtime-api/concepts/parameters.h"
-#include "transport-runtime-api/serialization/serializable.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/concepts/parameters.h"
+#include "transport-runtime/serialization/serializable.h"
+#include "transport-runtime/messages.h"
 
-#include "transport-runtime-api/utilities/named_list.h"
-#include "transport-runtime-api/utilities/random_string.h"
+#include "transport-runtime/utilities/named_list.h"
+#include "transport-runtime/utilities/random_string.h"
 
 // forward-declare model class if needed
-#include "transport-runtime-api/models/model_forward_declare.h"
+#include "transport-runtime/models/model_forward_declare.h"
 
 // forward-declare initial conditions class
-#include "transport-runtime-api/concepts/initial_conditions_forward_declare.h"
+#include "transport-runtime/concepts/initial_conditions_forward_declare.h"
 
 #include "boost/log/utility/formatting_ostream.hpp"
 

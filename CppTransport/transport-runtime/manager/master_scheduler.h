@@ -15,15 +15,15 @@
 #include <cmath>
 #include <random>
 
-#include "transport-runtime-api/manager/mpi_operations.h"
+#include "transport-runtime/manager/mpi_operations.h"
 
-#include "transport-runtime-api/repository/writers/generic_writer.h"
+#include "transport-runtime/repository/writers/generic_writer.h"
 
-#include "transport-runtime-api/reporting/key_value.h"
-#include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime/reporting/key_value.h"
+#include "transport-runtime/utilities/formatter.h"
 
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/exceptions.h"
+#include "transport-runtime/messages.h"
 
 #include "boost/timer/timer.hpp"
 

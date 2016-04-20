@@ -8,10 +8,10 @@
 #define __SQL_query_helper_H_
 
 
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/exceptions.h"
+#include "transport-runtime/messages.h"
 
 namespace transport
 	{

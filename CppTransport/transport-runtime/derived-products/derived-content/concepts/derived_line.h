@@ -15,28 +15,28 @@
 #include <vector>
 #include <stdexcept>
 
-#include "transport-runtime-api/serialization/serializable.h"
+#include "transport-runtime/serialization/serializable.h"
 
 // forward-declare model class if needed
-#include "transport-runtime-api/models/model_forward_declare.h"
+#include "transport-runtime/models/model_forward_declare.h"
 
 // forward-declare repository records if needed
-#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
+#include "transport-runtime/repository/records/repository_records_forward_declare.h"
 
 // forward-declare tasks if needed
-#include "transport-runtime-api/tasks/tasks_forward_declare.h"
+#include "transport-runtime/tasks/tasks_forward_declare.h"
 
 // get details of datapipe<number>
-#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
+#include "transport-runtime/data/datapipe/datapipe_decl.h"
 
-#include "transport-runtime-api/derived-products/line-collections/data_line.h"
+#include "transport-runtime/derived-products/line-collections/data_line.h"
 
-#include "transport-runtime-api/derived-products/utilities/index_selector.h"
-#include "transport-runtime-api/derived-products/utilities/wrapper.h"
+#include "transport-runtime/derived-products/utilities/index_selector.h"
+#include "transport-runtime/derived-products/utilities/wrapper.h"
 
-#include "transport-runtime-api/derived-products/line-collections/line_values.h"
+#include "transport-runtime/derived-products/line-collections/line_values.h"
 
-#include "transport-runtime-api/derived-products/derived-content/concepts/derived_line_type.h"
+#include "transport-runtime/derived-products/derived-content/concepts/derived_line_type.h"
 
 
 #define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 "task-name"

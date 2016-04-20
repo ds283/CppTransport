@@ -12,7 +12,7 @@
 #include <list>
 
 // forward-declare repository records if necessary
-#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
+#include "transport-runtime/repository/records/repository_records_forward_declare.h"
 
 
 namespace transport

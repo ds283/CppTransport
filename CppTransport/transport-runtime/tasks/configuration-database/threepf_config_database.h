@@ -12,21 +12,21 @@
 
 #include <assert.h>
 
-#include "transport-runtime-api/serialization/serializable.h"
-#include "transport-runtime-api/tasks/task_configurations.h"
-#include "transport-runtime-api/tasks/integration_detail/default_policies.h"
-#include "transport-runtime-api/tasks/configuration-database/twopf_config_database.h"
+#include "transport-runtime/serialization/serializable.h"
+#include "transport-runtime/tasks/task_configurations.h"
+#include "transport-runtime/tasks/integration_detail/default_policies.h"
+#include "transport-runtime/tasks/configuration-database/twopf_config_database.h"
 
-#include "transport-runtime-api/tasks/configuration-database/generic_record_iterator.h"
-#include "transport-runtime-api/tasks/configuration-database/generic_config_iterator.h"
-#include "transport-runtime-api/tasks/configuration-database/generic_value_iterator.h"
+#include "transport-runtime/tasks/configuration-database/generic_record_iterator.h"
+#include "transport-runtime/tasks/configuration-database/generic_config_iterator.h"
+#include "transport-runtime/tasks/configuration-database/generic_value_iterator.h"
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 #include "sqlite3.h"
-#include "transport-runtime-api/sqlite3/operations/sqlite3_utility.h"
+#include "transport-runtime/sqlite3/operations/sqlite3_utility.h"
 
 #include "boost/optional.hpp"
 

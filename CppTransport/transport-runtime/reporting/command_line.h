@@ -7,19 +7,19 @@
 #define CPPTRANSPORT_REPORTING_COMMAND_LINE_H
 
 
-#include "transport-runtime-api/repository/repository.h"
+#include "transport-runtime/repository/repository.h"
 
-#include "transport-runtime-api/repository/repository_cache.h"
-#include "transport-runtime-api/reporting/key_value.h"
-#include "transport-runtime-api/reporting/content_group_data.h"
+#include "transport-runtime/repository/repository_cache.h"
+#include "transport-runtime/reporting/key_value.h"
+#include "transport-runtime/reporting/content_group_data.h"
 
-#include "transport-runtime-api/manager/environment.h"
-#include "transport-runtime-api/manager/argument_cache.h"
-#include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/argument_cache.h"
+#include "transport-runtime/manager/message_handlers.h"
 
-#include "transport-runtime-api/utilities/asciitable.h"
-#include "transport-runtime-api/utilities/formatter.h"
-#include "transport-runtime-api/utilities/match.h"
+#include "transport-runtime/utilities/asciitable.h"
+#include "transport-runtime/utilities/formatter.h"
+#include "transport-runtime/utilities/match.h"
 
 
 namespace transport

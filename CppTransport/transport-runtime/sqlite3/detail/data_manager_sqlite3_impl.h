@@ -7,8 +7,8 @@
 #define CPPTRANSPORT_DATA_MANAGER_SQLITE3_IMPL_H
 
 
-#include <transport-runtime-api/exceptions.h>
-#include "transport-runtime-api/sqlite3/detail/data_manager_sqlite3_decl.h"
+#include <transport-runtime/exceptions.h>
+#include "transport-runtime/sqlite3/detail/data_manager_sqlite3_decl.h"
 
 
 namespace transport

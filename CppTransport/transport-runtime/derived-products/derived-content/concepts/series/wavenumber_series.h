@@ -15,26 +15,26 @@
 #include <vector>
 #include <stdexcept>
 
-#include "transport-runtime-api/serialization/serializable.h"
+#include "transport-runtime/serialization/serializable.h"
 
 // get details of datapipe<number>
-#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
+#include "transport-runtime/data/datapipe/datapipe_decl.h"
 
 // forward-declare model class if needed
-#include "transport-runtime-api/models/model_forward_declare.h"
+#include "transport-runtime/models/model_forward_declare.h"
 
 // forward-declare tasks if needed
-#include "transport-runtime-api/tasks/tasks_forward_declare.h"
+#include "transport-runtime/tasks/tasks_forward_declare.h"
 
 // forward-declare repository records if needed
-#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
+#include "transport-runtime/repository/records/repository_records_forward_declare.h"
 
-#include "transport-runtime-api/derived-products/utilities/index_selector.h"
-#include "transport-runtime-api/derived-products/utilities/wrapper.h"
+#include "transport-runtime/derived-products/utilities/index_selector.h"
+#include "transport-runtime/derived-products/utilities/wrapper.h"
 
-#include "transport-runtime-api/utilities/latex_output.h"
+#include "transport-runtime/utilities/latex_output.h"
 
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
 #define CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT           "momentum-configuration-series"

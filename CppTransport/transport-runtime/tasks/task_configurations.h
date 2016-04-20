@@ -10,10 +10,10 @@
 
 #include <iostream>
 
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/messages.h"
 
 // forward-declare derived products if needed
-#include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
+#include "transport-runtime/derived-products/derived_product_forward_declare.h"
 
 #include "boost/log/utility/formatting_ostream.hpp"
 

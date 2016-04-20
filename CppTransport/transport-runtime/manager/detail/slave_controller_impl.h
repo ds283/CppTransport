@@ -7,8 +7,8 @@
 #define CPPTRANSPORT_SLAVE_CONTROLLER_IMPL_H
 
 
-#include "transport-runtime-api/manager/detail/slave_controller_decl.h"
-#include "transport-runtime-api/manager/detail/slave_message_buffer.h"
+#include "transport-runtime/manager/detail/slave_controller_decl.h"
+#include "transport-runtime/manager/detail/slave_message_buffer.h"
 
 
 namespace transport

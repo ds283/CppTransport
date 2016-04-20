@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
-#include "transport-runtime-api/defaults.h"
+#include "transport-runtime/defaults.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/optional.hpp"

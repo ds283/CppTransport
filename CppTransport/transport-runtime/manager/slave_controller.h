@@ -13,29 +13,29 @@
 #include <memory>
 #include <functional>
 
-#include "transport-runtime-api/models/model.h"
-#include "transport-runtime-api/manager/model_manager.h"
-#include "transport-runtime-api/tasks/task.h"
-#include "transport-runtime-api/tasks/integration_tasks.h"
-#include "transport-runtime-api/tasks/output_tasks.h"
+#include "transport-runtime/models/model.h"
+#include "transport-runtime/manager/model_manager.h"
+#include "transport-runtime/tasks/task.h"
+#include "transport-runtime/tasks/integration_tasks.h"
+#include "transport-runtime/tasks/output_tasks.h"
 
-#include "transport-runtime-api/manager/mpi_operations.h"
+#include "transport-runtime/manager/mpi_operations.h"
 
-#include "transport-runtime-api/repository/json_repository.h"
-#include "transport-runtime-api/data/data_manager.h"
-#include "transport-runtime-api/manager/slave_work_handler.h"
-#include "transport-runtime-api/manager/environment.h"
-#include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime/repository/json_repository.h"
+#include "transport-runtime/data/data_manager.h"
+#include "transport-runtime/manager/slave_work_handler.h"
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/message_handlers.h"
 
-#include "transport-runtime-api/scheduler/context.h"
-#include "transport-runtime-api/scheduler/scheduler.h"
-#include "transport-runtime-api/scheduler/work_queue.h"
+#include "transport-runtime/scheduler/context.h"
+#include "transport-runtime/scheduler/scheduler.h"
+#include "transport-runtime/scheduler/work_queue.h"
 
-#include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime/utilities/formatter.h"
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 #include "boost/mpi.hpp"
 #include "boost/serialization/string.hpp"
@@ -45,18 +45,18 @@
 
 
 // DECLARE SLAVE CONTROLLER
-#include "transport-runtime-api/manager/detail/slave_controller_decl.h"
+#include "transport-runtime/manager/detail/slave_controller_decl.h"
 
 // DECLARE SLAVE DISPATCH FUNCTION
-#include "transport-runtime-api/manager/detail/slave_datapipe_dispatch_decl.h"
-#include "transport-runtime-api/manager/detail/slave_container_dispatch_decl.h"
+#include "transport-runtime/manager/detail/slave_datapipe_dispatch_decl.h"
+#include "transport-runtime/manager/detail/slave_container_dispatch_decl.h"
 
 // DEFINE SLAVE CONTROLLER
-#include "transport-runtime-api/manager/detail/slave_controller_impl.h"
+#include "transport-runtime/manager/detail/slave_controller_impl.h"
 
 // DEFINE SLAVE DISPATCH FUNCTION
-#include "transport-runtime-api/manager/detail/slave_datapipe_dispatch_impl.h"
-#include "transport-runtime-api/manager/detail/slave_container_dispatch_impl.h"
+#include "transport-runtime/manager/detail/slave_datapipe_dispatch_impl.h"
+#include "transport-runtime/manager/detail/slave_container_dispatch_impl.h"
 
 
 #endif //CPPTRANSPORT_SLAVE_CONTROLLER_H

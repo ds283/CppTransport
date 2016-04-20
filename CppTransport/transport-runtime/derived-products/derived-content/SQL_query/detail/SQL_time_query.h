@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_query.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/detail/SQL_query.h"
 
 
 #define CPPTRANSPORT_NODE_SQL_TIME_QUERY_TYPE "time-query"

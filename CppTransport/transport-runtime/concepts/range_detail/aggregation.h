@@ -10,8 +10,8 @@
 
 #include <limits>
 
-#include "transport-runtime-api/concepts/range_detail/common.h"
-#include "transport-runtime-api/concepts/range_detail/abstract.h"
+#include "transport-runtime/concepts/range_detail/common.h"
+#include "transport-runtime/concepts/range_detail/abstract.h"
 
 #define CPPTRANSPORT_NODE_SUBRANGE_ARRAY "subranges"
 

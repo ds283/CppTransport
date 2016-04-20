@@ -10,20 +10,20 @@
 
 #include <functional>
 
-#include "transport-runtime-api/manager/model_manager.h"
-#include "transport-runtime-api/repository/json_repository.h"
+#include "transport-runtime/manager/model_manager.h"
+#include "transport-runtime/repository/json_repository.h"
 
-#include "transport-runtime-api/manager/master_controller.h"
-#include "transport-runtime-api/manager/slave_controller.h"
+#include "transport-runtime/manager/master_controller.h"
+#include "transport-runtime/manager/slave_controller.h"
 
-#include "transport-runtime-api/manager/argument_cache.h"
-#include "transport-runtime-api/manager/environment.h"
-#include "transport-runtime-api/manager/message_handlers.h"
-#include "transport-runtime-api/manager/task_gallery.h"
+#include "transport-runtime/manager/argument_cache.h"
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/message_handlers.h"
+#include "transport-runtime/manager/task_gallery.h"
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/ansi_colour_codes.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
+#include "transport-runtime/ansi_colour_codes.h"
 
 
 namespace transport

@@ -12,19 +12,19 @@
 #include <iomanip>
 #include <sstream>
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/messages.h"
 
-#include "transport-runtime-api/data/data_manager.h"
+#include "transport-runtime/data/data_manager.h"
 
-#include "transport-runtime-api/tasks/task_configurations.h"
-#include "transport-runtime-api/tasks/configuration-database/time_config_database.h"
-#include "transport-runtime-api/tasks/configuration-database/twopf_config_database.h"
-#include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
+#include "transport-runtime/tasks/task_configurations.h"
+#include "transport-runtime/tasks/configuration-database/time_config_database.h"
+#include "transport-runtime/tasks/configuration-database/twopf_config_database.h"
+#include "transport-runtime/tasks/configuration-database/threepf_config_database.h"
 
-#include "transport-runtime-api/scheduler/work_queue.h"
+#include "transport-runtime/scheduler/work_queue.h"
 
-#include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime/utilities/formatter.h"
 
 #include <boost/timer/timer.hpp>
 

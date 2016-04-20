@@ -14,15 +14,15 @@
 #include <functional>
 #include <set>
 
-#include "transport-runtime-api/serialization/serializable.h"
+#include "transport-runtime/serialization/serializable.h"
 
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/localizations/messages_en.h"
+#include "transport-runtime/exceptions.h"
+#include "transport-runtime/localizations/messages_en.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
+#include "transport-runtime/derived-products/derived-content/correlation-functions/template_types.h"
 
-#include "transport-runtime-api/repository/records/repository_records_decl.h"
-#include "transport-runtime-api/repository/writers/generic_writer.h"
+#include "transport-runtime/repository/records/repository_records_decl.h"
+#include "transport-runtime/repository/writers/generic_writer.h"
 
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"

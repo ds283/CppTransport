@@ -12,34 +12,34 @@
 #include <functional>
 #include <memory>
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/enumerations.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/enumerations.h"
 
-#include "transport-runtime-api/utilities/formatter.h"
-#include "transport-runtime-api/utilities/linecache.h"
-#include "transport-runtime-api/utilities/host_information.h"
+#include "transport-runtime/utilities/formatter.h"
+#include "transport-runtime/utilities/linecache.h"
+#include "transport-runtime/utilities/host_information.h"
 
 // forward-declare tasks if needed
-#include "transport-runtime-api/tasks/tasks_forward_declare.h"
+#include "transport-runtime/tasks/tasks_forward_declare.h"
 
 // forward-declare repository records if needed
-#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
-#include "transport-runtime-api/repository/records/content_finder_decl.h"
+#include "transport-runtime/repository/records/repository_records_forward_declare.h"
+#include "transport-runtime/repository/records/content_finder_decl.h"
 
 // forward-declare derived content if needed
-#include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
+#include "transport-runtime/derived-products/derived_product_forward_declare.h"
+#include "transport-runtime/derived-products/derived-content/correlation-functions/template_types.h"
 
 // forward declare tags if needed
-#include "transport-runtime-api/data/datapipe/tags_forward_declare.h"
+#include "transport-runtime/data/datapipe/tags_forward_declare.h"
 
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 
-#include "transport-runtime-api/data/batchers/integration_items.h"
-#include "transport-runtime-api/data/batchers/postintegration_items.h"
+#include "transport-runtime/data/batchers/integration_items.h"
+#include "transport-runtime/data/batchers/postintegration_items.h"
 
-#include "transport-runtime-api/data/datapipe/linecache_specializations.h"
-#include "transport-runtime-api/data/datapipe/datapipe_dispatch_function.h"
+#include "transport-runtime/data/datapipe/linecache_specializations.h"
+#include "transport-runtime/data/datapipe/datapipe_dispatch_function.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -497,7 +497,7 @@ namespace transport
 
 
 // pull in tags definitions
-#include "transport-runtime-api/data/datapipe/tags.h"
+#include "transport-runtime/data/datapipe/tags.h"
 
 
 #endif //CPPTRANSPORT_DATAPIPE_DECL_H

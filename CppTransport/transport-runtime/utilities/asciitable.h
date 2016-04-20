@@ -14,13 +14,13 @@
 #include <sstream>
 
 
-#include "transport-runtime-api/manager/environment.h"
-#include "transport-runtime-api/manager/argument_cache.h"
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/argument_cache.h"
 
-#include "transport-runtime-api/ansi_colour_codes.h"
+#include "transport-runtime/ansi_colour_codes.h"
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 
 constexpr unsigned int DEFAULT_ASCIITABLE_PRECISION     = (12);

@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_SLAVE_DISPATCH_IMPL_H
 
 
-#include "transport-runtime-api/manager/detail/slave_datapipe_dispatch_decl.h"
+#include "transport-runtime/manager/detail/slave_datapipe_dispatch_decl.h"
 
 
 namespace transport

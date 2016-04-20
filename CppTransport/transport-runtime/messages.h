@@ -8,7 +8,7 @@
 #define CPPTRANSPORT_MESSAGES_H
 
 
-#include "transport-runtime-api/localizations/messages_en.h"
+#include "transport-runtime/localizations/messages_en.h"
 
 
 #endif // CPPTRANSPORT_MESSAGES_H

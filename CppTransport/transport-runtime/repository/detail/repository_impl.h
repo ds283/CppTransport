@@ -7,8 +7,8 @@
 #define CPPTRANSPORT_REPOSITORY_IMPL_H
 
 
-#include "transport-runtime-api/repository/detail/repository_mode.h"
-#include "transport-runtime-api/repository/detail/repository_decl.h"
+#include "transport-runtime/repository/detail/repository_mode.h"
+#include "transport-runtime/repository/detail/repository_decl.h"
 
 #include "boost/filesystem/operations.hpp"
 

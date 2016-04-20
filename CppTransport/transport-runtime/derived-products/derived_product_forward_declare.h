@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "transport-runtime-api/serialization/serializable.h"
-#include "transport-runtime-api/repository/records/record_finder_decl.h"
+#include "transport-runtime/serialization/serializable.h"
+#include "transport-runtime/repository/records/record_finder_decl.h"
 
 
 namespace transport

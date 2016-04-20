@@ -8,8 +8,8 @@
 #define CPPTRANSPORT_BACKGROUND_TASK_H
 
 
-#include "transport-runtime-api/tasks/integration_detail/common.h"
-#include "transport-runtime-api/tasks/integration_detail/abstract.h"
+#include "transport-runtime/tasks/integration_detail/common.h"
+#include "transport-runtime/tasks/integration_detail/abstract.h"
 
 
 namespace transport

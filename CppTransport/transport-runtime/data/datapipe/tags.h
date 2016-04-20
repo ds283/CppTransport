@@ -8,11 +8,11 @@
 #define CPPTRANSPORT_TAGS_H
 
 
-#include "transport-runtime-api/data/datapipe/tags/config_tags.h"
-#include "transport-runtime-api/data/datapipe/tags/field_tags.h"
-#include "transport-runtime-api/data/datapipe/tags/fNL_tags.h"
-#include "transport-runtime-api/data/datapipe/tags/stats_tags.h"
-#include "transport-runtime-api/data/datapipe/tags/zeta_tags.h"
+#include "transport-runtime/data/datapipe/tags/config_tags.h"
+#include "transport-runtime/data/datapipe/tags/field_tags.h"
+#include "transport-runtime/data/datapipe/tags/fNL_tags.h"
+#include "transport-runtime/data/datapipe/tags/stats_tags.h"
+#include "transport-runtime/data/datapipe/tags/zeta_tags.h"
 
 
 #endif //CPPTRANSPORT_TAGS_H

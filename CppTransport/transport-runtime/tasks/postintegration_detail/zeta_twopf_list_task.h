@@ -8,8 +8,8 @@
 #define CPPTRANSPORT_ZETA_TWOPF_LIST_TASK_H
 
 
-#include "transport-runtime-api/tasks/postintegration_detail/common.h"
-#include "transport-runtime-api/tasks/postintegration_detail/abstract.h"
+#include "transport-runtime/tasks/postintegration_detail/common.h"
+#include "transport-runtime/tasks/postintegration_detail/abstract.h"
 
 
 namespace transport

@@ -7,16 +7,16 @@
 #define CPPTRANSPORT_REPOSITORY_TOOLKIT_H
 
 
-#include "transport-runtime-api/repository/repository.h"
-#include "transport-runtime-api/repository/repository_cache.h"
+#include "transport-runtime/repository/repository.h"
+#include "transport-runtime/repository/repository_cache.h"
 
-#include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime/manager/message_handlers.h"
 
-#include "transport-runtime-api/utilities/match.h"
+#include "transport-runtime/utilities/match.h"
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 // use adjacency lists to represent graphs
 #include "boost/graph/adjacency_list.hpp"

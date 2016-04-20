@@ -10,12 +10,12 @@
 
 #include <vector>
 
-#include "transport-runtime-api/models/model_forward_declare.h"
+#include "transport-runtime/models/model_forward_declare.h"
 
-#include "transport-runtime-api/tasks/integration_tasks.h"
-#include "transport-runtime-api/tasks/task_configurations.h"
+#include "transport-runtime/tasks/integration_tasks.h"
+#include "transport-runtime/tasks/task_configurations.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h"
+#include "transport-runtime/derived-products/derived-content/correlation-functions/compute-gadgets/common.h"
 
 
 namespace transport

@@ -10,7 +10,7 @@
 #include <list>
 #include <string>
 
-#include "transport-runtime-api/manager/mpi_operations.h"
+#include "transport-runtime/manager/mpi_operations.h"
 
 #include "boost/mpi.hpp"
 

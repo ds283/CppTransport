@@ -8,9 +8,9 @@
 #define CPPTRANSPORT_TWOPF_TASK_H
 
 
-#include "transport-runtime-api/tasks/integration_detail/common.h"
-#include "transport-runtime-api/tasks/integration_detail/abstract.h"
-#include "transport-runtime-api/tasks/integration_detail/twopf_db_task.h"
+#include "transport-runtime/tasks/integration_detail/common.h"
+#include "transport-runtime/tasks/integration_detail/abstract.h"
+#include "transport-runtime/tasks/integration_detail/twopf_db_task.h"
 
 
 namespace transport

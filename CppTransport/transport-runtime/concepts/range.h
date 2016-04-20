@@ -8,11 +8,11 @@
 #define __range_H_
 
 
-#include "transport-runtime-api/concepts/range_detail/common.h"
-#include "transport-runtime-api/concepts/range_detail/abstract.h"
-#include "transport-runtime-api/concepts/range_detail/stepping.h"
-#include "transport-runtime-api/concepts/range_detail/aggregation.h"
-#include "transport-runtime-api/concepts/range_detail/helper.h"
+#include "transport-runtime/concepts/range_detail/common.h"
+#include "transport-runtime/concepts/range_detail/abstract.h"
+#include "transport-runtime/concepts/range_detail/stepping.h"
+#include "transport-runtime/concepts/range_detail/aggregation.h"
+#include "transport-runtime/concepts/range_detail/helper.h"
 
 
 #endif //__range_H_

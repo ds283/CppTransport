@@ -8,13 +8,13 @@
 #define __time_series_plot_H_
 
 
-#include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
+#include "transport-runtime/derived-products/line-collections/line_plot2d.h"
 
-#include "transport-runtime-api/derived-products/utilities/index_selector.h"
-#include "transport-runtime-api/derived-products/utilities/wrapper.h"
+#include "transport-runtime/derived-products/utilities/index_selector.h"
+#include "transport-runtime/derived-products/utilities/wrapper.h"
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/messages.h"
 
 #include "boost/log/utility/formatting_ostream.hpp"
 

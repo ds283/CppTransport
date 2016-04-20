@@ -7,9 +7,9 @@
 #define CPPTRANSPORT_RECORD_DECL_H
 
 
-#include "transport-runtime-api/repository/detail/repository_mode.h"
-#include "transport-runtime-api/transactions/transaction_manager.h"
-#include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime/repository/detail/repository_mode.h"
+#include "transport-runtime/transactions/transaction_manager.h"
+#include "transport-runtime/manager/environment.h"
 
 #include "boost/optional.hpp"
 

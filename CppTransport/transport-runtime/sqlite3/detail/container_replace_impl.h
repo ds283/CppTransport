@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_SQLITE3_CONTAINER_REPLACE_IMPL_H
 
 
-#include "transport-runtime-api/sqlite3/detail/container_replace_decl.h"
+#include "transport-runtime/sqlite3/detail/container_replace_decl.h"
 
 
 namespace transport

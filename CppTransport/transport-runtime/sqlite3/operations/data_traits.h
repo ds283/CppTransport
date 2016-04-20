@@ -8,7 +8,7 @@
 #define __batching_traits_H_
 
 
-#include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
+#include "transport-runtime/sqlite3/operations/data_manager_common.h"
 
 
 namespace transport

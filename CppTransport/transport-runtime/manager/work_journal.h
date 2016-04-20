@@ -12,14 +12,14 @@
 #include <memory>
 #include <cstdlib>
 
-#include "transport-runtime-api/manager/environment.h"
-#include "transport-runtime-api/manager/argument_cache.h"
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/argument_cache.h"
 
-#include "transport-runtime-api/utilities/plot_environment.h"
+#include "transport-runtime/utilities/plot_environment.h"
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 #include "boost/date_time.hpp"
 #include "boost/filesystem/operations.hpp"

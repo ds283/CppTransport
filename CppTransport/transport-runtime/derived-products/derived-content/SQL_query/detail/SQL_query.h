@@ -8,8 +8,8 @@
 #define __SQL_query_impl_H_
 
 
-#include "transport-runtime-api/serialization/serializable.h"
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_policy.h"
+#include "transport-runtime/serialization/serializable.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_policy.h"
 
 
 namespace transport

@@ -10,7 +10,7 @@
 #ifndef $GUARD   // avoid multiple inclusion
 #define $GUARD
 
-#include "transport-runtime-api/transport.h"
+#include "transport-runtime/transport.h"
 
 #include "$CORE"
 

@@ -11,12 +11,12 @@
 #include <string>
 #include <algorithm>
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
-#include "transport-runtime-api/derived-products/line-collections/line_values.h"
+#include "transport-runtime/derived-products/line-collections/line_values.h"
 
-#include "transport-runtime-api/utilities/spline1d.h"
+#include "transport-runtime/utilities/spline1d.h"
 
 
 namespace transport

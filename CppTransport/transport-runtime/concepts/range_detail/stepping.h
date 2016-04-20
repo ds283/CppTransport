@@ -8,8 +8,8 @@
 #define __range_stepping_H_
 
 
-#include "transport-runtime-api/concepts/range_detail/common.h"
-#include "transport-runtime-api/concepts/range_detail/abstract.h"
+#include "transport-runtime/concepts/range_detail/common.h"
+#include "transport-runtime/concepts/range_detail/abstract.h"
 
 
 #define CPPTRANSPORT_NODE_MIN                 "min"

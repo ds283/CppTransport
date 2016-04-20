@@ -18,10 +18,10 @@
 #include <stdexcept>
 
 
-#include "transport-runtime-api/serialization/serializable.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/serialization/serializable.h"
+#include "transport-runtime/messages.h"
 
-#include "transport-runtime-api/tasks/task_types.h"
+#include "transport-runtime/tasks/task_types.h"
 
 
 #define CPPTRANSPORT_NODE_TASK_DESCRIPTION        "description"

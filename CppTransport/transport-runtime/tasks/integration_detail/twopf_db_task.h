@@ -11,16 +11,16 @@
 #include <functional>
 #include <limits>
 
-#include "transport-runtime-api/tasks/integration_detail/common.h"
-#include "transport-runtime-api/tasks/integration_detail/abstract.h"
+#include "transport-runtime/tasks/integration_detail/common.h"
+#include "transport-runtime/tasks/integration_detail/abstract.h"
 
-#include "transport-runtime-api/tasks/configuration-database/twopf_config_database.h"
+#include "transport-runtime/tasks/configuration-database/twopf_config_database.h"
 
-#include "transport-runtime-api/models/advisory_classes.h"
+#include "transport-runtime/models/advisory_classes.h"
 
-#include "transport-runtime-api/utilities/spline1d.h"
+#include "transport-runtime/utilities/spline1d.h"
 
-#include "transport-runtime-api/defaults.h"
+#include "transport-runtime/defaults.h"
 
 #include "boost/math/tools/roots.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"

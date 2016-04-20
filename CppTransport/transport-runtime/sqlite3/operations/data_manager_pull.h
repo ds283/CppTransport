@@ -8,9 +8,9 @@
 #define CPPTRANSPORT_DATA_MANAGER_PULL_H
 
 
-#include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
-#include "transport-runtime-api/sqlite3/operations/data_traits.h"
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+#include "transport-runtime/sqlite3/operations/data_manager_common.h"
+#include "transport-runtime/sqlite3/operations/data_traits.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
 namespace transport

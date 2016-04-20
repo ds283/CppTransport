@@ -7,8 +7,8 @@
 #define CPPTRANSPORT_MANAGER_DETAIL_MASTER_CONTROLLER_CORE_H
 
 
-#include "transport-runtime-api/manager/detail/master_controller_decl.h"
-#include "transport-runtime-api/repository/repository_toolkit.h"
+#include "transport-runtime/manager/detail/master_controller_decl.h"
+#include "transport-runtime/repository/repository_toolkit.h"
 
 #include "boost/timer/timer.hpp"
 

@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_DATA_MANAGER_SQLITE3_TRANSACTION_HANDLER_DECL_H
 
 
-#include "transport-runtime-api/transactions/transaction_manager.h"
+#include "transport-runtime/transactions/transaction_manager.h"
 
 #include "sqlite3.h"
 

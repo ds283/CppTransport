@@ -14,9 +14,9 @@
 #include <stack>
 #include <map>
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
 

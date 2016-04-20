@@ -8,8 +8,8 @@
 #define CPPTRANSPORT_BATCHERS_H
 
 
-#include "transport-runtime-api/data/batchers/integration_batcher.h"
-#include "transport-runtime-api/data/batchers/postintegration_batcher.h"
+#include "transport-runtime/data/batchers/integration_batcher.h"
+#include "transport-runtime/data/batchers/postintegration_batcher.h"
 
 
 #endif //CPPTRANSPORT_BATCHERS_H

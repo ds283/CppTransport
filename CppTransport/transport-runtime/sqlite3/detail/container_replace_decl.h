@@ -7,9 +7,9 @@
 #define CPPTRANSPORT_SQLITE3_CONTAINER_REPLACE_DECL_H
 
 
-#include "transport-runtime-api/data/batchers/container_replace_function.h"
+#include "transport-runtime/data/batchers/container_replace_function.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
+#include "transport-runtime/derived-products/derived-content/correlation-functions/template_types.h"
 
 
 namespace transport

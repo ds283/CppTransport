@@ -9,9 +9,9 @@
 
 #include <map>
 
-#include "transport-runtime-api/repository/repository.h"
+#include "transport-runtime/repository/repository.h"
 
-#include "transport-runtime-api/defaults.h"
+#include "transport-runtime/defaults.h"
 
 
 namespace transport

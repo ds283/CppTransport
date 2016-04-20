@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_DATA_MANAGER_DECL_H
 
 
-#include <transport-runtime-api/data/metadata.h>
+#include <transport-runtime/data/metadata.h>
 
 namespace transport
   {

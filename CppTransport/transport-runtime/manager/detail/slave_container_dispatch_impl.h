@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_SLAVE_CONTAINER_DISPATCH_IMPL_H
 
 
-#include "transport-runtime-api/manager/detail/slave_container_dispatch_decl.h"
+#include "transport-runtime/manager/detail/slave_container_dispatch_decl.h"
 
 
 namespace transport

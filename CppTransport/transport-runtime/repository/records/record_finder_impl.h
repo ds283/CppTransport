@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_RECORD_FINDER_IMPL_H
 
 
-#include "transport-runtime-api/repository/records/record_finder_decl.h"
+#include "transport-runtime/repository/records/record_finder_decl.h"
 
 
 namespace transport

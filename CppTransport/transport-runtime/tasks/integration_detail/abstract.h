@@ -8,11 +8,11 @@
 #define CPPTRANSPORT_INTEGRATION_ABSTRACT_TASK_H
 
 
-#include "transport-runtime-api/tasks/integration_detail/common.h"
-#include "transport-runtime-api/tasks/configuration-database/time_config_database.h"
-#include "transport-runtime-api/models/advisory_classes.h"
+#include "transport-runtime/tasks/integration_detail/common.h"
+#include "transport-runtime/tasks/configuration-database/time_config_database.h"
+#include "transport-runtime/models/advisory_classes.h"
 
-#include "transport-runtime-api/utilities/random_string.h"
+#include "transport-runtime/utilities/random_string.h"
 
 #include "boost/log/utility/formatting_ostream.hpp"
 

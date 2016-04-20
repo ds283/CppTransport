@@ -8,8 +8,8 @@
 #define CPPTRANSPORT_DERIVED_PRODUCT_HELPER_H
 
 
-#include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
-#include "transport-runtime-api/derived-products/line-collections/line_asciitable.h"
+#include "transport-runtime/derived-products/line-collections/line_plot2d.h"
+#include "transport-runtime/derived-products/line-collections/line_asciitable.h"
 
 
 namespace transport

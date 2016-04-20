@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_DATAPIPE_IMPL_H
 
 
-#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
+#include "transport-runtime/data/datapipe/datapipe_decl.h"
 
 
 namespace transport

@@ -8,8 +8,8 @@
 #define __line_values_H_
 
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 
 // axis classes

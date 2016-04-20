@@ -14,12 +14,12 @@
 #include <memory>
 #include <functional>
 
-#include "transport-runtime-api/serialization/serializable.h"
+#include "transport-runtime/serialization/serializable.h"
 
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/localizations/messages_en.h"
+#include "transport-runtime/exceptions.h"
+#include "transport-runtime/localizations/messages_en.h"
 
-#include "transport-runtime-api/utilities/host_information.h"
+#include "transport-runtime/utilities/host_information.h"
 
 #include "boost/filesystem.hpp"
 #include "boost/log/core.hpp"

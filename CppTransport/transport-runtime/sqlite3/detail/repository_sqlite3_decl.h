@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_REPOSITORY_SQLITE3_DECL_H
 
 
-#include "transport-runtime-api/sqlite3/detail/repository_sqlite3_decl.h"
+#include "transport-runtime/sqlite3/detail/repository_sqlite3_decl.h"
 
 
 namespace transport

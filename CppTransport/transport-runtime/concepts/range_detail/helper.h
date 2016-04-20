@@ -8,7 +8,7 @@
 #define __range_helper_H_
 
 
-#include "transport-runtime-api/concepts/range_detail/common.h"
+#include "transport-runtime/concepts/range_detail/common.h"
 
 
 namespace transport

@@ -6,7 +6,7 @@
 #ifndef CPPTRANSPORT_CONTENT_FINDER_IMPL_H
 #define CPPTRANSPORT_CONTENT_FINDER_IMPL_H
 
-#include "transport-runtime-api/repository/records/content_finder_decl.h"
+#include "transport-runtime/repository/records/content_finder_decl.h"
 
 
 namespace transport

@@ -13,14 +13,14 @@
 #include <algorithm>
 
 
-#include "transport-runtime-api/derived-products/line-collections/line_collection.h"
-#include "transport-runtime-api/derived-products/line-collections/data_line.h"
+#include "transport-runtime/derived-products/line-collections/line_collection.h"
+#include "transport-runtime/derived-products/line-collections/data_line.h"
 
-#include "transport-runtime-api/utilities/asciitable.h"
+#include "transport-runtime/utilities/asciitable.h"
 
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"

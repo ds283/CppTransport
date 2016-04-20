@@ -8,13 +8,13 @@
 #define CPPTRANSPORT_MASTER_CONTROLLER_H
 
 
-#include "transport-runtime-api/manager/detail/master_controller_decl.h"
-#include "transport-runtime-api/manager/detail/aggregation.h"
+#include "transport-runtime/manager/detail/master_controller_decl.h"
+#include "transport-runtime/manager/detail/aggregation.h"
 
-#include "transport-runtime-api/manager/detail/master_controller_core.h"
-#include "transport-runtime-api/manager/detail/master_controller_integration.h"
-#include "transport-runtime-api/manager/detail/master_controller_postintegration.h"
-#include "transport-runtime-api/manager/detail/master_controller_output.h"
+#include "transport-runtime/manager/detail/master_controller_core.h"
+#include "transport-runtime/manager/detail/master_controller_integration.h"
+#include "transport-runtime/manager/detail/master_controller_postintegration.h"
+#include "transport-runtime/manager/detail/master_controller_output.h"
 
 
 #endif //CPPTRANSPORT_MASTER_CONTROLLER_H

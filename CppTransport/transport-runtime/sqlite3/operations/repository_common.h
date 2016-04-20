@@ -12,14 +12,14 @@
 #include <string>
 #include <sstream>
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
-#include "transport-runtime-api/transactions/transaction_manager.h"
+#include "transport-runtime/transactions/transaction_manager.h"
 
 #include "sqlite3.h"
 
-#include "transport-runtime-api/sqlite3/operations/sqlite3_utility.h"
+#include "transport-runtime/sqlite3/operations/sqlite3_utility.h"
 
 #include "boost/lexical_cast.hpp"
 

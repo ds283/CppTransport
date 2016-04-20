@@ -12,13 +12,13 @@
 #include <functional>
 #include <memory>
 
-#include "transport-runtime-api/defaults.h"
+#include "transport-runtime/defaults.h"
 
-#include "transport-runtime-api/utilities/host_information.h"
-#include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime/utilities/host_information.h"
+#include "transport-runtime/utilities/formatter.h"
 
-#include "transport-runtime-api/data/batchers/container_dispatch_function.h"
-#include "transport-runtime-api/data/batchers/container_replace_function.h"
+#include "transport-runtime/data/batchers/container_dispatch_function.h"
+#include "transport-runtime/data/batchers/container_replace_function.h"
 
 
 #include "boost/filesystem/operations.hpp"

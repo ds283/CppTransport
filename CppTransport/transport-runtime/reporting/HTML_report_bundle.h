@@ -7,22 +7,22 @@
 #define CPPTRANSPORT_REPORTING_HTML_REPORT_BUNDLE_H
 
 
-#include "transport-runtime-api/data/data_manager.h"
+#include "transport-runtime/data/data_manager.h"
 
-#include "transport-runtime-api/repository/repository_cache.h"
-#include "transport-runtime-api/reporting/unique_tags.h"
+#include "transport-runtime/repository/repository_cache.h"
+#include "transport-runtime/reporting/unique_tags.h"
 
-#include "transport-runtime-api/reporting/HTML_writer.h"
-#include "transport-runtime-api/reporting/CSS_writer.h"
-#include "transport-runtime-api/reporting/JavaScript_writer.h"
+#include "transport-runtime/reporting/HTML_writer.h"
+#include "transport-runtime/reporting/CSS_writer.h"
+#include "transport-runtime/reporting/JavaScript_writer.h"
 
-#include "transport-runtime-api/manager/environment.h"
-#include "transport-runtime-api/manager/argument_cache.h"
-#include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/argument_cache.h"
+#include "transport-runtime/manager/message_handlers.h"
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/defaults.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/defaults.h"
+#include "transport-runtime/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
 

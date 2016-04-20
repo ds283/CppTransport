@@ -8,11 +8,11 @@
 #define __integration_task_gadget_H_
 
 
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime/exceptions.h"
+#include "transport-runtime/messages.h"
 
-#include "transport-runtime-api/tasks/tasks_forward_declare.h"
-#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
+#include "transport-runtime/tasks/tasks_forward_declare.h"
+#include "transport-runtime/repository/records/repository_records_forward_declare.h"
 
 
 namespace transport

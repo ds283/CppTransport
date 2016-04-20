@@ -16,13 +16,13 @@
 #include <array>
 #include <stdexcept>
 
-#include "transport-runtime-api/derived-products/line-collections/data_line.h"
-#include "transport-runtime-api/derived-products/derived-content/concepts/series/time_series.h"
-#include "transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_twopf_line.h"
-#include "transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_threepf_line.h"
-#include "transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_reduced_bispectrum_line.h"
+#include "transport-runtime/derived-products/line-collections/data_line.h"
+#include "transport-runtime/derived-products/derived-content/concepts/series/time_series.h"
+#include "transport-runtime/derived-products/derived-content/concepts/lines/zeta_twopf_line.h"
+#include "transport-runtime/derived-products/derived-content/concepts/lines/zeta_threepf_line.h"
+#include "transport-runtime/derived-products/derived-content/concepts/lines/zeta_reduced_bispectrum_line.h"
 
-#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+#include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 
 namespace transport
   {

@@ -14,8 +14,8 @@
 #include <list>
 #include <stdexcept>
 
-#include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime/messages.h"
+#include "transport-runtime/exceptions.h"
 
 #include "boost/timer/timer.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"

@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_REPOSITORY_TRANSACTION_HANDLER_IMPL_H
 
 
-#include "transport-runtime-api/sqlite3/detail/repository_transaction_handler_decl.h"
+#include "transport-runtime/sqlite3/detail/repository_transaction_handler_decl.h"
 
 
 namespace transport

@@ -8,8 +8,8 @@
 #define CPPTRANSPORT_DATA_MANAGER_CREATE_H
 
 
-#include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
-#include "transport-runtime-api/sqlite3/operations/data_traits.h"
+#include "transport-runtime/sqlite3/operations/data_manager_common.h"
+#include "transport-runtime/sqlite3/operations/data_traits.h"
 
 
 namespace transport
