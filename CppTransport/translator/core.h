@@ -36,7 +36,7 @@ constexpr auto DEFAULT_RECURSION_DEPTH               = (127);
 constexpr auto DEFAULT_MODEL_NAME                    = "UNKNOWN_MODEL";
 
 constexpr auto CPPTRANSPORT_PATH_ENV                 = "CPPTRANSPORT_PATH";
-constexpr auto CPPTRANSPORT_TEMPLATE_PATH            = "cpptransport-templates";
+constexpr auto CPPTRANSPORT_TEMPLATE_PATH            = "templates";
 constexpr auto HOME_ENV                              = "HOME";
 
 constexpr auto CONFIG_FILE_LOCATION                  = ".cpptransport";

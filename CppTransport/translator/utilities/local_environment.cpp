@@ -69,7 +69,7 @@ void local_environment::set_template_search_paths()
       {
         std::string path = boost::copy_range<std::string>(*t);
 
-        // add 'cpptransport-templates' directory to each root
+        // add 'templates' directory to each root
         boost::filesystem::path rpath(path);
 
         // if path is not absolute, make relative to current working directory

@@ -157,7 +157,7 @@ TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 TARGET_COMPILE_OPTIONS(CppTransport PRIVATE -std=c++14)
 
 TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
-  ./
+  translator
   translator/backends
   translator/backends/infrastructure
   translator/backends/infrastructure/file_handling
@@ -189,9 +189,9 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
 ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
 
 
-# install targets for CppTransport translator, cpptransport-templates, and header-only library/runtime API
+# install targets for CppTransport translator, templates, and header-only library/runtime API
 INSTALL(TARGETS CppTransport DESTINATION bin)
-INSTALL(DIRECTORY cpptransport-templates DESTINATION share/cpptransport)
+INSTALL(DIRECTORY templates DESTINATION share/cpptransport)
 INSTALL(DIRECTORY thirdparty/bootstrap DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/bootstrap-tab-history DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/jQuery DESTINATION share/cpptransport/HTML)
@@ -204,27 +204,24 @@ INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake)
 
 ## FILL IN DUMMY TARGETS FOR CLION
 
-set(CPPTRANSPORT_TEMPLATES_FILES
-  cpptransport-templates/canonical_core.h
-  cpptransport-templates/canonical_mpi.h
+set(TEMPLATES_FILES
+  templates/canonical_core.h
+  templates/canonical_mpi.h
   )
 
-set(CPPTRANSPORT_TEMPLATES_VEXCL_CUDA_FILES
-  cpptransport-templates/vexcl-cuda/canonical_vexcl-cuda.h
-  cpptransport-templates/vexcl-cuda/threepf.cu
-  cpptransport-templates/vexcl-cuda/twopf.cu
+set(TEMPLATES_VEXCL_CUDA_FILES
+  templates/vexcl-cuda/canonical_vexcl-cuda.h
+  templates/vexcl-cuda/threepf.cu
+  templates/vexcl-cuda/twopf.cu
   )
 
-set(CPPTRANSPORT_TEMPLATES_VEXCL_OPENCL_FILES
-  cpptransport-templates/vexcl-opencl/canonical_vexcl-opencl.h
-  cpptransport-templates/vexcl-opencl/threepf.cl
-  cpptransport-templates/vexcl-opencl/twopf.cl
+set(TEMPLATES_VEXCL_OPENCL_FILES
+  templates/vexcl-opencl/canonical_vexcl-opencl.h
+  templates/vexcl-opencl/threepf.cl
+  templates/vexcl-opencl/twopf.cl
   )
 
 set(TOP_LEVEL_FILES
-  CMakeLists.txt
-  CppTransport.1
-  LICENSE
   )
 
 set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
@@ -955,9 +952,9 @@ set(TRANSPORT_RUNTIME_UTILITIES_FILES
   )
 
 set(SOURCE_FILES
-  ${CPPTRANSPORT_TEMPLATES_FILES}
-  ${CPPTRANSPORT_TEMPLATES_VEXCL_CUDA_FILES}
-  ${CPPTRANSPORT_TEMPLATES_VEXCL_OPENCL_FILES}
+  ${TEMPLATES_FILES}
+  ${TEMPLATES_VEXCL_CUDA_FILES}
+  ${TEMPLATES_VEXCL_OPENCL_FILES}
   ${TOP_LEVEL_FILES}
   ${TRANSLATOR_BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES}
   ${TRANSLATOR_BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES}
