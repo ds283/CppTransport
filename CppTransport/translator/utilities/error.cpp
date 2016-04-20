@@ -8,7 +8,7 @@
 
 #include <cstdlib>
 
-#include "translator/core.h"
+#include "core.h"
 #include "error.h"
 
 
