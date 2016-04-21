@@ -3685,22 +3685,29 @@ namespace transport
                 out << item.second;
                 ++count;
               }
-            out << "]" << '\n';
+            out << " ]" << '\n';
 
-
-            count = 0;
-            out << "label = [ ";
-            for(const count_list::value_type& item : counts)
+            if(this->env.has_matplotlib_tick_label())
               {
-                if(count > 0) out << ", ";
-                out << "'" << item.first.first << "," << item.first.second << "'";
-                ++count;
+                count = 0;
+                out << "label = [ ";
+                for(const count_list::value_type& item : counts)
+                  {
+                    if(count > 0) out << ", ";
+                    out << "'" << item.first.first << "," << item.first.second << "'";
+                    ++count;
+                  }
+                out << " ]" << '\n';
               }
-            out << "]" << '\n';
 
             if(counts.size() <= 20)
               {
-                out << "plt.bar(left, height, tick_label=label)" << '\n';
+                out << "plt.bar(left, height";
+                if(this->env.has_matplotlib_tick_label())
+                  {
+                    out << ", tick_label=label";
+                  }
+                out << ")" << '\n';
               }
             else // don't include tick labels if they would be too crowded
               {

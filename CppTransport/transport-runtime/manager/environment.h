@@ -82,6 +82,9 @@ namespace transport
         //! determine whether Matplotlib style sheets are available
         bool has_matplotlib_style_sheets() { if(!this->matplotlib_cached) this->detect_matplotlib(); return(this->matplotlib_style_sheets); }
 
+        //! determine whether the tick_label kwarg is available
+        bool has_matplotlib_tick_label() { if(!this->matplotlib_caches) this->detect_matplotlib(); return(this->matplotlib_tick_label); }
+
         //! determine whether Seaborn is available
         bool has_seaborn() { if(!this->seaborn_cached) this->detect_seaborn(); return(this->seaborn_available); }
 
@@ -168,6 +171,9 @@ namespace transport
         //! Matplotlib has style sheet support?
         bool matplotlib_style_sheets;
 
+        //! Matplotlib has the tick_label kwarg?
+        bool matplotlib_tick_label;
+
         //! has the status of Seaborn availability been cached?
         bool seaborn_cached;
 
@@ -189,6 +195,7 @@ namespace transport
         matplotlib_cached(false),
         matplotlib_available(false),
         matplotlib_style_sheets(false),
+        matplotlib_tick_label(false),
         seaborn_cached(false),
         seaborn_available(false)
       {
@@ -341,6 +348,20 @@ namespace transport
         outf2.close();
 
         this->matplotlib_style_sheets = this->execute_python(temp_sheets) == 0;
+
+        // get name of third temporary file
+        boost::filesystem::path temp_ticks = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+
+        std::ofstream outf3(temp_ticks.string(), std::ios_base::out | std::ios_base::trunc);
+        outf3 << "import matplotlib.pyplot as plt" << '\n';
+        outf3 << "plt.figure()" << '\n';
+        outf3 << "left = [ 0, 1, 2 ]" << '\n';
+        outf3 << "height = [ 1, 2, 3 ]" << '\n';
+        outf3 << "label = [ '1', '2', '3' ]" << '\n';
+        outf3 << "plt.bar(left, height, tick_label=label)" << '\n';
+        outf3.close();
+
+        this->matplotlib_tick_label = this->execute_python(temp_ticks) == 0;
 
         this->matplotlib_cached = true;
       }
