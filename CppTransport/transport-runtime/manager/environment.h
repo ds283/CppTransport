@@ -83,7 +83,7 @@ namespace transport
         bool has_matplotlib_style_sheets() { if(!this->matplotlib_cached) this->detect_matplotlib(); return(this->matplotlib_style_sheets); }
 
         //! determine whether the tick_label kwarg is available
-        bool has_matplotlib_tick_label() { if(!this->matplotlib_caches) this->detect_matplotlib(); return(this->matplotlib_tick_label); }
+        bool has_matplotlib_tick_label() { if(!this->matplotlib_cached) this->detect_matplotlib(); return(this->matplotlib_tick_label); }
 
         //! determine whether Seaborn is available
         bool has_seaborn() { if(!this->seaborn_cached) this->detect_seaborn(); return(this->seaborn_available); }
