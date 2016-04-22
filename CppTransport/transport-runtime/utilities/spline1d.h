@@ -4,8 +4,8 @@
 //
 //
 
-#ifndef CPPTRANSPORT_SPLINE_H_
-#define CPPTRANSPORT_SPLINE_H_
+#ifndef CPPTRANSPORT_SPLINE_H
+#define CPPTRANSPORT_SPLINE_H
 
 
 #include <vector>
@@ -15,8 +15,9 @@
 #include <assert.h>
 
 #include "SPLINTER/datatable.h"
-#include "SPLINTER/bsplineapproximant.h"
-#include "SPLINTER/psplineapproximant.h"
+#include "SPLINTER/bspline.h"
+#include "SPLINTER/bsplinebuilder.h"
+
 
 namespace transport
   {
@@ -93,12 +94,12 @@ namespace transport
         //! which also deals correctly with taking copies.
         //! This is a raw BSpline, meaning that it goes through each of the data points.
         //! We use it to interpolate values.
-        std::shared_ptr<SPLINTER::BSplineApproximant> b_spline;
+        std::shared_ptr<SPLINTER::BSpline> b_spline;
 
         //! pointer to penalized-B spline object.
         //! This is smoothed, so it need not go through every data point.
         //! We use it to interpolate derivatives
-        std::shared_ptr<SPLINTER::PSplineApproximant> p_spline;
+        std::shared_ptr<SPLINTER::BSpline> p_spline;
 
         //! DataTable instance
         SPLINTER::DataTable table;
@@ -139,8 +140,8 @@ namespace transport
 
         try
 	        {
-            b_spline = std::make_shared<SPLINTER::BSplineApproximant>(table, SPLINTER::BSplineType::CUBIC);
-            p_spline = std::make_shared<SPLINTER::PSplineApproximant>(table, 0.03);
+            b_spline = std::make_shared<SPLINTER::BSpline>(SPLINTER::BSpline::Builder(table).degree(3).build());
+            p_spline = std::make_shared<SPLINTER::BSpline>(SPLINTER::BSpline::Builder(table).degree(3).smoothing(SPLINTER::BSpline::Smoothing::PSPLINE).alpha(0.03).build());
 	        }
 				catch(SPLINTER::Exception& xe)
 					{
@@ -172,7 +173,7 @@ namespace transport
     template <typename number>
     void spline1d<number>::write(std::ostream& out) const
       {
-        for(std::multiset<SPLINTER::DataSample>::const_iterator t = this->table.cbegin(); t != this->table.cend(); ++t)
+        for(std::multiset<SPLINTER::DataPoint>::const_iterator t = this->table.cbegin(); t != this->table.cend(); ++t)
           {
             assert(t->getDimX() == 1);
             out << "x = " << t->getX()[0] << ", y = " << t->getY() << '\n';
@@ -191,4 +192,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif // CPPTRANSPORT_SPLINE_H_
+#endif // CPPTRANSPORT_SPLINE_H

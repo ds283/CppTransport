@@ -3,11 +3,13 @@
 // Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_TRANSPORT_H_
-#define CPPTRANSPORT_TRANSPORT_H_
+#ifndef CPPTRANSPORT_TRANSPORT_H
+#define CPPTRANSPORT_TRANSPORT_H
 
+
+// expect Boost to be linked with dynamic libraries;
+// note this macro is essential for Boost.Log
 #define BOOST_ALL_DYN_LINK
-#define FUSION_MAX_VECTOR_SIZE 20
 
 #include "transport-runtime/messages.h"
 #include "transport-runtime/defaults.h"
@@ -29,4 +31,4 @@
 #include "transport-runtime/manager/task_manager.h"
 
 
-#endif // CPPTRANSPORT_TRANSPORT_H_
+#endif // CPPTRANSPORT_TRANSPORT_H

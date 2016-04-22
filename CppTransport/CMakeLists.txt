@@ -7,9 +7,8 @@ PROJECT(CppTransport)
 # no consequences for us
 SET(CMAKE_MACOSX_RPATH TRUE)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/")
-
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
+INCLUDE(BuildDeps)
 
 # Attempt some platform/compiler introspection
 STRING(COMPARE EQUAL "Linux" ${CMAKE_SYSTEM_NAME} LINUX)
@@ -50,21 +49,30 @@ ENDIF()
 # find Bison to produce parser
 FIND_PACKAGE(BISON 3.0 REQUIRED)
 
-
-# pull in bundled JsonCpp and SPLINTER libraries
-SET(ARCH x86-64)
-ADD_SUBDIRECTORY(thirdparty/splinter)
-ADD_SUBDIRECTORY(thirdparty/jsoncpp)
-
-
-# find required libraries
+# find MPI library
 FIND_PACKAGE(MPI REQUIRED)
-FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options regex)
-FIND_PACKAGE(GiNaC 1.6 REQUIRED)
 
+# find required Boost libraries
+FIND_PACKAGE(Boost REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
+
+# find GiNaC library
+FIND_PACKAGE(GiNaC REQUIRED)
+
+
+# handle non-standard external dependencies
+ADD_CUSTOM_TARGET(DEPS ALL)
+SET(EXTERNAL_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/thirdparty/dist")
+
+BUILD_JSONCPP(${CMAKE_BINARY_DIR}/thirdparty/jsoncpp ${EXTERNAL_INSTALL_PREFIX})
+BUILD_SPLINTER(${CMAKE_BINARY_DIR}/thirdparty/SPLINTER ${EXTERNAL_INSTALL_PREFIX})
+
+
+# configure build_data.h
+STRING(TIMESTAMP CONFIG_TIMESTAMP)
+CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/build_data.h)
 
 # build parser
-BISON_TARGET(translator/parser translator/parser/bison/y_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/y_parser.cpp)
+BISON_TARGET(parser translator/parser/bison/y_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/y_parser.cpp)
 
 
 ADD_EXECUTABLE(CppTransport
@@ -153,7 +161,9 @@ ADD_EXECUTABLE(CppTransport
   translator/utilities/argument_cache.cpp
   )
 
-TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
+ADD_DEPENDENCIES(CppTransport DEPS)
+
+TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${CLN_LIBRARIES} ${GMP_LIBRARIES} ${Boost_LIBRARIES})
 TARGET_COMPILE_OPTIONS(CppTransport PRIVATE -std=c++14)
 
 TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
@@ -181,6 +191,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/utilities
   ${Boost_INCLUDE_DIRS}
   ${GINAC_INCLUDE_DIRS}
+  ${CLN_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   )
 
@@ -188,18 +199,33 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
 # pull in test target
 ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
 
-
 # install targets for CppTransport translator, templates, and header-only library/runtime API
 INSTALL(TARGETS CppTransport DESTINATION bin)
 INSTALL(DIRECTORY templates DESTINATION share/cpptransport)
+
+# install HTML, CSS and JavaScript assets
 INSTALL(DIRECTORY thirdparty/bootstrap DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/bootstrap-tab-history DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/jQuery DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/prism DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/DataTables DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
-INSTALL(DIRECTORY transport-runtime DESTINATION include)
-INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake)
+
+# install runtime system
+INSTALL(DIRECTORY transport-runtime DESTINATION include/cpptransport)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/build_data.h DESTINATION include/cpptransport/transport-runtime)
+
+# emplace jsoncpp assets into runtime system folders
+INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/json DESTINATION include/cpptransport)
+INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib DESTINATION lib/cpptransport)
+
+# emplace SPLINTER assets into runtime system folders
+INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/SPLINTER DESTINATION include/cpptransport)
+INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib DESTINATION lib/cpptransport)
+
+# install CMake finder script for all these assets
+CONFIGURE_FILE(cmake/FindCppTransport.cmake.in ${CMAKE_BINARY_DIR}/FindCppTransport.cmake @ONLY)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/FindCppTransport.cmake DESTINATION share/cmake)
 
 
 ## FILL IN DUMMY TARGETS FOR CLION
