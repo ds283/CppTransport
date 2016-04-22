@@ -37,7 +37,7 @@ def add_folder(path, relative_path, cmake_root, cmake_variables):
 
     for dir in dirs:
 
-        if dir[0] != '.' and dir.lower() != 'thirdparty' and dir.lower() != 'cmake':     # don't descend into thirdparty directories
+        if dir[0] != '.':     # don't descend into system directories
 
             add_folder(os.path.join(path, dir), os.path.join(relative_path, dir), '{root}_{leaf}'.format(root=cmake_root, leaf=dir.upper().replace("-", "_")), cmake_variables)
 

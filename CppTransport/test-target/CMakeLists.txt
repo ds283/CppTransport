@@ -7,15 +7,13 @@ PROJECT(test-target)
 # don't use FindCppTransport package; want to pull in headers from the source tree,
 # not from any already installed elsewhere on the system
 #FIND_PACKAGE(CppTransport REQUIRED)
-FIND_PACKAGE(MPI REQUIRED)
-FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options regex)
+#FIND_PACKAGE(MPI REQUIRED)
+#FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options regex)
 #find_package(CUDA REQUIRED)
 #find_package(OpenCL REQUIRED)
 
 
 SET(CPPTRANSPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
-SET(CPPTRANSPORT_JSONCPP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/jsoncpp/include)
-SET(CPPTRANSPORT_SPLINTER_EIGEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/splinter/thirdparty/Eigen)
 
 
 # main SPLINTER includes have a different relative position in the build tree
@@ -27,21 +25,22 @@ SET(CPPTRANSPORT_SPLINTER_EIGEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/sp
 SET(
   CPPTRANSPORT_INCLUDE_DIRS
   ${CPPTRANSPORT_INCLUDE_DIR}
-  ${CPPTRANSPORT_JSONCPP_INCLUDE_DIR}
-  ${CPPTRANSPORT_SPLINTER_EIGEN_DIR}
+  ${JSONCPP_INCLUDE_DIRS}
+  ${SPLINTER_INCLUDE_DIRS}
+  ${SPLINTER_INCLUDE_DIRS}/SPLINTER
   )
 
 
-SET(CPPTRANSPORT_LIBRARIES jsoncpp_lib_static splinter-static-2-0)
+SET(CPPTRANSPORT_LIBRARIES ${JSONCPP_LIBRARIES} ${SPLINTER_LIBRARIES})
 
 
 ADD_CUSTOM_COMMAND(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/axion_core.h ${CMAKE_CURRENT_BINARY_DIR}/axion_mpi.h
-  COMMAND CppTransport --verbose --no-search-env -I ${CMAKE_CURRENT_SOURCE_DIR}/../cpptransport-templates ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
+  COMMAND CppTransport --verbose --no-search-env -I ${CMAKE_CURRENT_SOURCE_DIR}/../templates ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
   DEPENDS axion.model
   DEPENDS defaults.model
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../cpptransport-templates/canonical_mpi.h
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../cpptransport-templates/canonical_core.h
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/canonical_mpi.h
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/canonical_core.h
 )
 
 
