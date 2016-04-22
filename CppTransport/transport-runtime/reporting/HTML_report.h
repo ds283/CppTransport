@@ -4275,8 +4275,7 @@ namespace transport
                         const std::list<std::string>& groups = item.get_content_groups();
                         if(!groups.empty())
                           {
-                            std::string group_tag = tag + "_" + boost::lexical_cast<std::string>(count);
-                            ++count;
+                            std::string group_tag = tag + "_" + boost::lexical_cast<std::string>(count) + "_table";
 
                             HTML_node button("button");
                             button.add_attribute("type", "button").add_attribute("class", "btn btn-info");
@@ -4342,6 +4341,7 @@ namespace transport
                             table_wrapper.add_element(table);
                             tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
                             data.add_element(tbl_panel);
+                            it.add_element(button).add_element(data);
 
                             // make a dependency diagram if Graphviz is available
                             if(this->env.has_dot())
@@ -4361,18 +4361,26 @@ namespace transport
                                 depends->write_graphviz(absolute_dot_script);
                                 if(this->env.execute_dot(absolute_dot_script, absolute_dot_product, "svg") == 0)
                                   {
+                                    std::string group_tag2 = tag + "_" + boost::lexical_cast<std::string>(count) + "_graph";
+
+                                    HTML_node button2("button", "Dependency diagram");
+                                    button2.add_attribute("type", "button").add_attribute("class", "btn btn-info");
+                                    button2.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + group_tag2);
+
                                     // remove unneeded script file
                                     boost::filesystem::remove(absolute_dot_script);
 
                                     HTML_node diagram("div");
+                                    diagram.add_attribute("id", group_tag2).add_attribute("class", "collapse");
                                     HTML_node graph("img", false);
-                                    graph.add_attribute("class", "img-responsive").add_attribute("src", relative_dot_product.string()).add_attribute("alt", relative_dot_product.string());
+                                    graph.add_attribute("class", "img-responsive topskip").add_attribute("src", relative_dot_product.string()).add_attribute("alt", relative_dot_product.string());
                                     diagram.add_element(graph);
-                                    data.add_element(diagram);
+
+                                    it.add_element(button2).add_element(diagram);
                                   }
                               }
 
-                            it.add_element(button).add_element(data);
+                            ++count;
                           }
 
                         content_list.add_element(it);
