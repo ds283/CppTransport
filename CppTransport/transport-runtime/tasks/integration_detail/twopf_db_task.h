@@ -781,7 +781,7 @@ namespace transport
     template <typename Stream>
     void twopf_db_task<number>::write(Stream& out) const
       {
-        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (this->get_adaptive_ics() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO);
+        out << CPPTRANSPORT_ADAPTIVE_ICS << ": " << (this->get_adaptive_ics() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO);
         out << " " << CPPTRANSPORT_WITH << " " << this->adaptive_efolds << " " << CPPTRANSPORT_EFOLDS << ", ";
         out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << this->get_max_refinements() << '\n';
         out << static_cast< const integration_task<number>& >(*this);

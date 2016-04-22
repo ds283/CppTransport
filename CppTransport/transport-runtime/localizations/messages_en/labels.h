@@ -34,7 +34,7 @@
 #define CPPTRANSPORT_TIME_CONFIG_SERIAL                 "serial ="
 #define CPPTRANSPORT_TIME_CONFIG_TEQUALS                "t ="
 
-#define CPPTRANSPORT_FAST_FORWARD                       "Fast-forward integration"
+#define CPPTRANSPORT_ADAPTIVE_ICS                       "Adaptive initial conditions"
 #define CPPTRANSPORT_MESH_REFINEMENTS                   "Maximum number of mesh refinements"
 #define CPPTRANSPORT_PARENT_TASK                        "Parent task"
 
