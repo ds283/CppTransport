@@ -45,6 +45,7 @@ constexpr bool         CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS = (false)
 constexpr double       CPPTRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION   = (1E-5);
 
 constexpr auto         CPPTRANSPORT_DEFAULT_PYTHON_PATH                = "/usr/bin/python";
+constexpr auto         CPPTRANSPORT_DEFAULT_DOT_PATH                   = "/usr/bin/dot";
 
 constexpr auto         CPPTRANSPORT_HOME_ENV                           = "HOME";
 constexpr auto         CPPTRANSPORT_PATH_ENV                           = "CPPTRANSPORT_PATH";

@@ -9,6 +9,7 @@
 
 #include "transport-runtime/manager/detail/master_controller_decl.h"
 #include "transport-runtime/repository/repository_toolkit.h"
+#include "transport-runtime/repository/repository_graphkit.h"
 
 #include "boost/timer/timer.hpp"
 
@@ -495,8 +496,8 @@ namespace transport
     void master_controller<number>::autocomplete_task_schedule()
       {
         // build distance matrix for tasks
-        repository_toolkit<number> toolkit(*this->repo, this->err, this->warn, this->msg);
-        std::unique_ptr<repository_distance_matrix> dmat = toolkit.task_distance_matrix();
+        repository_graphkit<number> graphkit(*this->repo, this->err, this->warn, this->msg);
+        std::unique_ptr<repository_distance_matrix> dmat = graphkit.task_distance_matrix();
 
         std::list< std::string > required_tasks;
         for(const job_descriptor& job : this->job_queue)
@@ -506,16 +507,7 @@ namespace transport
                 case job_type::job_task:
                   {
                     std::unique_ptr< std::list<std::string> > depends = dmat->find_dependencies(job.get_name());
-
-                    if(depends)
-                      {
-//                        std::cout << "-- Task '" << job.get_name() << "' depends on tasks:" << '\n';
-//                        for(const std::string& tk : *depends)
-//                          {
-//                            std::cout << "   " << tk << '\n';
-//                          }
-                        required_tasks.merge(*depends);
-                      }
+                    if(depends) required_tasks.merge(*depends);
                   }
               }
           }
@@ -535,7 +527,7 @@ namespace transport
         this->prune_paired_tasks(required_tasks);
 
         // insert any required job descriptors and sort task list into order
-        std::unique_ptr< std::list<std::string> > topological_order = dmat->compute_topological_order();
+        std::unique_ptr< std::list<std::string> > topological_order = dmat->get_graph().compute_topological_order();
         if(topological_order) this->insert_job_descriptors(required_tasks, *topological_order);
       }
 
@@ -548,16 +540,8 @@ namespace transport
             std::unique_ptr< task_record<number> > rec = this->repo->query_task(*t);
             if(rec)
               {
-                if(rec->get_content_groups().size() > 0)
-                  {
-//                    std::cout << "Task '" << *t << "' is needed, but already has content; evicting from list" << '\n';
-                    t = required_tasks.erase(t);
-                  }
-                else
-                  {
-//                    std::cout << "Task '" << *t << "' is needed and has no content; retaining in list" << '\n';
-                    ++t;
-                  }
+                if(rec->get_content_groups().size() > 0) t = required_tasks.erase(t);
+                else                                     ++t;
               }
           }
       }

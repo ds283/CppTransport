@@ -60,10 +60,10 @@ namespace transport
         //! Add tag
         void add_tag(const std::string& tag) { this->tags.push_back(tag); }
 
-        //! Get creation time
+        //! Get creation time for this piece of content
         const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
 
-        //! Get content groups
+        //! Get names of content groups on which this piece of content depends
         const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
 
 
@@ -618,7 +618,7 @@ namespace transport
 
       public:
 
-        //! Get task name
+        //! Get name of task that produced this content group
         const std::string& get_task_name() const { return(this->task); }
 
         //! Get locked status

@@ -3656,7 +3656,7 @@ namespace transport
             boost::filesystem::path relative_asset_loc = bundle.make_asset_directory(rec.get_name());
 
             boost::filesystem::path relative_script_loc = relative_asset_loc / "_worker_chart.py";
-            boost::filesystem::path relative_image_loc = relative_asset_loc / "_worker_chart.png";
+            boost::filesystem::path relative_image_loc = relative_asset_loc / "_worker_chart.svg";
 
             boost::filesystem::path script_path = this->root / relative_script_loc;
             boost::filesystem::path image_path = this->root / relative_image_loc;
@@ -3751,7 +3751,7 @@ namespace transport
             boost::filesystem::path relative_asset_loc = bundle.make_asset_directory(rec.get_name());
 
             boost::filesystem::path relative_script_loc = relative_asset_loc / "_timing_histogram.py";
-            boost::filesystem::path relative_image_loc = relative_asset_loc / "_timing_histogram.png";
+            boost::filesystem::path relative_image_loc = relative_asset_loc / "_timing_histogram.svg";
 
             boost::filesystem::path script_path = this->root / relative_script_loc;
             boost::filesystem::path image_path = this->root / relative_image_loc;
@@ -3942,7 +3942,7 @@ namespace transport
                 dataset.emplace_back(std::make_tuple((*krec)->kt_conventional, static_cast<double>(data_point.get_integration_time()) / 1E9, (1.0-(*krec)->beta)/2.0));
               }
 
-            this->plot_scatter(bundle, rec, "_timing_kt.py", "_timing_kt.png", dataset, "configuration scale $k_t$",
+            this->plot_scatter(bundle, rec, "_timing_kt.py", "_timing_kt.svg", dataset, "configuration scale $k_t$",
                                "integration time in seconds", "$k_3 / k_t$",
                                "report-chart", "Time dependence: scale",
                                "Shows the dependence of the integration time on the overall configuration scale",
@@ -3969,7 +3969,7 @@ namespace transport
                 dataset.emplace_back(std::make_tuple((*krec)->alpha, static_cast<double>(data_point.get_integration_time()) / 1E9, (*krec)->kt_conventional));
               }
 
-            this->plot_scatter(bundle, rec, "_timing_alpha.py", "_timing_alpha.png", dataset, "shape parameter $\\alpha$",
+            this->plot_scatter(bundle, rec, "_timing_alpha.py", "_timing_alpha.svg", dataset, "shape parameter $\\alpha$",
                                "integration time in seconds", "$k_t$",
                                "report-chart", "Time dependence: shape",
                                "Shows the dependence of the integration time on the shape parameter alpha",
@@ -3996,7 +3996,7 @@ namespace transport
                 dataset.emplace_back(std::make_tuple((1.0-(*krec)->beta)/2.0, static_cast<double>(data_point.get_integration_time()) / 1E9, (*krec)->kt_conventional));
               }
 
-            this->plot_scatter(bundle, rec, "_timing_beta.py", "_timing_beta.png", dataset, "shape parameter $k_3 / k_t$",
+            this->plot_scatter(bundle, rec, "_timing_beta.py", "_timing_beta.svg", dataset, "shape parameter $k_3 / k_t$",
                                "integration time in seconds", "$k_t$",
                                "report-chart", "Time dependence: shape",
                                "Shows the dependence of the integration time on the shape parameter k3/kt",
@@ -4114,10 +4114,14 @@ namespace transport
             output_content_db& db = bundle.get_output_content_db();
             typename derived_product_db<number>::type& product_db = bundle.get_derived_product_db();
 
+            std::unique_ptr< repository_graphkit<number> > graphkit = bundle.get_graphkit(this->err, this->warn, this->msg);
+
             for(const output_content_db::value_type& group : db)
               {
                 const content_group_record<output_payload>& rec = *group.second;
                 std::string tag = bundle.get_id(rec);
+
+                boost::filesystem::path asset_dir = bundle.make_asset_directory(rec.get_name());
 
                 HTML_node pane("div");
                 pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
@@ -4338,6 +4342,36 @@ namespace transport
                             table_wrapper.add_element(table);
                             tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
                             data.add_element(tbl_panel);
+
+                            // make a dependency diagram if Graphviz is available
+                            if(this->env.has_dot())
+                              {
+                                std::unique_ptr<repository_dependency_graph> depends = graphkit->derived_content_dependency(filename.string(), groups);
+
+                                boost::filesystem::path graph_filename(item.get_filename().stem().string() + "-graph");
+                                boost::filesystem::path relative_dot_script = asset_dir / graph_filename;
+                                relative_dot_script.replace_extension("dot");
+
+                                boost::filesystem::path relative_dot_product = relative_dot_script;
+                                relative_dot_product.replace_extension("svg");
+
+                                boost::filesystem::path absolute_dot_script = this->root / relative_dot_script;
+                                boost::filesystem::path absolute_dot_product = this->root / relative_dot_product;
+
+                                depends->write_graphviz(absolute_dot_script);
+                                if(this->env.execute_dot(absolute_dot_script, absolute_dot_product, "svg") == 0)
+                                  {
+                                    // remove unneeded script file
+                                    boost::filesystem::remove(absolute_dot_script);
+
+                                    HTML_node diagram("div");
+                                    HTML_node graph("img", false);
+                                    graph.add_attribute("class", "img-responsive").add_attribute("src", relative_dot_product.string()).add_attribute("alt", relative_dot_product.string());
+                                    diagram.add_element(graph);
+                                    data.add_element(diagram);
+                                  }
+                              }
+
                             it.add_element(button).add_element(data);
                           }
 

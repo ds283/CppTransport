@@ -830,6 +830,7 @@ set(TRANSPORT_RUNTIME_REPOSITORY_FILES
   transport-runtime/repository/repository.h
   transport-runtime/repository/repository_cache.h
   transport-runtime/repository/repository_toolkit.h
+  transport-runtime/repository/repository_graphkit.h
   )
 
 set(TRANSPORT_RUNTIME_REPOSITORY_RECORDS_DETAIL_FILES

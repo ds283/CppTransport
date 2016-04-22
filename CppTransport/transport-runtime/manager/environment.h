@@ -52,6 +52,23 @@ namespace transport
         void detect_userid();
 
 
+        // GRAPHVIZ SUPPORT
+
+      public:
+
+        //! determine whether dot is available
+        bool has_dot() { return(this->dot_available); }
+
+        //! execute a dot script
+        //! returns exit code provided by system()
+        int execute_dot(const boost::filesystem::path& script, const boost::filesystem::path& output, const std::string& format);
+
+      protected:
+
+        //! detect Graphviz installation details
+        void detect_graphviz();
+
+
         // PYTHON SUPPORT
 
       public:
@@ -60,7 +77,7 @@ namespace transport
         bool has_python() { if(!this->python_cached) this->detect_python(); return(this->python_available); }
 
         //! execute a Python script;
-        //! returns exit code provided by system
+        //! returns exit code provided by system()
         int execute_python(const boost::filesystem::path& script);
 
       protected:
@@ -148,12 +165,21 @@ namespace transport
         std::list< boost::filesystem::path > resources;
 
 
+        // GRAPHVIZ SUPPORT
+
+        //! is dot available?
+        bool dot_available;
+
+        //! dot executable
+        boost::filesystem::path dot_location;
+
+
         // PYTHON SUPPORT
 
         //! has the status of Python support been cached?
         bool python_cached;
 
-        //! is Python available
+        //! is Python available?
         bool python_available;
 
         //! Python executable
@@ -197,16 +223,20 @@ namespace transport
         matplotlib_style_sheets(false),
         matplotlib_tick_label(false),
         seaborn_cached(false),
-        seaborn_available(false)
+        seaborn_available(false),
+        dot_available(false)
       {
         // detect user id
-        detect_userid();
+        this->detect_userid();
 
         // detect home directory
-        detect_home();
+        this->detect_home();
 
         // detect terminal colour support
-        detect_terminal_type();
+        this->detect_terminal_type();
+
+        // detect Graphviz installation
+        this->detect_graphviz();
 
         // detection of Python support (Python interpreter, Matplotlib, style sheets, Seaborn, etc.) is
         // deferred until needed, since it slows down program initialization
@@ -283,6 +313,38 @@ namespace transport
           || term_type == "screen"
           || term_type == "linux"
           || term_type == "cygwin";
+      }
+
+
+    void local_environment::detect_graphviz()
+      {
+        // TODP: platform introspection
+        FILE* f = popen("which dot", "r");
+
+        if(!f)
+          {
+            this->dot_available = false;
+            this->dot_location = CPPTRANSPORT_DEFAULT_DOT_PATH;
+          }
+        else
+          {
+            char buffer[1024];
+            char* line = fgets(buffer, sizeof(buffer), f);
+            pclose(f);
+
+            if(line != nullptr)
+              {
+                this->dot_available = true;
+                std::string temp = std::string(line);
+                boost::algorithm::trim_right(temp);
+                this->dot_location = temp;
+              }
+            else
+              {
+                this->dot_available = false;
+                this->dot_location = CPPTRANSPORT_DEFAULT_DOT_PATH;
+              }
+          }
       }
 
 
@@ -410,6 +472,36 @@ namespace transport
         if(this->python_available)
           {
             command << this->python_location.string() << " \"" << script.string() << "\" > /dev/null 2>&1";
+            return std::system(command.str().c_str());
+          }
+        else
+          {
+            return EXIT_FAILURE;
+          }
+      }
+
+
+    int local_environment::execute_dot(const boost::filesystem::path& script, const boost::filesystem::path& output, const std::string& format)
+      {
+        std::ostringstream command;
+
+
+        // source user's .profile script if it exists
+        // TODO: Platform introspection
+        const char* user_home = getenv("HOME");
+        if(user_home != nullptr)
+          {
+            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            if(boost::filesystem::exists(user_profile))
+              {
+                // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
+                command << ". " << user_profile.string() << "; ";
+              }
+          }
+
+        if(this->dot_available)
+          {
+            command << this->dot_location.string() << " -T" << format << " \"" << script.string() << "\" -o \"" << output.string() << "\" > /dev/null 2>&1";
             return std::system(command.str().c_str());
           }
         else

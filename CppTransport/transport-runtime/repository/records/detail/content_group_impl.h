@@ -60,8 +60,8 @@ namespace transport
 
     template <typename Payload>
     content_group_record<Payload>::content_group_record(const std::string& tn, const paths_group& p,
-                                                      bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                      repository_record::handler_package& pkg)
+                                                        bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
+                                                        repository_record::handler_package& pkg)
       : repository_record(pkg),
         task(tn),
         paths(p),

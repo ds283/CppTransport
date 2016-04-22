@@ -20,6 +20,8 @@
 #include "transport-runtime/manager/argument_cache.h"
 #include "transport-runtime/manager/message_handlers.h"
 
+#include "transport-runtime/repository/repository_toolkit.h"
+
 #include "transport-runtime/messages.h"
 #include "transport-runtime/defaults.h"
 #include "transport-runtime/exceptions.h"
@@ -72,7 +74,7 @@ namespace transport
 
             //! make directory for assets belonging to named object
             //! returns relative path of directory
-            boost::filesystem::path make_asset_directory(const std::string& namme);
+            boost::filesystem::path make_asset_directory(const std::string& name);
 
             //! emplace an asset for a named object, creating a suitable asset directory if one does not exist
             //! returns relative path of emplaced asset
@@ -137,6 +139,9 @@ namespace transport
 
             //! get cache object
             repository_cache<number>& get_cache() { return this->cache; }
+
+            //! get toolkit
+            std::unique_ptr< repository_graphkit<number> > get_graphkit(error_handler e, warning_handler w, message_handler h) { return std::make_unique< repository_graphkit<number> >(this->repo, e, w, h); }
 
 
             // DATA MANAGER FUNCTIONS
