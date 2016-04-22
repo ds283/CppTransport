@@ -82,7 +82,7 @@ namespace macro_packages
 
     std::string replace_version::evaluate(const macro_argument_list& args)
       {
-        return(CPPTRANSPORT_VERSION);
+        return(boost::lexical_cast<std::string>(CPPTRANSPORT_NUMERIC_VERSION));
       }
 
 

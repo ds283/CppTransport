@@ -70,7 +70,7 @@ backend_data::backend_data(std::ifstream& inf, const boost::filesystem::path& in
                   }
                 else
                   {
-                    minver = static_cast<unsigned int>(100.0 * boost::lexical_cast<double>(tokens[++i]));
+                    minver = boost::lexical_cast<double>(tokens[++i]);
                   }
               }
             else

@@ -287,7 +287,7 @@ namespace transport
         if(version > CPPTRANSPORT_RUNTIME_API_VERSION)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_OLD_RUNTIMEAPI_A << " (" << CPPTRANSPORT_RUNTIME_API_VERSION << ") "
+            msg << CPPTRANSPORT_OLD_RUNTIMEAPI_A << " (" << (CPPTRANSPORT_RUNTIME_API_VERSION / 100) << "." << (CPPTRANSPORT_RUNTIME_API_VERSION % 100) << ") "
                 << CPPTRANSPORT_OLD_RUNTIMEAPI_B << " " << uid << " " CPPTRANSPORT_OLD_RUNTIMEAPI_C << " " << version;
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
@@ -316,7 +316,7 @@ namespace transport
 
             stream << c << ". " << mdl->get_name() << " [license=" << mdl->get_license() << ", revision=" << mdl->get_revision() << "]" << '\n';
             stream << "   backend = " << mdl->get_backend() << " [bg=" << mdl->get_back_stepper() << ", pert=" << mdl->get_pert_stepper() << "]" << '\n';
-            stream << "   UID = " << rec.get_uid() << " | built using CppTransport " << static_cast<double>(mdl->get_translator_version())/100.0 << '\n';
+            stream << "   UID = " << rec.get_uid() << " | built using CppTransport " << (mdl->get_translator_version()/100) << "." << (mdl->get_translator_version()%100) << '\n';
           }
       }
 

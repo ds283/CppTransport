@@ -8,12 +8,12 @@
 #define CPPTRANSPORT_VERSION_H
 
 
-#define CPPTRANSPORT_NAME                 "built using CppTransport"
-#define CPPTRANSPORT_VERSION              "0.14"
-#define CPPTRANSPORT_COPYRIGHT            "(c) University of Sussex 2013-2016"
+constexpr auto         CPPTRANSPORT_NAME                = "built using CppTransport";
+constexpr auto         CPPTRANSPORT_VERSION             = "2016.1";
+constexpr auto         CPPTRANSPORT_COPYRIGHT           = "(c) University of Sussex 2013-2016";
 
-#define CPPTRANSPORT_RUNTIME_API          "runtime version 0.14"
-#define CPPTRANSPORT_RUNTIME_API_VERSION  (14)
+constexpr auto         CPPTRANSPORT_RUNTIME_API         = "runtime version 2016.1";
+constexpr unsigned int CPPTRANSPORT_RUNTIME_API_VERSION = 201601;
 
 
 #endif //CPPTRANSPORT_VERSION_H
