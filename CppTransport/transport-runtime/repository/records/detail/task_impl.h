@@ -12,7 +12,7 @@ namespace transport
 
     constexpr auto CPPTRANSPORT_NODE_TASK_CONTENT_GROUPS = "content-groups";
 
-    constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TYPE = "type";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TYPE = "integration-record-type";
     constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TWOPF = "twopf";
     constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_THREEPF = "threepf";
     constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE = "kconfig-database";
