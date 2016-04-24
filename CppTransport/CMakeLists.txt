@@ -65,6 +65,8 @@ BUILD_SPLINTER(${CMAKE_BINARY_DIR}/thirdparty/SPLINTER ${EXTERNAL_INSTALL_PREFIX
 # configure build_data.h
 STRING(TIMESTAMP CONFIG_TIMESTAMP)
 CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/build_data.h)
+# provision a second version of build_data.h for use in test-target
+CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/transport-runtime/build_data.h)
 
 # build parser
 BISON_TARGET(parser translator/parser/bison/y_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/y_parser.cpp)
@@ -1048,6 +1050,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_TRANSACTIONS_FILES}
   ${TRANSPORT_RUNTIME_UTILITIES_FILES}
-  packages/assets.cpp packages/assets.h)
+  )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})

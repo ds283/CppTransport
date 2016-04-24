@@ -13,6 +13,12 @@
 namespace build_data
   {
 
+    constexpr auto CPPTRANSPORT_BUILD_DATA_TIMESTAMP      = "Build configured";
+    constexpr auto CPPTRANSPORT_BUILD_DATA_C_COMPILER     = "C compiler";
+    constexpr auto CPPTRANSPORT_BUILD_DATA_CPP_COMPILER   = "C++ compiler";
+    constexpr auto CPPTRANSPORT_BUILD_DATA_TYPE           = "Build type";
+    constexpr auto CPPTRANSPORT_BUILD_DATA_SYSTEM         = "System name";
+
     const std::string config_timestamp = "${CONFIG_TIMESTAMP}";
     const std::string c_compiler = "${CMAKE_C_COMPILER_ID}";
     const std::string cpp_compiler = "${CMAKE_CXX_COMPILER_ID}";

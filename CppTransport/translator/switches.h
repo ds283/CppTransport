@@ -15,6 +15,12 @@
 #define HELP_SWITCH                   "help"
 #define HELP_HELP                     "obtain brief description of command-line options"
 
+#define LICENSE_SWITCH                "license"
+#define LICENSE_HELP                  "show licensing information for the CppTransport translator"
+
+#define BUILDDATA_SWITCH              "build-data"
+#define BUILDDATA_HELP                "show build configuration information"
+
 #define VERBOSE_SWITCH                "verbose,v"
 #define VERBOSE_SWITCH_LONG           "verbose"
 #define VERBOSE_HELP                  "enable verbose output"

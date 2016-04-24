@@ -13,6 +13,12 @@
 #define CPPTRANSPORT_SWITCH_VERSION           "version"
 #define CPPTRANSPORT_HELP_VERSION             "output version information"
 
+#define CPPTRANSPORT_SWITCH_LICENSE           "license"
+#define CPPTRANSPORT_HELP_LICENSE             "show licensing information for the CppTransport platform"
+
+#define CPPTRANSPORT_SWITCH_BUILDDATA         "build-data"
+#define CPPTRANSPORT_HELP_BUILDDATA           "show build configuration information"
+
 #define CPPTRANSPORT_SWITCH_REPO              "repo,r"
 #define CPPTRANSPORT_SWITCH_REPO_LONG         "repo"
 #define CPPTRANSPORT_HELP_REPO                "specify repository path"
