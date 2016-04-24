@@ -495,6 +495,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::autocomplete_task_schedule()
       {
+        // check whether any work is required: if there are no jobs there is no need for autocompletion
+        if(this->job_queue.empty()) return;
+
         // build distance matrix for tasks
         repository_graphkit<number> graphkit(*this->repo, this->err, this->warn, this->msg);
         std::unique_ptr<repository_distance_matrix> dmat = graphkit.task_distance_matrix();
