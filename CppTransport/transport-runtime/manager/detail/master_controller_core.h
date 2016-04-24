@@ -1,6 +1,26 @@
 //
 // Created by David Seery on 22/01/2016.
+// --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
+//
+// This file is part of the CppTransport platform.
+//
+// CppTransport is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License, or
+// (at your option) any later version.
+//
+// CppTransport is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CppTransport.  If not, see <http://www.gnu.org/licenses/>.
+//
+// @license: GPL-2
+// @contributor: David Seery <D.Seery@sussex.ac.uk>
+// --@@
 //
 
 #ifndef CPPTRANSPORT_MANAGER_DETAIL_MASTER_CONTROLLER_CORE_H
@@ -11,11 +31,67 @@
 #include "transport-runtime/repository/repository_toolkit.h"
 #include "transport-runtime/repository/repository_graphkit.h"
 
+#include "transport-runtime/build_data.h"
+
 #include "boost/timer/timer.hpp"
 
 
 namespace transport
   {
+
+    namespace master_controller_impl
+      {
+
+        inline void show_license_data()
+          {
+            std::cout << '\n';
+            std::cout << "The CppTransport platform is free software, and you are welcome to redistribute" << '\n'
+                      << "it under certain conditions; for details see the LICENSE.txt file which came bundled" << '\n'
+                      << "with the platform source files. Different licensing conditions may apply to" << '\n';
+            std::cout << "individual model description files." << '\n';
+            std::cout << "For the CppTransport platform: contact David Seery <D.Seery@sussex.ac.uk>" << '\n';
+            std::cout << "For model licensing information: contact details should be embedded within the model file." << '\n';
+
+            std::cout << '\n';
+
+            std::cout << "There is no warranty for this program, to the extent permitted by applicable law." << '\n'
+                      << "Except when otherwise stated in writing the copyright holders and/or other parties" << '\n'
+                      << "provide the program \"as is\" without warranty of any kind, either expressed or implied," << '\n'
+                      << "including, but not limited to, the implied warranties of merchantability and" << '\n'
+                      << "fitness for a particular purpose. The entire risk as to the quality and performance" << '\n'
+                      << "of the program is with you. Should the program prove defective, you assume the" << '\n'
+                      << "cost of all necessary servicing, repair or correction." << '\n';
+
+            std::cout << '\n';
+
+            std::cout << "The CppTransport runtime system contains, depends on, or bundles portions of" << '\n';
+            std::cout << "the following open source projects:" << '\n' << '\n';
+
+            std::cout << "- The Boost C++ libraries (http://www.boost.org) Boost Software License" << '\n';
+            std::cout << "- The JsonCpp JSON parser (https://github.com/open-source-parsers/jsoncpp) MIT license" << '\n';
+            std::cout << "- The SPLINTER spline library (https://github.com/bgrimstad/splinter) Mozilla license" << '\n';
+            std::cout << "- The jQuery library (https://jquery.com/download/) MIT license" << '\n';
+            std::cout << "- The Bootstrap framework (http://getbootstrap.com) MIT license" << '\n';
+            std::cout << "- The bootstrap-tab-history plugin (http://mnarayan01.github.io/bootstrap-tab-history/) Apache license" << '\n';
+            std::cout << "- The DataTables library (https://datatables.net) MIT license" << '\n';
+            std::cout << "- The Prism.js library (http://prismjs.com) MIT license" << '\n';
+
+            std::cout << '\n';
+            std::cout << "For further details, see the NOTICE.txt file which came bundled with the" << '\n'
+                      << "platform source files." << '\n';
+          }
+
+
+        inline void show_build_data()
+          {
+            std::cout << build_data::CPPTRANSPORT_BUILD_DATA_TIMESTAMP      << ": " << build_data::config_timestamp << '\n';
+            std::cout << build_data::CPPTRANSPORT_BUILD_DATA_C_COMPILER     << ": " << build_data::c_compiler << '\n';
+            std::cout << build_data::CPPTRANSPORT_BUILD_DATA_CPP_COMPILER   << ": " << build_data::cpp_compiler << '\n';
+            std::cout << build_data::CPPTRANSPORT_BUILD_DATA_TYPE           << ": " << build_data::build_type << '\n';
+            std::cout << build_data::CPPTRANSPORT_BUILD_DATA_SYSTEM         << ": " << build_data::system_name << '\n';
+          }
+
+      }   // namespace master_controller_impl
 
     using namespace master_controller_impl;
 
@@ -51,6 +127,7 @@ namespace transport
         generic.add_options()
           (CPPTRANSPORT_SWITCH_HELP,                                                                                         CPPTRANSPORT_HELP_HELP)
           (CPPTRANSPORT_SWITCH_VERSION,                                                                                      CPPTRANSPORT_HELP_VERSION)
+          (CPPTRANSPORT_SWITCH_LICENSE,                                                                                      CPPTRANSPORT_HELP_LICENSE)
           (CPPTRANSPORT_SWITCH_INCLUDE,          boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_INCLUDE)
           (CPPTRANSPORT_SWITCH_MODELS,                                                                                       CPPTRANSPORT_HELP_MODELS)
           (CPPTRANSPORT_SWITCH_NO_COLOUR,                                                                                    CPPTRANSPORT_HELP_NO_COLOUR);
@@ -102,7 +179,8 @@ namespace transport
 
         boost::program_options::options_description hidden_options;
         hidden_options.add_options()
-          (CPPTRANSPORT_SWITCH_NO_COLOR, CPPTRANSPORT_HELP_NO_COLOR);
+          (CPPTRANSPORT_SWITCH_NO_COLOR,  CPPTRANSPORT_HELP_NO_COLOR)
+          (CPPTRANSPORT_SWITCH_BUILDDATA, CPPTRANSPORT_HELP_BUILDDATA);
 
         boost::program_options::options_description cmdline_options;
         cmdline_options.add(generic).add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
@@ -237,8 +315,18 @@ namespace transport
         if(option_map.count(CPPTRANSPORT_SWITCH_HELP))
           {
             if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << '\n';
+            emitted_version = true;
             std::cout << description << '\n';
           }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_LICENSE))
+          {
+            if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << '\n';
+            emitted_version = true;
+            show_license_data();
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_BUILDDATA)) show_build_data();
 
         if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
           {
