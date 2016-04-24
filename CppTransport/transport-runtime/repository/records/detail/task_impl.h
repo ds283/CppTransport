@@ -152,7 +152,7 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
-        // ingest data
+        // ingest task data
         tk = integration_task_helper::deserialize<number>(this->name, reader, handle, f);
 
         // close handle
