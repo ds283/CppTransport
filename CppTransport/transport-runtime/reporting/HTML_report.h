@@ -4378,6 +4378,12 @@ namespace transport
 
                                     it.add_element(button2).add_element(diagram);
                                   }
+                                else
+                                  {
+                                    HTML_node button2("button", "Dependency diagram");
+                                    button2.add_attribute("type", "button").add_attribute("class", "btn btn-info disabled");
+                                    it.add_element(button2);
+                                  }
                               }
 
                             ++count;
