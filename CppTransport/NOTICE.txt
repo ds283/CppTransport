@@ -1,0 +1,96 @@
+====
+
+The CppTransport sources incorporate portions of the following open source projects:
+
+* The GinacPrint common subexpression elimination algorithm made available by Doug Baker
+http://www.ginac.de/pipermail/ginac-list/2010-May/001631.html
+License: GPL-2
+This is incorporated in the source files
+CppTransport/translator/backends/infrastructure/language_concepts/cse.cpp
+CppTransport/translator/backends/infrastructure/language_concepts/cse.h
+
+====
+
+The CppTransport translator and runtime system are linked to the following
+libraries. The build process assumes they are available on the system,
+but does not automatically install them.
+
+The CppTransport sources do not include source code (or derivatives of thee source code)
+from these libraries; they only link to them as external resources.
+
+* GiNaC (used by translator)
+http://www.ginac.de
+License: GPL-2
+
+* Boost (used by translator and runtime system)
+http://www.boost.org
+License: Boost Software License
+
+* SQLite3 (used by runtime system)
+https://www.sqlite.org
+License: Public Domain (https://www.sqlite.org/copyright.html)
+
+====
+
+In addition, the CppTransport build process automatically downloads
+and installs the following libraries. They are statically linked to executables
+constructed by (1) running the translator and (2) building the resulting code
+using the provided runtime system.
+
+The CppTransport sources do not include source code (or derivatives of the source code)
+from these libraries. Compiled executables using the provided runtime system
+link to them only as external resources.
+
+* SPLINTER
+https://github.com/bgrimstad/splinter
+License: Mozilla public license
+(see thirdparty/License/SPLINTER.txt)
+
+* JsonCpp
+https://github.com/open-source-parsers/jsoncpp
+License: MIT License
+(see thirdparty/License/JsonCpp.txt)
+
+CppTransport also depends on the Eigen library using the version bundled as part of SPLINTER.
+
+* Eigen
+http://eigen.tuxfamily.org/index.php?title=Main_Page
+License: Mozilla public license
+(for details, see files installed by the SPLINTER build process)
+
+====
+
+Also, the CppTransport platform bundles parts of the following open source
+projects. These parts are included in the Git repository for CppTransport
+or the installation tarball in the thirdparty/ directory.
+
+The CppTransport sources do not include source code (or derivatives of the source code)
+from this projects. It depends on them only as external resources which are
+used by HTML reports.
+
+* jQuery
+https://jquery.com/download/
+License: MIT License
+(see thirdparty/License/jQuery.txt)
+
+* Twitter Bootstrap
+http://getbootstrap.com
+License: MIT License
+(see thirdparty/License/Bootstrap.txt)
+
+* bootstrap-tab-history
+http://mnarayan01.github.io/bootstrap-tab-history/
+License: Apache License
+(see thirdparty/License/bootstrap-tab-history.txt)
+
+* DataTables
+https://datatables.net
+License: MIT License
+(see thirdparty/License/DataTables.txt)
+
+* Prism.js
+http://prismjs.com
+License: MIT license
+(see thirdparty/License/prism.txt)
+
+====
