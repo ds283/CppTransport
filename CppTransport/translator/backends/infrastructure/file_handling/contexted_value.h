@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 02/12/2015.
-// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
+// Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
 #ifndef CPPTRANSPORT_CONTEXTED_VALUE_H

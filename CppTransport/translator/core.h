@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 12/06/2013.
-// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
+// Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
 #ifndef CPPTRANSPORT_CORE_H
@@ -13,7 +13,7 @@
 constexpr auto CPPTRANSPORT_NAME                     = "CppTransport";
 constexpr auto CPPTRANSPORT_VERSION                  = "2016.1.0";
 constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 201601;
-constexpr auto CPPTRANSPORT_COPYRIGHT                = "(c) University of Sussex 2013-2016";
+constexpr auto CPPTRANSPORT_COPYRIGHT                = "(c) University of Sussex 2016";
 
 constexpr auto MODEL_SCRIPT_SUFFIX                   = ".model";
 constexpr auto MODEL_SCRIPT_SUFFIX_LENGTH            = (6);

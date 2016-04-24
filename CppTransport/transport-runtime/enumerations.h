@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 20/08/2015.
-// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
+// Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
 #ifndef CPPTRANSPORT_ENUMERATIONS_H
