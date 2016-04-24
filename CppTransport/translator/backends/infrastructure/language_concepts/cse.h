@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Doug Baker <cape1232@yahoo.com>
 // --@@
 //
 
