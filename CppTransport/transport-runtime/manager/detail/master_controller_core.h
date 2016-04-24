@@ -39,7 +39,7 @@ namespace transport
                       << "provide the program \"as is\" without warranty of any kind, either expressed or implied," << '\n'
                       << "including, but not limited to, the implied warranties of merchantability and" << '\n'
                       << "fitness for a particular purpose. The entire risk as to the quality and performance" << '\n'
-                      << "of the program is with you. should the program prove defective, you assume the" << '\n'
+                      << "of the program is with you. Should the program prove defective, you assume the" << '\n'
                       << "cost of all necessary servicing, repair or correction." << '\n';
 
             std::cout << '\n';
@@ -47,7 +47,7 @@ namespace transport
             std::cout << "The CppTransport runtime system contains, depends on, or bundles portions of" << '\n';
             std::cout << "the following open source projects:" << '\n' << '\n';
 
-            std::cout << "- The Boost C++ libraries (http://www.boost.org) Boost license" << '\n';
+            std::cout << "- The Boost C++ libraries (http://www.boost.org) Boost Software License" << '\n';
             std::cout << "- The JsonCpp JSON parser (https://github.com/open-source-parsers/jsoncpp) MIT license" << '\n';
             std::cout << "- The SPLINTER spline library (https://github.com/bgrimstad/splinter) Mozilla license" << '\n';
             std::cout << "- The jQuery library (https://jquery.com/download/) MIT license" << '\n';
@@ -57,7 +57,8 @@ namespace transport
             std::cout << "- The Prism.js library (http://prismjs.com) MIT license" << '\n';
 
             std::cout << '\n';
-            std::cout << "For further details, see the NOTICE.txt file which came bundled with the platform source files." << '\n';
+            std::cout << "For further details, see the NOTICE.txt file which came bundled with the" << '\n'
+                      << "platform source files." << '\n';
           }
 
 

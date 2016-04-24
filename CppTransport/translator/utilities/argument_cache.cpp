@@ -31,7 +31,7 @@ namespace argument_cache_impl
                   << "provide the program \"as is\" without warranty of any kind, either expressed or implied," << '\n'
                   << "including, but not limited to, the implied warranties of merchantability and" << '\n'
                   << "fitness for a particular purpose. The entire risk as to the quality and performance" << '\n'
-                  << "of the program is with you. should the program prove defective, you assume the" << '\n'
+                  << "of the program is with you. Should the program prove defective, you assume the" << '\n'
                   << "cost of all necessary servicing, repair or correction." << '\n';
 
         std::cout << '\n';
@@ -40,13 +40,14 @@ namespace argument_cache_impl
         std::cout << "the following open source projects:" << '\n' << '\n';
 
         std::cout << "- The GiNaC computer algebra library (http://www.ginac.de) GPL-2" << '\n';
-        std::cout << "- The Boost C++ libraries (http://www.boost.org) Boost license" << '\n';
+        std::cout << "- The Boost C++ libraries (http://www.boost.org) Boost Software License" << '\n';
         std::cout << "- Common-subexpression elimination for GiNaC is adapted from the" << '\n';
         std::cout << "  GinacPrint implementation by Doug Baker" << '\n';
         std::cout << "  (http://www.ginac.de/pipermail/ginac-list/2010-May/001631.html) GPL-2" << '\n';
 
         std::cout << '\n';
-        std::cout << "For further details, see the NOTICE.txt file which came bundled with the platform source files." << '\n';
+        std::cout << "For further details, see the NOTICE.txt file which came bundled with the" << '\n'
+                  << "platform source files." << '\n';
       }
 
 
