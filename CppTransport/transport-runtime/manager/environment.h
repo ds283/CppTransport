@@ -485,7 +485,6 @@ namespace transport
       {
         std::ostringstream command;
 
-
         // source user's .profile script if it exists
         // TODO: Platform introspection
         const char* user_home = getenv("HOME");
