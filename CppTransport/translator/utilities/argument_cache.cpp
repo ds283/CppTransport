@@ -21,18 +21,18 @@ namespace argument_cache_impl
       {
         std::cout << '\n';
         std::cout << "The CppTransport translator is free software, and you are welcome to redistribute" << '\n'
-        << "it under certain conditions; see the bundled LICENSE.txt file for details." << '\n';
+                  << "it under certain conditions; see the bundled LICENSE.txt file for details." << '\n';
         std::cout << "Contact: David Seery <D.Seery@sussex.ac.uk>" << '\n';
 
         std::cout << '\n';
 
         std::cout << "There is no warranty for this program, to the extent permitted by applicable law." << '\n'
-        << "Except when otherwise stated in writing the copyright holders and/or other parties" << '\n'
-        << "provide the program \"as is\" without warranty of any kind, either expressed or implied," << '\n'
-        << "including, but not limited to, the implied warranties of merchantability and" << '\n'
-        << "fitness for a particular purpose. The entire risk as to the quality and performance" << '\n'
-        << "of the program is with you. should the program prove defective, you assume the" << '\n'
-        << "cost of all necessary servicing, repair or correction." << '\n';
+                  << "Except when otherwise stated in writing the copyright holders and/or other parties" << '\n'
+                  << "provide the program \"as is\" without warranty of any kind, either expressed or implied," << '\n'
+                  << "including, but not limited to, the implied warranties of merchantability and" << '\n'
+                  << "fitness for a particular purpose. The entire risk as to the quality and performance" << '\n'
+                  << "of the program is with you. should the program prove defective, you assume the" << '\n'
+                  << "cost of all necessary servicing, repair or correction." << '\n';
 
         std::cout << '\n';
 
@@ -44,6 +44,9 @@ namespace argument_cache_impl
         std::cout << "- Common-subexpression elimination for GiNaC is adapted from the" << '\n';
         std::cout << "  GinacPrint implementation by Doug Baker" << '\n';
         std::cout << "  (http://www.ginac.de/pipermail/ginac-list/2010-May/001631.html) GPL-2" << '\n';
+
+        std::cout << '\n';
+        std::cout << "For further details, see the NOTICE.txt file which came bundled with the platform source files." << '\n';
       }
 
 

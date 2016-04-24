@@ -55,6 +55,9 @@ namespace transport
             std::cout << "- The bootstrap-tab-history plugin (http://mnarayan01.github.io/bootstrap-tab-history/) Apache license" << '\n';
             std::cout << "- The DataTables library (https://datatables.net) MIT license" << '\n';
             std::cout << "- The Prism.js library (http://prismjs.com) MIT license" << '\n';
+
+            std::cout << '\n';
+            std::cout << "For further details, see the NOTICE.txt file which came bundled with the platform source files." << '\n';
           }
 
 
