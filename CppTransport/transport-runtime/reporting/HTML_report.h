@@ -586,14 +586,36 @@ namespace transport
                 p = boost::filesystem::absolute(p);
               }
 
+            while(p.filename().string() == ".")
+              {
+                p = p.parent_path();
+              }
+
             // check whether root directory already exists, and if it does, raise an error
             if(boost::filesystem::exists(p))
               {
+                boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+                boost::filesystem::path out_dir = p;
+                out_dir.remove_filename();
+
+                boost::filesystem::path out_leaf = p.filename();
+                boost::filesystem::path out_ext = p.extension();
+                out_leaf.replace_extension("");
+
+                std::ostringstream new_leaf;
+                new_leaf << out_leaf.string() << "-" << boost::posix_time::to_iso_string(now);
+
+                out_leaf = boost::filesystem::path(new_leaf.str());
+                out_leaf.replace_extension(out_ext);
+
+                boost::filesystem::path new_p = out_dir / out_leaf;
+
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_HTML_ROOT_EXISTS_A << " '" << p.string() << "' " << CPPTRANSPORT_HTML_ROOT_EXISTS_B;
-                this->err(msg.str());
-                this->root.clear();
-                return;
+                msg << CPPTRANSPORT_HTML_ROOT_EXISTS_A << " '" << p.string() << "' " << CPPTRANSPORT_HTML_ROOT_EXISTS_B << " '" << new_p.string() << "\"";
+                this->warn(msg.str());
+
+                p = new_p;
               }
 
             this->root = p;

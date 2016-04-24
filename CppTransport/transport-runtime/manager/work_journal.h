@@ -1017,7 +1017,7 @@ namespace transport
 		        boost::filesystem::path out_ext  = out_file.extension();
 		        out_leaf.replace_extension("");
 
-		        std::stringstream new_leaf;
+		        std::ostringstream new_leaf;
 		        new_leaf << out_leaf.string() << "-" << boost::posix_time::to_iso_string(now);
 
 		        out_leaf = boost::filesystem::path(new_leaf.str());

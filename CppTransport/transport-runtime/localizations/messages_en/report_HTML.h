@@ -27,7 +27,7 @@
 #define CPPTRANSPORT_MESSAGES_EN_HTML_REPORT_H
 
 constexpr auto CPPTRANSPORT_HTML_ROOT_EXISTS_A                    = "Specified HTML root directory";
-constexpr auto CPPTRANSPORT_HTML_ROOT_EXISTS_B                    = "already exists";
+constexpr auto CPPTRANSPORT_HTML_ROOT_EXISTS_B                    = "already exists; renamed as";
 constexpr auto CPPTRANSPORT_HTML_CREATE_FAILURE                   = "Could not create HTML root directory";
 constexpr auto CPPTRANSPORT_HTML_ASSET_CREATE_FAILURE             = "Could not create asset directory";
 constexpr auto CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_A          = "Could not emplace asset";
