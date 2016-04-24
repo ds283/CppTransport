@@ -31,7 +31,7 @@
 #include "msg_en.h"
 
 constexpr auto CPPTRANSPORT_NAME                     = "CppTransport";
-constexpr auto CPPTRANSPORT_VERSION                  = "2016.1.0";
+constexpr auto CPPTRANSPORT_VERSION                  = "2016.1.0 RC1";
 constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 201601;
 constexpr auto CPPTRANSPORT_COPYRIGHT                = "(c) University of Sussex 2016";
 
