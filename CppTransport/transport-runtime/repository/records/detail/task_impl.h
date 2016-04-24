@@ -140,9 +140,10 @@ namespace transport
             throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
           }
 
+        // ingest k-configuration database: first find absolute path to container
         boost::filesystem::path abs_database = repo_root / kconfig_db;
 
-        // open database
+        // open container and obtain sqlite3 handle
         sqlite3* handle;
         if(sqlite3_open_v2(abs_database.c_str(), &handle, SQLITE_OPEN_READONLY, nullptr) != SQLITE_OK)
           {
@@ -151,7 +152,11 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
+        // ingest data
         tk = integration_task_helper::deserialize<number>(this->name, reader, handle, f);
+
+        // close handle
+        sqlite3_close(handle);
 
         assert(tk != nullptr);
         if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
