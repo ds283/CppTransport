@@ -66,6 +66,13 @@ namespace transport
     typedef std::map< std::string, std::unique_ptr< content_group_record<output_payload> > > output_content_db;
 
 
+    // hint for query_task() method
+    enum query_task_hint
+      {
+        integration, postintegration, output, no_hint
+      };
+
+
     template <typename number>
     class repository
       {
@@ -111,6 +118,15 @@ namespace transport
 
         //! Generate a transaction management object
         transaction_manager generate_transaction_manager(std::unique_ptr<transaction_handler> handle);
+
+        //! Begin transaction
+        void begin_transaction();
+
+        //! Commit transaction
+        void commit_transaction();
+
+        //! Abort transaction
+        void abort_transaction();
 
         //! Release resources after end of transaction
         void release_transaction();
@@ -164,7 +180,11 @@ namespace transport
 
         //! Read a task record from the database
         //! Without a transaction_manager object, the returned record is readonly
-        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name) = 0;
+        //! If supplied, the hint is used to search more efficiently.
+        //! Note the use of a default argument in a virtual function: to avoid problems with static scoping rules, all
+        //! implementations should use the same default argument
+        //! (the choice of which default to supply is determined by the static scope)
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, query_task_hint hint=query_task_hint::no_hint) = 0;
 
         //! Read a derived product specification from the database
         //! Without a transaction_manager object, the returned record is readonly
@@ -188,7 +208,11 @@ namespace transport
         virtual std::unique_ptr< package_record<number> > query_package(const std::string& name, transaction_manager& mgr) = 0;
 
         //! Read a task record from the database
-        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, transaction_manager& mgr) = 0;
+        //! If supplied, the hint is used to search more efficiently.
+        //! Note the use of a default argument in a virtual function: to avoid problems with static scoping rules, all
+        //! implementations should use the same default argument
+        //! (the choice of which default to supply is determined by the static scope)
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, transaction_manager& mgr, query_task_hint hint=query_task_hint::no_hint) = 0;
 
         //! Read a derived product specification from the database
         virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, transaction_manager& mgr) = 0;
@@ -247,6 +271,14 @@ namespace transport
         //! Enumerate all content groups; all records are returned in a readonly state, so if updates
         //! are required each individual record must be re-queried using the query_*() methods
         virtual output_content_db enumerate_output_task_content() = 0;
+
+
+        // RECORD CACHE, CACHE MANAGEMENT
+
+      protected:
+
+        //! flush record cache
+        void flush_caches();
 
 
         // REMOVE OUTPUT GROUPS
@@ -508,11 +540,15 @@ namespace transport
 
         // POLICY CLASSES
 
+      protected:
+
         //! local environment
         local_environment& env;
 
 
         // ERROR, WARNING, MESSAGE HANDLERS
+
+      protected:
 
         //! error handler
         error_handler error;
@@ -525,6 +561,8 @@ namespace transport
 
 
         // FINDER SERVICES
+
+      protected:
 
         //! Cached model-finder supplied by instance manager
         model_manager<number>& m_finder;
@@ -541,8 +579,51 @@ namespace transport
 
         // TRANSACTIONS
 
+      protected:
+
         //! Number of open transactions on the database
         unsigned int transactions;
+
+
+        // CACHES
+
+      protected:
+
+        //! package record cache type
+        typedef std::map< std::string, std::unique_ptr< package_record<number> > > package_record_cache;
+
+        //! package record cache
+        package_record_cache pkg_cache;
+
+        //! task record cache type
+        typedef std::map< std::string, std::unique_ptr< task_record<number> > > task_record_cache;
+
+        //! task record cache
+        task_record_cache task_cache;
+
+        //! derived product record cache type
+        typedef std::map< std::string, std::unique_ptr< derived_product_record<number> > > derived_record_cache;
+
+        //! derived record cache
+        derived_record_cache derived_cache;
+
+        //! integration content group cache type
+        typedef std::map< std::string, std::unique_ptr< content_group_record<integration_payload> > > integration_content_cache;
+
+        //! integration content group cache
+        integration_content_cache int_cache;
+
+        //! postintegration content group cache type
+        typedef std::map< std::string, std::unique_ptr< content_group_record<postintegration_payload> > > postintegration_content_cache;
+
+        //! postintegration content group cache
+        postintegration_content_cache pint_cache;
+
+        //! output content group cache type
+        typedef std::map< std::string, std::unique_ptr< content_group_record<output_payload> > > output_content_cache;
+
+        //! output content group cache
+        output_content_cache out_cache;
 
       };
 
