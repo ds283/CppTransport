@@ -29,7 +29,7 @@
 
 #include "transport-runtime/data/data_manager.h"
 
-#include "transport-runtime/repository/repository_cache.h"
+#include "transport-runtime/reporting/repository_cache.h"
 #include "transport-runtime/reporting/unique_tags.h"
 
 #include "transport-runtime/reporting/HTML_writer.h"

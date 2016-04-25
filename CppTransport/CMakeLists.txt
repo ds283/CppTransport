@@ -808,6 +808,7 @@ set(TRANSPORT_RUNTIME_REPORTING_FILES
   transport-runtime/reporting/HTML_report_bundle.h
   transport-runtime/reporting/HTML_writer.h
   transport-runtime/reporting/JavaScript_writer.h
+  transport-runtime/reporting/repository_cache.h
   transport-runtime/reporting/key_value.h
   transport-runtime/reporting/unique_tags.h
   )
@@ -824,7 +825,6 @@ set(TRANSPORT_RUNTIME_REPOSITORY_FILES
   transport-runtime/repository/inflight.h
   transport-runtime/repository/json_repository.h
   transport-runtime/repository/repository.h
-  transport-runtime/repository/repository_cache.h
   transport-runtime/repository/repository_toolkit.h
   transport-runtime/repository/repository_graphkit.h
   )
