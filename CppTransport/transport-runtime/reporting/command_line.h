@@ -29,7 +29,7 @@
 
 #include "transport-runtime/repository/repository.h"
 
-#include "transport-runtime/repository/repository_cache.h"
+#include "transport-runtime/reporting/repository_cache.h"
 #include "transport-runtime/reporting/key_value.h"
 #include "transport-runtime/reporting/content_group_data.h"
 
