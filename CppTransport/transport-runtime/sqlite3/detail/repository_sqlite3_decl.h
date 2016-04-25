@@ -173,7 +173,11 @@ namespace transport
 
         //! Read a task record from the database
         //! Without a transaction_manager object, the returned record is readonly
-        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name) override;
+        //! If supplied, the hint is used to search more efficiently.
+        //! Note the use of a default argument in a virtual function: to avoid problems with static scoping rules, all
+        //! implementations should use the same default argument
+        //! (the choice of which default to supply is determined by the static scope)
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, query_task_hint hint=query_task_hint::no_hint) override;
 
         //! Read a derived product specification from the database
         //! Without a transaction_manager object, the returned record is readonly
@@ -197,7 +201,11 @@ namespace transport
         virtual std::unique_ptr< package_record<number> > query_package(const std::string& name, transaction_manager& mgr) override;
 
         //! Read a task record from the database
-        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, transaction_manager& mgr) override;
+        //! If supplied, the hint is used to search more efficiently.
+        //! Note the use of a default argument in a virtual function: to avoid problems with static scoping rules, all
+        //! implementations should use the same default argument
+        //! (the choice of which default to supply is determined by the static scope)
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, transaction_manager& mgr, query_task_hint hint=query_task_hint::no_hint) override;
 
         //! Read a derived product specification from the database
         virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, transaction_manager& mgr) override;
@@ -217,7 +225,7 @@ namespace transport
         std::unique_ptr< package_record<number> > query_package(const std::string& name, boost::optional<transaction_manager&> mgr);
 
         //! Generic method to read a task from the database
-        std::unique_ptr< task_record<number> > query_task(const std::string& name, boost::optional<transaction_manager&> mgr);
+        std::unique_ptr< task_record<number> > query_task(const std::string& name, boost::optional<transaction_manager&> mgr, query_task_hint hint);
 
         //! Generic method to read a derived product specification from the database
         std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, boost::optional<transaction_manager&> mgr);
@@ -436,6 +444,14 @@ namespace transport
         //! Build a database of content groups from a list of names
         template <typename Payload>
         void content_groups_from_list(const std::list<std::string>& list, std::map< std::string, std::unique_ptr < content_group_record<Payload> > >& db);
+
+        //! Functions used to redirect query from content_groups_from_list() to appropriate query_* function
+        //! (those functions cannot themselves be templated because they are virtual)
+        //! Odd-looking return-by-reference syntax enables us to use overloading rather then templating to
+        //! resolve the payload type; partial function specializations are not allowed, so we can't use templates for this purpose
+        void query_content(const std::string& name, std::unique_ptr< content_group_record<integration_payload> >& group);
+        void query_content(const std::string& name, std::unique_ptr< content_group_record<postintegration_payload> >& group);
+        void query_content(const std::string& name, std::unique_ptr< content_group_record<output_payload> >& group);
 
 
         // COMMIT CALLBACK METHODS FOR REPOSITORY RECORDS

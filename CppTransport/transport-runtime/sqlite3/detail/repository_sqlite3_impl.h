@@ -183,6 +183,9 @@ namespace transport
         assert(this->db != nullptr);
 
         sqlite3_operations::exec(this->db, "BEGIN TRANSACTION;");
+
+        // forward to abstract repository instance
+        this->repository<number>::begin_transaction();
       }
 
 
@@ -193,6 +196,9 @@ namespace transport
         assert(this->db != nullptr);
 
         sqlite3_operations::exec(this->db, "COMMIT");
+
+        // forward to abstract repository instance
+        this->repository<number>::commit_transaction();
       }
 
 
@@ -203,6 +209,9 @@ namespace transport
         assert(this->db != nullptr);
 
         sqlite3_operations::exec(this->db, "ROLLBACK;");
+
+        // forward to abstract repository instance
+        this->repository<number>::abort_transaction();
       }
 
 
@@ -683,14 +692,7 @@ namespace transport
 
         // check whether the initial conditions package for this task is already present; if not, insert it
         unsigned int count = sqlite3_operations::count_packages(this->db, tk.get_ics().get_name());
-        if(count == 0)
-          {
-//            std::ostringstream msg;
-//            msg << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
-//            << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
-//            this->message(msg.str());
-            this->commit(mgr, tk.get_ics());
-          }
+        if(count == 0) this->commit(mgr, tk.get_ics());
       }
 
 
@@ -722,14 +724,7 @@ namespace transport
           {
             derived_data::derived_product<number>& product = elt.get_product();
             unsigned int count = sqlite3_operations::count_products(this->db, product.get_name());
-            if(count == 0)
-              {
-//                std::ostringstream msg;
-//                msg << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
-//                << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product.get_name() << "'";
-//                this->message(msg.str());
-                this->commit(mgr, product);
-              }
+            if(count == 0) this->commit(mgr, product);
           }
       }
 
@@ -854,10 +849,6 @@ namespace transport
               {
                 integration_task<number>& rtk = dynamic_cast< integration_task<number>& >(tk);
 
-//                std::ostringstream msg;
-//                msg << commit_int_A << " '" << parent << "' " << commit_int_B << " '" << rtk.get_name() << "'";
-//                this->message(msg.str());
-
                 switch(rtk.get_task_type())
                   {
                     case integration_task_type::twopf:
@@ -879,10 +870,6 @@ namespace transport
             case task_type::postintegration:
               {
                 postintegration_task<number>& rtk = dynamic_cast< postintegration_task<number>& >(tk);
-
-//                std::ostringstream msg;
-//                msg << commit_pint_A << " '" << parent << "' " << commit_pint_B << " '" << rtk.get_name() << "'";
-//                this->message(msg.str());
 
                 switch(rtk.get_task_type())
                   {
@@ -921,12 +908,28 @@ namespace transport
     template <typename number>
     std::unique_ptr< package_record<number> > repository_sqlite3<number>::query_package(const std::string& name)
       {
-        return this->query_package(name, boost::optional<transaction_manager&>());
+        // if no transaction in progress, query whether we already have this record cached
+        if(this->transactions == 0)
+          {
+            typename repository<number>::package_record_cache::const_iterator t = this->pkg_cache.find(name);
+            if(t != this->pkg_cache.end())
+              {
+                // found a match, so build a copy and return that
+                return std::unique_ptr< package_record<number> >(dynamic_cast< package_record<number>* >(t->second->clone()));
+              }
+          }
+
+        // build a read-only copy and store it in the cache, again if no transaction is in progress
+        std::unique_ptr< package_record<number> > record = this->query_package(name, boost::optional<transaction_manager&>());
+        if(this->transactions == 0) this->pkg_cache.insert( std::make_pair(name, std::unique_ptr< package_record<number> >(dynamic_cast< package_record<number>* >(record->clone()))) );
+
+        return std::move(record);
       }
 
     template <typename number>
     std::unique_ptr< package_record<number> > repository_sqlite3<number>::query_package(const std::string& name, transaction_manager& mgr)
       {
+        // for read-write copies we don't search the cache but always build a new copy from the database
         return this->query_package(name, boost::optional<transaction_manager&>(mgr));
       }
 
@@ -941,33 +944,49 @@ namespace transport
 
     //! Read a task record from the database
     template <typename number>
-    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name)
+    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name, query_task_hint hint)
       {
-        return this->query_task(name, boost::optional<transaction_manager&>());
+        // if no transaction in progress, query whether we already have this record in the cache
+        if(this->transactions == 0)
+          {
+            typename repository<number>::task_record_cache::const_iterator t = this->task_cache.find(name);
+            if(t != this->task_cache.end())
+              {
+                // found a match, so build a copy and return that
+                return std::unique_ptr< task_record<number> >(dynamic_cast< task_record<number>* >(t->second->clone()));
+              }
+          }
+
+        // build a read-only copy and store it in the cache, again if no transaction is in progress
+        std::unique_ptr< task_record<number> > record = this->query_task(name, boost::optional<transaction_manager&>(), hint);
+        if(this->transactions == 0) this->task_cache.insert( std::make_pair(name, std::unique_ptr< task_record<number> >(dynamic_cast< task_record<number>* >(record->clone()))) );
+
+        return std::move(record);
       }
 
     template <typename number>
-    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name, transaction_manager& mgr)
+    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name, transaction_manager& mgr, query_task_hint hint)
       {
-        return this->query_task(name, boost::optional<transaction_manager&>(mgr));
+        // for read-write copies we don't search the cache, but always build a new copy from the database
+        return this->query_task(name, boost::optional<transaction_manager&>(mgr), hint);
       }
 
     template <typename number>
-    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name, boost::optional<transaction_manager&> mgr)
+    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name, boost::optional<transaction_manager&> mgr, query_task_hint hint)
       {
-        if(sqlite3_operations::count_integration_tasks(this->db, name) > 0)
+        if(hint == query_task_hint::integration || (hint == query_task_hint::no_hint && sqlite3_operations::count_integration_tasks(this->db, name) > 0))
           {
             boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
             return this->integration_task_record_factory(root, mgr);
           }
-        else if(sqlite3_operations::count_postintegration_tasks(this->db, name) > 0)
+        else if(hint == query_task_hint::postintegration || (hint == query_task_hint::no_hint && sqlite3_operations::count_postintegration_tasks(this->db, name) > 0))
           {
             boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
             return this->postintegration_task_record_factory(root, mgr);
           }
-        else if(sqlite3_operations::count_output_tasks(this->db, name) > 0)
+        else if(hint == query_task_hint::output || (hint == query_task_hint::no_hint && sqlite3_operations::count_output_tasks(this->db, name) > 0))
           {
             boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
@@ -982,12 +1001,28 @@ namespace transport
     template <typename number>
     std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::query_derived_product(const std::string& name)
       {
-        return this->query_derived_product(name, boost::optional<transaction_manager&>());
+        // if no transaction in progress, query whether we already have this record in the cache
+        if(this->transactions == 0)
+          {
+            typename repository<number>::derived_record_cache::const_iterator t = this->derived_cache.find(name);
+            if(t != this->derived_cache.end())
+              {
+                // found a match, so build a copy and return that
+                return std::unique_ptr< derived_product_record<number> >(dynamic_cast< derived_product_record<number>* >(t->second->clone()));
+              }
+          }
+
+        // build a read-only copy and store it in the cache, again if no transaction is in progress
+        std::unique_ptr< derived_product_record<number> > record = this->query_derived_product(name, boost::optional<transaction_manager&>());
+        if(this->transactions == 0) this->derived_cache.insert( std::make_pair(name, std::unique_ptr< derived_product_record<number> >(dynamic_cast< derived_product_record<number>* >(record->clone()))) );
+
+        return std::move(record);
       }
 
     template <typename number>
     std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::query_derived_product(const std::string& name, transaction_manager& mgr)
       {
+        // for read-write copies we don't search the cache, but always build a new copy from the database
         return this->query_derived_product(name, boost::optional<transaction_manager&>(mgr));
       }
 
@@ -1004,12 +1039,28 @@ namespace transport
     template <typename number>
     std::unique_ptr< content_group_record<integration_payload> > repository_sqlite3<number>::query_integration_content(const std::string& name)
       {
-        return this->query_content_group<integration_payload>(name, boost::optional<transaction_manager&>());
+        // if no transaction in progress, query whether we already have this record in the cache
+        if(this->transactions == 0)
+          {
+            typename repository<number>::integration_content_cache::const_iterator t = this->int_cache.find(name);
+            if(t != this->int_cache.end())
+              {
+                // found a match, so build a copy and return that
+                return std::unique_ptr< content_group_record<integration_payload> >(dynamic_cast< content_group_record<integration_payload>* >(t->second->clone()));
+              }
+          }
+
+        // build a read-only copy and store it in the cache, again if no transaction is in progress
+        std::unique_ptr< content_group_record<integration_payload> > record = this->query_content_group<integration_payload>(name, boost::optional<transaction_manager&>());
+        if(this->transactions == 0) this->int_cache.insert( std::make_pair(name, std::unique_ptr< content_group_record<integration_payload> >(dynamic_cast< content_group_record<integration_payload>* >(record->clone()))) );
+
+        return std::move(record);
       }
 
     template <typename number>
     std::unique_ptr< content_group_record<integration_payload> > repository_sqlite3<number>::query_integration_content(const std::string& name, transaction_manager& mgr)
       {
+        // for read-write copies we don't search the cache, but always build a new copy from the database
         return this->query_content_group<integration_payload>(name, boost::optional<transaction_manager&>(mgr));
       }
 
@@ -1018,12 +1069,28 @@ namespace transport
     template <typename number>
     std::unique_ptr< content_group_record<postintegration_payload> > repository_sqlite3<number>::query_postintegration_content(const std::string& name)
       {
-        return this->query_content_group<postintegration_payload>(name, boost::optional<transaction_manager&>());
+        // if no transaction in progress, query whether we already have this record in the cache
+        if(this->transactions == 0)
+          {
+            typename repository<number>::postintegration_content_cache::const_iterator t = this->pint_cache.find(name);
+            if(t != this->pint_cache.end())
+              {
+                // found a match, so build a copy and return that
+                return std::unique_ptr< content_group_record<postintegration_payload> >(dynamic_cast< content_group_record<postintegration_payload>* >(t->second->clone()));
+              }
+          }
+
+        // build a read-only copy and store it in the cache, again if no transaction is in progress
+        std::unique_ptr< content_group_record<postintegration_payload> > record = this->query_content_group<postintegration_payload>(name, boost::optional<transaction_manager&>());
+        if(this->transactions == 0) this->pint_cache.insert( std::make_pair(name, std::unique_ptr< content_group_record<postintegration_payload> >(dynamic_cast< content_group_record<postintegration_payload>* >(record->clone()))) );
+
+        return std::move(record);
       }
 
     template <typename number>
     std::unique_ptr< content_group_record<postintegration_payload> > repository_sqlite3<number>::query_postintegration_content(const std::string& name, transaction_manager& mgr)
       {
+        // for read-write copies we don't search the cache, but always build a new copy from the database
         return this->query_content_group<postintegration_payload>(name, boost::optional<transaction_manager&>(mgr));
       }
 
@@ -1032,12 +1099,28 @@ namespace transport
     template <typename number>
     std::unique_ptr< content_group_record<output_payload> > repository_sqlite3<number>::query_output_content(const std::string& name)
       {
-        return this->query_content_group<output_payload>(name, boost::optional<transaction_manager&>());
+        // if no transaction in progress, query whether we already have this record in the cache
+        if(this->transactions == 0)
+          {
+            typename repository<number>::output_content_cache::const_iterator t = this->out_cache.find(name);
+            if(t != this->out_cache.end())
+              {
+                // found a match, so build a copy and return that
+                return std::unique_ptr< content_group_record<output_payload> >(dynamic_cast< content_group_record<output_payload>* >(t->second->clone()));
+              }
+          }
+
+        // build a read-only copy and store it in the cache, again if no transaction is in progress
+        std::unique_ptr< content_group_record<output_payload> > record = this->query_content_group<output_payload>(name, boost::optional<transaction_manager&>());
+        if(this->transactions == 0) this->out_cache.insert( std::make_pair(name, std::unique_ptr< content_group_record<output_payload> >(dynamic_cast< content_group_record<output_payload>* >(record->clone()))) );
+
+        return std::move(record);
       }
 
     template <typename number>
     std::unique_ptr< content_group_record<output_payload> > repository_sqlite3<number>::query_output_content(const std::string& name, transaction_manager& mgr)
       {
+        // for read-write copies we don't search the cache, but always build a new copy from the database
         return this->query_content_group<output_payload>(name, boost::optional<transaction_manager&>(mgr));
       }
 
@@ -1067,10 +1150,7 @@ namespace transport
 
         for(const std::string& name : package_names)
           {
-            boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, CPPTRANSPORT_REPO_PACKAGE_MISSING);
-            Json::Value             root     = this->deserialize_JSON_document(filename);
-
-            std::unique_ptr< package_record<number> > pkg = this->package_record_factory(root, boost::optional<transaction_manager&>());
+            std::unique_ptr< package_record<number> > pkg = this->query_package(name);
             db.insert( std::make_pair(name, std::move(pkg)) );
           }
 
@@ -1093,28 +1173,19 @@ namespace transport
 
         for(const std::string& name : integration_names)
           {
-            boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
-            Json::Value             root     = this->deserialize_JSON_document(filename);
-
-            std::unique_ptr< task_record<number> > task = this->integration_task_record_factory(root, boost::optional<transaction_manager&>());
+            std::unique_ptr< task_record<number> > task = this->query_task(name, query_task_hint::integration);
             db.insert( std::make_pair(name, std::move(task)) );
           }
 
         for(const std::string& name : postintegration_names)
           {
-            boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
-            Json::Value             root     = this->deserialize_JSON_document(filename);
-
-            std::unique_ptr< task_record<number> > task = this->postintegration_task_record_factory(root, boost::optional<transaction_manager&>());
+            std::unique_ptr< task_record<number> > task = this->query_task(name, query_task_hint::postintegration);
             db.insert( std::make_pair(name, std::move(task)) );
           }
 
         for(const std::string& name : output_names)
           {
-            boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
-            Json::Value             root     = this->deserialize_JSON_document(filename);
-
-            std::unique_ptr< task_record<number> > task = this->output_task_record_factory(root, boost::optional<transaction_manager&>());
+            std::unique_ptr< task_record<number> > task = this->query_task(name, query_task_hint::output);
             db.insert( std::make_pair(name, std::move(task)) );
           }
 
@@ -1135,10 +1206,7 @@ namespace transport
 
         for(const std::string& name : derived_product_names)
           {
-            boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, CPPTRANSPORT_REPO_PRODUCT_MISSING);
-            Json::Value             root     = this->deserialize_JSON_document(filename);
-
-            std::unique_ptr< derived_product_record<number> > prod = this->derived_product_record_factory(root, boost::optional<transaction_manager&>());
+            std::unique_ptr< derived_product_record<number> > prod = this->query_derived_product(name);
             db.insert( std::make_pair(name, std::move(prod)) );
           }
 
@@ -1393,12 +1461,31 @@ namespace transport
       {
         for(const std::string& name : list)
           {
-            boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
-            Json::Value             root     = this->deserialize_JSON_document(filename);
-
-            std::unique_ptr< content_group_record<Payload> > group = this->template content_group_record_factory<Payload>(root, boost::optional<transaction_manager&>());
+            std::unique_ptr< content_group_record<Payload> > group;
+            this->query_content(name, group);
             db.insert( std::make_pair(group->get_name(), std::move(group)) );
           }
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::query_content(const std::string& name, std::unique_ptr< content_group_record<integration_payload> >& group)
+      {
+        group = this->query_integration_content(name);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::query_content(const std::string& name, std::unique_ptr< content_group_record<postintegration_payload> >& group)
+      {
+        group = this->query_postintegration_content(name);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::query_content(const std::string& name, std::unique_ptr< content_group_record<output_payload> >& group)
+      {
+        group = this->query_output_content(name);
       }
 
 

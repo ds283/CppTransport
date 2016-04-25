@@ -28,7 +28,6 @@
 
 
 #include "transport-runtime/repository/repository.h"
-#include "transport-runtime/repository/repository_cache.h"
 #include "transport-runtime/repository/repository_graphkit.h"
 
 #include "transport-runtime/manager/message_handlers.h"
@@ -198,7 +197,6 @@ namespace transport
         //! constructor
         repository_toolkit(repository<number>& r, error_handler eh, warning_handler wh, message_handler mh)
           : repo(r),
-            cache(r),
             graphkit(r, eh, wh, mh),
             err(eh),
             warn(wh),
@@ -259,9 +257,6 @@ namespace transport
         //! reference to repository object
         repository<number>& repo;
 
-        //! repository cache, used to avoid constly multiple enumerations
-        repository_cache<number> cache;
-
         //! graph toolkit
         repository_graphkit<number> graphkit;
 
@@ -293,9 +288,9 @@ namespace transport
           }
 
         // only content group records carry tags and notes
-        integration_content_db& integration_content = this->cache.get_integration_content_db();
-        postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
-        output_content_db& output_content = this->cache.get_output_content_db();
+        integration_content_db integration_content = this->repo.enumerate_integration_task_content();
+        postintegration_content_db postintegration_content = this->repo.enumerate_postintegration_task_content();
+        output_content_db output_content = this->repo.enumerate_output_task_content();
 
         this->update_tags_notes(integration_content, items, tags_add, tags_remove, notes_add, notes_remove);
         this->update_tags_notes(postintegration_content, items, tags_add, tags_remove, notes_add, notes_remove);
@@ -384,9 +379,9 @@ namespace transport
         std::unique_ptr<repository_distance_matrix> dmat = this->graphkit.content_group_distance_matrix();
 
         // cache content databases
-        integration_content_db& integration_content = this->cache.get_integration_content_db();
-        postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
-        output_content_db& output_content = this->cache.get_output_content_db();
+        integration_content_db integration_content = this->repo.enumerate_integration_task_content();
+        postintegration_content_db postintegration_content = this->repo.enumerate_postintegration_task_content();
+        output_content_db output_content = this->repo.enumerate_output_task_content();
 
         // attempt deletion in order output, postintegration, integration so that wildcard matches
         // will delete descendent content groups first;
@@ -486,10 +481,6 @@ namespace transport
 
         // commit all changes
         mgr.commit();
-
-        // reset repository cache and graphkit, so they do not work from stale content lists
-        this->cache.reset();
-        this->graphkit.reset();
       }
 
 
@@ -504,9 +495,9 @@ namespace transport
           }
 
         // cache content databases
-        integration_content_db& integration_content = this->cache.get_integration_content_db();
-        postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
-        output_content_db& output_content = this->cache.get_output_content_db();
+        integration_content_db integration_content = this->repo.enumerate_integration_task_content();
+        postintegration_content_db postintegration_content = this->repo.enumerate_postintegration_task_content();
+        output_content_db output_content = this->repo.enumerate_output_task_content();
 
         this->lock_content(integration_content, items);
         this->lock_content(postintegration_content, items);
@@ -573,9 +564,9 @@ namespace transport
           }
 
         // cache content databases
-        integration_content_db& integration_content = this->cache.get_integration_content_db();
-        postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
-        output_content_db& output_content = this->cache.get_output_content_db();
+        integration_content_db integration_content = this->repo.enumerate_integration_task_content();
+        postintegration_content_db postintegration_content = this->repo.enumerate_postintegration_task_content();
+        output_content_db output_content = this->repo.enumerate_output_task_content();
 
         this->unlock_content(integration_content, items);
         this->unlock_content(postintegration_content, items);

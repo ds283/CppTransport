@@ -35,10 +35,13 @@
 namespace transport
   {
 
-    //! repository objects can enumerate their contents, but this is costly because it involves
-    //! database access, and reading JSON files from the disk
-    //! To reduce wasteful multiple enumerations the repository_cache class caches these
-    //! enumerations using boost::optional
+    //! repository objects can enumerate their contents, but this can be costly
+    //! because even though the repository has an internal cache, it does have to
+    //! duplicate records and this involves a copy
+    //! To reduce wasteful multiple enumerations, the repository_cache class caches
+    //! these enumerations using boost::optional.
+    //! NOTE: REPOSITORY_CACHE<> SHOULD ONLY BE USED FOR REPORTING PURPOSES TO
+    //! AVOID THE RISK OF RECORDS BECOMING STALE
     template <typename number>
     class repository_cache
       {

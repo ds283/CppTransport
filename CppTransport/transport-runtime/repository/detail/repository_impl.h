@@ -156,10 +156,51 @@ namespace transport
 
 
     template <typename number>
+    void repository<number>::begin_transaction()
+      {
+        // flush caches at the beginning of a transaction, to avoid becoming out of sync with the database
+        // in principle one could imagine a more complex implementation which keeps track of
+        // those records that have become dirty ... but currently there seems no need for such complexity
+        this->flush_caches();
+      }
+
+
+    template <typename number>
+    void repository<number>::commit_transaction()
+      {
+        // flush caches likewise at the end of a transaction
+        this->flush_caches();
+      }
+
+
+    template <typename number>
+    void repository<number>::abort_transaction()
+      {
+        // flush caches when a transaction is aborted
+        this->flush_caches();
+      }
+
+
+    template <typename number>
     void repository<number>::release_transaction()
       {
         if(this->transactions == 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_OVER_RELEASE);
         this->transactions--;
+      }
+
+
+    // RECORD CACHE, CACHE MANAGEMENT
+
+
+    template <typename number>
+    void repository<number>::flush_caches()
+      {
+        this->pkg_cache.clear();
+        this->task_cache.clear();
+        this->derived_cache.clear();
+        this->int_cache.clear();
+        this->pint_cache.clear();
+        this->out_cache.clear();
       }
 
 
