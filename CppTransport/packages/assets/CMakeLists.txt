@@ -200,11 +200,8 @@ INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY transport-runtime DESTINATION include/cpptransport)
 INSTALL(FILES ${CMAKE_BINARY_DIR}/build_data.h DESTINATION include/cpptransport/transport-runtime)
 
-# emplace jsoncpp assets into runtime system folders
+# emplace JsonCpp and SPLINTER assets into runtime system folders
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/json DESTINATION include/cpptransport)
-INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib DESTINATION lib/cpptransport)
-
-# emplace SPLINTER assets into runtime system folders
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/SPLINTER DESTINATION include/cpptransport)
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib DESTINATION lib/cpptransport)
 
