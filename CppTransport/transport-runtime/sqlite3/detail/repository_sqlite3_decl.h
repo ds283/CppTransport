@@ -167,6 +167,32 @@ namespace transport
 
         // READ ONLY
 
+        // Read-only records are first checked against a cache. If a match is found, the record is returned from
+        // the cache rather than deserializing it from the disk and constructing a new record object.
+        // This avoids expensive multiple deserializations, either where the physical medium is slow (eg. network drive)
+        // or there is a lot of data to ingest (eg. large integration task which requires deserializing a big
+        // SQLite database)
+
+        // The cache is invalidated when a transaction begins, ends or aborts. After any of these events,
+        // the repository will go out to the physical database in order to serve an up-to-date copy
+
+        // Read-write records do not use the cache, but are always reconstructed by deserializing data in the
+        // physical database. This is to ensure that we always have an up-to-date version of the repository record
+        // before a new write takes place, so that data can't get lost.
+
+        // For read-only records, this procedure does give a risk that the repository will serve a stale copy
+        // of a record where two processes are independently writing to the database. Suppose Process A reads a copy
+        // of record X and stores it in its cache. Then Process B opens a transaction on the database and modified X.
+        // A knows nothing of this, since it can only track its own transactions. Then if a client of the repository in
+        // A asks for a read-only copy of X it will be served from the cache, meaning that it is stale.
+        // Of course, if A subsequently converts this to a read-write copy then it will pick up the changes made by B.
+
+        // This problem could be avoided with a significant overhead on constructing all read-only records, by checking
+        // a datestamp in the database. But the problem isn't any different to the first part of the scenario
+        // above, where A reads and caches a record which B subsequently alters. Then the original read-only record
+        // served by A is already out-of-date. Because there is no way at all to eliminate this (and because all
+        // read-write records are always safe) we choose to live with it.
+
         //! Read a package record from the database
         //! Without a transaction_manager object, the returned record is readonly
         virtual std::unique_ptr< package_record<number> > query_package(const std::string& name) override;
