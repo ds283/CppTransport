@@ -93,10 +93,7 @@ void local_environment::set_template_search_paths()
         boost::filesystem::path rpath(path);
 
         // if path is not absolute, make relative to current working directory
-        if(!rpath.is_absolute())
-          {
-            rpath = boost::filesystem::absolute(rpath);
-          }
+        if(!rpath.is_absolute()) rpath = boost::filesystem::absolute(rpath);
 
         this->template_search.emplace_back(rpath / CPPTRANSPORT_TEMPLATE_PATH);
       }

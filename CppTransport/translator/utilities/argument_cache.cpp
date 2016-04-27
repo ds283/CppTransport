@@ -231,7 +231,7 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
             boost::filesystem::path p = path;
             if(!p.is_absolute()) p = boost::filesystem::absolute(p);
 
-            this->search_path_list.emplace_back(p);
+            this->search_path_list.emplace_back(p / CPPTRANSPORT_TEMPLATE_PATH);
           }
       }
 
