@@ -222,24 +222,39 @@ unsigned int translation_unit::apply()
 
     const script& s = this->driver.get_script();
 
-    boost::optional< contexted_value<std::string>& > core = s.get_core();
-    if(core)
-      {
-        rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_type::process_core);
-      }
-    else
-      {
-        this->error(ERROR_NO_CORE_TEMPLATE);
-      }
+    boost::optional< contexted_value<std::string>& > model = s.get_model();
+    if(!model) this->error(ERROR_NO_MODEL_BLOCK);
 
-    boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
-    if(impl)
+    boost::optional< contexted_value<stepper>& > back = s.get_background_stepper();
+    if(!back) this->error(ERROR_NO_BACKGROUND_STEPPER_BLOCK);
+
+    boost::optional< contexted_value<stepper>& > pert = s.get_perturbations_stepper();
+    if(!pert) this->error(ERROR_NO_PERTURBATIONS_STEPPER_BLOCK);
+
+    boost::optional< contexted_value<GiNaC::ex>& > V = s.get_potential();
+    if(!V) this->error(ERROR_NO_POTENTIAL);
+
+    if(this->errors == 0)
       {
-        rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_type::process_implementation);
-      }
-    else
-      {
-        this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
+        boost::optional< contexted_value<std::string>& > core = s.get_core();
+        if(core)
+          {
+            rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_type::process_core);
+          }
+        else
+          {
+            this->error(ERROR_NO_CORE_TEMPLATE);
+          }
+
+        boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
+        if(impl)
+          {
+            rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_type::process_implementation);
+          }
+        else
+          {
+            this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
+          }
       }
 
     if(this->errors > 0) this->parse_failed = true;

@@ -145,7 +145,7 @@ class translator_data
 
     const GiNaC::symbol& get_Mp_symbol() const;
 
-    const GiNaC::ex get_potential() const;
+    boost::optional< contexted_value<GiNaC::ex>& > get_potential() const;
 
     const symbol_list get_field_symbols() const;
 
@@ -161,9 +161,9 @@ class translator_data
 
     const std::vector<std::string> get_platx_list() const;
 
-    const struct stepper& get_background_stepper() const;
+    boost::optional< contexted_value<stepper>& > get_background_stepper() const;
 
-    const struct stepper& get_perturbations_stepper() const;
+    boost::optional< contexted_value<stepper>& > get_perturbations_stepper() const;
 
 
     // MESSAGING INTERFACE

@@ -436,67 +436,131 @@ namespace macro_packages
       }
 
 
-     std::string replace_b_abs_err::evaluate(const macro_argument_list& args)
+    std::string replace_b_abs_err::evaluate(const macro_argument_list& args)
       {
-        const struct stepper s = this->data_payload.get_background_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
 
-        return boost::lexical_cast<std::string>(s.get_abserr());
+        if(s)
+          {
+            stepper step = *s;
+            return boost::lexical_cast<std::string>(step.get_abserr());
+          }
+        else
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
       }
 
 
     std::string replace_b_rel_err::evaluate(const macro_argument_list& args)
       {
-        const struct stepper s = this->data_payload.get_background_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
 
-        return boost::lexical_cast<std::string>(s.get_relerr());
+        if(s)
+          {
+            stepper step = *s;
+            return boost::lexical_cast<std::string>(step.get_relerr());
+          }
+        else
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
       }
 
 
     std::string replace_b_step::evaluate(const macro_argument_list& args)
       {
-        const struct stepper s = this->data_payload.get_background_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
 
-        return boost::lexical_cast<std::string>(s.get_stepsize());
+        if(s)
+          {
+            stepper step = *s;
+            return boost::lexical_cast<std::string>(step.get_stepsize());
+          }
+        else
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
       }
 
 
     std::string replace_b_stepper::evaluate(const macro_argument_list& args)
       {
-        const struct stepper s = this->data_payload.get_background_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
 
-        return(s.get_name());
+        if(s)
+          {
+            stepper step = *s;
+            return step.get_name();
+          }
+        else
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
       }
 
 
     std::string replace_p_abs_err::evaluate(const macro_argument_list& args)
       {
-        const struct stepper s = this->data_payload.get_perturbations_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
 
-        return boost::lexical_cast<std::string>(s.get_abserr());
+        if(s)
+          {
+            stepper step = *s;
+            return boost::lexical_cast<std::string>(step.get_abserr());
+          }
+        else
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
       }
 
 
     std::string replace_p_rel_err::evaluate(const macro_argument_list& args)
       {
-        const struct stepper s = this->data_payload.get_perturbations_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
 
-        return boost::lexical_cast<std::string>(s.get_relerr());
+        if(s)
+          {
+            stepper step = *s;
+            return boost::lexical_cast<std::string>(step.get_relerr());
+          }
+        else
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
       }
 
 
     std::string replace_p_step::evaluate(const macro_argument_list& args)
       {
-        const struct stepper s = this->data_payload.get_perturbations_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
 
-        return boost::lexical_cast<std::string>(s.get_stepsize());
+        if(s)
+          {
+            stepper step = *s;
+            return boost::lexical_cast<std::string>(step.get_stepsize());
+          }
+        else
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
       }
 
 
     std::string replace_p_stepper::evaluate(const macro_argument_list& args)
       {
-        const struct stepper s = this->data_payload.get_perturbations_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
 
-        return(s.get_name());
+        if(s)
+          {
+            stepper step = *s;
+            return step.get_name();
+          }
+        else
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
       }
 
 

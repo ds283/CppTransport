@@ -102,7 +102,7 @@ namespace y
 
         void set_implementation(lexeme_type* lex);
 
-        void set_potential(GiNaC::ex* V);
+        void set_potential(GiNaC::ex* V, lexeme_type* lex);
 
         void set_indexorder_left();
 
@@ -118,7 +118,7 @@ namespace y
 		    
 		    void add_latex_attribute(subexpr* e, lexeme_type* lex);
 
-		    void add_value_attribute(subexpr* e, GiNaC::ex* v);
+		    void add_value_attribute(subexpr* e, GiNaC::ex* v, lexeme_type* lex);
 
         void set_abserr(struct stepper* s, lexeme_type* lex);
 
@@ -128,9 +128,9 @@ namespace y
 
         void set_stepsize(struct stepper* s, lexeme_type* lex);
 
-        void set_background_stepper(struct stepper* s);
+        void set_background_stepper(struct stepper* s, lexeme_type* lex);
 
-        void set_perturbations_stepper(struct stepper* s);
+        void set_perturbations_stepper(struct stepper* s, lexeme_type* lex);
 
         GiNaC::ex* get_integer(lexeme_type* lex);
 

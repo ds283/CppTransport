@@ -80,8 +80,8 @@
 %token          relerr
 %token          stepper
 %token          stepsize
-%token          background
-%token          perturbations
+%token <lex>    background
+%token <lex>    perturbations
 %token          indexorder
 %token          left
 %token          right
@@ -128,7 +128,7 @@
 %token          period
 %token          colon
 %token          semicolon
-%token          equals
+%token <lex>    equals
 %token          plus
 %token          binary_minus
 %token          unary_minus
@@ -167,15 +167,15 @@
 program: script
         ;
 
-script: script potential equals expression semicolon                                    { driver.set_potential($4); }
+script: script potential equals expression semicolon                                    { driver.set_potential($4, $3); }
         | script model string model_block semicolon                                     { driver.set_model($3); }
         | script author string author_block semicolon                                   { driver.add_author($3, $4); }
         | script templates template_block semicolon
         | script settings settings_block semicolon
         | script field identifier attribute_block semicolon                             { driver.add_field($3, $4); }
         | script parameter identifier attribute_block semicolon                         { driver.add_parameter($3, $4); }
-        | script background stepper_block semicolon                                     { driver.set_background_stepper($3); }
-        | script perturbations stepper_block semicolon                                  { driver.set_perturbations_stepper($3); }
+        | script background stepper_block semicolon                                     { driver.set_background_stepper($3, $2); }
+        | script perturbations stepper_block semicolon                                  { driver.set_perturbations_stepper($3, $2); }
 				| script subexpr identifier subexpr_block semicolon                             { driver.add_subexpr($3, $4); }
         |
         ;
@@ -244,7 +244,7 @@ subexpr_block: open_brace subexpr_def close_brace                               
 				;
 
 subexpr_def: subexpr_def latex equals string semicolon                                  { driver.add_latex_attribute($1, $4); $$ = $1; }
-        | subexpr_def value equals expression semicolon                                 { driver.add_value_attribute($1, $4); $$ = $1; }
+        | subexpr_def value equals expression semicolon                                 { driver.add_value_attribute($1, $4, $3); $$ = $1; }
         |                                                                               { $$ = new subexpr; }
         ;
 

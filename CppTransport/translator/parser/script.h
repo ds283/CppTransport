@@ -320,9 +320,9 @@ class script
     enum index_order get_indexorder() const;
 
 
-    void set_potential(GiNaC::ex V);
+    void set_potential(GiNaC::ex V, const y::lexeme_type& l);
 
-    GiNaC::ex get_potential() const;
+    boost::optional< contexted_value<GiNaC::ex>& > get_potential() const;
 
     void unset_potential();
 
@@ -390,13 +390,13 @@ class script
 
   public:
 
-    void set_background_stepper(stepper* s);
+    void set_background_stepper(stepper* s, const y::lexeme_type& l);
 
-    void set_perturbations_stepper(stepper* s);
+    void set_perturbations_stepper(stepper* s, const y::lexeme_type& l);
 
-    const struct stepper& get_background_stepper() const;
+    boost::optional< contexted_value<stepper>& > get_background_stepper() const;
 
-    const struct stepper& get_perturbations_stepper() const;
+    boost::optional< contexted_value<stepper>& > get_perturbations_stepper() const;
 
 
 		// INTERNAL DATA
@@ -427,8 +427,8 @@ class script
 
     enum index_order order;
 
-    struct stepper background_stepper;
-    struct stepper perturbations_stepper;
+    std::unique_ptr< contexted_value<stepper> > background_stepper;
+    std::unique_ptr< contexted_value<stepper> > perturbations_stepper;
 
     //! symbol tables
     typedef std::unordered_map< std::string, std::unique_ptr<field_declaration> >     field_symbol_table;
@@ -444,8 +444,7 @@ class script
     std::unique_ptr<y::lexeme_type> fake_MPlanck_lexeme;
 
     //! store details of potentials
-    bool      potential_set;
-    GiNaC::ex potential;
+    std::unique_ptr< contexted_value<GiNaC::ex> > potential;
 
     // symbols
 

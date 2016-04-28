@@ -201,9 +201,9 @@ namespace y
 			}
 
 
-		void y_driver::add_value_attribute(subexpr* e, GiNaC::ex* v)
+		void y_driver::add_value_attribute(subexpr* e, GiNaC::ex* v, lexeme_type* lex)
 			{
-				e->set_value(*v);
+				e->set_value(*v, *lex);
 			}
 
 
@@ -275,17 +275,17 @@ namespace y
 	    }
 
 
-    void y_driver::set_background_stepper(stepper* s)
+    void y_driver::set_background_stepper(stepper* s, lexeme_type* lex)
 	    {
-        this->root.set_background_stepper(s);
+        this->root.set_background_stepper(s, *lex);
 
         delete s;
 	    }
 
 
-    void y_driver::set_perturbations_stepper(stepper* s)
+    void y_driver::set_perturbations_stepper(stepper* s, lexeme_type* lex)
 	    {
-        this->root.set_perturbations_stepper(s);
+        this->root.set_perturbations_stepper(s, *lex);
 
         delete s;
 	    }
@@ -448,9 +448,9 @@ namespace y
 	    }
 
 
-    void y_driver::set_potential(GiNaC::ex* V)
+    void y_driver::set_potential(GiNaC::ex* V, lexeme_type* lex)
 	    {
-        this->root.set_potential(*V);
+        this->root.set_potential(*V, *lex);
 
         delete V;
 	    }

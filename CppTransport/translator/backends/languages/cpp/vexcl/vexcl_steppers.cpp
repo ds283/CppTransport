@@ -58,20 +58,27 @@ namespace vexcl
 
     std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
-        const struct stepper& s = this->data_payload.get_background_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
-        if(s.get_name() != VEXCL_STEPPER)
+        if(!s)
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
+
+        stepper step = *s;
+
+        if(step.get_name() != VEXCL_STEPPER)
           {
             std::ostringstream msg;
-            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.get_name() << "')";
+            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << step.get_name() << "')";
 
             error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
             err_context.warn(msg.str());
           }
 
         std::ostringstream out;
-        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
+        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
 
         return(out.str());
       }
@@ -79,20 +86,27 @@ namespace vexcl
 
     std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
-        const struct stepper& s = this->data_payload.get_perturbations_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
-        if(s.get_name() != VEXCL_STEPPER)
+        if(!s)
+          {
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
+          }
+
+        stepper step = *s;
+
+        if(step.get_name() != VEXCL_STEPPER)
           {
             std::ostringstream msg;
-            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.get_name() << "')";
+            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << step.get_name() << "')";
 
             error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
             err_context.warn(msg.str());
           }
 
         std::ostringstream out;
-        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
+        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
 
         return(out.str());
       }

@@ -37,7 +37,6 @@ namespace canonical
         share(s),
         compute_timer(t),
         sym_factory(p.get_symbol_factory()),
-        V(p.get_potential()),
         field_list(p.get_field_symbols()),
         deriv_list(p.get_deriv_symbols()),
         param_list(p.get_parameter_symbols()),
@@ -45,6 +44,8 @@ namespace canonical
         num_fields(p.get_number_fields()),
         fl(p.get_number_parameters(), p.get_number_fields())
       {
+        boost::optional< contexted_value<GiNaC::ex>& > pot = p.get_potential();
+        if(pot) V = *pot; else V = GiNaC::ex(0);
         compute_timer.stop();
       }
 
