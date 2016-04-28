@@ -41,7 +41,7 @@ Development of the **CppTransport** platform has been supported by the grant *Pr
 
 Some development has been supported by other sources, including:
 
-* The UK Science and Technology Facilities Council grant number ST/L000652/1, which funded the science programme at the University of Sussex Astronomy Centre from April 2014 - April 2017.
+* The UK Science and Technology Facilities Council via grants ST/I000976/1 and ST/L000652/1, which funded the science programme at the University of Sussex Astronomy Centre from April 2011-March 2014 and April 2014-March 2017, respectively.
 
 * The Leverhulme Trust via a Philip Leverhulme Prize.
 
