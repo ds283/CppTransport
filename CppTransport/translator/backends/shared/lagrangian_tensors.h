@@ -36,29 +36,29 @@
 namespace macro_packages
   {
 
-    constexpr unsigned int A_PREDEF_K1_ARGUMENT = 0;
-    constexpr unsigned int A_PREDEF_K2_ARGUMENT = 1;
-    constexpr unsigned int A_PREDEF_K3_ARGUMENT = 2;
-    constexpr unsigned int A_PREDEF_A_ARGUMENT = 3;
-    constexpr unsigned int A_PREDEF_TOTAL_ARGUMENTS = 4;
-    constexpr unsigned int A_PREDEF_TOTAL_INDICES = 3;
+    constexpr unsigned int A_K1_ARGUMENT = 0;
+    constexpr unsigned int A_K2_ARGUMENT = 1;
+    constexpr unsigned int A_K3_ARGUMENT = 2;
+    constexpr unsigned int A_A_ARGUMENT = 3;
+    constexpr unsigned int A_TOTAL_ARGUMENTS = 4;
+    constexpr unsigned int A_TOTAL_INDICES = 3;
 
-    constexpr unsigned int B_PREDEF_K1_ARGUMENT = 0;
-    constexpr unsigned int B_PREDEF_K2_ARGUMENT = 1;
-    constexpr unsigned int B_PREDEF_K3_ARGUMENT = 2;
-    constexpr unsigned int B_PREDEF_A_ARGUMENT = 3;
-    constexpr unsigned int B_PREDEF_TOTAL_ARGUMENTS = 4;
-    constexpr unsigned int B_PREDEF_TOTAL_INDICES = 3;
+    constexpr unsigned int B_K1_ARGUMENT = 0;
+    constexpr unsigned int B_K2_ARGUMENT = 1;
+    constexpr unsigned int B_K3_ARGUMENT = 2;
+    constexpr unsigned int B_A_ARGUMENT = 3;
+    constexpr unsigned int B_TOTAL_ARGUMENTS = 4;
+    constexpr unsigned int B_TOTAL_INDICES = 3;
 
-    constexpr unsigned int C_PREDEF_K1_ARGUMENT = 0;
-    constexpr unsigned int C_PREDEF_K2_ARGUMENT = 1;
-    constexpr unsigned int C_PREDEF_K3_ARGUMENT = 2;
-    constexpr unsigned int C_PREDEF_A_ARGUMENT = 3;
-    constexpr unsigned int C_PREDEF_TOTAL_ARGUMENTS = 4;
-    constexpr unsigned int C_PREDEF_TOTAL_INDICES = 3;
+    constexpr unsigned int C_K1_ARGUMENT = 0;
+    constexpr unsigned int C_K2_ARGUMENT = 1;
+    constexpr unsigned int C_K3_ARGUMENT = 2;
+    constexpr unsigned int C_A_ARGUMENT = 3;
+    constexpr unsigned int C_TOTAL_ARGUMENTS = 4;
+    constexpr unsigned int C_TOTAL_INDICES = 3;
 
-    constexpr unsigned int M_PREDEF_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int M_PREDEF_TOTAL_INDICES = 2;
+    constexpr unsigned int M_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int M_TOTAL_INDICES = 2;
 
 
     class replace_A : public cse_map_field3
@@ -70,7 +70,7 @@ namespace macro_packages
 
         //! constructor
         replace_A(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field3(std::move(n), A_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field3(std::move(n), A_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
@@ -137,7 +137,7 @@ namespace macro_packages
 
         //! constructor
         replace_B(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field3(std::move(n), B_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field3(std::move(n), B_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
@@ -204,7 +204,7 @@ namespace macro_packages
 
         //! constructor
         replace_C(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field3(std::move(n), C_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field3(std::move(n), C_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
@@ -271,7 +271,7 @@ namespace macro_packages
 
         //! constructor
         replace_M(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field2(std::move(n), M_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field2(std::move(n), M_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
