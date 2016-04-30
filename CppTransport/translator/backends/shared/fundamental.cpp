@@ -30,6 +30,7 @@
 #include "fundamental.h"
 #include "to_printable.h"
 #include "translation_unit.h"
+#include "formatter.h"
 #include "core.h"
 
 #include "boost/lexical_cast.hpp"
@@ -102,7 +103,7 @@ namespace macro_packages
 
     std::string replace_version::evaluate(const macro_argument_list& args)
       {
-        return(boost::lexical_cast<std::string>(CPPTRANSPORT_NUMERIC_VERSION));
+        return format_version(CPPTRANSPORT_NUMERIC_VERSION);
       }
 
 

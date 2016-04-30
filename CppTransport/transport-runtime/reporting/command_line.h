@@ -1283,7 +1283,7 @@ namespace transport
 
             kv.insert_back(CPPTRANSPORT_REPORT_CREATION_DATE, boost::posix_time::to_simple_string(created));
             kv.insert_back(CPPTRANSPORT_REPORT_LAST_EDIT_DATE, boost::posix_time::to_simple_string(edited));
-            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, boost::lexical_cast<std::string>(rec.get_runtime_API_version()));
+            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, format_version(rec.get_runtime_API_version()));
 
             kv.set_tiling(true);
             kv.write(std::cout);
@@ -1300,7 +1300,7 @@ namespace transport
 
             kv.insert_back(CPPTRANSPORT_REPORT_CREATION_DATE, boost::posix_time::to_simple_string(created));
             kv.insert_back(CPPTRANSPORT_REPORT_LAST_EDIT_DATE, boost::posix_time::to_simple_string(edited));
-            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, boost::lexical_cast<std::string>(rec.get_runtime_API_version()));
+            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, format_version(rec.get_runtime_API_version()));
             kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK, rec.get_task_name());
             if(!type.empty()) kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK_TYPE, type);
             kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_LOCKED, rec.get_lock_status() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);

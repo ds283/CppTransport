@@ -43,6 +43,8 @@
 
 #include "transport-runtime/manager/message_handlers.h"
 
+#include "transport-runtime/utilities/formatter.h"
+
 // forward-declare model class if needed
 #include "transport-runtime/models/model_forward_declare.h"
 
@@ -307,7 +309,7 @@ namespace transport
         if(version > CPPTRANSPORT_RUNTIME_API_VERSION)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_OLD_RUNTIMEAPI_A << " (" << (CPPTRANSPORT_RUNTIME_API_VERSION / 100) << "." << (CPPTRANSPORT_RUNTIME_API_VERSION % 100) << ") "
+            msg << CPPTRANSPORT_OLD_RUNTIMEAPI_A << " (" << format_version(CPPTRANSPORT_RUNTIME_API_VERSION) << ") "
                 << CPPTRANSPORT_OLD_RUNTIMEAPI_B << " " << uid << " " CPPTRANSPORT_OLD_RUNTIMEAPI_C << " " << version;
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
@@ -336,7 +338,7 @@ namespace transport
 
             stream << c << ". " << mdl->get_name() << " [license=" << mdl->get_license() << ", revision=" << mdl->get_revision() << "]" << '\n';
             stream << "   backend = " << mdl->get_backend() << " [bg=" << mdl->get_back_stepper() << ", pert=" << mdl->get_pert_stepper() << "]" << '\n';
-            stream << "   UID = " << rec.get_uid() << " | built using CppTransport " << (mdl->get_translator_version()/100) << "." << (mdl->get_translator_version()%100) << '\n';
+            stream << "   UID = " << rec.get_uid() << " | built using CppTransport " << format_version(mdl->get_translator_version()) << '\n';
           }
       }
 

@@ -28,10 +28,12 @@
 #define CPPTRANSPORT_FORMATTER_H
 
 
-#include <boost/timer/timer.hpp>
+#include "boost/timer/timer.hpp"
 
 
 std::string format_time(boost::timer::nanosecond_type time, unsigned int precision=3);
+
+std::string format_version(unsigned int version);
 
 
 

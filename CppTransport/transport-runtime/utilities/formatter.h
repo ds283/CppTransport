@@ -106,4 +106,16 @@ inline std::string format_number(double number, unsigned int precision=3)
   }
 
 
+inline std::string format_version(unsigned int version)
+  {
+    unsigned int major = version / 100;
+    unsigned int minor = version % 100;
+
+    std::string major_string = boost::lexical_cast<std::string>(major);
+    std::string minor_string = boost::lexical_cast<std::string>(minor);
+
+    return(major_string + "." + minor_string);
+  }
+
+
 #endif //CPPTRANSPORT_FORMATTER_H

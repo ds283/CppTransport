@@ -4518,7 +4518,7 @@ namespace transport
             HTML_node col3_list("dl");
             col3_list.add_attribute("class", "dl-horizontal");
 
-            this->make_data_element("Runtime version", boost::lexical_cast<std::string>(rec.get_runtime_API_version()/100)+"."+boost::lexical_cast<std::string>(rec.get_runtime_API_version()%100), col3_list);
+            this->make_data_element("Runtime version", format_version(rec.get_runtime_API_version()), col3_list);
 
             col3.add_element(col3_list);
 
@@ -4580,7 +4580,7 @@ namespace transport
             HTML_node col3_list("dl");
             col3_list.add_attribute("class", "dl-horizontal");
 
-            this->make_data_element("Runtime version", boost::lexical_cast<std::string>(rec.get_runtime_API_version()/100)+"."+boost::lexical_cast<std::string>(rec.get_runtime_API_version()%100), col3_list);
+            this->make_data_element("Runtime version", format_version(rec.get_runtime_API_version()), col3_list);
             HTML_node tags_dt("dt", "Tags");
             HTML_node tags_dd("dd");
             this->compose_tag_list(rec.get_tags(), tags_dd);
