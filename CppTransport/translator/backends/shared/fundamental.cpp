@@ -52,6 +52,7 @@ namespace macro_packages
       {
         pre_package.emplace_back(BIND(replace_tool, "TOOL"));
         pre_package.emplace_back(BIND(replace_version, "VERSION"));
+        pre_package.emplace_back(BIND(replace_numeric_version, "NUMERIC_VERSION"));
         pre_package.emplace_back(BIND(replace_guard, "GUARD"));
         pre_package.emplace_back(BIND(replace_date, "DATE"));
         pre_package.emplace_back(BIND(replace_source, "SOURCE"));
@@ -105,6 +106,12 @@ namespace macro_packages
       {
         return format_version(CPPTRANSPORT_NUMERIC_VERSION);
       }
+
+
+      std::string replace_numeric_version::evaluate(const macro_argument_list& args)
+        {
+          return boost::lexical_cast<std::string>(CPPTRANSPORT_NUMERIC_VERSION);
+        }
 
 
     std::string replace_guard::evaluate(const macro_argument_list& args)
