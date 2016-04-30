@@ -33,7 +33,8 @@
 
 #include "transport-runtime/messages.h"
 
-#include <boost/timer/timer.hpp>
+#include "boost/timer/timer.hpp"
+#include "boost/lexical_cast.hpp"
 
 
 inline std::string format_memory(unsigned int size, unsigned int precision=2)
