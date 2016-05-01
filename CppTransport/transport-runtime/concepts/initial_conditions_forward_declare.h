@@ -24,8 +24,8 @@
 //
 
 
-#if !defined(__initial_conditions_forward_declare_H_) && !defined(__initial_conditions_H_)
-#define __initial_conditions_forward_declare_H_
+#if !defined(CPPTRANSPORT_INITIAL_CONDITIONS_FORWARD_DECLARE_H) && !defined(CPPTRANSPORT_INITIAL_CONDITIONS_H)
+#define CPPTRANSPORT_INITIAL_CONDITIONS_FORWARD_DECLARE_H
 
 
 #include <iostream>
@@ -39,4 +39,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__initial_conditions_forward_declare_H_
+#endif //CPPTRANSPORT_INITIAL_CONDITIONS_FORWARD_DECLARE_H

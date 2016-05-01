@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __initial_conditions_H_
-#define __initial_conditions_H_
+#ifndef CPPTRANSPORT_INITIAL_CONDITIONS_H
+#define CPPTRANSPORT_INITIAL_CONDITIONS_H
 
 
 #include <assert.h>
@@ -414,4 +414,4 @@ namespace transport
   }
 
 
-#endif //__initial_conditions_H_
+#endif //CPPTRANSPORT_INITIAL_CONDITIONS_H

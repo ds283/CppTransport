@@ -66,6 +66,18 @@ namespace transport
         template<>
         unsigned int elementsof_container(const std::vector<double>& container) { return(container.size()); }
 
+        template<>
+        unsigned int sizeof_container_element< std::vector<float> >() { return(sizeof(float)); }
+
+        template<>
+        unsigned int elementsof_container(const std::vector<float>& container) { return(container.size()); }
+
+        template<>
+        unsigned int sizeof_container_element< std::vector<long double> >() { return(sizeof(long double)); }
+
+        template<>
+        unsigned int elementsof_container(const std::vector<long double>& container) { return(container.size()); }
+
 	    }   // namespace linecache -- specializations
 
 
