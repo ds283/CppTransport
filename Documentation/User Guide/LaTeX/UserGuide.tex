@@ -49,6 +49,13 @@
 
 \newcommand{\massdimension}{\mathrm{M}}
 
+\newcommand{\Ninit}{N_{\text{init}}}
+\newcommand{\Nexit}{N_{\text{exit}}}
+\newcommand{\Nstar}{N_{\ast}}
+\newcommand{\Npre}{N_{\text{pre}}}
+\newcommand{\Nzero}{N_{0}}
+\newcommand{\kstar}{k_{\ast}}
+
 %\newcommand{\packagefont}{\fontfamily{lmtt}\selectfont\fontseries{l}\selectfont}
 %\newcommand{\packagefont}{\sffamily\fontseries{sbc}\selectfont}
 \newcommand{\packagefont}{\sffamily}
@@ -1719,6 +1726,7 @@ a {\LaTeX} name for the quantity:
     \begin{equation}
         V(\phi, \chi) = \frac{1}{2} M_\phi^2 \phi^2
             + \frac{1}{2} M_\chi^2 \chi^2 .
+        \label{eq:double-quadratic-V}
     \end{equation}
     This means there are two parameters, $M_\phi$
     and $M_\chi$.
@@ -2539,7 +2547,12 @@ This code involves the following steps:
         \mintinline{c++}{create_model()} is necessary, rather than
         constructing an instance directly, in order that the {\CppTransport}
         runtime system is aware of the model and can find it when needed
-        for computations. 
+        for computations.
+        
+        Notice that there is no need to explicitly deallocate the pointer
+        \mintinline{c++}{model}.
+        It is deallocated automatically when the
+        smart pointer which manages it is destroyed.
         
         \item \semibold{Pass control to the task manager.}
         It is possible to create instances of as many implementation classes
@@ -2882,6 +2895,258 @@ When configuration is complete, the build is initiated
 by issuing the \mintinline{bash}{make} command.
 If you then wish to install
 to a different location, use \mintinline{bash}{make install}.
+Once the executable has built you may wish to verify that it
+function correctly by trying the following invocations:
+\begin{minted}{bash}
+	./dquad --version
+	./dquad --models	
+	./dquad --help
+\end{minted}
+
+\subsection{Adding an integration task}
+To make the executable \file{dquad} useful we must add an integration task.
+This is done by using the task manager's
+\mintinline{c++}{add_generator()}
+method to inform it that this executable is capable of
+generating tasks.
+This method takes one argument, which should be a callable
+object which accepts a reference to
+a \mintinline{c++}{transport::repository<>}
+object as its single argument.
+{\CppTransport} stores all information about
+initial conditions, parameter choices, tasks,
+derived products and any generated content
+in disk-based databases called \emph{repositories}.
+The \mintinline{c++}{repository} class manages
+these databases and provides their services to other
+{\CppTransport} components.
+
+The \mintinline{c++}{add_generator} method accepts any callable,
+such as a \mintinline{c++}{std::function<>} object.
+If you are not familiar with constructing callable objects
+then the simplest option is to construct a class
+which provides a call operator.
+For the double-quadratic model this would take the form
+\begin{minted}{c++}
+	class write_task
+	  {
+	  public:
+	    write_task(transport::dquad_mpi<>* m) : model(m) {}
+	
+	  public:
+	    void operator()(transport::repository<>& repo);
+	
+	  private:
+	    transport::dquad_mpi<>* model;
+	  };	
+\end{minted}
+This declaration should be inserted above
+\mintinline{c++}{main()}.
+The \mintinline{c++}{write_task} constructor
+expects to be passed a pointer to a model instance, which
+will be the model used to construct any tasks which it generates.
+
+With this declaration in place we should now call
+\mintinline{c++}{add_generator()} with a
+\mintinline{c++}{write_task} instance.
+This is done by inserting the lines
+\begin{minted}{c++}
+    // register task writer
+    mgr.add_generator(write_task(model.get()));
+\end{minted}
+immediately prior to the call to
+\mintinline{c++}{mgr.process()}.
+
+\para{Building a task}
+The final step is to use the \mintinline{c++}{operator()} method of
+\mintinline{c++}{write_task} to construct an integration task
+and write it into the repository.
+
+Integration tasks package together all the information needed
+to perform a computation of the 2- or 3-point functions
+in a specific model.
+This includes:
+\begin{itemize}
+	\item details of the model itself, identified
+	through the pointer to the model instance
+	passed to the \mintinline{c++}{write_task} constructor
+	
+	\item specific choices for any parameters
+	used in the Lagrangian,
+	and a value for the Planck mass $\Mp$
+	
+	\item specific choices for the initial values of the background
+	fields (and their derivatives)
+	
+	\item fixed start and end times for the integration, and a mesh
+	of sample points between these times where samples will be recorded
+	
+	\item a mesh of wavenumber configurations
+	(values of the wavenumber $k$ for the 2-point function,
+	and configurations $\{ \vect{k}_1, \vect{k}_2, \vect{k}_3 \}$ for the
+	3-point function)
+	where the 2- and 3-point functions should be sampled
+\end{itemize}
+In addition, {\CppTransport} provides various options for customizing an
+integration---for example, by changing the way initial conditions are handled.
+These options are also recorded in the integration task.
+
+\para{Specifying parameters}
+We work with the double-quadratic model as an example.
+{\CppTransport} works in units where $c=\hbar=1$ but allows us
+to measure the Planck scale $\Mp$ using whatever units we find
+convenient.
+Typically, however, `natural' units with $\Mp=1$ give good results
+and in what follows we will make this choice.
+
+The double-quadratic potential~\eqref{eq:double-quadratic-V}
+requires us to specify the mass scales $M_\phi$ and $M_\chi$.
+We will choose $M_\phi = 9 \times 10^{-5} \Mp$
+and $M_\chi = 10^{-5} \Mp$.
+A \emph{parameter package} consists of a model,
+a choice for the Planck mass,
+and choices for each of the parameters in the Lagrangian.
+{\CppTransport} collects this information using a
+\mintinline{c++}{transport::parameters<>} object.
+Its constructor takes three arguments:
+the value of the Planck mass;
+a list of values for the model parameters
+\semibold{in the same order they were declared in the model
+description file};
+and a pointer to the model instance.
+With our choices we can construct a suitable parameter package using:
+\begin{minted}{c++}
+	void write_task::operator()(transport::repository<>& repo)
+	  {
+	    const double Mp   = 1.0;
+	    const double Mphi = 9E-5 * Mp;
+	    const double Mchi = 1E-5 * Mp;
+	
+	    transport::parameters<> params(Mp, {Mphi, Mchi}, model);	
+	  }
+\end{minted}
+To aid readability it is a good idea to use named temporary variables
+which give meaning to numbers which are quoted directly.
+We could have achieved the same effect by writing
+the single-line construction
+\begin{minted}{c++}
+	transport::parameters<> params(1.0, {9E-5, 1E-5}, model);	
+\end{minted}
+but it would then be more difficult to identify the meaning of the
+numbers.
+
+If it is more convenient
+the parameter list can be specified using any suitable iterable
+container, such as
+\mintinline{c++}{std::vector<double>}
+or
+\mintinline{c++}{std::list<double>}
+rather than quoting it directly as the initialization list
+\mintinline{c++}{{Mphi, Mchi}}.
+
+\para{Specifying initial conditions}
+Next we combine the parameter package with a choice of initial conditions
+to make an
+\emph{initial conditions package}.
+This information is stored in
+a \mintinline{c++}{transport::initial_conditions<>}
+object.
+Its constructor accepts
+three mandatory arguments:
+a textual name, which will be used later to refer to this initial conditions package;
+a parameter package, which specifies the model and parameters to be used;
+and a list of initial values for the fields.
+In an $N$-field model this list can contain either exactly $N$ or exactly $2N$ values:
+\begin{itemize}
+	\item if $N$ values are given, {\CppTransport} will interpret these as the initial
+	conditions for the background fields
+	\semibold{in the order they were declared in the model description}.
+	It will infer initial conditions for the field derivatives using the slow-roll
+	equation $3H \dot{\phi}^\alpha = \partial_\alpha V$,
+	where $\partial_\alpha$ denotes the field derivative
+	$\partial / \partial \phi^\alpha$.
+	
+	\item if $2N$ values are given, these are interpreted as $N$ initial
+	conditions for the background fields $\phi^\alpha$
+	(in the same order they were declared) followed by $N$ initial conditions
+	for their derivatives $\d \phi^\alpha / \d N$.
+	Here, $\d N = H \, \d t$ is a derivative with respect to e-folding number.
+\end{itemize}
+As for \mintinline{c++}{parameters},
+the value list can be specified using any suitable container or by
+quoting it directly using an initialization list.
+
+In addition, the package
+requires information about where these
+initial conditions are intended to apply.
+This information can be specified in two ways:
+\begin{itemize}
+	\item as an initial time $\Ninit$ (specified in e-folds)
+	together with the number of e-folds $\Npre$ from
+	$\Ninit$ to the horizon-crossing time of a distinguished
+	scale $\kstar$ (at time $\Nstar$) which is used as a reference.
+	
+	\item as an initial time $\Nzero$
+	together with the horizon-crossing
+	time for $\kstar$ (at $N=\Nstar$),
+	and the desired number of e-folds $\Npre$
+	from $\Ninit$ to $\Nstar$.
+	This amounts to moving a set of initial conditions specified
+	at $\Nzero$ to new initial conditions specified at
+	$\Nstar - \Npre$.
+	
+	This version can be used to `settle' a set of field-only
+	initial conditions onto the true dynamical attractor.
+	If the slow-roll approximation is a reasonable approximation
+	near the initial time, then {\CppTransport}'s estimate
+	of the field derivatives will normally be quite accurate.
+	Nevertheless, there will be a period of adjustment while the
+	numerical solution relaxes.
+	This can lead to slight jitter if any $n$-point functions
+	have initial conditions during this phase.
+	
+	If adaptive initial conditions are in use (this is normally the recommended configuration---see~\S\ref{})
+	then a customized initial condition will be computed for
+	each $n$-point function.
+	Provided $\Ninit$ is sufficiently early, the customization
+	procedure will allow the initial conditions to relax onto
+	the dynamical attractor.
+	Manual settling is normally required only if
+	$\Ninit$ if very close to the initial time for
+	any $n$-point function, or if adaptive initial conditions
+	are not being used.
+\end{itemize}
+For the purposes of illustration we will
+set initial conditions for the double quadratic model
+at $\phi = 10 \Mp$ and $\chi = 12.9 \Mp$.
+We take the initial time to be $N=0$
+(this is just a convention; any other value of $N$ could be used)
+and set $\Nstar$ to occur at $N=12$.
+To build an initial conditions package corresponding to these choices
+we can use:
+\begin{minted}{c++}
+    const double phi_init = 10.0 * Mp;
+    const double chi_init = 12.9 * Mp;
+
+    const double N_init   = 0.0;
+    const double N_pre    = 12.0;
+
+    transport::initial_conditions<> ics("dquad", params, {phi_init, chi_init}, N_init, N_pre);
+\end{minted}
+Remember that when specified in this form, $\Nstar = \Ninit + \Npre$.
+If we had used the second form, perhaps to arrange for some manual settling,
+the last two parameters
+\mintinline{c++}{N_init} and
+\mintinline{c++}{N_pre}
+would have been replaced by the \emph{three} parameters
+\mintinline{c++}{N_0},
+\mintinline{c++}{N_star}
+and
+\mintinline{c++}{N_pre},
+corresponding to $\Nzero$, $\Nstar$ and $\Npre$.
+
+\para{Selecting a mesh of time sample points}
+
 
 \section{Adding postintegration tasks}
 
