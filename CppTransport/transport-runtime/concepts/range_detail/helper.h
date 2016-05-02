@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __range_helper_H_
-#define __range_helper_H_
+#ifndef CPPTRANSPORT_RANGE_HELPER_H
+#define CPPTRANSPORT_RANGE_HELPER_H
 
 
 #include "transport-runtime/concepts/range_detail/common.h"
@@ -55,4 +55,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__range_helper_H_
+#endif //CPPTRANSPORT_RANGE_HELPER_H

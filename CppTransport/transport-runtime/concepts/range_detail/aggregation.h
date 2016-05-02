@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __range_aggregation_H_
-#define __range_aggregation_H_
+#ifndef CPPTRANSPORT_RANGE_AGGREGATION_H
+#define CPPTRANSPORT_RANGE_AGGREGATION_H
 
 
 #include <limits>
@@ -39,7 +39,7 @@
 namespace transport
 	{
 
-    template <typename value> class aggregation_range;
+    template <typename value=double> class aggregation_range;
 
 		template <typename value>
 		aggregation_range<value> operator+(const aggregation_range<value>& lhs, const range<value>& rhs);
@@ -345,4 +345,4 @@ namespace transport
 	}
 
 
-#endif //__range_aggregation_H_
+#endif //CPPTRANSPORT_RANGE_AGGREGATION_H
