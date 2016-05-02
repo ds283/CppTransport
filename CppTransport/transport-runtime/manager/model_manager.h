@@ -286,9 +286,7 @@ namespace transport
     template <typename Model>
     std::shared_ptr<Model> model_manager<number>::create_model()
       {
-        std::shared_ptr<Model> model = std::make_shared<Model>(error_handler(this->env, this->arg_cache),
-                                                               warning_handler(this->env, this->arg_cache),
-                                                               message_handler(this->env, this->arg_cache));
+        std::shared_ptr<Model> model = std::make_shared<Model>(this->env, this->arg_cache);
 
         // register the model in our database
         this->register_model(model);

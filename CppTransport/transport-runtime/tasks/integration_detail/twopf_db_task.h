@@ -40,11 +40,12 @@
 
 #include "transport-runtime/utilities/spline1d.h"
 
+#include "transport-runtime/reporting/key_value.h"
+
 #include "transport-runtime/defaults.h"
 
 #include "boost/math/tools/roots.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"
-
 
 
 namespace transport
@@ -286,7 +287,7 @@ namespace transport
       protected:
 
         //! output advisory information about horizon crossing times and number of subhorizon efolds
-        void write_time_details();
+        void write_time_details(reporting::key_value& kv);
 
         //! validate intended number of subhorizon efolds (if adaptive ics are being used),
         //! or check that initial conditions allow all modes to be subhorizon at the initial time otherwise
@@ -471,7 +472,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_db_task<number>::write_time_details()
+    void twopf_db_task<number>::write_time_details(reporting::key_value& kv)
       {
         // compute horizon-crossing time for earliest mode (the one with the smallest wavenumber) and the latest one (the one with the largest wavenumber)
 
@@ -488,28 +489,10 @@ namespace transport
 		    earliest_crossing -= this->get_N_horizon_crossing();
 		    latest_crossing   -= this->get_N_horizon_crossing();
 
-        std::ostringstream msg;
-        msg << "'" << this->get_name() << "': ";
-        msg << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
-          << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
-
-        std::ostringstream early_time;
-		    early_time << std::setprecision(3);
-        if(earliest_crossing > 0) early_time << "+";
-		    early_time << earliest_crossing;
-
-        msg << early_time.str() << ", ";
-
-        msg << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
-          << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
-
-        std::ostringstream late_time;
-		    late_time << std::setprecision(3);
-        if(latest_crossing > 0) late_time << "+";
-        late_time << latest_crossing;
-
-        msg << late_time.str();
-        this->get_model()->message(msg.str());
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_SMALLEST, format_number(this->twopf_db->get_kmin_conventional()));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_LARGEST, format_number(this->twopf_db->get_kmax_conventional()));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_EARLIEST, std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (earliest_crossing > 0 ? "+" : "") + format_number(earliest_crossing, 4));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_LATEST, std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (latest_crossing > 0 ? "+" : "") + format_number(latest_crossing, 4));
 
         this->validate_subhorizon_efolds();
 
@@ -517,24 +500,22 @@ namespace transport
           {
             double end_of_inflation = this->get_N_end_of_inflation();
 
-            std::ostringstream msg2;
-            msg2 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation;
-            this->get_model()->message(msg2.str());
+            kv.insert_back(CPPTRANSPORT_TASK_DATA_END_INFLATION, std::string(CPPTRANSPORT_TASK_DATA_N) + format_number(end_of_inflation, 4));
 
             // check if end time is after the end of inflation
             double end_time = this->times->get_grid().back();
             if(end_time > end_of_inflation)
               {
-                std::ostringstream msg3;
-                msg3 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END;
-                this->get_model()->warn(msg3.str());
+                std::ostringstream message;
+                message << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END;
+                this->get_model()->warn(message.str());
               }
           }
         catch(end_of_inflation_not_found& xe)
           {
-            std::ostringstream msg4;
-            msg4 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION;
-            this->get_model()->warn(msg4.str());
+            std::ostringstream message;
+            message << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION;
+            this->get_model()->warn(message.str());
           }
       }
 

@@ -127,8 +127,8 @@ namespace transport
       public:
 
         //! constructor
-        $MODEL_mpi(error_handler e, warning_handler w, message_handler m)
-          : $MODEL<number>(std::move(e), std::move(w), std::move(m))
+        $MODEL_mpi(local_environment& e, argument_cache& a)
+          : $MODEL<number>(e, a)
           {
 #ifdef CPPTRANSPORT_INSTRUMENT
             twopf_setup_timer.stop();

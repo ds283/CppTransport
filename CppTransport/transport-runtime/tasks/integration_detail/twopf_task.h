@@ -105,15 +105,19 @@ namespace transport
             this->twopf_db_task<number>::twopf_db->add_record(ks[j]);
 	        }
 
-        std::ostringstream msg;
-        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B;
-        this->get_model()->message(msg.str());
+        std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
+        kv->set_tiling(true);
+        kv->set_title(this->get_name());
+
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
 
         this->compute_horizon_exit_times();
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
-        this->write_time_details();
+        this->write_time_details(*kv);
         this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
+
+        if(kv) kv->write(std::cout);
 	    }
 
 

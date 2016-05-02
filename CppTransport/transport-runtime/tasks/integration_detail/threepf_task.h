@@ -29,6 +29,7 @@
 
 
 #include <memory>
+#include <transport-runtime/reporting/key_value.h>
 
 #include "transport-runtime/tasks/integration_detail/common.h"
 #include "transport-runtime/tasks/integration_detail/abstract.h"
@@ -482,16 +483,20 @@ namespace transport
         if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
-        std::ostringstream msg;
-        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C;
-        this->get_model()->message(msg.str());
+        std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
+        kv->set_tiling(true);
+        kv->set_title(this->get_name());
+
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_THREEPF, boost::lexical_cast<std::string>(this->threepf_db->size()));
 
         this->compute_horizon_exit_times();
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
-        this->write_time_details();
+        this->write_time_details(*kv);
         this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
+
+        if(this->get_model()->is_verbose()) kv->write(std::cout);
 	    }
 
 
@@ -609,16 +614,20 @@ namespace transport
         alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
         beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();
 
-        std::ostringstream msg;
-        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C;
-        this->get_model()->message(msg.str());
+        std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
+        kv->set_tiling(true);
+        kv->set_title(this->get_name());
+
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_THREEPF, boost::lexical_cast<std::string>(this->threepf_db->size()));
 
         this->compute_horizon_exit_times();
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
-        this->write_time_details();
+        this->write_time_details(*kv);
         this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
+
+        if(this->get_model()->is_verbose()) kv->write(std::cout);
 	    }
 
 

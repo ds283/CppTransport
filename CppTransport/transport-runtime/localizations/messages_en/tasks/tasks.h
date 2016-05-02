@@ -56,19 +56,19 @@
 
 #define CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE           "fNL_task: can't construct fNL product from non-integrable task"
 
-#define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A           "task with"
-#define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B           "3pf k-configurations and"
-#define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C           "2pf k-configurations"
+#define CPPTRANSPORT_TASK_DATA_NSTAR                   "N*"
+#define CPPTRANSPORT_TASK_DATA_N                       "N="
+
+#define CPPTRANSPORT_TASK_DATA_THREEPF                 "3pf configs"
+#define CPPTRANSPORT_TASK_DATA_TWOPF                   "2pf configs"
+
+#define CPPTRANSPORT_TASK_DATA_LARGEST                 "Largest k"
+#define CPPTRANSPORT_TASK_DATA_SMALLEST                "Smallest k"
+#define CPPTRANSPORT_TASK_DATA_EARLIEST                "Earliest N_exit"
+#define CPPTRANSPORT_TASK_DATA_LATEST                  "Latest N_exit"
+#define CPPTRANSPORT_TASK_DATA_END_INFLATION           "Inflation ends"
 
 #define CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS        "Internal error: missing database entry for k ="
-
-#define CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A             "task with"
-#define CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B             "2pf k-configurations"
-
-#define CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A      "largest scale kmin="
-#define CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B      "crosses horizon at time N*"
-#define CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C      "smallest scale kmax="
-#define CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D      "crosses horizon at time N*"
 
 #define CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A       "earliest required time N="
 #define CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B       "is earlier than time of initial conditions N="

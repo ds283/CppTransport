@@ -47,8 +47,11 @@
 #include "transport-runtime/derived-products/utilities/index_selector.h"
 
 #include "transport-runtime/manager/model_manager.h"
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/argument_cache.h"
 #include "transport-runtime/manager/message_handlers.h"
 #include "transport-runtime/data/data_manager.h"
+#include "transport-runtime/reporting/key_value.h"
 
 #include "transport-runtime/models/advisory_classes.h"
 
@@ -66,6 +69,7 @@ namespace transport
 
     // MODEL OBJECTS -- objects representing inflationary models
 
+    //! the author_record type handles author metadata as supplied in the model description file
     class author_record
       {
 
@@ -118,17 +122,20 @@ namespace transport
       };
 
 
-    // set up a typedef for the author database
+    //! set up a typedef for the author database -- basically an
+    //! indexed list of author_record records
     typedef std::map< std::string, std::unique_ptr<author_record> > author_db;
 
 
-    // basic class from which all other model representations are derived
+    //! abstract base class from which all other model representations are derived;
+    //! defines a common interface for all models
     template <typename number>
     class model: public abstract_flattener
       {
 
       public:
 
+        //! data type for storing integration of a background field-space trajectory
         typedef std::vector< std::vector<number> > backg_history;
 
         // CONSTRUCTORS, DESTRUCTORS
@@ -136,7 +143,7 @@ namespace transport
       public:
 
         //! constructor
-        model(const std::string& u, unsigned int v, error_handler e, warning_handler w, message_handler m);
+        model(const std::string& u, unsigned int v, local_environment& e, argument_cache& a);
 
         //! destructor is default
 		    ~model() = default;
@@ -345,6 +352,12 @@ namespace transport
         //! report message
         void message(const std::string& msg) const { this->message_h(msg); }
 
+        //! generate key-value reporting object
+        std::unique_ptr<reporting::key_value> make_key_value() { return std::make_unique<reporting::key_value>(this->env, this->args); }
+
+        //! expose verbose option setting
+        bool is_verbose() const { return(this->args.get_verbose()); }
+
 
         // INTERNAL UTILITY FUNCTIONS
 
@@ -364,6 +377,17 @@ namespace transport
 
         //! copy of translator version used to produce this model, used for registration
         const unsigned int tver;
+
+
+        // POLICY OBJECTS
+
+      protected:
+
+        //! reference to local environment
+        local_environment& env;
+
+        //! reference to argument cache
+        argument_cache& args;
 
 
         // ERROR, WARNING AND MESSAGE HANDLERS
@@ -388,12 +412,14 @@ namespace transport
     // CONSTRUCTOR, DESTRUCTOR
 
     template <typename number>
-    model<number>::model(const std::string& u, unsigned int v, error_handler e, warning_handler w, message_handler m)
+    model<number>::model(const std::string& u, unsigned int v, local_environment& e, argument_cache& a)
       : uid(u),
         tver(v),
-        error_h(std::move(e)),
-        warn_h(std::move(w)),
-        message_h(std::move(m))
+        env(e),
+        args(a),
+        error_h(e, a),
+        warn_h(e, a),
+        message_h(e, a)
       {
       }
 

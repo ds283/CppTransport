@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __canonical_model_H_
-#define __canonical_model_H_
+#ifndef CPPTRANSPORT_CANONICAL_MODEL_H
+#define CPPTRANSPORT_CANONICAL_MODEL_H
 
 
 #include <string>
@@ -50,8 +50,8 @@ namespace transport
       public:
 
         //! constructor
-        canonical_model(const std::string& uid, unsigned int tver, error_handler e, warning_handler w, message_handler m)
-          : model<number>(uid, tver, std::move(e), std::move(w), std::move(m))
+        canonical_model(const std::string& uid, unsigned int tver, local_environment& e, argument_cache& a)
+          : model<number>(uid, tver, e, a)
           {
           }
 
@@ -71,4 +71,4 @@ namespace transport
   }
 
 
-#endif //__canonical_model_H_
+#endif //CPPTRANSPORT_CANONICAL_MODEL_H
