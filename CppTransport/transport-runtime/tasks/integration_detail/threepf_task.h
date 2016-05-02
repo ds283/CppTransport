@@ -29,7 +29,6 @@
 
 
 #include <memory>
-#include <transport-runtime/reporting/key_value.h>
 
 #include "transport-runtime/tasks/integration_detail/common.h"
 #include "transport-runtime/tasks/integration_detail/abstract.h"
@@ -38,6 +37,8 @@
 #include "transport-runtime/tasks/configuration-database/threepf_config_database.h"
 
 #include "transport-runtime/utilities/spline1d.h"
+
+#include "transport-runtime/reporting/key_value.h"
 
 #include "transport-runtime/defaults.h"
 
@@ -395,7 +396,7 @@ namespace transport
 			}
 
 
-    template <typename number>
+    template <typename number=default_number_type>
     class threepf_cubic_task: public threepf_task<number>
 	    {
 
@@ -518,7 +519,7 @@ namespace transport
 	    }
 
 
-    template <typename number>
+    template <typename number=default_number_type>
     class threepf_fls_task: public threepf_task<number>
 	    {
 

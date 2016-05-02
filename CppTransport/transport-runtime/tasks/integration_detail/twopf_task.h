@@ -28,6 +28,8 @@
 #define CPPTRANSPORT_TWOPF_TASK_H
 
 
+#include "transport-runtime/defaults.h"
+
 #include "transport-runtime/tasks/integration_detail/common.h"
 #include "transport-runtime/tasks/integration_detail/abstract.h"
 #include "transport-runtime/tasks/integration_detail/twopf_db_task.h"
@@ -38,7 +40,7 @@ namespace transport
 
     // two-point function task
     // we need to specify the wavenumbers k at which we want to sample it
-    template <typename number>
+    template <typename number=default_number_type>
     class twopf_task: public twopf_db_task<number>
 	    {
 
@@ -117,7 +119,7 @@ namespace transport
         this->write_time_details(*kv);
         this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
 
-        if(kv) kv->write(std::cout);
+        if(this->get_model()->is_verbose()) kv->write(std::cout);
 	    }
 
 
