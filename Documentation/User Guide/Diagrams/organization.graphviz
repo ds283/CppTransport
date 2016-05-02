@@ -1,0 +1,51 @@
+digraph
+  {
+
+    bgcolor="transparent";
+
+    subgraph cluster_user
+      {
+        style=filled;
+        color="#EEEEEE";
+        label="User input";
+        fontname="helvetica bold";
+        fontsize=11;
+        modelfile [label="Model description",shape=box,style="rounded,filled",fillcolor="#D0D7F6",fontname="helvetica",fontsize=10];
+        usercode [label="User C++ code",shape=box,style="rounded,filled",fillcolor="#D0D7F6",fontname="helvetica",fontsize=10];
+      }
+
+    customcode [label="Custom C++",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+
+    runtime [label="Runtime system",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+    executable [label="Compiled executable",shape=box,style="rounded,filled",fillcolor="#D6F6D0",fontname="helvetica",fontsize=10];
+
+    modelfile -> customcode [label="Translator",fontname="helvetica",fontsize=10];
+    customcode -> executable;
+    runtime -> executable;
+    usercode -> executable;
+
+    executable -> repository;
+    executable -> repository;
+    executable -> repository;
+
+    subgraph cluster_repo
+      {
+        style=filled;
+        color="#EEEEEE";
+
+        repository [label="{<repo> Repository database|{<itasks> Integration tasks|<ptasks> Post-processing tasks|<otasks> Output tasks}}",shape=Mrecord,style=filled,fillcolor="#FFE0FF",fontname="helvetica",fontsize=10];
+
+        sqlite [label="SQLite databases",shape=oval,style=filled,fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+        output [label="{Output|PDF, SVG, PNG, tables}",shape=Mrecord,style=filled,fillcolor="#E7FFCC",fontname="helvetica",fontsize=10];
+
+        repository:itasks -> sqlite;
+        repository:ptasks -> sqlite [dir=both];
+        repository:otasks  -> output;
+
+        sqlite -> output;
+      }
+
+    report [label="{HTML reports|Provenance data}",shape=Mrecord,style=filled,fillcolor="#E7FFCC",fontname="helvetica",fontsize=10]
+
+    repository:repo -> report;
+  }

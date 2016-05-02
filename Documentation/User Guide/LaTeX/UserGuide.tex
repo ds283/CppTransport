@@ -1,0 +1,2884 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{jcappub}
+\usepackage{bm}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{relsize}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[table]{xcolor}
+\usepackage{tcolorbox}
+\usepackage[outputdir=.texpadtmp]{minted}
+\usepackage{etoolbox}
+\usepackage{upquote}
+\usepackage{abraces}
+
+\tcbuselibrary{skins}
+\tcbuselibrary{breakable}
+
+\renewcommand{\texttt}[1]{{\ttfamily\fontseries{l}\selectfont{#1}}}
+
+\newcounter{advancedbox}[section]
+
+\BeforeBeginEnvironment{minted}{\begin{tcolorbox}[enhanced,breakable,colback=white,boxrule=0pt,frame hidden,top=-0.75mm,bottom=-0.75mm,left=-0.75mm,right=-0.75mm,borderline north={0.5pt}{0pt}{black},borderline south={0.5pt}{0pt}{black}]}
+\AfterEndEnvironment{minted}{\end{tcolorbox}\noindent}
+
+\newenvironment{example}{\begin{tcolorbox}[enhanced,breakable,colback=black!10,colbacktitle=black!20,colframe=black!40,coltitle=black,title=Example,fonttitle=\sffamily\fontseries{b}\selectfont]}{\end{tcolorbox}}
+
+\newenvironment{advanced}[1]{\stepcounter{advancedbox}\begin{tcolorbox}[enhanced,breakable,colback=red!10,colbacktitle=red!20,colframe=red!40,coltitle=black,title={Advanced usage: {#1}},fonttitle=\sffamily\fontseries{b}\selectfont]}{\end{tcolorbox}}
+
+\newcommand{\ket}[1]{|{#1}\rangle}
+\newcommand{\bra}[1]{\langle{#1}|}
+\newcommand{\braket}[3]{\langle{#1}|{#2}|{#3}\rangle}
+\newcommand{\operator}{\mathcal{O}}
+\newcommand{\Hint}{H_{\text{int}}}
+\renewcommand{\d}{\mathrm{d}}
+\newcommand{\im}{\mathrm{i}}
+
+\newcommand{\e}[1]{\mathrm{e}^{{#1}}}
+
+\newcommand{\Mp}{M_{\mathrm{P}}}
+
+\newcommand{\fNL}{f_{\mathrm{NL}}}
+
+\newcommand{\vect}[1]{\bm{\mathrm{{#1}}}}
+\newcommand{\newp}{\tilde{p}}
+
+\newcommand{\massmatrix}{\mathfrak{m}}
+
+\newcommand{\massdimension}{\mathrm{M}}
+
+%\newcommand{\packagefont}{\fontfamily{lmtt}\selectfont\fontseries{l}\selectfont}
+%\newcommand{\packagefont}{\sffamily\fontseries{sbc}\selectfont}
+\newcommand{\packagefont}{\sffamily}
+
+\newcommand{\MadGraph}{{\packagefont MadGraph}}
+\newcommand{\Grace}{{\packagefont Grace}}
+\newcommand{\FormCalc}{{\packagefont FormCalc}}
+\newcommand{\GiNaC}{{\packagefont GiNaC}}
+\newcommand{\xloopsginac}{{\packagefont XLOOPS-GiNaC}}
+\newcommand{\CLN}{{\packagefont CLN}}
+\newcommand{\LanHEP}{{\packagefont LanHEP}}
+\newcommand{\CompHEP}{{\packagefont CompHEP}}
+\newcommand{\CalcHEP}{{\packagefont CalcHEP}}
+\newcommand{\FeynRules}{{\packagefont FeynRules}}
+\newcommand{\HELAC}{{\packagefont HELAC}}
+\newcommand{\SHERPA}{{\packagefont SHERPA}}
+\newcommand{\Whizard}{{\packagefont Whizard}}
+
+\newcommand{\ModeCode}{{\packagefont ModeCode}}
+\newcommand{\MultiModeCode}{{\packagefont MultiModeCode}}
+\newcommand{\FieldInf}{{\packagefont FieldInf}}
+\newcommand{\PyFlation}{{\packagefont PyFlation}}
+
+\newcommand{\BINGO}{{\packagefont BINGO}}
+
+\newcommand{\MTEasyPy}{{\packagefont MTEasyPy}}
+\newcommand{\CppTransport}{{\packagefont CppTransport}}
+
+\newcommand{\Xcode}{{\packagefont Xcode}}
+\newcommand{\Python}{{\packagefont Python}}
+\newcommand{\SymPy}{{\packagefont SymPy}}
+\newcommand{\Matplotlib}{{\packagefont Matplotlib}}
+\newcommand{\seaborn}{{\packagefont seaborn}}
+\newcommand{\Mayavi}{{\packagefont Mayavi}}
+\newcommand{\multiprocessing}{{\packagefont multiprocessing}}
+\newcommand{\MpiForPy}{{\packagefont Mpi4Py}}
+\newcommand{\MPI}{{\packagefont MPI}}
+\newcommand{\SQLite}{{\packagefont SQLite}}
+\newcommand{\MacPorts}{{\packagefont MacPorts}}
+\newcommand{\Homebrew}{{\packagefont Homebrew}}
+\newcommand{\Graphviz}{{\packagefont Graphviz}}
+\newcommand{\Mathematica}{{\packagefont Mathematica}}
+\newcommand{\Maple}{{\packagefont Maple}}
+
+\newcommand{\Boost}{{\packagefont Boost}}
+\newcommand{\odeint}{{\packagefont odeint}}
+
+\newcommand{\CMake}{{\packagefont CMake}}
+
+\newcommand{\file}[1]{\texttt{{#1}}}
+\newcommand{\envvar}[1]{\mintinline{bash}{#1}}
+\newcommand{\cmakevar}[1]{\texttt{\textbf{\footnotesize #1}}}
+\newcommand{\block}[1]{\mintinline{text}{#1}}
+\newcommand{\attribute}[1]{\mintinline{text}{#1}}
+\newcommand{\descfile}[1]{\mintinline{text}{#1}}
+\newcommand{\option}[1]{\texttt{\textbf{#1}}}
+\newcommand{\token}[1]{{\footnotesize\color{orange}\texttt{\textbf{{\$}#1}}}}
+\newcommand{\indexset}[1]{{\footnotesize\color{orange}\texttt{\textbf{[#1]}}}}
+
+\newcommand{\Gb}{\,\mathrm{Gb}}
+\newcommand{\Mb}{\,\mathrm{Mb}}
+
+\DeclareMathOperator{\TimeOrder}{T}
+\newcommand{\AntiTimeOrder}{\bar{\TimeOrder}}
+\DeclareMathOperator{\Or}{O}
+
+\newcommand{\semibold}[1]{{\fontseries{b}\selectfont{#1}}}
+\newcommand{\para}[1]{\par\vspace{2mm}\noindent\semibold{{#1.}---}\ignorespaces}
+
+% official C++ macro
+\newcommand\CC{C\nolinebreak\hspace{-.05em}\raisebox{.4ex}{\relsize{-3}{\textbf{+}}}\nolinebreak\hspace{-.10em}\raisebox{.4ex}{\relsize{-3}{\textbf{+}}}}
+
+% left-justified, displaystyle-math
+\newcolumntype{s}{>{$\displaystyle}l<{$}}
+% centred, displaystyle-math
+\newcolumntype{t}{>{$\displaystyle}c<{$}}
+% right-justified, displaystyle-math
+\newcolumntype{u}{>{$\displaystyle}r<{$}}
+% fixed-width column for formulas in table 1
+\newcolumntype{v}{>{$\displaystyle}m{4cm}<{$}}
+
+% aligned column type for error bars
+\newcolumntype{d}{D{!}{\;\pm\;}{-1}}
+
+\renewcommand{\geq}{\geqslant}
+\renewcommand{\leq}{\leqslant}
+
+\newcommand{\archivename}{\file{CppTransport\_2016\_01.tar.gz}}
+
+\renewcommand{\baselinestretch}{1.05}
+
+\setminted[bash]{
+    autogobble=true,
+    bgcolor=blue!10,
+    fontfamily=tt,
+    fontseries=l,
+    fontsize=\scriptsize,
+    frame=none,
+    linenos=true,
+    xleftmargin=0.05\linewidth,
+    style=tango,
+    breaklines=true,
+    breakbytoken=true
+}
+
+\setminted[text]{
+    autogobble=true,
+    bgcolor=green!10,
+    fontfamily=tt,
+    fontseries=l,
+    fontsize=\scriptsize,
+    frame=none,
+    linenos=true,
+    xleftmargin=0.05\linewidth,
+    style=tango,
+    breaklines=true,
+    breakbytoken=true
+}
+
+\setminted[python]{
+    autogobble=true,
+    bgcolor=red!10,
+    fontfamily=tt,
+    fontseries=l,
+    fontsize=\scriptsize,
+    frame=none,
+    linenos=true,
+    xleftmargin=0.05\linewidth,
+    style=tango,
+    breaklines=true,
+    breakbytoken=true
+}
+
+\setminted[c++]{
+    autogobble=true,
+    bgcolor=yellow!10,
+    fontfamily=tt,
+    fontseries=l,
+    fontsize=\scriptsize,
+    frame=none,
+    linenos=true,
+    xleftmargin=0.05\linewidth,
+    style=tango,
+    breaklines=true,
+    breakbytoken=true
+}
+
+\setminted[cmake]{
+    autogobble=true,
+    bgcolor=olive!10,
+    fontfamily=tt,
+    fontseries=l,
+    fontsize=\scriptsize,
+    frame=none,
+    linenos=true,
+    xleftmargin=0.05\linewidth,
+    style=tango,
+    breaklines=true,
+    breakbytoken=true
+}
+
+\setmintedinline{fontsize=\footnotesize}
+
+\begin{document}
+\title{\fontseries{s}\selectfont {\CppTransport}: a platform to
+automate calculation of inflationary correlation functions
+%\\
+%{\Large \it -- the transport approach with code
+\vspace{5mm}\hrule}
+\author{\fontseries{s}\selectfont David Seery}
+
+\affiliation{\vspace{2mm}
+Astronomy Centre, University of Sussex, Falmer, Brighton BN1 9QH, UK}
+
+\emailAdd{D.Seery@sussex.ac.uk}
+
+\abstract{}
+
+\maketitle
+\newpage
+
+\section{Introduction}
+There is now broad agreement that the inflationary
+scenario~\cite{Guth:1980zm,Starobinsky:1980te,Albrecht:1982wi,
+Hawking:1981fz,Linde:1981mu,Linde:1983gd}
+provides an acceptable framework within which to interpret
+observations of the very early universe.
+In this scenario, all structure arises from a primordial distribution
+of gravitational potential wells laid down by quantum
+fluctuations during an early phase of accelerated expansion.
+After inflation the universe is refilled with a sea of cooling radiation,
+and matter begins to condense within these potential wells.
+This generates a network of structure inheriting its statistical
+properties from those of the seed quantum fluctuations.
+By measuring these properties we can hope
+to infer something about the microphysical modes whose fluctuations
+were responsible.
+
+Information about the pattern of correlations visible within our Hubble patch
+can be extracted from any observable which traces the condensed matter
+distribution.
+To determine the viability of some particular inflationary model
+we must compare these observations with predictions
+which carefully account for the precise character of quantum
+fluctuations given the field content, mass scales and coupling constants of the model.
+
+Unfortunately these calculations are challenging.
+Various
+approximate schemes to compute a general $n$-point function are known,
+but even where these are available they require numerical methods
+except in special cases.
+Such schemes typically break the calculation into two pieces:
+a `hard' contribution characterized by wavenumbers near the scale
+of the sound horizon $k/a \sim H / c_s$,
+and a `soft' contribution characterized by wavenumbers
+$k/a \ll H / c_s$~\cite{Dias:2012qy}.
+The soft contribution can be computed using the classical
+equations of motion and is normally the only one to be handled exactly.
+The hard contribution is estimated by assuming
+all relevant degrees of freedom are massless and non-interacting.
+A typical example is the $\delta N$ formula for the
+equal-time two-point function
+of the curvature perturbation $\zeta$,
+\begin{equation}
+    \langle \zeta(\vect{k}_1) \zeta(\vect{k}_2) \rangle_t
+    = \aunderbrace[l1r]{N_\alpha(t, t_\ast) N_\beta(t, t_\ast)}_{\text{soft part}}
+    \aoverbrace[L1R]{\langle \delta\phi^\alpha(\vect{k}_1) \delta\phi^\beta(\vect{k}_2) \rangle_{t_\ast}}^{\text{hard part}} .
+    \label{eq:deltaN-approx}
+\end{equation}
+The indices $\alpha$, $\beta$, \ldots, label species of scalar
+field (with summation implied over repeated indices)
+and the subscript attached to each correlation function
+denotes its time of evaluation.
+The times are ordered so that $t \geq t_\ast$.
+Taking $t_\ast$ to label an epoch when
+$k_1 / a = k_2 / a \sim H / c_s$
+makes $N_\alpha N_\beta$
+correspond to the soft piece
+and the $t_\ast$ correlation function
+correspond to the hard piece.
+This division is entirely analogous to the factorization
+of hadronic scattering amplitudes into a hard subprocess
+followed by soft hadronization.
+
+Any scheme of this type will break down if the
+hard initial condition
+can not be approximated by the `universal'
+massless, non-interacting case.
+In recent years it has been understood that there is
+a rich phenomenology associated with this possibility,
+including `gelaton-like'~\cite{Tolley:2009fg}
+or
+`QSFI-like'~\cite{Chen:2009we,Chen:2009zp,Chen:2012ge}
+effects.
+With sufficient care these effects can be captured
+in an approximation scheme such as~\eqref{eq:deltaN-approx},
+but the approach becomes more complex---but
+even if this is possible we have only exchanged the problem
+for computation of the hard
+component
+$\langle \cdots \rangle_{t_\ast}$.
+If it is not universal
+this is
+no easier than
+calculation with which we started.
+
+A different way in which~\eqref{eq:deltaN-approx}
+loses its simplicity
+occurs when there is not a single hard scale,
+but a number of widely separated scales.
+For example, this can occur in an $n$-point function
+with $n \geq 3$
+where the external wavenumbers $\vect{k}_i$
+divide into groups characterized by typical
+magnitudes $\mu_1$, $\mu_2$, \ldots, $\mu_N$
+and $\mu_1 \ll \mu_2 \ll \cdots \ll \mu_N$.
+In this case the factorization in~\eqref{eq:deltaN-approx}
+becomes more involved~\cite{Kenton:2015lxa},
+and must be modified in a way depending on the precise
+hierarchy of groups.
+
+Taken together, these difficulties generate a significant
+overhead
+for any analysis where accurate predictions of
+$n$-point functions are important.
+The form of this overhead varies from model to model,
+and even on the range of wavenumbers under consideration.
+If we choose to pay the overhead 
+and pursue this approach, we encounter three
+significant obstacles.
+First, a sizeable investment may be required
+before analysis can commence for each new model.
+Second, because each hard component is model-specific, there
+may be limited opportunities for economy by re-use.
+Third, if we implement the hard component of each model
+individually (perhaps using a range of different
+analytic or numerical methods), we must painfully test and validate
+the calculation in each case.
+
+\subsection{Automated calculation of inflationary correlation functions}
+To do better we would prefer a completely general method
+which could be used to obtain accurate predictions for each $n$-point
+function, no matter what mass spectrum
+is involved or what physical
+processes contribute to the hard component.
+Such a method could be used to compute each correlation function directly,
+without imposing any form of approximation.
+
+The same problem
+is encountered in any area of physics for which
+observable predictions depend on the methods of quantum field theory.
+The paradigmatic example is collider phenomenology,
+where the goal is
+to compare theories of beyond-the-Standard-Model physics
+to collision events recorded at the Large Hadron Collider.
+In both early universe cosmology and collider phenomenology the challenge is to
+obtain sufficiently accurate predictions from a diverse and growing range
+of physical models---and,
+in principle, the obstacles listed above apply
+equally in each case.
+But, in collider phenomenology, the availability of sophisticated tools
+to \emph{automate}
+the prediction process has allowed models to be developed and investigated
+at a remarkable rate.
+Examples of such tools include
+\href{http://theory.sinp.msu.ru/~pukhov/calchep.html}{{\CompHEP}/{\CalcHEP}}~\cite{Pukhov:1999gg,Boos:2004kh,Pukhov:2004ca,Belyaev:2012qa},
+\href{http://www.feynarts.de/formcalc/}{\FormCalc}~\cite{Hahn:1998yk,Hahn:2000kx,Hahn:2006qw,Agrawal:2011tm},
+\href{http://helac-phegas.web.cern.ch/helac-phegas/helac-phegas.html}{\HELAC}~\cite{Kanaki:2000ey,Cafarella:2007pc},
+\href{http://madgraph.hep.uiuc.edu}{\MadGraph}~\cite{Maltoni:2002qb,Alwall:2007st,Alwall:2011uj,Alwall:2014hca},
+\href{https://sherpa.hepforge.org/trac/wiki}{\SHERPA}~\cite{Gleisberg:2003xi,Gleisberg:2008ta} and
+\href{https://whizard.hepforge.org}{\Whizard}~\cite{Moretti:2001zz,Kilian:2007gr}.
+(For an early review of the field, see the
+\emph{Les Houches Guide to MC Generators}~\cite{Dobbs:2004qw}.)
+Their
+common feature is support for automatic
+generation of LHC event rates
+directly from a Lagrangian
+by mixing three components:
+(1) symbolic calculations
+to construct suitable Feynman rules,
+(2) automatically-generated compiled code
+to compute individual matrix elements,
+and (3) Monte Carlo event generators to convert these matrix
+elements into
+measurable event rates.
+This strategy of automation has successfully
+overcome the difficulties encountered in
+developing cheap, reliable,
+model-dependent predictions.
+In addition,
+reusable tools
+bring
+obvious advantages of simplicity
+and reproducibility.
+There have also been indirect benefits.
+For example, the existence of widely-deployed
+tools has provided a common language
+in which to express not only the models but also the
+elements of their analysis.
+
+In early universe cosmology the available toolbox is substantially less developed.
+A number of public codes are available to assist computation of the
+two-point function,
+including
+\href{http://theory.physics.unige.ch/~ringeval/fieldinf.html}{\FieldInf}
+\cite{Ringeval:2005yn,Martin:2006rs,Ringeval:2007am},
+\href{http://modecode.org}{\ModeCode} and
+\href{http://modecode.org}{\MultiModeCode}
+\cite{Mortonson:2010er,Easther:2011yq,Norena:2012rs,Price:2014xpa},
+and
+\href{http://pyflation.ianhuston.net}{\PyFlation}~\cite{Huston:2009ac,
+Huston:2011vt,Huston:2011fr}.
+But although these codes are \emph{generic}---they can handle any model
+within a suitable class---%
+they are not \emph{automated} in the sense described above,
+because expressions for the potential and its derivatives must be obtained
+by hand and supplied as subroutines.
+For the three-point function the situation is more restrictive.
+Currently the only public code is
+\href{https://sites.google.com/site/codecosmo/bingo}{\BINGO}~\cite{Hazra:2012yn,
+Sreenath:2014nca}
+which is limited to single-field canonical models.
+
+Partially, this difference
+in availability of solvers for the two- and three-point functions
+has arisen because
+a direct implementation of the Feynman calculus is not straightforward
+for $n$-point functions with $n \geq 3$.
+In these cases, conversion of formal Feynman integrals into concrete
+numerical results
+usually
+depends on techniques such as Wick rotation
+which are difficult to implement without an analytic
+expression for the integrand.
+Such expressions are seldom available
+for the time-dependent backgrounds required by cosmology,
+making
+integration over the time variable more
+demanding than for Minkowski-space scattering amplitudes.
+For this reason it would be considerably more convenient to work with an
+explicitly real-time formulation.
+
+Recently, Dias et al. described a
+formulation of field theory with these properties.
+It can be applied to time-dependent backgrounds more straightforwardly
+than the traditional machinery of Feynman diagrams~\cite{DiasFrazerMulryneSeery}.
+This formulation is based on direct computation of the $n$-point functions
+by an evolution or `transport' equation,
+allowing most of the complexities of field theory to be absorbed into
+calculation of suitable initial conditions.
+In inflation these initial conditions are universal,
+provided the calculation is started at sufficiently early times where
+all scalar fields can be approximated as massless.
+Therefore, obtaining suitable initial conditions becomes a one-time
+cost, the results of which are easy to compute numerically.
+The remaining challenge is to implement the evolution equations which
+bring these initial conditions
+to the final time of interest.
+These also have a universal form,
+parametrized by coefficient matrices
+which depend only algebraically on the model at hand.
+
+Using this scheme it becomes possible to implement automated
+calculation of inflationary correlation functions in the same sense
+as the tools used in collider phenomenology.
+By performing suitable symbolic calculations we can
+compute the necessary coefficient matrices for any model,
+and given knowledge of these matrices it is straightforward to generate
+specialized code which implements the necessary evolution equations.
+When compiled this code will take advantage of any opportunities for
+optimization detected by the compiler, making evaluation of
+each correlation function as rapid as possible.
+Finally, by
+mapping each correlation function over a range of wavenumbers we
+place ourselves in a position to determine any
+late-universe observable of interest.
+
+\subsection{The {\CppTransport} platform}
+
+{\CppTransport} is a platform which implements
+this prescription.
+It is the result of three years of development, amounting to roughly 60,000
+lines of {\CC},
+and consists of three major components:
+\begin{enumerate}
+    \item
+    A \emph{translator} (17,000 lines)
+    converts `model description files' into
+    custom {\CC} implementing suitable evolution equations and
+    initial conditions.
+    The model description file enumerates the field content of the model,
+    lists any parameters required by the Lagrangian, and
+    specifies the inflationary potential.
+    It is also possible to document the model by providing
+    a rich range of metadata.
+    
+    \item
+    Once this specialized {\CC} code is available it must be compiled
+    together with a runtime support system to produce a finished product capable
+    of integrating the transport equations and producing correlation
+    functions.
+    The \emph{management system} (29,000 lines) is the largest component
+    in the runtime support
+    and
+    has responsibility for coordinating integration jobs
+    and
+    handling parallelization.
+    It also provides database services.
+    
+    \item The remaining component is a \emph{visualization and reporting suite}
+    (15,000 lines)
+    which can process the raw integration data to produce observable
+    quantities
+    and present the results as plots or tables.
+    The reporting component generates interactive HTML
+    documents
+    containing these outputs
+    for easy reading or sharing with collaborators.
+\end{enumerate}
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.75]{Diagrams/organization}
+    \end{center}
+    \caption{\label{fig:organization}Block diagram showing relation
+    of {\CppTransport} components.}
+\end{figure}
+A block diagram showing the interaction among {\CppTransport} components is given in
+Fig.~\ref{fig:organization}.
+To investigate some particular model normally requires the following steps:
+\begin{enumerate}
+    \item Produce a suitable model-description file and process it
+    using the {\CppTransport} translator.
+    
+    \item Produce a short {\CC} code
+    which couples the runtime system to some number of model implementations produced by
+    the translator---at least one, but up to as many as required.
+    Each implementation is pulled in as a header file via the \mintinline{c++}{#include}
+    directive.
+    The code can define
+    any number of \emph{integration tasks},
+    \emph{post-processing tasks}
+    and \emph{output tasks}
+    which describe the work to be done:
+    \begin{itemize}
+        \item \emph{Integration tasks} associate a single model with a fixed choice
+        for the parameters required by its Lagrangian, and initial conditions for
+        the fields and their derivatives.
+        The task specifies a set of times and
+        configurations (assignments for the wavenumbers
+        $\vect{k}_i$ characterizing each correlation function)
+        at which samples should be stored.
+        
+        \item \emph{Post-processing tasks} act on the output from an integration
+        task or other post-processing task. They are typically used to convert
+        the field-space correlation functions generated by integration tasks into
+        observable quantities, such as the correlation functions of the
+        curvature perturbation $\zeta$.
+        Further post-processing tasks can compute inner products of
+        the $\zeta$ three-point function with commonly-defined
+        templates.
+        
+        \item \emph{Output tasks} draw on the data produced by integration
+        and post-processing tasks to produce summary plots and tables.
+    \end{itemize}
+    
+    \item When compiled and executed, the code writes all details of its tasks into
+    a \emph{repository}---an on-disk database which is used to aggregate
+    information about the tasks and the numerical results they produce.
+    
+    \item The runtime system uses the information stored in a repository to
+    produce output for each task on demand.
+    The results are stored in the repository and information about them
+    is collected in its database.
+    
+    \item Once predictions for the required correlation functions have
+    been obtained, they can be converted into science outputs:
+    \begin{itemize}
+        \item If relatively simple observables are required, such as
+        a prediction of the amplitude or spectral indices for
+        the $\zeta$ spectrum or bispectrum,
+        then it may be sufficient to set up an output task
+        to compute these observables directly.
+        The result can be written as a set of
+        publication-ready plots in
+        some suitable format such as PDF, SVG or PNG,
+        or as ASCII-format tables listing numerical values.
+        
+        \item Output tasks support a limited range of observables.
+        For more complex cases, or to produce plots by hand,
+        the required data can be exported from the databases stored inside
+        the repository.
+        
+        {\CppTransport} does not itself provide this functionality,
+        but because its databases are of the industry-standard SQL type
+        there is a wide selection of powerful tools to choose from. Many
+        of these are freely available.
+        
+        \item To share information about the results that have been generated,
+        {\CppTransport} can produce a report in HTML format
+        suitable for exchanging with collaborators.
+        These reports include a summary analysis of content
+        generated by integration tasks.
+        They also
+        embed the plots and tables produced by output tasks.
+        
+    \end{itemize}
+
+\end{enumerate}
+
+
+\subsection{Summary of features}
+The remainder of this paper will describe these steps
+in more detail
+and illustrate how the numerical results they generate can be
+used to study inflationary models.
+Acting together, the components
+of {\CppTransport} provide much more than a bare implementation
+of the evolution equations for each $n$-point function.
+The main features of the platform are:
+\begin{itemize}
+    \item Numerical results including \semibold{all relevant
+    field-theory effects at tree-level}.
+    The method correctly accounts for
+    a hierarchy of mass scales,
+    interactions among different field species,
+    and correlation or interference effects
+    around the time of horizon exit.
+    It makes no use of approximations
+    such as the separate universe method or the slow-roll
+    expansion.
+    
+    \item An \semibold{SQL-based workflow} based on
+    the \href{http://sqlite.org}{\SQLite} database
+    management system,%
+        \footnote{`SQL' is the \emph{Structured Query Language},
+        a set-based language used nearly universally
+        to express queries acting on the most common `relational' type
+        of database. It is useful because, to extract
+        some subset from a large database, one need only \emph{describe}
+        the subset rather than give an explicit algorithm to search for it;
+        it is the responsibility of the database management system
+        to devise a strategy to read and collate the required records.
+        This is very convenient for
+        scientific purposes
+        because it allows a dataset to be analysed in
+        many different ways, by many different tools,
+        with only modest effort.}
+    which
+    {\CppTransport} uses for its data storage.
+    Because SQL is an industry-standard technology
+    there is a rich ecosystem of existing
+    tools which can be used to
+    read SQLite databases and perform real-time SQL queries.
+    This enables powerful GUI-based workflows which allow
+    \semibold{scientific exploitation and analysis without
+    extensive programming}.
+
+    \item A \semibold{fully parallelized} {\MPI}-based implementation which
+    scales from laptop-class hardware up to many cores, using
+    \semibold{adaptive load-balancing} to keep all cores fed with work.
+    A \semibold{transactional design} means it is safe to run multiple
+    jobs simultaneously,
+    and automated \semibold{checkpointing and recovery} prevent
+    work being lost in the event of a crash.
+    If modifications are required then the messaging implementation is
+    \semibold{automatically instrumented} to assist with debugging and
+    performance optimization.
+    
+    \item Manages the \semibold{data lifecycle} by
+    linking each dataset
+    to a repository
+    storing all information
+    about the parameters, initial conditions and sampling points
+    used for the calculation.
+    The repository also collects \semibold{metadata about the integration},
+    such as the type of stepper used and the tolerances applied.
+    Together, this information
+    ensures that each dataset is properly documented and
+    has long-term archival value.
+    (All repository data is stored in human-readable
+    JSON documents in order that this information is accessible, if necessary,
+    without requiring the {\CppTransport} platform.)
+    
+    \item The repository system
+    supports \semibold{reproducible research} by providing
+    an unambiguous means to regenerate
+    each dataset, including any products derived
+    from it.
+    This already provides clear benefits at the analysis stage, because it
+    is not possible to confuse when or how each
+    output was generated.
+    But if shared with the community, the information stored
+    in a repository
+    enables every step of an analysis to
+    be audited.
+        
+    \item When derived products such as plots or tables are produced,
+    their dependence on existing datasets is recorded.
+    This means that the platform can be provide \semibold{a detailed
+    provenance for any data product tracked by the repository}.
+    The reporting suite generates
+    HTML documents containing a hyperlinked
+    audit trail summarizing this provenance.
+    Notes can be attached to each repository record, meaning that
+    the report functions as a type of \semibold{electronic
+    laboratory notebook}.
+    
+    \item \semibold{Leverages standard libraries},
+    including the \href{http://www.boost.org}{\Boost} {\CC} library.
+    Integrations are performed using high-quality
+    steppers taken from
+    \href{http://www.boost.org/doc/libs/release/libs/numeric/odeint}{{\Boost}.{\odeint}}~\cite{2011AIPC.1389.1586A}.
+    These steppers are interchangeable, meaning that they can be customized
+    to suit the model in question.
+    For difficult integrations, very high-order adaptive steppers
+    are available.
+    
+    \item The translator is a full-featured tool in its own right,
+    capable of customizing arbitrary template code
+    for each model using sophisticated replacement rules.
+    It understands a form of Einstein summation convention,
+    making generation of \semibold{specialized template code}
+    rapid and convenient.
+\end{itemize}
+
+\subsection{Notation and conventions}
+This document includes examples of computer code written in a variety
+of languages.
+To assist in understanding the context of each code block, its background
+is colour-coded according to the language:
+\begin{itemize}
+	\item Shell input, blue background: \mintinline{bash}{export PATH=/usr/local/bin:$PATH}
+	\item Configuration files, green background: \mintinline{text}{input = /usr/local/share/cpptransport}
+	\item {\CC} files, yellow background: \mintinline{c++}{class dquad_mpi;}
+\end{itemize}
+
+\section{Installation}
+
+\subsection{Minimum requirements}
+
+\para{Compiler}
+{\CppTransport} is written in modern {\CC} and requires a relatively recent compiler
+with support for {\CC}14.
+It has been confirmed to build
+correctly with the three major toolchains used in physics and cosmology---%
+\href{http://clang.llvm.org}{Clang}
+(including Apple Clang),
+\href{https://gcc.gnu.org}{gcc} and the
+\href{https://software.intel.com/en-us/c-compilers}{Intel compiler}.
+The minimum recommended versions
+are $\geq$ gcc 5.0
+and $\geq$ Intel 16.0.
+Versions of gcc prior to 5.0 have insufficient standard library support,
+and versions of the Intel compiler prior to 16.0
+contain bugs which prevent a successful build.%
+    \footnote{On Linux, the Intel compiler normally depends on the
+    standard library supplied with gcc.
+    This means that gcc $\geq$ 5.0 should also be available.}
+Any moderately recent version of Clang should work correctly.
+
+In the absence of specialized requirements
+it is usually simplest to build with the default
+toolchain.
+On Linux the default compiler
+will be gcc, and for versions of OS X later than 10.7
+it will be Clang.
+Testing has shown that there is little to be gained by switching between
+different compilers, although the Intel compiler can give better performance
+under certain circumstances.
+Where this occurs
+it is sometimes possible to obtain the performance improvement
+by building executables for individual models using the Intel compiler,
+even if the base {\CppTransport} system is built with the default system
+toolchain.%
+    \footnote{This can go wrong if there are binary incompatibilities
+    between compiled code generated by different compilers.
+    In testing we have found that Clang and the Intel compiler normally
+    produce compatible output, but gcc and the Intel compiler
+    exhibit differences in the {\GiNaC} library.}
+
+\para{Dependencies}
+{\CppTransport} is packaged to minimize its pre-requisites and
+dependencies.
+Nevertheless, there are inevitably some libraries and tools which must be present
+before installation can be attempted.
+These dependencies have been organized by splitting them into two groups.
+The
+first
+group contains those which \emph{must} be installed system-wide
+(and therefore may be not be installable by individual users in a cluster environment),
+or which are very commonly available from package management systems.
+The second contains more specialized libraries.
+{\CppTransport}
+expects dependencies in the first group to be pre-installed by a system
+administrator,
+or via a package-management system on a personal computer. (Some examples are discussed
+below.)
+This approach uses system resources economically by
+promoting use of shared libraries. 
+Dependencies in the second group are managed internally
+and
+do not require user intervention.
+
+\para{Pre-requisite dependencies}
+The pre-requisite dependencies which must be installed prior to
+building {\CppTransport} are:
+
+\begin{itemize}
+
+\item \semibold{{\CMake} build system.}
+The build process for {\CppTransport} is managed by the
+\href{https://cmake.org}{\CMake} tool,
+which
+is responsible for finding the various libraries and system files
+needed by {\CppTransport}.
+It is also responsible for downloading and installing those dependencies
+which {\CppTransport} manages internally.
+Once all resources are available, CMake automatically builds and installs
+the {\CppTransport} platform.
+
+{\CppTransport} requires {\CMake} version 3.0 or later.
+
+\item \semibold{A working {\MPI} installation.}
+{\CppTransport} uses the standard
+{\MPI} message-passing system
+to coordinate parallel calculations.
+A suitable implementation must therefore be installed.
+Any standards-compliant choice should work,
+including
+\href{https://www.open-mpi.org}{\packagefont OpenMPI},
+\href{https://www.mpich.org}{\packagefont MPICH}
+(or its derivatives)
+or the
+\href{https://software.intel.com/en-us/intel-mpi-library}{\packagefont Intel MPI} libraries.
+
+\item \semibold{The Boost {\CC} libraries.}
+{\CppTransport} uses
+a suite of {\CC} libraries called
+\href{http://www.boost.org}{Boost}.
+Most Boost libraries are header-only and do not require
+shared libraries to be pre-built.
+However, some do require a build step.
+Those required by {\CppTransport}
+are
+\href{http://www.boost.org/doc/libs/1_60_0/doc/html/date_time.html}{\packagefont Date{\_}Time},
+\href{www.boost.org/doc/libs/1_60_0/libs/filesyste…}{\packagefont Filesystem},
+\href{http://www.boost.org/doc/libs/1_60_0/libs/log/doc/html/index.html}{\packagefont Log},
+\href{http://www.boost.org/doc/libs/1_60_0/doc/html/mpi.html}{\packagefont MPI},
+\href{http://www.boost.org/doc/libs/1_60_0/doc/html/program_options.html}{\packagefont ProgramOptions},
+\href{http://www.boost.org/doc/libs/1_60_0/doc/html/boost_random.html}{\packagefont Random},
+\href{www.boost.org/doc/libs/1_60_0/libs/regex/do…}{\packagefont RegEx},
+\href{http://www.boost.org/doc/libs/1_60_0/libs/system/doc/index.html}{\packagefont System},
+\href{http://www.boost.org/doc/libs/1_60_0/libs/serialization/doc/}{\packagefont Serialization},
+\href{www.boost.org/doc/libs/1_60_0/doc/html/thre…}{\packagefont Thread}
+and
+\href{http://www.boost.org/doc/libs/1_60_0/libs/timer/doc/index.html}{\packagefont Timer}.
+
+{\CppTransport} will function with any version of Boost later than 1.56,
+but is more efficient with version 1.58 or later.
+
+\item \semibold{The {\GiNaC} computer algebra library.}
+\href{http://www.ginac.de}{\GiNaC} is a library for performing symbolic computations
+in {\CC}. It was originally developed as part of the
+\href{http://wwwthep.physik.uni-mainz.de/~xloops/}{\xloopsginac} project
+to develop an automated 1-loop particle physics code.
+However, the library itself is independent of any particular application.
+{\GiNaC} has a further dependence on the
+\href{http://www.ginac.de/CLN/}{\CLN} project, but this will
+be handled automatically if installation is managed by
+a packaging system.
+
+\item \semibold{The {\SQLite} database library.}
+This is almost certain to be installed on every Linux or OS X machine,
+but some extra developer files may be required.
+
+\end{itemize}
+Typically, some of
+these dependencies
+(such as {\CMake}, an {\MPI} implementation, Boost, SQLite) will already
+be available in a managed HPC environment
+such as a compute cluster.
+All of them
+are widely packaged for convenient installation on personal
+machines:
+they are included in the most common Linux distributions,
+and are available using the
+\href{https://www.macports.org}{\MacPorts}
+or 
+\href{http://brew.sh}{\Homebrew}
+package-management systems for OS X.
+Unless there are compelling reasons to install in some other way,
+packaged versions of this kind normally represent
+the most convenient approach.
+
+In addition {\CppTransport} can use certain external programs
+if they are available, but does not depend on them for its
+core functionality of computing $n$-point functions:
+\begin{itemize}
+    \item Using output tasks to generate plots
+    depends on \href{https://www.python.org}{\Python} and the
+    \href{http://matplotlib.org}{\Matplotlib} library.
+    If one or both is unavailable then it is instead possible
+    to generate Python scripts which can be processed to
+    product plots at a later date.
+    (This provides a means to customize the plot format, if desired.)
+    
+    If it is available {\CppTransport} can use the
+    \href{https://stanford.edu/~mwaskom/software/seaborn}{\seaborn}
+    statistical library to style the plots it generates.
+    
+    \item If the \href{http://www.graphviz.org}{\Graphviz} tools are
+    available, the HTML report generator will produce a dependency diagram
+    showing how each product generated by an output task
+    depends on content produced by earlier integration and
+    post-processing tasks.
+\end{itemize}
+
+
+\subsection{Building the translator and installing the runtime system}
+
+This section describes how to install {\CppTransport},
+with explicit summaries for handling dependencies in a number of
+common cases---OS X with {\MacPorts} or {\Homebrew}, and Ubuntu.
+Users with experience building and installing software may wish
+to skip directly to~\S\ref{sec:build-translator}
+which gives instructions for building the {\CppTransport}
+once all dependencies have been installed.
+
+\subsubsection{Installing dependencies on OS X}
+
+As explained above, to build on OS X it is usually convenient to use
+the {\MacPorts} or {\Homebrew} packaging systems to simplify installation
+of its dependencies.
+Whichever package manager is chosen, the first step is to install
+{\Xcode} and its associated command-line tools.
+\begin{enumerate}
+    \item Download {\Xcode} from the App Store. It is a large download
+    (roughly $\sim$ 6 Gb) so this may take a while.
+    
+    \item Install the command-line tools associated with {\Xcode}
+    by opening the Terminal application and typing:
+    \begin{minted}{bash}
+        xcode-select --install    
+    \end{minted}
+    
+    \item Agree to the {\Xcode} license by typing:
+    \begin{minted}{bash}
+        sudo xcodebuild -license    
+    \end{minted}
+    You will need to page to the end of the license or chose
+    \mintinline{bash}{q} to quit, followed by typing
+    \mintinline{bash}{agree} to confirm that you accept the license.
+\end{enumerate}
+
+\para{Using {\MacPorts}}
+To install {\CppTransport}'s dependencies using {\MacPorts}:
+\begin{enumerate}
+    \item Install the {\MacPorts} system from
+    \url{http://www.macports.org}. Installers are available
+    for each recent release of OS X.
+    
+    \item Once {\MacPorts} is installed, open a new Terminal.
+    ({\MacPorts} makes some changes to your configuration files
+    in order to make its packages available.
+    These changes are only picked up when you open a new Terminal.)
+    
+    The dependencies for {\CppTransport}
+    can be installed simultaneously by typing
+    \begin{minted}{bash}
+        sudo port install cmake openmpi boost +openmpi ginac 
+    \end{minted}
+    (Note that the combination
+    \mintinline{bash}{boost +openmpi} is a single item and instructs
+    {\MacPorts} to install the Boost libraries using {\packagefont OpenMPI}
+    as the {\MPI} implementation.)
+    Each of these packages has further dependencies which {\MacPorts}
+    will download and install automatically.
+    This process can take some time.
+    
+    If you want to use {\Python} to produce plots and
+    {\Graphviz} for dependency diagrams then this can be followed with
+    \begin{minted}{bash}
+        sudo port install py-matplotlib py-seaborn graphviz    
+    \end{minted}
+    Alternatively you can combine all these packages together
+    in a single \mintinline{bash}{sudo port install} instruction.
+    
+    \item When all packages have installed, issue the command
+    \begin{minted}{bash}
+        sudo port select --set mpi openmpi-mp-fortran    
+    \end{minted}
+    This selects {\packagefont OpenMPI} as the default {\MPI}
+    implementation,
+    which will enable {\CppTransport} to find its libraries
+    while it is being built.
+\end{enumerate}
+
+\para{Using {\Homebrew}}
+
+\begin{itemize}
+    \item Install {\Homebrew} by following the instructions at
+    \url{http://brew.sh}.
+    
+    \item To install the major {\CppTransport} dependencies, execute
+    \begin{minted}{bash}
+        brew install cmake openmpi ginac
+        brew install boost --c++11 --with-mpi --without-single 
+    \end{minted}
+
+    \item Although {\Homebrew} includes {\Python} and {\Graphviz} it does not
+    include {\Matplotlib}, which must be installed separately.
+    First install {\Python} and {\Graphviz}:
+    \begin{minted}{bash}
+        brew install python graphviz    
+    \end{minted}
+    We will also want two further dependencies:
+    \begin{minted}{bash}
+        brew install pkg-config pip    
+    \end{minted}
+    It is now possible to install {\Matplotlib} and {\seaborn}:
+    \begin{minted}{bash}
+        pip2 install matplotlib seaborn    
+    \end{minted}
+
+\end{itemize}
+
+
+\subsubsection{Installing dependencies on Ubuntu}
+
+\subsection{Building the translator}
+\label{sec:build-translator}
+
+Once all dependencies are installed it is possible to build {\CppTransport}.
+It is packaged as a \file{.tar.gz} archive containing the source tree.
+Download this archive and place it in a suitable directory, then unpack the
+archive by typing
+\begin{minted}{bash}
+	tar xvf CppTransport_2016_01.tar.gz
+\end{minted}
+The name of the archive may be different if you are using a more recent
+version.
+The {\CppTransport} source code will be unpacked into a directory
+with the name \file{CppTransport}.
+The build process proceeds by entering this directory,
+creating a \emph{new} directory called
+\file{build} which will hold temporary files,
+and then configuring {\CMake} to use your preferred compiler
+and install to your preferred location.
+
+{\CppTransport} can be installed \emph{system-wide}, making it available
+to all users on a machine. Alternatively it can be installed locally,
+just for a single user. For example, if installing
+system wide we might choose to locate it in \file{/usr/local}.
+This usually requires administrator privileges.
+Single-user installation would usually locate {\CppTransport} within the
+user's home directory
+and does not require administrator privileges. This may be the only option
+if you are building on a managed system such as a cluster.
+
+In what follows we shall assume that installation is happening locally, but the
+changes required for system-wide installation are minimal.
+First, enter the {\CppTransport} directory and create a new directory
+for temporary files:
+\begin{minted}{bash}
+	cd CppTransport
+	mkdir build
+	cd build	
+\end{minted}
+The next step is to configure {\CMake}. If you are building with the default
+compiler you can enter
+\begin{minted}{bash}
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/.cpptransport-packages	
+\end{minted}
+This instructs {\CMake}
+to build using a release configuration
+(some debugging code is suppressed)
+and install to the directory \file{\textasciitilde{}/.cpptransport-packages}.
+The precise name of this directory is arbitrary and can be freely changed,
+although it is wise to avoid the names
+\file{\textasciitilde{}/.cpptransport}
+and
+\file{\textasciitilde{}/.cpptransport-runtime}
+which {\CppTransport} expects to be associated with configuration files.
+(See the discussion on p.\pageref{page:config-files} below.)
+If you are installing system-wide the install prefix should
+be set using
+\mintinline{bash}{-DCMAKE_INSTALL_PREFIX=/usr/local}
+or similar.
+
+If you wish to build with a different compiler then {\CMake} will require
+further information.
+For example, if the Intel compiler is available on your \envvar{PATH}
+and you wish to build with it, you should use
+\begin{minted}{bash}
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/.cpptransport-packages -DCMAKE_C_COMPILER=icc -DCMAKE_CXX_COMPILER=icpc	
+\end{minted}
+More generally, you should pass the location of the C compiler
+as the value of
+\envvar{CMAKE_C_COMPILER}
+and the location of the {\CC}
+compiler as the value
+of \envvar{CMAKE_CXX_COMPILER}.
+
+If configuration is successful, build the translator
+and then install:
+\begin{minted}{bash}
+	make CppTransport -j4
+	make install	
+\end{minted}
+Adjust the argument \mintinline{bash}{-j4}
+to correspond to the number of cores available on your machine;
+for example, on a dual-core machine you should
+use \mintinline{bash}{-j2}
+and on a quad-core machine with hyperthreading
+you could use \mintinline{bash}{-j8}.
+If you don't wish to use parallelized builds then it is possible to
+omit the \mintinline{bash}{-j} argument altogether,
+although the process may take substantially longer.
+
+\subsection{Configuring your environment}
+\label{sec:environment}
+\para{\envvar{PATH} variable}
+{\CppTransport} is now installed, but is not yet usable.
+The install procedure writes a large number of files and
+resources into directories
+under the installation prefix
+specified in
+\envvar{CMAKE_INSTALL_PREFIX};
+see Fig.~\ref{fig:directory-structure}.
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.65]{Diagrams/folders}	
+	\end{center}
+	\caption{\label{fig:directory-structure}Directory structure created by
+	{\CppTransport} installation process.}
+\end{figure}
+One of these files is the translator,
+called \file{CppTransport},
+which is installed under \file{bin}.
+The operating system needs to know where to find this
+when we ask it to process a model file,
+and this means adding its parent directory to the
+\envvar{PATH} variable.
+We also have to inform {\CppTransport}
+where its supporting files have been installed;
+for example,
+the translator requires access to its templates,
+and the runtime environment requires access to various assets
+that are used when writing HTML reports.
+
+The first step is to add the \file{bin} directory to your path.
+Typically this would be set in a configuration script such as
+\file{.profile}.%
+	\footnote{There are several possible locations where
+	\envvar{PATH} can be set, but
+	\file{.profile} is a good choice because it will typically be read
+	for non-interactive shells. This can be important if you will be running
+	{\CppTransport} via {\MPI} in a cluster environment.}
+You may find that this file already contains a line of the form
+\begin{minted}{bash}
+	export PATH=/opt/local/bin:/opt/local/sbin:$PATH	
+\end{minted}
+although the precise list of colon-separated paths may be different.
+If not, or there was no existing
+\file{.profile} script,
+add a new entry which points to the \file{bin}
+directory under your installation prefix.
+For example, for a user named \texttt{ds283}
+the resulting line might be
+\begin{minted}{bash}
+	export PATH=/Users/ds283/.cpptransport-packages/bin:$PATH	
+\end{minted}
+Ensure that you \emph{add} to the list of
+colon-separated paths rather than replacing any existing ones,
+or you may find that you lose access to some of your installed software.
+
+\para{{\CppTransport} resources}
+At this stage it should be possible to invoke
+the {\CppTransport} translator simply by typing
+\file{CppTransport} at the command line.
+and it is worth opening a new terminal
+(causing your \file{\textasciitilde{}/.profile} script to be read)
+to check that this happens.
+\begin{minted}{bash}
+	CppTransport --version	
+\end{minted}
+The translator should respond by printing information about
+the installed version, such as
+\begin{center}
+	\ttfamily\fontseries{l}\selectfont
+	CppTransport 2016.1.0 (c) University of Sussex 2016
+\end{center}
+
+If this has worked successfully
+then nothing else need to be done to translate model files
+or build them into executables.
+The only step that is still required
+is to inform the runtime system
+where it can find the files installed under \file{share}.
+There are two ways to do this:
+\begin{itemize}
+    \item \semibold{Use the \envvar{CPPTRANSPORT_PATH} environment variable.}
+    {\CppTransport} will search a list of filesystem locations when looking
+    for files. One option is to supply this information as a colon-separated list
+    in the environment variable \envvar{CPPTRANSPORT_PATH},
+    which functions very like the variable \mintinline{bash}{PATH}
+    used above to inform the shell where it should search for executable files.
+    
+    If set, \envvar{CPPTRANSPORT_PATH}
+    should point to the subdirectory \file{share/cpptransport}
+    of the installation prefix.
+    For example, your \file{\textasciitilde{}/.profile} could include
+    a line such as
+    \begin{minted}{bash}
+        export CPPTRANSPORT_PATH=~/.cpptransport-packages/share/cpptransport    
+    \end{minted}
+    The \envvar{CPPTRANSPORT_PATH} variable is used by both the
+    translator and the runtime library.
+    
+    \item \label{page:config-files}\semibold{Use configuration files.}
+    Alternatively, options may be supplied to {\CppTransport}
+    using configuration files in the top level of your home directory.
+    The translator will look for a configuration file named
+    \file{\textasciitilde{}/.cpptransport},
+    and the runtime environment will look for a file named
+    \file{\textasciitilde{}/.cpptransport-runtime}.
+    The use of separate files
+    enables different options to be passed
+    to each component.
+    
+    This method allows you to avoid adding extra material to
+    your \file{\textasciitilde{}/.profile} script
+    (or related files), if that is desirable.
+    To use configuration files for this purpose,
+    create a \file{\textasciitilde{}/.cpptransport} file
+    containing a the line such as
+    \begin{minted}{text}
+        include = /Users/ds283/.cpptransport-packages/share/cpptransport
+    \end{minted}
+    where the path on the right-hand side should be adjusted to have
+    the correct prefix and home directory.
+    Notice that
+    although is the same path that would appear in \envvar{CPPTRANSPORT_PATH},
+    the symbol \file{\textasciitilde{}} cannot be used to represent
+    the path to the home directory.
+    
+    The runtime system requires a separate configuration
+    file called \file{.cpptransport-runtime}
+    which should include the same line:
+    \begin{minted}{text}
+        include = /Users/ds283/.cpptransport-packages/share/cpptransport    
+    \end{minted}
+
+\end{itemize}
+
+\para{Using {\Python} to produce plots}
+Provided the {\Python} interpreter is available on your
+\envvar{PATH} it will be automatically detected.
+{\CppTransport} will also detect whether {\Matplotlib} is available.
+Therefore it is not necessary to adjust any settings in order to use these tools.
+
+By default {\CppTransport} will produce plots in {\Matplotlib}'s own default style.
+This was designed to mimic the appearance of MatLab and is not ideal for publication-quality
+results.
+If the installed version of {\Matplotlib} is sufficiently recent to support
+\href{http://matplotlib.org/users/whats_new.html#style-package-added}{style sheets},
+or if the {\seaborn} package is available,
+then {\CppTransport} can use these features to produce more attractive output.
+These features are enabled using the
+\option{plot-style} option.
+This can be provided on the command line
+(see {\S}\ref{}), but it is usually more convenient to include it in
+the \file{\textasciitilde{}/.cpptransport-runtime} configuration file.
+This file should include a line such as
+\begin{minted}{text}
+    plot-style = seaborn    
+\end{minted}
+Currently, the available styles are
+\mintinline{text}{ggplot},
+\mintinline{text}{ticks}
+(corresponding to the {\Matplotlib} style sheets with the same name; for example, see
+\href{https://tonysyu.github.io/raw_content/matplotlib-style-gallery/gallery.html}{here})
+and
+\mintinline{text}{seaborn}.
+If you wish to use a different style it is possible to generate {\Python} scripts
+from an output task and insert any required customization by hand.
+
+\para{Using {\Graphviz}}
+As for {\Python},
+{\CppTransport} will automatically detect the {\Graphviz} tools, provided
+they are available on your \envvar{PATH}.
+
+\section{The translator: generating custom code for a specific model}
+The first step in using {\CppTransport} to perform practical calculations
+is to generate a \emph{model description file}.
+As explained above, this describes details of the inflationary model
+such as its field content and Lagrangian.
+It is used by the translator to generate specialized code
+capable of computing the required initial conditions and transport equations.
+This code is constructed from a supplied template by applying
+well-defined replacement rules.
+The template can be modified if required, but in practice this is
+not normally necessary.
+
+The model description file consists of a number of \emph{blocks}
+which declare properties and attributes for the model.
+They generally take the
+form
+\begin{center}
+    \slshape\ttfamily\fontseries{l}\selectfont
+    block-name tag {\upshape \{} attribute-list {\upshape \}}
+\end{center}
+Here, \texttt{\textsl{block-name}} is a keyword indicating
+what kind of attributes are being declared;
+\texttt{\textsl{tag}} is a label used to identify the block;
+and
+\texttt{\textsl{attribute-list}} is a list of
+assignments in the form
+\begin{center}
+    \slshape\ttfamily\fontseries{l}\selectfont
+    property = value;
+\end{center}
+
+\para{Breaking the model description into files}
+If desired, it is possible to spread the model description
+over several files
+by using the directive
+\mintinline{text}{#include "string"}.
+The effect is as if the contents of the file
+whose name matchs
+\mintinline{text}{string} had been included at the same point.
+The included file can itself contain
+further \mintinline{text}{#include} directives.
+
+\subsection{Adding model metadata}
+\label{sec:model-block}
+Blocks can come in any order, but
+it is generally preferable to place
+the\block{model} block at or near the top of
+the file because it
+contains a range of useful summary information.
+Most of the fields are optional,
+but if provided
+they are embedded within the custom {\CC}
+output and subsequently attached to any data products
+that it is used to generate.
+By specifying this data we reduce the risk of
+`orphaned' code or data which cannot be traced back
+to a specific combination of model,
+parameters and initial conditions.
+
+The attributes available within the \block{model} block are:
+\begin{itemize}
+	\item The tag: this is used to construct the names of the
+	{\CC} classes build by the translator,
+	and also the names of the output files it generates.
+	For this reason it should be fairly short and obey the
+	rules for constructing valid {\CC} identifiers and
+	filenames.,
+
+    \item \attribute{name = "string";} \\
+    Sets the model's textual name to \attribute{string}. The textual name
+    is generally used only when producing reports;
+    automatically-generated code normally refers to the model
+    using the tag associated with the block.
+    
+    \item \attribute{description = "string";} \\
+    Adds a short description of the model. This should briefly identify
+    its origin and major features.
+    
+    \item \attribute{citeguide = "string";} \\
+    Give short guidance about how to cite this model and its description file.
+    
+    \item \attribute{license = "string";} \\
+    If you intend to make your description file publicly available (eg. on the
+    arXiv or via a data repository service such as
+    \href{http://www.zenodo.org}{zenodo.org}),
+    you may wish to explicitly set a license which allows re-use
+    such as the
+    \href{https://creativecommons.org/licenses/}{Creative Commons Attribution license}.
+    (TODO: Funding agencies?)
+    
+    \item \attribute{revision = integer;} \\
+    A model description may evolve through multiple iterations during its
+    lifetime.
+    Where significant changes occur it can be helpful to indicate this
+    unambiguously by changing the model's textual name and the tag
+    used to identify it in generated {\CC}.
+    However, for minor changes it may be less confusing to retain
+    the same identifiers. In these circumstances the
+    \attribute{revision} field can be used to
+    distinguish between different versions
+    of the model file.
+    
+    The runtime system will not allow code generated using
+    an earlier revision of a model description file to
+    handle tasks prepared using a later revision.
+    
+    \item \attribute{references = [ string, string, ... ];} \\
+    Attach a comma-separated list of strings
+    which reference publications associated with this model.
+    The string are free-format and can be used for any suitable
+    purpose. For example, you may wish to identify papers by their
+    arXiv number or by DOI.
+    
+    \item \attribute{urls = [ string, string, ... ];} \\
+    Attach a comma-separated list of strings
+    corresponding to URLs associated with this model.
+    These should be internet locations to which an end-user
+    can refer to obtain more details about the model or
+    its implementation.
+\end{itemize}
+
+\begin{example}
+    To illustrate the process of preparing a model file and
+    constructing tasks,
+    in these panels we will work through the steps needed
+    for the model of double quadratic inflation---%
+    eventually building up to an analysis of its
+    bispectrum.
+
+    This model was introduced by Rigopoulos, Shellard \& van
+    Tent~\cite{Rigopoulos:2005xx,Rigopoulos:2005us}
+    and later studied by
+    Vernizzi \& Wands~\cite{Vernizzi:2006ve}.
+    It has been widely used as a test case for numerical methods;
+    see eg. Refs.~\cite{Mulryne:2009kh,Mulryne:2010rp}.
+    
+    {\CppTransport} does not expect any particular naming convention
+    for model description files, and they do not need to have a fixed
+    extension.
+    However, to keep them readily recognizable it may help to
+    apply a uniform extension such as \file{.model} or
+    \file{.mdl}.
+    In this case we will write the model description into a file
+    named \file{dquad.model}.
+    The first step is to construct a suitable \block{model} block.
+	We use the tag \attribute{"dquad"},
+	and provide links to the original literature.
+	We also assign the model file
+	a specific license by tagging it with the abbreviation
+	``CC BY'', which indicates the Creative Commons
+	Attribution License.
+    
+    \begin{minted}{text}
+    model "dquad"
+      {
+        name        = "Double quadratic inflation";
+        description = "A two-field model with quadratic potentials";
+        citeguide   = "Example from the CppTransport user guide";
+        license     = "CC BY";
+        revision    = 1;
+    
+        references  = [ "astro-ph/0504508",
+                        "astro-ph/0511041",
+                        "astro-ph/0603799",
+                        "arXiv:160x.yyyy" ];
+        urls        = [ "http://transportmethod.com" ];
+     };    
+    \end{minted}
+\end{example}    
+
+\subsection{Specifying a template}
+\label{sec:template-block}
+The translator produces customized {\CC}
+output by reading the model description file,
+using it to construct all the information needed
+for concrete calculations, and then writing this information
+into a \emph{template}. We will examine this
+process in more detail in \S\ref{}.
+{\CppTransport} allows arbitrary templates to be used,
+although there will not normally be any need to
+modify the supplied examples.
+The purpose of the \block{model} block
+is to tell {\CppTransport} which templates are intended
+for use. It does not have a tag.
+
+To use the standard templates, the
+\block{templates} block should read:
+\begin{minted}{text}
+	templates
+	  {
+	    core           = "canonical_core";
+	    implementation = "canonical_mpi";
+	  };
+\end{minted}
+Notice that two templates are required.
+The \emph{core} template
+writes an output file called
+\file{tag\_core.h}
+and
+defines a {\CC} class
+called \mintinline{c++}{tag_core}, where
+\mintinline{c++}{tag} is the tag used to declare the
+\block{model} block.
+This class provides common services such as computation
+of initial conditions and mass matrices, which are
+the same no matter how we choose to solve the
+equations of motion for each correlation function.
+The \emph{implementation} class defines a {\CC}
+class which integrates these equations.
+
+In principle {\CppTransport} can support many different
+implementations. For example, these could use different resources
+to carry out the calculation, perhaps by
+splitting the work across a range of CPUs and
+offload processors such as GPUs or Xeon Phis.
+Currently only an {\MPI}-based CPU integrator is supplied
+because
+testing has shown that---for the specific
+system of differential equations
+which {\CppTransport} needs to solve---
+it is not straightforward to extract
+good performance from GPUs.
+This difficulty is partially driven by memory requirements,
+and may change in future.
+The CPU integrator is supplied as a template called
+\file{canonical\_mpi.h}
+and
+writes an output file called
+\file{tag\_mpi.h}.
+It
+defines a {\CC} class
+called \mintinline{c++}{tag_mpi}.
+
+\subsection{Choosing a stepper}
+\label{sec:stepper-block}
+The translator customizes the integration
+template to use
+a stepper drawn from
+the {\Boost}.{\odeint}
+\href{http://www.boost.org/doc/libs/1_60_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/getting_started/overview.html}{collection}.
+Not all the steppers provided by {\odeint} are available,
+and the selection may expand in future.
+Currently, the supported steppers are:
+\begin{itemize}
+	\item \option{runge\_kutta\_dopri5}.
+	This is a $4^{\mathrm{th}}$/$5^{\mathrm{th}}$-order
+	Dormand--Prince solver, and a good general purpose stepper.
+	It is capable of efficiently interpolating the solution between
+	sample points, meaning that the step-size can often be kept large
+	even when high accuracy is required.
+	This gives the method good overall performance.
+	It should be regarded as the default unless the model requires
+	special treatment.
+	
+	\item \option{runge\_kutta\_fehl78}.
+	This is a $7^{\mathrm{th}}$/$8^{\mathrm{th}}$ order
+	Fehlberg solver.
+	It is higher-order than the Dormand--Prince algorithm,
+	but cannot interpolate the solution between sample points
+	and
+	therefore
+	sometimes struggles to control its step-size.
+	Nevertheless,
+	it remains a useful alternative.
+	
+	\item \option{bulirsch\_stoer\_dense\_out}.
+	This is a Bulirsch--Stoer algorithm that adapts both its
+	step-size and the order of the method, currently up to 8th order.
+	It can interpolate the solution, enabling the same good control
+	of step-size exhibited by the Dormand--Prince algorithm.
+	It is typically slower than the other algorithms
+	but
+	is a good choice where high precision is required.
+	It may be the only practical choice if the solution exhibits
+	sharp features, which the adaptive order control can handle
+	quite effectively.
+\end{itemize}
+No matter which stepper is selected, it is a good idea to check
+that features in a solution
+are stable to changes in the stepper and sample mesh.
+
+Because the background equations seldom require a stepper with advanced
+capabilities it is possible to specify separate steppers
+for the background and perturbations.
+At present this has limited utility because background integrations
+usually constitute a negligible proportion of the runtime,
+but it may have more impact in future.
+
+The background stepper is specified with a \block{background}
+block, and the stepper for perturbations is specified with
+a \block{perturbations} block.
+Each block accepts the same attributes, and neither has a tag.
+\begin{itemize}
+    \item \attribute{stepper = "string";} \\
+    Sets the stepper for this block to be one of the supported
+    steppers listed above.
+    
+    \item \attribute{stepsize = number;} \\
+    Sets the initial step-size.
+    All steppers supported by {\CppTransport} are adaptive
+    and will adjust their step-size depending on the structure
+    of the solution, but an initial estimate is needed.
+    The step-size is measured in e-folds.
+    Typically values in the range $10^{-12}$ to $10^{-15}$
+    are reasonable.
+    
+    \item \attribute{abserr = number;} \\
+    Sets the absolute tolerance for the stepper.
+    
+    \item \attribute{relerr = number;} \\
+    Sets the relative tolerance for the stepper.    
+\end{itemize}
+Suitable values for the tolerances are typically around
+$10^{-12}$, although in some cases they need to be smaller.
+
+\begin{example}
+    Nothing special is needed for the double-quadratic model,
+    so we can use the default
+    \option{runge\_kutta\_dopri5}
+    solver and conventional values for the step-size and tolerances.
+    In addition we are using the standard templates,
+    so we should add the following lines to the description:
+    \begin{minted}{text}
+        templates
+          {
+            core           = "canonical_core";
+            implementation = "canonical_mpi"; 
+          };
+        
+        background
+          {
+            stepper  = "runge_kutta_dopri5";
+            stepsize = 1E-12;
+            abserr   = 1E-12;
+            relerr   = 1E-12;
+          };
+        
+        perturbations
+          {
+            stepper  = "runge_kutta_dopri5";
+            stepsize = 1E-12;
+            abserr   = 1E-12;
+            relerr   = 1E-12;
+          };
+    \end{minted}
+
+\end{example}
+
+\subsection{Adding author metadata}
+\label{sec:author-block}
+The authors of the model description file can be
+identified by including one or more \block{author}
+blocks.
+In principle these are intended to identify the authors
+of the \emph{model description} rather than to assign
+credit for the original model,
+which can be done via the
+\attribute{references} attribute
+of the \block{model} block.
+
+The tag for each block should be a string giving the
+author's textual name.
+The available attributes are:
+\begin{itemize}
+    \item \attribute{email = "string";} \\
+    Attaches an email address for this author. Only one
+    address is allowed per author.
+    If multiple email attributes are given then the
+    translator will issue a warning.
+    
+    \item \attribute{institute = "string";} \\
+    Attach an institutional affiliation.
+    As with email addresses, only one affiliation
+    is allowed per author.
+\end{itemize}
+
+\begin{example}
+    A suitable author block for our example file might be:
+    \begin{minted}{text}
+        author "David Seery"
+          {
+            institute = "Astronomy Centre, University of Sussex";
+            email     = "D.Seery@sussex.ac.uk";
+          };    
+    \end{minted}
+\end{example}
+
+\subsection{Specifying field content and Lagrangian parameters}
+\label{eq:field-param-block}
+The final step is to specify the Lagrangian of the model.
+Because {\CppTransport} is currently restricted to models with
+canonical kinetic terms it is only necessary to specify the potential.
+Before doing so, we must enumerate the fields used by the model
+and any parameters appearing in the Lagrangian.
+This is done by giving
+a \block{field} block for each field, and a \block{parameter} block
+for each parameter.
+The tag for each block is a symbolic name which can be used to refer
+to the corresponding quantity in the potential.
+Currently, only one attribute is available which is used to give
+a {\LaTeX} name for the quantity:
+\begin{itemize}
+    \item \attribute{latex = "string";} \\
+    Set the {\LaTeX} name of the quantity to be
+    \attribute{string}.
+    The {\LaTeX} name is available for use when generating derived
+    products such as plots.    
+\end{itemize}
+
+\begin{example}
+    In the double-quadratic inflation there are two
+    fields, conventionally $\phi$ and $\chi$,
+    and the potential is
+    \begin{equation}
+        V(\phi, \chi) = \frac{1}{2} M_\phi^2 \phi^2
+            + \frac{1}{2} M_\chi^2 \chi^2 .
+    \end{equation}
+    This means there are two parameters, $M_\phi$
+    and $M_\chi$.
+    To declare all of these objects we would write
+    \begin{minted}{text}
+        field phi
+          {
+            latex = "\phi";
+          };
+        
+        field chi
+          {
+            latex = "\chi";
+          };
+        
+        parameter Mphi
+          {
+            latex = "M_\phi";
+          };
+        
+        parameter Mchi
+          {
+            latex = "M_\chi";
+          };    
+    \end{minted}
+\end{example}
+
+\subsection{Specifying the Lagrangian}
+\label{sec:lagrangian-block}
+Once all fields and parameters have been declared
+we can use them to give an expression for the potential.
+The syntax for this is
+\attribute{potential = expression;}
+where \attribute{expression} is a mathematical
+expression written using the same kind of syntax
+one would employ in
+{\Mathematica} or {\Maple}.
+{\CppTransport} understands the standard mathematical
+operators, including
+\descfile{+} for addition,
+\descfile{-} for subtraction,
+\descfile{*} for multiplication,
+\descfile{/} for division
+and
+\descfile{^} for exponentiation.
+Nested brackets
+\descfile{(} $\cdots$ \descfile{)}
+can be used to indicate precedence.
+It also understands the mathematical functions listed in
+Table~\ref{table:funcs}.
+\begin{table}
+
+    \begin{center}
+
+        \small
+    	\heavyrulewidth=.08em
+    	\lightrulewidth=.05em
+    	\cmidrulewidth=.03em
+    	\belowrulesep=.65ex
+    	\belowbottomsep=0pt
+    	\aboverulesep=.4ex
+    	\abovetopsep=0pt
+    	\cmidrulesep=\doublerulesep
+    	\cmidrulekern=.5em
+    	\defaultaddspace=.5em
+    	\renewcommand{\arraystretch}{1.5}
+    
+        \rowcolors{2}{gray!25}{white}
+        
+        \begin{tabular}{ll}
+            
+            \toprule
+            \semibold{function} & \semibold{meaning} \\
+            \texttt{abs(x)} & absolute value $|x|$ \\
+            \texttt{sqrt(x)} & square root $\sqrt{x}$ \\
+            \texttt{sin(x)} & sine $\sin x$ \\
+            \texttt{cos(x)} & cosine $\cos x$ \\
+            \texttt{tan(x)} & tangent $\tan x$ \\
+            \texttt{asin(x)} & inverse sine $\sin^{-1} x$ \\
+            \texttt{acos(x)} & inverse cosine $\cos^{-1} x$ \\
+            \texttt{atan(x)} & inverse tangent $\tan^{-1} x$ \\
+            \texttt{atan2(y,x)} & inverse tangent $\tan^{-1} y/x$ using signs of $x$, $y$ to determine quadrant \\
+            \texttt{sinh(x)} & hyperbolic sine $\sinh x$ \\
+            \texttt{cosh(x)} & hyperbolic cosine $\cosh x$ \\
+            \texttt{tanh(x)} & hyperbolic tangent $\tanh x$ \\
+            \texttt{asinh(x)} & inverse hyperbolic sine $\sinh^{-1} x$ \\
+            \texttt{acosh(x)} & inverse hyperbolic cosine $\cosh^{-1} x$ \\
+            \texttt{atanh(x)} & inverse hyperbolic tangent $\tanh^{-1} x$ \\
+            \texttt{log(x)} & natural logarithm $\ln x$ \\
+            \texttt{pow(x, y)} & exponentiation $x^y$ \\
+            \bottomrule
+                
+        \end{tabular}
+
+    
+    \end{center}
+    
+    \caption{\label{table:funcs}Mathematical functions understood by {\CppTransport}}
+    
+\end{table}
+
+In simple cases it is easy to specify the potential in just one line.
+For example, in single-field $\phi^2$ inflation we could write
+\begin{minted}{text}
+    potential = m^2 * phi^2 / 2;
+\end{minted}
+Fields are assumed to have dimension $[\mathrm{M}]$,
+and the pre-defined symbol \descfile{M_P} is available to represent
+the Planck mass.
+
+In more complex cases, single-line expressions become difficult to read
+or debug and it is preferable to break the potential down into subexpressions.
+{\CppTransport} provides a \block{subexpr} block for this purpose.
+Its tag is the symbol which will be used to refer to the subexpression,
+and the block accepts two attributes:
+\begin{itemize}
+    \item \attribute{latex = "string";} \\
+    Specifies a {\LaTeX} symbol associated with this subexpression.
+    
+    \item \attribute{value = expression;} \\
+    Defines the symbolic expression
+    associated with this quantity.
+\end{itemize}
+For example, consider the potential studied
+by Gao, Langlois \& Mizuno~\cite{Gao:2012uq},
+\begin{equation}
+    V(\phi, \chi)
+    =
+        \frac{1}{2} M^2
+        \big[
+            \chi - (\phi - \phi_0) \tan \Xi
+        \big]^2
+        \cos^2 \frac{\Delta\theta}{2}
+        +
+        \frac{1}{2} m_\phi^2 \phi^2 ,
+\end{equation}
+where $\Xi$ is defined by
+\begin{equation}
+    \Xi \equiv \frac{\Delta\theta}{\pi}
+    \tan^{-1}
+    \frac{s(\phi - \phi_0)}{\Mp^2} .
+\end{equation}
+This potential is designed to contain an inflationary
+valley with a turn.
+The quantities $M$ and $m_\phi$ are mass scales, and
+$\phi_0$, $\Delta\theta$ and $s$ are
+constants which parametrize the turn.
+Assuming we have defined
+suitable fields \descfile{phi}, \descfile{chi}
+and parameters \descfile{M}, \descfile{mphi}, \descfile{phi0}
+\descfile{Delta} and \descfile{s},
+the potential can be broken down into subexpressions:
+\begin{minted}{text}
+    subexpr Xi
+      {
+        latex = "\Xi";
+        value = (Delta/pi) * atan(s*(phi-phi0) / M_P^2);
+      };
+    
+    subexpr V1
+      {
+        latex = "V_1";
+        value = (1/2) * M^2 * (chi - (phi-phi0)*tan(Xi))^2 * cos(Delta/2)^2;
+      };
+    
+    subexpr V2
+      {
+        latex = "V_2";
+        value = (1/2) * mphi^2 * phi^2;
+      };
+    
+    potential = V1 + V2;
+\end{minted}
+
+\begin{example}
+    The potential for double-quadratic inflation is simple.
+    Given the fields and parameter definitions
+    described above it can be written in one line:
+    \begin{minted}{text}
+        potential = Mphi^2 * phi^2 / 2 + Mchi^2 * chi^2 / 2;    
+    \end{minted}
+\end{example}
+
+\subsection{Running the translator and producing output}
+\label{sec:run-translator}
+Once the model description is complete,
+the translator is run to produce
+{\CC} classes which implement the transport equations for it.
+Provided your environment has been set up as described in
+\S\ref{sec:environment} it should be possible to
+invoke the translator simply by typing
+\file{CppTransport} at the shell prompt.
+
+The translator accepts a number of arguments.
+Some of these perform simple housekeeping functions:
+\begin{itemize}
+    \item \option{{-}{-}help} \\
+    Display brief usage information and a list of all
+    available options
+    
+    \item \option{{-}{-}version} \\
+    Show information about the version of {\CppTransport} being used.
+    
+    \item \option{{-}{-}license} \\
+    Display licensing information.
+    
+    \item \option{{-}{-}no-colour} \\
+    Do not produce colourized output. {\CppTransport} will normally detect
+    the type of terminal under which it is running, and will adjust its
+    output formatting appropriately. Where colour is available, it is used
+    to add clarity.
+    However, if you are redirecting its output to a file
+    (or if this happens automatically as part of a batch
+    environment), you may wish to suppress this behaviour.
+    
+    \item \option{{-}{-}verbose}, or abbreviate to \option{-v} \\
+    Enable verbose output, giving more information about the different
+    phases of translation and some statistics about
+    the process.
+\end{itemize}
+Others affect the files read or written by the translator:
+\begin{itemize}
+    \item \option{{-}{-}include}, or abbreviate to \option{-I} \\
+    Should be followed by a path which is added to the list
+    of paths searched when looking for template files.
+    For example, if extra templates have been written
+    (or installed in a different location),
+    this argument can be used to enable {\CppTransport} to find them.
+    The templates should be stored in a directory named
+    \file{templates} under this path.
+
+    \item \option{{-}{-}no-search-env} \\
+    Do not use the environment variable \envvar{CPPTRANSPORT_PATH}
+    to determine a list of search paths;
+    use only paths specified by \option{{-}{-}include} on the
+    command line.
+    
+    \item \option{{-}{-}core-output} \\
+    Followed by a path which specifies the file to which the
+    customized \emph{core template} should be written.
+    By default  the name
+    \file{tag\_core.h} is used, where \file{tag} is the tag
+    used to declare the \block{model} block.
+    In most cases this default will be suitable, so it is not necessary
+    to specify a filename explicitly.
+    
+    \item \option{{-}{-}implementation-output} \\
+    Followed by a path which specifies the file to which the
+    customized \emph{implementation template} should be written.
+    By default  the name
+    \file{tag\_implementation.h} is used, where \file{tag} is the tag
+    used to declare the \block{model} block
+    and \file{implementation}
+    is the name of the integration implementation; in the
+    current version this is always \file{mpi}.
+    In most cases this default will be suitable, so it is not necessary
+    to specify a filename explicitly.
+\end{itemize}
+A final set of options influence the {\CC} code generated by the translator:
+\begin{itemize}
+    \item \option{{-}{-}no-cse} \\
+    Disable \emph{common sub-expression elimination}, described in more detail
+    in~\S\ref{sec:codegen} below.
+    
+    \item \option{{-}{-}annotate} \\
+    Annotate the generated code with comments,
+    including comments to indicate which
+    template line corresponds to each output line.
+    This option can be useful for debugging, but often generates large
+    files.
+    
+    \item \option{{-}{-}unroll-policy} \\
+    Followed by an integer corresponding to the maximum allowed size of an
+    \emph{unrolled index set}, described in more detail in~\S\ref{sec:codegen}.
+    
+    \item \option{{-}{-}fast} \\
+    Unroll all index sets, regardless of size.
+\end{itemize}
+
+These options may also be specified in the
+\file{\textasciitilde{}/.cpptransport} configuration
+file discussed on p.\pageref{page:config-files}.
+Each option should be placed on a new line,
+without the leading \option{{-}{-}}.
+Options such as \option{{-}{-}include} which accept an argument
+should be written in the format
+\mintinline{text}{option = argument},
+such as
+\mintinline{text}{include = /usr/local/share/cpptransport}
+as described above.
+If an option appears both in the configuration file and on the
+command line, then values specified on the command line
+are preferred.
+
+\begin{example}
+    For double-quadratic inflation no special options are required
+    (although see the discussion of \option{{-}{-}fast}
+    in~\S\ref{sec:codegen} below, which can be used to improve the
+    execution time for this model).
+    To print status messages during the different phases of translation
+    we can run the translator with the \option{{-}{-}verbose} or
+    \option{-v} switch to product verbose output.
+    This gives:
+    \begin{minted}[xleftmargin=0pt,bgcolor=blue!10,linenos=false]{text} 
+        $ CppTransport -v dquad.model
+        CppTransport: translating '...templates/canonical_core.h' into 'dquad_core.h'
+        CppTransport: translation finished with 1216 macro replacements
+        CppTransport: macro replacement took 0.172s, of which time spent tokenizing 0.00881s (symbolic computation 0.0223s, common sub-expression elimination 0.087s)
+        CppTransport: translating '...templates/canonical_mpi.h' into 'dquad_mpi.h'
+        CppTransport: translation finished with 8102 macro replacements
+        CppTransport: macro replacement took 0.169s, of which time spent tokenizing 0.00547s (symbolic computation 0.0179s, common sub-expression elimination 0.0919s)
+        CppTransport: 153 expression cache hits, 415 misses (time spent performing queries 0.0116s)
+        CppTransport: processed 1 model in time 0.391s    
+    \end{minted}
+    
+    {\CppTransport} gives information about each file it translates.
+    Here, the files being translated are the core template
+    \file{canonical\_core}
+    which becomes \file{dquad\_core.h},
+    and the implementation template
+    \file{canonical\_mpi}
+    which becomes \file{dquad\_mpi.h}.
+    Recall that the stem \file{dquad} used to construct these filenames
+    is taken from the tag provided to the model block
+    in~\S\ref{sec:model-block}.
+    
+    In the subsequent messages, {\CppTransport} informs us of the number
+    of tokens (`macros') replaced while customizing each file,
+    and also the time spent performing each step.
+    Sometimes common sub-expression elimination becomes very time-consuming;
+    in this case, see the discussion in~\S\ref{sec:codegen}.
+\end{example}
+
+
+\subsection{Using the code generation options}
+\label{sec:codegen}
+As explained above,
+the translator's task is to produce customized output.
+It does this by rewriting the template files according
+to well-defined rules.
+
+In order to perform this rewriting
+the translator recognizes a large number of
+\emph{tokens},
+of the form
+\token{NAME},
+\token{CITEGUIDE},
+\token{DESCRIPTION}
+(and so on),
+which are replaced with the corresponding
+data from the model description file.
+There are also tokens such as
+\token{HUBBLE\_SQ}
+and \token{EPSILON}
+which are replaced with symbolic expressions
+computed from the Lagrangian of the model---here,
+these would be
+expressions to compute the square of the Hubble rate $H^2$
+and the slow-roll parameter $\epsilon = - \dot{H}/H^2$,
+respectively.
+
+\para{Unrolling index sets}
+In addition to these simple rewriting rules, the translator
+must be able to generate code which implements the transport equations
+for the two- and three-point functions.
+Writing these correlation functions as
+\begin{equation}
+\begin{split}
+    \langle
+        \delta \phi^\alpha(\vect{k}_1)
+        \delta\phi^\beta(\vect{k}_2)
+    \rangle_t
+    & = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
+    \Sigma^{\alpha\beta} \\
+    \langle
+        \delta \phi^\alpha(\vect{k}_1)
+        \delta \phi^\beta(\vect{k}_2)
+        \delta \phi^\gamma(\vect{k}_3)
+    \rangle_t
+    & = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2 + \vect{k}_3)
+    \alpha^{\alpha\beta\gamma} ,
+\end{split}    
+\end{equation}
+their evolution equations become
+\begin{equation}
+\begin{split}
+    \frac{\d \Sigma^{\alpha\beta}}{\d N}
+    & =
+    {u^\alpha}_\gamma \Sigma^{\gamma\beta}
+    + {u^\beta}_\gamma \Sigma^{\alpha\gamma} \\
+    \frac{\d \alpha^{\alpha\beta\gamma}}{\d N}
+    & =
+    {u^\alpha}_\delta \alpha^{\delta\beta\gamma}
+    +
+    {u^\alpha}_{\delta\epsilon} \Sigma^{\delta \beta} \Sigma^{\epsilon \gamma}
+    + \text{cyclic} ,
+\end{split}
+\label{eq:transport-equations}
+\end{equation}
+where $\d N = H \, \d t$ represents the number of e-folds which elapse in a
+cosmic time interval $\d t$.
+Here, ${u^\alpha}_\beta$ and ${u^\alpha}_{\beta\gamma}$ are coefficient matrices
+calculated internally by the translator and
+depending on the wavenumbers $\vect{k}_1$, $\vect{k}_2$, $\vect{k}_3$.
+These matrices are represented using further tokens
+such as \token{U2\_TENSOR[AB]} (corresponding to ${u^\alpha}_\beta$)
+and \token{U3\_TENSOR[ABC]} (corresponding to ${u^\alpha}_{\beta\gamma}$).
+The labels \indexset{AB} and \indexset{ABC} represent the associated indices.
+The translator understands enough of the Einstein summation convention
+to represent (for example) the transport equation for the two-point function
+as
+\begin{minted}{text}
+    dSigma[$A][$B] $=  $U2_TENSOR[AC] * Sigma[$C][$B];
+    dSigma[$A][$B] $+= $U2_TENSOR[BC] * Sigma[$A][$C];    
+\end{minted}
+It has been assumed that the two-point function $\Sigma^{\alpha\beta}$ is
+encoded in an array-like object \mintinline{text}{Sigma[][]}
+and the derivative is to be written into a separate
+array-like object \mintinline{text}{dSigma[][]}.
+In particular, given these expressions the translator
+understands that the free indices
+\indexset{A} and \indexset{B}
+label independent components of the
+overall matrix equation,
+and that the repeated index \indexset{C} is to be summed over.
+The transport equation for the three-point function can
+be represented similarly.
+
+During translation these compact expressions must be unpacked into
+valid {\CC} which performs the required calculations.
+There are $N^2$ independent equations for the two-point function,
+each of which entails a sum over one dummy index.
+Therefore the overall size for this set of equations scales as $\Or(N^3)$.
+For the three-point function there are $N^3$ independent equations,
+but now each equation entails a sum over \emph{two} dummy indices.
+Therefore the overall size scales as $\Or(N^5)$.
+After unpacking we incur two types of cost.
+One is \emph{execution time}:
+no matter how they are expressed, the amount of work
+involved in solving these evolution
+equations will scale roughly like $\Or(N^3)$ or $\Or(N^5)$, respectively.
+The other is \emph{space}:
+if unpacked in the most literal fashion,
+by simply writing out each component of Eq.~\eqref{eq:transport-equations}
+sequentially,
+the size of the generated {\CC} code will also scale roughly like
+$\Or(N^3)$ or $\Or(N^5)$.
+
+We cannot alter the power law in these scalings,
+but it is possible to
+make some limited tradeoffs between the space cost and execution time:
+\begin{itemize}
+    \item To obtain the fastest execution time, we can opt for the
+    space-hungry strategy of writing out each equation explicitly.
+    {\CppTransport} describes the indices being unpacked as an
+    \emph{index set}, and refers to the process of writing them
+    out sequentially as \emph{unrolling}.%
+    	\footnote{The name is borrowed from a very similar
+    	\href{https://en.wikipedia.org/wiki/Loop_unrolling}{loop optimization technique}.}
+    	    
+    Unrolling allows the {\CC} compiler to generate simple linear code
+    which performs all the required computations without branches
+    or jumps, which would be required by loops
+    and may incur performance penalties.
+    Also,
+    because this strategy is completely explicit it maximizes
+    the compiler's opportunities to optimize away redundant calculations.
+    
+    The downside is that generated {\CC} files become
+    very large even for moderate $N$.
+    If we require the three-point function
+    then the dominant scaling comes from terms of the form
+    ${u^\alpha}_{\delta\epsilon} \Sigma^{\delta\beta} \Sigma^{\epsilon^\gamma}$.
+    We have been estimating the number of terms in each sum as $\sim N$,
+    but it is usually $2N$ because we must account both for
+    the fields and their canonical momenta.
+    Therefore,
+    assuming the dominant terms generate $\sim (2N)^5$ lines
+    and supposing each of these lines to average $\sim 50$ characters,
+    it follows that even $N = 20$ will generate an implementation file of
+    size $\sim 10 \Gb$.
+    Such large files require a prohibitively large amount of time and memory to compile.
+    This places a practical upper limit on the maximum size of a {\CC} file.
+    On typical hardware this limit is already much smaller than $1 \Gb$,
+    making unrolling an unacceptable strategy except when $N$ is rather small.
+    
+    \item Alternatively, the indices can be unpacked into a
+    {\CC} \mintinline{c++}{for}-loop.
+    For example, the translator
+    might unpack the line
+    \mintinline{text}{dSigma[$A][$B] $= $U2_TENSOR[AC] Sigma[$C][$B];}
+    into
+    \begin{minted}{c++}
+        for(int A = 0; A < 2*N; ++A)
+          {
+            for(int B = 0; B < 2*N; ++B)
+              {
+                dSigma[A][B] = 0.0;
+                for(int C = 0; C < 2*N; ++C)
+                  {
+                    dSigma[A][B] += U2_TENSOR[A][C] * Sigma[C][B];
+                  }
+              }
+          }
+    \end{minted}
+    assuming that the array-like object
+    \mintinline{c++}{U2_TENSOR[][]} has been initialized with the
+    components of the tensor ${u^\alpha}_\beta$.
+
+    The loop-based representation is considerably more economical with space,
+    because its storage requirements do not grow with $N$.%
+        \footnote{To be explicit, it is the storage requirements to
+        express the \emph{algorithm itself} which are under discussion
+        here. The storage requirements for the state variables
+        \mintinline{c++}{Sigma} and \mintinline{c++}{dSigma}
+        always scale with $N$.}
+    For this reason
+    it is the only viable approach for general $N$.
+    The disadvantage is that we may forfeit opportunities
+    for optimization.%
+    	\footnote{Another disadvantage might come from
+    	the extra overhead associated with a loop counter
+    	and branch penalties. But the {\CC} compiler might
+    	decide it it worthwhile to
+    	optimize the loop by unrolling it anyway, in which
+    	case these disadvantages disappear.
+    	The disadvantage of masking zeros in
+    	in ${u^\alpha}_\beta$ or ${u^\alpha}_{\beta\gamma}$
+    	generally cannot be fixed, however, even by a good
+    	optimizing compiler.}
+    For example, it sometimes happens that
+    certain components of ${u^\alpha}_\beta$
+    or ${u^\alpha}_{\beta\gamma}$ are zero,
+    and therefore the corresponding terms in the summation
+    can be omitted.
+    When all expressions are written explicitly
+    it is easy for the compiler to make such
+    optimizations.   
+    In the loop-based approach
+    the compiler will normally be unable to
+    skip particular iterations of the loop body,
+    and therefore these terms will not be optimized away.
+    The effect of these irrelevant operations
+    can accumulate to a sizeable performance
+    difference over many integrations;
+    see Table~\ref{table:fast-v-unroll}.
+\end{itemize}
+
+{\CppTransport} attempts to find a compromise between these
+strategies.
+It will elect to unroll index sets where the result will not
+be too large,
+with
+the distinction being set by the value assigned to
+\option{{-}{-}unroll-policy}. The default is 1000.
+Also,
+the elements of a tensor such as ${u^\alpha}_\beta$
+are stored in temporary arrays (such as
+\mintinline{c++}{U2_TENSOR[][]} in the above example)
+because this is required for
+large index sets which `roll up' into
+\mintinline{c++}{for}-loops.
+Depending on the compiler settings, this use
+of temporary arrays may inhibit some
+optimization of redundant arithmetic.
+
+The default unroll policy of 1000 is intended to give reasonable
+performance for models with modest $N$, while simultaneously
+allowing models with large $N$ to be handled.
+However, we will see shortly
+that if $N$ is not too large then global unrolling should be preferred.
+In cases where it is known that the resulting {\CC} files will be
+acceptable to the compiler it is possible to force global
+unrolling using the command-line switch
+\option{{-}{-}fast}. This instructs
+{\CppTransport} to disregard the unroll policy limit and unroll
+\emph{all} index sets.
+In addition, the translator will no longer store the elements of tensors such as
+${u^\alpha}_\beta$ in a temporary array, but instead cache them
+in \mintinline{c++}{const} local variables.
+This gives the compiler the best chance of removing unnecessary operations.
+
+Table~\ref{table:fast-v-unroll}
+shows
+a comparison of execution times
+for a particular $N=2$ model
+with \option{{-}{-}fast}
+and unrolling limits of $1000$ and $0$ (forcing roll-up of all
+index sets).
+It shows a significant advantage for \option{{-}{-}fast}.
+This is a fairly general phenomenon;
+testing has shown that models with $N=2$ or $N=3$ can often be unrolled effectively,
+yielding a non-negligible performance improvement.
+
+\begin{table}
+
+    \begin{center}
+
+        \small
+    	\heavyrulewidth=.08em
+    	\lightrulewidth=.05em
+    	\cmidrulewidth=.03em
+    	\belowrulesep=.65ex
+    	\belowbottomsep=0pt
+    	\aboverulesep=.4ex
+    	\abovetopsep=0pt
+    	\cmidrulesep=\doublerulesep
+    	\cmidrulekern=.5em
+    	\defaultaddspace=.5em
+    	\renewcommand{\arraystretch}{1.5}
+    
+        \rowcolors{2}{gray!25}{white}
+        
+        \begin{tabular}{lrrrr}
+            
+            \toprule
+            \semibold{setting}
+                & \semibold{core}
+                & \semibold{implementation}
+                & \semibold{CPU/configuration}
+                & \semibold{CPU total} \\
+            \option{{-}{-}fast}
+                & 135 kb & 649 kb & 0.993 s & 47 m 17 s \\
+            \option{{-}{-}unroll-policy 1000}
+                & 145 kb & 211 kb & 1.60 s & 1 h 16 m 20 s \\
+            \option{{-}{-}unroll-policy 0}
+                & 118 kb & 89 kb & 2.41 s & 1 h 54 m 16 s\\
+            \bottomrule
+            
+        \end{tabular}
+    
+    \end{center}
+    
+    \caption{\label{table:fast-v-unroll}Comparison of
+    generated code size and execution time
+    for 2856 bispectrum configurations and
+    an axion+quadratic model
+    $V = m^2 \phi^2 / 2 + \Lambda^4 ( 1 - \cos 2\pi f^{-1} \chi )$;
+    see Elliston et al. for a description of the parameters
+    and initial conditions~\cite{Elliston:2011dr}.
+    We use the first set of parameters described in {\S}5.1.2 of that
+    reference.
+    Timings are averages of 3 runs using OS X 10.11.4
+    and the Apple Clang compiler 7.3.0
+    on an Ivy Bridge i7-3770 machine.
+    Each {\CppTransport} job used 7 worker processes.}
+    
+\end{table}
+
+\para{Common sub-expression elimination}
+To keep its generated files as small as possible,
+{\CppTransport} uses a second strategy called
+\emph{common sub-expression elimination}.
+The automated symbolic calculations performed internally by the translator
+are not automatically simplified,
+and therefore the results resemble
+those from {\Mathematica}
+before application of
+\texttt{Simplify[]}
+or
+\texttt{FullSimplify[]}.
+These expressions often share common building blocks, such as the
+Hubble rate $H$ or the slow-roll parameter $\epsilon$, which
+{\CppTransport} tries to factor out intelligently.
+Even when this has been done there may be further common pieces which
+can be extracted.
+For example, after common sub-expression elimination,
+{\CppTransport} would translate the expression $(A+B+1)^2/(A+B)$ into
+{\CC} of the form
+\begin{minted}{c++}
+    const auto temp_1 = A + B;
+    const auto temp_2 = temp_1 + 1.0;
+    const auto temp_3 = temp_2 * temp_2;
+    const auto temp_4 = temp_3 / temp_1;
+\end{minted}
+The local variable \mintinline{c++}{temp_4} would be used to represent
+the value of the expression.
+
+This procedure is generally effective at minimizing the size of the generated
+code, and therefore making the compiler's job as straightforward as possible.
+However, the task of finding common sub-expressions is expensive
+in the same way that
+{\Mathematica}'s \texttt{Simplify[]} or
+\texttt{FullSimplify[]} operations can be expensive.
+For more complex models it is usually
+the most time-consuming step in
+the translation process, by a considerable margin.
+If desired, {\CppTransport} provides the command-line switch
+\option{{-}{-}no-cse}
+to disable common sub-expression elimination.
+This will dramatically speed up translation, but leaves the compiler
+with a harder job because the same task has effectively been transferred
+to it.
+
+Normally it is advisable to leave common sub-expression elimination
+enabled unless there is a particular difficulty with performing it
+for a model.
+
+\section{Building and running an integration task}
+
+\subsection{Coupling a model to the runtime system}
+Once customized core and header files
+have been produced, they can be used to perform
+calculations. This involves
+connecting the translated
+files to other components of
+{\CppTransport},
+especially those which are needed to carry out integration tasks.
+To do so we create a short {\CC} program;
+for the double-quadratic example this could be called
+\file{dquad.cpp}.
+A simple implementation takes the form:
+\begin{minted}{c++}
+// include implementation header generated by translator
+#include "dquad_mpi.h"
+
+int main(int argc, char* argv[])
+  {
+    // set up a task_manager instance to control this process
+    transport::task_manager<> mgr(argc, argv);
+
+    // set up an instance of the double quadratic model
+    std::shared_ptr< transport::dquad_mpi<> > model = mgr.create_model< transport::dquad_mpi<> >();
+
+    // hand off control to the task manager
+    mgr.process();
+
+    return(EXIT_SUCCESS);
+  }
+\end{minted}
+This code involves the following steps:
+\begin{enumerate}
+    \item First, the implementation header file produced in~\S\ref{sec:build-translator}
+    is included using \mintinline{c++}{#include "dquad_mpi.h"}.
+    Nothing else is needed to
+    use the {\CppTransport} runtime system;
+    any necessary library files are automatically included by the implementation header.
+    
+    \item The only function provided is \mintinline{c++}{main()}.
+    It has three reponsibilities:
+    \begin{enumerate}
+        \item \semibold{Create a \emph{task manager} instance.}
+        The task manager is a
+        class provided by the runtime system. It is responsible for coordinating
+        what happens during execution.
+        For example: if we are running a parallel computation under {\MPI},
+        each copy of the executable may be either the master process
+        or a worker. It is the responsibility of the task manager
+        to decide which is correct and behave appropriately.
+        
+        If it is the master process, the task
+        manager builds a list of work using options specified
+        in the configuration file or on the command line.
+        It scatters these tasks to the workers and coordinates their activity.
+        On the other hand, if it is a worker, the task
+        manager waits for tasks to be issued by the master
+        process and arranges for them to be carried out.
+        
+        The task manager class is called
+        \mintinline{c++}{task_manager}.
+        It shares a common feature with most other {\CppTransport}
+        components:
+        it lives inside the namespace
+        \mintinline{c++}{transport}.
+        This prevents any conflict between symbols
+        defined in user code and those used internally by
+        {\CppTransport}.
+        As for objects defined in any namespace,
+        each {\CppTransport} component should be prefixed
+        by the namespace name and two colons, as in
+        \mintinline{c++}{transport::task_manager}.%
+            \footnote{It is possible pull all symbols defined
+            within the \mintinline{c++}{transport}
+            namespace
+            into the global
+            namespace with the \mintinline{c++}{using} directive,
+            as in for example
+            \mintinline{c++}{using namespace transport;}.
+            However, this practice is not recommended because it risks
+            conflicts between user-space symbols
+            and those belonging to {\CppTransport} itself.}
+        The meaning of the brackets
+        \mintinline{c++}{<>}
+        is explained in the
+        \emph{Advanced usage}
+        panel on p.\pageref{advanced:data-type}.
+        
+        The \mintinline{c++}{task_manager} constructor requires the
+        arguments \mintinline{c++}{argc} and \mintinline{c++}{argv}
+        provided to \mintinline{c++}{main()}.
+        It will process these internally.
+        The options understood by the task manager are described
+        in XXX.
+        
+        \item \semibold{Create an instance of the implementation class.}
+        Second, we need an instance of the implementation class
+        generated by the translator.
+        As explained in~\S\ref{sec:template-block},
+        this class will be
+        called \mintinline{c++}{tag_mpi}
+        if we use the \file{canonical\_mpi} template.
+        For us this will be \mintinline{c++}{dquad_mpi}.
+        Like \mintinline{c++}{task_manager} its name should be followed
+        by angle brackets \mintinline{c++}{<>}.
+        
+        To create the instance we use the \mintinline{c++}{task_manager} method
+        \mintinline{c++}{create_model()}.
+        This is a templated method which requires the name of the
+        instance class to be provided between angle brackets;
+        here, this is
+        \mintinline{c++}{< transport::dquad_mpi<> >}.
+        The method itself takes no arguments.
+        It returns a
+        \href{http://en.cppreference.com/w/cpp/memory/shared_ptr}{shared
+        \emph{smart pointer}}
+        to the implementation class instance.
+        The use of
+        \mintinline{c++}{create_model()} is necessary, rather than
+        constructing an instance directly, in order that the {\CppTransport}
+        runtime system is aware of the model and can find it when needed
+        for computations. 
+        
+        \item \semibold{Pass control to the task manager.}
+        It is possible to create instances of as many implementation classes
+        as are required.
+        Each one should be constructed using
+        \mintinline{c++}{create_model()}.
+        When all implementation classes have been
+        instantiated, control should be passed to the task
+        manager via its
+        \mintinline{c++}{process()} method.
+
+        When running as the master,
+        \mintinline{c++}{process()} will distribute tasks to the workers.
+        When running as a worker it will await instructions from
+        the master.
+    \end{enumerate}
+    
+    \item Finally, the \mintinline{c++}{process()} method returns when all work
+    has been exhausted. At this point the process should terminate,
+    so we return \mintinline{c++}{EXIT_SUCCESS}.
+\end{enumerate}
+Most {\CppTransport} executables will contain a
+\mintinline{c++}{main()} function of almost exactly this form.
+The general case differs only by providing tasks and derived products,
+which will be explained in \S\ref{} below.
+
+\begin{advanced}{Custom integration data types}
+    \label{advanced:data-type}
+    Like most {\CppTransport} components,
+    \mintinline{c++}{task_manager}
+    is a \semibold{template class}. This is indicated by the
+    angle brackets
+    \mintinline{c++}{<>} following the object name.
+    A \emph{template} is a class or other object that can be customized
+    by providing a list of data types 
+    such as \mintinline{c++}{double} (or other parameters)
+    between the brackets.    
+    For {\CppTransport}, the customization takes place in the integration engine,
+    which is capable of integrating the transport equations using any
+    suitable data type.
+    If no type name is given, as in the example above,
+    the integrator will default to
+    \mintinline{c++}{double}.
+    
+    For almost all users the default choice is suitable,
+    so there is no need to specify a type explicitly.
+    As an alternative, however, is it possible use the single-precision type
+    \mintinline{c++}{float}
+    if the intention is to trade off some accuracy against speed.%
+        \footnote{Although it is often true that
+        \mintinline{c++}{float}s are half as long as
+        \mintinline{c++}{double}s, this is a platform dependent statement.
+        On some platforms there may be no difference between
+        \mintinline{c++}{float} and \mintinline{c++}{double}.}
+    For greater precision it is possible to use
+    \mintinline{c++}{long double},
+    or even a customized type
+    from a library such as the GNU Multiple Precision Arithmetic Library
+    \href{https://gmplib.org}{GMP}
+    or the Class Library for Numbers \href{http://www.ginac.de/CLN}{CLN}.%
+        \footnote{There are some caveats. Although {\CppTransport} can integrate
+        using any required type, for storage it relies on the
+        {\SQLite} engine which expects real numbers to be stored as
+        64-bit IEEE floating-point numbers.
+        On most platforms this corresponds to a \mintinline{c++}{double},
+        and in fact the {\SQLite} API
+        is written under this assumption.
+        (For details, see
+        \href{https://www.sqlite.org/c3ref/bind_blob.html}{the {\SQLite}
+        documentation}.
+        There is only a
+        \mintinline{c++}{sqlite3_bind_double()}, but no
+        comparable method for the other floating-point types.)
+        This means that, no matter what precision was used during integration,
+        {\CppTransport} always stores the results
+        as \mintinline{c++}{double} precision.}
+    Using types with higher precision than \mintinline{c++}{double} will
+    increase the computation time
+    (eg. switching to \mintinline{c++}{long double}
+    very roughly doubles the time required),
+    whereas
+    \mintinline{c++}{float} may require less stringent tolerances
+    to prevent to integrator's stepsize becoming very small.
+    Attempting to use types from GMP or CLN will likely require some
+    template specializations to be provided. If so, this will manifest itself
+    as missing symbols reported during the link step.
+    
+    It is possible to use the same core and implementation classes with
+    different data types, just by changing the type name provided
+    in the template specialization brackets
+    \mintinline{c++}{<...>}.
+    However, the current version of {\CppTransport} does not support mixing different
+    types within the \emph{same} executable because the task manager
+    needs to know which data type is in use, and therefore also requires
+    a template specialization such as
+    \mintinline{c++}{<double>}.
+\end{advanced}
+
+\subsection{Translate and build using a {\CMake} script}
+It is possible to build {\CppTransport} executables by hand, but this
+is not always convenient because it is necessary to locate the
+{\Boost} and {\MPI}
+libraries on which the runtime system depends.
+The recommended way to build is using a {\CMake} build script.
+When {\CppTransport} is installed, it provides some
+{\CMake} tools which are intended to make simplify this process.
+
+The {\CMake} build script should be called \file{CMakeLists.txt} and
+placed it the same directory as the
+main {\CC} file---for the example of double-quadratic
+inflation this is the file \file{dquad.mpi}
+described above. A suitable script is:
+\begin{minted}{cmake}
+    CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+    PROJECT(dquad)
+    
+    SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport-packages/share/cmake/")
+    
+    SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
+    SET(CMAKE_C_FLAGS_RELEASE "-Ofast -DNDEBUG")
+    
+    FIND_PACKAGE(CppTransport REQUIRED)
+    
+    INCLUDE_DIRECTORIES(${CPPTRANSPORT_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
+    
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dquad_core.h ${CMAKE_CURRENT_BINARY_DIR}/dquad_mpi.h
+      COMMAND CppTransport --verbose --fast ${CMAKE_CURRENT_SOURCE_DIR}/dquad.model
+      DEPENDS dquad.model
+    )
+    
+    SET(HEADERS ${CMAKE_CURRENT_BINARY_DIR}/dquad_core.h ${CMAKE_CURRENT_BINARY_DIR}/dquad_mpi.h)
+    ADD_CUSTOM_TARGET(Generator DEPENDS ${HEADERS})
+    
+    ADD_EXECUTABLE(dquad dquad.cpp)
+    ADD_DEPENDENCIES(dquad Generator)
+    TARGET_LINK_LIBRARIES(dquad ${CPPTRANSPORT_LIBRARIES})
+    TARGET_COMPILE_OPTIONS(dquad PRIVATE -std=c++14 -mavx)
+\end{minted}
+The steps involved are:
+\begin{enumerate}
+    \item The lines
+    \begin{minted}{cmake}
+        CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+        PROJECT(dquad)
+    \end{minted}
+    are required by {\CMake}.
+    They specify the minimum version of the {\CMake} tool which is required
+    (here version 3.0) and the name of the project being built.
+    
+    \item The line
+    \begin{minted}{cmake}
+        SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport-packages/share/cmake/")
+    \end{minted}
+    should be adjusted to point to the \file{share/cmake} directory
+    installed under your installation prefix.
+    This will allow {\CMake} to locate the build tools installed by
+    {\CppTransport}.
+    
+    \item The lines
+    \begin{minted}{cmake}
+        SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
+        SET(CMAKE_C_FLAGS_RELEASE "-Ofast -DNDEBUG")
+    \end{minted}
+    set the compiler flags to be used when building in `Release' mode.
+    Generally it is desirable to optimize {\CppTransport} to \emph{at least}
+    \option{-O2} or similar, because the
+    templated {\Boost}.{\odeint} steppers require optimization to produce
+    acceptable results.
+    Also, a high optimization setting will encourage the compiler
+    to optimize the automatically-generated {\CC} produced by the translator.
+    Clang and the Intel compiler produce good results using their
+    \option{-Ofast} setting,
+    and gcc produces good results using \option{-O3}.
+    (For the Intel compiler, \option{-fast} is also a possibility.)
+    The switch \texttt{-DNDEBUG}
+    \href{http://en.cppreference.com/w/cpp/error/assert}{disables debugging code}
+    associated with the
+    \mintinline{c++}{assert()} macro.
+    
+    \item
+    The next step is to detect the libraries and include files needed by
+    {\CppTransport}. This is managed in a single line:
+    \begin{minted}{cmake}
+        FIND_PACKAGE(CppTransport REQUIRED)
+    \end{minted}
+    It was for this command to function correctly that we needed to
+    adjust \cmakevar{CMAKE\_MODULE\_PATH} above.
+    Specifically, this will detect the {\SQLite}, {\Boost} and {\MPI}
+    libraries required by {\CppTransport}. It will also detect the
+    libraries installed by {\CppTransport} itself.
+    
+    To make the header files required by these libraries available we use the
+    line
+    \begin{minted}{cmake}
+        INCLUDE_DIRECTORIES(${CPPTRANSPORT_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
+    \end{minted}
+    The variable \cmakevar{CPPTRANSPORT\_INCLUDE\_DIRS}
+    contains the \file{include} paths
+    required by {\CppTransport} and its dependencies.
+    The variable \cmakevar{CMAKE\_CURRENT\_BINARY\_DIR}
+    adds the {\CMake} build directory to the include path,
+    which is done to make the translated core and implementation header
+    files available (see below).
+    
+    \item Next we must instruct {\CMake} to build the final executable.
+    This is done in two stages:
+    first, we arrange for the model description file
+    \file{dquad.model} to be translated to the core and implementation headers
+    \file{dquad\_core.h} and \file{dquad\_mpi.h};
+    and second, we instruct the compiler to process the main
+    file \file{dquad.cpp}
+    with all the previously-determined include paths and library locations.
+    
+    \begin{enumerate}
+        \item {\CMake} is instructed to invoke the {\CppTransport} translator
+        using an \mintinline{cmake}{ADD_CUSTOM_COMMAND()} block,
+        \begin{minted}{cmake}
+            ADD_CUSTOM_COMMAND(
+              OUTPUT
+                ${CMAKE_CURRENT_BINARY_DIR}/dquad_core.h ${CMAKE_CURRENT_BINARY_DIR}/dquad_mpi.h
+              COMMAND CppTransport --verbose --fast ${CMAKE_CURRENT_SOURCE_DIR}/dquad.model
+              DEPENDS dquad.model
+            )
+        \end{minted}
+        This advises {\CMake} that the block gives a recipe for constructing
+        the files \file{dquad\_core.h} and \file{dquad\_mpi.h},
+        in a way which depends on the file \file{dquad.model}.
+        The {\CppTransport} translator is invoked with the options
+        \option{{-}{-}verbose} and \option{{-}{-}fast}.
+        The {\CMake} variables
+        \cmakevar{CMAKE\_CURRENT\_SOURCE\_DIR} and
+        \cmakevar{CMAKE\_CURRENT\_BINARY\_DIR} refer
+        to the source and build directories managed by {\CMake}.
+        
+        \item At this stage {\CMake}
+        knows \emph{how} to generate the core and implementation
+        header files, but it does not know that it \emph{should} do so.
+        To instruct it that these files are required, we add a \emph{target}
+        (a deliverable set of objects that {\CMake} can build):
+        \begin{minted}{cmake}
+            SET(HEADERS
+              ${CMAKE_CURRENT_BINARY_DIR}/dquad_core.h ${CMAKE_CURRENT_BINARY_DIR}/dquad_mpi.h
+            )
+            ADD_CUSTOM_TARGET(Generator DEPENDS ${HEADERS})
+        \end{minted}
+        
+        \item Finally, we set up a second target
+        \cmakevar{dquad} which consists of the
+        finished executable and make this depend on the
+        \cmakevar{Generator} target declared above.
+        {\CMake} then knows that the files associated with \cmakevar{Generator}
+        must be built before \cmakevar{dquad}.
+        \begin{minted}{cmake}
+            ADD_EXECUTABLE(dquad dquad.cpp)
+            ADD_DEPENDENCIES(dquad Generator)
+            TARGET_LINK_LIBRARIES(dquad ${CPPTRANSPORT_LIBRARIES})
+            TARGET_COMPILE_OPTIONS(dquad PRIVATE -std=c++14 -mavx)
+        \end{minted}
+        The \mintinline{cmake}{TARGET_COMPILE_OPTIONS()} command adds
+        extra compiler flags which are specific to the
+        \cmakevar{dquad} target.
+        The flag \cmakevar{-std=c++14} is required.
+        Other code generation or optimization options can be specified here;
+        an example is the switch \option{-mavx} which informs the compiler
+        that it is allowed to generate code using the AVX instruction set
+        extensions available on Intel since Sandy Bridge
+        and on AMD since late 2011/early 2012.
+        Where these instructions are available they
+        can give a useful performance boost.
+
+        Depending on your processor, even more recent instruction set extensions
+        may be available such as AVX-2.
+        These extensions have been available on Intel since Haswell.
+        On AMD they are currently implemented only for the Carrizo platform.
+
+        If using the Intel compiler to target Intel processors,
+        the switch \option{-xHost} may be used
+        to indicate that code generation should use all features of the
+        machine being used to build.
+        It is implied by the \option{-fast} optimization, which is more aggressive
+        than \option{-Ofast}.
+        Note, however, that \option{-xHost} should be used with caution if you
+        plan to run executables in a heterogeneous cluster environment,
+        because not all machines may have the same instruction set enhancements
+        available.
+        If this happens, the executable will terminate with an error message.
+    \end{enumerate}
+\end{enumerate}
+The same pattern can be adapted for any {\CppTransport} executable.
+
+\para{Build using {\CMake}}
+
+\section{Adding postintegration tasks}
+
+\section{Generating derived products using output tasks}
+
+\section{Conclusions} 
+
+\section{Acknowledgments}
+It is a pleasure to acknowledge a longstanding collaboration
+with
+Mafalda Dias,
+Jonathan Frazer
+and David Mulryne.
+
+Development of {\CppTransport} has been supported
+by an ERC grant:
+\begin{itemize}
+    \item \emph{Precision tests of the inflationary
+    scenario},
+    funded by
+    the European Research Council under the European Union's
+    Seventh Framework Programme (FP/2007--2013) and ERC Grant Agreement No. 308082.
+\end{itemize}
+In addition,
+some development of {\CppTransport} has been supported by
+other funding sources.
+Portions of
+the work described in this document have been supported by:
+\begin{itemize}
+    \item The UK
+    Science and Technology Facilities Council via grants
+    ST/I000976/1 and ST/L000652/1,
+    which funded the science programme at the University of Sussex Astronomy
+    Centre from April 2011--March 2014
+    and April 2014--March 2017, respectively.
+    \item The Leverhulme Trust via a Philip Leverhulme Prize.
+    \item The National Science Foundation Grant No. PHYS-1066293
+    and the hospitality of the Aspen Center for Physics.
+    \item The hospitality of the Higgs Centre for Theoretical
+    Physics at the University of Edinburgh,
+    and the Centre for Astronomy \& Particle Physics
+    at the University of Nottingham.
+\end{itemize}
+
+\appendix
+
+\section{Third-party software used by {\CppTransport}}
+
+\bibliographystyle{JHEP}
+\bibliography{paper}
+
+\end{document}

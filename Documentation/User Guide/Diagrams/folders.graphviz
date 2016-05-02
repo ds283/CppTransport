@@ -1,0 +1,50 @@
+digraph
+  {
+
+    bgcolor="transparent";
+
+    prefix [label="CMAKE_INSTALL_PREFIX",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+
+    bin [label="bin",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+    lib [label="lib",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+    share [label="share",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+    include [label="include",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+
+    translator [label="CppTransport",shape=box,style="rounded,filled",fillcolor="#D0D7F6",fontname="helvetica",fontsize=10];
+
+    libs [label="Library files needed for executables",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+    includes [label="Header files needed for executables",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+
+    cmake [label="cmake",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+    cpptransport [label="cpptransport",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+
+    cmake_files [label="CMake scripts to help build executables",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+
+    html [label="HTML",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+    templates [label="templates",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];
+
+    html_files [label="Resources for HTML reports",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+    template_files [label="Templates used by translator",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+
+    prefix -> bin [dir=none];
+    prefix -> lib [dir=none];
+    prefix -> share [dir=none];
+    prefix -> include [dir=none];
+
+    bin -> translator [dir=none];
+
+    lib -> libs [dir=none];
+
+    include -> includes [dir=none];
+
+    share -> cmake [dir=none];
+    share -> cpptransport [dir=none];
+
+    cmake -> cmake_files [dir=none];
+
+    cpptransport -> html [dir=none];
+    cpptransport -> templates [dir=none];
+
+    html -> html_files [dir=none];
+    templates -> template_files [dir=none];
+  }
