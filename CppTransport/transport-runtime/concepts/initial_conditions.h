@@ -80,67 +80,25 @@ namespace transport
         //! There are Npre e-folds of evolution prior to horizon exit for the conventionally-normalized
         //! mode with k=1, so N* (the horizon-crossing time for the k=1 mode) is equal to Ninit + Npre
         template <typename Container>
-        initial_conditions(const std::string& nm, model<number>* m,
-                           const parameters<number>& p, const Container& i,
+        initial_conditions(const std::string& nm, const parameters<number>& p, const Container& i,
                            double Nini, double Npre);
 
         //! overload for std::initializer_list<>
-        initial_conditions(const std::string& nm, model<number>* m,
-                           const parameters<number>& p, const std::initializer_list<number> i,
+        initial_conditions(const std::string& nm, const parameters<number>& p, const std::initializer_list<number> i,
                            double Nini, double Npre);
-
-        // ----
-
-        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
-        //! to manage the lifetime; we work with raw pointers
-        template <typename Container>
-        initial_conditions(const std::string& nm, std::shared_ptr< model<number> > m,
-                           const parameters<number>& p, const Container& i,
-                           double Nini, double Npre)
-          : initial_conditions(nm, m.get(), p, i, Nini, Npre)
-          {
-          }
-
-        //! overload for std::initializer_list
-        initial_conditions(const std::string& nm, std::shared_ptr< model<number> > m,
-                           const parameters<number>& p, const std::initializer_list<number> i,
-                           double Nini, double Npre)
-          : initial_conditions(nm, m.get(), p, i, Nini, Npre)
-          {
-          }
 
         // ----
 
         //! Construct anonymized initial conditions from directly-supplied data
         template <typename Container>
-        initial_conditions(model<number>* m, const parameters<number>& p,
-                           const Container& i, double Nini, double Npre)
-          : initial_conditions(random_string(), m, p, i, Nini, Npre)
+        initial_conditions(const parameters<number>& p, const Container& i, double Nini, double Npre)
+          : initial_conditions(random_string(), p, i, Nini, Npre)
           {
           }
 
         //! overload for std::initializer_list
-        initial_conditions(model<number>* m, const parameters<number>& p,
-                           const std::initializer_list<number> i, double Nini, double Npre)
-          : initial_conditions(random_string(), m, p, i, Nini, Npre)
-          {
-          }
-
-        // ----
-
-        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
-        //! to manage the lifetime; we work with raw pointers
-        template <typename Container>
-        initial_conditions(std::shared_ptr< model<number> > m, const parameters<number>& p,
-                           const Container& i, double Nini, double Npre)
-          : initial_conditions(random_string(), m.get(), p, i, Nini, Npre)
-          {
-          }
-
-        //! overload for std::initializer_list
-        initial_conditions(std::shared_ptr< model<number> > m, const parameters<number>& p,
-                           const std::initializer_list<number> i, double Nini, double Npre)
-          : initial_conditions(random_string(), m.get(), p, i, Nini, Npre)
+        initial_conditions(const parameters<number>& p, const std::initializer_list<number> i, double Nini, double Npre)
+          : initial_conditions(random_string(), p, i, Nini, Npre)
           {
           }
 
@@ -152,71 +110,27 @@ namespace transport
         //! Npre is the desired number of e-folds of subhorizon evolution
         //! N* should equal Ncross
         template <typename Container>
-        initial_conditions(const std::string& nm, model<number>* m,
-                           const parameters<number>& p, const Container& i,
+        initial_conditions(const std::string& nm, const parameters<number>& p, const Container& i,
                            double Nini, double Ncross, double Npre);
 
         //! overload for std::initializer_list
-        initial_conditions(const std::string& nm, model<number>* m,
-                           const parameters<number>& p, const std::initializer_list<number> i,
+        initial_conditions(const std::string& nm, const parameters<number>& p, const std::initializer_list<number> i,
                            double Nini, double Ncross, double Npre);
-
-        // ----
-
-        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
-        //! to manage the lifetime; we work with raw pointers
-        template <typename Container>
-        initial_conditions(const std::string& nm, std::shared_ptr< model<number> > m,
-                           const parameters<number>& p, const Container& i,
-                           double Nini, double Ncross, double Npre)
-          : initial_conditions(nm, m.get(), p, i, Nini, Ncross, Npre)
-          {
-          }
-
-        //! overload for std::initializer_list
-        initial_conditions(const std::string& nm, std::shared_ptr< model<number> > m,
-                           const parameters<number>& p, const std::initializer_list<number> i,
-                           double Nini, double Ncross, double Npre)
-          : initial_conditions(nm, m.get(), p, i, Nini, Ncross, Npre)
-          {
-          }
 
         // ----
 
         //! Construct anonymized initial conditions offset from directly-supplied data using a supplied model
         template <typename Container>
-        initial_conditions(model<number>* m,
-                           const parameters<number>& p, const Container& i,
+        initial_conditions(const parameters<number>& p, const Container& i,
                            double Nini, double Ncross, double Npre)
-          : initial_conditions(random_string(), m, p, i, Nini, Ncross, Npre)
+          : initial_conditions(random_string(), p, i, Nini, Ncross, Npre)
           {
           }
 
         //! overload for std::initializer_list
-        initial_conditions(model<number>* m,
-                           const parameters<number>& p, const std::initializer_list<number> i,
+        initial_conditions(const parameters<number>& p, const std::initializer_list<number> i,
                            double Nini, double Ncross, double Npre)
-          : initial_conditions(random_string(), m, p, i, Nini, Ncross, Npre)
-          {
-          }
-
-        // ----
-
-        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
-        //! to manage the lifetime; we work with raw pointers
-        template <typename Container>
-        initial_conditions(std::shared_ptr< model<number> > m,
-                           const parameters<number>& p, const Container& i,
-                           double Nini, double Ncross, double Npre)
-          : initial_conditions(random_string(), m.get, p, i, Nini, Ncross, Npre)
-          {
-          }
-
-        //! overload for std::initializer_list
-        initial_conditions(std::shared_ptr< model<number> > m,
-                           const parameters<number>& p, const std::initializer_list<number> i,
-                           double Nini, double Ncross, double Npre)
-          : initial_conditions(random_string(), m.get, p, i, Nini, Ncross, Npre)
+          : initial_conditions(random_string(), p, i, Nini, Ncross, Npre)
           {
           }
 
@@ -310,20 +224,19 @@ namespace transport
 
     template <typename number>
     template <typename Container>
-    initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
-                                                   const parameters<number>& p, const Container& i,
+    initial_conditions<number>::initial_conditions(const std::string& nm, const parameters<number>& p, const Container& i,
                                                    double Nini, double Npre)
       : name(nm),
-        mdl(m),
+        mdl(p.get_model()),
         params(p),
         N_init(Nini),
         N_sub_horizon(Npre)
       {
-		    assert(m != nullptr);
-		    if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
+		    assert(mdl != nullptr);
+		    if(mdl == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         // check model matches the one supplied with parameters
-        if(m->get_identity_string() != p.get_model()->get_identity_string())
+        if(mdl->get_identity_string() != p.get_model()->get_identity_string())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
@@ -341,20 +254,20 @@ namespace transport
 
 
     template <typename number>
-    initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
-                                                   const parameters<number>& p, const std::initializer_list<number> i,
+    initial_conditions<number>::initial_conditions(const std::string& nm, const parameters<number>& p,
+                                                   const std::initializer_list<number> i,
                                                    double Nini, double Npre)
       : name(nm),
-        mdl(m),
+        mdl(p.get_model()),
         params(p),
         N_init(Nini),
         N_sub_horizon(Npre)
       {
-        assert(m != nullptr);
-        if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
+        assert(mdl != nullptr);
+        if(mdl == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         // check model matches the one supplied with parameters
-        if(m->get_identity_string() != p.get_model()->get_identity_string())
+        if(mdl->get_identity_string() != p.get_model()->get_identity_string())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
@@ -373,17 +286,16 @@ namespace transport
 
     template <typename number>
     template <typename Container>
-    initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
-                                                   const parameters<number>& p, const Container& i,
+    initial_conditions<number>::initial_conditions(const std::string& nm, const parameters<number>& p, const Container& i,
                                                    double Nini, double Ncross, double Npre)
       : name(nm),
-        mdl(m),
+        mdl(p.get_model()),
         params(p),
         N_init(Ncross-Npre),
         N_sub_horizon(Npre)
       {
-        assert(m != nullptr);
-        if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
+        assert(mdl != nullptr);
+        if(mdl == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         std::vector<number> validated_ics;
         validated_ics.reserve(i.size());
@@ -401,17 +313,17 @@ namespace transport
 
 
     template <typename number>
-    initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
-                                                   const parameters<number>& p, const std::initializer_list<number> i,
+    initial_conditions<number>::initial_conditions(const std::string& nm, const parameters<number>& p,
+                                                   const std::initializer_list<number> i,
                                                    double Nini, double Ncross, double Npre)
       : name(nm),
-        mdl(m),
+        mdl(p.get_model()),
         params(p),
         N_init(Ncross-Npre),
         N_sub_horizon(Npre)
       {
-        assert(m != nullptr);
-        if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
+        assert(mdl != nullptr);
+        if(mdl == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         std::vector<number> validated_ics;
         validated_ics.reserve(i.size());

@@ -452,7 +452,7 @@ namespace transport
             stepping_range<double> times(Ninit, Ncross-Npre, time_steps);
 
             // set up initial conditions
-            initial_conditions<number> ics(params.get_model(), params, input, Ninit, Ncross-Ninit);
+            initial_conditions<number> ics(params, input, Ninit, Ncross-Ninit);
 
             // set up a new task object for this integration
             background_task<number> tk(ics, times);
@@ -499,7 +499,7 @@ namespace transport
         // set up times at which we wish to sample -- we just need a few scattered between the initial time and the horizon-crossing time
         stepping_range<double> times(tk->get_N_initial(), tk->get_N_horizon_crossing(), time_steps);
 
-        initial_conditions<number> new_ics(tk->get_model(), tk->get_params(), tk->get_ics().get_vector(), tk->get_N_initial(), tk->get_N_subhorizon_efolds());
+        initial_conditions<number> new_ics(tk->get_params(), tk->get_ics().get_vector(), tk->get_N_initial(), tk->get_N_subhorizon_efolds());
 
         background_task<number> new_task(new_ics, times);
 
