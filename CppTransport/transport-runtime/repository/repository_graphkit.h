@@ -286,7 +286,7 @@ namespace transport
             //! write label
             void operator()(std::ostream& out, const unsigned int& v) const
               {
-                out << "[label=" << boost::escape_dot_string(this->map[v]) << ",shape=box,style=filled,fillcolor=\"";
+                out << "[label=" << boost::escape_dot_string(this->map[v]) << ",shape=box,style=\"filled,rounded\",fillcolor=\"";
 
                 switch(this->map.get_type(v))
                   {
