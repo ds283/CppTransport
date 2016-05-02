@@ -42,8 +42,8 @@ namespace transport
 					{
 				    std::string type = reader[CPPTRANSPORT_NODE_RANGE_TYPE].asString();
 
-						if(type == CPPTRANSPORT_NODE_RANGE_STEPPING)       return std::make_unique< stepping_range<value> >(reader);
-						else if(type == CPPTRANSPORT_NODE_RANGE_AGGREGATE) return std::make_unique< aggregation_range<value> >(reader);
+						if(type == CPPTRANSPORT_NODE_RANGE_STEPPING)       return std::make_unique< basic_range<value> >(reader);
+						else if(type == CPPTRANSPORT_NODE_RANGE_AGGREGATE) return std::make_unique< aggregate_range<value> >(reader);
 
 				    std::ostringstream msg;
 				    msg << CPPTRANSPORT_RANGE_UNKNOWN_TYPE << " '" << type << "'";

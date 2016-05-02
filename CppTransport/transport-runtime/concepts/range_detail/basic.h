@@ -49,7 +49,7 @@ namespace transport
 
 
     template <typename value=double>
-    class stepping_range: public range<value>
+    class basic_range: public range<value>
 	    {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -57,10 +57,10 @@ namespace transport
       public:
 
         //! Construct a range object with specified minimum & maximum values, number of steps and spacing type.
-        stepping_range(value mn, value mx, unsigned int st, spacing sp=spacing::linear);
+        basic_range(value mn, value mx, unsigned int st, spacing sp=spacing::linear);
 
         //! Deserialization constructor
-        stepping_range(Json::Value& reader);
+        basic_range(Json::Value& reader);
 
 
         // INTERFACE
@@ -112,7 +112,7 @@ namespace transport
 
       public:
 
-        virtual stepping_range<value>* clone() const override { return new stepping_range<value>(dynamic_cast<const stepping_range<value>&>(*this)); }
+        virtual basic_range<value>* clone() const override { return new basic_range<value>(dynamic_cast<const basic_range<value>&>(*this)); }
 
 
         // SERIALIZATION INTERFACE -- implements a 'serializable' interface
@@ -154,7 +154,7 @@ namespace transport
 
 
     template <typename value>
-    stepping_range<value>::stepping_range(value mn, value mx, unsigned int st, spacing sp)
+    basic_range<value>::basic_range(value mn, value mx, unsigned int st, spacing sp)
 	    : min(mn), max(mx), steps(st), type(sp)
 	    {
         this->populate_grid();
@@ -162,7 +162,7 @@ namespace transport
 
 
     template <typename value>
-    stepping_range<value>::stepping_range(Json::Value& reader)
+    basic_range<value>::basic_range(Json::Value& reader)
 	    {
         double m = reader[CPPTRANSPORT_NODE_MIN].asDouble();
         min = static_cast<value>(m);
@@ -184,7 +184,7 @@ namespace transport
 
 
     template <typename value>
-    value stepping_range<value>::operator[](unsigned int d)
+    value basic_range<value>::operator[](unsigned int d)
 	    {
         assert(d < this->grid.size());
         if(d < this->grid.size())
@@ -199,7 +199,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::populate_grid(void)
+    void basic_range<value>::populate_grid(void)
 	    {
         this->grid.clear();
         this->grid.reserve(this->steps+1);
@@ -227,7 +227,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::populate_linear_grid(void)
+    void basic_range<value>::populate_linear_grid(void)
       {
         if(this->steps == 0)
           {
@@ -245,7 +245,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::populate_log_bottom_grid(void)
+    void basic_range<value>::populate_log_bottom_grid(void)
       {
         if(this->steps == 0)
           {
@@ -279,7 +279,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::populate_log_top_grid(void)
+    void basic_range<value>::populate_log_top_grid(void)
       {
         if(this->steps == 0)
           {
@@ -310,7 +310,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::serialize(Json::Value& writer) const
+    void basic_range<value>::serialize(Json::Value& writer) const
 	    {
         writer[CPPTRANSPORT_NODE_RANGE_TYPE] = std::string(CPPTRANSPORT_NODE_RANGE_STEPPING);
 
@@ -337,7 +337,7 @@ namespace transport
 
     template <typename value>
     template <typename Stream>
-    void stepping_range<value>::write(Stream& out)
+    void basic_range<value>::write(Stream& out)
       {
         out << CPPTRANSPORT_STEPPING_RANGE_A << this->get_steps() << CPPTRANSPORT_STEPPING_RANGE_B;
 
@@ -358,22 +358,22 @@ namespace transport
           }
       }
 
-    // can't make stepping_range as const since some methods, eg. get_steps(), get_grid() are not marked const
-    // (for the benefit of aggregation_range, where lazy evaluation of the grid means these methods
+    // can't make basic_range as const since some methods, eg. get_steps(), get_grid() are not marked const
+    // (for the benefit of aggregate_range, where lazy evaluation of the grid means these methods
     // sometimes need to modify the internal state)
     template <typename value, typename Char, typename Traits>
-    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, stepping_range<value>& obj)
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, basic_range<value>& obj)
 	    {
         obj.write(out);
         return(out);
 	    }
 
 
-    // can't make stepping_range as const since some methods, eg. get_steps(), get_grid() are not marked const
-    // (for the benefit of aggregation_range, where lazy evaluation of the grid means these methods
+    // can't make basic_range as const since some methods, eg. get_steps(), get_grid() are not marked const
+    // (for the benefit of aggregate_range, where lazy evaluation of the grid means these methods
     // sometimes need to modify the internal state)
     template <typename value, typename Char, typename Traits, typename Allocator>
-    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, stepping_range<value>& obj)
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, basic_range<value>& obj)
       {
         obj.write(out);
         return(out);

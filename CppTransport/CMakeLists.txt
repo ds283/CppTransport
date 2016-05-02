@@ -531,10 +531,10 @@ set(TRANSPORT_RUNTIME_CONCEPTS_FILES
 
 set(TRANSPORT_RUNTIME_CONCEPTS_RANGE_DETAIL_FILES
   transport-runtime/concepts/range_detail/abstract.h
-  transport-runtime/concepts/range_detail/aggregation.h
+  transport-runtime/concepts/range_detail/aggregate.h
   transport-runtime/concepts/range_detail/common.h
   transport-runtime/concepts/range_detail/helper.h
-  transport-runtime/concepts/range_detail/stepping.h
+  transport-runtime/concepts/range_detail/basic.h
   )
 
 set(TRANSPORT_RUNTIME_DATA_BATCHERS_FILES

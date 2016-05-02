@@ -39,13 +39,13 @@
 namespace transport
 	{
 
-    template <typename value=double> class aggregation_range;
+    template <typename value=double> class aggregate_range;
 
 		template <typename value>
-		aggregation_range<value> operator+(const aggregation_range<value>& lhs, const range<value>& rhs);
+		aggregate_range<value> operator+(const aggregate_range<value>& lhs, const range<value>& rhs);
 
 		template <typename value>
-		aggregation_range<value> operator+(const range<value>& lhs, const range<value>& rhs);
+		aggregate_range<value> operator+(const range<value>& lhs, const range<value>& rhs);
 
 		// forward-declare helper
 		namespace range_helper
@@ -54,7 +54,7 @@ namespace transport
 			}
 
 		template <typename value>
-		class aggregation_range: public range<value>
+		class aggregate_range: public range<value>
 			{
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -62,19 +62,19 @@ namespace transport
 		  public:
 
 				//! Construct an aggregation range
-				aggregation_range();
+				aggregate_range();
 
 				//! Construct an aggregation range from a given subrange
-				aggregation_range(const range<value>& a);
+				aggregate_range(const range<value>& a);
 
 				//! Construct an aggregation range from a pair of subranges
-				aggregation_range(const range<value>& a, const range<value>& b);
+				aggregate_range(const range<value>& a, const range<value>& b);
 
 				//! Deserialization constructor
-				aggregation_range(Json::Value& reader);
+				aggregate_range(Json::Value& reader);
 
         //! Provide explicit copy constructor to handle deep move on std::unique_ptr
-        aggregation_range(const aggregation_range<value>& obj);
+        aggregate_range(const aggregate_range<value>& obj);
 
 
 				// OVERLOAD ARITHMETIC OPERATORS FOR CONVENIENCE
@@ -82,14 +82,14 @@ namespace transport
       public:
 
 				//! assignment
-				aggregation_range<value>& operator=(const range<value>& rhs) { this->subrange_list.clear(); this->add_subrange(rhs); return(*this); }
+				aggregate_range<value>& operator=(const range<value>& rhs) { this->subrange_list.clear(); this->add_subrange(rhs); return(*this); }
 
 				//! compound addition
-				aggregation_range<value>& operator+=(const range<value>& rhs) { this->add_subrange(rhs); return(*this); }
+				aggregate_range<value>& operator+=(const range<value>& rhs) { this->add_subrange(rhs); return(*this); }
 
 				//! addition
-				friend aggregation_range<value> operator+ <>(const aggregation_range<value>& lhs, const range<value>& rhs);
-				friend aggregation_range<value> operator+ <>(const range<value>& lhs, const range<value>& rhs);
+				friend aggregate_range<value> operator+ <>(const aggregate_range<value>& lhs, const range<value>& rhs);
+				friend aggregate_range<value> operator+ <>(const range<value>& lhs, const range<value>& rhs);
 
 
 				// INTERFACE
@@ -140,7 +140,7 @@ namespace transport
 
 		  public:
 
-		    virtual aggregation_range<value>* clone() const override { return new aggregation_range<value>(dynamic_cast<const aggregation_range<value>&>(*this)); }
+		    virtual aggregate_range<value>* clone() const override { return new aggregate_range<value>(dynamic_cast<const aggregate_range<value>&>(*this)); }
 
 
 		    // SERIALIZATION INTERFACE -- implements a 'serializable' interface
@@ -180,21 +180,21 @@ namespace transport
 
 
 		template <typename value>
-		aggregation_range<value> operator+(const aggregation_range<value>& lhs, const range<value>& rhs)
+		aggregate_range<value> operator+(const aggregate_range<value>& lhs, const range<value>& rhs)
 			{
-		    return(aggregation_range<value>(lhs) += rhs);
+		    return(aggregate_range<value>(lhs) += rhs);
 			}
 
 
 		template <typename value>
-		aggregation_range<value> operator+(const range<value>& lhs, const range<value>& rhs)
+		aggregate_range<value> operator+(const range<value>& lhs, const range<value>& rhs)
 			{
-				return aggregation_range<value>(lhs, rhs);
+				return aggregate_range<value>(lhs, rhs);
 			}
 
 
 		template <typename value>
-		aggregation_range<value>::aggregation_range()
+		aggregate_range<value>::aggregate_range()
 			: min(std::numeric_limits<double>::max()),
         max(-std::numeric_limits<double>::max()),
         steps(0),
@@ -204,16 +204,16 @@ namespace transport
 
 
 		template <typename value>
-		aggregation_range<value>::aggregation_range(const range<value>& a)
-			: aggregation_range<value>()
+		aggregate_range<value>::aggregate_range(const range<value>& a)
+			: aggregate_range<value>()
 			{
 		    this->subrange_list.emplace_back(a.clone());
 			}
 
 
     template <typename value>
-    aggregation_range<value>::aggregation_range(const range<value>& a, const range<value>& b)
-	    : aggregation_range<value>()
+    aggregate_range<value>::aggregate_range(const range<value>& a, const range<value>& b)
+	    : aggregate_range<value>()
 	    {
         this->subrange_list.emplace_back(a.clone());
         this->subrange_list.emplace_back(b.clone());
@@ -221,8 +221,8 @@ namespace transport
 
 
 		template <typename value>
-		aggregation_range<value>::aggregation_range(Json::Value& reader)
-			: aggregation_range<value>()
+		aggregate_range<value>::aggregate_range(Json::Value& reader)
+			: aggregate_range<value>()
 			{
 		    Json::Value array = reader[CPPTRANSPORT_NODE_SUBRANGE_ARRAY];
 				assert(array.isArray());
@@ -237,7 +237,7 @@ namespace transport
 
 
     template <typename value>
-    aggregation_range<value>::aggregation_range(const aggregation_range<value>& obj)
+    aggregate_range<value>::aggregate_range(const aggregate_range<value>& obj)
       : dirty(true),
         min(obj.min),
         max(obj.max),
@@ -254,7 +254,7 @@ namespace transport
 
 
 		template <typename value>
-		void aggregation_range<value>::serialize(Json::Value& writer) const
+		void aggregate_range<value>::serialize(Json::Value& writer) const
 			{
 				writer[CPPTRANSPORT_NODE_RANGE_TYPE] = std::string(CPPTRANSPORT_NODE_RANGE_AGGREGATE);
 
@@ -272,7 +272,7 @@ namespace transport
 
 
 		template <typename value>
-		void aggregation_range<value>::add_subrange(const range<value>& s)
+		void aggregate_range<value>::add_subrange(const range<value>& s)
 			{
 				this->subrange_list.emplace_back(s.clone());
 				this->dirty = true;
@@ -280,7 +280,7 @@ namespace transport
 
 
     template <typename value>
-    value aggregation_range<value>::operator[](unsigned int d)
+    value aggregate_range<value>::operator[](unsigned int d)
 	    {
 		    if(this->dirty) this->populate_grid();
 
@@ -297,7 +297,7 @@ namespace transport
 
 
 		template <typename value>
-		void aggregation_range<value>::populate_grid()
+		void aggregate_range<value>::populate_grid()
 			{
 		    this->grid.clear();
 		    this->min   = std::numeric_limits<double>::max();
@@ -326,7 +326,7 @@ namespace transport
 
 
     template <typename value, typename Char, typename Traits>
-    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, aggregation_range<value>& obj)
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, aggregate_range<value>& obj)
       {
         const std::vector<value>& grid = obj.get_grid();
 
