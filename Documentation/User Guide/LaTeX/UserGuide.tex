@@ -305,7 +305,7 @@ or
 effects.
 With sufficient care these effects can be captured
 in an approximation scheme such as~\eqref{eq:deltaN-approx},
-but the approach becomes more complex---but
+but the approach becomes more complex---and
 even if this is possible we have only exchanged the problem
 for computation of the hard
 component
@@ -339,7 +339,9 @@ and even on the range of wavenumbers under consideration.
 If we choose to pay the overhead 
 and pursue this approach, we encounter three
 significant obstacles.
-First, a sizeable investment may be required
+First, a sizeable investment may be required---due to field-theory
+calculations
+of the hard component---%
 before analysis can commence for each new model.
 Second, because each hard component is model-specific, there
 may be limited opportunities for economy by re-use.
@@ -1107,10 +1109,10 @@ and you wish to build with it, you should use
 \end{minted}
 More generally, you should pass the location of the C compiler
 as the value of
-\envvar{CMAKE_C_COMPILER}
+\cmakevar{CMAKE\_C\_COMPILER}
 and the location of the {\CC}
 compiler as the value
-of \envvar{CMAKE_CXX_COMPILER}.
+of \cmakevar{CMAKE\_CXX\_COMPILER}.
 
 If configuration is successful, build the translator
 and then install:
@@ -1136,7 +1138,7 @@ The install procedure writes a large number of files and
 resources into directories
 under the installation prefix
 specified in
-\envvar{CMAKE_INSTALL_PREFIX};
+\cmakevar{CMAKE\_INSTALL\_PREFIX};
 see Fig.~\ref{fig:directory-structure}.
 \begin{figure}
 	\begin{center}
@@ -2637,16 +2639,18 @@ which will be explained in \S\ref{} below.
 \end{advanced}
 
 \subsection{Translate and build using a {\CMake} script}
-It is possible to build {\CppTransport} executables by hand, but this
+It is possible to build {\CppTransport} executables by manually invoking the
+compiler.
+However, this
 is not always convenient because it is necessary to locate the
 {\Boost} and {\MPI}
 libraries on which the runtime system depends.
 The recommended way to build is using a {\CMake} build script.
 When {\CppTransport} is installed, it provides some
-{\CMake} tools which are intended to make simplify this process.
+{\CMake} tools which are intended to simplify this process.
 
 The {\CMake} build script should be called \file{CMakeLists.txt} and
-placed it the same directory as the
+placed in the same directory as the
 main {\CC} file---for the example of double-quadratic
 inflation this is the file \file{dquad.mpi}
 described above. A suitable script is:
@@ -2693,7 +2697,8 @@ The steps involved are:
         SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport-packages/share/cmake/")
     \end{minted}
     should be adjusted to point to the \file{share/cmake} directory
-    installed under your installation prefix.
+    installed under your installation prefix
+    (see Fig.~\ref{fig:directory-structure}).
     This will allow {\CMake} to locate the build tools installed by
     {\CppTransport}.
     
@@ -2763,10 +2768,21 @@ The steps involved are:
               DEPENDS dquad.model
             )
         \end{minted}
-        This advises {\CMake} that the block gives a recipe for constructing
-        the files \file{dquad\_core.h} and \file{dquad\_mpi.h},
-        in a way which depends on the file \file{dquad.model}.
-        The {\CppTransport} translator is invoked with the options
+        The
+        \cmakevar{OUTPUT}
+        line
+        advises {\CMake} that this block gives a recipe for constructing
+        the files \file{dquad\_core.h} and \file{dquad\_mpi.h}.
+        The
+        \cmakevar{DEPENDS}
+        line advertises that this recipe
+        depends on the file \file{dquad.model},
+        and therefore should be re-run if it is changed.
+        Finally, the
+        \cmakevar{COMMAND} line gives the command
+        to execute;
+        it invokes
+        the {\CppTransport} translator with the options
         \option{{-}{-}verbose} and \option{{-}{-}fast}.
         The {\CMake} variables
         \cmakevar{CMAKE\_CURRENT\_SOURCE\_DIR} and
@@ -2784,6 +2800,10 @@ The steps involved are:
             )
             ADD_CUSTOM_TARGET(Generator DEPENDS ${HEADERS})
         \end{minted}
+        This tells {\CMake} that a target called
+        \cmakevar{Generator} depends on the core and implementation header files.
+        If we try to build this target, {\CMake} will invoke the recipe
+        above in order to generate these files.
         
         \item Finally, we set up a second target
         \cmakevar{dquad} which consists of the
@@ -2798,9 +2818,11 @@ The steps involved are:
             TARGET_COMPILE_OPTIONS(dquad PRIVATE -std=c++14 -mavx)
         \end{minted}
         The \mintinline{cmake}{TARGET_COMPILE_OPTIONS()} command adds
-        extra compiler flags which are specific to the
+        extra compiler flags to the
         \cmakevar{dquad} target.
-        The flag \cmakevar{-std=c++14} is required.
+        The flag \cmakevar{-std=c++14} is required, because it
+        enables certain {\CC}14 features which are used by the {\CppTransport}
+        platform.
         Other code generation or optimization options can be specified here;
         an example is the switch \option{-mavx} which informs the compiler
         that it is allowed to generate code using the AVX instruction set
@@ -2811,8 +2833,9 @@ The steps involved are:
 
         Depending on your processor, even more recent instruction set extensions
         may be available such as AVX-2.
-        These extensions have been available on Intel since Haswell.
-        On AMD they are currently implemented only for the Carrizo platform.
+        These extensions have been available on Intel since Haswell,
+        and
+        on AMD they are currently implemented for the Carrizo platform.
 
         If using the Intel compiler to target Intel processors,
         the switch \option{-xHost} may be used
@@ -2821,15 +2844,44 @@ The steps involved are:
         It is implied by the \option{-fast} optimization, which is more aggressive
         than \option{-Ofast}.
         Note, however, that \option{-xHost} should be used with caution if you
-        plan to run executables in a heterogeneous cluster environment,
-        because not all machines may have the same instruction set enhancements
-        available.
-        If this happens, the executable will terminate with an error message.
+        plan to run executables in a heterogeneous cluster environment
+        because different machines may support different instruction set enhancements.
+        If the executable requires instructions which are not available on
+        the host machine it will terminate with an error message.
     \end{enumerate}
 \end{enumerate}
-The same pattern can be adapted for any {\CppTransport} executable.
+The {\CMake} script can be adapted for any {\CppTransport} executable.
 
 \para{Build using {\CMake}}
+The build process is the same as for {\CppTransport} itself.
+First, starting from the directory containing the
+\file{CMakeLists.txt} script,
+create a build directory and move into it:
+\begin{minted}{bash}
+	mkdir build
+	cd build		
+\end{minted}
+Next, configure {\CMake} to build using the `Release' configuration.
+\begin{minted}{bash}
+	cmake .. -DCMAKE_BUILD_TYPE=Release	
+\end{minted}
+Because it is typically unnecessary to install individual executables
+the \cmakevar{CMAKE\_INSTALL\_PREFIX} option can be omitted.
+However, if you wish to later install your executables to a standard location
+such as \file{\textasciitilde{}/bin}
+then you can specify a suitable prefix here.
+Also,
+if you wish to build with a compiler other than the default
+then you should specify
+\cmakevar{CMAKE\_C\_COMPILER}
+and
+\cmakevar{CMAKE\_CXX\_COMPILER}
+as in~\S\ref{sec:build-translator}.
+
+When configuration is complete, the build is initiated
+by issuing the \mintinline{bash}{make} command.
+If you then wish to install
+to a different location, use \mintinline{bash}{make install}.
 
 \section{Adding postintegration tasks}
 
