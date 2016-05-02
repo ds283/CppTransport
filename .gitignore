@@ -1,3 +1,7 @@
 /doxygen/
 CppTransport/test-target/axion_core.h
-CppTransport/test-target/axion_basic_unrolled.h
+CppTransport/test-target/axion_mpi.h
+Documentation/User Guide/LaTeX/.texpadtmp
+Documentation/User Guide/LaTeX/UserGuide.pdf
+Documentation/User Guide/Diagrams/folders.pdf
+Documentation/User Guide/Diagrams/organization.pdf
