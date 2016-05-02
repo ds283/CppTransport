@@ -1119,6 +1119,7 @@ namespace transport
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_COMPLETE, payload.is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES);
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_WORKGROUP, boost::lexical_cast<std::string>(payload.get_workgroup_number()));
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEEDED, payload.is_seeded() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_DATA_TYPE, payload.get_data_type());
             if(payload.is_seeded()) kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEED_GROUP, payload.get_seed_group());
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_STATISTICS, payload.has_statistics() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ICS, payload.has_initial_conditions() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);

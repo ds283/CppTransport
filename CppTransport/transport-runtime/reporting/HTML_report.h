@@ -3400,6 +3400,7 @@ namespace transport
                 this->make_data_element("Statistics", (payload.has_statistics() ? "Yes" : "No"), col2_list);
                 this->make_data_element("Initial conditions", (payload.has_initial_conditions() ? "Yes" : "No"), col2_list);
                 this->make_data_element("Configurations", boost::lexical_cast<std::string>(metadata.total_configurations), col2_list);
+                this->make_data_element("Data type", payload.get_data_type(), col2_list);
 
                 col2.add_element(col2_list);
 

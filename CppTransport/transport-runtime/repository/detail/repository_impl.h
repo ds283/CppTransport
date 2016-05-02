@@ -540,26 +540,28 @@ namespace transport
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate content group with content from the writer
-        output_record->get_payload().set_container_path(writer.get_relative_container_path());
-        output_record->get_payload().set_metadata(writer.get_metadata());
-        output_record->get_payload().set_workgroup_number(writer.get_workgroup_number());
+        // populate payload with content from the writer
+        integration_payload& payload = output_record->get_payload();
+        payload.set_container_path(writer.get_relative_container_path());
+        payload.set_metadata(writer.get_metadata());
+        payload.set_workgroup_number(writer.get_workgroup_number());
+        payload.set_data_type(writer.get_data_type());
 
-        if(writer.is_seeded()) output_record->get_payload().set_seed(writer.get_seed_group());
+        if(writer.is_seeded()) payload.set_seed(writer.get_seed_group());
 
-        output_record->get_payload().set_fail(writer.is_failed());
-        output_record->get_payload().set_failed_serials(writer.get_missing_serials());
+        payload.set_fail(writer.is_failed());
+        payload.set_failed_serials(writer.get_missing_serials());
 
-        output_record->get_payload().set_statistics(writer.is_collecting_statistics());
-        output_record->get_payload().set_initial_conditions(writer.is_collecting_initial_conditions());
+        payload.set_statistics(writer.is_collecting_statistics());
+        payload.set_initial_conditions(writer.is_collecting_initial_conditions());
 
         try
           {
-            output_record->get_payload().set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
+            payload.set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
           }
         catch(boost::filesystem::filesystem_error& xe)
           {
-            output_record->get_payload().set_size(0);
+            payload.set_size(0);
           }
 
         // commit new output record
@@ -632,35 +634,36 @@ namespace transport
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate content group with content from the writer
-        output_record->get_payload().set_container_path(writer.get_relative_container_path());
-        output_record->get_payload().set_metadata(writer.get_metadata());
+        // populate payload with content from the writer
+        postintegration_payload& payload = output_record->get_payload();
+        payload.set_container_path(writer.get_relative_container_path());
+        payload.set_metadata(writer.get_metadata());
 
-        if(writer.is_seeded()) output_record->get_payload().set_seed(writer.get_seed_group());
+        if(writer.is_seeded()) payload.set_seed(writer.get_seed_group());
 
-        output_record->get_payload().set_pair(writer.is_paired());
-        output_record->get_payload().set_parent_group(writer.get_parent_group());
+        payload.set_pair(writer.is_paired());
+        payload.set_parent_group(writer.get_parent_group());
 
-        output_record->get_payload().set_fail(writer.is_failed());
-        output_record->get_payload().set_failed_serials(writer.get_missing_serials());
+        payload.set_fail(writer.is_failed());
+        payload.set_failed_serials(writer.get_missing_serials());
 
         try
           {
-            output_record->get_payload().set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
+            payload.set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
           }
         catch(boost::filesystem::filesystem_error& xe)
           {
-            output_record->get_payload().set_size(0);
+            payload.set_size(0);
           }
 
         // tag this content group with its contents
-        if(writer.get_products().get_zeta_twopf())   output_record->get_payload().get_precomputed_products().add_zeta_twopf();
-        if(writer.get_products().get_zeta_threepf()) output_record->get_payload().get_precomputed_products().add_zeta_threepf();
-        if(writer.get_products().get_zeta_redbsp())  output_record->get_payload().get_precomputed_products().add_zeta_redbsp();
-        if(writer.get_products().get_fNL_local())    output_record->get_payload().get_precomputed_products().add_fNL_local();
-        if(writer.get_products().get_fNL_equi())     output_record->get_payload().get_precomputed_products().add_fNL_equi();
-        if(writer.get_products().get_fNL_ortho())    output_record->get_payload().get_precomputed_products().add_fNL_ortho();
-        if(writer.get_products().get_fNL_DBI())      output_record->get_payload().get_precomputed_products().add_fNL_DBI();
+        if(writer.get_products().get_zeta_twopf())   payload.get_precomputed_products().add_zeta_twopf();
+        if(writer.get_products().get_zeta_threepf()) payload.get_precomputed_products().add_zeta_threepf();
+        if(writer.get_products().get_zeta_redbsp())  payload.get_precomputed_products().add_zeta_redbsp();
+        if(writer.get_products().get_fNL_local())    payload.get_precomputed_products().add_fNL_local();
+        if(writer.get_products().get_fNL_equi())     payload.get_precomputed_products().add_fNL_equi();
+        if(writer.get_products().get_fNL_ortho())    payload.get_precomputed_products().add_fNL_ortho();
+        if(writer.get_products().get_fNL_DBI())      payload.get_precomputed_products().add_fNL_DBI();
 
         // commit new output record
         output_record->commit();
@@ -724,14 +727,15 @@ namespace transport
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate content group with content from the writer
+        // populate payload with content from the writer
+        output_payload& payload = output_record->get_payload();
         for(const derived_content& c : writer.get_content())
           {
-            output_record->get_payload().add_derived_content(c);
+            payload.add_derived_content(c);
           }
-        output_record->get_payload().set_metadata(writer.get_metadata());
-        output_record->get_payload().set_fail(false);
-        output_record->get_payload().set_content_groups_summary(writer.get_content_groups());
+        payload.set_metadata(writer.get_metadata());
+        payload.set_fail(false);
+        payload.set_content_groups_summary(writer.get_content_groups());
 
         // commit new output record
         output_record->commit();
