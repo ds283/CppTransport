@@ -27,6 +27,12 @@
 #define CPPTRANSPORT_TRANSPORT_H
 
 
+#ifdef __INTEL_COMPILER
+// Intel compiler (at least 16.0.1) produces this warning when using boost::escape_dot_string()
+#pragma warning disable 2196
+#endif
+
+
 // expect Boost to be linked with dynamic libraries;
 // note this macro is essential for Boost.Log
 #define BOOST_ALL_DYN_LINK
