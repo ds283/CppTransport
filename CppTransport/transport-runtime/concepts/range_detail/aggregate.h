@@ -122,7 +122,7 @@ namespace transport
 		  public:
 
 				//! add a subrange
-				void add_subrange(const range<value>& s);
+				aggregate_range<value>& add_subrange(const range<value>& s);
 
         //! get number of subranges
         unsigned int get_number_subranges() const { return(this->subrange_list.size()); }
@@ -272,10 +272,12 @@ namespace transport
 
 
 		template <typename value>
-		void aggregate_range<value>::add_subrange(const range<value>& s)
+		aggregate_range<value>& aggregate_range<value>::add_subrange(const range<value>& s)
 			{
 				this->subrange_list.emplace_back(s.clone());
 				this->dirty = true;
+
+        return *this;
 			}
 
 
