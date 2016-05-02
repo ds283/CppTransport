@@ -38,11 +38,11 @@
 int main(int argc, char* argv[])
   {
     // set up an instance of a manager
-    std::unique_ptr< transport::task_manager<double> > mgr = std::make_unique< transport::task_manager<double> >(argc, argv);
+    std::unique_ptr< transport::task_manager<> > mgr = std::make_unique< transport::task_manager<> >(argc, argv);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    std::shared_ptr< transport::axion_mpi<double> > model = mgr->create_model< transport::axion_mpi<double> >();
+    std::shared_ptr< transport::axion_mpi<> > model = mgr->create_model< transport::axion_mpi<> >();
 
     mgr->process();
 

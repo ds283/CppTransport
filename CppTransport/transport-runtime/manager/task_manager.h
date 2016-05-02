@@ -52,7 +52,9 @@ namespace transport
     //! Task manager is a managed interface to CppTransport's integration and output stacks,
     //! relying on a JSON-aware repository interface 'json_repository'
     //! to handle storage and serialization, and MPI to handle task communication.
-    template <typename number>
+    //! The parameter 'number' determines the data type used by the integration engine
+    //! and defaults to double
+    template <typename number=default_number_type>
     class task_manager
       {
 
