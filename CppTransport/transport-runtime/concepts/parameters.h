@@ -24,18 +24,21 @@
 //
 
 
-#ifndef __parameters_H_
-#define __parameters_H_
+#ifndef CPPTRANSPORT_PARAMETERS_H
+#define CPPTRANSPORT_PARAMETERS_H
 
 
 #include <assert.h>
 #include <vector>
 #include <functional>
 #include <stdexcept>
+#include <algorithm>
+#include <initializer_list>
 
 #include "transport-runtime/serialization/serializable.h"
 #include "transport-runtime/exceptions.h"
 #include "transport-runtime/messages.h"
+#include "transport-runtime/defaults.h"
 
 #include "transport-runtime/utilities/named_list.h"
 
@@ -55,7 +58,7 @@
 namespace transport
   {
 
-    template <typename number>
+    template <typename number=default_number_type>
     class parameters: public serializable
       {
 
@@ -64,14 +67,29 @@ namespace transport
       public:
 
         //! Construct 'parameter' object from an explicit model and parameter combination
-        parameters(number Mp, const std::vector<number>& p, model<number>* m);
+        template <typename Container>
+        parameters(number Mp, const Container& p, model<number>* m);
+
+        //! overload for std::initializer_list
+        parameters(number Mp, const std::initializer_list<number> p, model<number>* m);
+
+        // ----
 
         //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
         //! to manage the lifetime; we work with raw pointers
-        parameters(number Mp, const std::vector<number>& p, std::shared_ptr< model<number> > m)
+        template <typename Container>
+        parameters(number Mp, const Container& p, std::shared_ptr< model<number> > m)
           : parameters(Mp, p, m.get())
         {
         }
+
+        //! overload for std::initializer_list
+        parameters(number Mp, const std::initializer_list<number> p, std::shared_ptr< model<number> > m)
+          : parameters(Mp, p, m.get())
+          {
+          }
+
+        // ----
 
         //! Deserialization constructor
         parameters(Json::Value& reader, model<number>* m);
@@ -126,7 +144,8 @@ namespace transport
 
 
     template <typename number>
-    parameters<number>::parameters(number Mp, const std::vector<number>& p, model<number>* m)
+    template <typename Container>
+    parameters<number>::parameters(number Mp, const Container& p, model<number>* m)
       : M_Planck(Mp),
         mdl(m)
       {
@@ -135,8 +154,33 @@ namespace transport
 				if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PARAMS_NULL_MODEL);
         if(M_Planck <= 0.0) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_MPLANCK_NEGATIVE);
 
+        // copy supplied parameters into a vector
+        std::vector<number> input_params;
+        input_params.reserve(p.size());
+        std::copy(p.begin(), p.end(), std::back_inserter(input_params));
+
         // validate supplied parameters
-		    mdl->validate_params(p, params);
+		    mdl->validate_params(input_params, params);
+      }
+
+
+    template <typename number>
+    parameters<number>::parameters(number Mp, const std::initializer_list<number> p, model<number>* m)
+      : M_Planck(Mp),
+        mdl(m)
+      {
+        assert(m != nullptr);
+
+        if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PARAMS_NULL_MODEL);
+        if(M_Planck <= 0.0) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_MPLANCK_NEGATIVE);
+
+        // copy supplied parameters into a vector
+        std::vector<number> input_params;
+        input_params.reserve(p.size());
+        std::copy(p.begin(), p.end(), std::back_inserter(input_params));
+
+        // validate supplied parameters
+        mdl->validate_params(input_params, params);
       }
 
 
@@ -243,4 +287,4 @@ namespace transport
 
 
 
-#endif //__parameters_H_
+#endif //CPPTRANSPORT_PARAMETERS_H
