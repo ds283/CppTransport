@@ -27,11 +27,10 @@
 #define CPPTRANSPORT_WRITER_REPO_DECL_H
 
 
+#include "transport-runtime/repository/repository_forward_declare.h"
+
 namespace transport
   {
-
-    // forward-declare repository
-    template <typename number> class repository;
 
 
     template <typename number>

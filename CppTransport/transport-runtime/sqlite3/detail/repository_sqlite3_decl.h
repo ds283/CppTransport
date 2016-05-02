@@ -27,9 +27,6 @@
 #define CPPTRANSPORT_REPOSITORY_SQLITE3_DECL_H
 
 
-#include "transport-runtime/sqlite3/detail/repository_sqlite3_decl.h"
-
-
 namespace transport
   {
 
@@ -49,7 +46,7 @@ namespace transport
     //! libjsoncpp and sqlite3 as the database backend.
     //! This implementation replaces two previous ones, the first
     //! using Oracle DBXML and the second using UnQLite.
-    template <typename number>
+    template <typename number=default_number_type>
     class repository_sqlite3: public json_repository<number>
       {
 

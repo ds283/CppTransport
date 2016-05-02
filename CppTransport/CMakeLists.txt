@@ -819,12 +819,13 @@ set(TRANSPORT_RUNTIME_REPOSITORY_DETAIL_FILES
   )
 
 set(TRANSPORT_RUNTIME_REPOSITORY_FILES
-  transport-runtime/repository/inflight.h
-  transport-runtime/repository/json_repository.h
-  transport-runtime/repository/repository.h
-  transport-runtime/repository/repository_toolkit.h
-  transport-runtime/repository/repository_graphkit.h
-  )
+    transport-runtime/repository/inflight.h
+    transport-runtime/repository/json_repository.h
+    transport-runtime/repository/repository.h
+    transport-runtime/repository/repository_toolkit.h
+    transport-runtime/repository/repository_graphkit.h
+    transport-runtime/repository/repository_forward_declare.h
+    )
 
 set(TRANSPORT_RUNTIME_REPOSITORY_RECORDS_DETAIL_FILES
   transport-runtime/repository/records/detail/content_group_decl.h
