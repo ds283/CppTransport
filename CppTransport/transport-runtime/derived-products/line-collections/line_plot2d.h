@@ -144,10 +144,23 @@ namespace transport
 		      public:
 
 		        //! Add a line to the collection
-		        virtual line_plot2d<number>& add_line(const derived_line<number>& line) override { this->line_collection<number>::add_line(line); this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set); return *this; }
+		        virtual line_plot2d<number>& add_line(const derived_line<number>& line) override
+              {
+                this->line_collection<number>::add_line(line);
+                this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set);
+                return *this;
+              }
 
             //! overload += to do the same thing
             virtual line_plot2d<number>& operator+=(const derived_line<number>& line) override { return this->add_line(line); }
+
+            //! add a vector of derived lines (eg. produced by operator+ overload between derived lines)
+            virtual line_plot2d<number>& operator+=(const std::vector< std::shared_ptr< derived_line<number> > > list) override
+              {
+                this->line_collection<number>::operator+=(list);
+                this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set);
+                return *this;
+              }
 
 
 		        // SETTING DEFAULTS

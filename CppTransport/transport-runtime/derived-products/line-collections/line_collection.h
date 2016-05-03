@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __line_collection_H_
-#define __line_collection_H_
+#ifndef CPPTRANSPORT_LINE_COLLECTION_H
+#define CPPTRANSPORT_LINE_COLLECTION_H
 
 
 #include <iostream>
@@ -50,6 +50,35 @@ namespace transport
 
 		namespace derived_data
 			{
+
+        // Specializations of arithmetic operators to build aggregations of derived_line<number> objects
+
+        // two derived lines can be summed into a vector
+        // we have to use a vector of pointers to avoid truncating the derived_line objects stored inside,
+        // but also for performance reasons because multiple additions will generate copies
+        template <typename number>
+        std::vector< std::shared_ptr< derived_line<number> > > operator+(const derived_line<number>& lhs, const derived_line<number>& rhs)
+          {
+            std::vector< std::shared_ptr< derived_line<number> > > list;
+            list.reserve(2);
+
+            list.emplace_back(lhs.clone());
+            list.emplace_back(rhs.clone());
+
+            return list;
+          }
+
+        // a vector of derived lines and another derived line can be summed into a bigger vector
+        template <typename number>
+        std::vector< std::shared_ptr< derived_line<number> > > operator+(const std::vector< std::shared_ptr< derived_line<number> > >& lhs, const derived_line<number>& rhs)
+          {
+            std::vector< std::shared_ptr< derived_line<number> > > list = lhs;
+
+            list.emplace_back(rhs.clone());
+
+            return list;
+          }
+
 
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT = "line-collection";
 
@@ -221,6 +250,13 @@ namespace transport
 
             //! overload += to do the same thing
             virtual line_collection<number>& operator+=(const derived_line<number>& line) { return this->add_line(line); }
+
+            //! add a vector of derived lines (eg. produced by operator+ overload between derived lines)
+            virtual line_collection<number>& operator+=(const std::vector< std::shared_ptr< derived_line<number> > > list)
+              {
+                for(const std::shared_ptr< derived_line<number> >& p : list) this->add_line(*p);
+                return *this;
+              }
 
             //! Get list of lines in collection
             const std::list< std::unique_ptr< derived_line<number> > >& get_lines() const { return(this->lines); }
@@ -721,10 +757,5 @@ namespace transport
 
 	}   // namespace transport
 
-class line_collection
-	{
 
-	};
-
-
-#endif //__line_collection_H_
+#endif //CPPTRANSPORT_LINE_COLLECTION_H
