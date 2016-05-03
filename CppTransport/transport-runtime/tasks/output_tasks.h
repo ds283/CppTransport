@@ -41,6 +41,9 @@
 
 #include "transport-runtime/tasks/task.h"
 #include "transport-runtime/messages.h"
+#include "transport-runtime/defaults.h"
+
+#include "transport-runtime/utilities/random_string.h"
 
 // forward-declare repository records if needed
 #include "transport-runtime/repository/records/repository_records_forward_declare.h"
@@ -69,10 +72,13 @@ namespace transport
 		// content-providers which compose the product.
 
 
-    template <typename number> class output_task;
+    template <typename number=default_number_type> class output_task;
 
 		template <typename number>
 		output_task<number> operator+(const output_task<number>& lhs, const derived_data::derived_product<number>& rhs);
+
+    template <typename number>
+    output_task<number> operator+(const derived_data::derived_product<number>& lhs, const derived_data::derived_product<number>& rhs);
 
 
     //! An 'output_task' is a specialization of 'task' which generates a set of derived products.
@@ -84,22 +90,20 @@ namespace transport
 
       public:
 
-        //! Construct a named output task using a supplied list of elements
+        //! Construct empty named output task
+        output_task(const std::string& nm)
+          : task<number>(nm),
+            serial(0)
+          {
+          }
 
-        output_task(const std::string& nm, typename std::vector< output_task_element<number> >& eles)
-	        : serial(0), elements(eles), task<number>(nm)
-	        {
-		        serial = elements.size();
-	        }
-
-        //! Construct a named output task using a supplied single derived_product<> object.
-        //! Tags provided.
+        //! Construct a named output task using a supplied single derived_product<> object and a set of tags
         output_task(const std::string& nm, const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
-	        : serial(0), task<number>(nm)
+	        : task<number>(nm),
+            serial(0)
 	        {
             elements.clear();
-
-            elements.push_back(output_task_element<number>(prod, tags, serial++));
+            elements.emplace_back(prod, tags, serial++);
 	        }
 
         //! Construct a named output task using a supplied single derived_product<> object.
@@ -109,20 +113,40 @@ namespace transport
 	        {
 	        }
 
+        //! Construct an unnamed output task using two supplied derived_product<> objects, no tags provided
+        output_task(const derived_data::derived_product<number>& p1, const derived_data::derived_product<number>& p2)
+          : output_task<number>(random_string(), p1)
+          {
+            this->add_element(p2);
+
+            // mark as unserializable
+            this->task<number>::serializable = false;
+          }
+
         //! Deserialization constructor
         output_task(const std::string& nm, Json::Value& reader, derived_product_finder<number>& pfinder);
 
-
-        //! Destroy an output task
+        //! Destructor is default
         virtual ~output_task() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! override set_name from task<> class to convert to serializable status
+        void set_name(std::string s) { this->task<number>::set_name(std::move(s)); this->serializable = true; }
 
 
 		    // OVERLOAD ARITHMETIC OPERATORS FOR CONVENIENCE
 
       public:
 
-		    //! += operator is the same as add_element()
+		    //! += operator for a derived product is the same as add_element()
 		    output_task<number>& operator+=(const derived_data::derived_product<number>& prod) { this->add_element(prod); return(*this); }
+
+        //! += operator for another output task adds all its elemnets
+        output_task<number>& operator+=(const output_task<number>& tk);
 
 		    //! + operator
 		    friend output_task<number> operator+ <>(const output_task<number>& lhs, const derived_data::derived_product<number>& rhs);
@@ -142,10 +166,10 @@ namespace transport
         const output_task_element<number>& get(unsigned int i) const;
 
 		    //! Add an element, no tags provided
-		    void add_element(const derived_data::derived_product<number>& prod) { this->add_element(prod, std::list<std::string>()); }
+		    output_task<number>& add_element(const derived_data::derived_product<number>& prod) { this->add_element(prod, std::list<std::string>()); return *this; }
 
 		    //! Add an element, tags provided
-        void add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags);
+        output_task<number>& add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags);
 
 		    //! Lookup a derived product
 		    boost::optional< derived_data::derived_product<number>& > lookup_derived_product(const std::string& name);
@@ -244,7 +268,7 @@ namespace transport
             derived_data::derived_product<number>* dp = product_record->get_product();
 
             // construct a output_task_element<> object wrapping these elements, and push it to the list
-            elements.push_back(output_task_element<number>(*dp, tags, sn));
+            elements.emplace_back(*dp, tags, sn);
             if(sn > serial) serial = sn;
           }
       }
@@ -283,7 +307,7 @@ namespace transport
 
 
 		template <typename number>
-    void output_task<number>::add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
+    output_task<number>& output_task<number>::add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
 	    {
         // check that this derived product has a distinct filename
 
@@ -306,7 +330,9 @@ namespace transport
 	            }
 	        }
 
-        elements.push_back(output_task_element<number>(prod, tags, serial++));
+        this->elements.emplace_back(prod, tags, serial++);
+
+        return *this;
 	    }
 
 
@@ -339,10 +365,29 @@ namespace transport
 
 
     template <typename number>
+    output_task<number>& output_task<number>::operator+=(const output_task<number>& tk)
+      {
+        for(const output_task_element<number>& element : tk.elements)
+          {
+            this->add_element(element.get_product(), element.get_tags());
+          }
+
+        return *this;
+      }
+
+
+    template <typename number>
     output_task<number> operator+(const output_task<number>& lhs, const derived_data::derived_product<number>& rhs)
 	    {
 		    return(output_task<number>(lhs) += rhs);
 	    }
+
+
+    template <typename number>
+    output_task<number> operator+(const derived_data::derived_product<number>& lhs, const derived_data::derived_product<number>& rhs)
+      {
+        return output_task<number>(lhs, rhs);
+      }
 
 
 	}   // namespace transport

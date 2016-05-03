@@ -71,11 +71,11 @@ namespace transport
 
 				// CONSTRUCTOR, DESTRUCTOR
 
-				//! Construct a named task
-				task(const std::string& nm);
+				//! Construct a named task with given serializable status
+				task(std::string nm, bool s=true);
 
 				//! Deserialization constructor
-				task(const std::string& nm, Json::Value& reader);
+				task(std::string nm, Json::Value& reader);
 
 				//! Destroy a task
 				virtual ~task() = default;
@@ -88,11 +88,17 @@ namespace transport
 		    //! Get name
 		    const std::string& get_name() const { return(this->name); }
 
+        //! Reset name; if name is non-zero, assume this
+        void set_name(std::string s) { this->name = std::move(s); }
+
         //! Set description
         void set_description(std::string d) { this->description = std::move(d); }
 
         //! Get description
         const std::string& get_description() const { return(this->description); }
+
+        //! Get serializable status
+        bool is_serializable() const { return(this->serializable); }
 
 
 				// CLONE
@@ -123,20 +129,25 @@ namespace transport
         //! Description for this task
         std::string description;
 
+        //! Is this task serializable?
+        bool serializable;
+
 			};
 
 
 		template <typename number>
-		task<number>::task(const std::string& nm)
-			: name(nm)
+		task<number>::task(std::string nm, bool s)
+			: name(std::move(nm)),
+        serializable(s)
 			{
 			}
 
 
 		template <typename number>
-		task<number>::task(const std::string& nm, Json::Value& reader)
-			: name(nm),
-        description(reader[CPPTRANSPORT_NODE_TASK_DESCRIPTION].asString())
+		task<number>::task(std::string nm, Json::Value& reader)
+			: name(std::move(nm)),
+        description(reader[CPPTRANSPORT_NODE_TASK_DESCRIPTION].asString()),
+        serializable(true)
 			{
 			}
 

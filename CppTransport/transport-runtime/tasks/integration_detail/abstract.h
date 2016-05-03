@@ -78,6 +78,8 @@ namespace transport
         integration_task(const initial_conditions<number>& i, range<double>& t)
 	        : integration_task(random_string(), i, t)
 	        {
+            // mark this task as not serializable
+            this->task<number>::serializable = false;
 	        }
 
         //! deserialization constructor

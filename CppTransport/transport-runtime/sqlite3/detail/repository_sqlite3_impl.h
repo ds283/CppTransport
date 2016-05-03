@@ -683,6 +683,13 @@ namespace transport
     template <typename TaskType>
     void repository_sqlite3<number>::commit_integration_task(transaction_manager& mgr, const TaskType& tk)
       {
+        if(!tk.is_serializable())
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_NOT_SERIALIZABLE << " '" << tk.get_name() << "'";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -710,6 +717,13 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit(transaction_manager& mgr, const output_task<number>& tk)
       {
+        if(!tk.is_serializable())
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_NOT_SERIALIZABLE << " '" << tk.get_name() << "'";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -783,6 +797,13 @@ namespace transport
     template <typename TaskType>
     void repository_sqlite3<number>::commit_postintegration_task(transaction_manager& mgr, const TaskType& tk)
       {
+        if(!tk.is_serializable())
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_NOT_SERIALIZABLE << " '" << tk.get_name() << "'";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
