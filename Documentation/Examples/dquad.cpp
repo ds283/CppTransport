@@ -50,10 +50,24 @@ void write_task::operator()(transport::repository<>& repo)
     const double phi_init = 10.0 * Mp;
     const double chi_init = 12.9 * Mp;
 
-    const double N_init   = 0.0;
-    const double N_pre    = 12.0;
+    const double N_init = 0.0;
+    const double N_pre  = 12.0;
+    const double N_end  = 60.0;
 
     transport::initial_conditions<> ics("dquad", params, {phi_init, chi_init}, N_init, N_pre);
+
+    transport::basic_range<> ts(N_init, N_end, 300, transport::spacing::linear);
+
+    const double kt_lo = std::exp(3.0);
+    const double kt_hi = std::exp(9.0);
+
+    transport::basic_range<> ks(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
+
+    transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
+    transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
+
+    repo.commit(tk2);
+    repo.commit(tk3);
   }
 
 

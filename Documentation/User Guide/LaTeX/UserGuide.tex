@@ -3043,6 +3043,9 @@ or
 \mintinline{c++}{std::list<double>}
 rather than quoting it directly as the initialization list
 \mintinline{c++}{{Mphi, Mchi}}.
+If an incorrect number of parameters are passed
+then {\CppTransport} will throw
+a \mintinline{c++}{std::out_of_range} exception.
 
 \para{Specifying initial conditions}
 Next we combine the parameter package with a choice of initial conditions
@@ -3075,6 +3078,9 @@ In an $N$-field model this list can contain either exactly $N$ or exactly $2N$ v
 As for \mintinline{c++}{parameters},
 the value list can be specified using any suitable container or by
 quoting it directly using an initialization list.
+If a number of values other than $N$ or $2N$ is given then
+{\CppTransport} will raise
+a \mintinline{c++}{std::out_of_range} exception.
 
 In addition, the package
 requires information about where these
@@ -3146,7 +3152,167 @@ and
 corresponding to $\Nzero$, $\Nstar$ and $\Npre$.
 
 \para{Selecting a mesh of time sample points}
+The remaining task is to set up a series of sample points, both for
+time and wavenumber configuration.
+To assist in doing so, {\CppTransport} provides a mechanism
+to construct arbitrary ranges with either
+linear or logarithmic spacing
+The building block
+is a class called
+\mintinline{c++}{transport::basic_range<>}. This has the basic syntax
+\begin{center}
+    \mintinline{c++}{transport::basic_range<>(lo, hi, N, spacing);}    
+\end{center}
+It constructs a range of \mintinline{c++}{N}+1 sample points between
+\mintinline{c++}{lo}
+and
+\mintinline{c++}{hi}
+(inclusive)
+which divide the interval
+[\mintinline{c++}{lo}, \mintinline{c++}{hi}] into $N$ parts.
+The parameter \mintinline{c++}{spacing} should be one of:
+\begin{itemize}
+    \item \mintinline{c++}{transport::spacing::linear}: the sample points
+    are spaced linearly
+    
+    \item \mintinline{c++}{transport::spacing::log_bottom}: the sample
+    points are logarithmically spaced from the bottom of the interval
+    
+    \item \mintinline{c++}{transport::spacing::log_top}: the sample points are
+    logarithmically spaced from the top of the interval
+\end{itemize}
+For any spacing type, if $N=0$ the range consists of a single
+value equal to \mintinline{c++}{lo}.
 
+Any number of \mintinline{c++}{basic_range<>} ranges can be
+added to produce a composite range.
+This produces an object of type
+\mintinline{c++}{aggregate_range<>}.
+If \mintinline{c++}{A}, \mintinline{c++}{B}, \mintinline{c++}{C}
+are ranges (which may themselves be composite) then
+the following are equivalent:
+\begin{minted}{c++}
+    transport::aggregate_range<> M = A + B + C;
+    
+    auto M = A + B + C;
+    
+    transport::aggregate_range<> M(A, B);
+    M += C;
+    
+    transport::aggregate_range<> M(A);
+    M.add_subrange(B);
+    M.add_subrange(C);
+\end{minted}
+It is also possible to construct an empty
+\mintinline{c++}{aggregate_range<>} by passing no arguments to its
+constructor.
+Often it assists readability to use the \mintinline{c++}{auto} type specifier,
+which allows the compiler to deduce the appropriate type.
+The ability to construct arbitrary meshes
+makes it possible to sample certain regions densely and others
+sparsely. For example, it is possible to sample densely
+in regions (either of time or wavenumber configuration)
+which exhibit sharp features
+while sampling sparsely elsewhere to keep the overall data volume
+manageable.
+
+For time sample, a sensible starting point is to sample linearly
+in $N$
+to get a sense of how the correlation functions evolve.
+Later, the sample mesh can be refined if required.
+A reasonable starting point
+might be 300 evenly spaced intervals between the minimum
+and maximum values of $N$,
+\begin{minted}{c++}
+    const double N_end  = 60.0;
+
+    transport::basic_range<> ts(N_init, N_end, 300, transport::spacing::linear);    
+\end{minted}
+
+\begin{advanced}{Arbitrary value types}
+    The \mintinline{c++}{basic_range<>} and
+    \mintinline{c++}{aggregate_range<>} objects are templated
+    and (if needed)
+    can be used to construct a range of values for any numeric
+    type. However, even if you are using a type other than
+    \mintinline{c++}{double} in the integration engine,
+    {\CppTransport} always measures times and wavenumbers
+    using \mintinline{c++}{double}.
+\end{advanced}
+
+
+\para{Selecting a mesh of wavenumber samples}
+Building a mesh of wavenumber samples is similar.
+For the two-point function, a wavenumber configuration is fixed simply
+by the magnitude $k$.
+A set of samples can therefore be specified by a range
+(possibly a composite, as above).
+The wavenumber $k=1$ is defined to exit the horizon at the time
+$N = \Nstar$
+fixed by the initial conditions package.
+If $H$ is nearly constant then a general wavenumber $k$ will exit the
+horizon approximately at time $N = \Nstar + \ln k$.
+This is usually a good rule-of-thumb when deciding what range $k$ cover
+a given range of e-folds.
+(When constructing a mesh of $k$s
+it is often useful to make use of the logarithmic spacing option
+in \mintinline{c++}{basic_range<>}.)
+However, {\CppTransport} does \emph{not}
+assume that $H$ is constant; it
+calculates the horizon-exit time of each wavenumber exactly.
+
+To begin, we will construct a range of wavenumbers which
+sample horizon exit times between approximately
+$\Nstar + 3.0$
+and
+$\Nstar + 9.0$:
+\begin{minted}{c++}
+    const double kt_lo = std::exp(3.0);
+    const double kt_hi = std::exp(9.0);
+
+    transport::basic_range<> ks(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
+\end{minted}
+
+\para{Building 2- and 3-point function integration tasks}
+With all of these elements in place, we can proceed to build
+integration tasks.
+{\CppTransport} offers two options.
+Although it will compute the 3-point function, doing so is expensive
+and wasteful if it is not required.
+Therefore the first option is to compute the 2-point function
+alone.
+This is represented by an object of type
+\mintinline{c++}{transport::twopf_task<>}:
+\begin{minted}{c++}
+    transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
+\end{minted}
+The constructor requires a name, an initial conditions package,
+a range representing the time sample points,
+and a range representing the wavenumber samples.
+
+Alternatively, if we wish to compute the 3-point function,
+a suitable task can be built using
+\begin{minted}{c++}
+    transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
+\end{minted}
+This will sample the three-point function on a cubic lattice
+$(k_1, k_2, k_3)$ built from the Cartesian product
+\mintinline{c++}{ks} $\times$
+\mintinline{c++}{ks} $\times$
+\mintinline{c++}{ks},
+after filtering out configurations which do not correspond to
+a physical triangle.
+This is only one way to construct a 3-point function task;
+there are many other options, which will be described fully in the next
+section.
+
+\subsection{Committing tasks to the database}
+
+\section{Options for integration tasks}
+
+\subsection{General options}
+
+\subsection{Three-point function tasks}
 
 \section{Adding postintegration tasks}
 
