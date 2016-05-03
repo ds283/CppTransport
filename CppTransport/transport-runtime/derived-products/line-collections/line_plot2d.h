@@ -144,7 +144,10 @@ namespace transport
 		      public:
 
 		        //! Add a line to the collection
-		        virtual void add_line(const derived_line<number>& line) override { this->line_collection<number>::add_line(line); this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set); }
+		        virtual line_plot2d<number>& add_line(const derived_line<number>& line) override { this->line_collection<number>::add_line(line); this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set); return *this; }
+
+            //! overload += to do the same thing
+            virtual line_plot2d<number>& operator+=(const derived_line<number>& line) override { return this->add_line(line); }
 
 
 		        // SETTING DEFAULTS
@@ -186,24 +189,30 @@ namespace transport
 
 		        //! get reverse x-axis setting
 		        bool get_reverse_x() const { return(this->reverse_x); }
+
 		        //! set reverse x-axis setting
-		        void set_reverse_x(bool g) { this->reverse_x = g; }
+		        line_plot2d<number>& set_reverse_x(bool g) { this->reverse_x = g; return *this; }
 
 		        //! get reverse y-axis setting
 		        bool get_reverse_y() const { return(this->reverse_y); }
+
 		        //! set reverse y-axis setting
-		        void set_reverse_y(bool g) { this->reverse_y = g; }
+            line_plot2d<number>& set_reverse_y(bool g) { this->reverse_y = g; return *this; }
 
 		        //! get use x-axis label setting
 		        bool get_x_label() const { return(this->x_label); }
-		        //! set use x-axis label setting
-		        void set_x_label(bool g) { this->x_label = g; }
-		        //! get x-axis label text
-		        const std::string& get_x_label_text() const { return(this->x_label_text); }
+
+            //! set use x-axis label setting
+            line_plot2d<number>& set_x_label(bool g) { this->x_label = g; return *this; }
+
+            //! get x-axis label text
+            const std::string& get_x_label_text() const { return(this->x_label_text); }
+
 		        //! set x-axis label text
-		        void set_x_label_text(const std::string& text) { this->internal_set_x_label_text(text); this->x_label_set = true; }
+            line_plot2d<number>& set_x_label_text(const std::string& text) { this->internal_set_x_label_text(text); this->x_label_set = true; return *this; }
+
 		        //! clear x-axis label text
-		        void clear_x_label_text() { this->internal_clear_x_label_text(); this->x_label_set = true; }
+            line_plot2d<number>& clear_x_label_text() { this->internal_clear_x_label_text(); this->x_label_set = true; return *this; }
 
 		      protected:
 
@@ -226,14 +235,18 @@ namespace transport
 
 		        //! get use y-axis label setting
 		        bool get_y_label() const { return(this->y_label); }
+
 		        //! set use y-axis label setting
-		        void set_y_label(bool g) { this->y_label = g; }
+            line_plot2d<number>& set_y_label(bool g) { this->y_label = g; return *this; }
+
 		        //! get y-axis label text
 		        const std::string& get_y_label_text() const { return(this->y_label_text); }
+
 		        //! set y-axis label text
-		        void set_y_label_text(const std::string& text) { this->internal_set_y_label_text(text); this->y_label_set = true; }
+            line_plot2d<number>& set_y_label_text(const std::string& text) { this->internal_set_y_label_text(text); this->y_label_set = true; return *this; }
+
 		        //! clear y-axis label text
-		        void clear_y_label_text() { this->internal_clear_y_label_text(); this->y_label_set = true; }
+            line_plot2d<number>& clear_y_label_text() { this->internal_clear_y_label_text(); this->y_label_set = true; return *this; }
 
 		      protected:
 
@@ -256,14 +269,18 @@ namespace transport
 
 		        //! get use title setting
 		        bool get_title() const { return(this->title); }
+
 		        //! set use title setting
-		        void set_title(bool g) { this->title = g; }
+            line_plot2d<number>& set_title(bool g) { this->title = g; return *this; }
+
 		        //! get title text
 		        const std::string& get_title_text() const { return(this->title_text); }
+
 		        //! set title text
-		        void set_title_text(const std::string& text) { this->internal_set_title_text(text); this->title_set = true; }
+            line_plot2d<number>& set_title_text(const std::string& text) { this->internal_set_title_text(text); this->title_set = true; return *this; }
+
 				    //! clear title text
-				    void clear_title_text() { this->internal_clear_title_text(); this->title_set = true; }
+            line_plot2d<number>& clear_title_text() { this->internal_clear_title_text(); this->title_set = true; return *this; }
 
 		      protected:
 
@@ -286,23 +303,27 @@ namespace transport
 
 				    //! get legend setting
 				    bool get_legend() const { return(this->legend); }
+
 				    //! set legend setting
-				    void set_legend(bool g) { this->legend = g; }
+            line_plot2d<number>& set_legend(bool g) { this->legend = g; return *this; }
 
 				    //! get legend position
 				    legend_pos get_legend_position() const { return(this->position); }
+
 				    //! set legend position
-				    void set_legend_position(legend_pos pos) { this->position = pos; }
+            line_plot2d<number>& set_legend_position(legend_pos pos) { this->position = pos; return *this;}
 
 				    //! get typeset with LaTeX setting
 				    bool get_typeset_with_LaTeX() const { return(this->typeset_with_LaTeX); }
+
 				    //! set typeset with LaTeX setting
-				    void set_typeset_with_LaTeX(bool g) { this->typeset_with_LaTeX = g; this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set); }
+            line_plot2d<number>& set_typeset_with_LaTeX(bool g) { this->typeset_with_LaTeX = g; this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set); return *this; }
 
 				    //! get dash second axis
 				    bool get_dash_second_axis() const { return(this->dash_second_axis); }
+
 				    //! set dash second axis
-				    void set_dash_second_axis(bool g) { this->dash_second_axis = g; }
+            line_plot2d<number>& set_dash_second_axis(bool g) { this->dash_second_axis = g; return *this; }
 
 
 				    // CLONE

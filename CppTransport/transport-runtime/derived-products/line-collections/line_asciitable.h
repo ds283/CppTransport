@@ -102,7 +102,10 @@ namespace transport
 		      public:
 
 		        //! Add a line to the collection
-		        virtual void add_line(const derived_line<number>& line) override { this->line_collection<number>::add_line(line); this->apply_default_labels(!this->x_label_set); }
+		        virtual line_asciitable<number>& add_line(const derived_line<number>& line) override { this->line_collection<number>::add_line(line); this->apply_default_labels(!this->x_label_set); return *this; }
+
+            //! overload += to do the same thing
+            virtual line_asciitable<number>& operator+=(const derived_line<number>& line) override { return this->add_line(line); }
 
 
 		        // GENERATE TABLE -- implements a 'derived_product' interface
@@ -130,7 +133,7 @@ namespace transport
 				    const std::string& get_x_label() const { return(this->x_label); }
 
 				    //! set x-axis text label
-				    void set_x_label(const std::string& l) { this->internal_set_x_label(l); this->x_label_set = true; }
+				    line_asciitable<number>& set_x_label(const std::string& l) { this->internal_set_x_label(l); this->x_label_set = true; return *this; }
 
 		      protected:
 

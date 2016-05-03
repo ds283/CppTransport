@@ -217,7 +217,10 @@ namespace transport
 				  public:
 
 				    //! Add a line to the collection
-				    virtual void add_line(const derived_line<number>& line);
+				    virtual line_collection<number>& add_line(const derived_line<number>& line);
+
+            //! overload += to do the same thing
+            virtual line_collection<number>& operator+=(const derived_line<number>& line) { return this->add_line(line); }
 
             //! Get list of lines in collection
             const std::list< std::unique_ptr< derived_line<number> > >& get_lines() const { return(this->lines); }
@@ -259,23 +262,27 @@ namespace transport
 
 				    //! get logarithmic x-axis setting
 				    bool get_log_x() const { return(this->log_x); }
+
 				    //! set logarithmic x-axis setting
-				    void set_log_x(bool g) { this->log_x = g; }
+				    line_collection<number>& set_log_x(bool g) { this->log_x = g; return *this; }
 
 				    //! get logarithmic y-axis setting
 				    bool get_log_y() const { return(this->log_y); }
+
 				    //! set logarithmic y-axis setting
-				    void set_log_y(bool g) { this->log_y = g; }
+				    line_collection<number>& set_log_y(bool g) { this->log_y = g; return *this; }
 
 				    //! get abs-y-axis setting
 				    bool get_abs_y() const { return(this->abs_y); }
+
 				    //! set abs-y-axis setting
-				    void set_abs_y(bool g) { this->abs_y = g; }
+				    line_collection<number>& set_abs_y(bool g) { this->abs_y = g; return *this; }
 
 				    //! get default LaTeX labels setting
 				    bool get_use_LaTeX() const { return(this->use_LaTeX); }
+
 				    //! set default LaTeX labels setting
-				    void set_use_LaTeX(bool g) { this->use_LaTeX = g; }
+				    line_collection<number>& set_use_LaTeX(bool g) { this->use_LaTeX = g; return *this; }
 
 
 						// SERIALIZATION -- implements a 'serializable' interface
@@ -360,7 +367,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::add_line(const derived_line<number>& line)
+		    line_collection<number>& line_collection<number>::add_line(const derived_line<number>& line)
 			    {
 				    // check that the axis-type used by this line is compatible with any existing lines
 
@@ -373,6 +380,8 @@ namespace transport
 					    }
 
 		        this->lines.emplace_back(line.clone());
+
+            return(*this);
 			    }
 
 
