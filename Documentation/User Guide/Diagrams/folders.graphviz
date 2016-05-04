@@ -1,6 +1,7 @@
 digraph
   {
 
+    overlap=false;
     bgcolor="transparent";
 
     prefix [label="CMAKE_INSTALL_PREFIX",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="helvetica",fontsize=10];

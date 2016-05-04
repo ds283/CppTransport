@@ -55,6 +55,15 @@
 \newcommand{\Npre}{N_{\text{pre}}}
 \newcommand{\Nzero}{N_{0}}
 \newcommand{\kstar}{k_{\ast}}
+\newcommand{\texit}{t_{\text{exit}}}
+\newcommand{\tmassless}{t_{\text{massless}}}
+
+\newcommand{\astar}{a_{\ast}}
+\newcommand{\Hstar}{H_{\ast}}
+
+\newcommand{\kcom}{k_{\text{com}}}
+
+\newcommand{\repoobject}[1]{{\sffamily\fontseries{scb}\selectfont #1}}
 
 %\newcommand{\packagefont}{\fontfamily{lmtt}\selectfont\fontseries{l}\selectfont}
 %\newcommand{\packagefont}{\sffamily\fontseries{sbc}\selectfont}
@@ -93,12 +102,19 @@
 \newcommand{\multiprocessing}{{\packagefont multiprocessing}}
 \newcommand{\MpiForPy}{{\packagefont Mpi4Py}}
 \newcommand{\MPI}{{\packagefont MPI}}
+\newcommand{\OpenMPI}{{\packagefont OpenMPI}}
+\newcommand{\MPICH}{{\packagefont MPICH}}
+\newcommand{\IntelMPI}{{\packagefont Intel MPI}}
 \newcommand{\SQLite}{{\packagefont SQLite}}
 \newcommand{\MacPorts}{{\packagefont MacPorts}}
 \newcommand{\Homebrew}{{\packagefont Homebrew}}
 \newcommand{\Graphviz}{{\packagefont Graphviz}}
 \newcommand{\Mathematica}{{\packagefont Mathematica}}
 \newcommand{\Maple}{{\packagefont Maple}}
+\newcommand{\CLion}{{\packagefont CLion}}
+\newcommand{\DataGrip}{{\packagefont DataGrip}}
+\newcommand{\Sqliteman}{{\packagefont Sqliteman}}
+\newcommand{\DBeaver}{{\packagefont DBeaver}}
 
 \newcommand{\Boost}{{\packagefont Boost}}
 \newcommand{\odeint}{{\packagefont odeint}}
@@ -217,6 +233,19 @@
     breakbytoken=true
 }
 
+\setminted[sql]{
+    autogobble=true,
+    fontfamily=tt,
+    bgcolor=magenta!5,
+    fontseries=l,
+    fontsize=\scriptsize,
+    frame=none,
+    linenos=true,
+    xleftmargin=0.05\linewidth,
+    style=tango,
+    breaklines=true,
+    breakbytoken=true
+}
 \setmintedinline{fontsize=\footnotesize}
 
 \begin{document}
@@ -847,11 +876,11 @@ to coordinate parallel calculations.
 A suitable implementation must therefore be installed.
 Any standards-compliant choice should work,
 including
-\href{https://www.open-mpi.org}{\packagefont OpenMPI},
-\href{https://www.mpich.org}{\packagefont MPICH}
+\href{https://www.open-mpi.org}{\OpenMPI},
+\href{https://www.mpich.org}{\MPICH}
 (or its derivatives)
 or the
-\href{https://software.intel.com/en-us/intel-mpi-library}{\packagefont Intel MPI} libraries.
+\href{https://software.intel.com/en-us/intel-mpi-library}{\IntelMPI} libraries.
 
 \item \semibold{The Boost {\CC} libraries.}
 {\CppTransport} uses
@@ -991,7 +1020,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
     \end{minted}
     (Note that the combination
     \mintinline{bash}{boost +openmpi} is a single item and instructs
-    {\MacPorts} to install the Boost libraries using {\packagefont OpenMPI}
+    {\MacPorts} to install the Boost libraries using {\OpenMPI}
     as the {\MPI} implementation.)
     Each of these packages has further dependencies which {\MacPorts}
     will download and install automatically.
@@ -1009,7 +1038,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
     \begin{minted}{bash}
         sudo port select --set mpi openmpi-mp-fortran    
     \end{minted}
-    This selects {\packagefont OpenMPI} as the default {\MPI}
+    This selects {\OpenMPI} as the default {\MPI}
     implementation,
     which will enable {\CppTransport} to find its libraries
     while it is being built.
@@ -1044,8 +1073,35 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
 
 \end{itemize}
 
+\subsubsection{Installing dependencies in Ubuntu 16.04}
+Most Linux distributions will include packages for all
+{\CppTransport} dependencies. For illustration we describe the process for
+Ubuntu 16.04, but the process will be nearly unchanged for any
+Debian-based distribution.
 
-\subsubsection{Installing dependencies on Ubuntu}
+From a terminal, issue the command:
+\begin{minted}{bash}
+    sudo apt-get install libsqlite3-dev libboost-all-dev libginac-dev libopenmpi-dev cmake python-matplotlib python-seaborn graphviz git texlive texlive-latex-extra texlive-fonts-recommended
+\end{minted}
+This will download and install all required packages and their dependencies.
+Depending what is already available on your machine, this may be a sizeable
+download and could take some time.
+The large \mintinline{bash}{texlive} dependencies are needed only if you plan to
+use {\LaTeX} typesetting with {\Matplotlib}.
+
+Ubuntu provides a tool called ubuntu-make which can conveniently
+\href{https://wiki.ubuntu.com/ubuntu-make}{install
+development platforms} and their dependencies.
+Although alternatives exist, you may wish to investigate the
+\href{https://www.jetbrains.com/clion/}{\CLion}
+and
+\href{https://www.jetbrains.com/datagrip/}{\DataGrip}
+platforms which are available through ubuntu-make.
+These are commercial products, but free licenses are available
+to researchers with an academic email address.
+In particular, {\DataGrip} is a good candidate
+for a tool to manage or interrogate the SQL databases which
+{\CppTransport} produces.
 
 \subsection{Building the translator}
 \label{sec:build-translator}
@@ -1933,9 +1989,9 @@ Some of these perform simple housekeeping functions:
     \item \option{{-}{-}license} \\
     Display licensing information.
     
-    \item \option{{-}{-}no-colour} \\
+    \item \option{{-}{-}no-colour} or \option{{-}{-}no-color} \\
     Do not produce colourized output. {\CppTransport} will normally detect
-    the type of terminal under which it is running, and will adjust its
+    the type of terminal in which it is running and adjust its
     output formatting appropriately. Where colour is available, it is used
     to add clarity.
     However, if you are redirecting its output to a file
@@ -2486,7 +2542,7 @@ This code involves the following steps:
         process and arranges for them to be carried out.
         
         The task manager class is called
-        \mintinline{c++}{task_manager}.
+        \mintinline{c++}{task_manager<>}.
         It shares a common feature with most other {\CppTransport}
         components:
         it lives inside the namespace
@@ -2514,7 +2570,7 @@ This code involves the following steps:
         \emph{Advanced usage}
         panel on p.\pageref{advanced:data-type}.
         
-        The \mintinline{c++}{task_manager} constructor requires the
+        The \mintinline{c++}{task_manager<>} constructor requires the
         arguments \mintinline{c++}{argc} and \mintinline{c++}{argv}
         provided to \mintinline{c++}{main()}.
         It will process these internally.
@@ -2529,10 +2585,10 @@ This code involves the following steps:
         called \mintinline{c++}{tag_mpi}
         if we use the \file{canonical\_mpi} template.
         For us this will be \mintinline{c++}{dquad_mpi}.
-        Like \mintinline{c++}{task_manager} its name should be followed
+        Like \mintinline{c++}{task_manager<>} its name should be followed
         by angle brackets \mintinline{c++}{<>}.
         
-        To create the instance we use the \mintinline{c++}{task_manager} method
+        To create the instance we use the \mintinline{c++}{task_manager<>} method
         \mintinline{c++}{create_model()}.
         This is a templated method which requires the name of the
         instance class to be provided between angle brackets;
@@ -2582,7 +2638,7 @@ which will be explained in \S\ref{} below.
 \begin{advanced}{Custom integration data types}
     \label{advanced:data-type}
     Like most {\CppTransport} components,
-    \mintinline{c++}{task_manager}
+    \mintinline{c++}{task_manager<>}
     is a \semibold{template class}. This is indicated by the
     angle brackets
     \mintinline{c++}{<>} following the object name.
@@ -2904,79 +2960,101 @@ function correctly by trying the following invocations:
 \end{minted}
 
 \subsection{Adding an integration task}
-To make the executable \file{dquad} useful we must add an integration task.
+\label{sec:add-integration-task}
+To make the executable \file{dquad} useful we must add tasks to generate
+$n$-point functions, and also tasks to convert these raw $n$-point
+functions into observables.
 This is done by using the task manager's
 \mintinline{c++}{add_generator()}
-method to inform it that this executable is capable of
-generating tasks.
-This method takes one argument, which should be a callable
-object which accepts a reference to
+method to inform it that the executable includes specifications
+for some number of
+tasks.
+The \mintinline{c++}{add_generator()}
+method takes one argument, which should be a callable
+object accepting a reference to
 a \mintinline{c++}{transport::repository<>}
 object as its single argument.
 {\CppTransport} stores all information about
 initial conditions, parameter choices, tasks,
 derived products and any generated content
 in disk-based databases called \emph{repositories}.
-The \mintinline{c++}{repository} class manages
-these databases and provides their services to other
+The \mintinline{c++}{repository<>} class manages
+these databases and offers related services
+to other
 {\CppTransport} components.
 
-The \mintinline{c++}{add_generator} method accepts any callable,
-such as a \mintinline{c++}{std::function<>} object.
-If you are not familiar with constructing callable objects
-then the simplest option is to construct a class
-which provides a call operator.
-For the double-quadratic model this would take the form
-\begin{minted}{c++}
-	class write_task
-	  {
-	  public:
-	    write_task(transport::dquad_mpi<>* m) : model(m) {}
-	
-	  public:
-	    void operator()(transport::repository<>& repo);
-	
-	  private:
-	    transport::dquad_mpi<>* model;
-	  };	
-\end{minted}
-This declaration should be inserted above
-\mintinline{c++}{main()}.
-The \mintinline{c++}{write_task} constructor
-expects to be passed a pointer to a model instance, which
-will be the model used to construct any tasks which it generates.
+The first step is always to build some number of integration tasks,
+because all other tasks depend on the $n$-point functions that they compute.
+In this section we illustrate the steps required to build, store and
+execute a collection of integration tasks.
 
-With this declaration in place we should now call
-\mintinline{c++}{add_generator()} with a
-\mintinline{c++}{write_task} instance.
-This is done by inserting the lines
+If you are not familiar with constructing callable objects
+then a simple option is to use the {\CC}11 \emph{lambda} feature.
+This is a shorthand way to notate functions.
+First,  declare a function
+\mintinline{c++}{write_tasks()} which accepts
+two arguments:
+a \mintinline{c++}{repository<>} and a model pointer:
+\begin{minted}{c++}
+    void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* m);
+\end{minted}
+This function should be registered using the
+\mintinline{c++}{add_generator()} method,
+by inserting the lines
 \begin{minted}{c++}
     // register task writer
-    mgr.add_generator(write_task(model.get()));
+    mgr.add_generator([=](transport::repository<>& repo) -> void { write_tasks(repo, model.get()); });
 \end{minted}
 immediately prior to the call to
 \mintinline{c++}{mgr.process()}.
+\begin{advanced}{Callable objects}
+    The \mintinline{c++}{add_generator()} method accepts any callable,
+    such as a \mintinline{c++}{std::function<>} object.
+    It is not necessary to lambdas
+    if a different solution is preferable.
+    For example, it is also possible supply an instance of any
+    class which provides a call operator
+    \mintinline{c++}{operator()}.
+\end{advanced}
+
+In this implementation, the argument of \mintinline{c++}{add_generator()}
+is the function
+\begin{center}
+    \mintinline{c++}{[=](transport::repository<>& repo) -> void { write_tasks(repo, model.get()); }}
+\end{center}
+This is a lambda expression. It represents an object which behaves as a callable function,
+taking a single \mintinline{c++}{repository<>} as an argument.
+The function body is the code enclosed by braces
+\mintinline{c++}{{ ... }}.
+It calls the function \mintinline{c++}{write_tasks()},
+passing on the \mintinline{c++}{repository<>} object
+given as its own argument
+and using the raw model pointer obtained from
+\mintinline{c++}{model.get()}.
+For the meaning of the prefix
+\mintinline{c++}{[=]},
+\href{http://en.cppreference.com/w/cpp/language/lambda}{see here}.
 
 \para{Building a task}
-The final step is to use the \mintinline{c++}{operator()} method of
-\mintinline{c++}{write_task} to construct an integration task
-and write it into the repository.
+The final step is to provide a definition
+for \mintinline{c++}{write_tasks()}.
+This should construct the integration tasks we want, and store them
+in the \mintinline{c++}{repository<>} object it is passed.
 
 Integration tasks package together all the information needed
-to perform a computation of the 2- or 3-point functions
-in a specific model.
+to perform a computation of the 2- or 3-point functions.
 This includes:
 \begin{itemize}
-	\item details of the model itself, identified
+	\item details of the model to be used, identified
 	through the pointer to the model instance
-	passed to the \mintinline{c++}{write_task} constructor
+	passed to \mintinline{c++}{write_tasks()}
 	
-	\item specific choices for any parameters
+	\item a choice for any parameters
 	used in the Lagrangian,
 	and a value for the Planck mass $\Mp$
 	
-	\item specific choices for the initial values of the background
-	fields (and their derivatives)
+	\item a choice for the initial values of the background
+	fields (and optionally their derivatives)
 	
 	\item fixed start and end times for the integration, and a mesh
 	of sample points between these times where samples will be recorded
@@ -2989,7 +3067,8 @@ This includes:
 \end{itemize}
 In addition, {\CppTransport} provides various options for customizing an
 integration---for example, by changing the way initial conditions are handled.
-These options are also recorded in the integration task.
+These options will be described in~\S\ref{sec:int-options}
+and are recorded as part of the integration task.
 
 \para{Specifying parameters}
 We work with the double-quadratic model as an example.
@@ -3025,8 +3104,8 @@ With our choices we can construct a suitable parameter package using:
 	    transport::parameters<> params(Mp, {Mphi, Mchi}, model);	
 	  }
 \end{minted}
-To aid readability it is a good idea to use named temporary variables
-which give meaning to numbers which are quoted directly.
+To aid readability it can be helpful to use named temporary variables
+that give meaning to numbers which are quoted directly.
 We could have achieved the same effect by writing
 the single-line construction
 \begin{minted}{c++}
@@ -3035,7 +3114,7 @@ the single-line construction
 but it would then be more difficult to identify the meaning of the
 numbers.
 
-If it is more convenient
+If it is more convenient,
 the parameter list can be specified using any suitable iterable
 container, such as
 \mintinline{c++}{std::vector<double>}
@@ -3072,19 +3151,20 @@ In an $N$-field model this list can contain either exactly $N$ or exactly $2N$ v
 	\item if $2N$ values are given, these are interpreted as $N$ initial
 	conditions for the background fields $\phi^\alpha$
 	(in the same order they were declared) followed by $N$ initial conditions
-	for their derivatives $\d \phi^\alpha / \d N$.
+	for their derivatives $\d \phi^\alpha / \d N$ (in the same order as the fields).
 	Here, $\d N = H \, \d t$ is a derivative with respect to e-folding number.
 \end{itemize}
 As for \mintinline{c++}{parameters},
 the value list can be specified using any suitable container or by
-quoting it directly using an initialization list.
+quoting it directly as an initialization list.
 If a number of values other than $N$ or $2N$ is given then
 {\CppTransport} will raise
 a \mintinline{c++}{std::out_of_range} exception.
 
-In addition, the package
-requires information about where these
-initial conditions are intended to apply.
+In addition, the initial conditions package
+should include
+information about the time during inflation when these
+initial field values are intended to apply.
 This information can be specified in two ways:
 \begin{itemize}
 	\item as an initial time $\Ninit$ (specified in e-folds)
@@ -3093,8 +3173,8 @@ This information can be specified in two ways:
 	scale $\kstar$ (at time $\Nstar$) which is used as a reference.
 	
 	\item as an initial time $\Nzero$
-	together with the horizon-crossing
-	time for $\kstar$ (at $N=\Nstar$),
+	together with the horizon-crossing $\Nstar$
+	associated with $\kstar$,
 	and the desired number of e-folds $\Npre$
 	from $\Ninit$ to $\Nstar$.
 	This amounts to moving a set of initial conditions specified
@@ -3103,8 +3183,8 @@ This information can be specified in two ways:
 	
 	This version can be used to `settle' a set of field-only
 	initial conditions onto the true dynamical attractor.
-	If the slow-roll approximation is a reasonable approximation
-	near the initial time, then {\CppTransport}'s estimate
+	If the slow-roll approximation holds to reasonable accuracy
+	near the initial time then {\CppTransport}'s estimate
 	of the field derivatives will normally be quite accurate.
 	Nevertheless, there will be a period of adjustment while the
 	numerical solution relaxes.
@@ -3114,8 +3194,8 @@ This information can be specified in two ways:
 	If adaptive initial conditions are in use (this is normally the recommended configuration---see~\S\ref{})
 	then a customized initial condition will be computed for
 	each $n$-point function.
-	Provided $\Ninit$ is sufficiently early, the customization
-	procedure will allow the initial conditions to relax onto
+	Provided $\Ninit$ is sufficiently early, this customization
+	will automatically allow the initial conditions to relax onto
 	the dynamical attractor.
 	Manual settling is normally required only if
 	$\Ninit$ if very close to the initial time for
@@ -3124,7 +3204,9 @@ This information can be specified in two ways:
 \end{itemize}
 For the purposes of illustration we will
 set initial conditions for the double quadratic model
-at $\phi = 10 \Mp$ and $\chi = 12.9 \Mp$.
+at $\phi = 10 \Mp$ and $\chi = 12.9 \Mp$
+and allow {\CppTransport} to infer
+values for the field derivatives.
 We take the initial time to be $N=0$
 (this is just a convention; any other value of $N$ could be used)
 and set $\Nstar$ to occur at $N=12$.
@@ -3155,11 +3237,13 @@ corresponding to $\Nzero$, $\Nstar$ and $\Npre$.
 The remaining task is to set up a series of sample points, both for
 time and wavenumber configuration.
 To assist in doing so, {\CppTransport} provides a mechanism
-to construct arbitrary ranges with either
-linear or logarithmic spacing
-The building block
-is a class called
-\mintinline{c++}{transport::basic_range<>}. This has the basic syntax
+to construct arbitrary meshes which are unions
+of ranges built using
+linear or logarithmic spacing.
+The building blocks of these meshes
+are objects of type
+\mintinline{c++}{transport::basic_range<>}. The constructor for
+this object has the form
 \begin{center}
     \mintinline{c++}{transport::basic_range<>(lo, hi, N, spacing);}    
 \end{center}
@@ -3181,11 +3265,11 @@ The parameter \mintinline{c++}{spacing} should be one of:
     \item \mintinline{c++}{transport::spacing::log_top}: the sample points are
     logarithmically spaced from the top of the interval
 \end{itemize}
-For any spacing type, if $N=0$ the range consists of a single
+If $N=0$ the range consists of a single
 value equal to \mintinline{c++}{lo}.
 
 Any number of \mintinline{c++}{basic_range<>} ranges can be
-added to produce a composite range.
+composed to produce a composite range.
 This produces an object of type
 \mintinline{c++}{aggregate_range<>}.
 If \mintinline{c++}{A}, \mintinline{c++}{B}, \mintinline{c++}{C}
@@ -3207,7 +3291,9 @@ It is also possible to construct an empty
 \mintinline{c++}{aggregate_range<>} by passing no arguments to its
 constructor.
 Often it assists readability to use the \mintinline{c++}{auto} type specifier,
-which allows the compiler to deduce the appropriate type.
+which informs the compiler that it should deduce an appropriate type
+for the given assignment.
+
 The ability to construct arbitrary meshes
 makes it possible to sample certain regions densely and others
 sparsely. For example, it is possible to sample densely
@@ -3216,7 +3302,7 @@ which exhibit sharp features
 while sampling sparsely elsewhere to keep the overall data volume
 manageable.
 
-For time sample, a sensible starting point is to sample linearly
+For time sampling, a sensible starting point is to sample linearly
 in $N$
 to get a sense of how the correlation functions evolve.
 Later, the sample mesh can be refined if required.
@@ -3243,17 +3329,22 @@ and maximum values of $N$,
 
 \para{Selecting a mesh of wavenumber samples}
 Building a mesh of wavenumber samples is similar.
-For the two-point function, a wavenumber configuration is fixed simply
+For the two-point function, a wavenumber configuration is fixed
 by the magnitude $k$.
 A set of samples can therefore be specified by a range
 (possibly a composite, as above).
-The wavenumber $k=1$ is defined to exit the horizon at the time
-$N = \Nstar$
-fixed by the initial conditions package.
+The wavenumber $k=1$ is \emph{defined} to exit the horizon at time
+$N = \Nstar$,
+as determined by the initial conditions package.
+{\CppTransport} refers to wavenumbers normalized in this way as
+\emph{conventionally normalized}. When producing derived products
+it is possible to measure wavenumbers using a number of different
+normalizations, as will be explained in~\S\ref{}.
+
 If $H$ is nearly constant then a general wavenumber $k$ will exit the
-horizon approximately at time $N = \Nstar + \ln k$.
-This is usually a good rule-of-thumb when deciding what range $k$ cover
-a given range of e-folds.
+horizon roughly when $N = \Nstar + \ln k$.
+This is a good rule-of-thumb when attempting to build a range
+of $k$ that covers a given range of e-folds.
 (When constructing a mesh of $k$s
 it is often useful to make use of the logarithmic spacing option
 in \mintinline{c++}{basic_range<>}.)
@@ -3261,7 +3352,7 @@ However, {\CppTransport} does \emph{not}
 assume that $H$ is constant; it
 calculates the horizon-exit time of each wavenumber exactly.
 
-To begin, we will construct a range of wavenumbers which
+To begin, we will construct a range of wavenumbers that
 sample horizon exit times between approximately
 $\Nstar + 3.0$
 and
@@ -3276,24 +3367,31 @@ $\Nstar + 9.0$:
 \para{Building 2- and 3-point function integration tasks}
 With all of these elements in place, we can proceed to build
 integration tasks.
-{\CppTransport} offers two options.
-Although it will compute the 3-point function, doing so is expensive
-and wasteful if it is not required.
-Therefore the first option is to compute the 2-point function
-alone.
-This is represented by an object of type
+Currently, {\CppTransport} offers two options.
+While the integration
+engine can compute the 3-point function for any model,
+this calculation is expensive.
+If the 3-point function is not required
+(perhaps only a power-spectrum analysis is contemplated)
+then it is much faster to omit it.
+A task which computes \emph{only} the two-point function
+is represented by an object of type
 \mintinline{c++}{transport::twopf_task<>}:
 \begin{minted}{c++}
     transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
+    tk2.set_description("Compute time history of the 2-point function from k ~ e^3 to k ~ e^9");
 \end{minted}
-The constructor requires a name, an initial conditions package,
+Its constructor requires a name, an initial conditions package,
 a range representing the time sample points,
 and a range representing the wavenumber samples.
+Setting a description is optional, but provides a convenient way to document
+choices including the time- and wavenumber-sampling strategy.
 
 Alternatively, if we wish to compute the 3-point function,
 a suitable task can be built using
 \begin{minted}{c++}
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
+    tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9")
 \end{minted}
 This will sample the three-point function on a cubic lattice
 $(k_1, k_2, k_3)$ built from the Cartesian product
@@ -3302,17 +3400,540 @@ $(k_1, k_2, k_3)$ built from the Cartesian product
 \mintinline{c++}{ks},
 after filtering out configurations which do not correspond to
 a physical triangle.
-This is only one way to construct a 3-point function task;
-there are many other options, which will be described fully in the next
-section.
+Note that
+this is only one way to construct a 3-point function task.
+There are other ways to specify the wavenumber configurations
+to be sampled, including use the
+Fergusson--Shellard $(k_t, \alpha, \beta)$ parameters.
+It is also possible to adjust the default
+policies which determine which configurations
+are regarded as physical triangles and whether all
+configurations produced by the Cartesian product should
+be retained for integration.
+These features (and others) are described in~\S\ref{sec:threepf-options}.
 
-\subsection{Committing tasks to the database}
+To commit these tasks to the repository we use the
+\mintinline{c++}{commit()} method:
+\begin{minted}{c++}
+    repo.commit(tk2);
+    repo.commit(tk3);    
+\end{minted}
+
+\subsection{Running tasks}
+The executable will build at this point, enabling us to experiment
+with creating repositories and running integration tasks.
+The source code, as described above, is available from the
+website \url{http://transportmethod.com} as
+\file{dquad\_A.cpp}.
+If the {\CMake} build directory was previously
+configured correctly then there should be no need
+to reconfigure.
+To build, it is sufficient to execute
+\mintinline{bash}{make}.
+
+\subsubsection{Running executables under MPI and creating a repository}
+The \file{dquad} executable can be invoked like any compiled object, by
+passing its name to the shell.
+Doing so without other arguments
+will result in {\CppTransport} printing the error message
+`Nothing to do: no repository specified'.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.7]{Diagrams/repo}   
+    \end{center}
+    \caption{\label{fig:repo-layout}Disk layout of a repository. The node
+    labelled \emph{Repository directory} is the root directory whose name
+    is passed to each {\CppTransport} executable.}
+\end{figure}
+
+\para{Repositories}
+In order to carry out practical work it is necessary to specify a repository,
+using the command line switch
+\option{{-}{-}repo} or its abbreviation \option{-r}.
+A repository
+is a disk-based database managed by {\CppTransport},
+distributed over a files in a predefined directory structure.
+The specified repository
+may already exist,
+but if not a suitable directory layout will be created;
+see Fig.~\ref{fig:repo-layout}.
+The \emph{repository directory} is the name passed
+as the argument of \option{{-}{-}repo}.
+This directory contains up to four items:
+\begin{itemize}
+    \item \file{database.sqlite}. The is a SQLite database
+    that contains summary information describing the relationship between
+    all items in the database---%
+    initial conditions packages, tasks, derived products and generated
+    content.
+    The database does not contain full information about these objects;
+    this information is stored as
+    \href{http://www.json.org}{JSON-format documents}
+    elsewhere in the repository, in order that the information they contain
+    is not hidden should it need to be recovered (or processed electronically)
+    without {\CppTransport}.
+    
+    In addition, \file{database.sqlite} stores information about jobs which
+    are currently running on the repository. This assists in automatically
+    recovering data should there be a crash.
+    
+    \item \file{repository}. This is a directory containing the JSON documents
+    that describe each repository object in detail.
+    
+    \item \file{output}. Output generated by tasks is placed in this folder.
+    For a task named \emph{TaskName}, {\CppTransport} will generated a subdirectory
+    also called \file{TaskName}.
+    All content generated by \emph{TaskName}
+    is placed in timestamped folders within this subdirectory.
+    
+    \item \file{failed}. If an error is encountered while generating output
+    from a task, the log files and other content are placed within this folder
+    for inspection.
+    The organization is the same as for \file{output}.
+\end{itemize}
+The folders \file{output} and \file{failed}
+are created only when needed. A freshly-created repository will contain only
+\file{database.sqlite} and \file{repository}.
+
+The \file{repository} folder contains further subfolders. As has been explained,
+these house the JSON documents for each repository record.%
+    \footnote{If necessary these can be edited by hand, although this practice
+    is not recommended because it loses most of the advantages of a managed
+    repository.}
+\begin{itemize}
+    \item \file{output}. Records describing each group of content generated
+    by a task are stored in this folder
+    in the format \file{ContentName.json}.
+    
+    \item \file{packages}. Contains records describing each initial conditions
+    package. A package named \emph{PackageName} is stored as
+    \file{PackageName.json}.
+    
+    \item \file{products}. Contains records describing each derived product.
+    A product name \emph{ProductName} is stored as
+    \file{ProductName.json}.
+    
+    \item \file{tasks}. Stores records describing each task
+    \emph{TaskName} as \file{TaskName.json}.
+    For integration tasks, this JSON document is accompanied by a
+    SQLite database with filename
+    \file{TaskName.kconfig-db.sqlite}
+    storing the list of 2- and 3-point wavenumber configurations to be
+    sampled, together with
+    pre-computed information such as the corresponding time of horizon exit.
+\end{itemize}
+Repositories collect groups of related data products, ensuring that their
+provenance is properly documented and that individual products do not become
+orphaned. For example,
+plots do not become separated from the datasets that were
+used to produce them, and
+computations of observables do not become separated from the raw $n$-point functions
+and inflationary initial conditions on which they depend.
+
+At the same time, repositories are intended to be a lightweight concept.
+{\CppTransport} allows repositories to be created at will, and does not impose
+limitations on their use.
+At one extreme, it would be possible to write all integration tasks,
+and all generated content, into the same repository.
+This is probably not a good choice, partly because reporting on the
+repository (see \S\ref{}) will take a long time as the repository
+becomes large.
+At the other extreme, every {\CppTransport} job could create a new
+repository.
+In practice this is a reasonable strategy---%
+especially if used in conjunction with the facility to attach notes
+to repository records,
+which
+can be used to document
+an evolving series of integrations.
+
+\para{Launching {\CppTransport} using MPI}
+If using a {\CppTransport} executable to create or
+interrogate a repository, it can be launched as described above
+in the same way as any other executable.
+But to execute a task, {\CppTransport} expects to be run as a group
+of related processes communicating within a managed {\MPI}
+environment.
+To carry out a task requires at least two processes,
+but the task manager will make use of as many as are available.
+
+To launch a {\CppTransport} executable under {\MPI},
+use the following command:
+\begin{minted}{bash}
+    mpiexec -n 4 dquad --verbose --repo test-repo --create
+\end{minted}
+Replace the argument
+\mintinline{bash}{-n 4} to \mintinline{bash}{mpiexec}
+by the number of processes you wish to launch;
+for running tasks it must be $\geq 2$.
+It is seldom worth launching more processes than
+there are physical cores to run them on,
+except for some 
+products which support two
+threads per core.
+Intel calls this technology \emph{hyperthreading}
+and it is available on certain i7 and Xeon
+processors.
+%At the time of writing there is no equivalent AMD
+%technology.
+Such processors generally
+identify themselves to the operating system with
+two times their
+physical core count.
+Therefore, normally,
+it is safe to use whatever number of
+cores is reported by your machine.
+In OS X, check Activity Monitor.
+In Linux the Gnome System Monitor or equivalent performs
+the same job.
+
+In a cluster environment the argument
+supplied to
+\mintinline{bash}{-n} should match the number of
+cores you request.
+For example, an Open Grid Scheduler-like job submission
+script requesting 36 cores
+managed under {\OpenMPI}
+might include the lines
+\begin{minted}{bash}
+#$ -pe openmpi 36
+mpiexec -n 36 ...
+\end{minted}
+
+\subsubsection{Examining the repository wavenumber configuration databases}
+If the \mintinline{bash}{mpiexec} command given above succeeded,
+{\CppTransport} will have created a repository called
+\file{test-repo} in your current working directory.
+The switch
+\option{{-}{-}create} instructs it
+to write any available tasks and derived products
+into the repository by calling each object
+registered with \mintinline{c++}{add_generator()}.
+For the example of double-quadratic inflation this is the
+function \mintinline{c++}{write_tasks()} described
+in~\S\ref{sec:add-integration-task}.
+The \option{{-}{-}create} option should be used only
+once, the first time that task information needs to be
+written to the repository.
+If an attempt is made to commit a second task with the
+same name as an existing task
+then {\CppTransport} will report an error.
+
+If verbose output is enabled using the switch
+\option{{-}{-}verbose}
+or
+\option{-v}
+then the constructors of
+\mintinline{c++}{twopf_task<>}
+and \mintinline{c++}{threepf_cubic_task<>}
+will print brief summary information about the
+tasks that have been constructed.
+The constructor for \mintinline{c++}{tk2}
+should print
+\begin{minted}[bgcolor=blue!10]{text}
+    dquad.twopf
+    2pf configs: 51            Smallest k: 20.1           
+    Largest k: 8.10e+03        Earliest N_exit: N*+3.118  
+    Latest N_exit: N*+9.492    Inflation ends: N=67.78
+\end{minted}
+The information given is:
+\begin{enumerate}
+    \item the number of 2-point function configurations, here
+    equal to 51 because the
+    \mintinline{c++}{basic_range<>} object \mintinline{c++}{ts}
+    was constructed with $N=50$ and therefore contains $N+1 = 51$
+    points
+    
+    \item the smallest conventionally-normalized wavenumber sampled by
+    the task, here
+    $k = 20.1 \approx \e{3}$.
+    
+    \item the largest conventionally-normalized wavenumber sampled by
+    the task, here
+    $k = 8.10 \times 10^3 \approx \e{9}$.
+    
+    \item the earliest horizon exit time, relative to the distinguished
+    time $\Nstar$. This will correspond to the smallest wavenumber,
+    which is the largest physical scale.
+    Here, that horizon exit time is $\approx 3.118$ e-folds after
+    $\Nstar$.
+    This is approximately what we expect from a mode with
+    $k = \e{3}$, but shows already that
+    the estimate $\Nexit \approx \Nstar + \ln k$
+    is accurate only to a few percent.
+    
+    \item the latest horizon exit time, corresponding to the largest
+    wavenumber or smallest physical scale.
+    In this case, the error in the na\"{\i}ve estimate
+    $\Nexit \approx \Nstar + \ln k$ has grown to $\sim 5\%$.
+    Generally these estimates will become worse as the horizon
+    exit time becomes farther from $\Nstar$.
+    
+    \item the time when inflation ends, if {\CppTransport}
+    could detect it. By default, {\CppTransport} will search for
+    1000 e-folds from the initial time
+    and attempt to find the point where $\epsilon \equiv - \dot{H}/H^2 = 1$.
+    If it does not find such a point within the 1000 e-fold search window
+    then it will issue a warning, but this does not prevent
+    successful calculation of the $n$-point functions.
+\end{enumerate}
+The constructor for \mintinline{c++}{tk3}
+prints similar information, with the addition of the
+number of bispectrum configurations that will be sampled:
+\begin{minted}[bgcolor=blue!10]{text}
+    dquad.threepf
+    2pf configs: 51            3pf configs: 3188          
+    Smallest k: 20.1           Largest k: 8.10e+03        
+    Earliest N_exit: N*+3.118  Latest N_exit: N*+9.492    
+    Inflation ends: N=67.78
+\end{minted}
+
+For tasks that sample the 3-point function it is frequently
+useful to inspect the list of wavenumber configurations that will
+be computed.
+There are two ways to do this.
+The simplest, suitable for tasks which do not sample
+too many configurations, is to run a HTML report
+on the repository.
+This writes details of the tasks into an easily browsable
+HTML document.
+The second option is slightly less simple but
+better suited to tasks which sample a large number of configurations.
+The list of sample points is written into SQLite databases
+held in the \file{repository/tasks} directory,
+and
+these can be inspected directly using a suitable tool.
+
+\para{Option 1: examine configurations using a HTML report}
+This option is generally preferred if the task samples
+less than 5000 configurations.
+The HTML report generator does not
+include a wavenumber listing for
+tasks with more than 5000 wavenumber configurations
+because it makes the report too large: HTML is not the best
+way to examine such a large database.
+
+To produce a report for the \file{repo-test}
+repository that has just been created,
+execute
+\begin{minted}{bash}
+    ./dquad --repo test-repo --html test-report    
+\end{minted}
+This will create a report in the directory
+\file{test-report}.
+In a desktop environment the report can usually
+be viewed by opening the file
+\file{test-report/index.html}, for example by a double-click.
+The report is divided into a number of tabs, most of which will
+be disabled at this stage because
+the repository contains only integration tasks---there are no
+tasks of other types, or any generated content.
+However, it should be possible to see
+details of the
+\repoobject{dquad}
+initial conditions package under the `Packages' tab,
+and the
+\repoobject{dquad.twopf} and
+\repoobject{dquad.threepf}
+tasks under the `Integration tasks' tab.
+The report for each task will include
+the number of 2- and 3-point wavenumber configurations
+that are to be sampled.
+Next to this number is a link labelled
+`show'.
+Clicking this link will display an overlay
+listing the wavenumber configurations as a table;
+see Fig.~\ref{fig:threepf-config-report}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.45]{Screenshots/threepf-config-report}    
+    \end{center}
+    \caption{\label{fig:threepf-config-report}Viewing the sampled 3-point function
+    wavenumber configurations in a HTML report.}
+\end{figure}
+
+The drop-down menu in the top left can be used to adjust
+the number of configurations displayed per page,
+and the
+position indicator in the bottom right can be used
+to move through the available pages.
+Clicking the arrows in the table header
+will sort the table in ascending or descending order
+on the corresponding column.
+The information displayed for both
+configurations of the 2- and 3-point functions
+(`2pf configurations' and `3pf configurations') is:
+\begin{itemize}
+    \item \semibold{Serial.} This is a unique serial number identifying
+    the configuration.
+    
+    \item \semibold{Wavenumber $k$.} For configurations of the 2-point function this is
+    the conventionally-normalized magnitude $k$.
+    For configurations of the 3-point function it is the
+    conventionally-normalized
+    value of $k_t = k_1 + k_2 + k_3$,
+    which is the perimeter of the triangle formed by the momenta
+    $\vect{k}_1$, $\vect{k}_2$, $\vect{k}_3$.
+    
+    \item \semibold{Horizon-exit time $\texit$.}
+    For 2pf configurations this is the time
+    (measured in e-folds)
+    when $\kcom = aH$.
+    Here, $\kcom$ is a \emph{comoving} wavenumber.
+    Comoving wavenumbers are computed from conventionally-normalized
+    wavenumbers by adjusting their normalization so that
+    the conventional wavenumber $k=1$
+    satisfies $\kcom = \astar \Hstar$
+    at time $\Nstar$.
+    For 3pf configurations
+    there is no unique concept of horizon exit time
+    because the wavenumber associated with each side
+    of the momentum triangle can exit at different times.
+    The time reported as $\texit$ is the average time in the
+    sense $k_t = aH$, where here $k_t$ is comoving-normalized.
+    
+    \item \semibold{Massless time $\tmassless$.}
+    In order to apply suitable initial conditions,
+    {\CppTransport} computes
+    a \emph{massless time} $\tmassless$ for each 2pf configuration.
+    This is defined to be the time when
+    $(k/a)^2 = M^2$ where $M^2$ is the largest eigenvalue of the mass
+    matrix $M_{\alpha\beta}$,
+    or the time of horizon exit if it is earlier.
+    
+    For 2pf configurations the quoted time is the massless time
+    computed according to this prescription.
+    For 3pf configurations it is the earliest massless time
+    associated with the individual wavenumbers
+    $\vect{k}_1$, $\vect{k}_2$, $\vect{k}_3$.
+    This is used when determining where to set initial conditions
+    for a 3pf configuration.
+\end{itemize}
+In addition, the table of 3pf configurations includes some extra columns:
+\begin{itemize}
+    \item \semibold{Shape parameters $\alpha$, $\beta$.}
+    Sometimes it is useful to measure the shape of the momentum triangle
+    using the parameters $\alpha$, $\beta$ introduced by
+    Fergusson \& Shellard~\cite{Fergusson:2006pr}.
+    They are defined by
+    \begin{equation}
+    \begin{split}
+        \alpha & = \frac{2(k_1 - k_2)}{k_t} \\        
+        \beta & = 1 - \frac{2k_3}{k_t} .
+    \end{split}
+    \end{equation}
+    These values are reported for each configuration.
+    
+    \item \semibold{Side lengths $k_1$, $k_2$, $k_3$.}
+    The comoving side lengths are also reported.
+\end{itemize}
+
+\para{Option 2: inspect the SQLite databases directly}
+If the table of sample configurations is large, or if
+there is a requirement to inspect subsets of the list,
+it is better to view the table in a dedicated SQL
+database management tool.
+Many such tools exist.
+The simpler tools are intended to manage only {\SQLite}
+databases.
+\href{http://sqliteman.yarpen.cz}{\Sqliteman}
+is an example of this type.
+It is packaged with Ubuntu, and can be installed on OS X
+using {\MacPorts} or {\Homebrew}.
+More complex tools are capable of managing many different
+types of database, and these are often more powerful
+at the expensive of a more complex user interface.
+The free tool
+\href{http://dbeaver.jkiss.org}{\DBeaver} is an example
+in this category.
+Another is
+\href{https://www.jetbrains.com/datagrip/}{\DataGrip};
+this is a commercial product, but free licenses are available to
+academic users.
+
+The wavenumber configuration databases can be found in the
+directory \file{repository/tasks}
+within the repository.
+The database for a task named \emph{TaskName} is
+\file{TaskName.kconfig-db.sqlite}.
+Opening this file in a database manager
+will reveal
+a table named
+\mintinline{sql}{twopf_kconfig}
+for a task sampling only the 2-point function,
+and two tables
+named
+\mintinline{sql}{twopf_kconfig}
+and
+\mintinline{sql}{threepf_kconfig}
+for a task which also samples the 3-point function.
+These tables list the data described above, in addition
+to some columns which are not displayed in the HTML table.
+First, each wavenumber $k$ or $k_t$ is listed twice with
+conventional and comoving normalizations.
+Second, there are extra columns with names
+beginning \mintinline{sql}{store_}.
+These are used internally by {\CppTransport} and can be
+ignored.
+
+For 3pf configurations, the table is normalized in the sense
+that the $k_1$, $k_2$, $k_3$ side lengths are not included
+directly but refer to the serial number of the corresponding entry
+in the 2pf configuration table.
+This helps to ensure that the database remains internally
+self-consistent.
+To display a table which lists the side lengths explicitly
+requires an SQL query:
+\begin{minted}{sql}
+    SELECT
+      threepf_kconfig.serial          AS serial,
+      threepf_kconfig.kt_conventional AS kt_conventional,
+      threepf_kconfig.alpha           AS alpha,
+      threepf_kconfig.beta            AS beta,
+      threepf_kconfig.t_exit_kt       AS t_exit_kt,
+      w1.conventional                 AS k1_conventional,
+      w2.conventional                 AS k2_conventional,
+      w3.conventional                 AS k3_conventional,
+      threepf_kconfig.t_exit_kt       AS kt_exit_kt,
+      threepf_kconfig.t_massless      AS t_massless
+    FROM threepf_kconfig
+      INNER JOIN twopf_kconfig AS w1 ON w1.serial = threepf_kconfig.wavenumber1
+      INNER JOIN twopf_kconfig AS w2 ON w2.serial = threepf_kconfig.wavenumber2
+      INNER JOIN twopf_kconfig AS w3 ON w3.serial = threepf_kconfig.wavenumber3
+    ORDER BY serial;    
+\end{minted}
+
+\subsubsection{Launch tasks from the command line}
+If the set of 3pf sample configurations has been constructed correctly
+the next step is to ask {\CppTransport} to carry out the tasks.
+A {\CppTransport} executable can be instructed to
+perform as many tasks as are desired,
+in which case it will perform them sequentially.
+To launch it with 4 processes, carrying out both the
+\repoobject{dquad.twopf} and
+\repoobject{dquad.threepf} tasks, we would use
+\begin{minted}{bash}
+    mpiexec -n 4 dquad -r test-repo --task dquad.twopf --task dquad.threepf    
+\end{minted}
+While the job is in progress, executing the command
+\begin{minted}{bash}
+    ./dquad -r test-repo --inflight    
+\end{minted}
+will show details of the tasks being processed:
+\begin{minted}[bgcolor=blue!10]{text}
+    In-flight content:
+    Name             Task         Type                      Initiated  Duration  Cores  Completion
+    20160504T120048  dquad.twopf  integration    2016-May-04 12:00:48       50s      4          --
+\end{minted}
+
 
 \section{Options for integration tasks}
+\label{sec:int-options}
 
 \subsection{General options}
 
 \subsection{Three-point function tasks}
+\label{sec:threepf-options}
 
 \section{Adding postintegration tasks}
 

@@ -1,0 +1,53 @@
+digraph
+  {
+
+    overlap=false;
+    bgcolor="transparent";
+
+    root [label="Repository directory",shape=box,style="rounded,filled",fillcolor="#FFE0FF",fontname="Helvetica",fontsize=10];
+
+    db [label="database.sqlite",shape=box,style="rounded,filled",fillcolor="#D0D7F6",fontname="Helvetica",fontsize=10];
+    repository [label="repository",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+    outputfolder [label="output",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+    failfolder [label="failed",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+
+    output [label="output",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+    packages [label="packages",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+    products [label="products",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+    tasks [label="tasks",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+
+    content [label="ContentName.json",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+    package [label="PackageName.json",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+    product [label="ProductName.json",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+    taskjson [label="TaskName.json",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10]
+    taskdb [label="TaskName.kconfig-db.sqlite",shape=box,style="rounded,filled",fillcolor="#D0D7F6",fontname="Helvetica",fontsize=10];
+
+    taskname [label="TaskName",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+    contentname [label="ContentName",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+
+    failtask [label="TaskName",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+    failcontent [label="ContentName",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10];
+
+    root -> db [dir=none];
+    root -> repository [dir=none];
+    root -> outputfolder [dir=none]
+    root -> failfolder [dir=none]
+
+    repository -> output [dir=none];
+    repository -> packages [dir=none];
+    repository -> products [dir=none];
+    repository -> tasks [dir=none];
+
+    output -> content [dir=none];
+    packages -> package [dir=none];
+    products -> product [dir=none];
+    tasks -> taskjson [dir=none];
+    tasks -> taskdb [dir=none];
+
+    outputfolder -> taskname [dir=none];
+    taskname -> contentname [dir=none];
+
+    failfolder -> failtask [dir=none];
+    failtask -> failcontent [dir=none];
+
+  }

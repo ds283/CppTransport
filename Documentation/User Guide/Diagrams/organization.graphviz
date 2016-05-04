@@ -1,6 +1,7 @@
 digraph
   {
 
+    overlap=false;
     bgcolor="transparent";
 
     subgraph cluster_user
