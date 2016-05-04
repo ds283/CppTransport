@@ -296,8 +296,8 @@ namespace transport
                     sqlite_str    = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
                     gp->seed_group = std::string(sqlite_str);
 
-                    gp->is_collecting_ics   = static_cast<bool>(sqlite3_column_int(stmt, 9));
-                    gp->is_collecting_stats = static_cast<bool>(sqlite3_column_int(stmt, 10));
+                    gp->is_collecting_stats = static_cast<bool>(sqlite3_column_int(stmt, 9));
+                    gp->is_collecting_ics   = static_cast<bool>(sqlite3_column_int(stmt, 10));
 
                     groups.insert(std::make_pair(gp->content_group, std::move(gp)));
                   }
