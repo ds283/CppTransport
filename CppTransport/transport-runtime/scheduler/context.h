@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __context_H_
-#define __context_H_
+#ifndef CPPTRANSPORT_CONTEXT_H
+#define CPPTRANSPORT_CONTEXT_H
 
 
 #include <assert.h>
@@ -134,4 +134,4 @@ namespace transport
   } // namespace transport
 
 
-#endif //__context_H_
+#endif //CPPTRANSPORT_CONTEXT_H
