@@ -96,7 +96,11 @@ inline std::string format_number(double number, unsigned int precision=3)
   {
     std::ostringstream out;
 
-    if(std::abs(number) > 1E3 || std::abs(number) < 1E-3)
+    double abs_number = std::abs(number);
+
+    // use scientific notation for large or small numbers, unless
+    // the number is exactly zero
+    if(abs_number != 0.0 && (std::abs(number) > 1E3 || std::abs(number) < 1E-3))
       {
         out << std::scientific;
         if(precision > 0) --precision;    // in scientific format, precision means number of decimal digits
