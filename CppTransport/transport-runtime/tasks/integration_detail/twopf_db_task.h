@@ -61,8 +61,9 @@ namespace transport
         class TolerancePredicate
           {
           public:
-            TolerancePredicate(double t)
-              : tol(t)
+            TolerancePredicate(std::string n, double t)
+              : name(std::move(n)),
+                tol(t)
               {
               }
 
@@ -77,26 +78,41 @@ namespace transport
 
                 assert(!std::isinf(frac));
                 assert(!std::isnan(frac));
-                if(std::isinf(frac)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_INF);
-                if(std::isnan(frac)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_NAN);
+
+                // check for invalid results
+                if(std::isinf(frac))
+                  {
+                    std::ostringstream msg;
+                    msg << "'" << name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_INF;
+                    throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+                  }
+                if(std::isnan(frac))
+                  {
+                    std::ostringstream msg;
+                    msg << "'" << name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_NAN;
+                    throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+                  }
 
                 return(std::abs(frac));
               }
 
           private:
             double tol;
+            std::string name;
           };
 
 
         template <typename SplineObject, typename TolerancePolicy>
-        double find_zero_of_spline(SplineObject& sp, TolerancePolicy& tol)
+        double find_zero_of_spline(const std::string& task_name, std::string bracket_error, SplineObject& sp, TolerancePolicy& tol)
           {
             // find root; note use of std::ref, because root finder would normally would take a copy of
             // its system function and this is slow -- we have to copy the whole spline
             assert(sp(sp.get_min_x()) * sp(sp.get_max_x()) < 0.0);
             if(sp(sp.get_min_x()) * sp(sp.get_max_x()) >= 0.0)
               {
-                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET);
+                std::ostringstream msg;
+                msg << "'" << task_name << "': " << bracket_error;
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
 
             boost::uintmax_t max_iter = CPPTRANSPORT_MAX_ITERATIONS;
@@ -116,21 +132,38 @@ namespace transport
             assert(!std::isinf(result.first) && !std::isinf(result.second));
             assert(!std::isnan(result.first) && !std::isnan(result.second));
 
+            // check for invalid return conditions
+
+            // maximum number of iterations exceeded? if so, result need not be accurate
             if(max_iter >= CPPTRANSPORT_MAX_ITERATIONS)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS << "=" << max_iter << "]";
+                msg << "'" << task_name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS << "=" << max_iter << "]";
                 throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
 
-            if(std::isinf(result.first) || std::isinf(result.second)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_INF);
-            if(std::isnan(result.first) || std::isnan(result.second)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_NAN);
+            // infinity returned?
+            if(std::isinf(result.first) || std::isinf(result.second))
+              {
+                std::ostringstream msg;
+                msg << "'" << task_name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_INF;
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+              }
 
+            // NaN returned?
+            if(std::isnan(result.first) || std::isnan(result.second))
+              {
+                std::ostringstream msg;
+                msg << "'" << task_name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_NAN;
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+              }
+
+            // check root is accurate enough
             assert(std::abs(sp(res)) < CPPTRANSPORT_ROOT_FIND_ACCURACY);
             if(std::abs(sp(res)) >= CPPTRANSPORT_ROOT_FIND_ACCURACY)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ZERO_EQ << "=" << sp(res) << "]";
+                msg << "'" << task_name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ZERO_EQ << "=" << sp(res) << "]";
                 throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
 
@@ -533,21 +566,59 @@ namespace transport
             if(t->t_massless < earliest_tmassless) earliest_tmassless = t->t_massless;
 	        }
 
-        if(earliest_required < this->get_N_initial())
+        // check for inconsistent configurations or warn about potentially dangerous scenarios, as needed
+        // first, earliest t_massless should be > time of initial conditions
+        // this has to be true otherwise we would have failed to compute t_massless for some configurations
+        // and therefore wouldn't have reached this point
+        if(earliest_tmassless < this->get_N_initial())
           {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
-              << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_VALIDATE_INCONSISTENT;
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        if(!this->adaptive_ics && earliest_tmassless - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+        if(adaptive_ics)
           {
-            std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
-              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
-              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C;
-            this->get_model()->warn(msg.str());
+            // is earliest required time earlier than time of initial conditions?
+            // this can only occur with adaptive_ics; in other cases, the earliest required
+            // time is always the initial time anyway
+            // if
+            if(earliest_required < this->get_N_initial())
+              {
+                std::ostringstream msg;
+                msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << format_number(this->adaptive_efolds, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << format_number(earliest_required, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_C << format_number(this->get_N_initial(), 4);
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            // does the initial time allow for 'settling'?
+            // if unsure, issue warning
+            if(earliest_required - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_SETTLE_EFOLDS)
+              {
+                std::ostringstream msg;
+                msg << "'" << this->get_name() << ": " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << format_number(this->adaptive_efolds, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << format_number(earliest_required, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_A << " " << format_number(earliest_required - this->get_N_initial(), 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_B;
+                this->get_model()->warn(msg.str());
+              }
+          }
+        else
+          {
+            // if no adaptive initial conditions, then need only check that earliest t_massless gives sufficient
+            // number of massless e-folds
+
+            // note concept of 'settling' doesn't really exist in this case; we have to assume that the initial conditions
+            // are already 'settled', perhaps by using initial_conditions<> to offset them when they were set up
+            if(earliest_tmassless - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+              {
+                std::ostringstream msg;
+                msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << format_number(earliest_tmassless, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << format_number(earliest_tmassless - this->get_N_initial(), 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C;
+                this->get_model()->warn(msg.str());
+              }
           }
       }
 
@@ -657,7 +728,7 @@ namespace transport
             spline1d<number> log_aH_sp(N, log_aH);
             spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
-            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -678,7 +749,7 @@ namespace transport
 		        log_aH.set_offset(log(t->k_comoving));
 
             // update database with computed horizon exit time
-		        t->t_exit = task_impl::find_zero_of_spline(log_aH, tol);
+		        t->t_exit = task_impl::find_zero_of_spline(this->name, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_EXIT, log_aH, tol);
             t->t_massless = this->compute_t_massless(*t, t->t_exit, log_a2H2M, tol);
 			    }
 			}
@@ -713,7 +784,7 @@ namespace transport
             // mass matrix becomes relevant some time before horizon exit
 
             log_a2H2M.set_offset(2.0*log_k);
-            t_massless = task_impl::find_zero_of_spline(log_a2H2M, tol);
+            t_massless = task_impl::find_zero_of_spline(this->name, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_MASSLESS, log_a2H2M, tol);
             log_a2H2M.set_offset(0.0);
           }
         else if(!light_at_init && light_at_exit)
@@ -765,15 +836,11 @@ namespace transport
 
         if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() < std::log(xe.get_largest_k()))
           {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL;
-            this->get_model()->warn(msg.str());
+            this->get_model()->warn(CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL);
           }
         else if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() > std::log(xe.get_largest_k()))
           {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL;
-            this->get_model()->warn(msg.str());
+            this->get_model()->warn(CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL);
           }
       }
 

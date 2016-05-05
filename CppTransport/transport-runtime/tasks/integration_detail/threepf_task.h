@@ -341,10 +341,10 @@ namespace transport
             // forward to underlying twopf_db_task to update its database;
             // should be done *before* computing horizon exit times for threepfs, so that horizon exit & massless times
             // for the corresponding twopfs are known
-            this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
 
             // compute horizon exit times & massless times for threepf configuraitons
-            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -364,7 +364,7 @@ namespace transport
 		        sp.set_offset(std::log(t->kt_comoving/3.0));
 
             // update database record with computed exit time
-            t->t_exit = task_impl::find_zero_of_spline(sp, tol);
+            t->t_exit = task_impl::find_zero_of_spline(this->name, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_EXIT, sp, tol);
 
             // determine massless time from pre-computed massless times of corresponding twopf database
             twopf_kconfig_database::record_iterator rec1;
