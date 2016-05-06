@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __batching_traits_H_
-#define __batching_traits_H_
+#ifndef CPPTRANSPORT_BATCHING_TRAITS_H
+#define CPPTRANSPORT_BATCHING_TRAITS_H
 
 
 #include "transport-runtime/sqlite3/operations/data_manager_common.h"
@@ -89,6 +89,12 @@ namespace transport
             static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_THREEPF_DERIV_DATATAB_FAIL); }
             static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
             static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_THREEPF_DERIV_COPY); }
+          };
+
+
+        template<typename number> struct data_traits<number, typename integration_items<number>::configuration_statistics>
+          {
+            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_STATS_TABLE); }
           };
 
 
@@ -196,4 +202,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__batching_traits_H_
+#endif //CPPTRANSPORT_BATCHING_TRAITS_H

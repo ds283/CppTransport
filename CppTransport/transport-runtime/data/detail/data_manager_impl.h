@@ -250,8 +250,8 @@ namespace transport
             writer.set_missing_serials(total_serials, tk->get_twopf_database());
 
             // ensure all tables are consistent
-            this->drop_twopf_re_configurations(mgr, writer, total_serials, tk->get_twopf_database());
-            this->drop_tensor_twopf_configurations(mgr, writer, total_serials, tk->get_twopf_database());
+            this->drop_twopf_re_configurations(mgr, writer, total_serials, twopf_serials, tk->get_twopf_database());
+            this->drop_tensor_twopf_configurations(mgr, writer, total_serials, tensor_serials, tk->get_twopf_database());
             if(writer.is_collecting_statistics()) this->drop_statistics_configurations(mgr, writer, total_serials, tk->get_twopf_database());
             if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, total_serials, tk->get_twopf_database());
           }
@@ -323,8 +323,8 @@ namespace transport
             writer.set_missing_serials(threepf_total_serials, tk->get_threepf_database());
 
             // ensure all threepf-indexed tables are consistent
-            this->drop_threepf_momentum_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_threepf_deriv_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_threepf_momentum_configurations(mgr, writer, threepf_total_serials, threepf_momentum_serials, tk->get_threepf_database());
+            this->drop_threepf_deriv_configurations(mgr, writer, threepf_total_serials, threepf_deriv_serials, tk->get_threepf_database());
             if(writer.is_collecting_statistics())         this->drop_statistics_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
             if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
 
@@ -332,9 +332,9 @@ namespace transport
             std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
 
             // ensure all twopf-indexed tables are consistent
-            this->drop_twopf_re_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
-            this->drop_twopf_im_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
-            this->drop_tensor_twopf_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
+            this->drop_twopf_re_configurations(mgr, writer, twopf_drop, twopf_re_serials, tk->get_twopf_database());
+            this->drop_twopf_im_configurations(mgr, writer, twopf_drop, twopf_im_serials, tk->get_twopf_database());
+            this->drop_tensor_twopf_configurations(mgr, writer, twopf_drop, tensor_serials, tk->get_twopf_database());
           }
 
         mgr.commit();
@@ -387,8 +387,8 @@ namespace transport
             writer.set_missing_serials(total_serials, tk->get_twopf_database());
 
             // ensure all tables are consistent
-            this->drop_zeta_twopf_configurations(mgr, writer, total_serials, tk->get_twopf_database());
-            this->drop_gauge_xfm1_configurations(mgr, writer, total_serials, tk->get_twopf_database());
+            this->drop_zeta_twopf_configurations(mgr, writer, total_serials, twopf_serials, tk->get_twopf_database());
+            this->drop_gauge_xfm1_configurations(mgr, writer, total_serials, xfm1_serials, tk->get_twopf_database());
           }
 
         mgr.commit();
@@ -462,17 +462,17 @@ namespace transport
             writer.set_missing_serials(threepf_total_serials, tk->get_threepf_database());
 
             // ensure all threepf-indexed tables are consistent
-            this->drop_zeta_threepf_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_123_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_213_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_312_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_zeta_threepf_configurations(mgr, writer, threepf_total_serials, threepf_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_123_configurations(mgr, writer, threepf_total_serials, gauge_xfm2_123_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_213_configurations(mgr, writer, threepf_total_serials, gauge_xfm2_213_serials, tk->get_threepf_database());
+            this->drop_gauge_xfm2_312_configurations(mgr, writer, threepf_total_serials, gauge_xfm2_312_serials, tk->get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
             std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
 
             // ensure all twopf-indexed tables are consistent
-            this->drop_zeta_twopf_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
-            this->drop_gauge_xfm1_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
+            this->drop_zeta_twopf_configurations(mgr, writer, twopf_drop, twopf_serials, tk->get_twopf_database());
+            this->drop_gauge_xfm1_configurations(mgr, writer, twopf_drop, gauge_xfm1_serials, tk->get_twopf_database());
           }
 
         mgr.commit();

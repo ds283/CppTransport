@@ -88,6 +88,16 @@ namespace transport
 			    }
 
 
+        template <typename number, typename ValueType>
+        std::set<unsigned int> get_stored_serials(sqlite3* db)
+          {
+            std::ostringstream find_stmt;
+
+            find_stmt << "SELECT DISTINCT(kserial) FROM " << data_traits<number, ValueType>::sqlite_table() << " ORDER BY kserial;";
+            return integrity_detail::get_serials(db, find_stmt.str());
+          };
+
+
         namespace integrity_detail
 	        {
 

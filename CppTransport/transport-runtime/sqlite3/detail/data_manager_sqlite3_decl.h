@@ -305,45 +305,71 @@ namespace transport
         // DROP GROUPS OF SERIAL NUMBERS
 
         //! drop a set of k-configurations from a twopf-re table; should be provided by implementation
-        virtual void drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                  const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                  const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a twopf-im table; should be provided by implementation
-        virtual void drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                  const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                  const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a tensor twopf table; should be provided by implementation
-        virtual void drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                      const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a threepf-momentum table; should be provided by implementation
-        virtual void drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer,
+                                                          const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                          const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a threepf-deriv table; should be provided by implementation
-        virtual void drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer,
+                                                       const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                       const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a zeta twopf table; should be provided by implementation
-        virtual void drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                    const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
-        virtual void drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                      const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a 1st-order gauge xfm table; should be provided by implementation
-        virtual void drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                    const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 123-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 213-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 312-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) override;
 
         //! drop statistics for a set of k-configurations
-        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
-        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
         //! drop initial conditions for a set of k-configurations
-        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
-        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                            const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                            const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
 
         friend class sqlite3_twopf_writer_integrity<number>;
