@@ -779,9 +779,11 @@ of languages.
 To assist in understanding the context of each code block, its background
 is colour-coded according to the language:
 \begin{itemize}
-	\item Shell input, blue background: \mintinline{bash}{export PATH=/usr/local/bin:$PATH}
+	\item Shell input or output, blue background: \mintinline{bash}{export PATH=/usr/local/bin:$PATH}
 	\item Configuration files, green background: \mintinline{text}{input = /usr/local/share/cpptransport}
 	\item {\CC} files, yellow background: \mintinline{c++}{class dquad_mpi;}
+	\item {\CMake} scripts, olive background: \mintinline{cmake}{TARGET_LINK_LIBRARIES()}
+	\item SQL code, magenta background: \mintinline{sql}{SELECT * FROM}
 \end{itemize}
 
 \section{Installation}
@@ -4057,7 +4059,7 @@ If any tasks are still in flight then \option{{-}{-}status} will
 additionally display the
 same information shown by \option{{-}{-}inflight}.
 
-\subsection{What happens when an integration task is in progress}
+\subsection{What happens while an integration task is in progress}
 Now let us consider what happened while each integration task was in progress.
 Out the outset, when {\CppTransport} comes to process each new task,
 it acquires a unique content group name derived from the current time.
@@ -4583,21 +4585,24 @@ Clicking it toggles a set of summary plots.
 \end{figure}
 
 \subsubsection{Generating a Gantt chart of worker activity}
+\label{sec:gantt}
 The integration report shows how the intrinsic computation cost scales
-with configuration, and helps identify regions where it is cheap to add
-configurations by comparison with other regions where configurations are
-expensive.
+with configuration, and helps identify regions where it is cheap or
+expensive to add
+configurations.
 These scalings are set partly by general properties of any inflationary phase,
 partly by detailed microphysical interactions
 determined by each specific model,
 and partly by the integration scheme and its use of `transport' or evolution
 equations.
 
-These intrinsic scalings comprise part of the numerical efficiency of the algorithm.
-The other part is determined by how effectively the master process is able to
+These intrinsic scalings are one component
+of the overall numerical efficiency achieved by {\CppTransport}.
+The remaining component is determined by how effectively the master process is able to
 feed tasks to its workers.
 {\CppTransport} tries to adjust its scheduling strategy to respond to environmental
-pressures, but this may not be successful.
+pressures. It is frequently successful, but under some circumstances the master
+process may become overwhelmed.
 For this reason it can be useful to check
 what the workers are doing, and in particular whether progress is being
 inhibited by stalls.
@@ -4622,16 +4627,97 @@ the figure width if the timeline is too compressed for easy reading.
 An example chart for the
 \repoobject{dquad.threepf} task is shown in Fig.~\ref{fig:gantt}.
 
-\para{Avoiding stalls}
-{\CppTransport} makes default choices which usually prevent significant stalling.
+If more detail is required then {\CppTransport} can produce an activity
+journal in JSON format using the
+\option{{-}{-}journal} command-line argument.
+It accepts a single parameter which is interpreted as the filename of the
+output journal.
+To use the journal for practical analysis it will probably be necessary
+to write a custom code which parses each record and generates a suitable output.
 
-\label{sec:gantt}
+\para{Avoiding stalls}
+{\CppTransport} makes default choices which usually prevent significant stalls.
+Stalls are more likely in the following circumstances:
+\begin{itemize}
+    \item if the main data container \file{data.sqlite} becomes very large.
+    Exactly how large is `large' can depend on the filing system and
+    physical properties of the storage medium.
+    However, as a guide, testing has shown that
+    database insertions with {\SQLite}
+    may begin slow down for container sizes $\gtrsim 20 \Gb$.
+    If insertions are slow, then each aggregation performed by the master
+    process will also be slow.
+    This can mean that worker processes are left waiting
+    for new work.
+    
+    To mitigate this effect, {\CppTransport} monitors how long is spent
+    performing aggregations and adjusts the amount of work it offers
+    to each worker.
+    Initially it will attempt to allocate $60\second$ of work,
+    but if aggregations are taking a long time
+    it will try to allocate \emph{up to}
+    ten times the current mean aggregation time.%
+        \footnote{In practice it may allocate less work in order to balance the
+        number of work items assigned to each worker process.}
+    This is intended to prevent the workers continually having to wait for
+    new work, but increases the risk that the allocation becomes unbalanced
+    in the sense that some workers run out of work items while other workers
+    still have a long queue.
+    
+    This slowdown is a tradeoff based on use of the {\SQLite} database manager.%
+        \footnote{It will also depend on the current database schema.
+        It is possible that
+        future versions of {\CppTransport} may be able to use a more
+        efficient schema.}
+    It could be adjusted in at least two ways. First, instead of the embedded
+    {\SQLite} manager, {\CppTransport} could be modified to use an out-of-process
+    manager such as MySQL or PostgreSQL.
+    Under some circumstances (but not always) these might offer more
+    performance than {\SQLite}.
+    However,
+    use a separate database server process
+    would make installation and deployment of {\CppTransport} more complex.
+    Also, relocating repositories would become nontrivial because the
+    corresponding databases would need migration
+    from one database server to another.
+    
+    Alternatively, it is possible to abandon the use of an SQL database entirely
+    and use a format such as \href{https://www.hdfgroup.org/HDF5/}{HDF5}.
+    This would be significantly faster than any SQL database, but also significantly
+    more difficult to use---in particular,
+    data analysis would need to be performed using
+    purpose-written code rather than SQL queries and CSV files,
+    because HDF5 is mostly searchable only via an API.
+    
+    The current implementation retains the advantages of
+    powerful SQL queries and easily-portable single-file databases,
+    and should be suitable for most users.
+    It should simply be borne in mind that as an increasing number of
+    wavenumber configurations are sampled,
+    one should decrease the number of time samples.
+    Using this strategy it is normally possible to keep database sizes in check.
+    For example, Ref.~\cite{Byrnes:2015dub} used a version of {\CppTransport}
+    to sample roughly $5 \times 10^6$ bispectrum configurations
+    in a two-field model.
+    Retaining only a single time-sample point gave very good database performance and
+    a $\sim 9 \Gb$ file.
+    Of course, the required storage would increase in a model with more fields.
+    
+    \item if a large number of workers are used with a slow filing system.
+    Using many workers will generate a large number of aggregation requests,
+    and if the filing system is too slow these can overwhelm the master process.
+    To mitigate this it may be possible to increase the buffer size, generating
+    fewer aggregation requests. 
+    Otherwise, at present, contention from multiple workers often sets a
+    an effective upper limit on the number of worker processes that can be used in
+    practice.
+\end{itemize}
 \begin{figure}
     \begin{center}
         \includegraphics[scale=0.5]{Outputs/gantt}    
     \end{center}
     \caption{\label{fig:gantt}Gantt chart
-    generated by {\CppTransport} \option{{-}{-}gantt} option,
+    generated by {\CppTransport}'s \option{{-}{-}gantt} option,
     showing worker activity
     for the task \repoobject{dquad.threepf}
     and \option{{-}{-}checkpoint 1}.
@@ -4644,6 +4730,24 @@ An example chart for the
     with checking integrity and performing routine maintenance.}
 \end{figure}
 
+\subsection{Using the {\SQLite} data container}
+In~\S\S\ref{sec:post-integration-tasks}--\ref{sec:derived-products}
+we will consider post-integration tasks and show how they can be used
+to generate observables from the raw $n$-point functions produced by
+an integration task.
+In many cases the facilities offered by these
+tasks will be quite sufficient to carry out a
+standard analysis of an inflationary model.
+However, in some circumstances, a nonstandard observable may be
+needed.
+In this case it is necessary to extract data for the raw $n$-point functions.
+Another reason for needing this data is simply that you may
+wish to produce your own customized plots.
+
+This data has to be retrieved from the main {\SQLite} container
+\file{data.sqlite}
+associated with each content group.
+
 
 \section{Options for integration tasks}
 \label{sec:int-options}
@@ -4654,8 +4758,10 @@ An example chart for the
 \label{sec:threepf-options}
 
 \section{Adding postintegration tasks}
+\label{sec:post-integration-tasks}
 
 \section{Generating derived products using output tasks}
+\label{sec:derived-products}
 
 \section{Conclusions} 
 
