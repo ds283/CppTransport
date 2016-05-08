@@ -972,15 +972,15 @@ namespace transport
 								switch((*t)->get_type())
 									{
 								    case slave_work_event::event_type::integration_aggregation:
-									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "red"));
+									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "green"));
                       break;
 
 								    case slave_work_event::event_type::postintegration_aggregation:
-									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "green"));
+									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "red"));
 									    break;
 
                     case slave_work_event::event_type::derived_content_aggregation:
-									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "orchid"));
+									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "yellow"));
 									    break;
 
 								    default:
