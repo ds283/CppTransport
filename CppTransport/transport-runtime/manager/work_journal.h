@@ -253,7 +253,7 @@ namespace transport
 				double size       = bar_height/3.0;
 				double bar_pad    = 0.1*env.height();
 
-				insn << env.axes_object() << ".plot([" << time_label.str() << "], [" << y+bar_pad+bar_height/2.0 << "], marker='D')";
+				insn << env.axes_object() << ".plot([" << time_label.str() << "], [" << y+bar_pad+bar_height/2.0 << "], marker='D', mfc='" << this->colour << "', mec='black')";
 
 				return(insn.str());
 			}
@@ -973,7 +973,7 @@ namespace transport
 									{
 								    case slave_work_event::event_type::integration_aggregation:
 									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "red"));
-												break;
+                      break;
 
 								    case slave_work_event::event_type::postintegration_aggregation:
 									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "green"));
@@ -1047,10 +1047,15 @@ namespace transport
         plot_env.write_environment(out);
 
 				out << "import matplotlib.dates as mdt" << '\n';
+        out << "import matplotlib.patches as patches" << '\n';
+        out << "from matplotlib import rcParams" << '\n';
 				out << "import datetime as dt" << '\n';
 				out << "import dateutil.parser" << '\n';
+        out << "rcParams['legend.numpoints'] = 1" << '\n';
 
-				out << "fig = plt.figure()" << '\n';
+        // height is 3" + 0.5" for each bar
+        double height = 3.0 + 0.5*bars_list.size();
+				out << "fig = plt.figure(figsize=(13," << height << "))" << '\n';
 				out << "ax = plt.gca()" << '\n';
 
 				Gantt_environment gantt_env("ax", "mdt", "dt", "dateutil.parser", 1.0);
@@ -1117,6 +1122,26 @@ namespace transport
 
 				out << "ax.invert_yaxis()" << '\n';
 				out << "fig.autofmt_xdate()" << '\n';
+
+        // add legend
+        out << "aggregate = patches.Patch(color='black', label='Aggregation')" << '\n'
+            << "MPI_master = patches.Patch(color='darkgoldenrod', label='MPI activity')" << '\n'
+            << "database = patches.Patch(color='aquamarine', label='Database activity')" << '\n'
+            << "twopf_task = patches.Patch(color='red', label='2pf task')" << '\n'
+            << "threepf_task = patches.Patch(color='orangered', label='3pf task')" << '\n'
+            << "zeta_twopf_task = patches.Patch(color='green', label='$\\zeta$ 2pf task')" << '\n'
+            << "zeta_threepf_task = patches.Patch(color='limegreen', label='$\\zeta$ 3pf task')" << '\n'
+            << "fNL_task = patches.Patch(color='royalblue', label='$f_{NL}$ task')" << '\n'
+            << "output_task = patches.Patch(color='orchid', label='Output task')" << '\n'
+            << "i_aggregation_event = plt.Line2D((0,1),(0,0), mfc='red', marker='D', mec='black', linestyle='', label='Push integration')" << '\n'
+            << "p_aggregation_event = plt.Line2D((0,1),(0,0), mfc='green', marker='D', mec='black', linestyle='', label='Push postintegration')" << '\n'
+            << "c_aggregation_event = plt.Line2D((0,1),(0,0), mfc='orchid', marker='D', mec='black', linestyle='', label='Push output')" << '\n'
+            << "plt.legend(frameon=False,bbox_to_anchor=(1.05, 1),loc=2,borderaxespad=0.0,handles=[aggregate,MPI_master,database,twopf_task,threepf_task,zeta_twopf_task,zeta_threepf_task,fNL_task,output_task,i_aggregation_event,p_aggregation_event,c_aggregation_event])"  << '\n';
+
+        out << "box = ax.get_position()" << '\n'
+            << "ax.set_position([box.x0, box.y0, 0.8*box.width, box.height])" << '\n';
+
+        // determine what to do based on file extension
 				if(out_file.extension() != ".py")
 					{
 				    out << "plt.savefig(" << out_file << ")" << '\n';
