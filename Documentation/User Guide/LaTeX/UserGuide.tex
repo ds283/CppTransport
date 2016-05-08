@@ -63,7 +63,7 @@
 
 \newcommand{\kcom}{k_{\text{com}}}
 
-\newcommand{\repoobject}[1]{{\sffamily\fontseries{scb}\selectfont #1}}
+\newcommand{\repoobject}[1]{{\ttfamily\bfseries\small #1}}
 
 %\newcommand{\packagefont}{\fontfamily{lmtt}\selectfont\fontseries{l}\selectfont}
 %\newcommand{\packagefont}{\sffamily\fontseries{sbc}\selectfont}
@@ -127,12 +127,13 @@
 \newcommand{\block}[1]{\mintinline{text}{#1}}
 \newcommand{\attribute}[1]{\mintinline{text}{#1}}
 \newcommand{\descfile}[1]{\mintinline{text}{#1}}
-\newcommand{\option}[1]{\texttt{\textbf{#1}}}
+\newcommand{\option}[1]{{\ttfamily\bfseries\small #1}}
 \newcommand{\token}[1]{{\footnotesize\color{orange}\texttt{\textbf{{\$}#1}}}}
 \newcommand{\indexset}[1]{{\footnotesize\color{orange}\texttt{\textbf{[#1]}}}}
 
 \newcommand{\Gb}{\,\mathrm{Gb}}
 \newcommand{\Mb}{\,\mathrm{Mb}}
+\newcommand{\second}{\,\mathrm{s}}
 
 \DeclareMathOperator{\TimeOrder}{T}
 \newcommand{\AntiTimeOrder}{\bar{\TimeOrder}}
@@ -3379,6 +3380,7 @@ is represented by an object of type
 \mintinline{c++}{transport::twopf_task<>}:
 \begin{minted}{c++}
     transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
+    tk2.set_adaptive_ics_efolds(4.0);
     tk2.set_description("Compute time history of the 2-point function from k ~ e^3 to k ~ e^9");
 \end{minted}
 Its constructor requires a name, an initial conditions package,
@@ -3386,11 +3388,15 @@ a range representing the time sample points,
 and a range representing the wavenumber samples.
 Setting a description is optional, but provides a convenient way to document
 choices including the time- and wavenumber-sampling strategy.
+The meaning of the
+\mintinline{c++}{set_adaptive_ics_efolds()}
+method will be explained in~\S\ref{} below.
 
 Alternatively, if we wish to compute the 3-point function,
 a suitable task can be built using
 \begin{minted}{c++}
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
+    tk3.set_adaptive_ics_efolds(4.0);
     tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9")
 \end{minted}
 This will sample the three-point function on a cubic lattice
@@ -3457,6 +3463,9 @@ The specified repository
 may already exist,
 but if not a suitable directory layout will be created;
 see Fig.~\ref{fig:repo-layout}.
+Once created,
+repositories are relocatable and can be moved to different filing-system
+locations after creation, or even to a different machine.
 The \emph{repository directory} is the name passed
 as the argument of \option{{-}{-}repo}.
 This directory contains up to four items:
@@ -3540,7 +3549,7 @@ repository (see \S\ref{}) will take a long time as the repository
 becomes large.
 At the other extreme, every {\CppTransport} job could create a new
 repository.
-In practice this is a reasonable strategy---%
+This strategy can work well in practice---%
 especially if used in conjunction with the facility to attach notes
 to repository records,
 which
@@ -3601,6 +3610,7 @@ mpiexec -n 36 ...
 \end{minted}
 
 \subsubsection{Examining the repository wavenumber configuration databases}
+\label{sec:examine-k-database}
 If the \mintinline{bash}{mpiexec} command given above succeeded,
 {\CppTransport} will have created a repository called
 \file{test-repo} in your current working directory.
@@ -3693,9 +3703,9 @@ useful to inspect the list of wavenumber configurations that will
 be computed.
 There are two ways to do this.
 The simplest, suitable for tasks which do not sample
-too many configurations, is to run a HTML report
+too many configurations, is to run an HTML report
 on the repository.
-This writes details of the tasks into an easily browsable
+This writes details of the tasks into an easily-browsable
 HTML document.
 The second option is slightly less simple but
 better suited to tasks which sample a large number of configurations.
@@ -3704,7 +3714,7 @@ held in the \file{repository/tasks} directory,
 and
 these can be inspected directly using a suitable tool.
 
-\para{Option 1: examine configurations using a HTML report}
+\para{Option 1: examine configurations using an HTML report}
 This option is generally preferred if the task samples
 less than 5000 configurations.
 The HTML report generator does not
@@ -3749,7 +3759,7 @@ see Fig.~\ref{fig:threepf-config-report}.
         \includegraphics[scale=0.45]{Screenshots/threepf-config-report}    
     \end{center}
     \caption{\label{fig:threepf-config-report}Viewing the sampled 3-point function
-    wavenumber configurations in a HTML report.}
+    wavenumber configurations in an HTML report.}
 \end{figure}
 
 The drop-down menu in the top left can be used to adjust
@@ -3792,6 +3802,17 @@ configurations of the 2- and 3-point functions
     The time reported as $\texit$ is the average time in the
     sense $k_t = aH$, where here $k_t$ is comoving-normalized.
     
+    If {\CppTransport} is unable to compute the horizon exit
+    time for all configurations
+    (presumably because for at least one configuration it occurs
+    \emph{before} the initial time) it will issue an error:
+    \begin{minted}[bgcolor=blue!10]{text}
+        dquad.twopf: extreme values of N did not bracket time of horizon exit; check whether range of N contains horizon exit times for all configurations
+    \end{minted}
+    To fix this it is usually necessary to move the initial time earlier
+    while keeping the horizon exit time of the longest mode constant,
+    or vice versa.
+
     \item \semibold{Massless time $\tmassless$.}
     In order to apply suitable initial conditions,
     {\CppTransport} computes
@@ -3808,6 +3829,13 @@ configurations of the 2- and 3-point functions
     $\vect{k}_1$, $\vect{k}_2$, $\vect{k}_3$.
     This is used when determining where to set initial conditions
     for a 3pf configuration.
+    
+    If {\CppTransport} is unable to compute the massless time
+    for all configuration it will issue an error similar to that for
+    the horizon-exit time:
+    \begin{minted}[bgcolor=blue!10]{text}
+        dquad.twopf: extreme values of N did not bracket massless point; check whether range of N contains massless time for all configurations    
+    \end{minted}
 \end{itemize}
 In addition, the table of 3pf configurations includes some extra columns:
 \begin{itemize}
@@ -3821,6 +3849,7 @@ In addition, the table of 3pf configurations includes some extra columns:
         \alpha & = \frac{2(k_1 - k_2)}{k_t} \\        
         \beta & = 1 - \frac{2k_3}{k_t} .
     \end{split}
+    \label{eq:alpha-beta}
     \end{equation}
     These values are reported for each configuration.
     
@@ -3903,7 +3932,7 @@ requires an SQL query:
     ORDER BY serial;    
 \end{minted}
 
-\subsubsection{Launch tasks from the command line}
+\subsubsection{Launch and track tasks from the command line}
 If the set of 3pf sample configurations has been constructed correctly
 the next step is to ask {\CppTransport} to carry out the tasks.
 A {\CppTransport} executable can be instructed to
@@ -3925,6 +3954,695 @@ will show details of the tasks being processed:
     Name             Task         Type                      Initiated  Duration  Cores  Completion
     20160504T120048  dquad.twopf  integration    2016-May-04 12:00:48       50s      4          --
 \end{minted}
+For each `in flight' task,%
+    \footnote{Only tasks which are currently active are shown in this list. Although we specified
+    two tasks on the command line, {\CppTransport} processes them sequentially and therefore
+    only one at once will appear in the list.}
+the information shown comprises:
+\begin{itemize}
+    \item The \semibold{group name}. {\CppTransport} refers to the output produced
+    by each execution of a task as a \emph{content group}.
+    For an integration task the content group will consist of a database
+    containing
+    various tables for the $n$-point functions and associated data products.
+    For the post-processing tasks currently available---%
+    to compute $n$-point functions of $\zeta$, and to take inner products
+    with the bispectrum---%
+    the content group will consist of
+    further databases containing these quantities.
+    For output tasks the content group will contain plots, tables
+    or Python scripts.
+
+    Each content group is given a unique name derived from its timestamp.
+    The format is \repoobject{yyyymmddThhmmss}
+    where \repoobject{yyyy} is replaced by the year,
+    \repoobject{mm} by the month,
+    and so on.
+    The capital \repoobject{T} separates the date
+    from the current time.
+
+    If two tasks happen to be initiated close together, their time stamps
+    may clash. In this case {\CppTransport} will append
+    \repoobject{-N} to the group name, where $N$ is a unique number.
+    The repository database is designed to be safe when used
+    by multiple processes, so name collisions will not occur even if
+    different {\CppTransport} jobs attempt simultaneously
+    to generate a content group
+    in the same repository.
+    
+    \item The \semibold{task name} and \semibold{task type}. This identifies the task to which the content group belongs.
+
+    \item The \semibold{job start time} and \semibold{duration}.
+    For long-running jobs, this enables you to keep track of the total elapsed time.
+    
+    \item The \semibold{number of cores} used by the job.
+    
+    \item An \semibold{estimated time of completion}.
+    For long-running jobs, {\CppTransport}
+    will attempt to estimate when the job will complete on the assumption that the
+    items it has processed so far are typical.
+    {\CppTransport} keeps track of the time required to process each item of work---for
+    example, to integrate a single configuration of the 2- or 3-point function,
+    or to generate a plot.
+    The completion time is estimated assuming the time taken
+    to process each remaining
+    work item will be the current average time-per-item.
+    This estimate is often accurate but can be misleading if the remaining
+    work items are atypically expensive to compute.
+    
+    The time-to-completion estimate is first generated after 5 minutes.
+    After this, it is updated at intervals of 10\% of the total number
+    of work items.
+    If verbose mode is enabled then {\CppTransport} will simultaneously
+    print a brief advisory message summarizing progress so far.
+    For the double quadratic example,
+    on most modern hardware, both 2- and 3-pf integrations will complete
+    before {\CppTransport} generates any progress update.
+\end{itemize}
+If verbose mode is enabled, {\CppTransport} will emit brief updates
+as it works through the list of tasks.
+For the double quadratic example its output will be similar to:
+\begin{minted}[bgcolor=blue!10]{text}
+    Task manager: processing task 'dquad.twopf' (1 of 2)
+    Committed content group '20160504T202210' for task 'dquad.twopf' at 2016-May-04 21:22:10
+    Task manager: processing task 'dquad.threepf' (2 of 2)
+    Committed content group '20160504T202210-1' for task 'dquad.threepf' at 2016-May-04 21:24:42
+    Task manager: processed 2 database tasks in wallclock time 2m 32.5s | time now 2016-May-04 21:24:42
+\end{minted}
+Notice that (in this case) the 2pf task \repoobject{dquad.twopf} completed so quickly that
+the content group from the second task
+\repoobject{dquad.threepf}
+has the same timestamp.
+(Notice that timestamps are based on
+\href{https://en.wikipedia.org/wiki/Coordinated_Universal_Time}{UTC}.)
+As explained above, to keep the names unique {\CppTransport}
+has renamed it
+\repoobject{20160504T202210-1}.
+
+To confirm that output from these groups has been safely written to the repository,
+use the \option{{-}{-}status} switch:
+\begin{minted}{bash}
+    ./dquad -r test-repo --status    
+\end{minted}
+This causes {\CppTransport} to display a short summary of the tasks available
+in the repository, and the number of content groups associated with each task.
+In this case the output should be:
+\begin{minted}[bgcolor=blue!10]{text}
+    Available tasks:
+    Task           Type                  Last activity  Outputs
+    dquad.threepf  integration    2016-May-04 20:24:42        1
+    dquad.twopf    integration    2016-May-04 20:22:10        1
+\end{minted}
+If any tasks are still in flight then \option{{-}{-}status} will
+additionally display the
+same information shown by \option{{-}{-}inflight}.
+
+\subsection{What happens when an integration task is in progress}
+Now let us consider what happened while each integration task was in progress.
+Out the outset, when {\CppTransport} comes to process each new task,
+it acquires a unique content group name derived from the current time.
+A folder with this name is created in the
+\file{output} directory of the repository, under a subdirectory
+corresponding to the name of the owning task.
+
+Each content group directory has the structure shown in Fig.~\ref{fig:integration-content}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.65]{Diagrams/integration}    
+    \end{center}
+    \caption{\label{fig:integration-content}Directory structure for an integration
+    content group.
+    The \file{tempfiles} directory is present only while this content group
+    is in flight; it is removed when the content group is committed to the
+    repository.}
+\end{figure}
+There are three items at the top level:
+\begin{itemize}
+    \item A {\SQLite} database named \file{data.sqlite}.
+    This is the main data container which stores the output produced by the job.
+    It is just a normal {\SQLite} database, so it can be inspected
+    using the database management tools described in~\S\ref{sec:examine-k-database}.
+    
+    \item A directory named \file{logs}.
+    This contains fairly verbose logs describing the activity of each process
+    while the job was active.
+    Each process generates a logfile
+    named \file{worker\_N\_yyy.log}
+    where $N$ is a number identifying the process---the master has $N=0$ and
+    the workers have $N > 0$---and \file{yyy} is a unique suffix
+    which is usually \file{000}.
+    
+    Often it is unnecessary to inspect the logs, but they provide useful information
+    if an integration task is not behaving as expected.
+    
+    \item A directory named \file{tempfiles}.
+    This is used only while the task is in flight, and contains temporary {\SQLite}
+    databases into which each worker writes its results.
+    The master process aggregates data from these databases into the main container
+    \file{data.sqlite}.
+    This has the effect that \emph{only the master process} writes to the main container.
+    
+    The temporary databases are removed when their contents are merged with the main
+    database.
+    Once the task is complete and the content group has been committed to the repository,
+    the \file{tempfiles} directory is removed.
+\end{itemize}
+A typical integration will involve the following sequence of steps.
+\begin{enumerate}
+    \item The task manager running on the master process begins work on a new
+    integration task. It sends messages to the worker processes, instructing them
+    to prepare for integration activity associated with this task.
+    
+    \item Once all workers have signalled that they are ready,
+    the task manager issues a small number of work items to each worker.
+    For integration tasks these work items are individual wavenumber
+    configurations.
+    The workers process these configurations and report the time taken.
+    The results of each integration are held in memory on each worker.
+    
+    \item The task manager on the master process attempts to balance the workload
+    of each worker by using the reported times to estimate capacity.
+    It estimates the number of configurations each worker can process in 60 seconds
+    and then issues a corresponding number of work items, modified if necessary to
+    prevent any one worker consuming an unbalanced fraction of
+    the queue.
+    The effect is that slower cores will be issued with fewer work items,
+    and faster cores will be issued with more.
+
+    As the workers process each group of work items, they report the time taken
+    back to the master. This information is used to update the estimate
+    of each worker's capacity
+    and to adjust future work allocations.
+    
+    \item The workers process integrations as they arrive, retaining the
+    results in memory.
+    To prevent memory requirements rising unboundedly, each worker
+    is given a fixed capacity.
+    When the accumulated integration produces outgrow this capacity
+    they are flushed to a temporary database in the
+    \file{tempfiles} directory.
+    (This strategy is adopted for performance reasons. It is faster
+    to write the database to disk in one go, rather than
+    writing the data piecemeal at the end of each integration.)
+
+    The worker process then sends a message to the master,
+    asking for this temporary database to be aggregated into the main
+    container.
+    
+    \item The master process continues to issue new work and aggregate
+    temporary databases.
+    For large databases and some choices of filing system
+    (especially slow network storage)
+    the aggregation time may become lengthy, in which case
+    the task manager will adjust the number of work items
+    it allocates to each worker in an attempt to prevent
+    workers waiting for new work allocations while an aggregation is
+    in progress.
+    
+    \item Eventually all work items have been processed
+    and their results aggregated into the main container.
+    At this point the task manager performs an integrity check
+    which attempts to detect any missing items.
+    It then generates a repository record for the content group.
+    If the integrity check was successful the group is marked
+    as complete.
+    Only complete groups can be used to generate subsequent
+    derived products.
+    However,
+    incomplete groups are retained in the repository because their
+    data can be re-used.
+    Finally, the \file{tempfiles} folder is removed.
+\end{enumerate}
+
+\subsection{Using checkpoints and recovery to minimize data loss}
+The amount of memory available to each worker can be adjusted using
+the command-line option
+\option{{-}{-}caches}.
+It should be followed by an argument representing the cache size
+as an integer number of megabytes.
+The default cache size is 500 Mb.
+
+Generally, it is advantageous to keep the cache size fairly large.
+A small cache size will encourage the workers to flush their
+temporary databases frequently, which can generate a large amount
+of disk activity.
+If the master process is busy with aggregations then
+some workers may stall while they wait for new work items to arrive.
+A large cache mitigates this, at least if the main container
+does not become too large, because a small number of
+large aggregations tends to be faster than a large number of small
+aggregations.
+
+On the other hand, the total cache memory
+allocated to cache should not become larger than the physical
+memory available on a machine.
+This will usually cause some physical memory to be swapped
+out to disk, potentially slowing down the progress of the job.
+
+\begin{advanced}{Estimating cache requirements with paired tasks}
+    For paired post-integration tasks it should be remembered that
+    each task uses an independent cache.
+    While the data generated by post-integration tasks is usually
+    smaller than an integration task, the cache size should be
+    chosen to prevent out-of-memory problems.
+    
+    With the default cache size of 500 Mb, a 4-process job could
+    consume up to 1.5 Gb for integration-only tasks
+    or 3 Gb for a paired set.
+    An 8-process job would consume up to 3.5 Gb for
+    integration-only or 7 Gb when paired.
+    If running on laptop- or desktop-class hardware these numbers
+    should be adjusted to ensure that memory requirements stay within
+    bounds.
+    Similar calculations apply if running in a cluster environment.
+\end{advanced}
+
+If the cache is large then a significant amount of data can
+accumulate in memory before being written to disk.
+In ordinary execution this does not an issue.
+However, if problems occur then this situation is
+undesirable:
+in the event of a crash, all data will be lost
+and would need to be expensively regenerated.
+The same applies to long-running tasks on a cluster,
+where jobs may be terminated by the scheduler,
+or the machine restarted,
+in a way that is beyond the control of individual users.
+
+To mitigate these risks {\CppTransport} offers to option
+to set checkpoints for each task
+at fixed time intervals.
+At the first opportunity after a checkpoint,
+a worker will flush its cache to a temporary database
+and ask the master process to aggregate it.
+If the job is subsequently terminated---by a crash,
+machine restart, or other cause---then any information
+stored in the main container can be recovered
+and used to \emph{seed} another task.
+In this way the CPU effort spent performing successful
+integrations is not wasted.
+
+To set checkpoints, the command-line option
+\option{{-}{-}checkpoint} is used. It should be followed
+by a time interval measured as an integer number of minutes.
+Exactly what interval is appropriate will depend on the
+typical time taken to integrate a configuration,
+but could perhaps be 30 to 60 minutes.
+Unless each integration takes substantially longer
+than this, the result is that no more than $\sim$ 1 hour
+of work would need to be regenerated following a crash.
+
+\begin{advanced}{Setting default checkpoints for a task}
+    In addition to the global checkpointing interval set by
+    \option{{-}{-}checkpoint}, it is possible to set default
+    checkpoint intervals for each task
+    using the \mintinline{c++}{set_default_checkpoint()}
+    method of an integration task. See~\S\ref{}.
+    Each task may set a different default checkpoint interval.
+    
+    If an explicit checkpoint interval is given on the
+    command line, it overrides
+    any task-specific defaults.
+\end{advanced}
+
+\para{Example}
+We can simulate a crash by manually terminating
+the \file{dquad} executable.
+Start a new instance of the
+\repoobject{dquad.threepf} task by typing
+\begin{minted}{bash}
+    mpiexec -n 2 dquad -v -r test-crash --create --checkpoint 1 --task dquad.threepf
+\end{minted}
+This starts a {\CppTransport} job using only two
+processes---a master and a single worker. It will therefore proceed
+more slowly, giving time to interrupt it.
+The checkpoint interval has been set to 1 minute, and
+the job output will be written into a new repository called
+\file{test-crash}.
+Monitor progress using a separate terminal and the
+\option{{-}{-}inflight} option.
+After the job has been in progress for a few minutes use
+\texttt{Ctrl-C}
+to terminate it.
+
+Even after termination, using \option{{-}{-}inflight}
+will appear to show that the task is still underway;
+by itself the repository database has no way to know
+that a crash has occurred:
+\begin{minted}[bgcolor=blue!10]{text}
+    $ ./dquad -r test-crash --inflight
+    In-flight content:
+    Name             Task           Type                      Initiated  Duration  Cores  Completion
+    20160505T112925  dquad.threepf  integration    2016-May-05 11:29:25    3m 41s      2          --
+\end{minted}
+To deal with this situation we should use the command-line
+switch \option{{-}{-}recover} to inform the repository that
+the integration is no longer live, and recovery should be attempted.
+{\CppTransport} informs us about each content group it is able to recover:
+\begin{minted}[bgcolor=blue!10]{text}
+    $ ./dquad -v -r test-crash --recover
+    Committed content group '20160506T093816' for task 'dquad.threepf' at 2016-May-06 10:40:44
+    Warning: Content group '20160506T093816' has missing content
+\end{minted}
+The recovery process may take some time.
+{\CppTransport} must ensure that the database is left in
+a consistent state and this can entail relatively costly comparison between
+the various tables held in the database container.
+
+Currently,
+recovery is a global repository operation. When
+\option{{-}{-}recovery} is specified, {\CppTransport}
+will perform recovery for all tasks which are currently registered as in-flight.
+If you have multiple tasks running against the same repository and need to
+perform recovery, you may wish to to wait until no more active tasks remain
+or manually terminate the remaining active processes.
+
+\para{Seeding an integration from a recovered content group}
+Normally, after successful recovery, the next step would be
+to restart the task, recycling
+any successful results from the recovered content group.
+To do this we instruct {\CppTransport} to use the recovered group as a \emph{seed},
+using the \option{{-}{-}seed} switch
+followed by the name of the content group to use:
+\begin{minted}[bgcolor=blue!10]{text}
+    $ mpiexec -n 4 dquad -v -r test-crash --seed 20160506T093816 --task dquad.threepf
+    Committed content group '20160506T094106' for task 'dquad.threepf' at 2016-May-06 10:42:38
+    Task manager: processed 1 database task in wallclock time 1m 31.9s | time now 2016-May-06 10:42:38    
+\end{minted}
+{\CppTransport} will copy any successful work items from the seed content group,
+and then organize the worker processes to compute whatever items remain outstanding.
+There is no limit to how many content groups can be chained together
+by this process of recovery followed by seeding.
+
+Once the seeded integration completes,
+{\CppTransport}'s \option{{-}{-}status} report shows (as expected)
+that two content groups are now attached to the
+\repoobject{dquad.threepf} task:
+\begin{minted}[bgcolor=blue!10]{text}
+    $ ./dquad -r test-crash --status
+    Available tasks:
+    Task           Type                  Last activity  Outputs
+    dquad.threepf  integration    2016-May-06 09:42:38        2
+    dquad.twopf    integration    2016-May-06 09:38:16        0    
+\end{minted}
+To obtain more information on these groups, use
+the \option{{-}{-}info} switch followed by the task name:
+\begin{minted}[bgcolor=blue!10]{text}
+    $ ./dquad -r test-crash --info dquad.threepf
+    dquad.threepf -- integration task
+    Created: 2016-May-06 09:38:16      Last update: 2016-May-06 09:42:38  
+    Runtime version: 2016.1            
+    Task type: threepf  
+    Initial conditions package: dquad  
+    k-config database: repository/tasks/dquad.threepf.kconfig-db.sqlite  
+    
+    Task description
+    Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9
+    
+    Content group                   Created           Last update  Complete        Size
+    20160506T093816    2016-May-06 09:40:42  2016-May-06 09:40:44        No    4e+02 Mb
+    20160506T094106    2016-May-06 09:41:06  2016-May-06 09:42:38       Yes  9.1e+02 Mb    
+\end{minted}
+The \option{{-}{-}info} switch can be used with the name of any repository object.
+It prints similar information to
+that shown by an HTML report, but can be more convenient for
+quick inspection of individual records.
+
+Here, the table at the bottom gives a short summary of the two
+content groups. Notice that the interrupted group is marked as incomplete.
+The reported size corresponds to the disk space occupied by the
+data container \file{data.sqlite}.
+For the final group (here \repoobject{20160506T094106}) this is just under
+1 Gb, showing that the generated datasets can become large
+even with a modest number of bispectrum configurations
+and a few hundred time sample points.
+
+{\CppTransport} tracks the relationship between different content groups.
+Inspecting the repository record for \repoobject{20160506T094106}
+shows that \repoobject{20160506T093816} was used as a seed:
+\begin{minted}[bgcolor=blue!10]{text}
+    $ ./dquad -r test-crash --info 20160506T094106
+    20160506T094106 -- integration content
+    Created: 2016-May-06 09:41:06      Last update: 2016-May-06 09:42:38  
+    Runtime version: 2016.1            Task: dquad.threepf                
+    Type: threepf                      Locked: No                         
+    Tags: --                           
+    
+    Complete: Yes  
+    Workgroup: 1  
+    Seeded: Yes  
+    Data type: double  
+    Seed group: 20160506T093816  
+    Has statistics: Yes  
+    Initial conditions: No  
+    Size: 9.1e+02 Mb  
+    Container: output/dquad.threepf/20160506T094106/data.sqlite  
+    
+    Metadata
+    Wallclock time: 1m 20s  
+    Total time: 6m 22.3s  
+    Min integration: 0.0329s  
+    Max integration: 4.55s  
+    Configurations: 3188  
+    Failures: 0      
+\end{minted}
+
+When complex relationships exist
+between different content groups,
+it becomes difficult to navigate the repository
+using \option{{-}{-}info} from the command line.
+In such cases it is often more convenient to generate an HTML report
+which summarizes the repository contents.
+We used these reports in~\S\ref{sec:examine-k-database}
+to examine the wavenumber configurations
+sampled as part of
+each integration task, but they have many other uses.
+
+Generating a report is done as in~\S\ref{sec:examine-k-database},
+\begin{minted}{bash}
+    ./dquad --repo test-repo --html test-report
+\end{minted}
+Now open \file{test-report/index.html} in a web browser
+and
+use the `Integration content' tab to view records for each
+content group.
+For the seeded group, the record includes the name of
+seed but this is also hyperlinked---clicking on its name will take
+you directly to its record.
+Likewise, it is possible to click the task name to view
+its details.
+See Fig.~\ref{fig:seeded-group-report}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.2]{Screenshots/seeded-task}    
+    \end{center}
+    \caption{\label{fig:seeded-group-report}HTML report for seeded
+    content group.
+    Notice that group relationships are hyperlinked, so it is possible
+    to click on the name of the attached seed group to view its
+    record.
+    The same is true for the task names and any other repository objects.}
+\end{figure}
+
+\subsection{How is the integration time spent?}
+
+\subsubsection{Using HTML reports to analyse integration performance}
+It is often useful to understand what determines the total execution time
+for an integration task,
+especially if performance is different from
+what would be expected.
+This can happen in two ways.
+First, the combination of batch size, aggregation frequency and
+number of processes can accidentally trigger an excessive number of stalls,
+where the workers spend a long time idle because the master is too busy
+to issue them with work.
+To detect this kind of scenario the most helpful tool is the process
+Gantt chart described in~\S\ref{sec:gantt} below.
+
+Second, the integration time per configuration can vary significantly.
+The total execution time therefore depends strongly
+on the range of configurations included in each task.
+A typical use of {\CppTransport} would be to sparsely sample a range
+of configurations $(k_1, k_2, k_3)$
+in an exploratory step, before increasing
+the number of sample points to perform some specific science
+analysis---for example, to predict the CMB temperature bispectrum
+from a specific inflationary model.
+Before stepping up to a more dense set of sample configurations
+it is very helpful to be aware of the
+way in which
+integration time depends on configuration.
+The information needed to understand this scaling
+is included in an HTML report.
+
+\para{Worker information table}
+Under the `Integration content' tab, the report for each content group
+includes two blue buttons near the bottom.
+One is labelled `Worker information', and clicking it will toggle
+a table listing each worker process that has contributed to the
+content group; see Fig.~\ref{fig:worker-info}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.18]{Screenshots/worker-info}    
+    \end{center}
+    \caption{\label{fig:worker-info}Worker information table displayed as
+    part of a content group record.}
+\end{figure}
+The table identifies each worker by a pair of coordinates
+$(w, n)$,
+where $w$ is the \emph{workgroup number}
+and $n$ is the \emph{worker number}.
+When a new content group is created its workers are assigned
+workgroup number 0.
+If this group is subsequently used to seed another group then the workers
+in the second group are assigned workgroup number 1, and so on.
+The worker number identifies a unique worker within the workgroup.
+
+For each worker, the table lists:
+\begin{itemize}
+    \item the hostname of the machine on which this worker was running.
+    This can help identify problematic machines, especially in a cluster environment.
+    
+    \item the type of backend in use. In current versions of {\CppTransport},
+    as explained in~\S\ref{sec:template-block}, this will be the
+    {\MPI} implementation.
+    
+    \item the steppers used for integration of the background and perturabtions,
+    and the tolerances applied in each case.
+    The tolerances are given in the format
+    (abserr, relerr).
+    
+    \item the number of configurations processed by the worker,
+    both in total and as a percentage of the task.
+    
+    \item the operating system on which {\CppTransport} was running.
+\end{itemize}
+
+\para{Integration report}
+The second blue button is labelled `Integration report'.
+Clicking it toggles a set of summary plots.
+\begin{itemize}
+    \item For any kind of integration task the report includes a
+    bar chart showing the number of configurations processed by each
+    worker, and a histogram showing the distribution of integration times
+    within the task.
+    For the 3-point function of the double quadratic model
+    this distribution is shown in Fig.~\ref{fig:time-distribution};
+    it is roughly a power law.
+    This is fairly typical for
+    {\CppTransport} tasks which sample a range of different configurations:
+    most configurations integrate relatively quickly
+    ($\lesssim 0.1 \second$),
+    but there is a heavy tail of
+    rare configurations
+    which take much longer
+    (few $\times$ $10^0 \second$).
+    These expensive configurations are usually those that probe the
+    squeezed limit of the 3-point function.
+    
+    \item For tasks which sample the 3-point function, {\CppTransport}
+    includes extra plots showing configuration dependence of the
+    integration time
+    (Fig.~\ref{fig:time-scaling}).
+    In smooth models where the bispectrum does not exhibit features
+    the strongest dependence is usually on the squeezing parameter
+    $k_3 / k_t$, where $k_3$
+    is taken to be the shortest side of the momentum triangle.
+    This is clearly visible in the top two plots of Fig.~\ref{fig:time-distribution}.
+    In the $k_t$ plot (top-left panel)
+    there are a range of integration times for each $k_t$, with the range
+    widening as $k_t$ increases.
+    However, the colour-bar shows that configurations generating the longest
+    integration times have small $k_3/k_t$.
+    The $k_3/k_t$ plot (top-right panel)
+    gives the same conclusion in a different form.
+    The dependence on $k_3/k_t$ is an approximate power law where the
+    squeezing is significant.
+\end{itemize}
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.65]{Outputs/timing_histogram}    
+    \end{center}
+    \caption{\label{fig:time-distribution}Distribution of integration
+    times for the three-point function in the double quadratic model
+    constructed in~\S\ref{sec:add-integration-task}.}
+\end{figure}
+\begin{figure}
+    \hspace{-8mm}
+    \begin{tabular}{l@{\hspace{-10mm}}l}
+        \includegraphics[scale=0.45]{Outputs/timing_kt} &
+        \includegraphics[scale=0.45]{Outputs/timing_beta} \\
+        \includegraphics[scale=0.45]{Outputs/timing_alpha}
+    \end{tabular}
+    \caption{\label{fig:time-scaling}Dependence of integration time on
+    the parameters
+    $k_t$ (top left), $k_3 / k_t = (1-\beta)/2$ (top right) and $\alpha$ (bottom left)
+    in the double quadratic model of~\S\ref{sec:add-integration-task};
+    for definitions, see Eq.~\eqref{eq:alpha-beta}.}
+\end{figure}
+
+\subsubsection{Generating a Gantt chart of worker activity}
+The integration report shows how the intrinsic computation cost scales
+with configuration, and helps identify regions where it is cheap to add
+configurations by comparison with other regions where configurations are
+expensive.
+These scalings are set partly by general properties of any inflationary phase,
+partly by detailed microphysical interactions
+determined by each specific model,
+and partly by the integration scheme and its use of `transport' or evolution
+equations.
+
+These intrinsic scalings comprise part of the numerical efficiency of the algorithm.
+The other part is determined by how effectively the master process is able to
+feed tasks to its workers.
+{\CppTransport} tries to adjust its scheduling strategy to respond to environmental
+pressures, but this may not be successful.
+For this reason it can be useful to check
+what the workers are doing, and in particular whether progress is being
+inhibited by stalls.
+
+To detect stalls, the most useful tool is the process Gantt chart.
+Specifying the option \option{{-}{-}gantt} on the command line
+will cause
+{\CppTransport} to produce a Gantt-like timeline showing the activity of
+each worker.
+Bars are colour-coded according to the type of activity, and a legend is included.
+The \option{{-}{-}gantt} option
+should be followed by a filename, and the output format will be determined by
+its extension.
+Any format supported by {\Matplotlib} can be used, of which the most useful
+choices are usually SVG (\file{.svg} extension)
+or PDF (\file{.pdf}), or PNG (\file{.png}) if a bitmap format is desired.
+Alternatively, specifying a \file{.py} extension will produce a Python script
+to generate the Gantt chart, but without executing it. This is useful if further
+customization is required.
+For example, by producing a Python script it is possible to manually increase
+the figure width if the timeline is too compressed for easy reading.
+An example chart for the
+\repoobject{dquad.threepf} task is shown in Fig.~\ref{fig:gantt}.
+
+\para{Avoiding stalls}
+{\CppTransport} makes default choices which usually prevent significant stalling.
+
+\label{sec:gantt}
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.5]{Outputs/gantt}    
+    \end{center}
+    \caption{\label{fig:gantt}Gantt chart
+    generated by {\CppTransport} \option{{-}{-}gantt} option,
+    showing worker activity
+    for the task \repoobject{dquad.threepf}
+    and \option{{-}{-}checkpoint 1}.
+    The diamonds integrate where each worker flushed its cache
+    to a temporary database.
+    Dark grey bars on the master timeline show where the
+    master process was aggregating temporary databases.
+    The aquamarine bar on the far right-hand side
+    shows database activity associated
+    with checking integrity and performing routine maintenance.}
+\end{figure}
 
 
 \section{Options for integration tasks}
