@@ -61,7 +61,7 @@ namespace transport
     constexpr double       CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION        = (4.0);
 
     constexpr unsigned int CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS           = (10);
-    constexpr double       CPPTRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS        = (4.0);
+    constexpr double       CPPTRANSPORT_DEFAULT_ADAPTIVE_ICS_EFOLDS        = (4.0);
     constexpr double       CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS         = (4.0);
     constexpr double       CPPTRANSPORT_DEFAULT_RECOMMENDED_SETTLE_EFOLDS  = (2.0);
 

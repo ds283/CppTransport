@@ -188,7 +188,8 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool adpt_ics,
+                      double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
         twopf_db_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -416,10 +417,10 @@ namespace transport
 
     template <typename number>
     twopf_db_task<number>::twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
-                                             bool ff, double ast)
+                                         bool adpt_ics, double ast)
 	    : integration_task<number>(nm, i, t),
-        adaptive_ics(ff),
-        adaptive_efolds(CPPTRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
+        adaptive_ics(adpt_ics),
+        adaptive_efolds(CPPTRANSPORT_DEFAULT_ADAPTIVE_ICS_EFOLDS),
         max_refinements(CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
         collect_initial_conditions(CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
