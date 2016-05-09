@@ -77,7 +77,7 @@ namespace transport
           public:
 
 				    //! Basic user-facing constructor
-				    zeta_twopf_line(const zeta_twopf_list_task<number>& tk);
+				    zeta_twopf_line(const zeta_twopf_db_task<number>& tk);
 
 				    //! Deserialization constructor
 				    zeta_twopf_line(Json::Value& reader);
@@ -134,7 +134,7 @@ namespace transport
 
 
 				template <typename number>
-				zeta_twopf_line<number>::zeta_twopf_line(const zeta_twopf_list_task<number>& tk)
+				zeta_twopf_line<number>::zeta_twopf_line(const zeta_twopf_db_task<number>& tk)
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        dimensionless(false)
 					{

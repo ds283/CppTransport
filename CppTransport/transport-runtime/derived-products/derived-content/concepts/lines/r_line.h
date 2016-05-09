@@ -76,7 +76,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    r_line(const zeta_twopf_list_task<number>& tk);
+				    r_line(const zeta_twopf_db_task<number>& tk);
 
 				    //! Deserialization constructor
 				    r_line(Json::Value& reader, task_finder<number>& finder);
@@ -122,7 +122,7 @@ namespace transport
 
 
 				template <typename number>
-				r_line<number>::r_line(const zeta_twopf_list_task<number>& tk)
+				r_line<number>::r_line(const zeta_twopf_db_task<number>& tk)
 					: derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 						gadget(dynamic_cast< twopf_db_task<number>& >(*(tk.get_parent_task())))
 					{

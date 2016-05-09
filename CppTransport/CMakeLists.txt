@@ -951,7 +951,7 @@ set(TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES
   transport-runtime/tasks/postintegration_detail/common.h
   transport-runtime/tasks/postintegration_detail/fNL_task.h
   transport-runtime/tasks/postintegration_detail/zeta_threepf_task.h
-  transport-runtime/tasks/postintegration_detail/zeta_twopf_list_task.h
+  transport-runtime/tasks/postintegration_detail/zeta_twopf_db_task.h
   transport-runtime/tasks/postintegration_detail/zeta_twopf_task.h
   )
 

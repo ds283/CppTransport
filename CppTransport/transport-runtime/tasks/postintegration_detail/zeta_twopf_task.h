@@ -30,7 +30,7 @@
 
 #include "transport-runtime/tasks/postintegration_detail/common.h"
 #include "transport-runtime/tasks/postintegration_detail/abstract.h"
-#include "transport-runtime/tasks/postintegration_detail/zeta_twopf_list_task.h"
+#include "transport-runtime/tasks/postintegration_detail/zeta_twopf_db_task.h"
 
 
 namespace transport
@@ -40,7 +40,7 @@ namespace transport
 
     //! A 'zeta_twopf_task' task is a postintegration task which produces the zeta two-point function
     template <typename number>
-    class zeta_twopf_task: public zeta_twopf_list_task<number>
+    class zeta_twopf_task: public zeta_twopf_db_task<number>
 	    {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -112,7 +112,7 @@ namespace transport
 
     template <typename number>
     zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const twopf_task<number>& t)
-	    : zeta_twopf_list_task<number>(nm, t),
+	    : zeta_twopf_db_task<number>(nm, t),
 	      paired(false)
 	    {
 	    }
@@ -120,7 +120,7 @@ namespace transport
 
     template <typename number>
     zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
-	    : zeta_twopf_list_task<number>(nm, reader, finder)
+	    : zeta_twopf_db_task<number>(nm, reader, finder)
 	    {
         this->paired = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
 	    }
@@ -132,7 +132,7 @@ namespace transport
         writer[CPPTRANSPORT_NODE_TASK_TYPE]                   = std::string(CPPTRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF);
         writer[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED] = this->paired;
 
-        this->zeta_twopf_list_task<number>::serialize(writer);
+        this->zeta_twopf_db_task<number>::serialize(writer);
 	    }
 
 	}   // namespace transport

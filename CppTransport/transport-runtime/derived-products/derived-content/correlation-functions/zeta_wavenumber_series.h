@@ -60,7 +60,7 @@ namespace transport
 		      public:
 
 				    //! construct a zeta twopf wavenumber data object
-				    zeta_twopf_wavenumber_series(const zeta_twopf_list_task<number>& tk,
+				    zeta_twopf_wavenumber_series(const zeta_twopf_db_task<number>& tk,
 				                                 SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
 				                                 unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -140,7 +140,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    zeta_twopf_wavenumber_series<number>::zeta_twopf_wavenumber_series(const zeta_twopf_list_task<number>& tk,
+		    zeta_twopf_wavenumber_series<number>::zeta_twopf_wavenumber_series(const zeta_twopf_db_task<number>& tk,
                                                                            SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
 		                                                                       unsigned int prec)
 			    : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),

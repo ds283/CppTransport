@@ -85,8 +85,8 @@ namespace transport
     template <typename number> class postintegration_task;
 #endif
 
-#ifndef CPPTRANSPORT_ZETA_TWOPF_LIST_TASK_H
-		template <typename number> class zeta_twopf_list_task;
+#ifndef CPPTRANSPORT_ZETA_TWOPF_DB_TASK_H
+		template <typename number> class zeta_twopf_db_task;
 #endif
 
 #ifndef CPPTRANSPORT_ZETA_TWOPF_TASK_H
