@@ -45,10 +45,10 @@
 
 #define KT_SYMBOL                  "k_t"
 #define KT_NAME                    "kt"
-#define FLS_ALPHA_SYMBOL           "\\alpha"
-#define FLS_ALPHA_NAME             "alpha"
-#define FLS_BETA_SYMBOL            "\\beta"
-#define FLS_BETA_NAME              "beta"
+#define ALPHABETA_ALPHA_SYMBOL     "\\alpha"
+#define ALPHABETA_ALPHA_NAME       "alpha"
+#define ALPHABETA_BETA_SYMBOL      "\\beta"
+#define ALPHABETA_BETA_NAME        "beta"
 
 #define TWOPF_SYMBOL               "\\Sigma"
 #define TWOPF_NAME                 "Sigma"

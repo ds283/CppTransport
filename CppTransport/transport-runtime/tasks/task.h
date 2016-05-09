@@ -44,17 +44,17 @@
 #include "transport-runtime/tasks/task_types.h"
 
 
-#define CPPTRANSPORT_NODE_TASK_DESCRIPTION        "description"
+#define CPPTRANSPORT_NODE_TASK_DESCRIPTION            "description"
 
-#define CPPTRANSPORT_NODE_TASK_TYPE               "task-type"
+#define CPPTRANSPORT_NODE_TASK_TYPE                   "task-type"
 
-#define CPPTRANSPORT_NODE_TASK_TYPE_TWOPF         "twopf-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC "threepf-cubic-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_FLS   "threepf-fls-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_OUTPUT        "output-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF    "zeta-twopf-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF  "zeta-threepf-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_FNL           "fNL-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_TWOPF             "twopf-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC     "threepf-cubic-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_ALPHABETA "threepf-alphabeta-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_OUTPUT            "output-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF        "zeta-twopf-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF      "zeta-threepf-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_FNL               "fNL-task"
 
 
 namespace transport

@@ -109,8 +109,8 @@ namespace transport
           };
 
 
-        // default FLS triangle policy required ordering k1 > k2 > k3
-        class DefaultFLSTrianglePolicy
+        // default alpha-beta triangle policy required ordering k1 > k2 > k3
+        class DefaultAlphaBetaTrianglePolicy
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -118,14 +118,14 @@ namespace transport
           public:
 
             //! constructor
-            DefaultFLSTrianglePolicy(double tol = CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE, double sq = CPPTRANSPORT_DEFAULT_SMALLEST_SQUEEZING)
+            DefaultAlphaBetaTrianglePolicy(double tol = CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE, double sq = CPPTRANSPORT_DEFAULT_SMALLEST_SQUEEZING)
               : tolerance(std::abs(tol)),
                 smallest_squeezing(std::abs(sq))
               {
               }
 
             //! destructor
-            ~DefaultFLSTrianglePolicy() = default;
+            ~DefaultAlphaBetaTrianglePolicy() = default;
 
 
             // INTERFACE

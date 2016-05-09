@@ -176,7 +176,7 @@ namespace transport
         double k2_conventional;
         double k3_conventional;
 
-        //! Fergusson-Shellard-Liguori coordinates for this k-configuration
+        //! Fergusson-Shellard coordinates for this k-configuration
         double kt_comoving;
         double kt_conventional;
         double alpha;
