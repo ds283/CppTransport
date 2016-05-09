@@ -89,10 +89,10 @@ namespace transport
 		    const std::string& get_name() const { return(this->name); }
 
         //! Reset name
-        void set_name(std::string s) { this->name = std::move(s); }
+        task<number>& set_name(std::string s) { this->name = std::move(s); return *this; }
 
         //! Set description
-        void set_description(std::string d) { this->description = std::move(d); }
+        task<number>& set_description(std::string d) { this->description = std::move(d); return *this; }
 
         //! Get description
         const std::string& get_description() const { return(this->description); }
