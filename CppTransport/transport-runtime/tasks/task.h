@@ -88,7 +88,7 @@ namespace transport
 		    //! Get name
 		    const std::string& get_name() const { return(this->name); }
 
-        //! Reset name; if name is non-zero, assume this
+        //! Reset name
         void set_name(std::string s) { this->name = std::move(s); }
 
         //! Set description
