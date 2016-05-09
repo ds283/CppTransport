@@ -40,7 +40,7 @@ namespace transport
 
     //! A 'zeta_threepf_task' task is a postintegration task which produces the zeta three-point
     //! function and associated derived quantities (the reduced bispectrum at the moment)
-    template <typename number>
+    template <typename number=default_number_type>
     class zeta_threepf_task: public zeta_twopf_db_task<number>
 	    {
 

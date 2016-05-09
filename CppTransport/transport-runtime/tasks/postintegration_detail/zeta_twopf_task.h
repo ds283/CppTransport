@@ -39,7 +39,7 @@ namespace transport
     // ZETA TWOPF TASK
 
     //! A 'zeta_twopf_task' task is a postintegration task which produces the zeta two-point function
-    template <typename number>
+    template <typename number=default_number_type>
     class zeta_twopf_task: public zeta_twopf_db_task<number>
 	    {
 

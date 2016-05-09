@@ -47,7 +47,7 @@ namespace transport
     // FNL TASK
 
     //! An 'fNL_task' is a postintegration task which produces an fNL amplitude
-    template <typename number>
+    template <typename number=default_number_type>
     class fNL_task: public postintegration_task<number>
 	    {
 
