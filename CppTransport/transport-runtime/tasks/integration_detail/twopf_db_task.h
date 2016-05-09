@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_TWOPF_LIST_TASK_H
-#define CPPTRANSPORT_TWOPF_LIST_TASK_H
+#ifndef CPPTRANSPORT_TWOPF_DB_TASK_H
+#define CPPTRANSPORT_TWOPF_DB_TASK_H
 
 
 #include <functional>
@@ -875,4 +875,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //CPPTRANSPORT_TWOPF_LIST_TASK_H
+#endif //CPPTRANSPORT_TWOPF_DB_TASK_H

@@ -49,7 +49,7 @@ namespace transport
     template <typename number> class integration_task;
 #endif
 
-#ifndef CPPTRANSPORT_TWOPF_LIST_TASK_H
+#ifndef CPPTRANSPORT_TWOPF_DB_TASK_H
     template <typename number> class twopf_db_task;
 #endif
 
