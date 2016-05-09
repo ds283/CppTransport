@@ -48,12 +48,14 @@ namespace index_assignment_impl
               {
                 // arrange for insertion at the back, so indices are in correct order
                 this->construct_assignment(this->parent->source_set.begin(), this->parent->source_set.end(), database_back_inserter<assignment_list>(*rval));
+                break;
               }
 
             case index_order::right:
               {
                 // arrange for insertion at the front, so indices remain in correct order
                 this->construct_assignment(this->parent->source_set.rbegin(), this->parent->source_set.rend(), database_front_inserter<assignment_list>(*rval));
+                break;
               }
           }
 
