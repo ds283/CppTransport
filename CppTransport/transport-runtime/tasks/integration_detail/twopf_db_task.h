@@ -271,13 +271,26 @@ namespace transport
         bool get_adaptive_ics() const { return(this->adaptive_ics); }
 
         //! Set adaptive ics setting
-        virtual void set_adaptive_ics(bool g) { this->adaptive_ics = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
+        virtual twopf_db_task<number>& set_adaptive_ics(bool g)
+          {
+            this->adaptive_ics = g;
+            this->validate_subhorizon_efolds();
+            this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
+            return *this;
+          }
 
         //! Get number of adaptive e-folds
         double get_adaptive_ics_efolds() const { return(this->adaptive_efolds); }
 
         //! Set adaptive e-folds
-        virtual void set_adaptive_ics_efolds(double N) { this->adaptive_ics = true; this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
+        virtual twopf_db_task<number>& set_adaptive_ics_efolds(double N)
+          {
+            this->adaptive_ics = true;
+            this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds);
+            this->validate_subhorizon_efolds();
+            this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
+            return *this;
+          }
 
         //! Get start time for a twopf configuration
         double get_initial_time(const twopf_kconfig& config) const;
@@ -291,7 +304,7 @@ namespace transport
         unsigned int get_max_refinements() const { return(this->max_refinements); }
 
         //! Set number of allowed time step refinements
-        void set_max_refinements(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); }
+        twopf_db_task<number>& set_max_refinements(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); return *this; }
 
 
 		    // INTERFACE - COLLECTION OF INITIAL CONDITIONS
@@ -302,7 +315,7 @@ namespace transport
 		    bool get_collect_initial_conditions() const { return(this->collect_initial_conditions); }
 
 		    //! Set current collection status
-		    void set_collect_initial_conditions(bool g) { this->collect_initial_conditions = g; }
+		    twopf_db_task<number>& set_collect_initial_conditions(bool g) { this->collect_initial_conditions = g; return *this; }
 
 
         // TIME CONFIGURATION DATABASE
@@ -582,7 +595,6 @@ namespace transport
             // is earliest required time earlier than time of initial conditions?
             // this can only occur with adaptive_ics; in other cases, the earliest required
             // time is always the initial time anyway
-            // if
             if(earliest_required < this->get_N_initial())
               {
                 std::ostringstream msg;

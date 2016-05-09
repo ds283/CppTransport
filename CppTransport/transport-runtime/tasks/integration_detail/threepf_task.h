@@ -146,10 +146,23 @@ namespace transport
         double get_initial_time(const threepf_kconfig& config) const;
 
         //! Set adaptics ics setting
-        virtual void set_adaptive_ics(bool g) override { this->adaptive_ics = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
+        virtual threepf_task<number>& set_adaptive_ics(bool g) override
+          {
+            this->adaptive_ics = g;
+            this->validate_subhorizon_efolds();
+            this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
+            return *this;
+          }
 
         //! Set number of adaptive e-folds
-        virtual void set_adaptive_ics_efolds(double N) override { this->adaptive_ics = true; this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
+        virtual threepf_task<number>& set_adaptive_ics_efolds(double N) override
+          {
+            this->adaptive_ics = true;
+            this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds);
+            this->validate_subhorizon_efolds();
+            this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
+            return *this;
+          }
 
 
         // SERIALIZATION -- implements a 'serialiazble' interface
