@@ -2488,8 +2488,10 @@ enabled unless there is a particular difficulty with performing it
 for a model.
 
 \section{Building and running an integration task}
+\label{sec:build-and-run}
 
 \subsection{Coupling a model to the runtime system}
+\label{sec:couple-to-runtime}
 Once customized core and header files
 have been produced, they can be used to perform
 calculations. This involves
@@ -5063,9 +5065,323 @@ objects used in~\S\ref{sec:add-integration-task}.
 
 \subsection{Two-point function tasks}
 \label{sec:twopf-options}
+Two-point function tasks need few specific options, and those that exist are supplied
+through the constructor. Its general form is
+\begin{minted}[linenos=false,xleftmargin=0pt]{c++}
+    twopf_task(
+        std::string name,
+        initial_conditions ics,
+        range time_samples,
+        range k_samples,
+        bool adaptive_ics=false
+    )
+\end{minted}
+This constructs a task with the given name and initial conditions,
+and the specified time- and wavenumber sample points.
+The \mintinline{c++}{range} objects can be instances of either
+\mintinline{c++}{basic_range}
+or
+\mintinline{c++}{aggregate_range}
+(\S\ref{sec:add-integration-task}).
+If the boolean
+\mintinline{c++}{adaptive_ics} is supplied then it determines whether adaptive initial conditions
+are automatically enabled.
+If \mintinline{c++}{true} the task will default to using 4 massless e-folds, but this can be
+changed by calling \mintinline{c++}{set_adaptive_ics_efolds()}.
 
 \subsection{Three-point function tasks}
 \label{sec:threepf-options}
+{\CppTransport} provides two different interfaces for
+specifying three-point function tasks.
+The differences relate to the way in which the sample configurations are specified.
+
+\subsubsection{Cubic $(k_1, k_2, k_3)$ mesh}
+One possibility is to build a set of bispectrum configurations from
+the Cartesian product
+\mintinline{c++}{ks} $\times$
+\mintinline{c++}{ks} $\times$
+\mintinline{c++}{ks}
+built out of some range of wavenumbers
+\mintinline{c++}{ks}.
+This option was used to build the task
+\repoobject{dquad.threepf} used as an example in~\S\ref{sec:build-and-run}.
+
+To generate a task in this way one should use the
+\mintinline{c++}{threepf_cubic_task} constructor. Its signature is
+\begin{minted}[linenos=false,xleftmargin=0pt]{c++}
+    threepf_cubic_task(
+        std::string name,
+        initial_conditions ics,
+        range time_samples,
+        range ks,
+        bool adaptive_ics=false,
+        StoragePolicy storage_policy = DefaultStoragePolicy,
+        TrianglePolicy triangle_policy = DefaultTrianglePolicy
+    )
+\end{minted}
+The last three parameters are optional, and if omitted their
+default values will be used.
+The range \mintinline{c++}{ks} is used to construct a Cartesian mesh
+of wavenumbers as explained above, and the remaining parameters
+share their meaning with the constructor for two-point function tasks
+described in~\S\ref{sec:twopf-options}.
+For details of the
+\mintinline{c++}{StoragePolicy} and
+\mintinline{c++}{TrianglePolicy} concepts
+see~\S\ref{sec:storage-policy} and~\S\ref{sec:triangle-policy} respectively.
+
+There is no need to specify a set of wavenumbers at which to sample the 2-point function.
+Samples will automatically be recorded at points corresponding to each wavenumber appearing
+on an external leg of the 3-point function.
+In this case that means the 2-point function will be sampled at the wavenumbers
+in \mintinline{c++}{ks}.
+
+\subsubsection{Fergusson--Shellard $(k_t, \alpha, \beta)$ mesh}
+Sampling from a wavenumber cube \mintinline{c++}{ks}$^3$
+is convenient for some purposes but awkward for others.
+In particular, if the intention is to sample a series of wavenumber configurations
+probing the squeezed limit of the bispectrum then there may be more efficient
+ways to proceed.
+A good choice is to work with parameters which directly specify the configuration
+shape.
+For this purpose {\CppTransport} uses the $(\alpha, \beta)$ parameters
+introduced by Fergusson \& Shellard~\cite{Fergusson:2006pr}; see Eq.~\eqref{eq:alpha-beta}.
+
+To build a task from a grid of $k_t$, $\alpha$ and $\beta$ combinations one should use
+the \mintinline{c++}{threepf_alphabeta_task} constructor:
+\begin{minted}[linenos=false,xleftmargin=0pt]{c++}
+    threepf_alphabeta_task(
+        std::string name,
+        initial_conditions ics,
+        range time_samples,
+        range kts,
+        range alpha,
+        range betas,
+        bool adaptive_ics=false,
+        StoragePolicy storage_policy = DefaultStoragePolicy,
+        TrianglePolicy triangle_policy = DefaultTrianglePolicy
+    )    
+\end{minted}
+As for \mintinline{c++}{threepf_cubic_task} the last three parameters are optional.
+The sample configurations are built from restricting the Cartesian product
+of the $(k_t, \alpha, \beta)$ parameters
+\mintinline{c++}{kts} $\times$ \mintinline{c++}{alphas} $\times$ \mintinline{c++}{betas}
+to valid triangle configurations.
+
+As for cubic tasks, the sample points for the 2-point function are not specified separately.
+{\CppTransport} will compute the wavenumbers appearing on each external leg of the
+3-point function and use these to build a list of sample points for the 2-point function.
+For tasks specified using combinations of $(k_t, \alpha, \beta)$ this means that the sample
+points can be irregularly spaced if the sampled set of bispectrum configurations
+is sparse.
+
+\subsubsection{Specifying a storage policy}
+\label{sec:storage-policy}
+Sometimes the grids
+\mintinline{c++}{ks} $\times$ \mintinline{c++}{ks} $\times$ \mintinline{c++}{ks}
+or
+\mintinline{c++}{kts} $\times$ \mintinline{c++}{alphas} $\times$ \mintinline{c++}{betas}
+will include combinations that are not needed for the task at hand.
+Rather than wastefully compute these, {\CppTransport} allows them to be omitted by
+specifying a \emph{storage policy}.
+
+If supplied, a storage policy should be an instance of a callable object
+which accepts a reference to a \mintinline{c++}{transport::threepf_kconfig}
+object and returns a valid \mintinline{c++}{transport::storage_outcome}:
+\begin{minted}[linenos=false,xleftmargin=0pt]{c++}
+    transport::storage_outcome (StoragePolicy)(const transport::threepf_kconfig& config)
+\end{minted}
+The \mintinline{c++}{transport::threepf_kconfig} data structure specifies
+the configuration which is to be inspected. Its fields are public data members:
+\begin{itemize}
+    \item \mintinline{c++}{serial} \\
+    The proposed unique serial number for this configuration.
+    
+    \item \mintinline{c++}{k1_serial}, \mintinline{c++}{k2_serial}, \mintinline{c++}{k3_serial} \\
+    The serial numbers for the wavenumbers $k_1$, $k_2$, $k_3$ associated with each external leg.
+    
+    \item \mintinline{c++}{k1_conventional}, \mintinline{c++}{k2_conventional}, \mintinline{c++}{k3_conventional} \\
+    The conventionally-normalized wavenumbers associated with each external leg.
+    
+    \item \mintinline{c++}{k1_comoving}, \mintinline{c++}{k1_comoving}, \mintinline{c++}{k3_comoving} \\
+    The comoving-normalized wavenumbers associated with each external leg.
+    
+    \item \mintinline{c++}{kt_conventional}, \mintinline{c++}{kt_comoving} \\
+    The conventional- and comoving-normalized $k_t$ associated with this configuration.
+    
+    \item \mintinline{c++}{alpha}, \mintinline{c++}{beta} \\
+    The $\alpha$ and $\beta$ values associated with this configuration.
+    
+%    \item \mintinline{c++}{t_exit}, \mintinline{c++}{t_massless} \\
+%    The horizon exit time $\texit$ and massless point $\tmassless$
+%    for this configuration.
+\end{itemize}
+The configuration presented for inspection is guaranteed to be a valid triangle as determined by the
+active \mintinline{c++}{TrianglePolicy} (\S\ref{sec:triangle-policy}).
+The callable should inspect the and determine whether it should be accepted or rejected.
+The default storage policy will accept all configurations.
+
+To accept this configuration the policy should return
+\mintinline{c++}{transport::storage_outcome::accept}.
+To reject, it should return either:
+\begin{itemize}
+    \item \mintinline{c++}{transport::storage_outcome::reject_remove} \\
+    When constructing this configuration, it may have been necessary to assign
+    unique serial numbers to new configurations for the two-point function.
+    This will happen if at least one leg of the bispectrum corresponds to a wavenumber
+    which has not yet been allocated a unique number.
+    
+    If \mintinline{c++}{reject_remove} is specified then {\CppTransport} will
+    reject the configuration and deallocate any serial numbers which were speculatively
+    assigned to `new' two-point function configurations.
+    
+    \item \mintinline{c++}{transport::storage_outcome::reject_retain} \\
+    Alternatively, \mintinline{c++}{reject_retain} allows these serial numbers to be
+    retained.
+    
+    A typical use case for this functionality occurs when you wish to
+    subsample a cubic grid.
+    Suppose the range \mintinline{c++}{ks} contains a set
+    $\{ k_1, k_2, \ldots, k_m \}$ of wavenumbers, ordered so that
+    $k_i < k_j$ if $i < j$.
+    Therefore $k_m$ corresponds to the shortest physical scale which will be sampled.
+    The set of isosceles triangles containing this mode
+    is given by the configurations
+    $(k_m, k_i, k_i)$ for all $i$, and a suitable storage policy picking out
+    this subset might be
+    \begin{minted}{c++}
+        struct StoragePolicy
+          {
+            transport::storage_outcome operator()(const transport::threepf_kconfig& data)
+              {
+                if(data.k1_serial == m) return(transport::storage_outcome::accept);
+                else                    return(transport::storage_outcome::reject_retain);
+              }
+          };
+    \end{minted}
+    Each configuration will be presented to
+    \mintinline{c++}{StoragePolicy} for inspection in the order
+    determined by the Cartesian product \mintinline{c++}{ks}$^3$,
+    so by returning
+    \mintinline{c++}{reject_retain} we can ensure that the
+    serial numbers assigned to the 2-point function configurations
+    will match the ordering in \mintinline{c++}{ks}.
+\end{itemize}
+
+\subsubsection{Specifying a triangle policy}
+\label{sec:triangle-policy}
+{\CppTransport} also allows specification of a \emph{triangle policy}.
+This is used to determine which members of the grids
+\mintinline{c++}{ks} $\times$ \mintinline{c++}{ks} $\times$ \mintinline{c++}{ks}
+and
+\mintinline{c++}{kts} $\times$ \mintinline{c++}{alphas} $\times$ \mintinline{c++}{betas}
+are considered valid triangles.
+
+{\CppTransport}'s default triangle policy imposes two conditions: first,
+it requires $k_1 + k_2 + k_3 \geq 2 \max \{ k_1, k_2, k_3 \}$.
+This is the geometrical condition that the sides
+$\{ k_1, k_2, k_3 \}$ can form a triangle
+and is equivalent to demanding that the sum of the two shortest sides is longer than the
+longest side.
+If this is not satisfied then the `triangle' cannot be closed.
+
+Second, it imposes the condition
+$k_1 \geq k_2 \geq k_3$.
+This is intended to prevent unnecessary repeat calculations.
+If we are interested only in connected correlation functions
+then we are free to reorder the fields inside any
+equal-time
+correlation function
+$\langle X^a(\vect{k}_1) X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle$
+because the failure of any pair of $X$s to commute will produce
+contact terms.
+Because {\CppTransport} solves the correlation functions for
+all index combinations $(a,b,c)$, this reordering property
+implies that it is only necessary to compute those configurations
+satisfying $k_1 \geq k_2 \geq k_3$.
+The remaining configurations can be determined by
+permuting the index labels.
+
+For some purposes, however, it is convenient to drop this restriction
+or to adopt a different ordering. One use case is to produce
+bispectrum shape plots in the $(\alpha, \beta)$ plane.
+The restriction $k_1 \geq k_2 \geq k_3$ implies that
+{\CppTransport} will produce correlation functions which cover only
+$1/3! = 1/6$ of the allowed $(\alpha, \beta)$ space,
+and in principle the remaining
+regions can be determined by suitable transformations
+of the region that is computed.
+However, this transformation will map a rectangular mesh
+in the computed region
+to a non-rectangular mesh in the other regions.
+Many plotting libraries require a uniform rectangular mesh
+of points in order to produce surface or 3-dimensional plots,
+making these non-rectangular transformed meshes unacceptable.
+In this case, instead of splining the transformed regions and resampling
+them on a rectangular mesh, it can be simpler
+to absorb the factor of 6 computation cost and have
+{\CppTransport} compute these points directly.
+
+A triangle policy is an instance of a callable object which
+determines whether a given configuration forms a triangle.
+The `cubic' and `$\alpha\beta$' constructors require different types of policy:
+\begin{itemize}
+    \item for a `cubic' constructor, the triangle policy should accept 6 arguments
+    and return a \mintinline{c++}{bool} indicating whether the configuration is valid:
+    \begin{minted}[linenos=false,xleftmargin=0pt]{c++}
+        bool (TrianglePolicy)(unsigned i, unsigned j, unsigned k, double k1, double k2, double k3)
+    \end{minted}
+    The arguments \mintinline{c++}{i}, \mintinline{c++}{j}, \mintinline{c++}{k}
+    refer to the index of the $k_1$, $k_2$, $k_3$ values (respectively)
+    within the original range \mintinline{c++}{ks}.
+    The arguments \mintinline{c++}{k1}, \mintinline{c++}{k2}, \mintinline{c++}{k3}
+    give these (conventionally-normalized) wavenumber values directly.
+    
+    The default {\CppTransport} policy rejects triangles according to the following
+    criteria:%
+        \footnote{In reality the policies do not perform literal \mintinline{c++}{<}
+        or \mintinline{c++}{>} comparisons because of possible issues with
+        floating point arithmetic. These subtleties are ignored here, and the
+        policy is presented as if it were implemented purely using its
+        mathematical definition. The same applies to the default
+        policy for `$\alpha\beta$' tasks.}
+    \begin{minted}{c++}
+        // impose ordering k1 > k2 > k3
+        if(i < j) return false;
+        if(j < k) return false;
+
+        // impose triangle
+        double max = std::max(std::max(k1, k2), k3);
+        return(k1 + k2 + k3 - 2.0*max >= 0.0);
+    \end{minted}
+
+    \item for an `$\alpha\beta$' task, the triangle policy should accept just two
+    arguments corresponding to the values of $\alpha$ and $\beta$,
+    \begin{minted}[linenos=false,xleftmargin=0pt]{c++}
+        bool (TrianglePolicy)(double alpha, double beta)    
+    \end{minted}
+    The default policy rejects triangles as follows:
+    \begin{minted}{c++}
+        // beta should lie between 0 and 1
+        if(beta < 0.0) return false;
+        if(beta > 1.0) return false;
+
+        // alpha should lie between 1-beta and beta-1
+        if(beta - 1.0 - alpha > 0.0) return false;
+        if(alpha - (1.0 - beta) > 0.0) return false;
+
+        // impose k1 > k2 > k3
+        if(alpha < 0) return false;
+        if(beta - (1.0 + alpha)/3.0 < 0.0) return false;
+    \end{minted}
+    In addition, it requires that none of the `squeezing' measures
+    $1-\beta$,
+    $|1+\alpha-\beta|$ and
+    $|1-\alpha+\beta|$ becomes too small.
+    By default the cutoff is taken to be $10^{-8}$.
+    
+\end{itemize}
+
 
 \section{Adding postintegration tasks}
 \label{sec:post-integration-tasks}
