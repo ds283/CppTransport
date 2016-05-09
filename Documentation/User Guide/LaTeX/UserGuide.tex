@@ -13,6 +13,7 @@
 \usepackage{etoolbox}
 \usepackage{upquote}
 \usepackage{abraces}
+\usepackage{refcount}
 
 \tcbuselibrary{skins}
 \tcbuselibrary{breakable}
@@ -156,6 +157,8 @@
 
 % aligned column type for error bars
 \newcolumntype{d}{D{!}{\;\pm\;}{-1}}
+
+\newenvironment{sqltablelist}{\renewcommand{\arraystretch}{1.3}\small}{}
 
 \renewcommand{\geq}{\geqslant}
 \renewcommand{\leq}{\leqslant}
@@ -4534,11 +4537,11 @@ Clicking it toggles a set of summary plots.
     This is fairly typical for
     {\CppTransport} tasks which sample a range of different configurations:
     most configurations integrate relatively quickly
-    ($\lesssim 0.1 \second$),
+    (here $\lesssim 0.1 \second$),
     but there is a heavy tail of
     rare configurations
     which take much longer
-    (few $\times$ $10^0 \second$).
+    (here, a few $\times$ $10^0 \second$).
     These expensive configurations are usually those that probe the
     squeezed limit of the 3-point function.
     
@@ -4546,7 +4549,8 @@ Clicking it toggles a set of summary plots.
     includes extra plots showing configuration dependence of the
     integration time
     (Fig.~\ref{fig:time-scaling}).
-    In smooth models where the bispectrum does not exhibit features
+    In smooth models where the bispectrum does not exhibit features,
+    and assuming use of adaptive initial conditions (\S\ref{}),
     the strongest dependence is usually on the squeezing parameter
     $k_3 / k_t$, where $k_3$
     is taken to be the shortest side of the momentum triangle.
@@ -4617,8 +4621,8 @@ The \option{{-}{-}gantt} option
 should be followed by a filename, and the output format will be determined by
 its extension.
 Any format supported by {\Matplotlib} can be used, of which the most useful
-choices are usually SVG (\file{.svg} extension)
-or PDF (\file{.pdf}), or PNG (\file{.png}) if a bitmap format is desired.
+choices are usually SVG (\file{.svg} extension),
+PDF (\file{.pdf}), or PNG (\file{.png}) if a bitmap format is desired.
 Alternatively, specifying a \file{.py} extension will produce a Python script
 to generate the Gantt chart, but without executing it. This is useful if further
 customization is required.
@@ -4681,13 +4685,13 @@ Stalls are more likely in the following circumstances:
     corresponding databases would need migration
     from one database server to another.
     
-    Alternatively, it is possible to abandon the use of an SQL database entirely
+    A different option would be to abandon the use of an SQL database entirely
     and use a format such as \href{https://www.hdfgroup.org/HDF5/}{HDF5}.
     This would be significantly faster than any SQL database, but also significantly
-    more difficult to use---in particular,
-    data analysis would need to be performed using
-    purpose-written code rather than SQL queries and CSV files,
-    because HDF5 is mostly searchable only via an API.
+    more difficult for an end-user to extract data---in particular,
+    any analysis would need to be performed using
+    purpose-written code rather than SQL queries in a database manager application,
+    because HDF5 is largely intended to be handled via a programming interface.
     
     The current implementation retains the advantages of
     powerful SQL queries and easily-portable single-file databases,
@@ -4708,7 +4712,7 @@ Stalls are more likely in the following circumstances:
     and if the filing system is too slow these can overwhelm the master process.
     To mitigate this it may be possible to increase the buffer size, generating
     fewer aggregation requests. 
-    Otherwise, at present, contention from multiple workers often sets a
+    Otherwise, at present, contention from multiple workers often sets
     an effective upper limit on the number of worker processes that can be used in
     practice.
 \end{itemize}
@@ -4736,7 +4740,7 @@ we will consider post-integration tasks and show how they can be used
 to generate observables from the raw $n$-point functions produced by
 an integration task.
 In many cases the facilities offered by these
-tasks will be quite sufficient to carry out a
+tasks will be quite adequate to carry out a
 standard analysis of an inflationary model.
 However, in some circumstances, a nonstandard observable may be
 needed.
@@ -4744,9 +4748,180 @@ In this case it is necessary to extract data for the raw $n$-point functions.
 Another reason for needing this data is simply that you may
 wish to produce your own customized plots.
 
-This data has to be retrieved from the main {\SQLite} container
+This data can be retrieved from the main {\SQLite} container
 \file{data.sqlite}
 associated with each content group.
+As explained above, this is done using SQL queries.
+The end result is a powerful method to easily extract appropriate subsets
+of the data, formatted in any convenient way.
+
+The {\SQLite} container for any integration task contains the following tables
+and columns:
+\begin{sqltablelist}    
+\begin{enumerate}
+    \item \mintinline{sql}{time_samples} --- contains the list of time sample points. \\
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{serial} & unique serial number for this sample point \\
+        \mintinline{sql}{time} & numerical value of time, measured in $N$, using
+        the user-defined conventions established by the
+        initial conditions package.
+    \end{tabular}
+    
+    \item \mintinline{sql}{twopf_samples} --- contains the list of sample points for the 2-point function \\
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{serial} & unique serial number for this sample configuration \\
+        \mintinline{sql}{conventional} & conventionally-normalized wavenumber $k$
+        corresponding to this configuration \\
+        \mintinline{sql}{comoving} & comoving-normalized wavenumber $k$
+        corresponding to this configuration \\
+        \mintinline{sql}{t_exit} & time of horizon exit for this wavenumber in the sense $k=aH$ \\
+        \mintinline{sql}{t_massless} & mass-point for this wavenumber in the
+        sense $(k/a)^2 = M^2$, where $M^2$ is the largest eigenvalue of the mass
+        matrix
+    \end{tabular}
+
+    \item \mintinline{sql}{backg} --- contains the time evolution of the background fields \\
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{tserial} & reference to serial number
+        \mintinline{sql}{time_samples.serial} identifying the time sample
+        point for this row \\
+        \mintinline{sql}{page} & the value of each background field is stored in the column
+        \mintinline{sql}{coordN}, where \mintinline{sql}{N} is a 0-based integer
+        labelling the fields in the same order that they were declared in
+        the model description file. However, {\SQLite} allows only a limited number
+        of columns per table. To accommodate this {\CppTransport} will store the roughly
+        the first 2000 entries with \mintinline{sql}{page} equal to $0$ and then
+        start a new row with \mintinline{sql}{page} equal to $1$, and so on.
+        The same strategy is used for all data tables \\
+        \mintinline{sql}{coordN} \ldots & values of the background fields in the order
+        declared in the model description file.
+        All fields come first as a block, followed by their $N$ derivatives as a second block.
+    \end{tabular}
+
+    \item \mintinline{sql}{twopf_re} --- contains real part of field-space 2-point function \\
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{tserial} & reference to serial number
+        \mintinline{sql}{time_samples.serial} identifying the time sample point for this row \\
+        \mintinline{sql}{kserial} & reference to serial number
+        \mintinline{sql}{twopf_samples.serial} identifying the wavenumber sample point for this row \\
+        \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}; see
+        \mintinline{sql}{eleN} below \\
+        \mintinline{sql}{eleN} \ldots & components of the real part of the field-space 2-point
+        function, packed in a `right-most' ordering defined as follows.
+        Set $\langle X^a(\vect{k}_1) X^b(\vect{k}_2) \rangle = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
+        \Sigma^{ab}$, where $a$, $b$ range over the fields and their
+        canonical momenta
+        (which for the purposes of the 2-point function are the same as the
+        derivatives with respect to $N$).
+        Then $N$ = $D \times \#a + \#b$, if $D$ is the dimension of phase
+        space (two times the number of fields)
+        and $\#$ is the map which assigns a numerical
+        value to a species in following order:
+        fields first, in the order defined in the model description file,
+        followed by momenta, in the same order as the fields.
+    \end{tabular}
+    
+    \item \mintinline{sql}{tensor_twopf} --- contains the tensor 2-point function \\
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{tserial} & reference to serial number
+        \mintinline{sql}{time_samples.serial} identifying the time sample point for this row \\
+        \mintinline{sql}{kserial} & reference to serial number
+        \mintinline{sql}{twopf_samples.serial} identifying the wavenumber sample point for this row \\
+        \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}; see
+        \mintinline{sql}{eleN} below \\
+        \mintinline{sql}{eleN} \ldots & components of the tensor two-point function
+        for an individual helicity state $\gamma_s$ (where $s = +, \times$)
+        and their derivatives $\pi_s = \d \gamma_s / \d N$,
+        in the following order:
+        $N = 0$ is $\gamma_s \gamma_s$,
+        $N = 1$ is $\gamma_s \pi_s$,
+        $N = 2$ is $\pi_s \gamma_s$
+        and $N = 3$ is $\pi_s \pi_s$
+    \end{tabular}
+
+        
+    \item \mintinline{sql}{integration_statistics} --- contains integration metadata \\
+    \label{sqltables:statistics}
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{kserial} & reference to serial number
+        \mintinline{sql}{twopf_samples.serial} or
+        \mintinline{sql}{threepf_samples.serial} (depending whether the data is for
+        a 2pf or 3pf task) to which this row corresponds \\
+        \mintinline{sql}{workgroup} & workgroup number for the worker that processed this configuration \\
+        \mintinline{sql}{worker} & worker number for the worker that processed this configuration \\
+        \mintinline{sql}{integration_time} & time required to perform integration, in nanoseconds \\
+        \mintinline{sql}{batch_time} & time required to transfer the integration data into storage, in nanoseconds \\
+        \mintinline{sql}{steps} & number of steps taken by the integrator. Can be used to check whether
+        the integrator is performing an excessive amount of work, which normally indicates that a different
+        algorithm might give better performance \\
+        \mintinline{sql}{refinements} & number of times the density of the time-sample mesh needed to be
+        increased. Not used in the current version of {\CppTransport}.
+    \end{tabular}
+\end{enumerate}
+\end{sqltablelist}
+In addition, tasks sampling the 3-point function include the following extra tables:
+\begin{sqltablelist}
+\begin{enumerate}
+    \setcounterref{enumi}{sqltables:statistics}
+    \item \mintinline{sql}{threepf_samples} --- contains the list of sample points for the 3-point function \\
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{serial} & unique serial number for this sample configuration \\
+        \mintinline{sql}{wavenumber1} & reference to \mintinline{sql}{twopf_samples.serial} identifying
+        the $k_1$ mode for this configuration \\
+        \mintinline{sql}{wavenumber2} & reference to \mintinline{sql}{twopf_samples.serial} identifying
+        the $k_2$ mode for this configuration \\
+        \mintinline{sql}{wavenumber3} & reference to \mintinline{sql}{twopf_samples.serial} identifying
+        the $k_3$ mode for this configuration \\
+        \mintinline{sql}{kt_conventional} & conventionally-normalized value of $k_t$ for this configuration \\
+        \mintinline{sql}{kt_comoving} & comoving-normalized value of $k_t$ for this configuration \\
+        \mintinline{sql}{alpha} & value of $\alpha$ for this configuration \\
+        \mintinline{sql}{beta} & value of $\beta$ for this configuration \\
+        \mintinline{sql}{t_exit_kt} & horizon-exit time for this configuration, in the sense
+        $k_t / 3 = aH$ \\
+        \mintinline{sql}{t_massless} & massless point for this configuration, given by the earliest
+        of the massless points for $k_1$, $k_2$, $k_3$
+    \end{tabular}
+
+    \item \mintinline{sql}{twopf_im} --- contains imaginary part of the field-space 2-point function \\
+    The schema for this table is the same as for the real part of the 2-point function,
+    \mintinline{sql}{twopf_re}.
+    
+    \item \mintinline{sql}{threepf_momentum} and \mintinline{sql}{threepf_deriv} \\
+    Contain the field-space 3-point function.
+    These tables share the same schema. The difference is that
+    \mintinline{sql}{threepf_momentum} stores correlation functions defined using
+    the canonical momenta (rescaled by $a^3$), whereas
+    \mintinline{sql}{threepf_deriv} stores correlation functions defined using
+    derivatives with respect to $N$.
+    These have a nontrivial relationship which is not easy to reconstruct without
+    access to model-dependent information, and specifically the $A$, $B$ and
+    $C$ tensors defined by Dias et al.~\cite{}.
+    To mitigate difficulties with reconstructing one or other of these
+    sets of correlation functions {\CppTransport} stores both, at the expense
+    of roughly doubling the storage requirements for each 3-point function task.
+    
+    If the correlation functions produced by {\CppTransport} are to be used as
+    input for a separate-universe type calculation,
+    or are to be compared with the corresponding \emph{outputs},
+    then it is the correlation functions involving derivatives that are required.
+    \\
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{tserial} & reference to serial number
+        \mintinline{sql}{time_samples.serial} identifying the time sample point for this row \\
+        \mintinline{sql}{kserial} & reference to serial number
+        \mintinline{sql}{twopf_samples.serial} identifying the wavenumber sample point for this row \\
+        \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}; see
+        \mintinline{sql}{eleN} below \\
+        \mintinline{sql}{eleN} \ldots & components of the real part of the field-space 3-point
+        function, packed in a `right-most' ordering as for the 2-point function.
+        That is, if
+        $\langle X^a(\vect{k}_1) X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle =
+        (2\pi)^3 \delta(\sum_i \vect{k}_i) \alpha^{abc}$,
+        then
+        $N = D^2 \times \#a + D \times \#b + \#c$.
+    \end{tabular}
+\end{enumerate}    
+\end{sqltablelist}
 
 
 \section{Options for integration tasks}
