@@ -1761,14 +1761,18 @@ namespace transport
         switch(type)
           {
             case twopf_type::real:
-              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
-                                                                                                                    pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
+                                                                                                                      pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
 
             case twopf_type::imag:
-              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
-                                                                                                                    pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
+                                                                                                                      pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
           }
       }
 
@@ -1787,14 +1791,18 @@ namespace transport
         switch(type)
           {
             case threepf_type::momentum:
-              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, k_serial, sample,
-                                                                                                                            pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, k_serial, sample,
+                                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
 
             case threepf_type::Nderiv:
-              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, k_serial, sample,
-                                                                                                                          pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, k_serial, sample,
+                                                                                                                            pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
           }
       }
 
@@ -1916,14 +1924,18 @@ namespace transport
         switch(type)
           {
             case twopf_type::real:
-              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
-                                                                                                                       pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
+                                                                                                                         pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
 
             case twopf_type::imag:
-              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
-                                                                                                                       pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
+                                                                                                                         pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
           }
       }
 
@@ -1942,14 +1954,18 @@ namespace transport
         switch(type)
           {
             case threepf_type::momentum:
-              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, t_serial, sample,
-                                                                                                                               pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, t_serial, sample,
+                                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
 
             case threepf_type::Nderiv:
-              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, t_serial, sample,
-                                                                                                                             pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, t_serial, sample,
+                                                                                                                               pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
           }
       }
 
