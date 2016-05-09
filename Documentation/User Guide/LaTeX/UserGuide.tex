@@ -3197,7 +3197,10 @@ This information can be specified in two ways:
 	This can lead to slight jitter if any $n$-point functions
 	have initial conditions during this phase.
 	
-	If adaptive initial conditions are in use (this is normally the recommended configuration---see~\S\ref{})
+	If adaptive initial conditions are in use
+	(this is normally the recommended configuration; see
+	the discussion on p.\pageref{enum:adpative-ics}
+	in~\S\ref{sec:int-options})
 	then a customized initial condition will be computed for
 	each $n$-point function.
 	Provided $\Ninit$ is sufficiently early, this customization
@@ -3819,6 +3822,7 @@ configurations of the 2- and 3-point functions
     or vice versa.
 
     \item \semibold{Massless time $\tmassless$.}
+    \label{enum:massless-time}
     In order to apply suitable initial conditions,
     {\CppTransport} computes
     a \emph{massless time} $\tmassless$ for each 2pf configuration.
@@ -4863,7 +4867,8 @@ In addition, tasks sampling the 3-point function include the following extra tab
 \begin{sqltablelist}
 \begin{enumerate}
     \setcounterref{enumi}{sqltables:statistics}
-    \item \mintinline{sql}{threepf_samples} --- contains the list of sample points for the 3-point function \\
+    \item \label{enum:threepf-samples}
+    \mintinline{sql}{threepf_samples} --- contains the list of sample points for the 3-point function \\
     \begin{tabular}{p{2.5cm}p{11.2cm}}
         \mintinline{sql}{serial} & unique serial number for this sample configuration \\
         \mintinline{sql}{wavenumber1} & reference to \mintinline{sql}{twopf_samples.serial} identifying
@@ -4923,11 +4928,141 @@ In addition, tasks sampling the 3-point function include the following extra tab
 \end{enumerate}    
 \end{sqltablelist}
 
-
 \section{Options for integration tasks}
 \label{sec:int-options}
 
 \subsection{General options}
+This section documents the options that can be used when customizing
+integration tasks.
+Typically options are set using member functions provided by
+each task object, such as
+the \mintinline{c++}{twopf_task} and \mintinline{c++}{threepf_cubic_task}
+objects used in~\S\ref{sec:add-integration-task}.
+
+\begin{itemize}
+    \item \mintinline{c++}{set_name(std::string s)} \\
+    Sets the task name to the supplied string
+    
+    \item \mintinline{c++}{set_description(std::string d)} \\
+    Sets an (optional) description field. Reports
+    for this task (either obtained
+    at the command line by the \option{{-}{-}info} switch, or using the
+    HTML report generator) include this description field where it is
+    present.
+    
+    \item
+    \label{enum:adpative-ics}
+    \mintinline{c++}{bool get_adaptive_ics()} \\
+    \mintinline{c++}{set_adaptive_ics(bool g)} \\
+    Get or set the current adaptive initial conditions state.
+    
+    {\CppTransport} sets initial conditions for each $n$-point function
+    by working in the universal, massless approximation.
+    This will be valid provided the initial time is set substantially earlier
+    than the massless point for each wavenumber
+    participating in the correlation function,
+    as defined on p.\pageref{enum:massless-time}
+    in~\S\ref{sec:examine-k-database}.
+    The massless time is not later than the horizon exit time for the corresponding
+    wavenumber, but can be earlier if there is a massive mode in the spectrum.
+
+    Generally, increasing the number of e-folds of massless evolution
+    will improve {\CppTransport}'s estimate of the correlation functions
+    at horizon exit.
+    The accuracy is these estimates is the principal factor determining accuracy
+    of the evolution in the superhorizon regime.
+    Unfortunately, subhorizon evolution is very expensive.
+    In this phase the individual wavefunctions oscillate with exponentially
+    increasing frequency
+    as we move deeper into the subhorizon epoch.
+    The correlation functions themselves do not oscillate,
+    and therefore to ensure accuracy the stepper must adjust its
+    step size so that counterbalancing oscillatory contributions cancel
+    to an acceptable precision.
+    The maximum acceptable step size decreases rapidly on subhorizon
+    scales.
+    
+    Normally this means we wish to have just enough e-folds of massless evolution,
+    but not more.
+    Usually it is sufficient to have between $3$ and $5$ e-folds of massless evolution,
+    with $4$ a good default choice.
+    To make this possible
+    {\CppTransport} supports two ways to set initial conditions for each $n$-point
+    function---\emph{uniform} and \emph{adaptive}.
+    With uniform initial conditions
+    {\CppTransport} will compute an initial condition for each $n$-point function
+    at the initial time specified in the initial conditions package
+    (\S\ref{sec:add-integration-task})
+    and evolve it from there.
+    The advantage is that each correlation function gets the same initial time,
+    so it is possible to compare their values at any subsequent point.
+    The disadvantage is that this initial time may give some $n$-point functions
+    a very large number of e-folds of massless evolution.
+    Often this makes the corresponding integrations impracticably expensive.
+    
+    The alternative is adaptive initial conditions.
+    Using adaptaive initial conditions, {\CppTransport} will compute a customized
+    initial condition a fixed number of e-folds before the massless point
+    for the correlation function in question.
+    (As explained on p.\pageref{enum:threepf-samples}, the massless point for
+    a bispectrum configuration is defined to be the earliest massless point
+    among all participating wavenumbers.)
+    This choice is often dramatically faster than using uniform initial conditions.
+    In many cases it is the only feasible way to perform the calculation.
+
+    \semibold{Adaptive initial conditions are the recommended setting
+    for all {\CppTransport} tasks.}
+    However, because they impose more stringent requirements on the initial
+    conditions they are not enabled by default.
+    This can be done by passing the value \mintinline{c++}{true} to
+    \mintinline{c++}{set_adaptive_ics()},
+    in which case the number of massless e-folds will default to 4,
+    or by calling
+    \mintinline{c++}{set_adaptive_ics_efolds()}
+    with an alternative value.
+    
+    If the initial time specified as part of the initial conditions package
+    does not allow this number of e-folds prior to the
+    earliest massless point, then the task will throw
+    a \mintinline{c++}{transport::runtime_exception} exception.
+    
+    \item \mintinline{c++}{double get_adaptive_ics_efolds()} \\
+    \mintinline{c++}{set_adaptive_ics_efolds(double N)} \\
+    Get or set the number of e-folds of massless evolution used by adapative
+    initial conditions.
+    
+    \item \mintinline{c++}{bool get_collect_initial_conditions()} \\
+    \mintinline{c++}{set_collect_initial_conditions(bool g)} \\
+    Get or set the current collection state for initial conditions.
+    
+    To assist comparison of the results produced by {\CppTransport} with
+    other methods of computing $n$-point functions,
+    it is possible to have {\CppTransport} write extra
+    table sinto the {\SQLite} container which gives the field-values
+    at horizon exit for each configuration.
+    For tasks computing the 2-point function only,
+    {\CppTransport} will write a table called
+    \mintinline{sql}{horizon_exit_values}
+    which
+    fields values at horizon exit for the corresponding wavenumber.
+    For tasks computing the 3-point function {\CppTransport}
+    writes two tables:
+    for each configuration,
+    \mintinline{sql}{horizon_exit_values}
+    contains field values at horizon-exit for the
+    wavenumber which exits
+    earliest.
+    In addition \mintinline{sql}{kt_horizon_exit_values}
+    contains the field values at horizon-exit for the
+    average scale $k_t/3$.
+    
+    Note that these are \emph{not} the initial conditions used
+    by {\CppTransport} internally.
+    
+\end{itemize}
+
+\subsection{Two-point function tasks}
+\label{sec:twopf-options}
 
 \subsection{Three-point function tasks}
 \label{sec:threepf-options}
