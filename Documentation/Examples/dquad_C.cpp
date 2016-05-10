@@ -65,9 +65,11 @@ void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
 
     transport::zeta_twopf_task<> ztk2("dquad.twopf-zeta", tk2);
     ztk2.set_description("Convert the output from dquad.twopf into a zeta 2-point function");
+    ztk2.set_paired(true);
 
     transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
     ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
+    ztk3.set_paired(true);
 
     repo.commit(ztk2);
     repo.commit(ztk3);
