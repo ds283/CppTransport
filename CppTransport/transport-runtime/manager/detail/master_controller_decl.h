@@ -146,13 +146,13 @@ namespace transport
         void autocomplete_task_schedule();
 
         //! prune autocomplete task list of tasks which already have content
-        void prune_tasks_with_content(std::list<std::string>& required_tasks);
+        void prune_tasks_with_content(std::set<std::string>& required_tasks);
 
         //! prune autocomplete task list of tasks which are paired with other tasks
-        void prune_paired_tasks(std::list<std::string>& required_tasks);
+        void prune_paired_tasks(std::set<std::string>& required_tasks);
 
         //! insert job descriptors for required jobs, and sort jobs into correct topological order
-        void insert_job_descriptors(const std::list<std::string>& tasks, const std::list<std::string>& order);
+        void insert_job_descriptors(const std::set<std::string>& required_tasks, const std::list<std::string>& order);
 
 
         // MPI FUNCTIONS

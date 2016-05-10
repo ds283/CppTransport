@@ -616,10 +616,10 @@ namespace transport
       public:
 
         //! determine a list of objects (vertices) which depend on a given named object (vertex)
-        std::unique_ptr< std::list<std::string> > find_dependent_objects(const std::string& name) const;
+        std::unique_ptr< std::set<std::string> > find_dependent_objects(const std::string& name) const;
 
         //! determine a list of objects (vertices) on which a given named object (vertex) depends
-        std::unique_ptr< std::list<std::string> > find_dependencies(const std::string& name) const;
+        std::unique_ptr< std::set<std::string> > find_dependencies(const std::string& name) const;
 
 
         // INTERNAL DATA
@@ -647,9 +647,9 @@ namespace transport
       }
 
 
-    std::unique_ptr< std::list<std::string> > repository_distance_matrix::find_dependent_objects(const std::string& name) const
+    std::unique_ptr< std::set<std::string> > repository_distance_matrix::find_dependent_objects(const std::string& name) const
       {
-        std::unique_ptr< std::list<std::string> > objects = std::make_unique< std::list<std::string> >();
+        std::unique_ptr< std::set<std::string> > objects = std::make_unique< std::set<std::string> >();
 
         const repository_vertex_map& map = *(this->G);
         const graph_type& graph = this->G.get_graph();
@@ -668,7 +668,7 @@ namespace transport
             unsigned int dist = this->D[vertex][vtx];
             if(vtx != vertex && dist < std::numeric_limits<unsigned int>::max())
               {
-                objects->push_back(map[vtx]);
+                objects->insert(map[vtx]);
               }
           }
 
@@ -676,9 +676,9 @@ namespace transport
       }
 
 
-    std::unique_ptr< std::list<std::string> > repository_distance_matrix::find_dependencies(const std::string& name) const
+    std::unique_ptr< std::set<std::string> > repository_distance_matrix::find_dependencies(const std::string& name) const
       {
-        std::unique_ptr< std::list<std::string> > objects = std::make_unique< std::list<std::string> >();
+        std::unique_ptr< std::set<std::string> > objects = std::make_unique< std::set<std::string> >();
 
         const repository_vertex_map& map = *(this->G);
         const graph_type& graph = this->G.get_graph();
@@ -696,7 +696,7 @@ namespace transport
             unsigned int dist = this->D[vtx][vertex];
             if(vtx != vertex && dist < std::numeric_limits<unsigned int>::max())
               {
-                objects->push_back(map[vtx]);
+                objects->insert(map[vtx]);
               }
           }
 

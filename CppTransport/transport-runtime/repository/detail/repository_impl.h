@@ -819,7 +819,7 @@ namespace transport
         repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second.get()->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(!group.second.get()->check_tags(tags)); } );
 
         if(db.empty())
           {

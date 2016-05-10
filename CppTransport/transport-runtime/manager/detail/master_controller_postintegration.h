@@ -55,7 +55,6 @@ namespace transport
         if((z2pf = dynamic_cast< zeta_twopf_task<number>* >(tk)) != nullptr)
           {
             twopf_task<number>* ptk = dynamic_cast<twopf_task<number>*>(z2pf->get_parent_task());
-            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -75,6 +74,7 @@ namespace transport
               }
             else
               {
+                this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
                 this->schedule_postintegration(rec, z2pf, seeded, seed_group, tags, slave_work_event::event_type::begin_zeta_twopf_assignment, slave_work_event::event_type::end_zeta_twopf_assignment);
@@ -83,7 +83,6 @@ namespace transport
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
           {
             threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
-            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -103,6 +102,7 @@ namespace transport
               }
             else
               {
+                this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
                 this->schedule_postintegration(rec, z3pf, seeded, seed_group, tags, slave_work_event::event_type::begin_zeta_threepf_assignment, slave_work_event::event_type::end_zeta_threepf_assignment);
@@ -111,7 +111,6 @@ namespace transport
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
           {
             zeta_threepf_task<number>* ptk = dynamic_cast<zeta_threepf_task<number>*>(zfNL->get_parent_task());
-            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -121,6 +120,7 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
               }
 
+            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
             this->work_scheduler.set_state_size(sizeof(number));
             this->work_scheduler.prepare_queue(*ptk);
             this->schedule_postintegration(rec, zfNL, false, "", tags, slave_work_event::event_type::begin_fNL_assignment, slave_work_event::event_type::end_fNL_assignment);
