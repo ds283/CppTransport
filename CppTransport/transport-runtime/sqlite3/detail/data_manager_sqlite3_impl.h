@@ -194,9 +194,11 @@ namespace transport
               {
                 std::unique_ptr<sqlite3_twopf_writer_aggregate<number> > aggregate = std::make_unique<sqlite3_twopf_writer_aggregate<number> >(*this);
                 std::unique_ptr<sqlite3_twopf_writer_integrity<number> > integrity = std::make_unique<sqlite3_twopf_writer_integrity<number> >(*this);
+                std::unique_ptr<sqlite3_twopf_writer_finalize<number> >  finalize  = std::make_unique<sqlite3_twopf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
                 break;
               }
 
@@ -204,9 +206,11 @@ namespace transport
               {
                 std::unique_ptr<sqlite3_threepf_writer_aggregate<number> > aggregate = std::make_unique<sqlite3_threepf_writer_aggregate<number> >(*this);
                 std::unique_ptr<sqlite3_threepf_writer_integrity<number> > integrity = std::make_unique<sqlite3_threepf_writer_integrity<number> >(*this);
+                std::unique_ptr<sqlite3_threepf_writer_finalize<number> >  finalize  = std::make_unique<sqlite3_threepf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
                 break;
               }
           }
@@ -217,30 +221,13 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::close_writer(integration_writer<number>& writer)
       {
-        // close sqlite3 handle to principal database
-        sqlite3* db = nullptr;
-        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
+        writer.check_integrity();
 
-        // vacuum the database if it is sufficiently small
-        if(boost::filesystem::file_size(writer.get_abs_container_path()) < CPPTRANSPORT_MAX_VACUUMABLE_SIZE)
-          {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
-            boost::timer::cpu_timer timer;
-            char* errmsg;
-            sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
-            timer.stop();
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
-          }
-        else
-          {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '" << writer.get_abs_container_path().string() << "' of size " << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path()))) << " is very large; automatic maintenance disabled";
-          }
+        // perform any finalization step
+        writer.finalize();
 
-        this->open_containers.remove(db);
-        sqlite3_close(db);
-
-        // physically remove the tempfiles directory
-        boost::filesystem::remove_all(writer.get_abs_tempdir_path());
+        this->close_writer_handle(writer);
       }
 
 
@@ -314,9 +301,11 @@ namespace transport
               {
                 std::unique_ptr< sqlite3_zeta_twopf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_twopf_writer_aggregate<number> >(*this);
                 std::unique_ptr< sqlite3_zeta_twopf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_twopf_writer_integrity<number> >(*this);
+                std::unique_ptr< sqlite3_zeta_twopf_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_zeta_twopf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
 
                 writer.get_products().add_zeta_twopf();
                 break;
@@ -326,9 +315,11 @@ namespace transport
               {
                 std::unique_ptr< sqlite3_zeta_threepf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_threepf_writer_aggregate<number> >(*this);
                 std::unique_ptr< sqlite3_zeta_threepf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_threepf_writer_integrity<number> >(*this);
+                std::unique_ptr< sqlite3_zeta_threepf_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_zeta_threepf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
 
                 writer.get_products().add_zeta_twopf();
                 writer.get_products().add_zeta_threepf();
@@ -342,9 +333,12 @@ namespace transport
 
                 std::unique_ptr< sqlite3_fNL_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_fNL_writer_aggregate<number> >(*this, ztk.get_template());
                 std::unique_ptr< sqlite3_fNL_writer_integrity<number> > integrity = std::make_unique< sqlite3_fNL_writer_integrity<number> >(*this);
+                std::unique_ptr< sqlite3_fNL_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_fNL_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
+
                 switch(ztk.get_template())
                   {
                     case derived_data::template_type::fNL_local_template:
@@ -382,6 +376,40 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::close_writer(postintegration_writer<number>& writer)
       {
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
+        writer.check_integrity();
+
+        // perform any finalization step
+        writer.finalize();
+
+        this->close_writer_handle(writer);
+      }
+
+
+    // Close a pair of integration_writer, postintegration_writer objects
+    template <typename number>
+    void data_manager_sqlite3<number>::close_writer(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer)
+      {
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
+        i_writer.check_integrity();
+        p_writer.check_integrity();
+
+        // synchronize any missing serial numbers between containers
+        this->synchronize_missing_serials(i_writer, p_writer);
+
+        // perform finalization step
+        i_writer.finalize();
+        p_writer.finalize();
+
+        this->close_writer_handle(i_writer);
+        this->close_writer_handle(p_writer);
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    void data_manager_sqlite3<number>::close_writer_handle(WriterObject& writer)
+      {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -398,7 +426,10 @@ namespace transport
           }
         else
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '" << writer.get_abs_container_path().string() << "' of size " << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path()))) << " is very large; automatic maintenance disabled";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '"
+                                                                                     << writer.get_abs_container_path().string() << "' of size "
+                                                                                     << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path())))
+                                                                                     << " is very large; automatic maintenance disabled";
           }
 
         this->open_containers.remove(db);
@@ -1670,6 +1701,114 @@ namespace transport
         std::set_intersection(serials.begin(), serials.end(), kt_present.begin(), kt_present.end(), std::inserter(kt_drop_list, kt_drop_list.begin()));
 
         sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(mgr, db, kt_drop_list, dbase);
+      }
+
+
+    // FINALIZE WRITERS
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_twopf_writer(integration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for twopf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_twopf_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_threepf_writer(integration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for threepf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_threepf_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_zeta_twopf_writer(postintegration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_zeta_twopf_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_zeta_threepf_writer(postintegration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_zeta_threepf_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_fNL_writer(postintegration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for fNL container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_fNL_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 

@@ -1749,16 +1749,14 @@ namespace transport
 
             std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(*inflight.second, data_mgr, *rec, worker);
 
-            // carry out an integrity check; this updates the writer with all missing serial numbers
-            // if any are missing, the writer will be marked as failed
-            // also updates writer's metadata with correct number of configurations stored in the container
-            writer->check_integrity(rec->get_task());
-
             // metadata for the writer are likely to be inconsistent
             // try to recover correct metadata directly from the container
             this->recover_integration_metadata(data_mgr, *writer);
 
-            // close writer
+            // close writer, performing integrity check to update all missing serial numbers
+            // if any are missing, the writer will be marked as failed
+            // also updates writer's metadata with correct number of configurations stored in the container
+            // and performs finalization step
             // (closing the writer will remove it from the list of active integrations)
             data_mgr.close_writer(*writer);
 
@@ -1857,11 +1855,11 @@ namespace transport
       {
         std::unique_ptr< postintegration_writer<number> > writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
 
-        // carry out an integrity check; this updates the writer with all missing serial numbers
+        // close writer, performing integrity check to update all missing serial numbers
         // if any are missing, the writer will be marked as failed
-        writer->check_integrity(rec.get_task());
-
-        // close writer
+        // also updates writer's metadata with correct number of configurations stored in the container
+        // and performs finalization step
+        // (closing the writer will remove it from the list of active integrations)
         data_mgr.close_writer(*writer);
 
         // commit output
@@ -1913,20 +1911,17 @@ namespace transport
             std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
             std::unique_ptr< postintegration_writer<number> > p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
 
-            // carry out an integrity check; this updates the writers with all missing serial numbers
-            // if any are missing, the writer will be marked as failed
-            i_writer->check_integrity(i_rec.get_task());
-            p_writer->check_integrity(p_rec.get_task());
-
-            data_mgr.synchronize_missing_serials(*i_writer, *p_writer, i_rec.get_task(), p_rec.get_task());
-
             // metadata for the writer are likely to be inconsistent
             // try to recover correct metadata directly from the container
             this->recover_integration_metadata(data_mgr, *i_writer);
 
-            // close writers
-            data_mgr.close_writer(*i_writer);
-            data_mgr.close_writer(*p_writer);
+            // close writers, performing integrity check to update all missing serial numbers
+            // if any are missing, the writer will be marked as failed
+            // any missing serials are synchornized between the containers
+            // also updates writer's metadata with correct number of configurations stored in the container
+            // and performs finalization step
+            // (closing the writer will remove it from the list of active integrations)
+            data_mgr.close_writer(*i_writer, *p_writer);
 
             // commit output
             // (closing the writers will remove them from the list of active postintegrations)

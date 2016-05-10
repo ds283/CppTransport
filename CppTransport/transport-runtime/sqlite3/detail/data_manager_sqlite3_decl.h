@@ -100,7 +100,7 @@ namespace transport
         friend class data_manager_sqlite3_transaction_handler<number>;
 
 
-        // WRITER HANDLONG -- implements a 'data_manager' interface
+        // WRITER HANDLING -- implements a 'data_manager' interface
 
       public:
 
@@ -128,6 +128,15 @@ namespace transport
 
         //! Close an open postintegration_writer object
         virtual void close_writer(postintegration_writer<number>& writer) override;
+
+        //! Close a paired integration_writer and postintegration_writer set
+        virtual void close_writer(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer) override;
+
+      protected:
+
+        //! Internal method to close the SQLite container associated with a handle
+        template <typename WriterObject>
+        void close_writer_handle(WriterObject& writer);
 
 
         // WRITE TABLES -- implements a 'data_manager' interface
@@ -377,6 +386,33 @@ namespace transport
         friend class sqlite3_zeta_twopf_writer_integrity<number>;
         friend class sqlite3_zeta_threepf_writer_integrity<number>;
         friend class sqlite3_fNL_writer_integrity<number>;
+
+
+        // FINALIZATION HANDLERS
+
+      protected:
+
+        //! finalize twopf writer
+        void finalize_twopf_writer(integration_writer<number>& writer);
+
+        //! finalize threepf writer
+        void finalize_threepf_writer(integration_writer<number>& writer);
+
+        //! finalize zeta twopf writer
+        void finalize_zeta_twopf_writer(postintegration_writer<number>& writer);
+
+        //! finalize zeta threepf writer
+        void finalize_zeta_threepf_writer(postintegration_writer<number>& writer);
+
+        //! finalize fNL writer
+        void finalize_fNL_writer(postintegration_writer<number>& writer);
+
+
+        friend class sqlite3_twopf_writer_finalize<number>;
+        friend class sqlite3_threepf_writer_finalize<number>;
+        friend class sqlite3_zeta_twopf_writer_finalize<number>;
+        friend class sqlite3_zeta_threepf_writer_finalize<number>;
+        friend class sqlite3_fNL_writer_finalize<number>;
 
 
         // DATA PIPES -- implements a 'data_manager' interface

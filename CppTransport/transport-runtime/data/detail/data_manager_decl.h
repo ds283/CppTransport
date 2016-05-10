@@ -128,6 +128,9 @@ namespace transport
         //! Close an open postintegration_writer object.
         virtual void close_writer(postintegration_writer<number>& writer) = 0;
 
+        //! Close a paired integration_writer and postintegration_writer set
+        virtual void close_writer(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer) = 0;
+
 
         // WRITE TABLES FOR A DATA CONTAINER
 
@@ -211,23 +214,24 @@ namespace transport
       public:
 
         //! Check integrity for a twopf container
-        void check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
+        void check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>& tk);
 
         //! Check integrity for a threepf container
-        void check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
+        void check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>& tk);
 
         //! Check integrity for a zeta twopf container
-        void check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        void check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& tk);
 
         //! Check integrity for a zeta threepf container
-        void check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        void check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& tk);
 
         //! Check integrity for an fNL container
-        void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& tk);
+
+      protected:
 
         //! Synchronize missing serial numbers between an integration writer and a postintegration writer
-        void synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
-                                         integration_task<number>* i_tk, postintegration_task<number>* p_tk);
+        void synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer);
 
 
         // -- CALCULATE MISSING SERIAL NUMBERS

@@ -902,6 +902,7 @@ set(TRANSPORT_RUNTIME_SQLITE3_OPERATIONS_FILES
   transport-runtime/sqlite3/operations/data_manager_pull.h
   transport-runtime/sqlite3/operations/data_manager_read.h
   transport-runtime/sqlite3/operations/data_manager_write.h
+  transport-runtime/sqlite3/operations/data_manager_finalize.h
   transport-runtime/sqlite3/operations/data_traits.h
   transport-runtime/sqlite3/operations/repository.h
   transport-runtime/sqlite3/operations/repository_admin.h

@@ -126,12 +126,8 @@ namespace transport
         // this call returns when all workers have signalled that their work is done
         bool success = this->integration_task_to_workers(*writer, i_agg, p_agg, d_agg, begin_label, end_label);
 
+        // close the writer; performs integrity check and finalization step
         journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
-
-        // perform integrity check; updates writer with a list of missing serial numbers, if needed
-        writer->check_integrity(tk);
-
-        // close the writer
         this->data_mgr->close_writer(*writer);
 
         // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
