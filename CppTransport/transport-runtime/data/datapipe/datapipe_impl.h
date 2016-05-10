@@ -227,8 +227,9 @@ namespace transport
 
         if((itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)    // trying to attach to an integration content group
           {
-            this->type                       = attachment_type::integration_attached;
+            // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
             this->attached_integration_group = this->data_mgr.datapipe_attach_integration_content(this, this->utilities.integration_finder, tk->get_name(), tags);
+            this->type                       = attachment_type::integration_attached;
 
             // remember number of fields associated with this container
             this->N_fields = itk->get_model()->get_N_fields();
@@ -243,8 +244,9 @@ namespace transport
           }
         else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
           {
-            this->type                           = attachment_type::postintegration_attached;
+            // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
             this->attached_postintegration_group = this->data_mgr.datapipe_attach_postintegration_content(this, this->utilities.postintegration_finder, tk->get_name(), tags);
+            this->type                           = attachment_type::postintegration_attached;
 
             this->N_fields = 0;
 
