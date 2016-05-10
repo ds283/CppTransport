@@ -1133,9 +1133,9 @@ namespace transport
             << "zeta_threepf_task = patches.Patch(color='limegreen', label='$\\zeta$ 3pf task')" << '\n'
             << "fNL_task = patches.Patch(color='royalblue', label='$f_{NL}$ task')" << '\n'
             << "output_task = patches.Patch(color='orchid', label='Output task')" << '\n'
-            << "i_aggregation_event = plt.Line2D((0,1),(0,0), mfc='red', marker='D', mec='black', linestyle='', label='Push integration')" << '\n'
-            << "p_aggregation_event = plt.Line2D((0,1),(0,0), mfc='green', marker='D', mec='black', linestyle='', label='Push postintegration')" << '\n'
-            << "c_aggregation_event = plt.Line2D((0,1),(0,0), mfc='orchid', marker='D', mec='black', linestyle='', label='Push output')" << '\n'
+            << "i_aggregation_event = plt.Line2D((0,1),(0,0), mfc='green', marker='D', mec='black', linestyle='', label='Push integration')" << '\n'
+            << "p_aggregation_event = plt.Line2D((0,1),(0,0), mfc='red', marker='D', mec='black', linestyle='', label='Push postintegration')" << '\n'
+            << "c_aggregation_event = plt.Line2D((0,1),(0,0), mfc='yellow', marker='D', mec='black', linestyle='', label='Push output')" << '\n'
             << "plt.legend(frameon=False,bbox_to_anchor=(1.05, 1),loc=2,borderaxespad=0.0,handles=[aggregate,MPI_master,database,twopf_task,threepf_task,zeta_twopf_task,zeta_threepf_task,fNL_task,output_task,i_aggregation_event,p_aggregation_event,c_aggregation_event])"  << '\n';
 
         out << "box = ax.get_position()" << '\n'
