@@ -157,10 +157,10 @@ namespace transport
         boost::optional<unsigned int> get_default_checkpoint() const { if(this->default_checkpoint_set) return this->default_checkpoint; else return boost::none; }
 
         //! set default checkpoint
-        void set_default_checkpoint(unsigned int t) { this->default_checkpoint = t; this->default_checkpoint_set = (t > 0); }
+        integration_task<number>& set_default_checkpoint(unsigned int t) { this->default_checkpoint = t; this->default_checkpoint_set = (t > 0); return *this; }
 
         //! unset default checkpoint
-        void unset_default_checkpoint() { this->default_checkpoint = 0; this->default_checkpoint_set = false; }
+        integration_task<number>& unset_default_checkpoint() { this->default_checkpoint = 0; this->default_checkpoint_set = false; return*this; }
 
 
         // TIME CONFIGURATION DATABASE
