@@ -363,7 +363,7 @@ namespace transport
               << " FROM " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE
               << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
 	            << " ON " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=tsample.serial"
-              << " WHERE " CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".page=" << page
+              << " WHERE " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".page=" << page
               << " ORDER BY tsample.serial;";
 
             sample.clear();
@@ -394,12 +394,14 @@ namespace transport
 		        std::stringstream select_stmt;
 		        select_stmt
 			        << "SELECT"
-			        << " " << table_name << ".ele" << col
-			        << " FROM " << table_name
-			        << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
-			        << " ON " << table_name << ".tserial=tsample.serial"
-			        << " WHERE " << table_name << ".kserial=" << k_serial << " AND " << table_name << ".page=" << page
-			        << " ORDER BY tsample.serial;";
+			        << " _subsample.ele" << col
+			        << " FROM"
+              << " (SELECT * FROM " << table_name
+              << " WHERE " << table_name << ".kserial=" << k_serial << " AND " << table_name << ".page=" << page
+              << ") _subsample"
+			        << " INNER JOIN (" << tquery.make_query(policy, true) << ") _tsample"
+			        << " ON _subsample.tserial=_tsample.serial"
+			        << " ORDER BY _tsample.serial;";
 
 						sample.clear();
 		        pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
@@ -429,12 +431,14 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
 	            << "SELECT"
-	            << " " << table_name << ".ele" << col
-	            << " FROM " << table_name
-	            << " INNER JOIN (" << kquery.make_query(policy, true) << ") ksample"
-	            << " ON " << table_name << ".kserial=ksample.serial"
-	            << " WHERE " << table_name << ".tserial=" << t_serial << " AND " << table_name << ".page=" << page
-	            << " ORDER BY ksample.serial;";
+	            << " _subsample.ele" << col
+	            << " FROM "
+              << " (SELECT * FROM " << table_name
+              << " WHERE " << table_name << ".tserial=" << t_serial << " AND " << table_name << ".page=" << page
+              << ") _subsample"
+	            << " INNER JOIN (" << kquery.make_query(policy, true) << ") _ksample"
+	            << " ON _subsample.kserial=_ksample.serial"
+	            << " ORDER BY _ksample.serial;";
 
             sample.clear();
             pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
@@ -458,12 +462,14 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
 	            << "SELECT"
-	            << " " << table_name << "." << data_traits<number, ValueType>::column_name()
-	            << " FROM " << table_name
-	            << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
-	            << " ON " << table_name << ".tserial=tsample.serial"
-	            << " WHERE " << table_name << ".kserial=" << k_serial
-	            << " ORDER BY tsample.serial;";
+	            << " _subsample." << data_traits<number, ValueType>::column_name()
+	            << " FROM"
+              << " (SELECT * FROM " << table_name
+              << " WHERE " << table_name << ".kserial=" << k_serial
+              << ") _subsample"
+	            << " INNER JOIN (" << tquery.make_query(policy, true) << ") _tsample"
+	            << " ON _subsample.tserial=_tsample.serial"
+	            << " ORDER BY _tsample.serial;";
 
             sample.clear();
             pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
@@ -487,12 +493,14 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
 	            << "SELECT"
-	            << " " << table_name << "." << data_traits<number, ValueType>::column_name()
-	            << " FROM " << table_name
-	            << " INNER JOIN (" << kquery.make_query(policy, true) << ") ksample"
-	            << " ON " << table_name << ".kserial=ksample.serial"
-	            << " WHERE " << table_name << ".tserial=" << t_serial
-	            << " ORDER BY ksample.serial;";
+	            << " _subsample." << data_traits<number, ValueType>::column_name()
+	            << " FROM"
+              << " (SELECT * FROM " << table_name
+              << " WHERE " << table_name << ".tserial=" << t_serial
+              << ") _subsample"
+	            << " INNER JOIN (" << kquery.make_query(policy, true) << ") _ksample"
+	            << " ON _subsample.kserial=_ksample.serial"
+	            << " ORDER BY _ksample.serial;";
 
             sample.clear();
             pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
