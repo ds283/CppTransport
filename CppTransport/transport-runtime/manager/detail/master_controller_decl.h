@@ -263,6 +263,12 @@ namespace transport
         //! Master node: Dispatch a postintegration task to the worker processes.
         void dispatch_postintegration_task(postintegration_task_record<number>& rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
 
+        //! Master node: validate that a suitable content group exists before scheduling a postintegration task
+        void validate_content_group(integration_task<number>* tk, const std::list<std::string>& tags);
+
+        //! Master node: validate that a suitable content group exists before scheduling a postintegration task
+        void validate_content_group(postintegration_task<number>* tk, const std::list<std::string>& tags);
+
         //! Master node: Dispatch a postintegration queue to the worker processes
         template <typename TaskObject>
         void schedule_postintegration(postintegration_task_record<number>& rec, TaskObject* tk,

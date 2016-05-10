@@ -55,6 +55,7 @@ namespace transport
         if((z2pf = dynamic_cast< zeta_twopf_task<number>* >(tk)) != nullptr)
           {
             twopf_task<number>* ptk = dynamic_cast<twopf_task<number>*>(z2pf->get_parent_task());
+            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -82,6 +83,7 @@ namespace transport
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
           {
             threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
+            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -109,6 +111,7 @@ namespace transport
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
           {
             zeta_threepf_task<number>* ptk = dynamic_cast<zeta_threepf_task<number>*>(zfNL->get_parent_task());
+            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -128,6 +131,32 @@ namespace transport
             msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec.get_name() << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::validate_content_group(integration_task<number>* tk, const std::list<std::string>& tags)
+      {
+        assert(tk != nullptr);
+
+        integration_content_finder<number> finder(*this->repo);
+
+        // check whether finder can locate a suitable content group for this parent task;
+        // if not, an exception will be thrown which is caught back in the main task processing loop, so this task will be aborted
+        std::unique_ptr< content_group_record<integration_payload> > group = finder(tk->get_name(), tags);
+      }
+
+
+    template <typename number>
+    void master_controller<number>::validate_content_group(postintegration_task<number>* tk, const std::list<std::string>& tags)
+      {
+        assert(tk != nullptr);
+
+        postintegration_content_finder<number> finder(*this->repo);
+
+        // check whether finder can locate a suitable content group for this parent task;
+        // if not, an exception will be thrown which is caught back in the main task processing loop, so this task will be aborted
+        std::unique_ptr< content_group_record<postintegration_payload> > group = finder(tk->get_name(), tags);
       }
 
 

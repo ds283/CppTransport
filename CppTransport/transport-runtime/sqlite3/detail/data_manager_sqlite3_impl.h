@@ -2234,7 +2234,7 @@ namespace transport
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
-        // find a suitable content group for this task
+        // find a suitable content group for this task; will throw an exception if no suitable content group can be found
         std::unique_ptr< content_group_record<integration_payload> > group = finder(name, tags);
 
         integration_payload& payload = group->get_payload();
@@ -2256,7 +2256,7 @@ namespace transport
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
-        // find a suitable content group for this task
+        // find a suitable content group for this task; will throw an exception if no suitable content group can be found
         std::unique_ptr< content_group_record<postintegration_payload> > group = finder(name, tags);
 
         postintegration_payload& payload = group->get_payload();
