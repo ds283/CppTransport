@@ -142,6 +142,7 @@
 
 \newcommand{\semibold}[1]{{\fontseries{b}\selectfont{#1}}}
 \newcommand{\para}[1]{\par\vspace{2mm}\noindent\semibold{{#1.}---}\ignorespaces}
+\newcommand{\grouptag}[1]{\textsf{{#1}}}
 
 % official C++ macro
 \newcommand\CC{C\nolinebreak\hspace{-.05em}\raisebox{.4ex}{\relsize{-3}{\textbf{+}}}\nolinebreak\hspace{-.10em}\raisebox{.4ex}{\relsize{-3}{\textbf{+}}}}
@@ -301,9 +302,10 @@ approximate schemes to compute a general $n$-point function are known,
 but even where these are available they require numerical methods
 except in special cases.
 Such schemes typically break the calculation into two pieces:
-a `hard' contribution characterized by wavenumbers near the scale
+a `hard' contribution---that is, involving comparatively
+large momenta---characterized by wavenumbers near the scale
 of the sound horizon $k/a \sim H / c_s$,
-and a `soft' contribution characterized by wavenumbers
+and a `soft' contribution involving comparatively low wavenumbers
 $k/a \ll H / c_s$~\cite{Dias:2012qy}.
 The soft contribution can be computed using the classical
 equations of motion and is normally the only one to be handled exactly.
@@ -5061,6 +5063,27 @@ objects used in~\S\ref{sec:add-integration-task}.
     Note that these are \emph{not} the initial conditions used
     by {\CppTransport} internally.
     
+    \item \mintinline{c++}{boost::optional<unsigned int> get_default_checkpoint()} \\
+    \mintinline{c++}{set_default_checkpoint(unsigned int t)} \\
+    \mintinline{c++}{unset_default_checkpoint()} \\
+    Get or set the current default checkpoint interval.
+    
+    A default checkpoint interval can be set on a per-task basis.
+    If no \option{{-}{-}checkpoint} switch is given on the command line then
+    the default checkpoint interval is applied, otherwise the value
+    supplied to \option{{-}{-}checkpoint} is used.
+    The current checkpoint interval can be cleared
+    using
+    \mintinline{c++}{unset_default_checkpoint()}.
+    
+    If there is no currently-set default interval then
+    \mintinline{c++}{get_default_checkpoint()} returns an empty
+    \mintinline{c++}{boost::optional}
+    (see \href{http://www.boost.org/doc/libs/1_60_0/libs/optional/doc/html/index.html}{here}).
+    Otherwise, it returns a
+    \mintinline{c++}{boost::optional} containing the current
+    checkpoint interval in minutes.
+    
 \end{itemize}
 
 \subsection{Two-point function tasks}
@@ -5382,12 +5405,304 @@ The `cubic' and `$\alpha\beta$' constructors require different types of policy:
     
 \end{itemize}
 
-
 \section{Adding postintegration tasks}
 \label{sec:post-integration-tasks}
+Although integration tasks are always the first step in using {\CppTransport},
+for most purposes the $n$-point functions they produce need to be reprocessed
+into observables.
+At a minimum we normally require predictions for the correlation functions of
+the primordial curvature perturbation
+$\zeta$.
+It is $\zeta$ that eventually determines the statistics of the
+observed density perturbation---although it may happen that
+these observable statistics cannot be
+predicted purely from knowledge of the inflationary phase
+tracked by {\CppTransport}.
+In such cases the $\zeta$ correlation functions produced by
+the {\CppTransport} platform should be used as initial
+conditions for a subsequent Boltzmann solver (or equivalent)
+that is capable of following their evolution through the
+subsequent radiation- and matter-dominated phases.
+
+\subsection{$\zeta$ tasks for the two- and three-point functions}
+Post-processing or `postintegration' tasks accept the output
+from integration tasks (or other postintegration tasks)
+and convert it into some other form.
+To produce $\zeta$ correlation functions we need to specify
+post-processing tasks which can perform the gauge transformation
+from field space into $\zeta$.
+
+Returning to the example of double-quadratic inflation,
+we can `connect' suitable two- and three-point function
+tasks for $\zeta$ to the existing integration tasks
+\mintinline{c++}{tk2} and
+\mintinline{c++}{tk3}.
+It is only necessary to add the following lines at the end of
+the
+\mintinline{c++}{write_tasks()} function:
+\begin{minted}{c++}
+    transport::zeta_twopf_task<> ztk2("dquad.twopf-zeta", tk2);
+    ztk2.set_description("Convert the output from dquad.twopf into a zeta 2-point function");
+
+    transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
+    ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
+
+    repo.commit(ztk2);
+    repo.commit(ztk3);    
+\end{minted}
+The constructor for
+\mintinline{c++}{zeta_twopf_task} accepts a name and an instance of a
+\mintinline{c++}{twopf_task}, whereas
+the constructor for
+\mintinline{c++}{zeta_threepf_task} accepts a name and an instance of
+a generic
+\mintinline{c++}{threepf_task}.
+The 3-point function task can
+have been constructed using either
+\mintinline{c++}{threepf_cubic_task} or
+\mintinline{c++}{threepf_alphabeta_task}.
+It is not possible to use
+a \mintinline{c++}{twopf_task} with
+\mintinline{c++}{zeta_threepf_task}
+or a \mintinline{c++}{threepf_task} with
+\mintinline{c++}{zeta_twopf_task}.
+
+After constructing
+\mintinline{c++}{ztk2} and
+\mintinline{c++}{ztk3}
+they are committed to the
+repository
+database using \mintinline{c++}{repo.commit()},
+as for any repository object.
+The original
+\mintinline{c++}{commit()}
+calls for
+\mintinline{c++}{tk2} and
+\mintinline{c++}{tk3} can be removed because
+{\CppTransport} will realize that
+these integration tasks must be stored in the
+repository database in order for
+\mintinline{c++}{ztk2} and
+\mintinline{c++}{ztk3} to make sense.
+
+Build the \file{dquad} executable as before and invoke it
+with an instruction to execute the
+new \repoobject{dquad.threepf-zeta} task:
+\begin{minted}{bash}
+    mpiexec -n 4 dquad -v -r test-zeta --create --task dquad.threepf-zeta    
+\end{minted}
+As usual, the \mintinline{bash}{-n} argument of
+\mintinline{bash}{mpiexec} should be adjusted to use a suitable
+number of processes on your machine.
+As before
+{\CppTransport} will print short updates as it carries out each
+task:
+\begin{minted}[bgcolor=blue!10]{text}
+Task manager: processing task 'dquad.threepf' (1 of 2)
+Committed content group '20160510T134815' for task 'dquad.threepf' at 2016-May-10 14:52:33
+Task manager: processing task 'dquad.threepf-zeta' (2 of 2)
+Committed content group '20160510T135233' for task 'dquad.threepf-zeta' at 2016-May-10 14:53:50
+Task manager: processed 2 database tasks in wallclock time 5m 35s | time now 2016-May-10 14:53:50    
+\end{minted}
+Although we only asked for the
+\repoobject{dquad.threepf-zeta} task,
+{\CppTransport} has scheduled execution of both
+\repoobject{dquad.threepf} and \repoobject{dquad.threepf-zeta}.
+This happens because it is aware that
+\repoobject{dquad.threepf-zeta} needs content
+from \repoobject{dquad.threepf} before it can be processed.
+If no content groups are available for
+\repoobject{dquad.threepf} then it is added to the list of tasks
+to be processed.
+The same applies for any chain of dependent tasks;
+if a task specified on the command line depends on output from
+some other task for which no content groups are available,
+{\CppTransport} will automatically schedule execution of these tasks.
+
+If we now re-run the same command
+(removing the unnecessary option \option{{-}{-}create}),
+{\CppTransport} will notice that
+content for \repoobject{dquad.threepf} is already available
+and assume that should be used to feed
+the new execution of
+\repoobject{dquad.threepf-zeta}:
+\begin{minted}[bgcolor=blue!10]{text}
+$ mpiexec -n 4 dquad -v -r test-zeta --create --task dquad.threepf-zeta
+Committed content group '20160510T141749' for task 'dquad.threepf-zeta' at 2016-May-10 15:19:16
+Task manager: processed 1 database task in wallclock time 1m 26.9s | time now 2016-May-10 15:19:16
+\end{minted}
+Checking the number of content groups attached to each task using
+\option{{-}{-}status} shows that
+\repoobject{dquad.threepf-zeta} now has 2 groups, while
+\repoobject{dquad.threepf} has only one:
+\begin{minted}[bgcolor=blue!10]{text}    
+    $ ./dquad -r test-zeta/ --status
+    Available tasks:
+    Task                Type                      Last activity  Outputs
+    dquad.threepf       integration        2016-May-10 14:15:13        1
+    dquad.threepf-zeta  postintegration    2016-May-10 14:19:16        2
+    dquad.twopf         integration        2016-May-10 14:09:53        0
+    dquad.twopf-zeta    postintegration    2016-May-10 14:09:53        0
+\end{minted}
+
+\subsection{Applying tags to control which content groups are used}
+When several suitable content groups are available
+to feed into a postintegration task,
+{\CppTransport} must decide which one should be used.
+By default it will use the most recently-generated group, but this
+not always the appropriate choice.
+For example, we might have several content groups attached to the
+task \repoobject{dquad.threepf}, perhaps generated using
+different steppers or different numerical tolerances.
+To control which content groups are used by postintegration tasks
+{\CppTransport} allows \emph{tags} to be attached to each group.
+These are short, descriptive strings that label some property
+of the group.
+(Of course, these labels may be useful in their own right in addition
+to their ability to control selection of content groups.)
+
+Tags can be attached to content groups when they are generated
+using the \option{{-}{-}tag} switch, or applied later
+using \option{{-}{-}add-tag}
+(see~\S\ref{sec:add-remove-tags}).
+For example, suppose we generate two content groups
+for the same integration task,
+one
+using the
+Dormand--Prince $4^{\mathrm{th}}$/$5^{\mathrm{th}}$-order
+stepper and another using the
+Fehlberg $7^{\mathrm{th}}$/$8^{\mathrm{th}}$-order stepper.
+This could be done
+by compiling two different executables using different
+model description files, or by editing the model description file
+and rebuilding.
+Using \option{{-}{-}tag},
+we can tag each of these content groups appropriately:
+\begin{minted}{bash}
+    $ mpiexec -n 4 dquad -v -r test-tags --create --task dquad.threepf --tag stepper-dopri5
+    $ mpiexec -n 4 dquad -v -r test-tags --task dquad.threepf --tag stepper-fehlberg78
+\end{minted}
+It can be checked that the tags have been correctly applied
+by using \option{{-}{-}info} with the content group
+name, or by generating an HTML report
+and viewing the group records.
+We could have specified multiple tags, if necessary, by repeating
+the \option{{-}{-}tag} argument for each one.
+There is no limit to the number of tags that can be applied.
+
+To compare the results from each stepper we need to obtain
+$\zeta$ predictions from each content group
+by feeding them to
+\repoobject{dquad.threepf-zeta}.
+This can be done by specifying the appropriate tag (or group of tags)
+when we launch the \repoobject{dquad.threepf-zeta} job:
+\begin{minted}{bash}
+    $ mpiexec -n 4 dquad -v -r test-tags --tag stepper-dopri5 --task dquad.threepf-zeta    
+\end{minted}
+This time, the option
+\option{{-}{-}tag} has two meanings:
+first, as for an integration task,
+the resulting content group will be
+tagged with whatever labels we specify, here
+`\grouptag{stepper-dopri5}'.
+Second, when searching for content groups to use as a source,
+{\CppTransport} will restrict attention to those with matching tags.
+If multiple tags are specified then {\CppTransport} will attempt to match
+them all,
+and if no suitable content groups are found
+then the task will fail with an error:%
+    \footnote{If a task has no content groups, but tags are specified on the
+    command line, then {\CppTransport} will schedule execution of the corresponding
+    task. The generated content group will be labelled with the given tags.
+    But if content groups \emph{are} present, simply without matching tags, then
+    {\CppTransport} will issue an error.
+    The presumption is that tags
+    have been specified with an intention to pick out
+    a content group with specific properties.}
+\begin{minted}[bgcolor=blue!10]{text}
+    $ mpiexec -n 4 dquad -v -r test-tags --tag no-matching-tag --task dquad.threepf-zeta 
+    Repository error: no matching content groups for task 'dquad.threepf'    
+\end{minted}
+
+This process can be repeated.
+For example, in~\S\ref{sec:derived-products}
+we will see how to build derived products and generate them using output tasks.
+Each output task draws its data from a collection of integration and
+postintegration tasks such as \repoobject{dquad.threepf}
+and \repoobject{dquad.threepf-zeta}.
+By specifying a collection of tags while executing the output task we can cause it
+to select input data which satisfy specific labels
+such as 
+\grouptag{stepper-dopri5}
+or
+\grouptag{stepper-fehlberg78}.
+
+\para{Selecting a content group by name}
+Alternatively, it is possible to select a content group by name.
+To do this,
+specify the name as a tag.
+The resulting content groups will
+themselves be tagged with the original group name,
+meaning that in principle it is possible to use this feature
+to follow chains
+of groups back to an original integration content group.
+In practice, however, this kind of dependency tracking is best performed
+using HTML reports. These can generate dependency diagrams which summarize the
+interrelation between content groups more efficiently than a large number of tags.
+
+The option to specify content groups by name remains useful
+when it is necessary to force a particular group to be used.
+
+\subsection{Paired $\zeta$ tasks}
+It sometimes happens that the output from an integration task is of limited
+interest by itself.
+(For example, if our interest is only to determine the observational viability
+of a model then we may only require predictions for $\zeta$,
+at least if a suitable adiabatic limit is reached during the inflationary
+phase.)
+The content groups for such tasks will normally be generated only in order
+to postprocess them using other postintegration tasks.
+This is such a common occurrence that {\CppTransport} provides a short-cut
+enabling a pair of coupled integration/postintegration tasks
+to be processed simultaneously.
+Tasks coupled in this way are said to be \emph{paired}.
+
+To pair
+the postintegration tasks
+\mintinline{c++}{ztk2} and
+\mintinline{c++}{ztk3} with their parent integration tasks requires use
+of the
+\mintinline{c++}{set_paired()}
+function.
+The {\CC} code used to generate these tasks can be replaced by
+\begin{minted}{c++}
+    transport::zeta_twopf_task<> ztk2("dquad.twopf-zeta", tk2);
+    ztk2.set_description("Convert the output from dquad.twopf into a zeta 2-point function");
+    ztk2.set_paired(true);
+
+    transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
+    ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
+    ztk3.set_paired(true);
+
+    repo.commit(ztk2);
+    repo.commit(ztk3);
+\end{minted}
+
 
 \section{Generating derived products using output tasks}
 \label{sec:derived-products}
+
+\section{Managing repositories}
+\label{sec:repo-management}
+
+\subsection{Adding and removing tags}
+\label{sec:add-remove-tags}
+
+\subsection{Adding and removing notes}
+\label{sec:add-remove-notes}
+
+\subsection{Deleting content groups}
+\label{sec:delete-content}
 
 \section{Conclusions} 
 
