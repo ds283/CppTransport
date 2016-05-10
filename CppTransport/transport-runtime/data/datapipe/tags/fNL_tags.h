@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __fNL_tags_H_
-#define __fNL_tags_H_
+#ifndef CPPTRANSPORT_FNL_TAGS_H
+#define CPPTRANSPORT_FNL_TAGS_H
 
 
 #include <vector>
@@ -311,4 +311,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__fNL_tags_H_
+#endif //CPPTRANSPORT_FNL_TAGS_H

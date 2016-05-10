@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __config_tags_H_
-#define __config_tags_H_
+#ifndef CPPTRANSPORT_CONFIG_TAGS_H
+#define CPPTRANSPORT_CONFIG_TAGS_H
 
 
 #include <vector>
@@ -290,4 +290,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__config_tags_H_
+#endif //CPPTRANSPORT_CONFIG_TAGS_H
