@@ -261,7 +261,13 @@ namespace transport
         double get_N_horizon_crossing() const { return(this->ics.get_N_horizon_crossing()); }
 
         //! Get current a* normalization
+        //! This determines the value of the scale factor a(t) at the distinguished scale k*.
+        //! The value supplied is ln(a*), so it can be positive or negative
         double get_astar_normalization() const { return(this->astar_normalization); }
+
+        //! Set current a* normalization
+        //! The value supplied in ln(a*)
+        twopf_db_task<number>& set_astar_normalization(double astar) const { this->astar_normalization = astar; }
 
 
         // INTERFACE - ADAPTIVE INITIAL CONDITIONS
