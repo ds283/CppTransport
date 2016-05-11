@@ -139,6 +139,7 @@
 \DeclareMathOperator{\TimeOrder}{T}
 \newcommand{\AntiTimeOrder}{\bar{\TimeOrder}}
 \DeclareMathOperator{\Or}{O}
+\newcommand{\iprod}[2]{\langle\!\langle {#1}, {#2} \rangle\!\rangle}
 
 \newcommand{\semibold}[1]{{\fontseries{b}\selectfont{#1}}}
 \newcommand{\para}[1]{\par\vspace{2mm}\noindent\semibold{{#1.}---}\ignorespaces}
@@ -163,6 +164,11 @@
 
 \renewcommand{\geq}{\geqslant}
 \renewcommand{\leq}{\leqslant}
+
+\DeclareMathOperator{\realpart}{Re}
+\DeclareMathOperator{\imagpart}{Im}
+\renewcommand{\Re}{\realpart}
+\renewcommand{\Im}{\imagpart}
 
 \newcommand{\archivename}{\file{CppTransport\_2016\_01.tar.gz}}
 
@@ -4769,6 +4775,7 @@ and columns:
 \begin{sqltablelist}    
 \begin{enumerate}
     \item \mintinline{sql}{time_samples} --- contains the list of time sample points. \\
+    \label{sqltable:time-samples}
     \begin{tabular}{p{2.5cm}p{11.2cm}}
         \mintinline{sql}{serial} & unique serial number for this sample point \\
         \mintinline{sql}{time} & numerical value of time, measured in $N$, using
@@ -4777,6 +4784,7 @@ and columns:
     \end{tabular}
     
     \item \mintinline{sql}{twopf_samples} --- contains the list of sample points for the 2-point function \\
+    \label{sqltable:twopf-samples}
     \begin{tabular}{p{2.5cm}p{11.2cm}}
         \mintinline{sql}{serial} & unique serial number for this sample configuration \\
         \mintinline{sql}{conventional} & conventionally-normalized wavenumber $k$
@@ -4790,6 +4798,7 @@ and columns:
     \end{tabular}
 
     \item \mintinline{sql}{backg} --- contains the time evolution of the background fields \\
+    \label{sqltable:backg}
     \begin{tabular}{p{2.5cm}p{11.2cm}}
         \mintinline{sql}{tserial} & reference to serial number
         \mintinline{sql}{time_samples.serial} identifying the time sample
@@ -4829,7 +4838,7 @@ and columns:
         fields first, in the order defined in the model description file,
         followed by momenta, in the same order as the fields.
         
-        The quantity stored is $k^3 \Sigma^{ab}$, where $k = |\vect{k}_1| = |\vect{k}_2|$
+        The quantity stored is $\Re(k^3 \Sigma^{ab})$, where $k = |\vect{k}_1| = |\vect{k}_2|$
         is the common magnitude of the momenta.
         This is independent of the comoving normalization, making the results
         easy to remap into whatever units are convenient.
@@ -4844,7 +4853,7 @@ and columns:
         \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}; see
         \mintinline{sql}{eleN} below \\
         \mintinline{sql}{eleN} \ldots & \semibold{dimensionless components}
-        of the tensor two-point function
+        of the real part of the tensor two-point function
         for an individual helicity state $\gamma_s$ (where $s = +, \times$)
         and their derivatives $\pi_s = \d \gamma_s / \d N$,
         in the following order:
@@ -4857,7 +4866,7 @@ and columns:
         (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2) \Sigma_{ss'}$,
         where $s$ and $s'$ label helicities,
         then the quantity stored is
-        $k^2 \Sigma_{ss'}$.
+        $\Re(k^3 \Sigma_{ss'})$.
     \end{tabular}
 
         
@@ -4884,7 +4893,7 @@ In addition, tasks sampling the 3-point function include the following extra tab
 \begin{sqltablelist}
 \begin{enumerate}
     \setcounterref{enumi}{sqltables:statistics}
-    \item \label{enum:threepf-samples}
+    \item \label{sqltable:threepf-samples}
     \mintinline{sql}{threepf_samples} --- contains the list of sample points for the 3-point function \\
     \begin{tabular}{p{2.5cm}p{11.2cm}}
         \mintinline{sql}{serial} & unique serial number for this sample configuration \\
@@ -4904,13 +4913,14 @@ In addition, tasks sampling the 3-point function include the following extra tab
         of the massless points for $k_1$, $k_2$, $k_3$
     \end{tabular}
 
-    \item \mintinline{sql}{twopf_im} --- contains imaginary part of the field-space 2-point function \\
+    \item \mintinline{sql}{twopf_im} --- contains the imaginary part of the field-space 2-point function \\
     The schema and storage conventions
     for this table are the same as for the real part of the 2-point function,
     \mintinline{sql}{twopf_re}.
     
-    \item \mintinline{sql}{threepf_momentum} and \mintinline{sql}{threepf_deriv} \\
-    Contain the field-space 3-point function.
+    \item \mintinline{sql}{threepf_momentum} \\
+    \mintinline{sql}{threepf_deriv} --- contain
+    the real part of the field-space 3-point function \\
     These tables share the same schema. The difference is that
     \mintinline{sql}{threepf_momentum} stores correlation functions defined using
     the canonical momenta (rescaled by $a^3$), whereas
@@ -4945,10 +4955,10 @@ In addition, tasks sampling the 3-point function include the following extra tab
         $N = D^2 \times \#a + D \times \#b + \#c$.
         
         The quantity stored is the \emph{shape function}
-        $k_1^2 k_2^2 k_3^2 \alpha^{abc}$.
+        $\Re(k_1^2 k_2^2 k_3^2 \alpha^{abc})$.
         As for the other data tables, this object is independent of the
         comoving normalization and can be easily remapped into
-        any choice of units.
+        any choice of wavenumber normalization.
     \end{tabular}
 \end{enumerate}    
 \end{sqltablelist}
@@ -5030,7 +5040,7 @@ objects used in~\S\ref{sec:add-integration-task}.
     Using adaptaive initial conditions, {\CppTransport} will compute a customized
     initial condition a fixed number of e-folds before the massless point
     for the correlation function in question.
-    (As explained on p.\pageref{enum:threepf-samples}, the massless point for
+    (As explained on p.\pageref{sqltable:threepf-sampels}, the massless point for
     a bispectrum configuration is defined to be the earliest massless point
     among all participating wavenumbers.)
     This choice is often dramatically faster than using uniform initial conditions.
@@ -5080,16 +5090,15 @@ objects used in~\S\ref{sec:add-integration-task}.
     $\astar = 4$.
     The current transport implementation uses
     \emph{dimensionful} correlation
-    functions, and therefore while the choice of $\astar$ has no effect
-    of the final values, it does affect the magnitude of intermediate
+    functions (although this may change in future),
+    and therefore while the choice of $\astar$ has no effect
+    of the final values it does affect the magnitude of intermediate
     terms.
-    This may change in future, although if so this is likely to happen in a way
-    that is invisible to users.
     The default value $\astar = 4$ is intended to give good performance
     for typical models.
     
     If the integration engine is not performing well, it may be possible
-    to improve its performance by adjustment of $\astar$.
+    to obtain an improvement by adjusting $\astar$.
     
     \item \mintinline{c++}{bool get_collect_initial_conditions()} \\
     \mintinline{c++}{set_collect_initial_conditions(bool g)} \\
@@ -5470,18 +5479,20 @@ At a minimum we normally require predictions for the correlation functions of
 the primordial curvature perturbation
 $\zeta$.
 It is $\zeta$ that eventually determines the statistics of the
-observed density perturbation---although it may happen that
-these observable statistics cannot be
-predicted purely from knowledge of the inflationary phase
-tracked by {\CppTransport}.
+observed density perturbation---although it may happen
+(where an adiabatic limit is not acheived by the end of inflation)
+that
+these observable statistics
+also depend on post-inflationary
+physics which is not handled by {\CppTransport}.
 In such cases the $\zeta$ correlation functions produced by
 the {\CppTransport} platform should be used as initial
-conditions for a subsequent Boltzmann solver (or equivalent)
+conditions for a Boltzmann solver (or equivalent)
 that is capable of following their evolution through the
 subsequent radiation- and matter-dominated phases.
 
 \subsection{$\zeta$ tasks for the two- and three-point functions}
-Post-processing or `postintegration' tasks accept the output
+Post-processing or `postintegration' tasks accept output
 from integration tasks (or other postintegration tasks)
 and convert it into some other form.
 To produce $\zeta$ correlation functions we need to specify
@@ -5513,7 +5524,7 @@ the constructor for
 \mintinline{c++}{zeta_threepf_task} accepts a name and an instance of
 a generic
 \mintinline{c++}{threepf_task}.
-The 3-point function task can
+The 3-point function task may
 have been constructed using either
 \mintinline{c++}{threepf_cubic_task} or
 \mintinline{c++}{threepf_alphabeta_task}.
@@ -5550,7 +5561,6 @@ new \repoobject{dquad.threepf-zeta} task:
 As usual, the \mintinline{bash}{-n} argument of
 \mintinline{bash}{mpiexec} should be adjusted to use a suitable
 number of processes on your machine.
-As before
 {\CppTransport} will print short updates as it carries out each
 task:
 \begin{minted}[bgcolor=blue!10]{text}
@@ -5579,7 +5589,7 @@ If we now re-run the same command
 (removing the unnecessary option \option{{-}{-}create}),
 {\CppTransport} will notice that
 content for \repoobject{dquad.threepf} is already available
-and assume that should be used to feed
+and assume that it should be used to feed
 the new execution of
 \repoobject{dquad.threepf-zeta}:
 \begin{minted}[bgcolor=blue!10]{text}
@@ -5617,8 +5627,10 @@ of the group.
 (Of course, these labels may be useful in their own right in addition
 to their ability to control selection of content groups.)
 
-Tags can be attached to content groups when they are generated
-using the \option{{-}{-}tag} switch, or applied later
+Using the \option{{-}{-}tag} switch,
+tags can be attached to content groups at the time of generation.
+Alternatively
+they may be applied later
 using \option{{-}{-}add-tag}
 (see~\S\ref{sec:add-remove-tags}).
 For example, suppose we generate two content groups
@@ -5717,7 +5729,8 @@ of a particular
 inflationary model then we only require predictions for $\zeta$,
 at least if a suitable adiabatic limit is reached during the inflationary
 phase.
-The content group generated by such integration tasks
+In these circumstances
+the content group generated by an integration task
 will be used only for post-processing by other postintegration tasks.
 This is such a common occurrence that {\CppTransport} provides a short-cut
 enabling a pair of coupled integration/postintegration tasks
@@ -5727,15 +5740,13 @@ Tasks coupled in this way are said to be \emph{paired}.
 To pair
 the postintegration tasks
 \mintinline{c++}{ztk2} and
-\mintinline{c++}{ztk3} with their parent integration tasks requires use
-of the
-\mintinline{c++}{set_paired()}
-function.
-If we wish to implement pairing then
-the {\CC} code used to generate these tasks could be replaced by
+\mintinline{c++}{ztk3} with their parent integration tasks, use
+the
+\mintinline{c++}{set_paired()} method.
+The {\CC} code used to generate these tasks could be replaced by
 \begin{minted}{c++}
     transport::zeta_twopf_task<> ztk2("dquad.twopf-zeta", tk2);
-    ztk2.set_description("Convert the output from dquad.twopf into a zeta 2-point function");
+    ztk2.set_description("Convert the output from dquad.twof into a zeta 2-point function");
     ztk2.set_paired(true);
 
     transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
@@ -5773,12 +5784,236 @@ It is possible to specify independent checkpoint intervals for the tasks
 in an integration/postintegration pair, but in the event of failure
 the data stored in each container will be synchronized.
 In practice this means that data in one container which has no counterpart
-in the other will be discarded.
-For this reason there is no real use case for unequal checkpoint intervals.
+in the other will be discarded,
+and therefore there is no real use case for unequal checkpoint intervals.
 
 \subsection{Using $\zeta$ {\SQLite} data containers}
+\S\ref{sec:using-integration-container}
+described the database containers used to hold data products from
+an integration task.
+The data products from postintegration tasks are handled very similarly.
+In particular, each content group will have the same physical layout
+shown in Fig.~\ref{fig:integration-content}.
+All $n$-point functions and supporting metadata
+are aggregated into a main container
+\file{data.sqlite},
+and logs are left in the directory \file{logs}.
 
-\subsection{Inner product tasks to compute $\fNL$-like amplitudes}
+\subsubsection{$\zeta$ two-point function tasks}
+The {\SQLite} container for a task generating the $\zeta$ two-point function will container
+the following tables:
+\begin{sqltablelist}
+\begin{enumerate}
+	\item \mintinline{sql}{time_samples} --- contains the list of time sample points. \\
+	This table is a duplicate of the one described in \S\ref{sec:using-integration-container}
+	(see p.\pageref{sqltable:time-samples}).
+	
+	\item \mintinline{sql}{twopf_samples} --- contains the list of sample points for the 2-point function \\
+	This table is a duplicate of the one described in \S\ref{sec:using-integration-container}
+	(see p.\pageref{sqltable:twopf-samples}).
+	
+	\item \mintinline{sql}{zeta_twopf} --- contains the real part of the $\zeta$ 2-point function \\
+    \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
+        identifying the time sample point for this row \\
+        \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
+        identifying the wavenumber sample point for this row \\
+        \mintinline{sql}{twopf} & \semibold{dimensionless value} of
+        the real part of the $\zeta$ 2-point function,
+        $\langle \zeta(\vect{k}_1) \zeta(\vect{k}_3) \rangle = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
+        \Sigma_\zeta$.
+
+        The value stored is $\Re(k^3 \Sigma_\zeta)$.
+    \end{tabular}
+    
+    \item \mintinline{sql}{gauge_xfm1} --- contains the linear gauge transformation $N_a$ \\
+    The required Fourier-space gauge transformation has the form
+    \begin{equation}
+    	\zeta(\vect{k}) =
+    	N_a(\vect{k})
+    	X^a(\vect{k})	
+    	+
+    	\frac{1}{2}
+    	\int \frac{\d^3 q}{(2\pi)^3} \frac{\d^3 r}{(2\pi)^3}
+    	\delta(\vect{k} - \vect{q} - \vect{r})
+    	N_{ab}(\vect{q},\vect{r})
+    	X^a(\vect{q})
+    	X^b(\vect{r})
+    	+ \cdots ,
+    	\label{eq:gauge-xfm}
+    \end{equation}
+	where $X^a$, $X^b$ (and so on) label fluctuations over the full phase space
+	of fields and their derivatives with respect to $N$,
+	and the omitted terms represented by `$\cdots$' are higher order
+	$X$.
+	Expressions for the transformation coefficients
+	$N_a$ and $N_{ab}$ may be extracted from Dias et al.~\cite{Dias:2014msa}.
+	In the notation of that reference,
+	the expressions used by {\CppTransport} correspond to
+	$\zeta_1^{\text{simple}}$
+	and
+	$\zeta_2^{\text{simple}}$,
+	making $N_a$ independent of $\vect{k}$ in practice.
+	
+	The $\zeta$ post-processing tasks write these transformation coefficients into the
+	data containers.
+	Specifically, the table
+	\mintinline{sql}{gauge_xfm1} is associated with production of the
+	$\zeta$ power spectrum,
+	for which only $N_a$ is required.
+    Although the expression used for $N_a$ in current versions is
+    momentum independent, {\CppTransport} does not assume this will always be the
+    case and records the gauge transformation for each momentum configuration. \\
+    \begin{tabular}{p{2.5cm}p{11.5cm}}
+    	\mintinline{sql}{tserial} & 	reference to serial number \mintinline{sql}{times_samples.serial}
+        identifying the time sample point for this row \\
+        \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
+        identifying the wavenumber sample point for this row \\
+        \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}
+        in~\S\ref{sec:using-integration-container}; see p.\pageref{sqltable:backg} \\
+        \mintinline{sql}{eleM} \ldots & components of $N_a$ for this
+        momentum configuration, packed with $M= \#a$.
+        Here, as in~\S\ref{sec:using-integration-container}, `$\#$'
+        is the map which takes a species label to its numeric equivalent
+        defined by the order of declaration in the model description file.
+        All fields come first, followed by all field derivatives in the same order.
+        Notice that
+		the gauge transformation~\eqref{eq:gauge-xfm} is taken to be written in
+		terms of \emph{derivatives}, as in Ref.~\cite{Dias:2014msa}, and not canonical momenta.
+		
+		Notice that because $\zeta$ is dimensionless but the $X^a$ have dimensions of
+		mass, $N_a$ has dimensions of inverse mass. It therefore scales with the
+		value assigned to the Planck scale $\Mp$.
+    \end{tabular}
+\end{enumerate}
+\end{sqltablelist}
+
+\subsubsection{$\zeta$ three-point function tasks}
+In addition to the generic tables described above,
+postintegration tasks which generate the $\zeta$ three-point function also
+write the following tables to the data container:
+\begin{sqltablelist}
+\begin{enumerate}
+	\item \mintinline{sql}{threepf_samples} --- contains the list of sample points for the 3-point function \\
+	This table is a duplicate of the one decribed in \S\ref{sec:using-integration-container}
+	(see p.\pageref{sqltable:threepf-samples}).
+	
+	\item \mintinline{sql}{threepf} --- contains the real part of the $\zeta$ 3-point function \\
+	\begin{tabular}{p{2.5cm}p{11.5cm}}
+        \mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
+        identifying the time sample point for this row \\
+        \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
+        identifying the wavenumber sample point for this row \\
+        \mintinline{sql}{threepf} & \semibold{dimensionless value} of
+        the real part of the $\zeta$ 3-point function.
+        If this is taken to satisfy
+        $\langle \zeta(\vect{k}_1) \zeta(\vect{k}_2) \zeta(\vect{k}_3) \rangle
+        = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2 + \vect{k}_3) \alpha_\zeta$
+        then the stored quantity is
+        the dimensionless shape function
+        $k_1^2 k_2^2 k_3^2 \alpha_\zeta$. \\
+        \mintinline{sql}{redbsp} & \semibold{dimensionless reduced bispectrum},
+        defined by
+        \begin{equation}
+        	\frac{6}{5} \fNL(k_1, k_2, k_3) = \frac{\alpha_\zeta(k_1, k_2, k_3)}
+        		{\Sigma_\zeta(k_1) \Sigma_\zeta(k_2) +
+        		 \Sigma_\zeta(k_1) \Sigma_\zeta(k_3) +
+        		 \Sigma_\zeta(k_2) \Sigma_\zeta(k_3)} .
+        \end{equation}
+	\end{tabular}
+	
+	\item \mintinline{sql}{gauge_xfm2_123} \\
+    \mintinline{sql}{gauge_xfm2_213} \\
+    \mintinline{sql}{gauge_xfm2_312} --- contains the quadratic gauge transformation $N_{ab}$ \\
+    For each bispectrum configuration there are three possible assignments
+    for $N_{ab}$.
+    {\CppTransport} writes them all to the data container, in three separate tables
+    with the mapping: \\
+    \begin{tabular}{p{2.5cm}p{11.5cm}}
+    	\mintinline{sql}{gauge_xfm_123} & $N_{ab}(\vect{k}_2, \vect{k}_3)$ \\
+    	\mintinline{sql}{gauge_xfm_213} & $N_{ab}(\vect{k}_1, \vect{k}_3)$ \\
+    	\mintinline{sql}{gauge_xfm_312} & $N_{ab}(\vect{k}_1, \vect{k}_2)$
+    \end{tabular}
+	The columns in each table are: \\
+	\begin{tabular}{p{2.5cm}p{11.5cm}}
+		\mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
+        identifying the time sample point for this row \\
+        \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
+        identifying the wavenumber sample point for this row \\
+        \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}
+        in~\S\ref{sec:using-integration-container}; see p.\pageref{sqltable:backg} \\
+        \mintinline{sql}{eleM} \ldots & components of $N_{ab}$ for this
+        momentum configuration and momentum assignment, packed with the right-most
+        ordering $M = D \times \#a + \#b$.
+        As for the linear gauge transformation, the expressions assume~\eqref{eq:gauge-xfm}
+        is written in terms of derivatives with respect to e-folding $N$
+        rather than canonical momenta.
+	\end{tabular}
+\end{enumerate}	
+\end{sqltablelist}
+On superhorizon scales all the gauge transformation coefficients become independent of
+momenta.
+
+\subsection{Inner-product tasks to compute $\fNL$-like amplitudes}
+\label{sec:inner-products}
+The $\zeta$ post-processing tasks
+\mintinline{c++}{zeta_twopf_task} and
+\mintinline{c++}{zeta_threepf_task}
+are not the only postintegration tasks provided by {\CppTransport}.
+In principle, tasks could be provided to compute almost any observable of interest;
+but at present only one option is offered---an inner product between the
+numerically-computed bispectrum and one of the standard bispectrum shapes.
+
+To generate such inner products we use an
+\mintinline{c++}{fNL_task}.
+{\CppTransport} refers to them in this way because, \emph{under certain circumstances},
+the amplitudes they produce may be related to the $\fNL$ amplitudes
+reported by surveys of the cosmic microwave background anisotropies
+or the large-scale galaxy distribution.
+However, this interpretation should be treated with caution.
+The is no necessary relation between these inner products and
+the quantities observed by some particular instrument,
+and to obtain truly accurate results requires a more careful calculation.
+For an example, see Ref.~\cite{Byrnes:2015dub}.
+
+To compute an inner product
+we must provide a source of 3-point function
+data by attaching a \mintinline{c++}{zeta_threepf_task}.
+However, {\CppTransport} places restrictions on the
+source 3-point functions for which it can compute inner products.
+In particular:
+\begin{itemize}
+	\item currently, inner products are supported only for
+	cubic tasks built from a linear grid.
+	\item the grid should be complete---no configurations should
+	be dropped by the storage policy.
+\end{itemize}
+
+The inner product between two bispectra is defined to be
+a sum over the corresponding dimensionless shape functions.
+Given a bispectrum $B(k_1, k_2, k_3)$, its shape function is
+$S \equiv (k_1 k_2 k_3)^2 B(k_1, k_2, k_3)$
+and the inner product between two bispectra
+$B_1$, $B_2$ satisfies~\cite{Babich:2004gb,Fergusson:2009nv}
+\begin{equation}
+	\iprod{B_1}{B_2} \equiv
+	\sum_{\text{triangles}}
+	S_1(k_1, k_2, k_3) S_2(k_1, k_2, k_3) .	
+\end{equation}
+Sometimes the configurations in this sum are weighted
+to approximate the sensitivity of a particular instrument,
+but {\CppTransport} uses an unweighted definition.
+The sum over triangles unpacks into an integral,
+\begin{equation}
+	\iprod{B_1}{B_2} \equiv
+	\int \d k_1 \, \d k_2 \, \d k_3 \;
+	S_1(k_1, k_2, k_3) S_2(k_1, k_2, k_3) .	
+\end{equation}
+
+This inner product is not unique, and in any case requires
+the specification of UV and IR limits in order to be well defined.
+These issues are not a cause for concern, because the purpose
+of the inner product is not mathematical but physical.
 
 \para{Using the {\SQLite} data container}
 
