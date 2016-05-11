@@ -4743,6 +4743,7 @@ Stalls are more likely in the following circumstances:
 \end{figure}
 
 \subsection{Using the {\SQLite} data container}
+\label{sec:using-integration-container}
 In~\S\S\ref{sec:post-integration-tasks}--\ref{sec:derived-products}
 we will consider post-integration tasks and show how they can be used
 to generate observables from the raw $n$-point functions produced by
@@ -4814,7 +4815,7 @@ and columns:
         \mintinline{sql}{twopf_samples.serial} identifying the wavenumber sample point for this row \\
         \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}; see
         \mintinline{sql}{eleN} below \\
-        \mintinline{sql}{eleN} \ldots & components of the real part of the field-space 2-point
+        \mintinline{sql}{eleN} \ldots & \semibold{dimensionless components} of the real part of the field-space 2-point
         function, packed in a `right-most' ordering defined as follows.
         Set $\langle X^a(\vect{k}_1) X^b(\vect{k}_2) \rangle = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
         \Sigma^{ab}$, where $a$, $b$ range over the fields and their
@@ -4827,6 +4828,11 @@ and columns:
         value to a species in following order:
         fields first, in the order defined in the model description file,
         followed by momenta, in the same order as the fields.
+        
+        The quantity stored is $k^3 \Sigma^{ab}$, where $k = |\vect{k}_1| = |\vect{k}_2|$
+        is the common magnitude of the momenta.
+        This is independent of the comoving normalization, making the results
+        easy to remap into whatever units are convenient.
     \end{tabular}
     
     \item \mintinline{sql}{tensor_twopf} --- contains the tensor 2-point function \\
@@ -4837,14 +4843,21 @@ and columns:
         \mintinline{sql}{twopf_samples.serial} identifying the wavenumber sample point for this row \\
         \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}; see
         \mintinline{sql}{eleN} below \\
-        \mintinline{sql}{eleN} \ldots & components of the tensor two-point function
+        \mintinline{sql}{eleN} \ldots & \semibold{dimensionless components}
+        of the tensor two-point function
         for an individual helicity state $\gamma_s$ (where $s = +, \times$)
         and their derivatives $\pi_s = \d \gamma_s / \d N$,
         in the following order:
         $N = 0$ is $\gamma_s \gamma_s$,
         $N = 1$ is $\gamma_s \pi_s$,
         $N = 2$ is $\pi_s \gamma_s$
-        and $N = 3$ is $\pi_s \pi_s$
+        and $N = 3$ is $\pi_s \pi_s$.
+
+        If $\langle \gamma_s(\vect{k}_1 \gamma_{s'}(\vect{k}_2) \rangle =
+        (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2) \Sigma_{ss'}$,
+        where $s$ and $s'$ label helicities,
+        then the quantity stored is
+        $k^2 \Sigma_{ss'}$.
     \end{tabular}
 
         
@@ -4892,7 +4905,8 @@ In addition, tasks sampling the 3-point function include the following extra tab
     \end{tabular}
 
     \item \mintinline{sql}{twopf_im} --- contains imaginary part of the field-space 2-point function \\
-    The schema for this table is the same as for the real part of the 2-point function,
+    The schema and storage conventions
+    for this table are the same as for the real part of the 2-point function,
     \mintinline{sql}{twopf_re}.
     
     \item \mintinline{sql}{threepf_momentum} and \mintinline{sql}{threepf_deriv} \\
@@ -4921,13 +4935,20 @@ In addition, tasks sampling the 3-point function include the following extra tab
         \mintinline{sql}{twopf_samples.serial} identifying the wavenumber sample point for this row \\
         \mintinline{sql}{page} & page number, defined as for \mintinline{sql}{backg.page}; see
         \mintinline{sql}{eleN} below \\
-        \mintinline{sql}{eleN} \ldots & components of the real part of the field-space 3-point
+        \mintinline{sql}{eleN} \ldots & \semibold{dimensionless components}
+        of the real part of the field-space 3-point
         function, packed in a `right-most' ordering as for the 2-point function.
         That is, if
         $\langle X^a(\vect{k}_1) X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle =
         (2\pi)^3 \delta(\sum_i \vect{k}_i) \alpha^{abc}$,
         then
         $N = D^2 \times \#a + D \times \#b + \#c$.
+        
+        The quantity stored is the \emph{shape function}
+        $k_1^2 k_2^2 k_3^2 \alpha^{abc}$.
+        As for the other data tables, this object is independent of the
+        comoving normalization and can be easily remapped into
+        any choice of units.
     \end{tabular}
 \end{enumerate}    
 \end{sqltablelist}
@@ -4986,7 +5007,8 @@ objects used in~\S\ref{sec:add-integration-task}.
     The maximum acceptable step size decreases rapidly on subhorizon
     scales.
     
-    Normally this means we wish to have just enough e-folds of massless evolution,
+    In normal circumstances
+    this means we wish to have just enough e-folds of massless evolution,
     but not more.
     Usually it is sufficient to have between $3$ and $5$ e-folds of massless evolution,
     with $4$ a good default choice.
@@ -5034,6 +5056,40 @@ objects used in~\S\ref{sec:add-integration-task}.
     \mintinline{c++}{set_adaptive_ics_efolds(double N)} \\
     Get or set the number of e-folds of massless evolution used by adapative
     initial conditions.
+    
+    \item \mintinline{c++}{double get_astar_normalization()} \\
+    \mintinline{c++}{set_astar_normalization(double astar)} \\
+    For concrete calculations {\CppTransport} must convert conventionally-normalized
+    wavenumbers to comoving-normalized ones.
+    This involves a choice of scale factor $\astar$ at the distinguished
+    time $\Nstar$ when the conventionally-normalized scale $k=1$ leaves the
+    horizon.
+
+    Normally it is not necessary to be aware of what choice is made for
+    $\astar$, because as explained in~\S\ref{sec:using-integration-container}
+    the database stores \emph{dimensionless} correlation functions.
+    The normalization of these correlation functions does not depend on
+    $\astar$
+    and therefore they are simple to remap into whatever wavenumber
+    normalization is convenient for the problem at hand. In particular, you should
+    not normally adjust $\astar$
+    to match your final normalization convention because it could inhibit
+    performance of the integrator.
+     
+    By default {\CppTransport} sets
+    $\astar = 4$.
+    The current transport implementation uses
+    \emph{dimensionful} correlation
+    functions, and therefore while the choice of $\astar$ has no effect
+    of the final values, it does affect the magnitude of intermediate
+    terms.
+    This may change in future, although if so this is likely to happen in a way
+    that is invisible to users.
+    The default value $\astar = 4$ is intended to give good performance
+    for typical models.
+    
+    If the integration engine is not performing well, it may be possible
+    to improve its performance by adjustment of $\astar$.
     
     \item \mintinline{c++}{bool get_collect_initial_conditions()} \\
     \mintinline{c++}{set_collect_initial_conditions(bool g)} \\
@@ -5656,12 +5712,13 @@ when it is necessary to force a particular group to be used.
 \subsection{Paired $\zeta$ tasks}
 It sometimes happens that the output from an integration task is of limited
 interest by itself.
-(For example, if our interest is only to determine the observational viability
-of a model then we may only require predictions for $\zeta$,
+For example, if our interest is to determine the observational viability
+of a particular
+inflationary model then we only require predictions for $\zeta$,
 at least if a suitable adiabatic limit is reached during the inflationary
-phase.)
-The content groups for such tasks will normally be generated only in order
-to postprocess them using other postintegration tasks.
+phase.
+The content group generated by such integration tasks
+will be used only for post-processing by other postintegration tasks.
 This is such a common occurrence that {\CppTransport} provides a short-cut
 enabling a pair of coupled integration/postintegration tasks
 to be processed simultaneously.
@@ -5674,7 +5731,8 @@ the postintegration tasks
 of the
 \mintinline{c++}{set_paired()}
 function.
-The {\CC} code used to generate these tasks can be replaced by
+If we wish to implement pairing then
+the {\CC} code used to generate these tasks could be replaced by
 \begin{minted}{c++}
     transport::zeta_twopf_task<> ztk2("dquad.twopf-zeta", tk2);
     ztk2.set_description("Convert the output from dquad.twopf into a zeta 2-point function");
@@ -5687,7 +5745,42 @@ The {\CC} code used to generate these tasks can be replaced by
     repo.commit(ztk2);
     repo.commit(ztk3);
 \end{minted}
+Once tasks have been paired in this way:
+\begin{itemize}
+    \item asking {\CppTransport} to execute the \emph{integration} task will generate
+    a content group for it, as usual. This content group can be used
+    in the same way as any other.
+    
+    \item asking {\CppTransport} to execute the \emph{postintegration} task
+    will commence simultaneous processing of the integration/postintegration pair.
+    The postintegration task will not look for an existing content group
+    attached to the integration task, as described above;
+    a new integration content group is generated every time.
+    To mark that this content group is paired with a postintegration group,
+    {\CppTransport} will add the suffix `-paired' to its name.
+    
+    Notice that this means it isn't possible to select a pre-existing
+    content group to use with a paired postintegration task.
+\end{itemize}
+During simultaneous processing, the gauge transformation from field-space
+to $\zeta$ will be calculated on-the-fly, without writing all the integration data
+out to a database and then reading it back again as with unpaired
+post-processing. This means that paired tasks normally execute
+more quickly than unpaired tasks.
 
+\para{Task options}
+It is possible to specify independent checkpoint intervals for the tasks
+in an integration/postintegration pair, but in the event of failure
+the data stored in each container will be synchronized.
+In practice this means that data in one container which has no counterpart
+in the other will be discarded.
+For this reason there is no real use case for unequal checkpoint intervals.
+
+\subsection{Using $\zeta$ {\SQLite} data containers}
+
+\subsection{Inner product tasks to compute $\fNL$-like amplitudes}
+
+\para{Using the {\SQLite} data container}
 
 \section{Generating derived products using output tasks}
 \label{sec:derived-products}
