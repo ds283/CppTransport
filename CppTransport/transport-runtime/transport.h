@@ -56,5 +56,11 @@
 
 #include "transport-runtime/manager/task_manager.h"
 
+// finally, pull derived_data namespace into main transport namespace
+namespace transport
+  {
+    using namespace derived_data;
+  }   // namespace transport
+
 
 #endif // CPPTRANSPORT_TRANSPORT_H
