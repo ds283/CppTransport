@@ -97,7 +97,7 @@ namespace transport
           public:
 
             //! get template type
-            template_type get_template() const { return(this->type); }
+            bispectrum_template get_template() const { return(this->type); }
 
 
             // LABELLING SERVICES
@@ -132,7 +132,7 @@ namespace transport
           protected:
 
             //! record which fNL template we are using
-            template_type type;
+            bispectrum_template type;
 
           };
 
@@ -148,14 +148,14 @@ namespace transport
         template <typename number>
         fNL_line<number>::fNL_line(Json::Value& reader)
           : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
-            type(template_type::fNL_local_template)
+            type(bispectrum_template::local)
           {
             std::string type_str = reader[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE].asString();
 
-            if     (type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL)       type = template_type::fNL_local_template;
-            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL) type = template_type::fNL_equi_template;
-            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL)  type = template_type::fNL_ortho_template;
-            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI)         type = template_type::fNL_DBI_template;
+            if     (type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL)       type = bispectrum_template::local;
+            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL) type = bispectrum_template::equilateral;
+            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL)  type = bispectrum_template::orthogonal;
+            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI)         type = bispectrum_template::DBI;
             else
               {
                 std::ostringstream msg;
@@ -172,19 +172,19 @@ namespace transport
 
             switch(this->type)
               {
-                case template_type::fNL_local_template:
+                case bispectrum_template::local:
                   label << CPPTRANSPORT_LATEX_FNL_LOCAL_SYMBOL;
                   break;
 
-                case template_type::fNL_equi_template:
+                case bispectrum_template::equilateral:
                   label << CPPTRANSPORT_LATEX_FNL_EQUI_SYMBOL;
                   break;
 
-                case template_type::fNL_ortho_template:
+                case bispectrum_template::orthogonal:
                   label << CPPTRANSPORT_LATEX_FNL_ORTHO_SYMBOL;
                   break;
 
-                case template_type::fNL_DBI_template:
+                case bispectrum_template::DBI:
                   label << CPPTRANSPORT_LATEX_FNL_DBI_SYMBOL;
                   break;
 
@@ -204,19 +204,19 @@ namespace transport
 
             switch(this->type)
               {
-                case template_type::fNL_local_template:
+                case bispectrum_template::local:
                   label << CPPTRANSPORT_NONLATEX_FNL_LOCAL_SYMBOL;
                   break;
 
-                case template_type::fNL_equi_template:
+                case bispectrum_template::equilateral:
                   label << CPPTRANSPORT_NONLATEX_FNL_EQUI_SYMBOL;
                   break;
 
-                case template_type::fNL_ortho_template:
+                case bispectrum_template::orthogonal:
                   label << CPPTRANSPORT_NONLATEX_FNL_ORTHO_SYMBOL;
                   break;
 
-                case template_type::fNL_DBI_template:
+                case bispectrum_template::DBI:
                   label << CPPTRANSPORT_NONLATEX_FNL_DBI_SYMBOL;
                   break;
 
@@ -234,19 +234,19 @@ namespace transport
           {
             switch(this->type)
               {
-                case template_type::fNL_local_template:
+                case bispectrum_template::local:
                   writer[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL);
                   break;
 
-                case template_type::fNL_equi_template:
+                case bispectrum_template::equilateral:
                   writer[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL);
                   break;
 
-                case template_type::fNL_ortho_template:
+                case bispectrum_template::orthogonal:
                   writer[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL);
                   break;
 
-                case template_type::fNL_DBI_template:
+                case bispectrum_template::DBI:
                   writer[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI);
                   break;
 

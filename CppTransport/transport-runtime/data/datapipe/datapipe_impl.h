@@ -527,21 +527,21 @@ namespace transport
 
 
     template <typename number>
-    fNL_time_data_tag<number> datapipe<number>::new_fNL_time_data_tag(derived_data::template_type type)
+    fNL_time_data_tag<number> datapipe<number>::new_fNL_time_data_tag(derived_data::bispectrum_template type)
       {
         return fNL_time_data_tag<number>(this, type);
       }
 
 
     template <typename number>
-    BT_time_data_tag<number> datapipe<number>::new_BT_time_data_tag(derived_data::template_type type)
+    BT_time_data_tag<number> datapipe<number>::new_BT_time_data_tag(derived_data::bispectrum_template type)
       {
         return BT_time_data_tag<number>(this, type);
       }
 
 
     template <typename number>
-    TT_time_data_tag<number> datapipe<number>::new_TT_time_data_tag(derived_data::template_type type)
+    TT_time_data_tag<number> datapipe<number>::new_TT_time_data_tag(derived_data::bispectrum_template type)
       {
         return TT_time_data_tag<number>(this, type);
       }

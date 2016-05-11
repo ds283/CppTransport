@@ -341,25 +341,25 @@ namespace transport
 
                 switch(ztk.get_template())
                   {
-                    case derived_data::template_type::fNL_local_template:
+                    case derived_data::bispectrum_template::local:
                       {
                         writer.get_products().add_fNL_local();
                         break;
                       }
 
-                    case derived_data::template_type::fNL_equi_template:
+                    case derived_data::bispectrum_template::equilateral:
                       {
                         writer.get_products().add_fNL_equi();
                         break;
                       }
 
-                    case derived_data::template_type::fNL_ortho_template:
+                    case derived_data::bispectrum_template::orthogonal:
                       {
                         writer.get_products().add_fNL_ortho();
                         break;
                       }
 
-                    case derived_data::template_type::fNL_DBI_template:
+                    case derived_data::bispectrum_template::DBI:
                       {
                         writer.get_products().add_fNL_DBI();
                         break;
@@ -944,7 +944,7 @@ namespace transport
     template <typename number>
     fNL_batcher<number>
     data_manager_sqlite3<number>::create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
-                                                            model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher, derived_data::template_type type)
+                                                            model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher, derived_data::bispectrum_template type)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
         boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
@@ -977,7 +977,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::template_type type)
+    void data_manager_sqlite3<number>::make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::bispectrum_template type)
       {
         sqlite3_operations::create_fNL_table(mgr, db, type, sqlite3_operations::foreign_keys_type::no_foreign_keys);
       }
@@ -1128,7 +1128,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::template_type type,
+    void data_manager_sqlite3<number>::replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::bispectrum_template type,
                                                                   generic_batcher& batcher, replacement_action action)
       {
         sqlite3* db = nullptr;
@@ -1260,7 +1260,7 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type)
+    bool data_manager_sqlite3<number>::aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::bispectrum_template type)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -2009,7 +2009,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                            std::vector<number>& sample, derived_data::template_type type)
+                                                            std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2023,7 +2023,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                           std::vector<number>& sample, derived_data::template_type type)
+                                                           std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2037,7 +2037,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                           std::vector<number>& sample, derived_data::template_type type)
+                                                           std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);

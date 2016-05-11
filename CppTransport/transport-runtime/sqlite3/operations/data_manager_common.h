@@ -134,20 +134,20 @@ namespace transport
 
 
         // construct the name of an fNL table
-        inline std::string fNL_table_name(derived_data::template_type type)
+        inline std::string fNL_table_name(derived_data::bispectrum_template type)
           {
             switch(type)
               {
-                case derived_data::template_type::fNL_local_template:
+                case derived_data::bispectrum_template::local:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE);
 
-                case derived_data::template_type::fNL_equi_template:
+                case derived_data::bispectrum_template::equilateral:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE);
 
-                case derived_data::template_type::fNL_ortho_template:
+                case derived_data::bispectrum_template::orthogonal:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE);
 
-                case derived_data::template_type::fNL_DBI_template:
+                case derived_data::bispectrum_template::DBI:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE);
               }
           }

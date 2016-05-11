@@ -217,7 +217,7 @@ namespace transport
                                                               const boost::filesystem::path& logdir,
                                                               unsigned int worker, model<number>* m,
                                                               std::unique_ptr<container_dispatch_function> dispatcher,
-                                                              derived_data::template_type type) override;
+                                                              derived_data::bispectrum_template type) override;
 
       protected:
 
@@ -237,7 +237,7 @@ namespace transport
         void make_temp_zeta_threepf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields);
 
         //! make tables for a temporary fNL container
-        void make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::template_type type);
+        void make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::bispectrum_template type);
 
 
         // AGGREGATION HANDLERS
@@ -260,7 +260,7 @@ namespace transport
         bool aggregate_zeta_threepf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary fNL container
-        bool aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type);
+        bool aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::bispectrum_template type);
 
 
         friend class sqlite3_twopf_writer_aggregate<number>;
@@ -490,15 +490,15 @@ namespace transport
 
         //! Pull a sample of fNL from a datapipe
         virtual void pull_fNL_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                          std::vector<number>& sample, derived_data::template_type type) override;
+                                          std::vector<number>& sample, derived_data::bispectrum_template type) override;
 
         //! Pull a sample of bispectrum.template from a datapipe
         virtual void pull_BT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                         std::vector<number>& sample, derived_data::template_type type) override;
+                                         std::vector<number>& sample, derived_data::bispectrum_template type) override;
 
         //! Pull a sample of template.template from a datapipe
         virtual void pull_TT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                         std::vector<number>& sample, derived_data::template_type type) override;
+                                         std::vector<number>& sample, derived_data::bispectrum_template type) override;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
@@ -572,7 +572,7 @@ namespace transport
                                                  generic_batcher& batcher, replacement_action action);
 
         //! Replace a temporary fNL container with a new one
-        void replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::template_type type,
+        void replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::bispectrum_template type,
                                         generic_batcher& batcher, replacement_action action);
 
         //! Generate the name for a temporary container

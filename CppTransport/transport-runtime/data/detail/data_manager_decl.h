@@ -206,7 +206,7 @@ namespace transport
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
         virtual fNL_batcher<number> create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                               unsigned int worker, model<number>* m,
-                                                              std::unique_ptr<container_dispatch_function> dispatcher, derived_data::template_type type) = 0;
+                                                              std::unique_ptr<container_dispatch_function> dispatcher, derived_data::bispectrum_template type) = 0;
 
 
         // INTEGRITY CHECK
@@ -447,15 +447,15 @@ namespace transport
 
         //! Pull a sample of fNL from a datapipe
         virtual void pull_fNL_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
-                                          std::vector<number>& sample, derived_data::template_type type) = 0;
+                                          std::vector<number>& sample, derived_data::bispectrum_template type) = 0;
 
         //! Pull a sample of bispectrum.template from a datapipe
         virtual void pull_BT_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
-                                         std::vector<number>& sample, derived_data::template_type type) = 0;
+                                         std::vector<number>& sample, derived_data::bispectrum_template type) = 0;
 
         //! Pull a sample of template.template from a datapipe
         virtual void pull_TT_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
-                                         std::vector<number>& sample, derived_data::template_type type) = 0;
+                                         std::vector<number>& sample, derived_data::bispectrum_template type) = 0;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,

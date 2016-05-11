@@ -471,7 +471,7 @@ namespace transport
       public:
 
         //! constructor captures repository_sqlite3 object
-        sqlite3_fNL_writer_aggregate(data_manager_sqlite3<number>& m, derived_data::template_type t)
+        sqlite3_fNL_writer_aggregate(data_manager_sqlite3<number>& m, derived_data::bispectrum_template t)
           : mgr(m),
             type(t)
           {
@@ -497,7 +497,7 @@ namespace transport
         data_manager_sqlite3<number>& mgr;
 
         //! fNL template type
-        derived_data::template_type type;
+        derived_data::bispectrum_template type;
 
       };
 

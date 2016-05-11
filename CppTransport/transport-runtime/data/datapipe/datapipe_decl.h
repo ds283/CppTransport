@@ -356,13 +356,13 @@ namespace transport
         zeta_reduced_bispectrum_kconfig_data_tag<number> new_zeta_reduced_bispectrum_kconfig_data_tag(unsigned int tserial);
 
         //! Generate a new fNL time tag
-        fNL_time_data_tag<number> new_fNL_time_data_tag(derived_data::template_type type);
+        fNL_time_data_tag<number> new_fNL_time_data_tag(derived_data::bispectrum_template type);
 
         //! Generate a new bispectrum.template time tag
-        BT_time_data_tag<number> new_BT_time_data_tag(derived_data::template_type type);
+        BT_time_data_tag<number> new_BT_time_data_tag(derived_data::bispectrum_template type);
 
         //! Generate a new template.template time tag
-        TT_time_data_tag<number> new_TT_time_data_tag(derived_data::template_type type);
+        TT_time_data_tag<number> new_TT_time_data_tag(derived_data::bispectrum_template type);
 
 
         // INTERNAL DATA

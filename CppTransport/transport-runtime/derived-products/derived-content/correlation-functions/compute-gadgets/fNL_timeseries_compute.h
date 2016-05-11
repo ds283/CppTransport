@@ -57,10 +57,10 @@ namespace transport
 
 				      public:
 
-				        handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, template_type ty);
+				        handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, bispectrum_template ty);
 
                 handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
-                       template_type ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl);
+                       bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl);
 
 						    ~handle() = default;
 
@@ -85,7 +85,7 @@ namespace transport
                 std::vector<time_config> t_axis;
 
 						    //! template type
-						    template_type type;
+						    bispectrum_template type;
 
                 //! restrict integration to a supplied set of triangles?
                 bool restrict_triangles;
@@ -114,11 +114,11 @@ namespace transport
 		      public:
 
 				    //! make a handle, integrate over all triangles
-				    std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, template_type ty) const;
+				    std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, bispectrum_template ty) const;
 
             //! make a handle, integrate over a supplied subset of triangles
             std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
-                                                template_type ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const;
+                                                bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const;
 
 
 				    // COMPUTE FNL PRODUCT
@@ -142,7 +142,7 @@ namespace transport
                                 const std::vector<number>& twopf_k3, std::vector<number>& shape) const;
 
 		        //! compute shape function for a selected template
-		        void shape_function(template_type type, const threepf_kconfig& config,
+		        void shape_function(bispectrum_template type, const threepf_kconfig& config,
 		                            const std::vector<number>& twopf_k1, const std::vector<number>& twopf_k2,
 		                            const std::vector<number>& twopf_k3, std::vector<number>& shape) const;
 
@@ -173,7 +173,7 @@ namespace transport
 
 
 		    template <typename number>
-		    fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t, const SQL_time_config_query& tq, template_type ty)
+		    fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t, const SQL_time_config_query& tq, bispectrum_template ty)
 			    : pipe(p),
 			      tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
 			      tquery(tq),
@@ -200,7 +200,7 @@ namespace transport
 
         template <typename number>
         fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t, const SQL_time_config_query& tq,
-                                                       template_type ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl)
+                                                       bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl)
           : pipe(p),
             tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
             tquery(tq),
@@ -244,7 +244,7 @@ namespace transport
 
 		    template <typename number>
 		    std::unique_ptr<typename fNL_timeseries_compute<number>::handle>
-		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, template_type ty) const
+		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, bispectrum_template ty) const
 			    {
 		        return std::make_unique<handle>(pipe, tk, tq, ty);
 			    }
@@ -253,7 +253,7 @@ namespace transport
         template <typename number>
         std::unique_ptr<typename fNL_timeseries_compute<number>::handle>
         fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
-                                                    template_type ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const
+                                                    bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const
           {
             return std::make_unique<handle>(pipe, tk, tq, ty, wl);
           }
@@ -366,7 +366,7 @@ namespace transport
 
 		    // compute shape function for the intended template
 		    template <typename number>
-        void fNL_timeseries_compute<number>::shape_function(template_type type, const threepf_kconfig& config,
+        void fNL_timeseries_compute<number>::shape_function(bispectrum_template type, const threepf_kconfig& config,
                                                             const std::vector<number>& twopf_k1,
                                                             const std::vector<number>& twopf_k2,
                                                             const std::vector<number>& twopf_k3,
@@ -389,19 +389,19 @@ namespace transport
 
 		            switch(type)
 			            {
-		                case template_type::fNL_local_template:
+		                case bispectrum_template::local:
 			                T = this->local_template(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 			                break;
 
-		                case template_type::fNL_equi_template:
+		                case bispectrum_template::equilateral:
 			                T = this->equi_template(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 			                break;
 
-		                case template_type::fNL_ortho_template:
+		                case bispectrum_template::orthogonal:
 			                T = this->ortho_template(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 			                break;
 
-		                case template_type::fNL_DBI_template:
+		                case bispectrum_template::DBI:
 			                T = this->DBI_template(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 		                  break;
 			            }

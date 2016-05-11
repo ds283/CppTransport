@@ -510,7 +510,7 @@ namespace transport
         // Pull a sample of an fNL, for a specific set of time serial numbers
         template <typename number>
         void pull_fNL_time_sample(sqlite3* db, const derived_data::SQL_query& tquery,
-                                  std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
+                                  std::vector<number>& sample, unsigned int worker, derived_data::bispectrum_template type)
           {
             assert(db != nullptr);
 
@@ -536,7 +536,7 @@ namespace transport
         // Pull a sample of bispectrum.template, for a specific set of time serial numbers
         template <typename number>
         void pull_BT_time_sample(sqlite3* db, const derived_data::SQL_query& tquery,
-                                 std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
+                                 std::vector<number>& sample, unsigned int worker, derived_data::bispectrum_template type)
           {
             assert(db != nullptr);
 
@@ -562,7 +562,7 @@ namespace transport
         // Pull a sample of template.template, for a specific set of time serial numbers
         template <typename number>
         void pull_TT_time_sample(sqlite3* db, const derived_data::SQL_query& tquery,
-                                 std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
+                                 std::vector<number>& sample, unsigned int worker, derived_data::bispectrum_template type)
           {
             assert(db != nullptr);
 
