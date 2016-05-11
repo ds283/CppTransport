@@ -139,8 +139,38 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
 
     // parse options from command line; we do this first so that any options specified on the command line
     // override those specified in a configuration file
-    boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).positional(positional_options).allow_unregistered().run();
-    boost::program_options::store(cmdline_parsed, option_map);
+    try
+      {
+        boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).positional(positional_options).allow_unregistered().run();
+        boost::program_options::store(cmdline_parsed, option_map);
+
+        // inform the user that we have ignored any unrecognized options
+        std::vector<std::string> unrecognized_cmdline_options = boost::program_options::collect_unrecognized(cmdline_parsed.options, boost::program_options::exclude_positional);
+        if(unrecognized_cmdline_options.size() > 0)
+          {
+            for(const std::string& option : unrecognized_cmdline_options)
+              {
+                std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+              }
+          }
+      }
+    catch(boost::program_options::ambiguous_option& xe)
+      {
+        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+      }
+    catch(boost::program_options::invalid_syntax& xe)
+      {
+        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+      }
+    catch(boost::program_options::invalid_command_line_style& xe)
+      {
+        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+      }
+    catch(boost::program_options::invalid_command_line_syntax& xe)
+      {
+        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+      }
+
 
     // parse options from configuration file
     boost::optional< boost::filesystem::path > config_path = env.config_file_path();
@@ -151,18 +181,33 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
             std::ifstream instream((*config_path).string());
             if(instream)
               {
-                // parse contents of file; 'true' means allow unregistered options
-                boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
-                boost::program_options::store(file_parsed, option_map);
-                boost::program_options::notify(option_map);
-
-                std::vector<std::string> unrecognized_config_options = boost::program_options::collect_unrecognized(file_parsed.options, boost::program_options::exclude_positional);
-                if(unrecognized_config_options.size() > 0)
+                try
                   {
-                    for(const std::string& option : unrecognized_config_options)
+                    // parse contents of file; 'true' means allow unregistered options
+                    boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
+                    boost::program_options::store(file_parsed, option_map);
+                    boost::program_options::notify(option_map);
+
+                    std::vector<std::string> unrecognized_config_options = boost::program_options::collect_unrecognized(file_parsed.options, boost::program_options::exclude_positional);
+                    if(unrecognized_config_options.size() > 0)
                       {
-                        std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                        for(const std::string& option : unrecognized_config_options)
+                          {
+                            std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                          }
                       }
+                  }
+                catch(boost::program_options::ambiguous_option& xe)
+                  {
+                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+                  }
+                catch(boost::program_options::invalid_syntax& xe)
+                  {
+                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+                  }
+                catch(boost::program_options::invalid_config_file_syntax& xe)
+                  {
+                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
                   }
               }
           }
@@ -170,17 +215,6 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
 
     // inform the Boost::Program_Options library that option parsing is complete
     boost::program_options::notify(option_map);
-
-    // inform the user that we have ignored any unrecognized options
-    std::vector<std::string> unrecognized_cmdline_options = boost::program_options::collect_unrecognized(cmdline_parsed.options, boost::program_options::exclude_positional);
-    if(unrecognized_cmdline_options.size() > 0)
-      {
-        for(const std::string& option : unrecognized_cmdline_options)
-          {
-            std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
-          }
-      }
-
 
     // HANDLE OPTIONS
 

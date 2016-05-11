@@ -193,9 +193,29 @@ namespace transport
 
         // parse options from the command line; we do this first so that any options
         // supplied on the command line override options specified in a configuration file
-        boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
-        boost::program_options::store(cmdline_parsed, this->option_map);
-        this->warn_unrecognized_switches(cmdline_parsed);
+        try
+          {
+            boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
+            boost::program_options::store(cmdline_parsed, this->option_map);
+            this->warn_unrecognized_switches(cmdline_parsed);
+          }
+        catch(boost::program_options::ambiguous_option& xe)
+          {
+            this->warn(xe.what());
+          }
+        catch(boost::program_options::invalid_syntax& xe)
+          {
+            this->warn(xe.what());
+          }
+        catch(boost::program_options::invalid_command_line_style& xe)
+          {
+            this->warn(xe.what());
+          }
+        catch(boost::program_options::invalid_command_line_syntax& xe)
+          {
+            this->warn(xe.what());
+          }
+
 
         // parse options from configuration file
         boost::optional< boost::filesystem::path > config_path = this->local_env.config_file_path();
@@ -206,10 +226,25 @@ namespace transport
                 std::ifstream instream((*config_path).string());
                 if(instream)
                   {
-                    // parse contents of file; 'true' means allow unregistered options
-                    boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
-                    boost::program_options::store(file_parsed, this->option_map);
-                    this->warn_unrecognized_switches(file_parsed);
+                    try
+                      {
+                        // parse contents of file; 'true' means allow unregistered options
+                        boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
+                        boost::program_options::store(file_parsed, this->option_map);
+                        this->warn_unrecognized_switches(file_parsed);
+                      }
+                    catch(boost::program_options::ambiguous_option& xe)
+                      {
+                        this->warn(xe.what());
+                      }
+                    catch(boost::program_options::invalid_syntax& xe)
+                      {
+                        this->warn(xe.what());
+                      }
+                    catch(boost::program_options::invalid_config_file_syntax& xe)
+                      {
+                        this->warn(xe.what());
+                      }
                   }
               }
           }
