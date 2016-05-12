@@ -30,23 +30,29 @@ int main(int argc, char* argv[]);
 
 void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model);
 
+void write_zeta_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
+                         transport::range<>& ts, transport::range<>& ks)
+
+void write_fNL_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
+                        transport::range<>& ts, transport::range<>& ks);
+
 
 void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
   {
-    const double Mp   = 1.0;
+    const double Mp = 1.0;
     const double Mphi = 9E-5 * Mp;
     const double Mchi = 1E-5 * Mp;
 
-    transport::parameters<> params(Mp, {Mphi, Mchi}, model);
+    transport::parameters<> params(Mp, { Mphi, Mchi }, model);
 
     const double phi_init = 10.0 * Mp;
     const double chi_init = 12.9 * Mp;
 
     const double N_init = 0.0;
-    const double N_pre  = 12.0;
-    const double N_end  = 60.0;
+    const double N_pre = 12.0;
+    const double N_end = 60.0;
 
-    transport::initial_conditions<> ics("dquad", params, {phi_init, chi_init}, N_init, N_pre);
+    transport::initial_conditions<> ics("dquad", params, { phi_init, chi_init }, N_init, N_pre);
 
     transport::basic_range<> ts(N_init, N_end, 300, transport::spacing::linear);
 
@@ -56,11 +62,19 @@ void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
     transport::basic_range<> ks_logspaced(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
     transport::basic_range<> ks_linearspaced(kt_lo, kt_hi, 50, transport::spacing::linear);
 
-    transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks_logspaced);
+    write_zeta_products(repo, ics, ts, ks_logspaced);
+    write_fNL_products(repo, ics, ts, ks_linearspaced);
+  }
+
+
+void write_zeta_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
+                         transport::range<>& ts, transport::range<>& ks)
+  {
+    transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
     tk2.set_adaptive_ics_efolds(4.0);
     tk2.set_description("Compute time history of the 2-point function from k ~ e^3 to k ~ e^9");
 
-    transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks_logspaced);
+    transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
     tk3.set_adaptive_ics_efolds(4.0);
     tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9");
 
@@ -70,19 +84,34 @@ void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
     transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
     ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
 
-    transport::threepf_cubic_task<> tk3_linear("dquad.threepf-linear", ics, ts, ks_linearspaced);
-    tk3_linear.set_adaptive_ics_efolds(4.0);
-    tk3_linear.set_description("Compute time history of the 3-point function on a linear grid");
+    vis_toolkit::SQL_threepf_kconfig_query
 
-    transport::zeta_threepf_task<> ztk3_linear("dquad.threepf-linear-zeta", tk3_linear);
-    ztk3_linear.set_description("Convert the output from dquad.threepf-linear into zeta 2 and 3-point functions");
+    vis_toolkit::zeta_twopf_time_series(ztk3);
+    vis_toolkit::zeta_threepf_time_series(ztk3);
+  }
 
-    transport::fNL_task<> fNL_local("dquad.fNL-local", ztk3_linear, vis_toolkit::bispectrum_template::local);
+
+void write_fNL_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
+                        transport::range<>& ts, transport::range<>& ks)
+  {
+
+    transport::threepf_cubic_task<> tk("dquad.threepf-linear", ics, ts, ks);
+    tk.set_adaptive_ics_efolds(4.0);
+    tk.set_description("Compute time history of the 3-point function on a linear grid");
+
+    transport::zeta_threepf_task<> ztk("dquad.threepf-linear-zeta", tk);
+    ztk.set_description("Convert the output from dquad.threepf-linear into zeta 2 and 3-point functions");
+
+    transport::fNL_task<> fNL_local("dquad.fNL-local", ztk, vis_toolkit::bispectrum_template::local);
     fNL_local.set_description("Compute inner product of double-quadratic bispectrum with local template");
 
-    repo.commit(ztk2);
-    repo.commit(ztk3);
-    repo.commit(fNL_local);
+    transport::fNL_task<> fNL_local("dquad.fNL-equi", ztk, vis_toolkit::bispectrum_template::equilateral);
+    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with equilateral template");
+
+    transport::fNL_task<> fNL_local("dquad.fNL-ortho", ztk, vis_toolkit::bispectrum_template::orthogonal);
+    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with orthogonal template");
+
+
   }
 
 
