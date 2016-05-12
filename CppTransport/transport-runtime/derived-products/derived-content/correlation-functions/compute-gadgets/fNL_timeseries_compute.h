@@ -434,10 +434,10 @@ namespace transport
 		    template <typename number>
 		    number fNL_timeseries_compute<number>::equi_template(number Pk1, number Pk2, number Pk3) const
 			    {
-		        return(6.0 * (-Pk1*Pk2 - Pk1*Pk3 -Pk2*Pk3 - 2.0*pow(Pk1*Pk2*Pk3, 2.0/3.0)
-			        + pow(Pk1*Pk2*Pk2, 1.0/3.0)*Pk3 + pow(Pk1*Pk3*Pk3, 1.0/3.0)*Pk2
-			        + pow(Pk2*Pk1*Pk1, 1.0/3.0)*Pk3 + pow(Pk2*Pk3*Pk3, 1.0/3.0)*Pk1
-			        + pow(Pk3*Pk1*Pk1, 1.0/3.0)*Pk2 + pow(Pk3*Pk2*Pk2, 1.0/3.0)*Pk1) );
+		        return(6.0 * (-Pk1*Pk2 - Pk1*Pk3 - Pk2*Pk3 - 2.0*std::pow(Pk1*Pk2*Pk3, 2.0/3.0)
+			        + std::pow(Pk1*Pk2*Pk2, 1.0/3.0)*Pk3 + std::pow(Pk1*Pk3*Pk3, 1.0/3.0)*Pk2
+			        + std::pow(Pk2*Pk1*Pk1, 1.0/3.0)*Pk3 + std::pow(Pk2*Pk3*Pk3, 1.0/3.0)*Pk1
+			        + std::pow(Pk3*Pk1*Pk1, 1.0/3.0)*Pk2 + std::pow(Pk3*Pk2*Pk2, 1.0/3.0)*Pk1) );
 			    }
 
 
@@ -445,10 +445,10 @@ namespace transport
 		    template <typename number>
 		    number fNL_timeseries_compute<number>::ortho_template(number Pk1, number Pk2, number Pk3) const
 			    {
-		        return(6.0 * (-3.0*Pk1*Pk2 - 3.0*Pk1*Pk3 - 3.0*Pk2*Pk3 - 8.0*pow(Pk1*Pk2*Pk3, 2.0/3.0)
-			        + 3.0*pow(Pk1*Pk2*Pk2, 1.0/3.0)*Pk3 + 3.0*pow(Pk1*Pk3*Pk3, 1.0/3.0)*Pk2
-			        + 3.0*pow(Pk2*Pk1*Pk1, 1.0/3.0)*Pk3 + 3.0*pow(Pk2*Pk3*Pk3, 1.0/3.0)*Pk1
-			        + 3.0*pow(Pk3*Pk1*Pk1, 1.0/3.0)*Pk2 + 3.0*pow(Pk3*Pk2*Pk2, 1.0/3.0)*Pk1) );
+		        return(6.0 * (-3.0*Pk1*Pk2 - 3.0*Pk1*Pk3 - 3.0*Pk2*Pk3 - 8.0*std::pow(Pk1*Pk2*Pk3, 2.0/3.0)
+			        + 3.0*std::pow(Pk1*Pk2*Pk2, 1.0/3.0)*Pk3 + 3.0*std::pow(Pk1*Pk3*Pk3, 1.0/3.0)*Pk2
+			        + 3.0*std::pow(Pk2*Pk1*Pk1, 1.0/3.0)*Pk3 + 3.0*std::pow(Pk2*Pk3*Pk3, 1.0/3.0)*Pk1
+			        + 3.0*std::pow(Pk3*Pk1*Pk1, 1.0/3.0)*Pk2 + 3.0*std::pow(Pk3*Pk2*Pk2, 1.0/3.0)*Pk1) );
 			    }
 
 
