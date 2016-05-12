@@ -51,7 +51,7 @@ namespace transport
       {
 
         //! zeta twopf time data line
-        template <typename number>
+        template <typename number=default_number_type>
         class zeta_twopf_time_series : public time_series<number>, public zeta_twopf_line<number>
           {
 
@@ -287,7 +287,7 @@ namespace transport
 
 
         //! zeta threepf time data line
-        template <typename number>
+        template <typename number=default_number_type>
         class zeta_threepf_time_series: public time_series<number>, public zeta_threepf_line<number>
           {
 
@@ -519,7 +519,7 @@ namespace transport
 
 
         //! zeta reduced bispectrum time data line
-        template <typename number>
+        template <typename number=default_number_type>
         class zeta_reduced_bispectrum_time_series: public time_series<number>, public zeta_reduced_bispectrum_line<number>
           {
 

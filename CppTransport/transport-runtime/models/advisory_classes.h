@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __advisory_classes_H_
-#define __advisory_classes_H_
+#ifndef CPPTRANSPORT_ADVISORY_CLASSES_H
+#define CPPTRANSPORT_ADVISORY_CLASSES_H
 
 
 #include <string>
@@ -225,4 +225,4 @@ namespace transport
   }
 
 
-#endif //__advisory_classes_H_
+#endif //CPPTRANSPORT_ADVISORY_CLASSES_H

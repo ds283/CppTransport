@@ -62,7 +62,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 				class cost_wavenumber: public wavenumber_series<number>
 					{
 
@@ -71,11 +71,11 @@ namespace transport
 				  public:
 
 						//! basic user-facing constructor -- 2pf task version
-						cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_query& kq, cost_metric m=cost_metric::time_cost,
+						cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_query& kq, cost_metric m=cost_metric::time,
 						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! basic user-facing constructor -- 3pf task version
-						cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_query& kq, cost_metric m=cost_metric::time_cost,
+						cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_query& kq, cost_metric m=cost_metric::time,
 						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! deserialization constructor
@@ -198,9 +198,9 @@ namespace transport
 						else assert(false); // TODO: raise exception
 
 				    std::string metric_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC].asString();
-						metric = cost_metric::time_cost;
-						if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME)       metric = cost_metric::time_cost;
-						else if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = cost_metric::steps_cost;
+						metric = cost_metric::time;
+						if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME)       metric = cost_metric::time;
+						else if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = cost_metric::steps;
 						else assert(false); // TODO: raise exception
 					}
 
@@ -241,13 +241,13 @@ namespace transport
 
 				    switch(this->metric)
 					    {
-				        case cost_metric::time_cost:
+				        case cost_metric::time:
                   {
                     writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME);
                     break;
                   }
 
-				        case cost_metric::steps_cost:
+				        case cost_metric::steps:
                   {
                     writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS);
                     break;
@@ -311,14 +311,14 @@ namespace transport
 			                {
 		                    switch(this->metric)
 			                    {
-		                        case cost_metric::time_cost:
+		                        case cost_metric::time:
                               {
                                 line_data.push_back(static_cast<number>(t->integration) / 1E9); // convert to seconds
                                 this_value = value_type::time_value;
                                 break;
                               }
 
-		                        case cost_metric::steps_cost:
+		                        case cost_metric::steps:
                               {
                                 line_data.push_back(static_cast<number>(t->steps));
                                 this_value = value_type::steps_value;
@@ -350,7 +350,7 @@ namespace transport
 					    }
 				    else
 					    {
-				        label = "$" + (this->metric == cost_metric::time_cost ? std::string(CPPTRANSPORT_LATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_LATEX_STEPS_SYMBOL)) + "$";
+				        label = "$" + (this->metric == cost_metric::time ? std::string(CPPTRANSPORT_LATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_LATEX_STEPS_SYMBOL)) + "$";
 					    }
 
 				    return(label);
@@ -368,7 +368,7 @@ namespace transport
 			        }
 		        else
 			        {
-		            label = (this->metric == cost_metric::time_cost ? std::string(CPPTRANSPORT_NONLATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_NONLATEX_STEPS_SYMBOL));
+		            label = (this->metric == cost_metric::time ? std::string(CPPTRANSPORT_NONLATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_NONLATEX_STEPS_SYMBOL));
 			        }
 
 		        return(label);

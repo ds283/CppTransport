@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __fNL_timeseries_compute_H_
-#define __fNL_timeseries_compute_H_
+#ifndef CPPTRANSPORT_FNL_TIMESERIES_COMPUTE_H
+#define CPPTRANSPORT_FNL_TIMESERIES_COMPUTE_H
 
 
 #include <vector>
@@ -465,4 +465,4 @@ namespace transport
 	}
 
 
-#endif //__fNL_timeseries_compute_H_
+#endif //CPPTRANSPORT_FNL_TIMESERIES_COMPUTE_H

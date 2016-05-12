@@ -51,7 +51,7 @@ namespace transport
 			{
 
 				//! zeta twopf wavenumber-data line
-				template <typename number>
+				template <typename number=default_number_type>
 		    class zeta_twopf_wavenumber_series: public wavenumber_series<number>, public zeta_twopf_line<number>
 			    {
 
@@ -296,7 +296,7 @@ namespace transport
 
 
 				//! zeta threepf wavenumber data line
-				template <typename number>
+				template <typename number=default_number_type>
 				class zeta_threepf_wavenumber_series: public wavenumber_series<number>, public zeta_threepf_line<number>
 					{
 
@@ -537,7 +537,7 @@ namespace transport
 
 
 		    //! zeta reduced bispectrum wavenumber data line
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class zeta_reduced_bispectrum_wavenumber_series: public wavenumber_series<number>, public zeta_reduced_bispectrum_line<number>
 			    {
 

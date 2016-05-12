@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __zeta_threepf_line_H_
-#define __zeta_threepf_line_H_
+#ifndef CPPTRANSPORT_ZETA_THREEPF_LINE_H
+#define CPPTRANSPORT_ZETA_THREEPF_LINE_H
 
 
 #include <iostream>
@@ -229,4 +229,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_threepf_line_H_
+#endif //CPPTRANSPORT_ZETA_THREEPF_LINE_H

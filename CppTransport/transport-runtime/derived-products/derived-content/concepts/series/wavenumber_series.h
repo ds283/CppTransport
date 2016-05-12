@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __wavenumber_series_H_
-#define __wavenumber_series_H_
+#ifndef CPPTRANSPORT_WAVENUMBER_SERIES_H
+#define CPPTRANSPORT_WAVENUMBER_SERIES_H
 
 
 #include <iostream>
@@ -361,4 +361,4 @@ namespace transport
 }   // namespace transport
 
 
-#endif //__wavenumber_series_H_
+#endif //CPPTRANSPORT_WAVENUMBER_SERIES_H

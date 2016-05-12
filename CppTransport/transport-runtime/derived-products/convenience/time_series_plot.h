@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __time_series_plot_H_
-#define __time_series_plot_H_
+#ifndef CPPTRANSPORT_TIME_SERIES_PLOT_H
+#define CPPTRANSPORT_TIME_SERIES_PLOT_H
 
 
 #include "transport-runtime/derived-products/line-collections/line_plot2d.h"
@@ -48,7 +48,7 @@ namespace transport
 				//! time-series-plot is a convenience class which defines a line-plot2d with
 				//! sensible defaults for a time series plot
 
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class time_series_plot : public line_plot2d<number>
 			    {
 
@@ -154,4 +154,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__time_series_plot_H_
+#endif //CPPTRANSPORT_TIME_SERIES_PLOT_H

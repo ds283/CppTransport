@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __data_products_H_
-#define __data_products_H_
+#ifndef CPPTRANSPORT_DATA_PRODUCTS_H
+#define CPPTRANSPORT_DATA_PRODUCTS_H
 
 
 #include "transport-runtime/derived-products/line-collections/line_plot2d.h"
@@ -38,4 +38,4 @@
 #include "transport-runtime/derived-products/derived_product_helper.h"
 
 
-#endif //__data_products_H_
+#endif //CPPTRANSPORT_DATA_PRODUCTS_H

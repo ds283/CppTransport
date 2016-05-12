@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __r_line_H_
-#define __r_line_H_
+#ifndef CPPTRANSPORT_R_LINE_H
+#define CPPTRANSPORT_R_LINE_H
 
 
 #include <iostream>
@@ -185,4 +185,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__r_line_H_
+#endif //CPPTRANSPORT_R_LINE_H

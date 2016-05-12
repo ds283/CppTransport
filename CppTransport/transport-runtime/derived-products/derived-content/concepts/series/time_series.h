@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __time_series_H_
-#define __time_series_H_
+#ifndef CPPTRANSPORT_TIME_SERIES_H
+#define CPPTRANSPORT_TIME_SERIES_H
 
 
 #include <iostream>
@@ -302,4 +302,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__time_series_H_
+#endif //CPPTRANSPORT_TIME_SERIES_H

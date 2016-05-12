@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __time_series_table_H_
-#define __time_series_table_H_
+#ifndef CPPTRANSPORT_TIME_SERIES_TABLE_H
+#define CPPTRANSPORT_TIME_SERIES_TABLE_H
 
 
 #include "transport-runtime/derived-products/line-collections/line_asciitable.h"
@@ -46,7 +46,7 @@ namespace transport
 				//! time-series-table is a convenience class which defines a line-asciitable with
 				//! sensible defaults for time series
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class time_series_table: public line_asciitable<number>
 			    {
 
@@ -105,4 +105,4 @@ namespace transport
 
 
 
-#endif //__time_series_table_H_
+#endif //CPPTRANSPORT_TIME_SERIES_TABLE_H

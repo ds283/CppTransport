@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __r_wavenumber_series_H_
-#define __r_wavenumber_series_H_
+#ifndef CPPTRANSPORT_R_WAVENUMBER_SERIES_H
+#define CPPTRANSPORT_R_WAVENUMBER_SERIES_H
 
 
 #include <iostream>
@@ -48,7 +48,7 @@ namespace transport
 			{
 
 				//! tensor-to-scalar ratio wavenumber data line
-				template <typename number>
+				template <typename number=default_number_type>
 		    class r_wavenumber_series: public wavenumber_series<number>, public r_line<number>
 			    {
 
@@ -309,4 +309,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__r_wavenumber_series_H_
+#endif //CPPTRANSPORT_R_WAVENUMBER_SERIES_H

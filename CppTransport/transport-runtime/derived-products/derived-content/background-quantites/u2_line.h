@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __u2_line_H_
-#define __u2_line_H_
+#ifndef CPPTRANSPORT_U2_LINE_H
+#define CPPTRANSPORT_U2_LINE_H
 
 
 #include <iostream>
@@ -51,7 +51,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class u2_line: public time_series<number>
 			    {
 
@@ -60,7 +60,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    u2_line(const twopf_db_task<number>& tk, index_selector<2>& sel, SQL_time_query tq, SQL_twopf_query,
+				    u2_line(const twopf_db_task<number>& tk, index_selector<2> sel, SQL_time_query tq, SQL_twopf_query,
                     unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -150,7 +150,7 @@ namespace transport
 
 
 				template <typename number>
-				u2_line<number>::u2_line(const twopf_db_task<number>& tk, index_selector<2>& sel,
+				u2_line<number>::u2_line(const twopf_db_task<number>& tk, index_selector<2> sel,
                                  SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
 					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
@@ -339,4 +339,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__u2_line_H_
+#endif //CPPTRANSPORT_U2_LINE_H

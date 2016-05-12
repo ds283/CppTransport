@@ -80,7 +80,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    tensor_twopf_line(const twopf_db_task<number>& tk, index_selector<2>& sel);
+				    tensor_twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel);
 
 				    //! Deserialization constructor
 				    tensor_twopf_line(Json::Value& reader, task_finder<number>& finder);
@@ -143,7 +143,7 @@ namespace transport
 
 
 		    template <typename number>
-		    tensor_twopf_line<number>::tensor_twopf_line(const twopf_db_task<number>& tk, index_selector<2>& sel)
+		    tensor_twopf_line<number>::tensor_twopf_line(const twopf_db_task<number>& tk, index_selector<2> sel)
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        gadget(tk),
 		        active_indices(sel),

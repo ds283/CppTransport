@@ -81,7 +81,7 @@ namespace transport
           public:
 
 		        //! Basic user-facing constructor
-		        threepf_line(const threepf_task<number>& tk, index_selector<3>& sel);
+		        threepf_line(const threepf_task<number>& tk, index_selector<3> sel);
 
 		        //! Deserialization constructor
 		        threepf_line(Json::Value& reader, task_finder<number>& finder);
@@ -172,7 +172,7 @@ namespace transport
 
 
         template <typename number>
-        threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3>& sel)
+        threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3> sel)
 	        : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 	          gadget(tk),
 	          active_indices(sel),

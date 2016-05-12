@@ -50,7 +50,7 @@ namespace transport
 	    {
 
 		    //! tensor two-point function wavenumber data line
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class tensor_twopf_wavenumber_series: public wavenumber_series<number>, public tensor_twopf_line<number>
 			    {
 
@@ -59,7 +59,7 @@ namespace transport
 		      public:
 
 				    //! construct a tensor twopf wavenumber-series object
-				    tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
+				    tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2> sel,
 				                                   SQL_time_query tq, SQL_twopf_query kq,
 				                                   unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -140,7 +140,7 @@ namespace transport
         // derived_line<> is not called automatically during construction of time_series<>.
         // We have to call it ourselves
         template <typename number>
-        tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
+        tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2> sel,
                                                                                SQL_time_query tq, SQL_twopf_query kq,
                                                                                unsigned int prec)
 	        : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __fNL_line_H_
-#define __fNL_line_H_
+#ifndef CPPTRANSPORT_FNL_LINE_H
+#define CPPTRANSPORT_FNL_LINE_H
 
 
 #include <iostream>
@@ -268,4 +268,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__fNL_line_H_
+#endif //CPPTRANSPORT_FNL_LINE_H

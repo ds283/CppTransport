@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __threepf_kconfig_shift_H_
-#define __threepf_kconfig_shift_H_
+#ifndef CPPTRANSPORT_THREEPF_KCONFIG_SHIFT_H
+#define CPPTRANSPORT_THREEPF_KCONFIG_SHIFT_H
 
 
 #include <iostream>
@@ -280,4 +280,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__threepf_kconfig_shift_H_
+#endif //CPPTRANSPORT_THREEPF_KCONFIG_SHIFT_H

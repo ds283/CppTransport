@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __generic_value_iterator_H_
-#define __generic_value_iterator_H_
+#ifndef CPPTRANSPORT_GENERIC_VALUE_ITERATOR_H
+#define CPPTRANSPORT_GENERIC_VALUE_ITERATOR_H
 
 
 #include <type_traits>
@@ -156,4 +156,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__generic_value_iterator_H_
+#endif //CPPTRANSPORT_GENERIC_VALUE_ITERATOR_H

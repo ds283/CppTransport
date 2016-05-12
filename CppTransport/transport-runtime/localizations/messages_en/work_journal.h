@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __work_journal_messages_H_
-#define __work_journal_messages_H_
+#ifndef CPPTRANSPORT_WORK_JOURNAL_MESSAGES_H
+#define CPPTRANSPORT_WORK_JOURNAL_MESSAGES_H
 
 
 #define CPPTRANSPORT_JOURNAL_OPEN_FAIL                "Failed to create journal analysis file"
@@ -51,4 +51,4 @@
 #define CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT         "Unexpected event in work journal"
 
 
-#endif //__work_journal_messages_H_
+#endif //CPPTRANSPORT_WORK_JOURNAL_MESSAGES_H

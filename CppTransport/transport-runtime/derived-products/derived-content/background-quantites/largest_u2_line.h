@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __largest_u2_line_H_
-#define __largest_u2_line_H_
+#ifndef CPPTRANSPORT_LARGEST_U2_LINE_H
+#define CPPTRANSPORT_LARGEST_U2_LINE_H
 
 
 #include <iostream>
@@ -51,7 +51,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class largest_u2_line: public time_series<number>
 			    {
 
@@ -314,4 +314,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__largest_u2_line_H_
+#endif //CPPTRANSPORT_LARGEST_U2_LINE_H

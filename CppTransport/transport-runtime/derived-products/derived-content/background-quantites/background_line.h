@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __background_line_H_
-#define __background_line_H_
+#ifndef CPPTRANSPORT_BACKGROUND_LINE_H
+#define CPPTRANSPORT_BACKGROUND_LINE_H
 
 
 #include <iostream>
@@ -57,7 +57,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class background_line: public time_series<number>
 			    {
 
@@ -413,4 +413,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__background_line_H_
+#endif //CPPTRANSPORT_BACKGROUND_LINE_H

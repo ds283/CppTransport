@@ -34,7 +34,7 @@
 namespace transport
 	{
 
-    template <typename value>
+    template <typename value=double>
     class range: public serializable
 	    {
 

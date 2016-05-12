@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __fNL_time_series_H_
-#define __fNL_time_series_H_
+#ifndef CPPTRANSPORT_FNL_TIME_SERIES_H
+#define CPPTRANSPORT_FNL_TIME_SERIES_H
 
 
 #include <iostream>
@@ -50,7 +50,7 @@ namespace transport
       {
 
         //! fNL time data line
-        template <typename number>
+        template <typename number=default_number_type>
         class fNL_time_series: public time_series<number>, public fNL_line<number>
           {
 
@@ -250,4 +250,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__fNL_time_series_H_
+#endif //CPPTRANSPORT_FNL_TIME_SERIES_H

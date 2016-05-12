@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __cost_metrics_H_
-#define __cost_metrics_H_
+#ifndef CPPTRANSPORT_COST_METRICS_H
+#define CPPTRANSPORT_COST_METRICS_H
 
 
 namespace transport
@@ -34,11 +34,11 @@ namespace transport
 		namespace derived_data
 			{
 
-        enum class cost_metric { time_cost, steps_cost };
+        enum class cost_metric { time, steps };
 
 			}   // namespace derived_data
 
 	}   // namespace transport
 
 
-#endif //__cost_metrics_H_
+#endif //CPPTRANSPORT_COST_METRICS_H

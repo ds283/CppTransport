@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __u3_line_H_
-#define __u3_line_H_
+#ifndef CPPTRANSPORT_U3_LINE_H
+#define CPPTRANSPORT_U3_LINE_H
 
 
 #include <iostream>
@@ -54,7 +54,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class u3_line: public time_series<number>
 			    {
 
@@ -63,7 +63,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    u3_line(const threepf_task<number>& tk, index_selector<3>& sel, SQL_time_query tq, SQL_threepf_query,
+				    u3_line(const threepf_task<number>& tk, index_selector<3> sel, SQL_time_query tq, SQL_threepf_query,
                     unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -185,7 +185,7 @@ namespace transport
 
 
 				template <typename number>
-				u3_line<number>::u3_line(const threepf_task<number>& tk, index_selector<3>& sel,
+				u3_line<number>::u3_line(const threepf_task<number>& tk, index_selector<3> sel,
                                  SQL_time_query tq, SQL_threepf_query kq, unsigned int prec)
 					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
@@ -390,4 +390,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__u3_line_H_
+#endif //CPPTRANSPORT_U3_LINE_H

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __r_time_series_H_
-#define __r_time_series_H_
+#ifndef CPPTRANSPORT_R_TIME_SERIES_H
+#define CPPTRANSPORT_R_TIME_SERIES_H
 
 
 #include <iostream>
@@ -49,7 +49,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class r_time_series: public time_series<number>, public r_line<number>
 			    {
 
@@ -311,4 +311,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__r_time_series_H_
+#endif //CPPTRANSPORT_R_TIME_SERIES_H

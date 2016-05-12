@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __slave_work_handler_H_
-#define __slave_work_handler_H_
+#ifndef CPPTRANSPORT_SLAVE_WORK_HANDLER_H
+#define CPPTRANSPORT_SLAVE_WORK_HANDLER_H
 
 #include <list>
 #include <vector>
@@ -307,4 +307,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__slave_work_handler_H_
+#endif //CPPTRANSPORT_SLAVE_WORK_HANDLER_H

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __symbol_factory_H_
-#define __symbol_factory_H_
+#ifndef CPPTRANSPORT_SYMBOL_FACTORY_H
+#define CPPTRANSPORT_SYMBOL_FACTORY_H
 
 
 #include <unordered_map>
@@ -65,4 +65,4 @@ class symbol_factory
 	};
 
 
-#endif //__symbol_factory_H_
+#endif //CPPTRANSPORT_SYMBOL_FACTORY_H

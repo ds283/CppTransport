@@ -51,7 +51,7 @@ namespace transport
 			{
 
 		    //! background time data line
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class background_time_series : public time_series<number>
 			    {
 
@@ -60,7 +60,7 @@ namespace transport
 		      public:
 
             //! construct a background time-data object
-            background_time_series(const twopf_db_task<number>& tk, index_selector<1>& sel,
+            background_time_series(const twopf_db_task<number>& tk, index_selector<1> sel,
                                    SQL_time_query tq, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
@@ -143,7 +143,7 @@ namespace transport
 				// note that because time_series<> inherits virtually from derived_line<>, the constructor for
 				// derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    background_time_series<number>::background_time_series(const twopf_db_task<number>& tk, index_selector<1>& sel,
+		    background_time_series<number>::background_time_series(const twopf_db_task<number>& tk, index_selector<1> sel,
 		                                                           SQL_time_query tq, unsigned int prec)
 			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 			      time_series<number>(tk),
@@ -307,7 +307,7 @@ namespace transport
 
 
 		    //! twopf time data line
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class twopf_time_series: public time_series<number>, public twopf_line<number>
 			    {
 
@@ -316,7 +316,7 @@ namespace transport
 		      public:
 
 		        //! construct a twopf time-series object
-		        twopf_time_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
+		        twopf_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
 		                          SQL_time_query tq, SQL_twopf_query kq,
 		                          unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -396,7 +396,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    twopf_time_series<number>::twopf_time_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
+		    twopf_time_series<number>::twopf_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
 		                                                 SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
 			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 			      twopf_line<number>(tk, sel),
@@ -556,7 +556,7 @@ namespace transport
 
 
 		    //! threepf time data line
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class threepf_time_series: public time_series<number>, public threepf_line<number>
 			    {
 
@@ -565,7 +565,7 @@ namespace transport
 		      public:
 
             //! construct a threepf time-data object
-            threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
+            threepf_time_series(const threepf_task<number>& tk, index_selector<3> sel,
                                 SQL_time_query tq, SQL_threepf_query kq,
                                 unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -649,7 +649,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
+		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3> sel,
 		                                                     SQL_time_query tq, SQL_threepf_query kq,
 		                                                     unsigned int prec)
 			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),

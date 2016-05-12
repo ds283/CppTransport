@@ -149,4 +149,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__SQL_twopf_query_H_
+#endif //CPPTRANSPORT_SQL_TWOPF_QUERY_H

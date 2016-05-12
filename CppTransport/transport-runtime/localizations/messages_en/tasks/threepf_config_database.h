@@ -24,12 +24,12 @@
 //
 
 
-#ifndef __threepf_config_database_messages_H_
-#define __threepf_config_database_messages_H_
+#ifndef CPPTRANSPORT_THREEPF_CONFIG_DATABASE_MESSAGES_H
+#define CPPTRANSPORT_THREEPF_CONFIG_DATABASE_MESSAGES_H
 
 
 #define CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL   "Internal error: failed to write threepf k-configuration database (backend code="
 #define CPPTRANSPORT_THREEPF_DATABASE_READ_FAIL    "Internal error: failed to read threepf k-configuration database (backend code="
 
 
-#endif //__threepf_config_database_messages_H_
+#endif //CPPTRANSPORT_THREEPF_CONFIG_DATABASE_MESSAGES_H

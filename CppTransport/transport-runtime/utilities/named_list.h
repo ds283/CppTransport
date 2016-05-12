@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __named_list_H_
-#define __named_list_H_
+#ifndef CPPTRANSPORT_NAMED_LIST_H
+#define CPPTRANSPORT_NAMED_LIST_H
 
 
 #include <string>
@@ -106,4 +106,4 @@ namespace
 	}   // unnamed namespace
 
 
-#endif //__named_list_H_
+#endif //CPPTRANSPORT_NAMED_LIST_H

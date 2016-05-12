@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef __advisory_classes_messages_H_
-#define __advisory_classes_messages_H_
+#ifndef CPPTRANSPORT_ADVISORY_CLASSES_MESSAGES_H
+#define CPPTRANSPORT_ADVISORY_CLASSES_MESSAGES_H
 
 
 #define CPPTRANSPORT_ADVISORY_EMPTY                     "NULL"
@@ -50,4 +50,4 @@
 #define CPPTRANSPORT_ADVISORY_AT_TEXIT                  "at horizon exit time"
 #define CPPTRANSPORT_ADVISORY_K_A2M                     "(k/a)^2 / M"
 
-#endif // __advisory_classes_messages_H_
+#endif // CPPTRANSPORT_ADVISORY_CLASSES_MESSAGES_H

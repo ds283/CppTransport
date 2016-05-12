@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __zeta_timeseries_compute_H_
-#define __zeta_timeseries_compute_H_
+#ifndef CPPTRANSPORT_ZETA_TIMESERIES_COMPUTE_H
+#define CPPTRANSPORT_ZETA_TIMESERIES_COMPUTE_H
 
 
 #include <vector>
@@ -381,4 +381,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__zeta_timeseries_compute_H_
+#endif //CPPTRANSPORT_ZETA_TIMESERIES_COMPUTE_H

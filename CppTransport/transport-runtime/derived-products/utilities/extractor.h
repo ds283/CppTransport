@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __extractor_H_
-#define __extractor_H_
+#ifndef CPPTRANSPORT_EXTRACTOR_H
+#define CPPTRANSPORT_EXTRACTOR_H
 
 
 #include <assert.h>
@@ -99,4 +99,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__extractor_H_
+#endif //CPPTRANSPORT_EXTRACTOR_H

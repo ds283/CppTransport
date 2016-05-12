@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __task_configurations_H_
-#define __task_configurations_H_
+#ifndef CPPTRANSPORT_TASK_CONFIGURATIONS_H
+#define CPPTRANSPORT_TASK_CONFIGURATIONS_H
 
 
 #include <iostream>
@@ -373,4 +373,4 @@ namespace transport
 	}
 
 
-#endif //__task_configurations_H_
+#endif //CPPTRANSPORT_TASK_CONFIGURATIONS_H

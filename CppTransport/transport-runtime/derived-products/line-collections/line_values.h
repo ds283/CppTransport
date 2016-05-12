@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __line_values_H_
-#define __line_values_H_
+#ifndef CPPTRANSPORT_LINE_VALUES_H
+#define CPPTRANSPORT_LINE_VALUES_H
 
 
 #include "transport-runtime/messages.h"
@@ -91,4 +91,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__line_values_H_
+#endif //CPPTRANSPORT_LINE_VALUES_H

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __zeta_reduced_bispectrum_line_H_
-#define __zeta_reduced_bispectrum_line_H_
+#ifndef CPPTRANSPORT_ZETA_REDUCED_BISPECTRUM_LINE_H
+#define CPPTRANSPORT_ZETA_REDUCED_BISPECTRUM_LINE_H
 
 
 #include <iostream>
@@ -202,4 +202,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_reduced_bispectrum_line_H_
+#endif //CPPTRANSPORT_ZETA_REDUCED_BISPECTRUM_LINE_H

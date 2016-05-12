@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __generic_config_iterator_H_
-#define __generic_config_iterator_H_
+#ifndef CPPTRANSPORT_GENERIC_CONFIG_ITERATOR_H
+#define CPPTRANSPORT_GENERIC_CONFIG_ITERATOR_H
 
 
 #include <type_traits>
@@ -165,4 +165,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__generic_config_iterator_H_
+#endif //CPPTRANSPORT_GENERIC_CONFIG_ITERATOR_H

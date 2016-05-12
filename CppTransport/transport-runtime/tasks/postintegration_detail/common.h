@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __postintegration_task_common_H_
-#define __postintegration_task_common_H_
+#ifndef CPPTRANSPORT_POSTINTEGRATION_TASK_COMMON_H
+#define CPPTRANSPORT_POSTINTEGRATION_TASK_COMMON_H
 
 
 #include <assert.h>
@@ -50,4 +50,4 @@
 #include "transport-runtime/defaults.h"
 
 
-#endif //__postintegration_task_common_H_
+#endif //CPPTRANSPORT_POSTINTEGRATION_TASK_COMMON_H

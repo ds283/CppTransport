@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __data_line_H_
-#define __data_line_H_
+#ifndef CPPTRANSPORT_DATA_LINE_H
+#define CPPTRANSPORT_DATA_LINE_H
 
 #include <vector>
 #include <string>
@@ -257,4 +257,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__data_line_H_
+#endif //CPPTRANSPORT_DATA_LINE_H
