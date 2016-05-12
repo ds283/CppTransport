@@ -310,15 +310,15 @@ namespace transport
 
             //! write details for an SQL time configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& query, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_query& query, HTML_node& parent);
 
             //! write details for an SQL twopf momentum-configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& query, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_query& query, HTML_node& parent);
 
             //! write details for an SQL threepf momentum-configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& query, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_query& query, HTML_node& parent);
 
 
             // SPECIFIC LINES
@@ -2974,21 +2974,21 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& query, HTML_node& parent)
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_query& query, HTML_node& parent)
           {
             this->write_SQL_panel("SQL query for time sample points", query.get_query_string(), parent);
           }
 
 
         template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& query, HTML_node& parent)
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_query& query, HTML_node& parent)
           {
             this->write_SQL_panel("SQL query for 2-point function momentum-configuration points", query.get_query_string(), parent);
           }
 
 
         template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& query, HTML_node& parent)
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_query& query, HTML_node& parent)
           {
             this->write_SQL_panel("SQL query for 3-point function momentum-configuration sample points", query.get_query_string(), parent);
           }

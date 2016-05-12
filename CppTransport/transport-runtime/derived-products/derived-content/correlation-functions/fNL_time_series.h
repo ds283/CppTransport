@@ -59,7 +59,7 @@ namespace transport
           public:
 
             //! construct an fNL time series data object
-            fNL_time_series(const fNL_task<number>& tk, SQL_time_config_query tq);
+            fNL_time_series(const fNL_task<number>& tk, SQL_time_query tq);
 
             //! deserialization constructor
             fNL_time_series(Json::Value& reader, task_finder<number>& finder);
@@ -80,7 +80,7 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
 
             // DERIVE LINES -- implements a 'time_series' interface
@@ -127,7 +127,7 @@ namespace transport
           protected:
 
             //! SQL query representing x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
           };
 
@@ -136,7 +136,7 @@ namespace transport
         // for derived_line<> is not called automatically when constructing time_series<>.
         // We have to call it ourselves.
         template <typename number>
-        fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, SQL_time_config_query tq)
+        fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, SQL_time_query tq)
           : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }),
             fNL_line<number>(tk),
             time_series<number>(tk),

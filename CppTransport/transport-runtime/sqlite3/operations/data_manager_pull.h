@@ -73,7 +73,7 @@ namespace transport
 
 
         // Pull a set of time sample points, identified by their serial numbers
-        void pull_time_config_sample(sqlite3* db, const derived_data::SQL_time_config_query& query,
+        void pull_time_config_sample(sqlite3* db, const derived_data::SQL_time_query& query,
                                      std::vector<time_config>& sample, unsigned int worker)
           {
             assert(db != nullptr);
@@ -124,7 +124,7 @@ namespace transport
 
         // Pull a set of twopf k-configuration sample points, identified by their serial numbers
         template <typename number>
-        void pull_twopf_kconfig_sample(sqlite3* db, const derived_data::SQL_twopf_kconfig_query& query,
+        void pull_twopf_kconfig_sample(sqlite3* db, const derived_data::SQL_twopf_query& query,
                                        std::vector<twopf_kconfig>& sample, unsigned int worker)
           {
             assert(db != nullptr);
@@ -181,7 +181,7 @@ namespace transport
 
         // Pull a set of threepf k-configuration sample points, identified by their serial numbers
         template <typename number>
-        void pull_threepf_kconfig_sample(sqlite3* db, const derived_data::SQL_threepf_kconfig_query& query,
+        void pull_threepf_kconfig_sample(sqlite3* db, const derived_data::SQL_threepf_query& query,
                                          std::vector<threepf_kconfig>& sample, unsigned int worker)
           {
             assert(db != nullptr);

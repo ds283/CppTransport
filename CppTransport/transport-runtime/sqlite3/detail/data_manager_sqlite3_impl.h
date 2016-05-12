@@ -1831,7 +1831,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& query,
+    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_query& query,
                                                         std::vector<time_config>& sample)
       {
         assert(pipe != nullptr);
@@ -1845,7 +1845,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_kconfig_query& query,
+    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_query& query,
                                                           std::vector<twopf_kconfig>& sample)
       {
         assert(pipe != nullptr);
@@ -1859,7 +1859,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_kconfig_query& query,
+    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_query& query,
                                                             std::vector<threepf_kconfig>& sample)
       {
         assert(pipe != nullptr);

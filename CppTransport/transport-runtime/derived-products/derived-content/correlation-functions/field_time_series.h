@@ -61,7 +61,7 @@ namespace transport
 
             //! construct a background time-data object
             background_time_series(const twopf_db_task<number>& tk, index_selector<1>& sel,
-                                   SQL_time_config_query tq, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
+                                   SQL_time_query tq, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
 		        background_time_series(Json::Value& reader, task_finder<number>& finder);
@@ -82,7 +82,7 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
 
 		        // DERIVE LINES -- implements a 'time_series' interface
@@ -135,7 +135,7 @@ namespace transport
 		        index_selector<1> active_indices;
 
 		        //! query representing x-axis
-		        SQL_time_config_query tquery;
+		        SQL_time_query tquery;
 
 			    };
 
@@ -144,7 +144,7 @@ namespace transport
 				// derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    background_time_series<number>::background_time_series(const twopf_db_task<number>& tk, index_selector<1>& sel,
-		                                                           SQL_time_config_query tq, unsigned int prec)
+		                                                           SQL_time_query tq, unsigned int prec)
 			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 			      time_series<number>(tk),
 			      gadget(tk),
@@ -317,7 +317,7 @@ namespace transport
 
 		        //! construct a twopf time-series object
 		        twopf_time_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
-		                          SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+		                          SQL_time_query tq, SQL_twopf_query kq,
 		                          unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
@@ -339,10 +339,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
 		        // DERIVE LINES -- implements a 'time_series' interface
@@ -385,10 +385,10 @@ namespace transport
 		        protected:
 
 		        //! SQL query representing x-axis
-		        SQL_time_config_query tquery;
+		        SQL_time_query tquery;
 
 		        //! SQL query representing different lines
-		        SQL_twopf_kconfig_query kquery;
+		        SQL_twopf_query kquery;
 
 			    };
 
@@ -397,7 +397,7 @@ namespace transport
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
-		                                                 SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
+		                                                 SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
 			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 			      twopf_line<number>(tk, sel),
 			      time_series<number>(tk),
@@ -566,7 +566,7 @@ namespace transport
 
             //! construct a threepf time-data object
             threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
-                                SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                SQL_time_query tq, SQL_threepf_query kq,
                                 unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
@@ -588,10 +588,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_threepf_query& get_k_query() const { return(this->kquery); }
 
 
 		        // DERIVE LINES -- implements a 'time_series' interface
@@ -638,10 +638,10 @@ namespace transport
           protected:
 
             //! SQL query representing x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_threepf_kconfig_query kquery;
+            SQL_threepf_query kquery;
 
 			    };
 
@@ -650,7 +650,7 @@ namespace transport
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
-		                                                     SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+		                                                     SQL_time_query tq, SQL_threepf_query kq,
 		                                                     unsigned int prec)
 			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 			      threepf_line<number>(tk, sel),

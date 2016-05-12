@@ -276,9 +276,9 @@ namespace transport
 
       public:
 
-        typedef linecache::serial_group< std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_config_handle;
-        typedef linecache::serial_group< std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
-        typedef linecache::serial_group< std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
+        typedef linecache::serial_group< std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_config_handle;
+        typedef linecache::serial_group< std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
+        typedef linecache::serial_group< std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
 		    typedef linecache::serial_group< std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > k_statistics_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_data_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_data_handle;
@@ -286,31 +286,31 @@ namespace transport
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_zeta_handle;
 
         //! Generate a serial-group handle for a set of time-configuration serial numbers
-        time_config_handle& new_time_config_handle(const derived_data::SQL_time_config_query& query) const;
+        time_config_handle& new_time_config_handle(const derived_data::SQL_time_query& query) const;
 
         //! Generate a serial-group handle for a set of twopf-kconfiguration serial numbers
-        twopf_kconfig_handle& new_twopf_kconfig_handle(const derived_data::SQL_twopf_kconfig_query& query) const;
+        twopf_kconfig_handle& new_twopf_kconfig_handle(const derived_data::SQL_twopf_query& query) const;
 
         //! Generate a serial-group handle for a set of threepf-kconfiguration serial numbers
-        threepf_kconfig_handle& new_threepf_kconfig_handle(const derived_data::SQL_threepf_kconfig_query& query) const;
+        threepf_kconfig_handle& new_threepf_kconfig_handle(const derived_data::SQL_threepf_query& query) const;
 
 		    //! Generate a serial-group handle for a set of k-configuration statistics; accepts any SQL_query object, but
 		    //! it needs to be a query over k-modes otherwise the result will be garbage
 		    k_statistics_handle& new_k_statistics_handle(const derived_data::SQL_query& query) const;
 
         //! Generate a serial-group handle for a set of time-data serial numbers
-        time_data_handle& new_time_data_handle(const derived_data::SQL_time_config_query& query) const;
+        time_data_handle& new_time_data_handle(const derived_data::SQL_time_query& query) const;
 
         //! Generate a serial-group handle for a set of kconfig-data serial numbers
-        kconfig_data_handle& new_kconfig_data_handle(const derived_data::SQL_twopf_kconfig_query& query) const;
-        kconfig_data_handle& new_kconfig_data_handle(const derived_data::SQL_threepf_kconfig_query& query) const;
+        kconfig_data_handle& new_kconfig_data_handle(const derived_data::SQL_twopf_query& query) const;
+        kconfig_data_handle& new_kconfig_data_handle(const derived_data::SQL_threepf_query& query) const;
 
         //! Generate a serial-group handle for a set of zeta time-serial numbers
-        time_zeta_handle& new_time_zeta_handle(const derived_data::SQL_time_config_query& query) const;
+        time_zeta_handle& new_time_zeta_handle(const derived_data::SQL_time_query& query) const;
 
         //! Generate a serial-group handle fora set of zeta kconfig-serial numbers
-        kconfig_zeta_handle& new_kconfig_zeta_handle(const derived_data::SQL_twopf_kconfig_query& query) const;
-        kconfig_zeta_handle& new_kconfig_zeta_handle(const derived_data::SQL_threepf_kconfig_query& query) const;
+        kconfig_zeta_handle& new_kconfig_zeta_handle(const derived_data::SQL_twopf_query& query) const;
+        kconfig_zeta_handle& new_kconfig_zeta_handle(const derived_data::SQL_threepf_query& query) const;
 
 		    // TAG FACTORIES
 
@@ -395,13 +395,13 @@ namespace transport
         // CACHES
 
         //! time configuration cache
-        linecache::cache<std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> time_config_cache;
+        linecache::cache<std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> time_config_cache;
 
         //! twopf k-config cache
-        linecache::cache<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> twopf_kconfig_cache;
+        linecache::cache<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> twopf_kconfig_cache;
 
         //! threepf k-config cache
-        linecache::cache<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
+        linecache::cache<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
 
 		    //! statistics cache
 		    linecache::cache<std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> statistics_cache;
@@ -413,13 +413,13 @@ namespace transport
         // CACHE TABLES
 
         //! Time configuration cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* time_config_cache_table;
+        linecache::table<std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* time_config_cache_table;
 
         //! twopf k-config cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* twopf_kconfig_cache_table;
+        linecache::table<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* twopf_kconfig_cache_table;
 
         //! threepf k-config cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
+        linecache::table<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
 
 		    //! statistics cache table for currently-attached group; null if no group is attached
 		    linecache::table<std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* statistics_cache_table;

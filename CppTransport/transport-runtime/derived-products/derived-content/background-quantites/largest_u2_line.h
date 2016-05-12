@@ -60,7 +60,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    largest_u2_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query,
+				    largest_u2_line(const twopf_db_task<number>& tk, SQL_time_query tq, SQL_twopf_query,
                             unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -83,10 +83,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
 				    // DERIVE LIVES -- implements a 'derived_line' interface
@@ -138,16 +138,16 @@ namespace transport
 		        integration_task_gadget<number> gadget;
 
 		        //! time query object
-				    SQL_time_config_query tquery;
+				    SQL_time_query tquery;
 
             //! kconfig query object
-            SQL_twopf_kconfig_query kquery;
+            SQL_twopf_query kquery;
 
 			    };
 
 
 				template <typename number>
-				largest_u2_line<number>::largest_u2_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
+				largest_u2_line<number>::largest_u2_line(const twopf_db_task<number>& tk, SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
 					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),

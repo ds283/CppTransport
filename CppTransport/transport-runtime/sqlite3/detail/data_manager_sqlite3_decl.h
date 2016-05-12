@@ -451,15 +451,15 @@ namespace transport
       public:
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& tquery, std::vector<time_config>& sample) override;
+        virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_query& tquery, std::vector<time_config>& sample) override;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        void pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_kconfig_query& kquery, std::vector<twopf_kconfig>& sample) override;
+        void pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_query& kquery, std::vector<twopf_kconfig>& sample) override;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        void pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_kconfig_query& query, std::vector<threepf_kconfig>& sample) override;
+        void pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_query& query, std::vector<threepf_kconfig>& sample) override;
 
         //! Pull a time sample of a background field from a datapipe
         virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, std::vector<number>& sample) override;

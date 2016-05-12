@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __SQL_policy_H_
-#define __SQL_policy_H_
+#ifndef CPPTRANSPORT_SQL_POLICY_H
+#define CPPTRANSPORT_SQL_POLICY_H
 
 
 namespace transport
@@ -139,4 +139,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__SQL_policy_H_
+#endif //CPPTRANSPORT_SQL_POLICY_H

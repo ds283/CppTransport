@@ -71,11 +71,11 @@ namespace transport
 				  public:
 
 						//! basic user-facing constructor -- 2pf task version
-						cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_kconfig_query& kq, cost_metric m=cost_metric::time_cost,
+						cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_query& kq, cost_metric m=cost_metric::time_cost,
 						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! basic user-facing constructor -- 3pf task version
-						cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_kconfig_query& kq, cost_metric m=cost_metric::time_cost,
+						cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_query& kq, cost_metric m=cost_metric::time_cost,
 						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! deserialization constructor
@@ -155,7 +155,7 @@ namespace transport
 
 
 				template <typename number>
-				cost_wavenumber<number>::cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_kconfig_query& kq,
+				cost_wavenumber<number>::cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_query& kq,
 				                                         cost_metric m, unsigned int prec)
 					: derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
 					  wavenumber_series<number>(tk),
@@ -168,7 +168,7 @@ namespace transport
 
 
 		    template <typename number>
-		    cost_wavenumber<number>::cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_kconfig_query& kq,
+		    cost_wavenumber<number>::cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_query& kq,
 		                                             cost_metric m, unsigned int prec)
 			    : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis }, prec),
 			      wavenumber_series<number>(tk),
@@ -281,7 +281,7 @@ namespace transport
 					            {
 				                case analysis_type::twopf_analysis:
 					                {
-						                SQL_twopf_kconfig_query* kquery_as_twopf = dynamic_cast<SQL_twopf_kconfig_query*>(this->kquery.get());
+						                SQL_twopf_query* kquery_as_twopf = dynamic_cast<SQL_twopf_query*>(this->kquery.get());
 						                assert(kquery_as_twopf != nullptr);   // TODO: raise exception
 						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_twopf);
 						                break;
@@ -289,7 +289,7 @@ namespace transport
 
 				                case analysis_type::threepf_analysis:
 					                {
-						                SQL_threepf_kconfig_query* kquery_as_threepf = dynamic_cast<SQL_threepf_kconfig_query*>(this->kquery.get());
+						                SQL_threepf_query* kquery_as_threepf = dynamic_cast<SQL_threepf_query*>(this->kquery.get());
 						                assert(kquery_as_threepf != nullptr);   // TODO: raise exception
 						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_threepf);
 						                break;

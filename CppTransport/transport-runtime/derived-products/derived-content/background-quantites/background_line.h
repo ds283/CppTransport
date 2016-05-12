@@ -66,7 +66,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    background_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
+				    background_line(const twopf_db_task<number>& tk, SQL_time_query tq, background_quantity t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    background_line(Json::Value& reader, task_finder<number>& finder);
@@ -88,7 +88,7 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
 
             // INTERFACE
@@ -163,7 +163,7 @@ namespace transport
 		        integration_task_gadget<number> gadget;
 
 		        //! query object
-				    SQL_time_config_query tquery;
+				    SQL_time_query tquery;
 
 				    //! line type
             background_quantity type;
@@ -172,7 +172,7 @@ namespace transport
 
 
 				template <typename number>
-				background_line<number>::background_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec)
+				background_line<number>::background_line(const twopf_db_task<number>& tk, SQL_time_query tq, background_quantity t, unsigned int prec)
 					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),

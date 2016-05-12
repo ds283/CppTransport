@@ -106,7 +106,7 @@ namespace transport
 		    // set up query representing time values at which to sample; we just want all of them,
 		    // so we need a condition which always evaluates to TRUE.
 		    // SQL has no boolean literals, so use 1=1 instead
-		    const derived_data::SQL_time_config_query tquery("1=1");
+		    const derived_data::SQL_time_query tquery("1=1");
 
         // pull time configuration information from the database
         typename datapipe<number>::time_config_handle& tc_handle   = pipe.new_time_config_handle(tquery);
@@ -159,7 +159,7 @@ namespace transport
         const typename work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
 
         // set up query representing time values at which to sample
-        const derived_data::SQL_time_config_query tquery("1=1");
+        const derived_data::SQL_time_query tquery("1=1");
 
         // pull time configuration information from the database
         typename datapipe<number>::time_config_handle& tc_handle   = pipe.new_time_config_handle(tquery);
@@ -272,7 +272,7 @@ namespace transport
         boost::timer::cpu_timer timer;
 
         // set up query representing time values at which to sample
-        const derived_data::SQL_time_config_query tquery("1=1");
+        const derived_data::SQL_time_query tquery("1=1");
 
         // pull time configuration information from the database
         typename datapipe<number>::time_config_handle& tc_handle   = pipe.new_time_config_handle(tquery);

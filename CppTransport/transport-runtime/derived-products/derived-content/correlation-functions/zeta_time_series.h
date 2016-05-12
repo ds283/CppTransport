@@ -61,7 +61,7 @@ namespace transport
 
             //! construct a zeta two-pf time data object
             zeta_twopf_time_series(const zeta_twopf_db_task<number>& tk,
-                                   SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+                                   SQL_time_query tq, SQL_twopf_query kq,
                                    unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
@@ -83,10 +83,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
             // DERIVE LINES -- implements a 'time_series' interface
@@ -133,10 +133,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_twopf_kconfig_query kquery;
+            SQL_twopf_query kquery;
 
           };
 
@@ -145,7 +145,7 @@ namespace transport
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
         zeta_twopf_time_series<number>::zeta_twopf_time_series(const zeta_twopf_db_task<number>& tk,
-                                                               SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
+                                                               SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
 	        : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 	          zeta_twopf_line<number>(tk),
 	          time_series<number>(tk),
@@ -297,7 +297,7 @@ namespace transport
 
             //! construct a zeta_threepf_time_series object
             zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
-                                     SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                     SQL_time_query tq, SQL_threepf_query kq,
                                      unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
@@ -319,10 +319,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_threepf_query& get_k_query() const { return(this->kquery); }
 
 
             // DERIVE LINES -- implements a 'derived_line' interface
@@ -365,10 +365,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_threepf_kconfig_query kquery;
+            SQL_threepf_query kquery;
 
           };
 
@@ -377,7 +377,7 @@ namespace transport
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
         zeta_threepf_time_series<number>::zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
-                                                                   SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                                                   SQL_time_query tq, SQL_threepf_query kq,
                                                                    unsigned int prec)
           : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             zeta_threepf_line<number>(tk),
@@ -529,7 +529,7 @@ namespace transport
 
             //! construct a zeta_reduced_bispectrum_time_series object
             zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
-                                                SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                                SQL_time_query tq, SQL_threepf_query kq,
                                                 unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
@@ -551,10 +551,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_threepf_query& get_k_query() const { return(this->kquery); }
 
 
             // DERIVE LINES -- implements a 'derived line' interface
@@ -597,10 +597,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_threepf_kconfig_query kquery;
+            SQL_threepf_query kquery;
 
           };
 
@@ -609,7 +609,7 @@ namespace transport
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
         zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
-                                                                                         SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                                                                         SQL_time_query tq, SQL_threepf_query kq,
                                                                                          unsigned int prec)
           : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             zeta_reduced_bispectrum_line<number>(tk),

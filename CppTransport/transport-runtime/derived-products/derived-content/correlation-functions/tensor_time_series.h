@@ -60,7 +60,7 @@ namespace transport
 
 				    //! construct a tensor two-point function time series data object
 				    tensor_twopf_time_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
-				                             SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+				                             SQL_time_query tq, SQL_twopf_query kq,
 				                             unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -82,10 +82,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
 				    // DERIVE LINES -- implements a 'time_series' interface
@@ -132,10 +132,10 @@ namespace transport
           protected:
 
             //! SQL query representing x axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_twopf_kconfig_query kquery;
+            SQL_twopf_query kquery;
 
 			    };
 
@@ -145,7 +145,7 @@ namespace transport
 		    // We have to call it ourselves
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
-		                                                               SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
+		                                                               SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
 			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             tensor_twopf_line<number>(tk, sel),
             time_series<number>(tk),

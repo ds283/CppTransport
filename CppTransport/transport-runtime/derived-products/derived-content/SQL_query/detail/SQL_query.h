@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __SQL_query_impl_H_
-#define __SQL_query_impl_H_
+#ifndef CPPTRANSPORT_SQL_QUERY_IMPL_H
+#define CPPTRANSPORT_SQL_QUERY_IMPL_H
 
 
 #include "transport-runtime/serialization/serializable.h"
@@ -79,4 +79,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__SQL_query_impl_H_
+#endif //CPPTRANSPORT_SQL_QUERY_IMPL_H

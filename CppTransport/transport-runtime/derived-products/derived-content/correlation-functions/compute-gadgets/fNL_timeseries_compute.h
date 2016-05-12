@@ -57,9 +57,9 @@ namespace transport
 
 				      public:
 
-				        handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, bispectrum_template ty);
+				        handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq, bispectrum_template ty);
 
-                handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
+                handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq,
                        bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl);
 
 						    ~handle() = default;
@@ -79,7 +79,7 @@ namespace transport
 						    zeta_threepf_task<number>* tk;
 
 						    //! SQL query representing time sample
-						    const SQL_time_config_query tquery;
+						    const SQL_time_query tquery;
 
                 //! time configuration data corresponding to this SQL query, pulled from the datapipe
                 std::vector<time_config> t_axis;
@@ -114,10 +114,10 @@ namespace transport
 		      public:
 
 				    //! make a handle, integrate over all triangles
-				    std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, bispectrum_template ty) const;
+				    std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq, bispectrum_template ty) const;
 
             //! make a handle, integrate over a supplied subset of triangles
-            std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
+            std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq,
                                                 bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const;
 
 
@@ -173,7 +173,7 @@ namespace transport
 
 
 		    template <typename number>
-		    fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t, const SQL_time_config_query& tq, bispectrum_template ty)
+		    fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t, const SQL_time_query& tq, bispectrum_template ty)
 			    : pipe(p),
 			      tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
 			      tquery(tq),
@@ -199,7 +199,7 @@ namespace transport
 
 
         template <typename number>
-        fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t, const SQL_time_config_query& tq,
+        fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t, const SQL_time_query& tq,
                                                        bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl)
           : pipe(p),
             tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
@@ -244,7 +244,7 @@ namespace transport
 
 		    template <typename number>
 		    std::unique_ptr<typename fNL_timeseries_compute<number>::handle>
-		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, bispectrum_template ty) const
+		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq, bispectrum_template ty) const
 			    {
 		        return std::make_unique<handle>(pipe, tk, tq, ty);
 			    }
@@ -252,7 +252,7 @@ namespace transport
 
         template <typename number>
         std::unique_ptr<typename fNL_timeseries_compute<number>::handle>
-        fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
+        fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq,
                                                     bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const
           {
             return std::make_unique<handle>(pipe, tk, tq, ty, wl);

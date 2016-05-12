@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __SQL_query_helper_H_
-#define __SQL_query_helper_H_
+#ifndef CPPTRANSPORT_SQL_QUERY_HELPER_H
+#define CPPTRANSPORT_SQL_QUERY_HELPER_H
 
 
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
@@ -46,9 +46,9 @@ namespace transport
 							{
 						    std::string type = reader[CPPTRANSPORT_NODE_SQL_QUERY_TYPE].asString();
 
-								if(type == CPPTRANSPORT_NODE_SQL_TIME_QUERY_TYPE)                 return std::make_unique<SQL_time_config_query>(reader);
-								else if(type == CPPTRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY)        return std::make_unique<SQL_twopf_kconfig_query>(reader);
-								else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_TYPE) return std::make_unique<SQL_threepf_kconfig_query>(reader);
+								if(type == CPPTRANSPORT_NODE_SQL_TIME_QUERY_TYPE)                 return std::make_unique<SQL_time_query>(reader);
+								else if(type == CPPTRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY)        return std::make_unique<SQL_twopf_query>(reader);
+								else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_TYPE) return std::make_unique<SQL_threepf_query>(reader);
 
 						    std::ostringstream msg;
 						    msg << CPPTRANSPORT_SQL_QUERY_UNKNOWN_TYPE << " '" << type << "'";
@@ -62,4 +62,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__SQL_query_helper_H_
+#endif //CPPTRANSPORT_SQL_QUERY_HELPER_H

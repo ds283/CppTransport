@@ -63,7 +63,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    u3_line(const threepf_task<number>& tk, index_selector<3>& sel, SQL_time_config_query tq, SQL_threepf_kconfig_query,
+				    u3_line(const threepf_task<number>& tk, index_selector<3>& sel, SQL_time_query tq, SQL_threepf_query,
                     unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -86,10 +86,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_threepf_query& get_k_query() const { return(this->kquery); }
 
 
 				    // DERIVE LIVES -- implements a 'derived_line' interface
@@ -164,10 +164,10 @@ namespace transport
 		        integration_task_gadget<number> gadget;
 
 		        //! time query object
-				    SQL_time_config_query tquery;
+				    SQL_time_query tquery;
 
             //! kconfig query object
-            SQL_threepf_kconfig_query kquery;
+            SQL_threepf_query kquery;
 
             //! record which indices are active
             index_selector<3> active_indices;
@@ -186,7 +186,7 @@ namespace transport
 
 				template <typename number>
 				u3_line<number>::u3_line(const threepf_task<number>& tk, index_selector<3>& sel,
-                                 SQL_time_config_query tq, SQL_threepf_kconfig_query kq, unsigned int prec)
+                                 SQL_time_query tq, SQL_threepf_query kq, unsigned int prec)
 					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
