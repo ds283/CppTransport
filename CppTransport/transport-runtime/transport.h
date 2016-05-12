@@ -56,11 +56,8 @@
 
 #include "transport-runtime/manager/task_manager.h"
 
-// finally, pull derived_data namespace into main transport namespace
-namespace transport
-  {
-    using namespace derived_data;
-  }   // namespace transport
+// derived_data namespace gets aliased to vis_toolkit
+namespace vis_toolkit = transport::derived_data;
 
 
 #endif // CPPTRANSPORT_TRANSPORT_H
