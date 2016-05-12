@@ -41,7 +41,15 @@
 
 \newcommand{\Mp}{M_{\mathrm{P}}}
 
+\newcommand{\kmax}{k_\text{max}}
+\newcommand{\ellmax}{\ell_\text{max}}
+
+\newcommand{\Pzeta}{P_\zeta}
+\newcommand{\Bzeta}{B_\zeta}
 \newcommand{\fNL}{f_{\mathrm{NL}}}
+\newcommand{\fNLlocal}{\fNL^{\text{local}}}
+\newcommand{\fNLortho}{\fNL^{\text{ortho}}}
+\newcommand{\fNLequi}{\fNL^{\text{equi}}}
 
 \newcommand{\vect}[1]{\bm{\mathrm{{#1}}}}
 \newcommand{\newp}{\tilde{p}}
@@ -5037,14 +5045,19 @@ objects used in~\S\ref{sec:add-integration-task}.
     Often this makes the corresponding integrations impracticably expensive.
     
     The alternative is adaptive initial conditions.
-    Using adaptaive initial conditions, {\CppTransport} will compute a customized
+    Using adaptive initial conditions, {\CppTransport} will compute a customized
     initial condition a fixed number of e-folds before the massless point
     for the correlation function in question.
-    (As explained on p.\pageref{sqltable:threepf-sampels}, the massless point for
+    (As explained on p.\pageref{sqltable:threepf-samples}, the massless point for
     a bispectrum configuration is defined to be the earliest massless point
     among all participating wavenumbers.)
     This choice is often dramatically faster than using uniform initial conditions.
     In many cases it is the only feasible way to perform the calculation.
+    The disadvantage is that not all correlation functions will have
+    sample data available at early times, because sampling
+    begins at different times for different configurations.
+    {\CppTransport} will only keep sample points for which all configurations have
+    data available.
 
     \semibold{Adaptive initial conditions are the recommended setting
     for all {\CppTransport} tasks.}
@@ -5805,11 +5818,11 @@ the following tables:
 \begin{sqltablelist}
 \begin{enumerate}
 	\item \mintinline{sql}{time_samples} --- contains the list of time sample points. \\
-	This table is a duplicate of the one described in \S\ref{sec:using-integration-container}
+	This table duplicates, and is inherited from, the one described in \S\ref{sec:using-integration-container}
 	(see p.\pageref{sqltable:time-samples}).
 	
 	\item \mintinline{sql}{twopf_samples} --- contains the list of sample points for the 2-point function \\
-	This table is a duplicate of the one described in \S\ref{sec:using-integration-container}
+	This table duplicates, and is inherited from, the one described in \S\ref{sec:using-integration-container}
 	(see p.\pageref{sqltable:twopf-samples}).
 	
 	\item \mintinline{sql}{zeta_twopf} --- contains the real part of the $\zeta$ 2-point function \\
@@ -5821,9 +5834,9 @@ the following tables:
         \mintinline{sql}{twopf} & \semibold{dimensionless value} of
         the real part of the $\zeta$ 2-point function,
         $\langle \zeta(\vect{k}_1) \zeta(\vect{k}_3) \rangle = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
-        \Sigma_\zeta$.
+        \Pzeta$.
 
-        The value stored is $\Re(k^3 \Sigma_\zeta)$.
+        The value stored is $\Re(k^3 \Pzeta)$.
     \end{tabular}
     
     \item \mintinline{sql}{gauge_xfm1} --- contains the linear gauge transformation $N_a$ \\
@@ -5895,7 +5908,7 @@ write the following tables to the data container:
 \begin{sqltablelist}
 \begin{enumerate}
 	\item \mintinline{sql}{threepf_samples} --- contains the list of sample points for the 3-point function \\
-	This table is a duplicate of the one decribed in \S\ref{sec:using-integration-container}
+	This table duplicates, and is inherited from, the one decribed in \S\ref{sec:using-integration-container}
 	(see p.\pageref{sqltable:threepf-samples}).
 	
 	\item \mintinline{sql}{threepf} --- contains the real part of the $\zeta$ 3-point function \\
@@ -5908,17 +5921,17 @@ write the following tables to the data container:
         the real part of the $\zeta$ 3-point function.
         If this is taken to satisfy
         $\langle \zeta(\vect{k}_1) \zeta(\vect{k}_2) \zeta(\vect{k}_3) \rangle
-        = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2 + \vect{k}_3) \alpha_\zeta$
+        = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2 + \vect{k}_3) \Bzeta$
         then the stored quantity is
         the dimensionless shape function
-        $k_1^2 k_2^2 k_3^2 \alpha_\zeta$. \\
+        $k_1^2 k_2^2 k_3^2 \Bzeta$. \\
         \mintinline{sql}{redbsp} & \semibold{dimensionless reduced bispectrum},
         defined by
         \begin{equation}
-        	\frac{6}{5} \fNL(k_1, k_2, k_3) = \frac{\alpha_\zeta(k_1, k_2, k_3)}
-        		{\Sigma_\zeta(k_1) \Sigma_\zeta(k_2) +
-        		 \Sigma_\zeta(k_1) \Sigma_\zeta(k_3) +
-        		 \Sigma_\zeta(k_2) \Sigma_\zeta(k_3)} .
+        	\frac{6}{5} \fNL(k_1, k_2, k_3) = \frac{\Bzeta(k_1, k_2, k_3)}
+        		{\Pzeta(k_1) \Pzeta(k_2) +
+        		 \Pzeta(k_1) \Pzeta(k_3) +
+        		 \Pzeta(k_2) \Pzeta(k_3)} .
         \end{equation}
 	\end{tabular}
 	
@@ -5956,22 +5969,23 @@ momenta.
 
 \subsection{Inner-product tasks to compute $\fNL$-like amplitudes}
 \label{sec:inner-products}
-The $\zeta$ post-processing tasks
-\mintinline{c++}{zeta_twopf_task} and
-\mintinline{c++}{zeta_threepf_task}
-are not the only postintegration tasks provided by {\CppTransport}.
-In principle, tasks could be provided to compute almost any observable of interest;
+Production of $\zeta$ correlation functions 
+is not the only kind of post-processing that could be
+considered.
+In principle it is possible to implement {\CppTransport} postintegration
+tasks to compute almost any observable of interest,
 but at present only one option is offered---an inner product between the
 numerically-computed bispectrum and one of the standard bispectrum shapes.
 
 To generate such inner products we use an
 \mintinline{c++}{fNL_task}.
-{\CppTransport} refers to them in this way because, \emph{under certain circumstances},
+{\CppTransport} uses this name because, \emph{under certain circumstances},
 the amplitudes they produce may be related to the $\fNL$ amplitudes
 reported by surveys of the cosmic microwave background anisotropies
 or the large-scale galaxy distribution.
 However, this interpretation should be treated with caution.
-The is no necessary relation between these inner products and
+As will be explained below,
+there is no necessary relation between these inner products and
 the quantities observed by some particular instrument,
 and to obtain truly accurate results requires a more careful calculation.
 For an example, see Ref.~\cite{Byrnes:2015dub}.
@@ -5984,7 +5998,8 @@ source 3-point functions for which it can compute inner products.
 In particular:
 \begin{itemize}
 	\item currently, inner products are supported only for
-	cubic tasks built from a linear grid.
+	3-point function tasks built from a linear grid
+	(whether of cubic or $\alpha\beta$ type).
 	\item the grid should be complete---no configurations should
 	be dropped by the storage policy.
 \end{itemize}
@@ -5999,26 +6014,383 @@ $B_1$, $B_2$ satisfies~\cite{Babich:2004gb,Fergusson:2009nv}
 	\iprod{B_1}{B_2} \equiv
 	\sum_{\text{triangles}}
 	S_1(k_1, k_2, k_3) S_2(k_1, k_2, k_3) .	
+	\label{eq:inner-product}
 \end{equation}
 Sometimes the configurations in this sum are weighted
 to approximate the sensitivity of a particular instrument,
-but {\CppTransport} uses an unweighted definition.
-The sum over triangles unpacks into an integral,
+but {\CppTransport} chooses to weight all configurations equally.
+With this choice
+the formal sum over triangles can be understood as an integral
 \begin{equation}
 	\iprod{B_1}{B_2} \equiv
 	\int \d k_1 \, \d k_2 \, \d k_3 \;
 	S_1(k_1, k_2, k_3) S_2(k_1, k_2, k_3) .	
 \end{equation}
 
-This inner product is not unique, and in any case requires
-the specification of UV and IR limits in order to be well defined.
-These issues are not a cause for concern, because the purpose
-of the inner product is not mathematical but physical.
+For the reasons explained above
+this choice is not unique,
+and even when we have settled on a weighting for the
+integrand
+the definition must be completed by
+specifying UV and IR limits.
+The numerical value of a typical inner product
+$\iprod{B_1}{B_2}$
+(and any conclusions that are drawn from it)
+will depend on the choices that are made.
+However, this arbitrariness is not really a cause for concern, because
+the purpose of the inner product is not mathematical but physical.
+Present-day experiments achieve only low signal-to-noise
+in measurements of any individual bispectrum configuration.
+Results with high signal-to-noise can be obtained only by
+supposing a relationship between the amplitude of different
+groups of configurations
+and averaging
+to obtain to cumulative contribution of the entire group.
+Our choice of inner product
+is useful if it happens that the averaging
+involved in Eq.~\eqref{eq:inner-product}
+can be regarded as a proxy for the averaging over
+configurations performed by a realistic experiment.
 
-\para{Using the {\SQLite} data container}
+\subsubsection{The standard templates}
+{\CppTransport} knows about a number of standard `templates',
+or suppositions for the relationship between the amplitude of
+nearby bispectrum configurations.
+These are:
+\begin{itemize}
+    \item \semibold{The local template.} This is defined by
+    \begin{equation}
+        \Bzeta^\text{local} =
+            2
+            \Big(
+                \Pzeta(\vect{k}_1) \Pzeta(\vect{k}_2)
+                + \Pzeta(\vect{k}_1) \Pzeta(\vect{k}_3)
+                + \Pzeta(\vect{K}_2) \Pzeta(\vect{k}_3)
+            \Big) .
+    \end{equation}
+    
+    \item \semibold{The equilateral template.} This satisfies~\cite{Creminelli:2005hu}
+    \begin{equation}
+    \begin{split}
+        \Bzeta^\text{equi} =
+        6
+        \Big(
+        &
+            {- \Pzeta(\vect{k}_1)} \Pzeta(\vect{k}_2)
+            - \Pzeta(\vect{k}_1) \Pzeta(\vect{k}_3)
+            - \Pzeta(\vect{k}_2) \Pzeta(\vect{k}_3)
+        \\
+        & -
+            2 \big[ \Pzeta(\vect{k}_1) \Pzeta(\vect{k}_2
+                \Pzeta(\vect{k}_3) \big]^{2/3}
+        \\
+        & +
+            \big[
+                \Pzeta(\vect{k}_1)
+                \Pzeta^2(\vect{k}_2)
+            \big]^{1/3}
+            \Pzeta(\vect{k}_3)
+            + \text{5 cyclic permutations}
+        \Big)
+    \end{split}
+    \end{equation}
+    
+    \item \semibold{The orthogonal template.} This satisfies~\cite{Senatore:2009gt}
+    \begin{equation}
+    \begin{split}
+        \Bzeta^\text{ortho} =
+        6
+        \Big(
+        &
+            {- 3\Pzeta(\vect{k}_1)} \Pzeta(\vect{k}_2)
+            - 3\Pzeta(\vect{k}_1) \Pzeta(\vect{k}_3)
+            - 3\Pzeta(\vect{k}_2) \Pzeta(\vect{k}_3)
+        \\
+        & -
+            8 \big[ \Pzeta(\vect{k}_1) \Pzeta(\vect{k}_2
+                \Pzeta(\vect{k}_3) \big]^{2/3}
+        \\
+        & +
+            3 \big[
+                \Pzeta(\vect{k}_1)
+                \Pzeta^2(\vect{k}_2)
+            \big]^{1/3}
+            \Pzeta(\vect{k}_3)
+            + \text{5 cyclic permutations}
+        \Big)
+    \end{split}
+    \end{equation}
+\end{itemize}
+For any template $\Bzeta^i$
+{\CppTransport} defines an associated amplitude parameter
+$\fNL^i$,
+\begin{equation}
+    \fNL^i = \frac{5}{3} \frac{\iprod{B}{\Bzeta^i}}{\iprod{\Bzeta^i}{\Bzeta^i}}
+    \qquad
+    \text{(no sum on $i$)}
+    \label{eq:fNL-amplitudes}
+\end{equation}
+When the inner products in~\eqref{eq:fNL-amplitudes}
+are a good estimate for the response of
+the quadratic estimator used for practical
+parameter estimation in a given experiment, the
+corresponding $\fNL^i$ should be a good estimate
+for the amplitudes
+$\fNLlocal$, $\fNLequi$, $\fNLortho$
+(and so on)
+measured by that experiment, assuming the
+true primordial bispectrum is $B$.
+On the other hand, if the inner product
+$\iprod{\cdot}{\cdot}$ is not a good estimate
+for the response of a practical estimator
+then $\fNL^i$ computed in this way may have little or
+nothing to do with the response of a real experiment.
+In particular, this can happen if
+$B$ is too far from scale-invariant.
+The 3-dimensional inner product~\eqref{eq:inner-product}
+will weight configurations near the upper limit
+$\kmax$ like $\kmax^3$,
+whereas a realistic CMB estimator working in $\ell$ space
+would
+weight such configurations like $\ellmax^2$.
+This difference in dimensionality
+can mean that
+$\iprod{\cdot}{\cdot}$ overestimates the signal-to-noise
+contributed by the high-$k$ configurations.
+
+\subsubsection{Building an inner-product task}
+To compute an inner product and associated $\fNL$-parameter
+for the double quadratic model we will need a new
+3-point function task build from a linear grid.
+The output from this task should be attached to a
+$\zeta$ task, and the output from \emph{that}
+should be attached to the inner-product task.
+
+To specify the template the constructor for
+\mintinline{c++}{fNL_task<>} requires a third
+argument.
+The possible values technically belong to
+{\CppTransport}'s visualization toolkit rather
+than the underlying base platform,
+and therefore
+live in the
+\mintinline{c++}{vis_toolkit} namespace rather than
+the
+\mintinline{c++}{transport} namespace.
+\begin{itemize}
+    \item \mintinline{c++}{vis_toolkit::bispectrum_template::local} -- local template
+    \item \mintinline{c++}{vis_toolkit::bispectrum_template::equilateral} -- equilateral template
+    \item \mintinline{c++}{vis_toolkit::bispectrum_template::orthogonal} -- orthogonal template
+\end{itemize}
+
+\begin{minted}{c++}
+    transport::basic_range<> ks_linearspaced(kt_lo, kt_hi, 50, transport::spacing::linear);
+
+    transport::threepf_cubic_task<> tk3_linear("dquad.threepf-linear", ics, ts, ks_linearspaced);
+    tk3_linear.set_adaptive_ics_efolds(4.0);
+    tk3_linear.set_description("Compute time history of the 3-point function on a linear grid");
+
+    transport::zeta_threepf_task<> ztk3_linear("dquad.threepf-linear-zeta", tk3_linear);
+    ztk3_linear.set_description("Convert the output from dquad.threepf-linear into zeta 2 and 3-point functions");
+
+    transport::fNL_task<> fNL_local("dquad.fNL-local", ztk3_linear, transport::bispectrum_template::local);
+    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with local template");
+
+    repo.commit(fNL_local);    
+\end{minted}
+The resulting executable can be built in the usual way,
+and launched using \mintinline{bash}{mpiexec}.
+We need only specify the final
+task \repoobject{dquad.fNL-local},
+because {\CppTransport} will realise that content groups
+for \repoobject{dquad.threepf-linear}
+and \repoobject{dquad.threepf-linear-zeta}
+are required in order to generate suitable input.
+
+With linear spacing in $k$ we generate many more configurations,
+roughly 12,000.
+Although they integrate fairly quickly, the large number
+of integrations means these tasks will take a few minutes to process:
+\begin{minted}[bgcolor=blue!10]{text}
+    $ mpiexec -n 4 dquad -v -r test-fNL --create --task dquad.fNL-local --gantt gantt-fNL.pdf
+    Task manager: processing task 'dquad.threepf-linear' (1 of 3)
+    Task manager: 2016-May-12 10:28:15
+    Items processed: 9313   In flight: 1606         Remaining: 1132         
+    Complete: 77.3%         Mean CPU/item: 0.0904s  Assignment: 3m 13.3s    
+    Estimated completion: 2016-May-12 10:29:55 (1m 40.3s from now)                  
+    Task manager: 2016-May-12 10:28:34
+    Items processed: 10116  In flight: 1456         Remaining: 479          
+    Complete: 83.9%         Mean CPU/item: 0.0901s  Assignment: 3m 13.3s    
+    Estimated completion: 2016-May-12 10:29:42 (1m 8.9s from now)                   
+    Task manager: 2016-May-12 10:28:41
+    Items processed: 10919  In flight: 929          Remaining: 203          
+    Complete: 90.6%         Mean CPU/item: 0.0896s  Assignment: 3m 13.3s    
+    Estimated completion: 2016-May-12 10:29:19 (38.1s from now)                     
+    Task manager: 2016-May-12 10:29:54
+    All work items processed: 2016-May-12 10:29:54                                  
+    Committed content group '20160512T092234' for task 'dquad.threepf-linear' at 2016-May-12 10:30:57
+    Task manager: processing task 'dquad.threepf-linear-zeta' (2 of 3)
+    Committed content group '20160512T093057' for task 'dquad.threepf-linear-zeta' at 2016-May-12 10:37:02
+    Task manager: processing task 'dquad.fNL-local' (3 of 3)
+    Committed content group '20160512T093702' for task 'dquad.fNL-local' at 2016-May-12 10:37:04
+    Task manager: processed 3 database tasks in wallclock time 14m 30.6s | time now 2016-May-12 10:37:04
+\end{minted}
+Notice that {\CppTransport}'s
+periodic progress updates
+show that it has adjusted its target work assignment from 1 minute
+to just over 3 minutes.
+This is because, with the final data container reaching $\sim 3.5 \Gb$, aggregation
+takes a few tens of seconds per temporary database on an SSD.
+It will be a little slower if writing to a conventional disk.
+As explained above,
+when aggregation times are non-negligible
+{\CppTransport} schedules larger batches of work in an attempt
+to avoid wasteful stalls.
+That process Gantt chart for this job is shown
+in Fig.~\ref{fig:gantt-fNL}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.5]{Outputs/gantt-fNL}    
+    \end{center}
+    \caption{\label{fig:gantt-fNL}Process Gantt chart for the inner-product task \repoobject{dquad.fNL-local}.}
+\end{figure}
+
+\subsubsection{Example: Using the {\SQLite} data container to produce a plot}
+In~\S\ref{sec:derived-products}
+we will see how to generate a derived product
+which plots the time history of
+$\fNLlocal$ in this model.
+As for other types of task, however, it is also possible to extract
+raw data from the {\SQLite} database.
+
+Each inner-product task will write the following tables
+into its container:
+\begin{sqltablelist}
+\begin{enumerate}
+    \item \mintinline{sql}{time_samples} -- contains the list of time sample points.
+	This table duplicates, and is inherited from, the one described in \S\ref{sec:using-integration-container}
+	(see p.\pageref{sqltable:time-samples}).
+	
+	\item \mintinline{sql}{fNL_local} \\
+	\mintinline{sql}{fNL_equi} \\
+	\mintinline{sql}{fNL_ortho} --- contain the inner products needed to compute $\fNL^i$ \\
+	Typically only one of these tables will be present, as appropriate. Each table contains the columns: \\
+	\begin{tabular}{p{2.5cm}p{11.5cm}}
+	   \mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{time_samples.serial}
+	   identifying the time sample point for this row \\
+	   \mintinline{sql}{BB} & contains the inner product $\iprod{B}{B}$, where $B$ is the numerical
+	   bispectrum produced by the $\zeta$ task used as a source \\
+	   \mintinline{sql}{BT} & contains the inner product $\iprod{B}{T}$, where $B$ is as above and
+	   $T$ is the appropriate template \\
+	   \mintinline{sql}{TT} & contains the inner product $\iprod{T}{T}$ 
+	\end{tabular}
+\end{enumerate}
+\end{sqltablelist}
+As an example, consider what would be required to compute
+$\fNL^i$ from this database and plot it.
+The first step is to construct an SQL query which computes the
+required combination
+of the columns \mintinline{sql}{BT}
+and \mintinline{sql}{TT}.
+We also need a column representing the time sample point.
+A simple way to achieve this is
+\begin{minted}{sql}
+    SELECT
+      tserial           AS tserial,
+      (5 / 3) * BT / TT AS fNL
+    FROM fNL_local;
+\end{minted}
+This is an example of the way in which short SQL queries can be used
+to perform simple data analysis without
+the need to write complex programs.
+For example, if we wished it would be possible to add
+a new column representing the (square of) the correlation `cosine'
+between $B$ and $T$,
+\begin{equation}
+    \cos^2 (B,T) = \frac{\iprod{B}{T}^2}{\iprod{B}{B} \iprod{T}{T}} .
+\end{equation}
+To do this we would change the query:
+\begin{minted}{sql}
+    SELECT
+      tserial             AS tserial,
+      (5 / 3) * BT / TT   AS fNL,
+      BT * BT / (BB * TT) AS cos_square
+    FROM fNL_local;    
+\end{minted}
+We would usually prefer to plot e-foldings $N$ on the $x$-axis rather than the
+time serial number.
+This requires us to join the
+\mintinline{sql}{fNL_local} and
+\mintinline{sql}{time_samples} tables,
+by splicing together rows from each table
+to form a bigger table with more columns.
+This is accomplished by the SQL
+\mintinline{sql}{INNER JOIN} clause:
+\begin{minted}{sql}
+    SELECT
+      time_samples.time                                           AS time,
+      (5 / 3) * fNL_local.BT / fNL_local.TT                       AS fNL,
+      fNL_local.BT * fNL_local.BT / (fNL_local.BB * fNL_local.TT) AS cos_square
+    FROM fNL_local
+      INNER JOIN time_samples ON fNL_local.tserial = time_samples.serial
+    ORDER BY time;
+\end{minted}
+Most database managers will allow the results of this query to be saved
+in any suitable format.
+`Comma Separated Value' or CSV is usually a good choice which has
+widespread support among third party tools.
+Once the data has been exported we can plot it as we wish.
+For example, the following Python script will produce a simple plot
+from a CSV file.
+\begin{minted}{python}
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import csv
+    
+    with open('fNL_local.csv') as f:
+        time = []
+        fNL_local = []
+    
+        reader = csv.DictReader(f)
+        for row in reader:
+            time.append(float(row['time']))
+            fNL_local.append(float(row['fNL']))
+    
+        time_data = np.array(time)
+        fNL_local_data = np.array(fNL_local)
+    
+    plt.figure()
+    plt.plot(time_data, fNL_local_data, label='$f_{\mathrm{NL}}^{\mathrm{local}}$')
+    
+    plt.xlabel(r'e-folds $N$')
+    plt.legend(frameon=False)
+    plt.savefig('fNL_local.pdf')    
+\end{minted}
+The resulting plot is shown in Fig.~\ref{fig:dquad-fNL-plot}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.65]{Plots/fNL_local}    
+    \end{center}
+    \caption{\label{fig:dquad-fNL-plot}Evolution of the inner-product
+    amplitude $\fNLlocal$ in the double-quadratic inflation model.}
+\end{figure}
 
 \section{Generating derived products using output tasks}
 \label{sec:derived-products}
+
+We are now in a position to consider the final step in
+performing an analysis with {\CppTransport}---using its visualization
+toolkit to produce derived products for comparison with science data.
+{\CppTransport} can convert its raw $n$-point functions into many
+derived observables, and in many cases these will be sufficient
+for simple analysis or comparison with summary
+observables such as the power spectrum amplitude or spectral index.
+For more advanced uses it may be
+desirable to export raw data from the database
+and process it using a dedicated pipeline.
+
+To current implementation of the visualization toolkit can produce 
 
 \section{Managing repositories}
 \label{sec:repo-management}
@@ -6038,7 +6410,7 @@ of the inner product is not mathematical but physical.
 It is a pleasure to acknowledge a longstanding collaboration
 with
 Mafalda Dias,
-Jonathan Frazer
+Jonathan Frazerd
 and David Mulryne.
 
 Development of {\CppTransport} has been supported
