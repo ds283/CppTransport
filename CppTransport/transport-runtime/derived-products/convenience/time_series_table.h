@@ -89,8 +89,10 @@ namespace transport
 							    {
 						        case axis_value::unset_axis:
 						        case axis_value::efolds_axis:
-							        this->internal_set_x_label(CPPTRANSPORT_PRODUCT_TIME_SERIES_TABLE_X_LABEL_NOLATEX);
-							        break;
+											{
+												this->internal_set_x_label(CPPTRANSPORT_PRODUCT_TIME_SERIES_TABLE_X_LABEL_NOLATEX);
+												break;
+											}
 
 						        default:
 							        assert(false);

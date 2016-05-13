@@ -118,9 +118,11 @@ namespace transport
 							    {
 						        case axis_value::unset_axis:
 						        case axis_value::efolds_axis:
-			                if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
-			                else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
-							        break;
+											{
+												if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
+												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
+												break;
+											}
 
 						        default:
 							        assert(false);
