@@ -37,9 +37,6 @@ void write_fNL_products(transport::repository<>& repo, transport::initial_condit
                         transport::range<>& ts, transport::range<>& ks);
 
 
-constexpr unsigned int num_fields = 2;
-
-
 void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
   {
     const double Mp = 1.0;
@@ -73,6 +70,8 @@ void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
 void write_zeta_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
                          transport::range<>& ts, transport::range<>& ks)
   {
+    constexpr unsigned int num_fields = 2;
+
     transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
     tk2.set_adaptive_ics_efolds(4.0);
     tk2.set_description("Compute time history of the 2-point function from k ~ e^3 to k ~ e^9");

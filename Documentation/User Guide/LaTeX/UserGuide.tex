@@ -1199,7 +1199,17 @@ and the location of the {\CC}
 compiler as the value
 of \cmakevar{CMAKE\_CXX\_COMPILER}.
 
-If configuration is successful, build the translator
+If configuration is successful, build the translator%
+	\footnote{If you are using a recent version of {\GiNaC}
+	from the 1.7 series, you may see a large number of warnings
+	during compilation
+	of the form
+	\begin{center}
+		\ttfamily
+		warning: `class\_name' overrides a member function but is not marked 'override'
+	\end{center}
+	These are harmless and presumably will be fixed in a later release
+	of {\GiNaC}.}
 and then install:
 \begin{minted}{bash}
 	make CppTransport -j4
@@ -6455,6 +6465,407 @@ and
 or \mintinline{c++}{SQL_threepf_query}
 are used to select suitable configurations from the sample points
 for 2- or 3-point function wavenumber configurations.
+To use them, supply a suitable SQL expression based on the columns
+of the tables
+\mintinline{sql}{time_samples},
+\mintinline{sql}{twopf_samples}
+and
+\mintinline{sql}{threepf_samples},
+as appropriate.
+Each of these accepts a single argument, which is the SQL
+expression to use.
+
+\para{Selecting times}
+For example, to build a trivial query which selects all configurations
+we require an expression which is always true, such as
+\mintinline{sql}{1=1}.
+For example:
+\begin{minted}{c++}
+	SQL_time_query all_times("1=1");
+	SQL_twopf_query all_twopfs("1=1");
+	SQL_threepf_query all_threepfs("1=1");	
+\end{minted}
+Alternatively, to select the latest time recorded in the database
+we could use
+\begin{minted}{sql}
+	tserial IN (SELECT MAX(tserial) FROM time_samples)
+\end{minted}
+The function \mintinline{sql}{MAX} is provided by SQL.
+There is also a \mintinline{sql}{MIN} function which can be used to select
+the earliest time available in the database,
+or we can combine these to get two sample points---both the earliest \emph{and}
+latest times,
+\begin{minted}{sql}
+	tserial IN (SELECT MAX(tserial) FROM time_samples UNION SELECT MIN(tserial) FROM time_samples)
+\end{minted}
+To pick a specific time, it's possible to look up the corresponding serial
+number (using an HTML report as described in~\S\ref{sec:examine-k-database}
+for wavenumber configurations, but checking the time sample points instead)
+and specify it directly.
+Alternatively you can specify a range of times using a query such as
+\mintinline{sql}{time > 10 AND time < 30}.
+
+\para{Selecting wavenumber configurations}
+To select wavenumber configurations is equally easy.
+For 2-point function configurations we could select a range of wavenumbers
+using an expression such as
+\begin{minted}{sql}
+	conventional > 10 AND conventional < 50	
+\end{minted}
+The available column names are those
+which apply to the corresponding SQL table, as described in~\S\ref{sec:using-integration-container}.
+This means that we could also select configurations based on their horizon-exit
+time via the column
+\mintinline{sql}{t_exit}
+or their massless point
+\mintinline{sql}{t_massless}.
+So, for example, we could select all wavenumbers $k$ which leave the horizon in
+some specified e-folding interval using
+\begin{minted}{sql}
+	t_exit > 0.0 AND t_exit < 10.0	
+\end{minted}
+The same facilities are available
+for 3-point function configurations,
+for which it is possible to select on
+the columns
+\mintinline{sql}{kt_conventional},
+\mintinline{sql}{kt_comoving},
+\mintinline{sql}{alpha},
+\mintinline{sql}{beta},
+\mintinline{sql}{t_exit_kt}
+or
+\mintinline{sql}{t_massless}.
+If you wish to select on a squeezing ratio such as $k_3/k_t$ then
+this has to be done by rewriting the expression in terms of
+$\alpha$ and $\beta$, eg. the SQL expression
+\begin{minted}{sql}
+	(1-beta)/2 < 1E-3	
+\end{minted}
+will select all configurations with squeezing ratio
+$k_3/k_t < 10^{-3}$.
+
+\subsection{Example: plotting the evolution of the background fields}
+To see how these queries are used in practice,
+consider building a plot showing the time evolution of the background
+fields and their derivatives.
+To keep our function
+\mintinline{c++}{write_tasks()} from becoming excessively long, we break it
+into two parts: one which builds the sample points and initial conditions,
+and another which builds tasks and derived products.
+Later, we will add further tasks and products which can go in separate functions.
+Our prototypes are now
+\begin{minted}{c++}
+	void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model);
+	
+	void write_zeta_products(transport::repository<>& repo, transport::initial_conditions<>& ics, transport::range<>& ts, transport::range<>& ks);	
+\end{minted}
+The function \mintinline{c++}{write_tasks()} becomes
+\begin{minted}{c++}
+	void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
+	  {
+	    const double Mp = 1.0;
+	    const double Mphi = 9E-5 * Mp;
+	    const double Mchi = 1E-5 * Mp;
+	
+	    transport::parameters<> params(Mp, { Mphi, Mchi }, model);
+	
+	    const double phi_init = 10.0 * Mp;
+	    const double chi_init = 12.9 * Mp;
+	
+	    const double N_init = 0.0;
+	    const double N_pre = 12.0;
+	    const double N_end = 60.0;
+	
+	    transport::initial_conditions<> ics("dquad", params, { phi_init, chi_init }, N_init, N_pre);
+	
+	    transport::basic_range<> ts(N_init, N_end, 300, transport::spacing::linear);
+	
+	    const double kt_lo = std::exp(3.0);
+	    const double kt_hi = std::exp(9.0);
+	
+	    transport::basic_range<> ks_logspaced(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
+	    transport::basic_range<> ks_linearspaced(kt_lo, kt_hi, 50, transport::spacing::linear);
+	
+	    write_zeta_products(repo, ics, ts, ks_logspaced);
+	  }
+\end{minted}
+and the new function
+\mintinline{c++}{write_zeta_products()} is
+\begin{minted}{c++}
+void write_zeta_products(transport::repository<>& repo, transport::initial_conditions<>& ics, transport::range<>& ts, transport::range<>& ks)
+  {
+	constexpr unsigned int num_fields = 2;
+
+    transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
+    tk3.set_adaptive_ics_efolds(4.0);
+    tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9");
+
+    transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
+    ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
+
+    vis_toolkit::SQL_time_query all_times("1=1");
+
+    vis_toolkit::background_time_series<> bg_fields(tk3, vis_toolkit::index_selector<1>(num_fields).all(), all_times);
+
+    vis_toolkit::time_series_plot<> bg_plot("dquad.product.bg_plot", "background.pdf");
+    bg_plot.set_legend_position(vis_toolkit::legend_pos::bottom_left);
+    bg_plot += bg_fields;
+
+    transport::output_task<> out_tk("dquad.output.zeta");
+    out_tk += bg_plot;
+
+    repo.commit(out_tk);
+  }
+\end{minted}
+The steps involved here are:
+\begin{enumerate}
+	\item We set up a \mintinline{c++}{threepf_cubic_task} and couple it to a
+	\mintinline{c++}{zeta_threepf_task} as described above.
+	These tasks will collaborate to produce the raw $n$-point functions in the model.
+	
+	\item We set up an \mintinline{c++}{SQL_time_query} containing the trivial
+	SQL query \mintinline{sql}{1=1}. This will select all sample times stored in the database,
+	so we will see the evolution of the background fields over the entire integration.
+
+	However, remember that with adaptive initial conditions, {\CppTransport} will not begin
+	storing samples until all $n$-point functions are available. This means that the
+	first time stored in the database will be some time later than the initial time
+	$\Ninit = 0$ specified in the initial conditions package
+	\mintinline{c++}{ics}.
+	
+	\item We set up a time-series line for the background fields using the
+	\mintinline{c++}{vis_toolkit::background_time_series<>} class.
+	Its constructor has signature
+	\begin{minted}{c++}
+		background_time_series(integration_task tk, index_selector<1> selector, SQL_time_query query)
+	\end{minted}
+	The first argument identifies the integration task that will supply the data.
+	The second argument is a new type of object,
+	an \mintinline{c++}{index_selector<>}.
+	This determines which fields to plot.
+	The final argument is an \mintinline{c++}{SQL_time_query}.
+	As explained above, this will determine which time sample points to include.
+	Our choice \mintinline{c++}{all_times} will use them all.
+	
+	The constructor for the \mintinline{c++}{index_selector}
+	accepts a single argument, corresponding to the number of fields in the model.
+	It takes a template argument between angle brackets,
+	here \mintinline{c++}{<1>},
+	to indicate the number of indices being selected from.
+	For example: the background fields have one index,
+	the two-point function $\Sigma^{ab}$ has two indices, and
+	the three-point function $\alpha^{abc}$ has three indices.
+
+	By default all components are selected, but to be explicit we have used the
+	\mintinline{c++}{all()} method to indicate that they should all be included.
+	This will give us a plot showing the field expectation values
+	$\phi(N)$, $\chi(N)$
+	and also their derivatives $p_\phi \equiv \d \phi / \d N$
+	and $p_\chi = \d \chi / \d N$.
+	
+	\item Once the derived line has been created we build a plot
+	to contain it. This is the object
+	\mintinline{c++}{time_series_plot<>}.
+	Its constructor takes two arguments:
+	a \emph{derived product name} (which should be unique)
+	and a filename.
+	The format of the output file is inferred by
+	{\Matplotlib} from the extension of the filename.
+	Any format that can be written by {\Matplotlib} may be used,
+	and typically PDF (\file{.pdf}) or SVG (\file{.svg})
+	are good for plots.
+	
+	\item By default, the plot includes a legend
+	which is placed in the upper right-hand corner.
+	In this case it will overlay the lines, so we elect to move it to the bottom
+	left-hand corner using the
+	\mintinline{c++}{set_legend_position()} method.
+	
+	\item The data line \mintinline{c++}{bg_fields} is added to the plot
+	by writing
+	\mintinline{c++}{bg_plot += bg_fields}.
+	If we had more than one line to add we could include them all in a summation
+	on the right-hand side.
+	
+	\item Finally, we build an output task called
+	\repoobject{dquad.output.zeta}. We add the plot to the task
+	by writing
+	\mintinline{c++}{out_tk += bg_plot}.
+	The output task is committed to the database.
+	Notice that there is no need to commit the derived products on which the
+	task depends,
+	or the tasks on which those derived products depend,
+	because {\CppTransport} will automatically commit these dependencies if they are
+	required.
+\end{enumerate}
+To test, build the executable and launch the task
+\repoobject{dquad.output.zeta} using
+\begin{minted}{bash}
+	$ mpiexec -n 4 dquad -v -r test-output --create --task dquad.output.zeta	
+\end{minted}
+As usual, {\CppTransport} will schedule execution of any tasks needed to produce
+content groups which feed later tasks in the chain:
+\begin{minted}[bgcolor=blue!10]{text}
+	Task manager: processing task 'dquad.threepf' (1 of 2)
+	Committed content group '20160513T100911' for task 'dquad.threepf' at 2016-May-13 11:13:34
+	Task manager: processing task 'dquad.output.zeta' (2 of 2)
+	Committed content group '20160513T101334' for task 'dquad.output.zeta' at 2016-May-13 11:13:46
+	Task manager: processed 2 database tasks in wallclock time 4m 35.8s | time now 2016-May-13 11:13:46	
+\end{minted}
+Fig.~\ref{fig:background-plot} shows the generated plot, using the
+\option{seaborn} plot style.
+We will discuss its features below and explain how it can be customized.
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.6]{Outputs/background}	
+	\end{center}
+	\caption{\label{fig:background-plot}Time evolution of background fields $\phi$, $\chi$ and their
+	derivatives $p_\phi$, $p_\chi$ generated by the produce
+	\repoobject{dquad.product.bg\_plot}.}
+\end{figure}
+
+{\CppTransport} employs a similar directory structure to that
+used for integration and postintegration tasks.
+Generated content is placed in the \file{output} folder of the repository,
+under a subfolder with name corresponding to the output task.
+Inside this folder, each content group
+is placed in a directory with name given by the content group name.
+Each derived product is generated inside this directory, with the filename
+specified when the derived product was set up.
+There is also the usual \file{logs} folder which contains detailed logging
+from the master and worker processes while the task was in progress.
+
+\para{Reporting on output content groups}
+Asking {\CppTransport} to report on \repoobject{dquad.output.zeta} shows the derived products
+which are generated as part of the task, and lists each associated content group:
+\begin{minted}[bgcolor=blue!10]{text}
+	$ ./dquad -r test-output/ --info dquad.output.zeta
+	dquad.output.zeta -- output task
+	Created: 2016-May-13 10:09:09      Last update: 2016-May-13 10:13:46  
+	Runtime version: 2016.1            
+	
+	Derived product        Type     Matches tags  Filename        
+	dquad.product.bg_plot  2d plot  --            background.pdf  
+	
+	Content group                   Created           Last update
+	20160513T101334    2016-May-13 10:13:34  2016-May-13 10:13:46	
+\end{minted}
+If we instead report on the content group generated by this task, {\CppTransport} will summarize
+the content groups which were used to feed data into its derived products:
+\begin{minted}[bgcolor=blue!10]{text}
+	$ ./dquad -r test-output/ --info 20160513T101334
+	20160513T101334 -- derived content
+	Created: 2016-May-13 10:13:34      Last update: 2016-May-13 10:13:46  
+	Runtime version: 2016.1            Task: dquad.output.zeta            
+	Locked: No                         Tags: --                           
+	
+	Summary of content groups used
+	Content group    Task           Type                    Last update
+	20160513T100911  dquad.threepf  integration    2016-May-13 10:13:34
+\end{minted}
+The table aggregates all dependencies, but sometimes it is more useful
+to see indivudally how each derived product depends on other content groups.
+{\CppTransport} can provide this information as a
+\emph{provenance report},
+obtained by using
+the command-line option \option{{-}{-}provenance} rather than
+\option{{-}{-}info}.
+
+The same information is embedded in an HTML report,
+and often these are the easiest way to navigate the network of
+dependencies.
+Content groups generated by output tasks are listed
+under the `Output content' tab, and where possible the report
+includes any generated plots.
+This is often a good way to view the products generated by an output
+task, especially if there are more than a few.
+See Fig.~\ref{fig:bg-plot-screenshot}.
+The report for each derived product includes a table of
+dependencies similar to that provided by the
+\option{{-}{-}provenance} option.
+Also, if {\Graphviz} is installed, it will produce a dependency diagram
+showing the interrelation of
+initial conditions packages,
+tasks and content groups which
+yielded the data for this product.
+An example for the background fields plot is shown in Fig.~\ref{fig:bg-dependencies}.
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.4]{Screenshots/bg-plot}
+	\end{center}
+	\caption{\label{fig:bg-plot-screenshot}The HTML report for content groups
+	generated by output tasks will include the output where possible.
+	Click the `Data provenance' button to display a hyperlinked list of content
+	groups showing the data sources for each product.
+	The `Dependency diagram' shows how the data sources depend on each other,
+	on particular integration and postintegration tasks, and ultimately
+	on a set of initial conditions packages.}
+\end{figure}
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{DependencyDiagrams/bg-plot}
+	\end{center}
+	\caption{\label{fig:bg-dependencies}Dependency diagram for
+	the background field plot \repoobject{dquad.products.bg\_plot}.
+	In this case the chain of dependencies is very straightforward, but
+	more complex cases are possible. Initial conditions packages are coloured
+	green, tasks are coloured yellow, content groups are red and
+	derived products are blue.}
+\end{figure}
+
+\subsection{Derived products: plots and tables}
+The current implementation of the visualization toolkit supports four principal
+types of derived product:
+\begin{itemize}
+	\item The products \mintinline{c++}{time_series_plot<>}
+	and \mintinline{c++}{wavenumber_series_plot<>}
+	are two-dimensional graphs
+	suitable for plotting time-series and wavenumber-series
+	data, respectively.
+	
+	\item The products \mintinline{c++}{time_series_table<>}
+	and \mintinline{c++}{wavenumber_series_table<>}
+	are suitable for tabulating time- and wavenumber-series data.
+\end{itemize}
+The constructors for these derived products have a standard signature
+consisting of two arguments:
+a unique name, and an output filename.
+We have already seen this in action for the
+\mintinline{c++}{time_series_plot<>} used to plot background field data
+above.
+
+\para{Common options}
+Each derived product can be customized by applying options.
+Some of these are common to both tables and products. They are:
+\begin{itemize}
+	\item \mintinline{c++}{bool get_log_x()} \\
+	\mintinline{c++}{set_log_y(bool f)} \\
+	Determine whether logarithmic $x$-axis values are used
+	
+	This setting applies to both tables and plots.
+\end{itemize}
+
+
+\subsection{Enabling or disabling indices in a \mintinline{c++}{index_selector<>}}
+For derived lines generated by objects with multiple indices, a
+\mintinline{c++}{index_selector<>} object must be supplied
+to select which indices should be plotted.
+
+Constructing a selector requires specifying a template argument which fixes the
+number of indices. Also, the constructor accepts a single argument giving the number
+of fields.
+For example, to build a selector for a 2-index object such as the field-space
+correlation function $\Sigma^{ab}$, we could use
+\begin{minted}{c++}
+	vis_toolkit::index_selector<2> sel(num_fields);
+\end{minted}
+where \mintinline{c++}{num_fields} should be suitably defined.
+(It could be extracted from the \mintinline{c++}{get_N_fields()} method of a
+\mintinline{c++}{transport::model} object, which returns the number of
+fields used in the model.)
+
+As explained above, index selectors enable all components by default.
+
 
 \section{Managing repositories}
 \label{sec:repo-management}
