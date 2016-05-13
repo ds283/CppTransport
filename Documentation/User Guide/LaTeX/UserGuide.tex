@@ -5625,6 +5625,7 @@ Checking the number of content groups attached to each task using
 \end{minted}
 
 \subsection{Applying tags to control which content groups are used}
+\label{sec:apply-tags}
 When several suitable content groups are available
 to feed into a postintegration task,
 {\CppTransport} must decide which one should be used.
@@ -6209,8 +6210,8 @@ are required in order to generate suitable input.
 
 With linear spacing in $k$ we generate many more configurations,
 roughly 12,000.
-Although they integrate fairly quickly, the large number
-of integrations means these tasks will take a few minutes to process:
+Although they integrate fairly quickly, the
+number of configurations means these tasks will take a few minutes to process:
 \begin{minted}[bgcolor=blue!10]{text}
     $ mpiexec -n 4 dquad -v -r test-fNL --create --task dquad.fNL-local --gantt gantt-fNL.pdf
     Task manager: processing task 'dquad.threepf-linear' (1 of 3)
@@ -6260,8 +6261,9 @@ In~\S\ref{sec:derived-products}
 we will see how to generate a derived product
 which plots the time history of
 $\fNLlocal$ in this model.
-As for other types of task, however, it is also possible to extract
-raw data from the {\SQLite} database.
+As for other types of data-generating task, however, it is also possible to extract
+raw data from the {\SQLite} database
+and use that directly.
 
 Each inner-product task will write the following tables
 into its container:
@@ -6302,9 +6304,9 @@ A simple way to achieve this is
 \end{minted}
 This is an example of the way in which short SQL queries can be used
 to perform simple data analysis without
-the need to write complex programs.
+the need to write programs.
 For example, if we wished it would be possible to add
-a new column representing the (square of) the correlation `cosine'
+a new column representing the (square of the) correlation `cosine'
 between $B$ and $T$,
 \begin{equation}
     \cos^2 (B,T) = \frac{\iprod{B}{T}^2}{\iprod{B}{B} \iprod{T}{T}} .
@@ -6339,8 +6341,10 @@ Most database managers will allow the results of this query to be saved
 in any suitable format.
 `Comma Separated Value' or CSV is usually a good choice which has
 widespread support among third party tools.
-Once the data has been exported we can plot it as we wish.
-For example, the following Python script will produce a simple plot
+Once the data has been exported we can plot it as we wish,
+by using a suitable tool such as
+\href{http://www.gnuplot.info}{Gnuplot}.
+Alternatively, the following Python script will produce a simple plot
 from a CSV file.
 \begin{minted}{python}
     import numpy as np
@@ -6379,18 +6383,78 @@ The resulting plot is shown in Fig.~\ref{fig:dquad-fNL-plot}.
 \section{Generating derived products using output tasks}
 \label{sec:derived-products}
 
-We are now in a position to consider the final step in
+We are able to consider the final step in
 performing an analysis with {\CppTransport}---using its visualization
-toolkit to produce derived products for comparison with science data.
-{\CppTransport} can convert its raw $n$-point functions into many
-derived observables, and in many cases these will be sufficient
-for simple analysis or comparison with summary
-observables such as the power spectrum amplitude or spectral index.
+toolkit to produce derived products.
+{\CppTransport} can convert its raw $n$-point functions into a large
+number of derived quantities, some of which are observables.
+In many cases these quantities will be sufficient to undertake
+a simple model analysis, or comparison with summary observables
+such as the power spectrum amplitude or spectral index.
 For more advanced uses it may be
-desirable to export raw data from the database
+preferable or necessary to export raw data from the database
 and process it using a dedicated pipeline.
 
-To current implementation of the visualization toolkit can produce 
+The current implementation of the visualization toolkit can
+produce
+good quality two-dimensional line and scatter plots
+with minimal manual intervention.
+Outputs are built from a series of building blocks:
+\begin{itemize}
+    \item \semibold{derived \emph{lines}} are simple functions of time
+    or configuration that can be extracted from the output of one or more tasks.
+    Examples might be
+    the values of raw correlation functions,
+    the spectral index of the power spectrum,
+    or the tensor-to-scalar ratio---all as functions of time or configuration.
+    Many such quantities can be constructed using just one task but others require
+    two, such as the tensor-to-scalar ratio.
+    (The tensor amplitude is computed by
+    a \mintinline{c++}{twopf_task} or
+    \mintinline{c++}{threepf_task}, while the $\zeta$ amplitude
+    is computed by the
+    \mintinline{c++}{zeta_*} versions of these.)
+    
+    \item \semibold{derived \emph{products}} are groups of derived lines,
+    presented either as a table or as a plot.
+    A single derived product can include lines which draw data from many different
+    integration or postintegration tasks.
+    However, only groups of lines that share a common type of $x$-axis can be
+    aggregated into a single derived product.
+    
+    \item \semibold{output tasks} are collections of derived products.
+    When an output task is executed, {\CppTransport}
+    produces fresh copies of each derived product it contains.
+    The standard rules described in~\S\ref{sec:apply-tags}
+    are used to select which content groups are used as data sources.
+\end{itemize}
+{\CppTransport} supports two types of derived line:
+\emph{time series}, which capture the evolution of some quantity as a function
+of e-foldings $N$, and
+\emph{wavenumber series},
+which capture the dependence on some aspect of the wavenumber configuration.
+This could be the scale $k$ or $k_t$, but also shape parameters such as
+$\alpha$ or $\beta$, or the squeezing ratios $k_i/k_t$.
+It can automatically take derivatives of wavenumber series in order to
+measure spectral indices.
+
+\subsection{Selecting which data to plot using SQL query objects}
+To build a derived line requires selecting among the time and wavenumber samples
+stored by {\CppTransport} during integration,
+or subsequently generated by a postintegration task.
+Because {\CppTransport}'s internal data storage services are built on top of
+SQL databases, a natural and efficient
+means to perform this selection is to use
+SQL expressions as building blocks.
+
+{\CppTransport} provides three classes which encapsulate SQL expressions suitable
+for selecting a group of time of configuration sample points.
+\mintinline{c++}{SQL_time_query} is used to select time samples,
+and
+\mintinline{c++}{SQL_twopf_query}
+or \mintinline{c++}{SQL_threepf_query}
+are used to select suitable configurations from the sample points
+for 2- or 3-point function wavenumber configurations.
 
 \section{Managing repositories}
 \label{sec:repo-management}
@@ -6410,7 +6474,7 @@ To current implementation of the visualization toolkit can produce
 It is a pleasure to acknowledge a longstanding collaboration
 with
 Mafalda Dias,
-Jonathan Frazerd
+Jonathan Frazer
 and David Mulryne.
 
 Development of {\CppTransport} has been supported

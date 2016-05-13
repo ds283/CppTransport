@@ -31,10 +31,13 @@ int main(int argc, char* argv[]);
 void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model);
 
 void write_zeta_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
-                         transport::range<>& ts, transport::range<>& ks)
+                         transport::range<>& ts, transport::range<>& ks);
 
 void write_fNL_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
                         transport::range<>& ts, transport::range<>& ks);
+
+
+constexpr unsigned int num_fields = 2;
 
 
 void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
@@ -84,17 +87,24 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
     transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
     ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
 
-    vis_toolkit::SQL_threepf_kconfig_query
+    vis_toolkit::SQL_time_query all_times("1=1");
 
-    vis_toolkit::zeta_twopf_time_series(ztk3);
-    vis_toolkit::zeta_threepf_time_series(ztk3);
+    vis_toolkit::background_time_series<> bg_fields(tk3, vis_toolkit::index_selector<1>(num_fields).all(), all_times);
+
+    vis_toolkit::time_series_plot<> bg_plot("dquad.product.bg_plot", "background.pdf");
+    bg_plot.set_legend_position(vis_toolkit::legend_pos::bottom_left);
+    bg_plot += bg_fields;
+
+    transport::output_task<> out_tk("dquad.output.zeta");
+    out_tk += bg_plot;
+
+    repo.commit(out_tk);
   }
 
 
 void write_fNL_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
                         transport::range<>& ts, transport::range<>& ks)
   {
-
     transport::threepf_cubic_task<> tk("dquad.threepf-linear", ics, ts, ks);
     tk.set_adaptive_ics_efolds(4.0);
     tk.set_description("Compute time history of the 3-point function on a linear grid");
@@ -105,13 +115,26 @@ void write_fNL_products(transport::repository<>& repo, transport::initial_condit
     transport::fNL_task<> fNL_local("dquad.fNL-local", ztk, vis_toolkit::bispectrum_template::local);
     fNL_local.set_description("Compute inner product of double-quadratic bispectrum with local template");
 
-    transport::fNL_task<> fNL_local("dquad.fNL-equi", ztk, vis_toolkit::bispectrum_template::equilateral);
-    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with equilateral template");
+    transport::fNL_task<> fNL_equi("dquad.fNL-equi", ztk, vis_toolkit::bispectrum_template::equilateral);
+    fNL_equi.set_description("Compute inner product of double-quadratic bispectrum with equilateral template");
 
-    transport::fNL_task<> fNL_local("dquad.fNL-ortho", ztk, vis_toolkit::bispectrum_template::orthogonal);
-    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with orthogonal template");
+    transport::fNL_task<> fNL_ortho("dquad.fNL-ortho", ztk, vis_toolkit::bispectrum_template::orthogonal);
+    fNL_ortho.set_description("Compute inner product of double-quadratic bispectrum with orthogonal template");
 
+    vis_toolkit::SQL_time_query all_times("1=1");
 
+    vis_toolkit::fNL_time_series<> local(fNL_local, all_times);
+    vis_toolkit::fNL_time_series<> equi(fNL_equi, all_times);
+    vis_toolkit::fNL_time_series<> ortho(fNL_ortho, all_times);
+
+    vis_toolkit::time_series_plot<> fNL_plot("dquad.product.fNL_plot", "fNL_plot.pdf");
+    fNL_plot.set_log_y(false).set_abs_y(false);
+    fNL_plot += local + equi + ortho;
+
+    transport::output_task<> out_tk("dquad.output.fNL");
+    out_tk += fNL_plot;
+
+    repo.commit(out_tk);
   }
 
 
