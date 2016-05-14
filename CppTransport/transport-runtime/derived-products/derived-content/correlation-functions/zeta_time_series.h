@@ -146,7 +146,7 @@ namespace transport
         template <typename number>
         zeta_twopf_time_series<number>::zeta_twopf_time_series(const zeta_twopf_db_task<number>& tk,
                                                                SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-	        : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+	        : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 	          zeta_twopf_line<number>(tk),
 	          time_series<number>(tk),
             tquery(tq),
@@ -198,7 +198,7 @@ namespace transport
                       {
                         line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
                       }
-                    value = value_type::dimensionless_value;
+                    value = value_type::dimensionless;
                   }
                 else
                   {
@@ -207,7 +207,7 @@ namespace transport
                       {
                         line_data[j] *= 1.0 / k_cube;
                       }
-                    value = value_type::correlation_function_value;
+                    value = value_type::correlation_function;
                   }
 
                 lines.emplace_back(group, this->x_type, value, t_axis, line_data,
@@ -379,7 +379,7 @@ namespace transport
         zeta_threepf_time_series<number>::zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
                                                                    SQL_time_query tq, SQL_threepf_query kq,
                                                                    unsigned int prec)
-          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
             zeta_threepf_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -430,7 +430,7 @@ namespace transport
                 value_type value;
                 if(this->dimensionless)
                   {
-                    value = value_type::dimensionless_value;
+                    value = value_type::dimensionless;
                   }
                 else
                   {
@@ -439,7 +439,7 @@ namespace transport
                       {
                         line_data[j] *= 1.0/shape;
                       }
-                    value = value_type::correlation_function_value;
+                    value = value_type::correlation_function;
                   }
 
                 lines.emplace_back(group, this->x_type, value, t_axis, line_data,
@@ -611,7 +611,7 @@ namespace transport
         zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
                                                                                          SQL_time_query tq, SQL_threepf_query kq,
                                                                                          unsigned int prec)
-          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
             zeta_reduced_bispectrum_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -657,7 +657,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                lines.emplace_back(group, this->x_type, value_type::fNL_value, t_axis, line_data,
+                lines.emplace_back(group, this->x_type, value_type::fNL, t_axis, line_data,
                                    this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t), messages);
               }
 

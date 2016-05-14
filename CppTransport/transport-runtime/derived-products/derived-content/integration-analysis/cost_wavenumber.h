@@ -157,9 +157,9 @@ namespace transport
 				template <typename number>
 				cost_wavenumber<number>::cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_query& kq,
 				                                         cost_metric m, unsigned int prec)
-					: derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
+					: derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit }, prec),
 					  wavenumber_series<number>(tk),
-					  type(analysis_type::twopf_analysis),
+					  type(analysis_type::twopf),
 		        gadget(tk),
 		        metric(m),
 						kquery(kq.clone())
@@ -170,9 +170,9 @@ namespace transport
 		    template <typename number>
 		    cost_wavenumber<number>::cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_query& kq,
 		                                             cost_metric m, unsigned int prec)
-			    : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis }, prec),
+			    : derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 }, prec),
 			      wavenumber_series<number>(tk),
-			      type(analysis_type::threepf_analysis),
+			      type(analysis_type::threepf),
 			      gadget(tk),
 			      metric(m),
 		        kquery(kq.clone())
@@ -192,9 +192,9 @@ namespace transport
 						kquery = SQL_query_helper::deserialize(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE].asString();
-						type = analysis_type::twopf_analysis;
-						if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF)        type = analysis_type::twopf_analysis;
-						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF) type = analysis_type::threepf_analysis;
+						type = analysis_type::twopf;
+						if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF)        type = analysis_type::twopf;
+						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF) type = analysis_type::threepf;
 						else assert(false); // TODO: raise exception
 
 				    std::string metric_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC].asString();
@@ -226,13 +226,13 @@ namespace transport
 
 				    switch(this->type)
 					    {
-				        case analysis_type::twopf_analysis:
+				        case analysis_type::twopf:
                   {
                     writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF);
                     break;
                   }
 
-				        case analysis_type::threepf_analysis:
+				        case analysis_type::threepf:
                   {
                     writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF);
                     break;
@@ -279,7 +279,7 @@ namespace transport
 		                std::vector<double> w_axis;
 				            switch(this->type)
 					            {
-				                case analysis_type::twopf_analysis:
+				                case analysis_type::twopf:
 					                {
 						                SQL_twopf_query* kquery_as_twopf = dynamic_cast<SQL_twopf_query*>(this->kquery.get());
 						                assert(kquery_as_twopf != nullptr);   // TODO: raise exception
@@ -287,7 +287,7 @@ namespace transport
 						                break;
 					                };
 
-				                case analysis_type::threepf_analysis:
+				                case analysis_type::threepf:
 					                {
 						                SQL_threepf_query* kquery_as_threepf = dynamic_cast<SQL_threepf_query*>(this->kquery.get());
 						                assert(kquery_as_threepf != nullptr);   // TODO: raise exception
@@ -305,7 +305,7 @@ namespace transport
 
 		                std::vector<number> line_data;
 		                line_data.reserve(statistics.size());
-		                value_type this_value = value_type::time_value;
+		                value_type this_value = value_type::time;
 
 		                for(std::vector<kconfiguration_statistics>::const_iterator t = statistics.begin(); t != statistics.end(); ++t)
 			                {
@@ -314,14 +314,14 @@ namespace transport
 		                        case cost_metric::time:
                               {
                                 line_data.push_back(static_cast<number>(t->integration) / 1E9); // convert to seconds
-                                this_value = value_type::time_value;
+                                this_value = value_type::time;
                                 break;
                               }
 
 		                        case cost_metric::steps:
                               {
                                 line_data.push_back(static_cast<number>(t->steps));
-                                this_value = value_type::steps_value;
+                                this_value = value_type::steps;
                                 break;
                               }
 			                    }

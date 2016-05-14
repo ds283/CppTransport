@@ -145,7 +145,7 @@ namespace transport
 		    template <typename number>
 		    background_time_series<number>::background_time_series(const twopf_db_task<number>& tk, index_selector<1> sel,
 		                                                           SQL_time_query tq, unsigned int prec)
-			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+			    : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 			      time_series<number>(tk),
 			      gadget(tk),
 			      active_indices(sel),
@@ -230,8 +230,8 @@ namespace transport
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
                     lines.emplace_back(group, this->x_type,
-                                       this->gadget.get_model()->is_field(m) ? value_type::field_value
-                                                                             : value_type::momentum_value, t_axis,
+                                       this->gadget.get_model()->is_field(m) ? value_type::field
+                                                                             : value_type::momentum, t_axis,
                                        line_data,
                                        this->make_LaTeX_label(m), this->make_non_LaTeX_label(m), messages);
                   }
@@ -398,7 +398,7 @@ namespace transport
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
 		                                                 SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+			    : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 			      twopf_line<number>(tk, sel),
 			      time_series<number>(tk),
 			      tquery(tq),
@@ -464,7 +464,7 @@ namespace transport
 			                            {
 		                                line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
 			                            }
-                                value = value_type::dimensionless_value;
+                                value = value_type::dimensionless;
 			                        }
                             else
                               {
@@ -473,7 +473,7 @@ namespace transport
                                   {
                                     line_data[j] *= 1.0 / k_cube;
                                   }
-                                value = value_type::correlation_function_value;
+                                value = value_type::correlation_function;
                               }
 
                             lines.emplace_back(group, this->x_type, value, t_axis, line_data,
@@ -652,7 +652,7 @@ namespace transport
 		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3> sel,
 		                                                     SQL_time_query tq, SQL_threepf_query kq,
 		                                                     unsigned int prec)
-			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+			    : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 			      threepf_line<number>(tk, sel),
 			      time_series<number>(tk),
 			      tquery(tq),
@@ -716,7 +716,7 @@ namespace transport
                                 value_type value;
                                 if(this->dimensionless)
                                   {
-                                    value = value_type::dimensionless_value;
+                                    value = value_type::dimensionless;
                                   }
                                 else
                                   {
@@ -725,7 +725,7 @@ namespace transport
                                       {
                                         line_data[j] *= 1.0/shape;
                                       }
-                                    value = value_type::correlation_function_value;
+                                    value = value_type::correlation_function;
                                   }
 
                                 lines.emplace_back(group, this->x_type, value, t_axis, line_data,

@@ -187,7 +187,7 @@ namespace transport
 				template <typename number>
 				u3_line<number>::u3_line(const threepf_task<number>& tk, index_selector<3> sel,
                                  SQL_time_query tq, SQL_threepf_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
             active_indices(sel),

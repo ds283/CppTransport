@@ -147,7 +147,7 @@ namespace transport
 		    template <typename number>
 		    std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe, const SQL_time_query& tquery) const
 			    {
-				    assert(this->x_type == axis_value::efolds_axis);
+				    assert(this->x_type == axis_value::efolds);
 		        if(!pipe.validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 
 		        // set-up time sample data

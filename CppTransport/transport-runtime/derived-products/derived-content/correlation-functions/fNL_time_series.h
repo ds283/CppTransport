@@ -137,7 +137,7 @@ namespace transport
         // We have to call it ourselves.
         template <typename number>
         fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, SQL_time_query tq)
-          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }),
+          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }),
             fNL_line<number>(tk),
             time_series<number>(tk),
             tquery(tq)
@@ -176,7 +176,7 @@ namespace transport
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-            lines.emplace_back(group, this->x_type, value_type::fNL_value, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
+            lines.emplace_back(group, this->x_type, value_type::fNL, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 
             // detach pipe from content group
             this->detach(pipe);

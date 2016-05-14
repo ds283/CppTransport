@@ -145,7 +145,7 @@ namespace transport
 				template <typename number>
 				r_time_series<number>::r_time_series(const zeta_twopf_db_task<number>& tk,
 				                                     SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 					  r_line<number>(tk),
 					  time_series<number>(tk),
             tquery(tq),
@@ -230,7 +230,7 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        lines.emplace_back(groups, this->x_type, value_type::r_value, t_axis, line_data,
+				        lines.emplace_back(groups, this->x_type, value_type::r, t_axis, line_data,
                                    this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]), messages);
 					    }
 

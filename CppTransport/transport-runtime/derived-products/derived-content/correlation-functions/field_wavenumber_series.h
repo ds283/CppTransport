@@ -144,7 +144,7 @@ namespace transport
         template <typename number>
         twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2> sel,
                                                                  SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-	        : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
+	        : derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit }, prec),
 	          twopf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),
 	          tquery(tq),
@@ -406,8 +406,8 @@ namespace transport
         threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3> sel,
                                                                      SQL_time_query tq, SQL_threepf_query kq,
                                                                      unsigned int prec)
-	        : derived_line<number>(tk, axis_class::wavenumber_axis,
-	                               std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis },
+	        : derived_line<number>(tk, axis_class::wavenumber,
+	                               std::list<axis_value>{ axis_value::k, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 },
 	                               prec),
 	          threepf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),

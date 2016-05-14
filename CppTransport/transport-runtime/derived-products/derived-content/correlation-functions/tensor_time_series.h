@@ -146,7 +146,7 @@ namespace transport
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
 		                                                               SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+			    : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
             tensor_twopf_line<number>(tk, sel),
             time_series<number>(tk),
             tquery(tq),
@@ -209,7 +209,7 @@ namespace transport
                                   {
                                     line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
                                   }
-                                value = value_type::dimensionless_value;
+                                value = value_type::dimensionless;
                               }
                             else
                               {
@@ -218,7 +218,7 @@ namespace transport
                                   {
                                     line_data[j] *= 1.0 / k_cube;
                                   }
-                                value = value_type::correlation_function_value;
+                                value = value_type::correlation_function;
                               }
 
                             lines.emplace_back(group, this->x_type, value, t_axis, line_data,

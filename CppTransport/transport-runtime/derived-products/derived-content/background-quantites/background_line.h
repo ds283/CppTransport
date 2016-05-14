@@ -173,7 +173,7 @@ namespace transport
 
 				template <typename number>
 				background_line<number>::background_line(const twopf_db_task<number>& tk, SQL_time_query tq, background_quantity t, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),

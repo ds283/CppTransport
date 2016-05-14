@@ -152,7 +152,7 @@ namespace transport
 				template <typename number>
 				u2_line<number>::u2_line(const twopf_db_task<number>& tk, index_selector<2> sel,
                                  SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
             active_indices(sel),

@@ -671,12 +671,16 @@ namespace transport
 										switch(*vv)
 											{
 										    case data_line_type::continuous_data:
-											    out << "errorbar";
-													break;
+                          {
+                            out << "errorbar";
+                            break;
+                          }
 
 										    case data_line_type::scattered_data:
-											    out << "plot";
-													break;
+                          {
+                            out << "plot";
+                            break;
+                          }
 											}
 								    out << "(x" << *tt << ", y" << *tt;
 										if(*vv == data_line_type::scattered_data) out << ", 'o'";

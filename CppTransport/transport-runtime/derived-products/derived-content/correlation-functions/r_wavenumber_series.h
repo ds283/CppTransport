@@ -140,7 +140,7 @@ namespace transport
 				template <typename number>
 				r_wavenumber_series<number>::r_wavenumber_series(const zeta_twopf_db_task<number>& tk,
 				                                                 SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
+					: derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit }, prec),
 					  r_line<number>(tk),
 					  wavenumber_series<number>(tk),
             tquery(tq),

@@ -143,7 +143,7 @@ namespace transport
         tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2> sel,
                                                                                SQL_time_query tq, SQL_twopf_query kq,
                                                                                unsigned int prec)
-	        : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
+	        : derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit }, prec),
 	          tensor_twopf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),
             tquery(tq),
@@ -214,7 +214,7 @@ namespace transport
                                   {
                                     *l_pos *= 1.0 / (2.0*M_PI*M_PI);
                                   }
-                                value = value_type::dimensionless_value;
+                                value = value_type::dimensionless;
                               }
                             else
                               {
@@ -225,7 +225,7 @@ namespace transport
                                     double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
                                     *l_pos *=  1.0 / k_cube;
                                   }
-                                value = value_type::correlation_function_value;
+                                value = value_type::correlation_function;
                               }
 
                             lines.emplace_back(group, this->x_type, value, w_axis, line_data,

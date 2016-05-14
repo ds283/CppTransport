@@ -155,7 +155,7 @@ namespace transport
                                      slave_message_buffer& msg, bool spectral_index)
 	        : groups(g),
             x_type(at),
-	          y_type(spectral_index ? value_type::spectral_index_value : vt),
+	          y_type(spectral_index ? value_type::spectral_index : vt),
 	          LaTeX_label(Ll),
 	          non_LaTeX_label(nLl),
             data_type(data_line_type::continuous_data),

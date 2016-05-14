@@ -430,7 +430,7 @@ namespace transport
 							}
 						else
 							{
-								return(axis_value::unset_axis);
+								return(axis_value::unset);
 							}
 
 					}
