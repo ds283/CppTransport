@@ -46,6 +46,10 @@
 
 \newcommand{\Pzeta}{P_\zeta}
 \newcommand{\Bzeta}{B_\zeta}
+\newcommand{\DimlessPzeta}{\mathcal{P}_\zeta}
+\newcommand{\DimlessBzeta}{S_\zeta}
+\newcommand{\DimlessSigma}{\mathcal{P}}
+\newcommand{\DimlessB}{S}
 \newcommand{\fNL}{f_{\mathrm{NL}}}
 \newcommand{\fNLlocal}{\fNL^{\text{local}}}
 \newcommand{\fNLortho}{\fNL^{\text{ortho}}}
@@ -4863,6 +4867,7 @@ and columns:
     \end{tabular}
     
     \item \mintinline{sql}{tensor_twopf} --- contains the tensor 2-point function \\
+    \label{sqltable:tensor-twopf}
     \begin{tabular}{p{2.5cm}p{11.2cm}}
         \mintinline{sql}{tserial} & reference to serial number
         \mintinline{sql}{time_samples.serial} identifying the time sample point for this row \\
@@ -4993,10 +4998,10 @@ the \mintinline{c++}{twopf_task} and \mintinline{c++}{threepf_cubic_task}
 objects used in~\S\ref{sec:add-integration-task}.
 
 \begin{itemize}
-    \item \mintinline{c++}{set_name(std::string s)} \\
+    \item \mintinline{c++}{set_name(std::string)} \\
     Sets the task name to the supplied string
     
-    \item \mintinline{c++}{set_description(std::string d)} \\
+    \item \mintinline{c++}{set_description(std::string)} \\
     Sets an (optional) description field. Reports
     for this task (either obtained
     at the command line by the \option{{-}{-}info} switch, or using the
@@ -5006,7 +5011,7 @@ objects used in~\S\ref{sec:add-integration-task}.
     \item
     \label{enum:adpative-ics}
     \mintinline{c++}{bool get_adaptive_ics()} \\
-    \mintinline{c++}{set_adaptive_ics(bool g)} \\
+    \mintinline{c++}{set_adaptive_ics(bool)} \\
     Get or set the current adaptive initial conditions state.
     
     {\CppTransport} sets initial conditions for each $n$-point function
@@ -5091,7 +5096,8 @@ objects used in~\S\ref{sec:add-integration-task}.
     initial conditions.
     
     \item \mintinline{c++}{double get_astar_normalization()} \\
-    \mintinline{c++}{set_astar_normalization(double astar)} \\
+    \mintinline{c++}{set_astar_normalization(double)} \\
+    \label{method:set_astar_normalization}
     For concrete calculations {\CppTransport} must convert conventionally-normalized
     wavenumbers to comoving-normalized ones.
     This involves a choice of scale factor $\astar$ at the distinguished
@@ -5124,7 +5130,7 @@ objects used in~\S\ref{sec:add-integration-task}.
     to obtain an improvement by adjusting $\astar$.
     
     \item \mintinline{c++}{bool get_collect_initial_conditions()} \\
-    \mintinline{c++}{set_collect_initial_conditions(bool g)} \\
+    \mintinline{c++}{set_collect_initial_conditions(bool)} \\
     Get or set the current collection state for initial conditions.
     
     To assist comparison of the results produced by {\CppTransport} with
@@ -5152,7 +5158,7 @@ objects used in~\S\ref{sec:add-integration-task}.
     by {\CppTransport} internally.
     
     \item \mintinline{c++}{boost::optional<unsigned int> get_default_checkpoint()} \\
-    \mintinline{c++}{set_default_checkpoint(unsigned int t)} \\
+    \mintinline{c++}{set_default_checkpoint(unsigned int)} \\
     \mintinline{c++}{unset_default_checkpoint()} \\
     Get or set the current default checkpoint interval.
     
@@ -5943,6 +5949,7 @@ write the following tables to the data container:
         		{\Pzeta(k_1) \Pzeta(k_2) +
         		 \Pzeta(k_1) \Pzeta(k_3) +
         		 \Pzeta(k_2) \Pzeta(k_3)} .
+            \label{eq:reduced-bispectrum}
         \end{equation}
 	\end{tabular}
 	
@@ -6675,6 +6682,14 @@ The steps involved here are:
 	and typically PDF (\file{.pdf}) or SVG (\file{.svg})
 	are good for plots.
 	
+	As an alternative it is possible to specify a filename with extension
+	\file{.py}.
+	This causes {\CppTransport} to write a Python script which will produce
+	the plot, but it does not execute it---the script \emph{is} the derived
+	product.
+	This gives an opportunity to apply custom formatting or to apply
+	adjustments which {\CppTransport} cannot make automatically.
+	
 	\item By default, the plot includes a legend
 	which is placed in the upper right-hand corner.
 	In this case it will overlay the lines, so we elect to move it to the bottom
@@ -6834,17 +6849,545 @@ We have already seen this in action for the
 \mintinline{c++}{time_series_plot<>} used to plot background field data
 above.
 
-\para{Common options}
+\subsubsection{Standard options}
+\label{sec:product-standard-options}
 Each derived product can be customized by applying options.
-Some of these are common to both tables and products. They are:
+The \mintinline{c++}{set_*} methods can be chained together for more
+economical expression.
 \begin{itemize}
 	\item \mintinline{c++}{bool get_log_x()} \\
 	\mintinline{c++}{set_log_y(bool f)} \\
-	Determine whether logarithmic $x$-axis values are used
+	Determine whether logarithmic $x$-axis values are used, if this makes sense
+	for the product. Off by default.
 	
-	This setting applies to both tables and plots.
+	\item \mintinline{c++}{bool get_log_y()} \\
+	\mintinline{c++}{set_log_y(bool f)} \\
+	Determine whether logarithmic $y$-axis values are used, if this makes sense
+	for the product. Enabled by default for plots.
+	
+	\item \mintinline{c++}{bool get_abs_y()} \\
+	\mintinline{c++}{set_abs_y(bool f)} \\
+	Determine whether absolute $y$-values are used. Enabled by default for plots.
+	
+	If a logarithmic $y$-axis is in use, {\CppTransport} will detect whether
+	absolute values are needed for lines which have negative values.
+	
+	\item \mintinline{c++}{bool get_use_LaTeX()} \\
+	\mintinline{c++}{set_use_LaTeX()} \\
+	\label{method:use_LaTeX}
+	Determine whether {\LaTeX}-format labels are used
+	in preference to plain text.
+	Notice that this has nothing to do with whether {\LaTeX}
+	is involved in typesetting. Enabled by default for plots.
 \end{itemize}
 
+\subsubsection{Plot-specific options}
+In addition, there are a number of options which are specific to plots.
+As usual, the \mintinline{c++}{set_*} methods can be chained.
+
+\para{Axis handling}
+The following options influence axes:
+\begin{itemize}
+    \item \mintinline{c++}{bool get_reverse_x()} \\
+    \mintinline{c++}{set_reverse_x(bool)} \\
+    Determine whether $x$-axis is reversed. Off by default.
+    
+    \item \mintinline{c++}{bool get_reverse_y()} \\
+    \mintinline{c++}{set_reverse_y(bool)} \\
+    Determine whether $y$-axis is reversed. Off by default.
+\end{itemize}
+
+\para{Labelling}
+The following options determine labelling:
+\begin{itemize}
+    \item \mintinline{c++}{bool get_x_label()} \\
+    \mintinline{c++}{set_x_label(bool)} \\
+    Determine whether a label is added to the $x$-axis. Enabled by default.
+    
+    \item \mintinline{c++}{std::string get_x_label_text()} \\
+    \mintinline{c++}{set_x_label_text(std::string)} \\
+    \mintinline{c++}{clear_x_label_text()} \\
+    Set or clear
+    text for $x$-axis label, if it is in use. Does not imply labelling is enabled.
+    
+    If labelling is enabled but no text is explicitly supplied, {\CppTransport}
+    will use a default label.
+    In this case, \mintinline{c++}{get_x_label_text()} will return an empty string.
+    
+    \item \mintinline{c++}{bool get_y_label()} \\
+    \mintinline{c++}{set_y_label(bool)} \\
+    Determine whether a label is added to the $y$-axis. Off by default.
+    
+    On the example of Fig.~\ref{fig:background-plot}
+    we could switch on labelling on the $y$-axis by adding
+    \begin{minted}{c++}
+        bg_fields.set_y_label(true);    
+    \end{minted}
+    before adding the \mintinline{c++}{bg_fields} lines to
+    \mintinline{c++}{bg_plot}.
+    It is not necessary to specify a label; {\CppTransport} will
+    apply default labels based on quantities represented by each axis.
+    If we wish, however, it is possible to specify a label
+    using the \mintinline{c++}{set_y_label_text} method described below.
+    This sets the label for the first axis only.
+    
+    \item \mintinline{c++}{std::string get_y_label_text()} \\
+    \mintinline{c++}{set_y_label_text(std::string)} \\
+    \mintinline{c++}{clear_y_label_text()}
+    Set or clear
+    text for $y$-axis label, if it is in use. Does not imply labelling is enabled.
+    
+    If labelling is enabled but no text is explicitly supplied, {\CppTransport}
+    will use a default label.
+    In this case, \mintinline{c++}{get_y_label_text()} will return an empty string.
+    
+    \item \mintinline{c++}{bool get_title()} \\
+    \mintinline{c++}{set_title(bool)} \\
+    Determine whether a title is added to the plot. Off by default.
+    
+    \item \mintinline{c++}{std::string get_title_text()} \\
+    \mintinline{c++}{set_title_text(std::string)} \\
+    \mintinline{c++}{clear_title_text()} \\
+    Set or clear
+    text for plot title, if it is in use. Does not imply titling is enabled.
+    
+    If no title text has been supplied,
+    \mintinline{c++}{get_title_text()} will return an empty string.
+    
+    \item \mintinline{c++}{bool get_legend()} \\
+    \mintinline{c++}{set_legend(bool)} \\
+    Determine whether a legend is included on the plot. Enabled by default.
+    
+    \item \mintinline{c++}{vis_toolkit::legend_pos get_legend_position()} \\
+    \mintinline{c++}{set_legend_position(vis_toolkit::legend_pos)} \\
+    Determine position of legend, if one is enabled. By default the legend is
+    position in the top right corder of the plot
+    
+    The allowed values are: \\
+    \begin{tabular}{p{6.5cm}p{7cm}}
+        \mintinline{c++}{vis_toolkit::legend_pos::top_left} & legend in top left corner \\
+        \mintinline{c++}{vis_toolkit::legend_pos::top_right} & legend in top right corner \\
+        \mintinline{c++}{vis_toolkit::legend_pos::bottom_left} & legend in bottom left corner \\
+        \mintinline{c++}{vis_toolkit::legend_pos::bottom_right} & legend in bottom right corner \\
+        \mintinline{c++}{vis_toolkit::legend_pos::right} & legend position to right of plot \\
+        \mintinline{c++}{vis_toolkit::legend_pos::centre_right} & legend in right side of plot, vertically centred  \\
+        \mintinline{c++}{vis_toolkit::legend_pos::centre_left} & legend in left side of plot, vertically centred \\
+        \mintinline{c++}{vis_toolkit::legend_pos::upper_centre} & legend in top of plot, horizontally centred \\
+        \mintinline{c++}{vis_toolkit::legend_pos::lower_centre} & legend in bottom of plot, horizontally centred \\
+        \mintinline{c++}{vis_toolkit::legend_pos::centre} & legend in centre of plot \\
+    \end{tabular}
+    
+    \item \mintinline{c++}{bool get_typeset_with_LaTeX()} \\
+    \mintinline{c++}{set_typeset_with_LaTeX(bool)} \\
+    Determine whether {\Matplotlib} is
+	asked to offload typesetting responsibilities
+	to {\LaTeX}. This produces higher quality results but is slower, and requires
+	a {\LaTeX} toolchain to be installed on
+	the current user's
+	\mintinline{bash}{PATH}.	
+	{\LaTeX} is needed for some typesetting choices because {\Matplotlib}'s
+	built-in typesetting engine does not support the full range of
+	{\LaTeX} commands.
+	
+	Disabled by default. Notice that this setting is independent of
+	whether {\LaTeX}-format labels have been enabled using
+	\mintinline{c++}{set_use_LaTeX()}.
+	
+	\item \mintinline{c++}{bool get_dash_second_axis()} \\
+	\mintinline{c++}{set_dash_second_axis(bool)} \\
+	Determine whether lines associated with a second vertical axis
+	are distinguished by being dashed.
+	{\CppTransport} understands that different derived products have different
+    units and scales,
+    and where necessary it will add a second axis to handle lines
+    with two different intrinsic scales.
+    An example is the plot of background fields already produced
+    in Fig.~\ref{fig:background-plot}.
+    Here, although the axes are not labelled in the default configuration,
+    the left-hand vertical axis refers to the value of the fields
+    $\phi$, $\chi$
+    and the right-hand axis refers to the value of their
+    derivatives.
+    
+    To disable dashing on our example plot Fig.~\ref{fig:background-plot}
+    we should add
+    \begin{minted}{c++}
+        bg_fields.set_dash_second_axis(false);    
+    \end{minted}
+    before adding \mintinline{c++}{bg_fields} to the plot
+    \mintinline{c++}{bg_plot}.
+    
+    Enabled by default.
+\end{itemize}
+
+\subsection{Available derived lines}
+
+In this section we document
+the different derived lines provided by the visualization toolkit.
+Each line is represented by a suitable object whose constructor
+typically requires:
+\begin{itemize}
+    \item one or more \semibold{task objects} that specify the data sources
+    for the line    
+    \item for lines representing tensor objects such as the two-point
+    function $\Sigma^{ab}$ or the three-point function $\alpha^{abc}$,
+    an \semibold{index selector} that specifies which components should be
+    plotted
+    \item for both time-series and wavenumber-series objects,
+    two \semibold{SQL query expressions}---one for time configurations, and
+    another for wavenumber configurations.
+    \begin{itemize}
+        \item for \emph{time series}, the time query determines
+        the range of points sampled on the $x$-axis. If the wavenumber-configuration
+        query generates multiple points then these are used to produce different
+        lines on the plot.
+        
+        \item for \emph{wavenumber series} the situation is reversed. The
+        wavenumber configuration query determines the points sampled on the
+        $x$-axis, and if the time query generates multiple points then these
+        are plotted as multiple lines.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Standard options}
+
+In addition, each line has a number of standard options. These settings are available
+for all derived lines, although not every line will make use of each option.
+\begin{itemize}
+    \item \mintinline{c++}{vis_toolkit::dot_type get_dot_meaning()} \\
+    \mintinline{c++}{set_dot_meaning(vis_toolkit::dot_type)} \\
+    Determines whether the phase space is taken to be built from the
+    fields and their derivatives with respect to $N$, or the fields
+    and their canonical momenta.
+    
+    The allowed values for \mintinline{c++}{vis_toolkit::dot_type} are: \\
+    \begin{tabular}{p{6.5cm}p{7cm}}
+        \mintinline{c++}{vis_toolkit::dot_type::derivatives} &
+            use derivatives \\
+        \mintinline{c++}{vis_toolkit::dot_type::momenta} &
+            use momenta    
+    \end{tabular}
+
+    This setting affects only derived products containing
+    field space correlation functions.
+    
+    \item \mintinline{c++}{vis_toolkit::klabel_type get_klabel_meaning()} \\
+    \mintinline{c++}{set_klabel_meaning(vis_toolkit::klabel_type)} \\
+    Determines whether conventional or comoving momenta are used.
+    
+    The allowed values for \mintinline{c++}{vis_toolkit::klabel_type} are: \\
+    \begin{tabular}{p{6.5cm}p{7.5cm}}
+        \mintinline{c++}{vis_toolkit::klabel_type::conventional} &
+            use conventional normalization \\
+        \mintinline{c++}{vis_toolkit::klabel_type::comoving} &
+            use comoving normalization 
+    \end{tabular}
+
+    The comoving normalization is the one set by the value of
+    $\astar$; see p.\pageref{method:set_astar_normalization}.
+    
+    \item \mintinline{c++}{vis_toolkit::axis_value get_current_x_axis_value()} \\
+    \mintinline{c++}{set_current_x_axis_value(vis_toolkit::axis_value)} \\
+    Determines how the $x$-axis is constructed.
+    
+    {\CppTransport} can use several different quantities
+    for the $x$-axis scale: \\
+    \begin{tabular}{p{6.5cm}p{7cm}}
+        \mintinline{c++}{vis_toolkit::axis_value::efolds} &
+            use e-folds $N$ \\
+        \mintinline{c++}{vis_toolkit::axis_value::k} &
+            use wavenumber $k$ (or $k_t$ for 3-point function data) \\
+        \mintinline{c++}{vis_toolkit::axis_value::efolds_exit} &
+            use e-folds between $\Nstar$ and horizon exit of
+            wavenumber $k$ (or $k_t/3$ for 3-point function data) \\
+        \mintinline{c++}{vis_toolkit::axis_value::alpha} &
+            use the shape parameter $\alpha$ \\
+        \mintinline{c++}{vis_toolkit::axis_value::beta} &
+            use the shape parameter $\beta$ \\
+        \mintinline{c++}{vis_toolkit::axis_value::squeeze_k1} \\
+        \mintinline{c++}{vis_toolkit::axis_value::squeeze_k2} \\
+        \mintinline{c++}{vis_toolkit::axis_value::squeeze_k3} &
+            use the squeezing ratio $k_i/k_t$
+    \end{tabular}
+
+    Not all derived lines support all $x$-axis types.
+    Time series lines support only
+    \mintinline{c++}{efolds},
+    and wavenumber series associated with configurations of the 2-point
+    function support only
+    \mintinline{c++}{k} and
+    \mintinline{c++}{efolds_exit}.
+    Wavenumber series associated with configurations of the 3-point function
+    support all types except
+    \mintinline{c++}{efolds}.
+    {\CppTransport} will raise an exception if you attempt to
+    select an unsupported $x$-axis value.
+    
+    Derived products can contain only lines with the same $x$-axis type.
+    If you attempt to add lines with different types to the same 
+    product then
+    {\CppTransport} will raise an exception.
+    
+    \item \mintinline{c++}{clear_label_text()} \\
+    \mintinline{c++}{set_label_text(std::string latex, std::string non_latex)} \\
+    Set or clear a customized label for this line.
+
+    Two labels are required: one in {\LaTeX} format
+    and one in plain text format.
+    The {\LaTeX}-format label is used
+    if {\LaTeX} labels have been enabled by
+    \mintinline{c++}{set_use_LaTeX()}
+    (see~\S\ref{sec:product-standard-options}).
+    Otherwise, the plain text label is used.
+    
+    Labels are used as column headings (if the derived product is a table)
+    or displayed on the legend (if the derived product is a plot).
+    If no label is set then {\CppTransport} will use a suitable default.
+    
+    \item \mintinline{c++}{bool get_label_tags()} \\
+    \mintinline{c++}{set_label_tags(bool)} \\
+    \label{method:get_label_tags}
+    Determine whether identifying `tags' are added to each label.
+    For time series, the tag identifies the wavenumber configuration
+    corresponding to each line (if relevant).
+    For wavenumber series it identifies the time sample point.
+    
+    Tags are useful where a single derived line generates multiple physical
+    lines and you wish to distinguish them.
+\end{itemize}
+
+\subsubsection{Options for 2-point correlation functions}
+The lines representing 2-point correlation functions are:
+\begin{itemize}
+    \item \mintinline{c++}{twopf_time_series}
+    \item \mintinline{c++}{twopf_wavenumber_series}
+    \item \mintinline{c++}{tensor_time_series}
+    \item \mintinline{c++}{tensor_wavenmber_series}
+    \item \mintinline{c++}{zeta_twopf_time_series}
+    \item \mintinline{c++}{zeta_twopf_wavenumber_series}
+\end{itemize}
+These lines
+have additional options:
+\begin{itemize}        
+    \item \mintinline{c++}{set_dimensionless(bool)} \\
+    Determine whether the dimensionful or dimensionless correlation
+    function is plotted.
+    The dimensionless correlation function $\DimlessSigma$ is defined
+    in terms of the dimensionful correlation function $\Sigma$
+    via
+    \begin{equation}
+        \DimlessSigma = \frac{k^3}{2\pi^2} \Sigma .
+    \end{equation}
+\end{itemize}
+The field-space two-point function lines
+\mintinline{c++}{twopf_time_series}
+and \mintinline{c++}{twopf_wavenumber_series} have an additional option which
+allows them to be switched between
+real and imaginary values, where available.
+\begin{itemize}
+    \item \mintinline{c++}{vis_toolkit::twopf_type get_type()} \\
+    \mintinline{c++}{set_type(vis_toolkit::twopf_type)} \\
+    Determine whether real or imaginary values are used.
+    
+    The allowed values
+    of \mintinline{c++}{vis_toolkit::twopf_type} are: \\
+    \begin{tabular}{p{6.5cm}p{7.5cm}}
+        \mintinline{c++}{vis_toolkit::twopf_type::real} & use real values \\
+        \mintinline{c++}{vis_toolkit::twopf_type::imaginary} & use imaginary values    
+    \end{tabular}
+    Real values are used by default.
+    Notice that only datasets generated by three-point function tasks
+    include imaginary values for the 2-point function.
+\end{itemize}
+
+\subsubsection{Options for 3-point correlation functions}
+The lines representing 3-point correlation functions are:
+\begin{itemize}
+    \item \mintinline{c++}{threepf_time_series}
+    \item \mintinline{c++}{threepf_wavenumber_series}
+    \item \mintinline{c++}{zeta_threepf_time_series}
+    \item \mintinline{c++}{zeta_threepf_wavenumber_series}
+\end{itemize}
+These lines have additional options:
+\begin{itemize}
+    \item \mintinline{c++}{set_dimensionless(bool)} \\
+    Determine whether the dimensionful or dimensionless correlation
+    function is plotted.
+    The dimensionless correlation function $\DimlessB^{abc}$
+    is sometimes called the shape function.
+    It is defined
+    in terms of the dimensionful 3-point function $\alpha$
+    by
+    \begin{equation}
+        \DimlessB = (k_1 k_2 k_3)^2 \alpha .
+    \end{equation}
+    
+    \item \mintinline{c++}{bool get_use_kt_label()} \\
+    \mintinline{c++}{set_use_kt_label(bool)} \\
+    If tags are
+    being attached to labels
+    (see p.\pageref{method:get_label_tags}),
+    determine whether the $k_t$ value is used as part of the label.
+    
+    \item \mintinline{c++}{bool get_use_alpha_label()} \\
+    \mintinline{c++}{set_use_alpha_label(bool)} \\
+    If tags are
+    being attached to labels
+    (see p.\pageref{method:get_label_tags}),
+    determine whether the $\alpha$ shape parameter is used as part of the label.
+    
+    \item \mintinline{c++}{bool get_use_beta_label()} \\
+    \mintinline{c++}{set_use_beta_label(bool)} \\
+    If tags are
+    being attached to labels
+    (see p.\pageref{method:get_label_tags}),
+    determine whether the $\beta$ shape parameter is used as part of the label.
+\end{itemize}
+
+In addition, the lines
+\mintinline{c++}{zeta_reduced_bispectrum_time_series}
+\mintinline{c++}{zeta_reduced_bispectrum_wavenumber_series}    
+represent ratios of 2- and 3-point correlation functions.
+They have the same options given above except for
+\mintinline{c++}{set_dimensionless()}.
+
+\subsubsection{Time series}
+This section lists the available time series lines and the
+signature of their constructors.
+As a shorthand, the namespace
+\mintinline{c++}{vis_toolkit}
+is omitted for the names of the lines themselves,
+and for types appearing in their constructors
+such as \mintinline{c++}{vis_toolkit::SQL_time_query}
+and
+\mintinline{c++}{vis_toolkit::index_selector<>}.
+We also use the following abbreviations for tasks: \\
+\begin{tabular}{p{3.5cm}p{10.5cm}}
+    \mintinline{c++}{integration_task} & any integration task \\
+    \mintinline{c++}{threepf_task} & any 3-point function integration task \\
+    \mintinline{c++}{zeta_task} & any $\zeta$ postintegration task \\
+    \mintinline{c++}{fNL_task} & any $\fNL$ postintegration task    
+\end{tabular}
+ 
+\begin{itemize}
+    \item \mintinline{c++}{background_time_series<>} \\
+    Time evolution of the background fields and their derivatives.
+    \begin{minted}{c++}
+        background_time_series(
+            integration_task,
+            index_selector<1>,
+            SQL_time_query
+        )
+    \end{minted}
+    
+    \item \mintinline{c++}{twopf_time_series<>} \\
+    Time evolution of the field-space two-point correlation function $\Sigma^{ab}$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        twopf_time_series(
+            integration_task,
+            index_selector<2>,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+    
+    \item \mintinline{c++}{threepf_time_series<>} \\
+    Time evolution of the field-space three-point correlation function $\alpha^{abc}$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        threepf_time_series(
+            threepf_task,
+            index_selector<3>,
+            SQL_time_query,
+            SQL_twopf_query
+        )    
+    \end{minted}
+
+    \item \mintinline{c++}{tensor_time_series<>} \\
+    Time evolution of the tensor
+    two-point correlation function $\Sigma_{ss'}$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        tensor_time_series(
+            integration_task,
+            index_selector<2>,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+    
+    \item \mintinline{c++}{r_time_series<>} \\
+    Time evolution of the tensor-to-scalar ratio $r$.
+    \begin{minted}{c++}
+        r_time_series(
+            zeta_task,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+
+    \item \mintinline{c++}{zeta_twopf_time_series<>} \\
+    Time evolution of the $\zeta$ two-point correlation function $\Sigma_\zeta$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        zeta_twopf_time_series(
+            zeta_task,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+
+    \item \mintinline{c++}{zeta_threepf_time_series<>} \\
+    Time evolution of the $\zeta$ three-point correlation function $\alpha_\zeta$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        zeta_threepf_time_series(    
+            zeta_task,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+    
+    \item \mintinline{c++}{zeta_reduced_bispectrum_time_series<>} \\
+    Time evolution of the $\zeta$ reduced bispectrum, defined by
+    Eq.~\eqref{eq:reduced-bispectrum}.
+    \begin{minted}{c++}
+        zeta_reduced_bispectrum_time_series(    
+            zeta_task,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+    
+    \item \mintinline{c++}{fNL_time_series<>} \\
+    Time evolution of an inner product amplitude $\fNL^i$;
+    see Eq.~\eqref{eq:fNL-amplitudes}.
+    \begin{minted}{c++}
+        fNL_time_series(
+            fNL_task,
+            SQL_time_query
+        )    
+    \end{minted}
+
+    \item \mintinline{c++}{background_line<>} \\
+    Time evolution of a background quantity. Currently-implemented options are
+    $H$, $\epsilon$ and $aH$.
+    \begin{minted}{c++}
+        background_line(
+            integration_task,
+            SQL_time_query,
+            background_quantity
+        )
+    \end{minted}
+    The allowed values of \mintinline{c++}{vis_toolkit::background_quantity}
+
+\end{itemize}
+
+
+\subsubsection{Wavenumber series}
+
+\subsubsection{Generic options}
 
 \subsection{Enabling or disabling indices in a \mintinline{c++}{index_selector<>}}
 For derived lines generated by objects with multiple indices, a
