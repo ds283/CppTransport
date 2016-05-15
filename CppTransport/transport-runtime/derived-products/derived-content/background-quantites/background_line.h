@@ -289,7 +289,7 @@ namespace transport
 				        line_data[j] = mdl->epsilon(this->gadget.get_integration_task()->get_params(), bg_data[j]);
 					    }
 
-            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
@@ -309,7 +309,7 @@ namespace transport
 		            line_data[j] = mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
-            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
@@ -334,7 +334,7 @@ namespace transport
 		            line_data[j] = a * mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
-            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 

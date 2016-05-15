@@ -227,7 +227,7 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-                lines.emplace_back(groups, this->x_type, value_type::r_value, w_axis, line_data,
+                lines.emplace_back(groups, this->x_type, value_type::r, w_axis, line_data,
                                    this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 					    }
 

@@ -252,7 +252,7 @@ namespace transport
                                 line_data[j] = u2_tensor[mdl->flatten(m,n)];
                               }
 
-                            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+                            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
                                                this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t), messages);
                           }
                       }

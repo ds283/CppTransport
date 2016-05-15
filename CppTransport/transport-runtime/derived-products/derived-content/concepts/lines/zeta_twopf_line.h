@@ -93,7 +93,7 @@ namespace transport
 				    bool is_dimensionless() const { return(this->dimensionless); }
 
 				    //! set dimensionless
-				    void set_dimensionless(bool g) { this->dimensionless = g; }
+				    zeta_twopf_line<number>& set_dimensionless(bool g) { this->dimensionless = g; return *this; }
 
 
 				    // LABELLING SERVICES

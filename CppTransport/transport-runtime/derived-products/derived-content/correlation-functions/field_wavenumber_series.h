@@ -216,7 +216,7 @@ namespace transport
 									                {
 								                    *l_pos *= 1.0 / (2.0*M_PI*M_PI);
 									                }
-                                value = value_type::dimensionless_value;
+                                value = value_type::dimensionless;
 									            }
                             else
                               {
@@ -227,7 +227,7 @@ namespace transport
                                     double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
                                     *l_pos *=  1.0 / k_cube;
                                   }
-                                value = value_type::correlation_function_value;
+                                value = value_type::correlation_function;
                               }
 
                             lines.emplace_back(group, this->x_type, value, w_axis, line_data,
@@ -494,7 +494,7 @@ namespace transport
                                 value_type value;
                                 if(this->dimensionless)
                                   {
-                                    value = value_type::dimensionless_value;
+                                    value = value_type::dimensionless;
                                   }
                                 else
                                   {
@@ -505,7 +505,7 @@ namespace transport
                                         double shape = k_pos->k1_comoving*k_pos->k1_comoving * k_pos->k2_comoving*k_pos->k2_comoving * k_pos->k3_comoving*k_pos->k3_comoving;
                                         *l_pos *= 1.0/shape;
                                       }
-                                    value = value_type::correlation_function_value;
+                                    value = value_type::correlation_function;
                                   }
 
                                 lines.emplace_back(group, this->x_type, value, w_axis, line_data,

@@ -101,7 +101,7 @@ namespace transport
             twopf_type get_type() const { return(this->twopf_meaning); }
 
             //! set twopf type setting
-            void set_type(twopf_type m) { this->twopf_meaning = m; }
+            twopf_line<number>& set_type(twopf_type m) { this->twopf_meaning = m; return *this; }
 
             //! query type of twopf - is it real?
             bool is_real_twopf() const { return(this->twopf_meaning == twopf_type::real); }
@@ -113,7 +113,7 @@ namespace transport
             bool is_dimensionless() const { return(this->dimensionless); }
 
             //! set dimensionless
-            void set_dimensionless(bool g) { this->dimensionless = g; }
+            twopf_line<number>& set_dimensionless(bool g) { this->dimensionless = g; return *this; }
 
 
 		        // LABELLING SERVICES

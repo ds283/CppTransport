@@ -205,7 +205,7 @@ namespace transport
                       {
                         *l_pos *= 1.0 / (2.0*M_PI*M_PI);
                       }
-                    value = value_type::dimensionless_value;
+                    value = value_type::dimensionless;
                   }
                 else
                   {
@@ -216,7 +216,7 @@ namespace transport
                         double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
                         *l_pos *=  1.0 / k_cube;
                       }
-                    value = value_type::correlation_function_value;
+                    value = value_type::correlation_function;
                   }
 
                 lines.emplace_back(group, this->x_type, value, w_axis, line_data,
@@ -389,7 +389,7 @@ namespace transport
                                                                                SQL_time_query tq, SQL_threepf_query kq,
 		                                                                           unsigned int prec)
 			    : derived_line<number>(tk, axis_class::wavenumber,
-			                           std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 },
+			                           std::list<axis_value>{ axis_value::k, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 },
 			                           prec),
 			      zeta_threepf_line<number>(tk),
 			      wavenumber_series<number>(tk),
@@ -446,7 +446,7 @@ namespace transport
                 value_type value;
                 if(this->dimensionless)
                   {
-                    value = value_type::dimensionless_value;
+                    value = value_type::dimensionless;
                   }
                 else
                   {
@@ -457,7 +457,7 @@ namespace transport
                         double shape = k_pos->k1_comoving*k_pos->k1_comoving * k_pos->k2_comoving*k_pos->k2_comoving * k_pos->k3_comoving*k_pos->k3_comoving;
                         *l_pos *= 1.0/shape;
                       }
-                    value = value_type::correlation_function_value;
+                    value = value_type::correlation_function;
                   }
 
                 lines.emplace_back(group, this->x_type, value, w_axis, line_data,
@@ -630,7 +630,7 @@ namespace transport
 		                                                                                                 SQL_time_query tq, SQL_threepf_query kq,
                                                                                                      unsigned int prec)
 			    : derived_line<number>(tk, axis_class::wavenumber,
-			                           std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 },
+			                           std::list<axis_value>{ axis_value::k, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 },
 			                           prec),
 			      zeta_reduced_bispectrum_line<number>(tk),
 			      wavenumber_series<number>(tk),
@@ -679,7 +679,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                lines.emplace_back(group, this->x_type, value_type::fNL_value, w_axis, line_data,
+                lines.emplace_back(group, this->x_type, value_type::fNL, w_axis, line_data,
                                    this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 			        }
 
