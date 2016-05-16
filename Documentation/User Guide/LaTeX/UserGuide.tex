@@ -4300,7 +4300,7 @@ of work would need to be regenerated following a crash.
     \option{{-}{-}checkpoint}, it is possible to set default
     checkpoint intervals for each task
     using the \mintinline{c++}{set_default_checkpoint()}
-    method of an integration task. See~\S\ref{}.
+    method of an integration task; see~\S\ref{sec:general-integration-options}.
     Each task may set a different default checkpoint interval.
     
     If an explicit checkpoint interval is given on the
@@ -4993,6 +4993,7 @@ In addition, tasks sampling the 3-point function include the following extra tab
 \label{sec:int-options}
 
 \subsection{General options}
+\label{sec:general-integration-options}
 This section documents the options that can be used when customizing
 integration tasks.
 Typically options are set using member functions provided by
@@ -7233,6 +7234,7 @@ These lines have additional options:
     being attached to labels
     (see p.\pageref{method:get_label_tags}),
     determine whether the $k_t$ value is used as part of the label.
+    Enabled by default.
     
     \item \mintinline{c++}{bool get_use_alpha_label()} \\
     \mintinline{c++}{set_use_alpha_label(bool)} \\
@@ -7240,6 +7242,7 @@ These lines have additional options:
     being attached to labels
     (see p.\pageref{method:get_label_tags}),
     determine whether the $\alpha$ shape parameter is used as part of the label.
+    Disabled by default.
     
     \item \mintinline{c++}{bool get_use_beta_label()} \\
     \mintinline{c++}{set_use_beta_label(bool)} \\
@@ -7247,7 +7250,14 @@ These lines have additional options:
     being attached to labels
     (see p.\pageref{method:get_label_tags}),
     determine whether the $\beta$ shape parameter is used as part of the label.
+    Disabled by default.
 \end{itemize}
+If your configurations vary only with scale $k_t$ then the default tag
+will be correct.
+However, if you are varying more than one parameter, or keeping $k_t$
+constant while varying $\alpha$ or $\beta$,
+you should considering changing which quantities are
+used to generate the tag.
 
 In addition, the `reduced bispectrum'~\eqref{eq:reduced-bispectrum}
 is defined by a ratio of 2- and 3-point correlation functions.
@@ -7816,7 +7826,7 @@ as data sources for other groups that remain in the repository,
 because this would disrupt its ability to provide a provenance for those groups.
 
 \subsection{Lock and unlock groups}
-\lable{sec:lock-unlock}
+\label{sec:lock-unlock}
 
 Finally, groups can be \emph{locked} to prevent modifications. To do this use the
 \option{{-}{-}lock} switch.
@@ -7824,6 +7834,20 @@ Locked groups cannot be altered or deleted until they are unlocked using
 \option{{-}{-}unlock}.
 
 \section{Conclusions} 
+
+TODO:
+\begin{itemize}
+    \item Known issue -- loss of precision over a large range of $k_t$, leading
+    to `noisy' power-law decay inside the horizon. Solution to turn down
+    abstol/reltol
+    \item Often need more e-folds of massless evolution to get very accurate
+    results for spectral indices
+    \item Often need more e-folds of massless evolution when features occur
+    during horizon exit
+    \item Go back and update all dquad C++ code with new kt\_max and number
+    of subhorizon e-folds
+\end{itemize}
+
 
 \section{Acknowledgments}
 It is a pleasure to acknowledge a longstanding collaboration
