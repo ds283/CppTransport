@@ -51,16 +51,16 @@ void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
     transport::basic_range<> ts(N_init, N_end, 300, transport::spacing::linear);
 
     const double kt_lo = std::exp(3.0);
-    const double kt_hi = std::exp(9.0);
+    const double kt_hi = std::exp(8.0);
 
     transport::basic_range<> ks(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
 
     transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
-    tk2.set_adaptive_ics_efolds(4.0);
+    tk2.set_adaptive_ics_efolds(5.0);
     tk2.set_description("Compute time history of the 2-point function from k ~ e^3 to k ~ e^9");
 
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
-    tk3.set_adaptive_ics_efolds(4.0);
+    tk3.set_adaptive_ics_efolds(5.0);
     tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9");
 
     repo.commit(tk2);

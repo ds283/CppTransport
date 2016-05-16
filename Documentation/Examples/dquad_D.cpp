@@ -51,17 +51,17 @@ void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
     transport::basic_range<> ts(N_init, N_end, 300, transport::spacing::linear);
 
     const double kt_lo = std::exp(3.0);
-    const double kt_hi = std::exp(9.0);
+    const double kt_hi = std::exp(8.0);
 
     transport::basic_range<> ks_logspaced(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
     transport::basic_range<> ks_linearspaced(kt_lo, kt_hi, 50, transport::spacing::linear);
 
     transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks_logspaced);
-    tk2.set_adaptive_ics_efolds(4.0);
+    tk2.set_adaptive_ics_efolds(5.0);
     tk2.set_description("Compute time history of the 2-point function from k ~ e^3 to k ~ e^9");
 
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks_logspaced);
-    tk3.set_adaptive_ics_efolds(4.0);
+    tk3.set_adaptive_ics_efolds(5.0);
     tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9");
 
     transport::zeta_twopf_task<> ztk2("dquad.twopf-zeta", tk2);
@@ -71,7 +71,7 @@ void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
     ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
 
     transport::threepf_cubic_task<> tk3_linear("dquad.threepf-linear", ics, ts, ks_linearspaced);
-    tk3_linear.set_adaptive_ics_efolds(4.0);
+    tk3_linear.set_adaptive_ics_efolds(5.0);
     tk3_linear.set_description("Compute time history of the 3-point function on a linear grid");
 
     transport::zeta_threepf_task<> ztk3_linear("dquad.threepf-linear-zeta", tk3_linear);

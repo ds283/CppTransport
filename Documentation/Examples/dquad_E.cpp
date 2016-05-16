@@ -57,7 +57,7 @@ void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model)
     transport::basic_range<> ts(N_init, N_end, 300, transport::spacing::linear);
 
     const double kt_lo = std::exp(3.0);
-    const double kt_hi = std::exp(9.0);
+    const double kt_hi = std::exp(8.0);
 
     transport::basic_range<> ks_logspaced(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
     transport::basic_range<> ks_linearspaced(kt_lo, kt_hi, 50, transport::spacing::linear);
@@ -72,30 +72,100 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
   {
     constexpr unsigned int num_fields = 2;
 
-    transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
-    tk2.set_adaptive_ics_efolds(4.0);
-    tk2.set_description("Compute time history of the 2-point function from k ~ e^3 to k ~ e^9");
-
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
-    tk3.set_adaptive_ics_efolds(4.0);
+    tk3.set_adaptive_ics_efolds(5.0);
     tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9");
-
-    transport::zeta_twopf_task<> ztk2("dquad.twopf-zeta", tk2);
-    ztk2.set_description("Convert the output from dquad.twopf into a zeta 2-point function");
 
     transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
     ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
 
+    // time query -- all sample points
     vis_toolkit::SQL_time_query all_times("1=1");
+
+    // time query -- last time
+    vis_toolkit::SQL_time_query last_time("serial IN (SELECT MAX(serial) FROM time_samples)");
+
+    // twopf query -- all configuraitons
+    vis_toolkit::SQL_twopf_query all_twopfs("1=1");
+
+    // threepf query -- all equilateral configurations
+    vis_toolkit::SQL_threepf_query all_equilateral("ABS(alpha) < 1E-5 AND ABS(beta-1.0/3.0) < 1E-5");
+
+    // threepf query -- isosceles triangles
+    vis_toolkit::SQL_threepf_query all_isosceles("ABS(alpha) < 1E-5");
+
+    // threepf query -- largest and smallest equilateral triangles
+    vis_toolkit::SQL_threepf_query large_small_equilateral("ABS(alpha) < 1E-5 AND ABS(beta-1.0/3.0) < 1E-5 AND wavenumber1 IN (SELECT MAX(serial) FROM twopf_samples UNION SELECT MIN(serial) FROM twopf_samples)");
+
+    // 1. Background fields and their momenta
 
     vis_toolkit::background_time_series<> bg_fields(tk3, vis_toolkit::index_selector<1>(num_fields).all(), all_times);
 
-    vis_toolkit::time_series_plot<> bg_plot("dquad.product.bg_plot", "background.pdf");
+    vis_toolkit::time_series_plot<> bg_plot("dquad.product.bg-plot", "background.pdf");
     bg_plot.set_legend_position(vis_toolkit::legend_pos::bottom_left);
+    bg_plot.set_y_label(true);
     bg_plot += bg_fields;
 
+    // 2. Zeta power spectrum
+
+    vis_toolkit::zeta_twopf_wavenumber_series<> zeta_twopf(ztk3, last_time, all_twopfs);
+    zeta_twopf.set_dimensionless(true);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_twopf_plot("dquad.product.zeta-twopf.plot", "twopf-plot.pdf");
+    zeta_twopf_plot.set_log_x(true);
+    zeta_twopf_plot += zeta_twopf;
+
+    // 3. Zeta power spectrum spectral index
+
+    vis_toolkit::zeta_twopf_wavenumber_series<> zeta_twopf_index(ztk3, last_time, all_twopfs);
+    zeta_twopf_index.set_dimensionless(true);
+    zeta_twopf_index.set_spectral_index(true);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_twopf_index_plot("dquad.product.zeta-twopf.index-plot", "twopf-index-plot.pdf");
+    zeta_twopf_index_plot.set_log_x(true);
+    zeta_twopf_index_plot += zeta_twopf_index;
+
+    // 4. Reduced bispectrum on equilateral configurations
+
+    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> zeta_redbsp_equi(ztk3, last_time, all_equilateral);
+    zeta_redbsp_equi.set_current_x_axis_value(vis_toolkit::axis_value::k);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_redbsp_equi_plot("dquad.product.zeta-redbsp.equi-plot", "equi-plot.pdf");
+    zeta_redbsp_equi_plot.set_log_x(true);
+    zeta_redbsp_equi_plot += zeta_redbsp_equi;
+
+    // 5. Spectral index of reduced bispectrum on equilateral configurations
+
+    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> zeta_redbsp_equi_index(ztk3, last_time, all_equilateral);
+    zeta_redbsp_equi_index.set_spectral_index(true).set_current_x_axis_value(vis_toolkit::axis_value::k);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_redbsp_equi_index_plot("dquad.product.zeta-redbsp.equi-index-plot", "equi-index.pdf");
+    zeta_redbsp_equi_index_plot.set_log_x(true);
+    zeta_redbsp_equi_index_plot += zeta_redbsp_equi_index;
+
+    // 6. Reduced bispectrum as a function of squeezing on isosceles triangles
+
+    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> zeta_redbsp_squeeze(ztk3, last_time, all_isosceles);
+    zeta_redbsp_squeeze.set_current_x_axis_value(vis_toolkit::axis_value::squeeze_k3);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_redbsp_squeeze_plot("dquad.product.zeta_redbsp.squeeze-plot", "squeeze-plot.pdf");
+    zeta_redbsp_squeeze_plot.set_log_x(true);
+    zeta_redbsp_squeeze_plot += zeta_redbsp_squeeze;
+
+    // 7. Time evolution of some sample 3-point correlation functions
+
+    vis_toolkit::threepf_time_series<> threepf_time(tk3, vis_toolkit::index_selector<3>(num_fields).none().set_on({ 0, 0, 0 }).set_on({ 1, 1, 1 }),
+                                                    all_times, large_small_equilateral);
+
+    vis_toolkit::time_series_plot<> threepf_time_plot("dquad.product.threepf-time", "threepf-time.pdf");
+    threepf_time_plot += threepf_time;
+
+    // Output task
+
     transport::output_task<> out_tk("dquad.output.zeta");
-    out_tk += bg_plot;
+    out_tk += bg_plot + zeta_twopf_plot + zeta_twopf_index_plot + zeta_redbsp_equi_plot
+              + zeta_redbsp_equi_index_plot + zeta_redbsp_squeeze_plot
+              + threepf_time_plot;
 
     repo.commit(out_tk);
   }
@@ -105,7 +175,7 @@ void write_fNL_products(transport::repository<>& repo, transport::initial_condit
                         transport::range<>& ts, transport::range<>& ks)
   {
     transport::threepf_cubic_task<> tk("dquad.threepf-linear", ics, ts, ks);
-    tk.set_adaptive_ics_efolds(4.0);
+    tk.set_adaptive_ics_efolds(5.0);
     tk.set_description("Compute time history of the 3-point function on a linear grid");
 
     transport::zeta_threepf_task<> ztk("dquad.threepf-linear-zeta", tk);

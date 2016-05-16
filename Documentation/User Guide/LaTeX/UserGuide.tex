@@ -286,7 +286,26 @@ Astronomy Centre, University of Sussex, Falmer, Brighton BN1 9QH, UK}
 
 \emailAdd{D.Seery@sussex.ac.uk}
 
-\abstract{}
+\abstract{{\CppTransport} is a numerical platform which can automatically
+generate and solve the evolution equations for the 2- and 3-point correlation
+functions
+(in field space and for the curvature perturbation $\zeta$)
+for any inflationary model with canonical kinetic terms.
+It makes no approximations beyond the applicability of tree-level
+perturbation theory.
+Given an input Lagrangian,
+{\CppTransport} performs symbolic calculations to determine the
+`Feynman rules' of the model
+and generates efficient {\CC} to integrate the correlation functions of interest.
+It includes a visualization suite
+that automates extraction of observable quantities from the raw
+$n$-point functions and generates high quality plots with minimal
+manual intervention.
+It is intended to be used as a collaborative platform,
+promoting the rapid investigation of models and
+systematizing their comparison with observation.
+This document describes how to install and use the system,
+and illustrates its use through some simple examples.}
 
 \maketitle
 \newpage
@@ -3399,10 +3418,10 @@ To begin, we will construct a range of wavenumbers that
 sample horizon exit times between approximately
 $\Nstar + 3.0$
 and
-$\Nstar + 9.0$:
+$\Nstar + 8.0$:
 \begin{minted}{c++}
     const double kt_lo = std::exp(3.0);
-    const double kt_hi = std::exp(9.0);
+    const double kt_hi = std::exp(8.0);
 
     transport::basic_range<> ks(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
 \end{minted}
@@ -3422,7 +3441,7 @@ is represented by an object of type
 \mintinline{c++}{transport::twopf_task<>}:
 \begin{minted}{c++}
     transport::twopf_task<> tk2("dquad.twopf", ics, ts, ks);
-    tk2.set_adaptive_ics_efolds(4.0);
+    tk2.set_adaptive_ics_efolds(5.0);
     tk2.set_description("Compute time history of the 2-point function from k ~ e^3 to k ~ e^9");
 \end{minted}
 Its constructor requires a name, an initial conditions package,
@@ -3432,13 +3451,14 @@ Setting a description is optional, but provides a convenient way to document
 choices including the time- and wavenumber-sampling strategy.
 The meaning of the
 \mintinline{c++}{set_adaptive_ics_efolds()}
-method will be explained in~\S\ref{} below.
+method will be explained in~\S\ref{sec:general-integration-options} below
+(see p.\pageref{enum:adpative-ics}).
 
 Alternatively, if we wish to compute the 3-point function,
 a suitable task can be built using
 \begin{minted}{c++}
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
-    tk3.set_adaptive_ics_efolds(4.0);
+    tk3.set_adaptive_ics_efolds(5.0);
     tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9")
 \end{minted}
 This will sample the three-point function on a cubic lattice
@@ -3451,7 +3471,7 @@ a physical triangle.
 Note that
 this is only one way to construct a 3-point function task.
 There are other ways to specify the wavenumber configurations
-to be sampled, including use the
+to be sampled, including use of
 Fergusson--Shellard $(k_t, \alpha, \beta)$ parameters.
 It is also possible to adjust the default
 policies which determine which configurations
@@ -3468,7 +3488,7 @@ To commit these tasks to the repository we use the
 \end{minted}
 
 \subsection{Running tasks}
-The executable will build at this point, enabling us to experiment
+It is now possible to build the executable, enabling us to experiment
 with creating repositories and running integration tasks.
 The source code, as described above, is available from the
 website \url{http://transportmethod.com} as
@@ -3587,7 +3607,7 @@ limitations on their use.
 At one extreme, it would be possible to write all integration tasks,
 and all generated content, into the same repository.
 This is probably not a good choice, partly because reporting on the
-repository (see \S\ref{}) will take a long time as the repository
+repository (see \S\ref{sec:HTML-analysis}) will take a long time as the repository
 becomes large.
 At the other extreme, every {\CppTransport} job could create a new
 repository.
@@ -3685,8 +3705,8 @@ should print
 \begin{minted}[bgcolor=blue!10]{text}
     dquad.twopf
     2pf configs: 51            Smallest k: 20.1           
-    Largest k: 8.10e+03        Earliest N_exit: N*+3.118  
-    Latest N_exit: N*+9.492    Inflation ends: N=67.78
+    Largest k: 2.98e+03        Earliest N_exit: N*+3.118  
+    Latest N_exit: N*+8.408    Inflation ends: N=67.78   
 \end{minted}
 The information given is:
 \begin{enumerate}
@@ -3702,7 +3722,7 @@ The information given is:
     
     \item the largest conventionally-normalized wavenumber sampled by
     the task, here
-    $k = 8.10 \times 10^3 \approx \e{9}$.
+    $k = 2.9 \times 10^3 \approx \e{8}$.
     
     \item the earliest horizon exit time, relative to the distinguished
     time $\Nstar$. This will correspond to the smallest wavenumber,
@@ -3734,10 +3754,10 @@ prints similar information, with the addition of the
 number of bispectrum configurations that will be sampled:
 \begin{minted}[bgcolor=blue!10]{text}
     dquad.threepf
-    2pf configs: 51            3pf configs: 3188          
-    Smallest k: 20.1           Largest k: 8.10e+03        
-    Earliest N_exit: N*+3.118  Latest N_exit: N*+9.492    
-    Inflation ends: N=67.78
+    2pf configs: 51            3pf configs: 4017          
+    Smallest k: 20.1           Largest k: 2.98e+03        
+    Earliest N_exit: N*+3.118  Latest N_exit: N*+8.408    
+    Inflation ends: N=67.78  
 \end{minted}
 
 For tasks that sample the 3-point function it is frequently
@@ -3758,11 +3778,12 @@ these can be inspected directly using a suitable tool.
 
 \para{Option 1: examine configurations using an HTML report}
 This option is generally preferred if the task samples
-less than 5000 configurations.
+fewer than 5000 configurations.
 The HTML report generator does not
 include a wavenumber listing for
 tasks with more than 5000 wavenumber configurations
-because it makes the report too large: HTML is not the best
+because it makes the report too large: HTML documents
+are not the best
 way to examine such a large database.
 
 To produce a report for the \file{repo-test}
@@ -3798,7 +3819,7 @@ listing the wavenumber configurations as a table;
 see Fig.~\ref{fig:threepf-config-report}.
 \begin{figure}
     \begin{center}
-        \includegraphics[scale=0.45]{Screenshots/threepf-config-report}    
+        \includegraphics[scale=0.2]{Screenshots/threepf-config-report}    
     \end{center}
     \caption{\label{fig:threepf-config-report}Viewing the sampled 3-point function
     wavenumber configurations in an HTML report.}
@@ -3848,7 +3869,7 @@ configurations of the 2- and 3-point functions
     time for all configurations
     (presumably because for at least one configuration it occurs
     \emph{before} the initial time) it will issue an error:
-    \begin{minted}[bgcolor=blue!10]{text}
+    \begin{minted}[linenos=false,xleftmargin=0pt,bgcolor=blue!10]{text}
         dquad.twopf: extreme values of N did not bracket time of horizon exit; check whether range of N contains horizon exit times for all configurations
     \end{minted}
     To fix this it is usually necessary to move the initial time earlier
@@ -3876,7 +3897,7 @@ configurations of the 2- and 3-point functions
     If {\CppTransport} is unable to compute the massless time
     for all configuration it will issue an error similar to that for
     the horizon-exit time:
-    \begin{minted}[bgcolor=blue!10]{text}
+    \begin{minted}[linenos=false,xleftmargin=0pt,bgcolor=blue!10]{text}
         dquad.twopf: extreme values of N did not bracket massless point; check whether range of N contains massless time for all configurations    
     \end{minted}
 \end{itemize}
@@ -3992,13 +4013,14 @@ While the job is in progress, executing the command
     ./dquad -r test-repo --inflight    
 \end{minted}
 will show details of the tasks being processed:
-\begin{minted}[bgcolor=blue!10]{text}
+\begin{minted}[linenos=false,xleftmargin=0pt,bgcolor=blue!10]{text}
     In-flight content:
-    Name             Task         Type                      Initiated  Duration  Cores  Completion
-    20160504T120048  dquad.twopf  integration    2016-May-04 12:00:48       50s      4          --
+    Name               Task           Type                      Initiated  Duration  Cores  Completion
+    20160516T123513-1  dquad.threepf  integration    2016-May-16 12:35:13       33s      4          --
 \end{minted}
 For each `in flight' task,%
-    \footnote{Only tasks which are currently active are shown in this list. Although we specified
+    \footnote{Only those tasks that
+    are currently active are shown in this list. Although we specified
     two tasks on the command line, {\CppTransport} processes them sequentially and therefore
     only one at once will appear in the list.}
 the information shown comprises:
@@ -4064,22 +4086,38 @@ the information shown comprises:
 \end{itemize}
 If verbose mode is enabled, {\CppTransport} will emit brief updates
 as it works through the list of tasks.
-For the double quadratic example its output will be similar to:
-\begin{minted}[bgcolor=blue!10]{text}
+For the
+\repoobject{dquad.twopf}
+and
+\repoobject{dquad.threepf}
+tasks of 
+double quadratic example
+its output will be similar to:
+\begin{minted}[linenos=false,xleftmargin=0pt,bgcolor=blue!10]{text}
     Task manager: processing task 'dquad.twopf' (1 of 2)
-    Committed content group '20160504T202210' for task 'dquad.twopf' at 2016-May-04 21:22:10
+    Committed content group '20160516T123513' for task 'dquad.twopf' at 2016-May-16 13:35:13
     Task manager: processing task 'dquad.threepf' (2 of 2)
-    Committed content group '20160504T202210-1' for task 'dquad.threepf' at 2016-May-04 21:24:42
-    Task manager: processed 2 database tasks in wallclock time 2m 32.5s | time now 2016-May-04 21:24:42
+    Task manager: 2016-May-16 13:40:29
+    Items processed: 3229  In flight: 496         Remaining: 292         
+    Complete: 80.4%        Mean CPU/item: 0.249s  Assignment: 60s        
+    Estimated completion: 2016-May-16 13:41:46 (1m 17.2s from now)                  
+    Task manager: 2016-May-16 13:41:26
+    Items processed: 3826  In flight: 181         Remaining: 10          
+    Complete: 95.2%        Mean CPU/item: 0.277s  Assignment: 60s        
+    Estimated completion: 2016-May-16 13:41:44 (18.6s from now)                     
+    Task manager: 2016-May-16 13:41:36
+    All work items processed: 2016-May-16 13:41:36                                  
+    Committed content group '20160516T123513-1' for task 'dquad.threepf' at 2016-May-16 13:42:06
+    Task manager: processed 2 database tasks in wallclock time 6m 53s | time now 2016-May-16 13:42:06
 \end{minted}
-Notice that (in this case) the 2pf task \repoobject{dquad.twopf} completed so quickly that
+Notice that---in this case---the 2pf task \repoobject{dquad.twopf} completed so quickly that
 the content group from the second task
 \repoobject{dquad.threepf}
-has the same timestamp.
-(Notice that timestamps are based on
-\href{https://en.wikipedia.org/wiki/Coordinated_Universal_Time}{UTC}.)
+has the same timestamp;
+the timestamp itself is measured using
+\href{https://en.wikipedia.org/wiki/Coordinated_Universal_Time}{UTC}.
 As explained above, to keep the names unique {\CppTransport}
-has renamed it
+has renamed the second group
 \repoobject{20160504T202210-1}.
 
 To confirm that output from these groups has been safely written to the repository,
@@ -4090,11 +4128,11 @@ use the \option{{-}{-}status} switch:
 This causes {\CppTransport} to display a short summary of the tasks available
 in the repository, and the number of content groups associated with each task.
 In this case the output should be:
-\begin{minted}[bgcolor=blue!10]{text}
+\begin{minted}[linenos=false,xleftmargin=0pt,bgcolor=blue!10]{text}
     Available tasks:
     Task           Type                  Last activity  Outputs
-    dquad.threepf  integration    2016-May-04 20:24:42        1
-    dquad.twopf    integration    2016-May-04 20:22:10        1
+    dquad.threepf  integration    2016-May-16 12:42:06        1
+    dquad.twopf    integration    2016-May-16 12:35:13        1
 \end{minted}
 If any tasks are still in flight then \option{{-}{-}status} will
 additionally display the
@@ -4764,10 +4802,13 @@ Stalls are more likely in the following circumstances:
     showing worker activity
     for the task \repoobject{dquad.threepf}
     and \option{{-}{-}checkpoint 1}.
-    The diamonds integrate where each worker flushed its cache
+    The diamonds indicate where each worker flushed its cache
     to a temporary database.
     Dark grey bars on the master timeline show where the
     master process was aggregating temporary databases.
+    (In many cases the time spent aggregating was too short to register
+    on the plot. This test was performed on a machine with an SSD; on
+    a machine with a hard disk, aggregation times are typically longer.)
     The aquamarine bar on the far right-hand side
     shows database activity associated
     with checking integrity and performing routine maintenance.}
@@ -5596,12 +5637,12 @@ As usual, the \mintinline{bash}{-n} argument of
 number of processes on your machine.
 {\CppTransport} will print short updates as it carries out each
 task:
-\begin{minted}[bgcolor=blue!10]{text}
-Task manager: processing task 'dquad.threepf' (1 of 2)
-Committed content group '20160510T134815' for task 'dquad.threepf' at 2016-May-10 14:52:33
-Task manager: processing task 'dquad.threepf-zeta' (2 of 2)
-Committed content group '20160510T135233' for task 'dquad.threepf-zeta' at 2016-May-10 14:53:50
-Task manager: processed 2 database tasks in wallclock time 5m 35s | time now 2016-May-10 14:53:50    
+\begin{minted}[linenos=false,xleftmargin=0pt,bgcolor=blue!10]{text}
+    Task manager: processing task 'dquad.threepf' (1 of 2)
+    Committed content group '20160516T130625' for task 'dquad.threepf' at 2016-May-16 14:12:44
+    Task manager: processing task 'dquad.threepf-zeta' (2 of 2)
+    Committed content group '20160516T131244' for task 'dquad.threepf-zeta' at 2016-May-16 14:13:50
+    Task manager: processed 2 database tasks in wallclock time 7m 24.5s | time now 2016-May-16 14:13:50
 \end{minted}
 Although we only asked for the
 \repoobject{dquad.threepf-zeta} task,
@@ -5626,9 +5667,9 @@ and assume that it should be used to feed
 the new execution of
 \repoobject{dquad.threepf-zeta}:
 \begin{minted}[bgcolor=blue!10]{text}
-$ mpiexec -n 4 dquad -v -r test-zeta --create --task dquad.threepf-zeta
-Committed content group '20160510T141749' for task 'dquad.threepf-zeta' at 2016-May-10 15:19:16
-Task manager: processed 1 database task in wallclock time 1m 26.9s | time now 2016-May-10 15:19:16
+    $ mpiexec -n 4 dquad -v -r test-zeta --create --task dquad.threepf-zeta
+    Committed content group '20160516T131956' for task 'dquad.threepf-zeta' at 2016-May-16 14:21:02
+    Task manager: processed 1 database task in wallclock time 1m 6.97s | time now 2016-May-16 14:21:02
 \end{minted}
 Checking the number of content groups attached to each task using
 \option{{-}{-}status} shows that
@@ -5638,10 +5679,10 @@ Checking the number of content groups attached to each task using
     $ ./dquad -r test-zeta/ --status
     Available tasks:
     Task                Type                      Last activity  Outputs
-    dquad.threepf       integration        2016-May-10 14:15:13        1
-    dquad.threepf-zeta  postintegration    2016-May-10 14:19:16        2
-    dquad.twopf         integration        2016-May-10 14:09:53        0
-    dquad.twopf-zeta    postintegration    2016-May-10 14:09:53        0
+    dquad.threepf       integration        2016-May-16 13:12:44        1
+    dquad.threepf-zeta  postintegration    2016-May-16 13:21:02        2
+    dquad.twopf         integration        2016-May-16 13:06:25        0
+    dquad.twopf-zeta    postintegration    2016-May-16 13:06:25        0
 \end{minted}
 
 \subsection{Applying tags to control which content groups are used}
@@ -6231,39 +6272,39 @@ are required in order to generate suitable input.
 
 With linear spacing in $k$ we generate many more configurations,
 roughly 12,000.
-Although they integrate fairly quickly, the
-number of configurations means these tasks will take a few minutes to process:
+Although each configuration integrates fairly quickly, the
+total number means these tasks will take a few minutes to process:
 \begin{minted}[bgcolor=blue!10]{text}
     $ mpiexec -n 4 dquad -v -r test-fNL --create --task dquad.fNL-local --gantt gantt-fNL.pdf
     Task manager: processing task 'dquad.threepf-linear' (1 of 3)
-    Task manager: 2016-May-12 10:28:15
-    Items processed: 9313   In flight: 1606         Remaining: 1132         
-    Complete: 77.3%         Mean CPU/item: 0.0904s  Assignment: 3m 13.3s    
-    Estimated completion: 2016-May-12 10:29:55 (1m 40.3s from now)                  
-    Task manager: 2016-May-12 10:28:34
-    Items processed: 10116  In flight: 1456         Remaining: 479          
-    Complete: 83.9%         Mean CPU/item: 0.0901s  Assignment: 3m 13.3s    
-    Estimated completion: 2016-May-12 10:29:42 (1m 8.9s from now)                   
-    Task manager: 2016-May-12 10:28:41
-    Items processed: 10919  In flight: 929          Remaining: 203          
-    Complete: 90.6%         Mean CPU/item: 0.0896s  Assignment: 3m 13.3s    
-    Estimated completion: 2016-May-12 10:29:19 (38.1s from now)                     
-    Task manager: 2016-May-12 10:29:54
-    All work items processed: 2016-May-12 10:29:54                                  
-    Committed content group '20160512T092234' for task 'dquad.threepf-linear' at 2016-May-12 10:30:57
+    Task manager: 2016-May-16 14:32:36
+    Items processed: 9073   In flight: 634          Remaining: 2344         
+    Complete: 75.3%         Mean CPU/item: 0.0985s  Assignment: 60s         
+    Estimated completion: 2016-May-16 14:34:26 (1m 50.7s from now)                  
+    Task manager: 2016-May-16 14:32:47
+    Items processed: 9707   In flight: 1196         Remaining: 1148         
+    Complete: 80.5%         Mean CPU/item: 0.0975s  Assignment: 60s         
+    Estimated completion: 2016-May-16 14:34:11 (1m 24.2s from now)                  
+    Task manager: 2016-May-16 14:33:50
+    Items processed: 10971  In flight: 868          Remaining: 212          
+    Complete: 91%           Mean CPU/item: 0.0969s  Assignment: 60s         
+    Estimated completion: 2016-May-16 14:34:30 (40.4s from now)                     
+    Task manager: 2016-May-16 14:34:08
+    All work items processed: 2016-May-16 14:34:08                                  
+    Committed content group '20160516T132659' for task 'dquad.threepf-linear' at 2016-May-16 14:35:01
     Task manager: processing task 'dquad.threepf-linear-zeta' (2 of 3)
-    Committed content group '20160512T093057' for task 'dquad.threepf-linear-zeta' at 2016-May-12 10:37:02
+    Committed content group '20160516T133501' for task 'dquad.threepf-linear-zeta' at 2016-May-16 14:39:12
     Task manager: processing task 'dquad.fNL-local' (3 of 3)
-    Committed content group '20160512T093702' for task 'dquad.fNL-local' at 2016-May-12 10:37:04
-    Task manager: processed 3 database tasks in wallclock time 14m 30.6s | time now 2016-May-12 10:37:04
+    Committed content group '20160516T133912' for task 'dquad.fNL-local' at 2016-May-16 14:39:13
+    Task manager: processed 3 database tasks in wallclock time 12m 14.7s | time now 2016-May-16 14:39:13
 \end{minted}
-Notice that {\CppTransport}'s
+On a slow filing system you may find that
+{\CppTransport}'s
 periodic progress updates
-show that it has adjusted its target work assignment from 1 minute
-to just over 3 minutes.
-This is because, with the final data container reaching $\sim 3.5 \Gb$, aggregation
-takes a few tens of seconds per temporary database on an SSD.
-It will be a little slower if writing to a conventional disk.
+show an adjustment of the target work assignment.
+For this task the final data container reaches $\sim 3.5 \Gb$, and aggregation
+may take a few seconds per temporary database on an SSD,
+or more if writing to a conventional disk.
 As explained above,
 when aggregation times are non-negligible
 {\CppTransport} schedules larger batches of work in an attempt
@@ -6593,7 +6634,7 @@ The function \mintinline{c++}{write_tasks()} becomes
 	    transport::basic_range<> ts(N_init, N_end, 300, transport::spacing::linear);
 	
 	    const double kt_lo = std::exp(3.0);
-	    const double kt_hi = std::exp(9.0);
+	    const double kt_hi = std::exp(8.0);
 	
 	    transport::basic_range<> ks_logspaced(kt_lo, kt_hi, 50, transport::spacing::log_bottom);
 	    transport::basic_range<> ks_linearspaced(kt_lo, kt_hi, 50, transport::spacing::linear);
@@ -6609,7 +6650,7 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
 	constexpr unsigned int num_fields = 2;
 
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
-    tk3.set_adaptive_ics_efolds(4.0);
+    tk3.set_adaptive_ics_efolds(54.0);
     tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9");
 
     transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
@@ -6725,19 +6766,19 @@ To test, build the executable and launch the task
 \end{minted}
 As usual, {\CppTransport} will schedule execution of any tasks needed to produce
 content groups which feed later tasks in the chain:
-\begin{minted}[bgcolor=blue!10]{text}
-	Task manager: processing task 'dquad.threepf' (1 of 2)
-	Committed content group '20160513T100911' for task 'dquad.threepf' at 2016-May-13 11:13:34
-	Task manager: processing task 'dquad.output.zeta' (2 of 2)
-	Committed content group '20160513T101334' for task 'dquad.output.zeta' at 2016-May-13 11:13:46
-	Task manager: processed 2 database tasks in wallclock time 4m 35.8s | time now 2016-May-13 11:13:46	
+\begin{minted}[linenos=false,xleftmargin=0pt,bgcolor=blue!10]{text}
+    Task manager: processing task 'dquad.threepf' (1 of 2)
+    Committed content group '20160516T135141' for task 'dquad.threepf' at 2016-May-16 15:00:18
+    Task manager: processing task 'dquad.output.zeta' (2 of 2)
+    Committed content group '20160516T140133' for task 'dquad.output.zeta' at 2016-May-16 15:01:43
+    Task manager: processed 2 database tasks in wallclock time 10m 1.8s | time now 2016-May-16 15:01:43
 \end{minted}
 Fig.~\ref{fig:background-plot} shows the generated plot, using the
 \option{seaborn} plot style.
 We will discuss its features below and explain how it can be customized.
 \begin{figure}
 	\begin{center}
-		\includegraphics[scale=0.6]{Outputs/background}	
+		\includegraphics[scale=0.75]{Outputs/background}	
 	\end{center}
 	\caption{\label{fig:background-plot}Time evolution of background fields $\phi$, $\chi$ and their
 	derivatives $p_\phi$, $p_\chi$ generated by the produce
@@ -6759,29 +6800,29 @@ from the master and worker processes while the task was in progress.
 Asking {\CppTransport} to report on \repoobject{dquad.output.zeta} shows the derived products
 which are generated as part of the task, and lists each associated content group:
 \begin{minted}[bgcolor=blue!10]{text}
-	$ ./dquad -r test-output/ --info dquad.output.zeta
-	dquad.output.zeta -- output task
-	Created: 2016-May-13 10:09:09      Last update: 2016-May-13 10:13:46  
-	Runtime version: 2016.1            
-	
-	Derived product        Type     Matches tags  Filename        
-	dquad.product.bg_plot  2d plot  --            background.pdf  
-	
-	Content group                   Created           Last update
-	20160513T101334    2016-May-13 10:13:34  2016-May-13 10:13:46	
+    $ ./dquad -r test-output/ --info dquad.output.zeta
+dquad.output.zeta -- output task
+    Created: 2016-May-16 13:51:40      Last update: 2016-May-16 14:01:43  
+    Runtime version: 2016.1            
+    
+    Derived product                            Type     Matches tags  Filename              
+    dquad.product.bg-plot                      2d plot  --            background.pdf        
+    
+    Content group                   Created           Last update
+    20160516T140133    2016-May-16 14:01:33  2016-May-16 14:01:43
 \end{minted}
 If we instead report on the content group generated by this task, {\CppTransport} will summarize
 the content groups which were used to feed data into its derived products:
 \begin{minted}[bgcolor=blue!10]{text}
-	$ ./dquad -r test-output/ --info 20160513T101334
-	20160513T101334 -- derived content
-	Created: 2016-May-13 10:13:34      Last update: 2016-May-13 10:13:46  
-	Runtime version: 2016.1            Task: dquad.output.zeta            
-	Locked: No                         Tags: --                           
-	
-	Summary of content groups used
-	Content group    Task           Type                    Last update
-	20160513T100911  dquad.threepf  integration    2016-May-13 10:13:34
+    $ ./dquad -r test-output/ --info 20160516T140133
+    20160516T140133 -- derived content
+    Created: 2016-May-16 14:01:33      Last update: 2016-May-16 14:01:43  
+    Runtime version: 2016.1            Task: dquad.output.zeta            
+    Locked: No                         Tags: --                           
+    
+    Summary of content groups used
+    Content group    Task                Type                        Last update
+    20160516T135141  dquad.threepf       integration        2016-May-16 14:00:18
 \end{minted}
 The table aggregates all dependencies, but sometimes it is more useful
 to see indivudally how each derived product depends on other content groups.
@@ -7056,6 +7097,7 @@ typically requires:
 \end{itemize}
 
 \subsubsection{Standard options}
+\label{sec:derived-standard-options}
 
 In addition, each line has a number of standard options. These settings are available
 for all derived lines, although not every line will make use of each option.
@@ -7733,6 +7775,249 @@ we could use
 \end{minted}
 
 \subsection{Examples: double quadratic inflation}
+To illustrate the use of these derived quantites, consider generating
+plots for a set of standard observables in the double-quadratic model.
+We will use the following standard queries to select time- and wavenumber-configuration
+samples:
+\begin{minted}[breakbytoken=false]{c++}
+    // time query -- all sample points
+    vis_toolkit::SQL_time_query all_times("1=1");
+
+    // time query -- last time
+    vis_toolkit::SQL_time_query last_time("serial IN (SELECT MAX(serial) FROM time_samples)");
+
+    // twopf query -- all configuraitons
+    vis_toolkit::SQL_twopf_query all_twopfs("1=1");
+
+    // threepf query -- all equilateral configurations
+    vis_toolkit::SQL_threepf_query all_equilateral("ABS(alpha) < 1E-5 AND ABS(beta-1.0/3.0) < 1E-5");
+
+    // threepf query -- isosceles triangles
+    vis_toolkit::SQL_threepf_query all_isosceles("ABS(alpha) < 1E-5");
+
+    // threepf query -- largest and smallest equilateral triangles
+    vis_toolkit::SQL_threepf_query large_small_equilateral("ABS(alpha) < 1E-5 AND ABS(beta-1.0/3.0) < 1E-5 AND wavenumber1 IN (SELECT MAX(serial) FROM twopf_samples UNION SELECT MIN(serial) FROM twopf_samples)");
+\end{minted}
+
+\subsubsection{$\zeta$ power spectrum}
+\begin{minted}{c++}
+    // 2. Zeta power spectrum
+
+    vis_toolkit::zeta_twopf_wavenumber_series<> zeta_twopf(ztk3, last_time, all_twopfs);
+    zeta_twopf.set_dimensionless(true);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_twopf_plot("dquad.product.zeta-twopf.plot", "twopf-plot.pdf");
+    zeta_twopf_plot.set_log_x(true);
+    zeta_twopf_plot += zeta_twopf;
+\end{minted}
+This produces the plot of Fig.~\ref{fig:twopf-plot}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.75]{Outputs/twopf-plot}
+    \end{center}
+    \caption{\label{fig:twopf-plot}$\zeta$ 2-point function}
+\end{figure}
+
+\subsubsection{Spectral index for $\zeta$ power spectrum}
+\begin{minted}{c++}
+    // 3. Zeta power spectrum spectral index
+
+    vis_toolkit::zeta_twopf_wavenumber_series<> zeta_twopf_index(ztk3, last_time, all_twopfs);
+    zeta_twopf_index.set_dimensionless(true);
+    zeta_twopf_index.set_spectral_index(true);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_twopf_index_plot("dquad.product.zeta-twopf.index-plot", "twopf-index-plot.pdf");
+    zeta_twopf_index_plot.set_log_x(true);
+    zeta_twopf_index_plot += zeta_twopf_index;
+\end{minted}
+This produces the plot of Fig.~\ref{fig:twopf-index-plot}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.75]{Outputs/twopf-index-plot}    
+    \end{center}
+    \caption{\label{fig:twopf-index-plot}Spectral index of $\zeta$ two-point function}
+\end{figure}
+Notice the jitter near the ends of the line;
+see the discussion of spectral index calculations in~\S\ref{sec:wavenumber-series}.
+The results could be improved by extending the range of wavenumbers being sampled,
+to move these edge effects away from the region of interest.
+
+\subsubsection{Reduced bispectrum on equilateral configurations}
+\begin{minted}{c++}
+    // 4. Reduced bispectrum on equilateral configurations
+
+    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> zeta_redbsp_equi(ztk3, last_time, all_equilateral);
+    zeta_redbsp_equi.set_current_x_axis_value(vis_toolkit::axis_value::k);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_redbsp_equi_plot("dquad.product.zeta-redbsp.equi-plot", "equi-plot.pdf");
+    zeta_redbsp_equi_plot.set_log_x(true);
+    zeta_redbsp_equi_plot += zeta_redbsp_equi;
+\end{minted}
+This produces the plot of Fig.~\ref{fig:equi-plot}.
+Notice the slight oscillations caused by settling of the heavy field
+into its minimum.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.75]{Outputs/equi-plot}    
+    \end{center}
+    \caption{\label{fig:equi-plot}Reduced bispectrum on equilateral configurations of
+    varying scale $k_t$}
+\end{figure}
+
+\subsubsection{Spectral index of reduced bispectrum on equilateral configurations}
+\begin{minted}{c++}
+    // 5. Spectral index of reduced bispectrum on equilateral configurations
+
+    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> zeta_redbsp_equi_index(ztk3, last_time, all_equilateral);
+    zeta_redbsp_equi_index.set_spectral_index(true).set_current_x_axis_value(vis_toolkit::axis_value::k);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_redbsp_equi_index_plot("dquad.product.zeta-redbsp.equi-index-plot", "equi-index.pdf");
+    zeta_redbsp_equi_index_plot.set_log_x(true);
+    zeta_redbsp_equi_index_plot += zeta_redbsp_equi_index;
+\end{minted}
+This produces the plot of Fig.~\ref{fig:equi-index-plot}.
+The oscillatory structure is much more visible than it is in the amplitude.
+In general, obtaining accurate spectral indices requires
+higher accuracy in the integration.
+This can be
+achievd by increasing the number of e-folds of massless evolutoion,
+and by decreasing the absolute and relative tolerances if needed.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.75]{Outputs/equi-index}
+    \end{center}
+    \caption{\label{fig:equi-index-plot}Spectral index (with $k_t$) of reduced bispectrum
+    on equilateral configurations}
+\end{figure}
+
+\subsubsection{Squeezing dependence of reduced bispectrum: isosceles triangles}
+\begin{minted}{c++}
+    // 6. Reduced bispectrum as a function of squeezing on isosceles triangles
+
+    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> zeta_redbsp_squeeze(ztk3, last_time, all_isosceles);
+    zeta_redbsp_squeeze.set_current_x_axis_value(vis_toolkit::axis_value::squeeze_k3);
+
+    vis_toolkit::wavenumber_series_plot<> zeta_redbsp_squeeze_plot("dquad.product.zeta_redbsp.squeeze-plot", "squeeze-plot.pdf");
+    zeta_redbsp_squeeze_plot.set_log_x(true);
+    zeta_redbsp_squeeze_plot += zeta_redbsp_squeeze;
+\end{minted}
+This produces the plot of Fig.~\ref{fig:squeeze-plot}.
+The general trend is clear, but there are obvious jumps in amplitude
+from configuration to configuration.
+This happens because the plot is constructed from a cubic mesh.
+Although only the squeezing ratio $k_3/k_t$ is plotted on the $x$-axis,
+the configurations are also varying in $k_t$.
+To get a smooth line---for example, suitable for computing a spectral index---it
+would be necessary to switch to an $\alpha\beta$-type mesh
+which would allow sampling from different values of $k_3/k_t$ at
+\emph{fixed} $k_t$.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.75]{Outputs/squeeze-plot}    
+    \end{center}
+    \caption{\label{fig:squeeze-plot}Variation of reduced bispectrum with squeezing
+    $k_3/k_t$}
+\end{figure}
+
+\subsubsection{Time evolution of 3pf correlation functions}
+The most commonly used data products
+are functions of wavenumber (or other configuration variables)
+at fixed time. Often this fixed time will be the end of inflation,
+although it may be earlier if the system converges to an adiabatic
+limit characterized by conservation of $\zeta$ (as it does for the double quadratic model).
+
+However, it is also useful to plot the time \emph{evolution} of individual
+quantities. This is especially useful to check for any anomalies in the integration
+which might make the final data products inaccurate.
+As a sanity check, it is useful to plot the evolution of the raw 3-point
+functions for at least a few scales.
+\begin{minted}{c++}
+    // 7. Time evolution of some sample 3-point correlation functions
+
+    vis_toolkit::threepf_time_series<> threepf_time(tk3, vis_toolkit::index_selector<3>(num_fields).none().set_on({ 0, 0, 0 }).set_on({ 1, 1, 1 }),
+                                                    all_times, large_small_equilateral);
+
+    vis_toolkit::time_series_plot<> threepf_time_plot("dquad.product.threepf-time", "threepf-time.pdf");
+    threepf_time_plot += threepf_time;    
+\end{minted}
+The resulting plot is shown in Fig.~\ref{fig:threepf-time}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.75]{Outputs/threepf-time}    
+    \end{center}
+    \caption{\label{fig:threepf-time}Time evolution of the
+    3-point functions $\langle \phi \phi \phi \rangle$
+    and $\langle \chi \chi \chi \rangle$ for the largest and smallest values of $k_t$}
+\end{figure}
+Notice the use of `tags' giving the $k_t$ value, which distinguish between the
+different lines generated by the wavenumber configuration query;
+see the discussion of label tagging in~\S\ref{sec:derived-standard-options}.
+
+Such plots are especially diagnostic where they include the subhorizon
+evolution, here visible as a steeply falling straight line at the left-hand
+edge of the plot for the lines with $k_t = 8.94 \times 10^3$.
+In this region the individual wavefunctions oscillate rapidly but the
+\emph{correlation function} is smooth, as was explained in the discussion of
+adaptive initial conditions in~\S\ref{sec:general-integration-options}.
+In the absence of special features, the subhorizon evolution should be a smooth
+decaying power law. Any noise in these lines, or the appearance of oscillations,
+tends to indicate loss of accuracy during the integration.
+
+\subsubsection{$\fNL$ amplitude}
+Finally, consider setting up a plot of the amplitudes generated by
+inner-products with the equilateral, orthogonal and local
+templates.
+We can collect these in a separate function:
+\begin{minted}{c++}
+void write_fNL_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
+                        transport::range<>& ts, transport::range<>& ks)
+  {
+    transport::threepf_cubic_task<> tk("dquad.threepf-linear", ics, ts, ks);
+    tk.set_adaptive_ics_efolds(5.0);
+    tk.set_description("Compute time history of the 3-point function on a linear grid");
+
+    transport::zeta_threepf_task<> ztk("dquad.threepf-linear-zeta", tk);
+    ztk.set_description("Convert the output from dquad.threepf-linear into zeta 2 and 3-point functions");
+
+    transport::fNL_task<> fNL_local("dquad.fNL-local", ztk, vis_toolkit::bispectrum_template::local);
+    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with local template");
+
+    transport::fNL_task<> fNL_equi("dquad.fNL-equi", ztk, vis_toolkit::bispectrum_template::equilateral);
+    fNL_equi.set_description("Compute inner product of double-quadratic bispectrum with equilateral template");
+
+    transport::fNL_task<> fNL_ortho("dquad.fNL-ortho", ztk, vis_toolkit::bispectrum_template::orthogonal);
+    fNL_ortho.set_description("Compute inner product of double-quadratic bispectrum with orthogonal template");
+
+    vis_toolkit::SQL_time_query all_times("1=1");
+
+    vis_toolkit::fNL_time_series<> local(fNL_local, all_times);
+    vis_toolkit::fNL_time_series<> equi(fNL_equi, all_times);
+    vis_toolkit::fNL_time_series<> ortho(fNL_ortho, all_times);
+
+    vis_toolkit::time_series_plot<> fNL_plot("dquad.product.fNL_plot", "fNL_plot.pdf");
+    fNL_plot.set_log_y(false).set_abs_y(false);
+    fNL_plot += local + equi + ortho;
+
+    transport::output_task<> out_tk("dquad.output.fNL");
+    out_tk += fNL_plot;
+
+    repo.commit(out_tk);
+  }
+\end{minted}
+The resulting plot is shown in Fig.~\ref{fig:fNL-auto-plot} and can be
+compared with the hand-generated version Fig.~\ref{fig:dquad-fNL-plot}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.75]{Outputs/fNL_plot}
+    \end{center}
+    \caption{\label{fig:fNL-auto-plot}Time evolution of
+    inner-product amplitudes
+    $\fNLlocal$, $\fNLequi$ and $\fNLortho$.
+    As above, we caution that these quantities must be interpreted with
+    care and are not necessarily related to the constraints reported
+    from experiment.}
+\end{figure}
+
 
 \section{Managing repositories}
 \label{sec:repo-management}
@@ -7833,20 +8118,20 @@ Finally, groups can be \emph{locked} to prevent modifications. To do this use th
 Locked groups cannot be altered or deleted until they are unlocked using
 \option{{-}{-}unlock}.
 
-\section{Conclusions} 
-
-TODO:
-\begin{itemize}
-    \item Known issue -- loss of precision over a large range of $k_t$, leading
-    to `noisy' power-law decay inside the horizon. Solution to turn down
-    abstol/reltol
-    \item Often need more e-folds of massless evolution to get very accurate
-    results for spectral indices
-    \item Often need more e-folds of massless evolution when features occur
-    during horizon exit
-    \item Go back and update all dquad C++ code with new kt\_max and number
-    of subhorizon e-folds
-\end{itemize}
+%\section{Conclusions} 
+%
+%TODO:
+%\begin{itemize}
+%    \item Known issue -- loss of precision over a large range of $k_t$, leading
+%    to `noisy' power-law decay inside the horizon. Solution to turn down
+%    abstol/reltol
+%    \item Often need more e-folds of massless evolution to get very accurate
+%    results for spectral indices
+%    \item Often need more e-folds of massless evolution when features occur
+%    during horizon exit
+%    \item Go back and update all dquad C++ code with new kt\_max and number
+%    of subhorizon e-folds
+%\end{itemize}
 
 
 \section{Acknowledgments}
