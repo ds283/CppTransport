@@ -29,6 +29,8 @@
 
 \newenvironment{advanced}[1]{\stepcounter{advancedbox}\begin{tcolorbox}[enhanced,breakable,colback=red!10,colbacktitle=red!20,colframe=red!40,coltitle=black,title={Advanced usage: {#1}},fonttitle=\sffamily\fontseries{b}\selectfont]}{\end{tcolorbox}}
 
+\newenvironment{warning}{\begin{tcolorbox}[enhanced,breakable,colback=red!10,colbacktitle=red!20,colframe=red!40,coltitle=black,title={Warning},fonttitle=\sffamily\fontseries{b}\selectfont]}{\end{tcolorbox}}
+
 \newcommand{\ket}[1]{|{#1}\rangle}
 \newcommand{\bra}[1]{\langle{#1}|}
 \newcommand{\braket}[3]{\langle{#1}|{#2}|{#3}\rangle}
@@ -1790,7 +1792,7 @@ The available attributes are:
 \end{example}
 
 \subsection{Specifying field content and Lagrangian parameters}
-\label{eq:field-param-block}
+\label{sec:field-param-block}
 The final step is to specify the Lagrangian of the model.
 Because {\CppTransport} is currently restricted to models with
 canonical kinetic terms it is only necessary to specify the potential.
@@ -4488,6 +4490,7 @@ See Fig.~\ref{fig:seeded-group-report}.
 \subsection{How is the integration time spent?}
 
 \subsubsection{Using HTML reports to analyse integration performance}
+\label{sec:HTML-analysis}
 It is often useful to understand what determines the total execution time
 for an integration task,
 especially if performance is different from
@@ -6552,6 +6555,7 @@ will select all configurations with squeezing ratio
 $k_3/k_t < 10^{-3}$.
 
 \subsection{Example: plotting the evolution of the background fields}
+\label{sec:example-backg-evolve}
 To see how these queries are used in practice,
 consider building a plot showing the time evolution of the background
 fields and their derivatives.
@@ -7021,6 +7025,7 @@ The following options determine labelling:
 \end{itemize}
 
 \subsection{Available derived lines}
+\label{sec:derived-lines}
 
 In this section we document
 the different derived lines provided by the visualization toolkit.
@@ -7244,14 +7249,18 @@ These lines have additional options:
     determine whether the $\beta$ shape parameter is used as part of the label.
 \end{itemize}
 
-In addition, the lines
-\mintinline{c++}{zeta_reduced_bispectrum_time_series}
-\mintinline{c++}{zeta_reduced_bispectrum_wavenumber_series}    
-represent ratios of 2- and 3-point correlation functions.
+In addition, the `reduced bispectrum'~\eqref{eq:reduced-bispectrum}
+is defined by a ratio of 2- and 3-point correlation functions.
+It is represented by the lines
+\begin{itemize}
+    \item \mintinline{c++}{zeta_reduced_bispectrum_time_series}
+    \item \mintinline{c++}{zeta_reduced_bispectrum_wavenumber_series}
+\end{itemize}
 They have the same options given above except for
 \mintinline{c++}{set_dimensionless()}.
 
 \subsubsection{Time series}
+\label{sec:time-series}
 This section lists the available time series lines and the
 signature of their constructors.
 As a shorthand, the namespace
@@ -7261,13 +7270,24 @@ and for types appearing in their constructors
 such as \mintinline{c++}{vis_toolkit::SQL_time_query}
 and
 \mintinline{c++}{vis_toolkit::index_selector<>}.
-We also use the following abbreviations for tasks: \\
+We also use the following abbreviations for task types: \\
 \begin{tabular}{p{3.5cm}p{10.5cm}}
     \mintinline{c++}{integration_task} & any integration task \\
     \mintinline{c++}{threepf_task} & any 3-point function integration task \\
     \mintinline{c++}{zeta_task} & any $\zeta$ postintegration task \\
+    \mintinline{c++}{zeta_threepf_task} & a $\zeta$ 3-point function task \\
     \mintinline{c++}{fNL_task} & any $\fNL$ postintegration task    
-\end{tabular}
+\end{tabular} \\
+Each time series requires an
+\mintinline{c++}{vis_toolkit::SQL_time_query} to select the
+time sample points.
+Each sample is taken at fixed wavenumber configuration,
+selected by a
+\mintinline{c++}{vis_toolkit::SQL_twopf_query} or
+\mintinline{c++}{vis_toolkit::SQL_threepf_query}
+that must also be supplied.
+Where this query picks out multiple configurations, they are included
+as separate columns in a table or lines in a plot.
  
 \begin{itemize}
     \item \mintinline{c++}{background_time_series<>} \\
@@ -7343,7 +7363,7 @@ We also use the following abbreviations for tasks: \\
     (or its dimensionless counterpart).
     \begin{minted}{c++}
         zeta_threepf_time_series(    
-            zeta_task,
+            zeta_threepf_task,
             SQL_time_query,
             SQL_twopf_query
         )
@@ -7354,7 +7374,7 @@ We also use the following abbreviations for tasks: \\
     Eq.~\eqref{eq:reduced-bispectrum}.
     \begin{minted}{c++}
         zeta_reduced_bispectrum_time_series(    
-            zeta_task,
+            zeta_threepf_task,
             SQL_time_query,
             SQL_twopf_query
         )
@@ -7381,21 +7401,283 @@ We also use the following abbreviations for tasks: \\
         )
     \end{minted}
     The allowed values of \mintinline{c++}{vis_toolkit::background_quantity}
+    are: \\
+    \begin{tabular}{p{7cm}p{7.5cm}}
+        \mintinline{c++}{vis_toolkit::background_quantity::epsilon} &
+            compute $\epsilon = - \dot{H}/H^2$ \\
+        \mintinline{c++}{vis_toolkit::background_quantity::Hubble} &
+            compute Hubble parameter $H$ \\
+        \mintinline{c++}{vis_toolkit::background_quantity::aH} &
+            compute comoving Hubble scale $aH$
+    \end{tabular}
+    
+    \item \mintinline{c++}{u2_line<>} \\
+    Time evolution of components of the tensor $u_{ab}$.
+    \begin{minted}{c++}
+        u2_line(
+            integration_task,
+            index_selector<2>,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+
+    \item \mintinline{c++}{u3_line<>} \\
+    Time evolution of components of the tensor $u_{abc}$.
+    \begin{minted}{c++}
+        u3_line(
+            threepf_task,
+            index_selector<2>,
+            SQL_time_query,
+            SQL_threepf_query
+        )    
+    \end{minted}
+    Notice that because $u_{abc}$ is a function of a bispectrum configuration
+    it can be computed only for 3-point function integrations.
+    
+    \item \mintinline{c++}{largest_u2_line<>} \\
+    Time evolution of the largest component of the momentum--field block
+    of $u_{ab}$, which is numerically equivalent to the field-space
+    mass matrix in Hubble units $M_{\alpha\beta}/H^2$.
+    The other components of $u_{ab}$ have fixed magnitudes or depend only
+    on $\epsilon$, and so are excluded.
+    \begin{minted}{c++}
+        largest_u2_line(
+            integration_task,
+            index_selector<2>,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+
+    \item \mintinline{c++}{largest_u3_line<>} \\
+    Time evolution of the largest component of $u_{abc}$.
+    Unlike $u_{ab}$, \emph{all} components are included.
+    \begin{minted}{c++}
+        largest_u3_line(
+            threepf_task,
+            index_selector<3>,
+            SQL_time_query,
+            SQL_threepf_query
+        )    
+    \end{minted}
 
 \end{itemize}
 
-
 \subsubsection{Wavenumber series}
+\label{sec:wavenumber-series}
+For each quantity which is wavenumber-configuration dependent there is a corresponding
+wavenumber series.
+We describe these using the same conventions used for time series
+in~\S\ref{sec:time-series}.
 
-\subsubsection{Generic options}
+Like the corresponding time series, each wavenumber series
+requires
+a \mintinline{c++}{vis_toolkit::SQL_time_query}
+and one
+or other of
+\mintinline{c++}{vis_toolkit::SQL_twopf_query} or
+\mintinline{c++}{vis_toolkit::SQL_threepf_query}.
+For wavenumber series, the twopf- or threepf-query is used to select the
+sample points that will appear on the $x$-axis
+and the time query selects the particular time at which we wish to sample.
+If multiple times are included, they generate separate columns in a table
+or lines on a plot.
+
+\para{Spectral indices}
+All wavenumber series have an extra option to compute the spectral index,
+using the current $x$-axis type;
+the definition is
+\begin{equation}
+    n = \frac{\d \ln y}{\d \ln x} .    
+\end{equation}
+If $y$ can be approximated as a slowly varying power law, then $n$
+can be regarded as an estimate for the power-law index
+$y \sim x^n$.
+For example, if $x$ is a wavenumber and $y$ is a power spectrum, then
+$n$ computed in this way is the usual spectral index.
+Alternatively, if $y$ is a reduced bispectrum and
+$x$ is a squeezing ratio $k_i/k_t$ then
+$n$ gives the local approximate power law
+$\fNL(k_1, k_2, k_3) \sim (k_i/k_t)^n$.
+
+The calculation of spectral indices is enabled using
+\mintinline{c++}{set_spectral_index(bool)}.
+
+\begin{warning}
+    When computing spectral indices associated with variation of the
+    bispectrum configuration, as above, it is important to be
+    careful about which quantities vary and which are held fixed.
+
+    For example, to measure the spectral index associated with
+    variations of the squeezing $k_i/k_t$ at fixed scale, we should keep
+    $k_t$ fixed. The SQL query expression which selects those configurations
+    to include should enforce this constraint.
+
+    Likewise, to measure the spectral index associated with variations of
+    scale $k_t$ we should usually keep the squeezing parameters $k_i/k_t$ fixed.
+\end{warning}
+
+\begin{warning}
+    In the current version of {\CppTransport},
+    spectral indices generated using this option should be treated
+    with caution.
+    The calculation is performed by fitting a spline to $y(x)$
+    and differentiating this spline.
+
+    In general this gives acceptable results, but there are some pitfalls.
+    First, the spline and its derivative can lose accuracy near the edges of the
+    fitted region.
+    This tends to introduce some spurious jitter into the spectral index.
+    Second, with a large number of sample points the spline tends to
+    be overfit. {\CppTransport} tries to compensate for this by using a
+    $p$-spline (a `penalized' spline which tries to smoothly interpolate
+    between sample points, rather than strictly passing through each point),
+    but it is not always successful.
+    
+    For these reasons it is wise to check the spectral index calculation using
+    other methods before relying on the result.
+\end{warning}
+
+
+\begin{itemize}
+    \item \mintinline{c++}{twopf_wavenumber_series<>} \\
+    $k$-dependence of the field-space two-point correlation function $\Sigma^{ab}$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        twopf_wavenumber_series(
+            integration_task,
+            index_selector<2>,
+            SQL_time_query,
+            SQL_twopf_query
+        )    
+    \end{minted}
+    
+    \item \mintinline{c++}{threepf_wavenumber_series<>} \\
+    Configuration-dependence
+    of the field-space three-point correlation function $\alpha^{abc}$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        threepf_wavenumber_series(
+            threepf_task,
+            index_selector<3>,
+            SQL_time_query,
+            SQL_twopf_query
+        )    
+    \end{minted}
+
+    \item \mintinline{c++}{tensor_wavenumber_series<>} \\
+    $k$-dependence of the tensor
+    two-point correlation function $\Sigma_{ss'}$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        tensor_wavenumber_series(
+            integration_task,
+            index_selector<2>,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+    
+    \item \mintinline{c++}{r_wavenumber_series<>} \\
+    $k$-dependence of the tensor-to-scalar ratio $r$.
+    \begin{minted}{c++}
+        r_time_series(
+            zeta_task,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+
+    \item \mintinline{c++}{zeta_twopf_wavenumber_series<>} \\
+    $k$-dependence of the $\zeta$ two-point correlation function $\Sigma_\zeta$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        zeta_twopf_wavenumber_series(
+            zeta_task,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+
+    \item \mintinline{c++}{zeta_threepf_wavenumber_series<>} \\
+    Configuration-dependence
+    of the $\zeta$ three-point correlation function $\alpha_\zeta$
+    (or its dimensionless counterpart).
+    \begin{minted}{c++}
+        zeta_threepf_wavenumber_series(    
+            zeta_threepf_task,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+    
+    \item \mintinline{c++}{zeta_reduced_bispectrum_wavenumber_series<>} \\
+    Configuration-dependence of the $\zeta$ reduced bispectrum, defined by
+    Eq.~\eqref{eq:reduced-bispectrum}.
+    \begin{minted}{c++}
+        zeta_reduced_bispectrum_time_series(    
+            zeta_threepf_task,
+            SQL_time_query,
+            SQL_twopf_query
+        )
+    \end{minted}
+
+\end{itemize}
+
+\subsubsection{Integration cost analysis}
+
+Finally, a special set of derived lines exist which do not represent
+data or observables, but rather provide metadata about the
+performance of the integration.
+These can be used to provide more targeted versions of the
+scatter plots generated by HTML reports
+and discussed in~\S\ref{sec:HTML-analysis}.
+(See Fig.~\ref{fig:time-scaling}.)
+These automatically-generated plots include all configurations,
+whereas the derived lines offer more control through the use of SQL
+query expressions to restrict the configuration that are included.
+
+\begin{itemize}
+    \item \mintinline{c++}{cost_wavenumber<>} \\
+    Supply the per-configuration integration cost, where this information is
+    available.
+    \begin{minted}{c++}
+        cost_wavenumber(
+            twopf_task,    
+            SQL_twopf_query,
+            cost_metric
+        )
+        
+        cost_wavenumber(
+            threepf_task,
+            SQL_threepf_task,
+            cost_metric
+        )
+    \end{minted}
+    The allowed values of \mintinline{c++}{vis_toolkit::cost_metric}
+    are \\
+    \begin{tabular}{p{6cm}p{8.5cm}}
+        \mintinline{c++}{vis_toolkit::cost_metric::time} &
+            measure integration time \\
+        \mintinline{c++}{vis_toolkit::cost_metric::steps} &
+            measure number of steps taken by stepper
+    \end{tabular}
+
+\end{itemize}
 
 \subsection{Enabling or disabling indices in a \mintinline{c++}{index_selector<>}}
-For derived lines generated by objects with multiple indices, a
+\label{sec:index-selector}
+
+In~\S\ref{sec:example-backg-evolve}--\ref{sec:derived-lines}
+it was explained that
+for derived lines generated by objects with multiple indices, a
 \mintinline{c++}{index_selector<>} object must be supplied
-to select which indices should be plotted.
+to select which indices should be included.
 
 Constructing a selector requires specifying a template argument which fixes the
-number of indices. Also, the constructor accepts a single argument giving the number
+number of indices.
+The constructor accepts a single argument giving the number
 of fields.
 For example, to build a selector for a 2-index object such as the field-space
 correlation function $\Sigma^{ab}$, we could use
@@ -7407,20 +7689,139 @@ where \mintinline{c++}{num_fields} should be suitably defined.
 \mintinline{c++}{transport::model} object, which returns the number of
 fields used in the model.)
 
-As explained above, index selectors enable all components by default.
+Index selectors enable all components by default.
+Once constructed, a selector provides methods
+\mintinline{c++}{all()}
+and
+\mintinline{c++}{none()}
+which explicitly enable or disable all components.
+It is also possible to enable or disable individual
+components by supplying a tuple of numbers representing
+the component in question.
+As in the mapping used for index assignment in {\SQLite} containers,
+fields are assigned increasing integers beginning at 0
+and with ordering inherited from the model description file.
+The field derivatives or momenta
+follow the fields, in the same order.
 
+For example, in the double quadratic model the fields are
+$\phi$ and $\chi$, with $\phi$ being declared before $\chi$
+in the description file (see~\S\ref{sec:field-param-block}).
+To plot only the components $\Sigma_{\phi\phi}$ and
+$\Sigma_{\chi\chi}$ we could use the selector
+\begin{minted}{c++}    
+    vis_toolkit::index_selector<2>().none().set_on( {0,0} ).set_on( {1,1} )
+\end{minted}
+On the other hand, to plot components \emph{except} the
+momentum cross-terms
+$\Sigma_{p_\phi p_\chi}$
+and
+$\Sigma_{p_\chi p_\phi}$
+we could use
+\begin{minted}{c++}
+    vis_toolkit::index_selector<2>().all().set_off( {2,3} ).set_off( {3,2} )    
+\end{minted}
+
+\subsection{Examples: double quadratic inflation}
 
 \section{Managing repositories}
 \label{sec:repo-management}
 
+\S\ref{sec:apply-tags} explained the system of `tags' used to control which
+content groups are selected as data sources
+for postintegration or output tags.
+Tags can be set immediately, when each content group is generated,
+but it is also possible to adjust them after
+the group has been entered in the repository.
+
+In addition to tags, {\CppTransport} provides a facility to attach
+longer `notes' to each group.
+These consist of free-format text and can be used for any purpose.
+For example, they could be used to add persistent working notes
+to an ongoing project,
+to highlight features when circulating data to collaborators,
+or to provide enriched documentation for archival purposes.
+
+Finally, it is sometimes desirable to remove content groups from a repostiory.
+Notice, however, that {\CppTransport} does \emph{not} offer an option to remove
+or edit
+the details of initial conditions packages, tasks, or derived products.
+This is an intentional design choice.
+These details form part of the documentation associated with each content group,
+and if they were to be changed then some of this documentation would be lost
+or become ambiguous.
+If it is necessary to make adjustments to any of these definitions, it is
+preferable to add a new definition with a different name or to write into a new
+repository.
+
+\subsection{Specifying which objects to modify}
+\label{sec:specify-objects}
+{\CppTransport} allows modifications to be applied to many different
+repository records simultaneously.
+To specify records use the \option{{-}{-}object} command-line argument,
+followed by the name of a content group.
+It is possible to use multiple \option{{-}{-}object} arguments to specify
+multiple records.
+
+Alternatively, to name provided to \option{{-}{-}object} can be
+enclosed in braces
+\mintinline{bash}+{+
+$\cdots$
+\mintinline{bash}+}+.
+{\CppTransport} will interpret the name between the braces
+as a regular expression and attempt to match it to any available content groups.
+For example, to match any content group produced in 2016 we could write
+\option{{-}{-}object \{2016.*\}}.
+
 \subsection{Adding and removing tags}
 \label{sec:add-remove-tags}
+
+Adding tags is accomplished using the
+\option{{-}{-}add-tag} command-line switch,
+followed by the name of a tag. If that tag contains spaces then it should be
+wrapped in quotation marks.
+The given tag is added to all content groups that match
+an argument provided to \option{{-}{-}object}.
+To remove a tag from all such groups use
+\option{{-}{-}delete-tag}.
 
 \subsection{Adding and removing notes}
 \label{sec:add-remove-notes}
 
+To add notes, use
+\option{{-}{-}add-note}
+followed by the text to be added.
+If it contains spaces, it should be wrapped in quotation marks.
+The note is added to all content groups matching an argument provided
+to \option{{-}{-}object}.
+
+To remove a note, obtain a list of notes attached to the content group of your
+choice using \option{{-}{-}info}.
+Then use \option{{-}{-}delete-note} followed by the number of the note to be
+removed.
+
+\begin{warning}
+    Notice that the given note is removed from every content group that matches
+    an argument provided to \option{{-}{-}option}. If the note you intend to delete
+    is not in the same position in every content group then you will need to carry out
+    the removal in batches.    
+\end{warning}
+
 \subsection{Deleting content groups}
 \label{sec:delete-content}
+
+To delete an unwanted content group use \option{{-}{-}delete}.
+{\CppTransport} will not allow you to delete content groups which were used
+as data sources for other groups that remain in the repository,
+because this would disrupt its ability to provide a provenance for those groups.
+
+\subsection{Lock and unlock groups}
+\lable{sec:lock-unlock}
+
+Finally, groups can be \emph{locked} to prevent modifications. To do this use the
+\option{{-}{-}lock} switch.
+Locked groups cannot be altered or deleted until they are unlocked using
+\option{{-}{-}unlock}.
 
 \section{Conclusions} 
 
