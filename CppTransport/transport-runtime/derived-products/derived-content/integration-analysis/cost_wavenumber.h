@@ -47,20 +47,19 @@
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE    "type"
-#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF   "twopf"
-#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF "threepf"
-
-#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC  "metric"
-#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME    "time"
-#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS   "steps"
-
-
 namespace transport
 	{
 
 		namespace derived_data
 			{
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE    = "type";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF   = "twopf";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF = "threepf";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC  = "metric";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME    = "time";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS   = "steps";
 
 				template <typename number=default_number_type>
 				class cost_wavenumber: public wavenumber_series<number>

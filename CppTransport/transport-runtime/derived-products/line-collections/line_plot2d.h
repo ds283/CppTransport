@@ -757,7 +757,7 @@ namespace transport
 						        unsigned int i = 1;
 				            for(std::vector<value_type>::const_iterator w = bin_types.begin(); w != bin_types.end() && i < bin_count; w++, ++i)
 					            {
-				                std::string label = this->typeset_with_LaTeX ? value_type_to_string_LaTeX(*w) : value_type_to_string_non_LaTeX(*w);
+				                std::string label = this->use_LaTeX ? value_type_to_string_LaTeX(*w) : value_type_to_string_non_LaTeX(*w);
 						            out << "ax" << i << ".set_ylabel(r'" << label << "')" << '\n';
 					            }
 					        }

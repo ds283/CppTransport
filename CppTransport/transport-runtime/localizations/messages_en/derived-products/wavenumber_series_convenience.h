@@ -29,10 +29,10 @@
 
 
 #define CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX                "wavenumber k"
-#define CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX                  "\\textrm{wavenumber} $k$"
+#define CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX                  "wavenumber $k$"
 
 #define CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_NOLATEX            "e-folds from horizon exit of k*"
-#define CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX              "\\textrm{e-folds from horizon exit of} $k_\\star$"
+#define CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX              "e-folds from horizon exit of $k_\\star$"
 
 #define CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_NOLATEX                  "alpha"
 #define CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_LATEX                    "$\\alpha$"

@@ -97,7 +97,7 @@ namespace transport
 		        bool is_spectral_index() const { return(this->compute_index); }
 
 		        //! set spectral index calculation
-		        void set_spectral_index(bool g) { this->compute_index = g; }
+		        wavenumber_series<number>& set_spectral_index(bool g) { this->compute_index = g; return *this; }
 
 
             // DATAPIPE SERVICES

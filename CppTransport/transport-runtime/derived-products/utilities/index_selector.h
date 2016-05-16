@@ -38,20 +38,20 @@
 #include "transport-runtime/exceptions.h"
 
 
-#define CPPTRANSPORT_NODE_INDEX_ROOT        "index-selection"
-
-#define CPPTRANSPORT_NODE_INDEX_RANGE       "index-range"
-#define CPPTRANSPORT_NODE_INDEX_FIELDS      "num-fields"
-#define CPPTRANSPORT_NODE_INDEX_RANGE_ALL   "all"
-#define CPPTRANSPORT_NODE_INDEX_RANGE_FIELD "field"
-#define CPPTRANSPORT_NODE_INDEX_TOGGLES     "enabled-indices"
-
-
 namespace transport
   {
 
     namespace derived_data
       {
+
+        constexpr auto CPPTRANSPORT_NODE_INDEX_ROOT        = "index-selection";
+
+        constexpr auto CPPTRANSPORT_NODE_INDEX_RANGE       = "index-range";
+        constexpr auto CPPTRANSPORT_NODE_INDEX_FIELDS      = "num-fields";
+        constexpr auto CPPTRANSPORT_NODE_INDEX_RANGE_ALL   = "all";
+        constexpr auto CPPTRANSPORT_NODE_INDEX_RANGE_FIELD = "field";
+        constexpr auto CPPTRANSPORT_NODE_INDEX_TOGGLES     = "enabled-indices";
+
 
         template <unsigned int indices> class index_selector;
 

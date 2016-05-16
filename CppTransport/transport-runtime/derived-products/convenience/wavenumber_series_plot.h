@@ -118,50 +118,50 @@ namespace transport
 								    case axis_value::unset:
 								    case axis_value::k:
 											{
-												if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX);
-												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX);
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX);
 												break;
 											}
 
 								    case axis_value::efolds_exit:
 											{
-												if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX);
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX);
 												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_NOLATEX);
 												break;
 											}
 
 								    case axis_value::alpha:
 											{
-												if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_LATEX);
-												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_NOLATEX);
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_NOLATEX);
 												break;
 											}
 
 								    case axis_value::beta:
 											{
-												if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_LATEX);
-												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_NOLATEX);
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_NOLATEX);
 												break;
 											}
 
 								    case axis_value::squeeze_k1:
 											{
-												if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_LATEX);
-												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_NOLATEX);
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_NOLATEX);
 												break;
 											}
 
 								    case axis_value::squeeze_k2:
 											{
-												if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_LATEX);
-												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_NOLATEX);
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_NOLATEX);
 												break;
 											}
 
 								    case axis_value::squeeze_k3:
 											{
-												if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_LATEX);
-												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_NOLATEX);
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_NOLATEX);
 												break;
 											}
 

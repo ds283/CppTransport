@@ -189,25 +189,25 @@ namespace transport
 				    dot_type get_dot_meaning() const { return(this->dot_meaning); }
 
 				    //! set dot meaning
-				    void set_dot_meaning(dot_type t) { this->dot_meaning = t; }
+				    derived_line<number>& set_dot_meaning(dot_type t) { this->dot_meaning = t; return *this; }
 
 				    //! get label meaning
 				    klabel_type get_klabel_meaning() const { return(this->klabel_meaning); }
 
 				    //! set label meaning
-				    void set_klabel_meaning(klabel_type t) { this->klabel_meaning = t; }
+				    derived_line<number>& set_klabel_meaning(klabel_type t) { this->klabel_meaning = t; return *this; }
 
 						//! get current x-axis value type
 						axis_value get_current_x_axis_value() const { return(this->x_type); }
 
 						//! set current x-axis value
-						void set_current_x_axis_value(axis_value v);
+						derived_line<number>& set_current_x_axis_value(axis_value v);
 
 						//! set label text
-						void set_label_text(const std::string& latex, const std::string& non_latex);
+						derived_line<number>& set_label_text(const std::string& latex, const std::string& non_latex);
 
 						//! clear label text
-						void clear_label_text();
+						derived_line<number>& clear_label_text();
 
 						//! has a label been set?
 						bool is_label_set() const { return(this->label_set); }
@@ -222,7 +222,7 @@ namespace transport
 						bool get_label_tags() const { return(this->use_tags); }
 
 						//! set use tags flag
-						void set_label_tags(bool g) { this->use_tags = g; }
+						derived_line<number>& set_label_tags(bool g) { this->use_tags = g; return *this; }
 
 
 				    // DATAPIPE HANDLING
@@ -491,7 +491,7 @@ namespace transport
 
 
 				template <typename number>
-				void derived_line<number>::set_current_x_axis_value(axis_value v)
+				derived_line<number>& derived_line<number>::set_current_x_axis_value(axis_value v)
 					{
 				    std::list< axis_value >::iterator fv = std::find(this->supported_x_axes.begin(), this->supported_x_axes.end(), v);
 
@@ -503,11 +503,12 @@ namespace transport
 							}
 
 						this->x_type = v;
+            return *this;
 					}
 
 
 				template <typename number>
-				void derived_line<number>::set_label_text(const std::string& latex, const std::string& non_latex)
+				derived_line<number>& derived_line<number>::set_label_text(const std::string& latex, const std::string& non_latex)
 					{
 						if(latex == "" && non_latex == "")    // treat as an attempt to clear the labels
 							{
@@ -519,15 +520,17 @@ namespace transport
 						    this->non_LaTeX_label = non_latex;
 						    this->label_set       = true;
 							}
+            return *this;
 					}
 
 
 				template <typename number>
-				void derived_line<number>::clear_label_text()
+				derived_line<number>& derived_line<number>::clear_label_text()
 					{
 						this->LaTeX_label.clear();
 						this->non_LaTeX_label.clear();
 						this->label_set = false;
+            return *this;
 					}
 
 

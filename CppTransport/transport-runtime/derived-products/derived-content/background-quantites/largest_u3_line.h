@@ -45,14 +45,13 @@
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT          "u3-line-settings"
-
-
 namespace transport
 	{
 
 		namespace derived_data
 			{
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT = "u3-line-settings";
 
 				template <typename number=default_number_type>
 		    class largest_u3_line: public time_series<number>
