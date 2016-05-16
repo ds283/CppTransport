@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __data_line_H_
-#define __data_line_H_
+#ifndef CPPTRANSPORT_DATA_LINE_H
+#define CPPTRANSPORT_DATA_LINE_H
 
 #include <vector>
 #include <string>
@@ -155,7 +155,7 @@ namespace transport
                                      slave_message_buffer& msg, bool spectral_index)
 	        : groups(g),
             x_type(at),
-	          y_type(spectral_index ? value_type::spectral_index_value : vt),
+	          y_type(spectral_index ? value_type::spectral_index : vt),
 	          LaTeX_label(Ll),
 	          non_LaTeX_label(nLl),
             data_type(data_line_type::continuous_data),
@@ -257,4 +257,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__data_line_H_
+#endif //CPPTRANSPORT_DATA_LINE_H

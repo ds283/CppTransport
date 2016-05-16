@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __line_collection_H_
-#define __line_collection_H_
+#ifndef CPPTRANSPORT_LINE_COLLECTION_H
+#define CPPTRANSPORT_LINE_COLLECTION_H
 
 
 #include <iostream>
@@ -50,6 +50,35 @@ namespace transport
 
 		namespace derived_data
 			{
+
+        // Specializations of arithmetic operators to build aggregations of derived_line<number> objects
+
+        // two derived lines can be summed into a vector
+        // we have to use a vector of pointers to avoid truncating the derived_line objects stored inside,
+        // but also for performance reasons because multiple additions will generate copies
+        template <typename number>
+        std::vector< std::shared_ptr< derived_line<number> > > operator+(const derived_line<number>& lhs, const derived_line<number>& rhs)
+          {
+            std::vector< std::shared_ptr< derived_line<number> > > list;
+            list.reserve(2);
+
+            list.emplace_back(lhs.clone());
+            list.emplace_back(rhs.clone());
+
+            return list;
+          }
+
+        // a vector of derived lines and another derived line can be summed into a bigger vector
+        template <typename number>
+        std::vector< std::shared_ptr< derived_line<number> > > operator+(const std::vector< std::shared_ptr< derived_line<number> > >& lhs, const derived_line<number>& rhs)
+          {
+            std::vector< std::shared_ptr< derived_line<number> > > list = lhs;
+
+            list.emplace_back(rhs.clone());
+
+            return list;
+          }
+
 
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT = "line-collection";
 
@@ -217,7 +246,17 @@ namespace transport
 				  public:
 
 				    //! Add a line to the collection
-				    virtual void add_line(const derived_line<number>& line);
+				    virtual line_collection<number>& add_line(const derived_line<number>& line);
+
+            //! overload += to do the same thing
+            virtual line_collection<number>& operator+=(const derived_line<number>& line) { return this->add_line(line); }
+
+            //! add a vector of derived lines (eg. produced by operator+ overload between derived lines)
+            virtual line_collection<number>& operator+=(const std::vector< std::shared_ptr< derived_line<number> > > list)
+              {
+                for(const std::shared_ptr< derived_line<number> >& p : list) this->add_line(*p);
+                return *this;
+              }
 
             //! Get list of lines in collection
             const std::list< std::unique_ptr< derived_line<number> > >& get_lines() const { return(this->lines); }
@@ -259,23 +298,27 @@ namespace transport
 
 				    //! get logarithmic x-axis setting
 				    bool get_log_x() const { return(this->log_x); }
+
 				    //! set logarithmic x-axis setting
-				    void set_log_x(bool g) { this->log_x = g; }
+				    line_collection<number>& set_log_x(bool g) { this->log_x = g; return *this; }
 
 				    //! get logarithmic y-axis setting
 				    bool get_log_y() const { return(this->log_y); }
+
 				    //! set logarithmic y-axis setting
-				    void set_log_y(bool g) { this->log_y = g; }
+				    line_collection<number>& set_log_y(bool g) { this->log_y = g; return *this; }
 
 				    //! get abs-y-axis setting
 				    bool get_abs_y() const { return(this->abs_y); }
+
 				    //! set abs-y-axis setting
-				    void set_abs_y(bool g) { this->abs_y = g; }
+				    line_collection<number>& set_abs_y(bool g) { this->abs_y = g; return *this; }
 
 				    //! get default LaTeX labels setting
 				    bool get_use_LaTeX() const { return(this->use_LaTeX); }
+
 				    //! set default LaTeX labels setting
-				    void set_use_LaTeX(bool g) { this->use_LaTeX = g; }
+				    line_collection<number>& set_use_LaTeX(bool g) { this->use_LaTeX = g; return *this; }
 
 
 						// SERIALIZATION -- implements a 'serializable' interface
@@ -360,7 +403,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::add_line(const derived_line<number>& line)
+		    line_collection<number>& line_collection<number>::add_line(const derived_line<number>& line)
 			    {
 				    // check that the axis-type used by this line is compatible with any existing lines
 
@@ -373,6 +416,8 @@ namespace transport
 					    }
 
 		        this->lines.emplace_back(line.clone());
+
+            return(*this);
 			    }
 
 
@@ -385,7 +430,7 @@ namespace transport
 							}
 						else
 							{
-								return(axis_value::unset_axis);
+								return(axis_value::unset);
 							}
 
 					}
@@ -712,10 +757,5 @@ namespace transport
 
 	}   // namespace transport
 
-class line_collection
-	{
 
-	};
-
-
-#endif //__line_collection_H_
+#endif //CPPTRANSPORT_LINE_COLLECTION_H

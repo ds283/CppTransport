@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __exceptions_H_
-#define __exceptions_H_
+#ifndef CPPTRANSPORT_EXCEPTIONS_H
+#define CPPTRANSPORT_EXCEPTIONS_H
 
 
 #include <string>
@@ -83,4 +83,4 @@ namespace transport
 
 
 
-#endif //__exceptions_H_
+#endif //CPPTRANSPORT_EXCEPTIONS_H

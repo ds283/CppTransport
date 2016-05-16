@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __scheduler_H_
-#define __scheduler_H_
+#ifndef CPPTRANSPORT_SCHEDULER_H
+#define CPPTRANSPORT_SCHEDULER_H
 
 
 #include <iostream>
@@ -263,4 +263,4 @@ namespace transport
 
 
 
-#endif //__scheduler_H_
+#endif //CPPTRANSPORT_SCHEDULER_H

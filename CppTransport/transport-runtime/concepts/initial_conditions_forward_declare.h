@@ -24,17 +24,17 @@
 //
 
 
-#if !defined(CPPTRANSPORT_INITIAL_CONDITIONS_FORWARD_DECLARE_H) && !defined(CPPTRANSPORT_INITIAL_CONDITIONS_H)
+// no need to check CPPTRANSPORT_INITIAL_CONDITIONS_H since initial_conditions.h includes this file
+// in order to get correct declaration of default template parameter
+#ifndef CPPTRANSPORT_INITIAL_CONDITIONS_FORWARD_DECLARE_H
 #define CPPTRANSPORT_INITIAL_CONDITIONS_FORWARD_DECLARE_H
 
-
-#include <iostream>
-
+#include "transport-runtime/defaults.h"
 
 namespace transport
 	{
 
-    template <typename number> class initial_conditions;
+    template <typename number=default_number_type> class initial_conditions;
 
 	}   // namespace transport
 

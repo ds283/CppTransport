@@ -58,14 +58,12 @@
 
 #define CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH     "Repository error: Error while attempting to move content group to failure cache"
 
-#define CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A    "Autocommit: integration task"
-#define CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B    "requires package"
+#define CPPTRANSPORT_TASK_NOT_SERIALIZABLE            "Internal error: serializable is not allowed for task"
+
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A        "Autocommit: derived product"
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B        "requires integration task"
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C        "Autocommit: derived product"
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D        "requires postintegration task"
-#define CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A         "Autocommit: output task"
-#define CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B         "requires derived product"
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A     "Autocommit: postintegration task"
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B     "requires integration task"
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C     "Autocommit: postintegration task"

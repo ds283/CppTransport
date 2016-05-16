@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __stats_tags_H_
-#define __stats_tags_H_
+#ifndef CPPTRANSPORT_STATS_TAGS_H
+#define CPPTRANSPORT_STATS_TAGS_H
 
 
 #include <vector>
@@ -140,4 +140,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__stats_tags_H_
+#endif //CPPTRANSPORT_STATS_TAGS_H

@@ -406,7 +406,7 @@ namespace transport
 
 
 		    // Create table for fNL values
-		    void create_fNL_table(transaction_manager& mgr, sqlite3* db, derived_data::template_type type, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
+		    void create_fNL_table(transaction_manager& mgr, sqlite3* db, derived_data::bispectrum_template type, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt

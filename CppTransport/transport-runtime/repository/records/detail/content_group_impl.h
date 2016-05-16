@@ -133,17 +133,25 @@ namespace transport
 
 
     template <typename Payload>
-    bool content_group_record<Payload>::check_tags(std::list<std::string> match_tags) const
+    bool content_group_record<Payload>::check_tags(const std::list<std::string>& match_tags) const
       {
-        // remove all this group's tags from the matching set.
-        // If any remain after this process, then the match set isn't a subset of the group's tags.
-
-        for(const std::string& t : this->tags)
+        // iterate through match_tags, checking whether we can match each one
+        for(const std::string& tag : match_tags)
           {
-            match_tags.remove(t);
+            std::list<std::string>::const_iterator t = std::find(this->tags.begin(), this->tags.end(), tag);
+
+            // if match, move on to next tag
+            if(t != this->tags.end()) continue;
+
+            // otherwise, allow it to match against the content group name
+            if(tag == this->name) continue;
+
+            // no match, return failure
+            return false;
           }
 
-        return (!match_tags.empty());
+        // all tags matched, return success
+        return true;
       }
 
 

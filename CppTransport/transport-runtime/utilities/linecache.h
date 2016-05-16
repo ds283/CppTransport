@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __linecache_H_
-#define __linecache_H_
+#ifndef CPPTRANSPORT_LINECACHE_H
+#define CPPTRANSPORT_LINECACHE_H
 
 
 #include <iostream>
@@ -693,10 +693,10 @@ namespace transport
 					}
 
 
-			}   // namespce linecache
+			}   // namespace linecache
 
 
 	}   // namespace transport
 
 
-#endif //__linecache_H_
+#endif //CPPTRANSPORT_LINECACHE_H

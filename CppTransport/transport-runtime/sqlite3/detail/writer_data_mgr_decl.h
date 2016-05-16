@@ -89,7 +89,7 @@ namespace transport
       public:
 
         //! commit
-        void operator()(integration_writer<number>& writer, integration_task<number>* task) override;
+        void operator()(integration_writer<number>& writer, integration_task<number>& task) override;
 
 
         // INTERNAL DATA
@@ -100,7 +100,43 @@ namespace transport
         data_manager_sqlite3<number>& mgr;
 
       };
-    
+
+
+    template <typename number>
+    class sqlite3_twopf_writer_finalize: public integration_writer_finalize<number>
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor captures repository_sqlite3 object
+        sqlite3_twopf_writer_finalize(data_manager_sqlite3<number>& m)
+          : mgr(m)
+          {
+          }
+
+        //! destructor is default
+        virtual ~sqlite3_twopf_writer_finalize() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! commit
+        void operator()(integration_writer<number>& writer) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to repository object
+        data_manager_sqlite3<number>& mgr;
+
+      };
+
     
     template <typename number>
     class sqlite3_threepf_writer_aggregate: public integration_writer_aggregate<number>
@@ -161,7 +197,7 @@ namespace transport
       public:
         
         //! commit
-        void operator()(integration_writer<number>& writer, integration_task<number>* task) override;
+        void operator()(integration_writer<number>& writer, integration_task<number>& task) override;
         
         
         // INTERNAL DATA
@@ -171,6 +207,42 @@ namespace transport
         //! reference to repository object
         data_manager_sqlite3<number>& mgr;
         
+      };
+
+
+    template <typename number>
+    class sqlite3_threepf_writer_finalize: public integration_writer_finalize<number>
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor captures repository_sqlite3 object
+        sqlite3_threepf_writer_finalize(data_manager_sqlite3<number>& m)
+          : mgr(m)
+          {
+          }
+
+        //! destructor is default
+        virtual ~sqlite3_threepf_writer_finalize() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! commit
+        void operator()(integration_writer<number>& writer) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to repository object
+        data_manager_sqlite3<number>& mgr;
+
       };
 
 
@@ -233,7 +305,7 @@ namespace transport
       public:
 
         //! commit
-        void operator()(postintegration_writer<number>& writer, postintegration_task<number>* task) override;
+        void operator()(postintegration_writer<number>& writer, postintegration_task<number>& task) override;
 
 
         // INTERNAL DATA
@@ -244,7 +316,43 @@ namespace transport
         data_manager_sqlite3<number>& mgr;
 
       };
-    
+
+
+    template <typename number>
+    class sqlite3_zeta_twopf_writer_finalize: public postintegration_writer_finalize<number>
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor captures repository_sqlite3 object
+        sqlite3_zeta_twopf_writer_finalize(data_manager_sqlite3<number>& m)
+          : mgr(m)
+          {
+          }
+
+        //! destructor is default
+        virtual ~sqlite3_zeta_twopf_writer_finalize() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! commit
+        void operator()(postintegration_writer<number>& writer) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to repository object
+        data_manager_sqlite3<number>& mgr;
+
+      };
+
     
     template <typename number>
     class sqlite3_zeta_threepf_writer_aggregate: public postintegration_writer_aggregate<number>
@@ -305,7 +413,7 @@ namespace transport
       public:
         
         //! commit
-        void operator()(postintegration_writer<number>& writer, postintegration_task<number>* task) override;
+        void operator()(postintegration_writer<number>& writer, postintegration_task<number>& task) override;
         
         
         // INTERNAL DATA
@@ -319,6 +427,42 @@ namespace transport
 
 
     template <typename number>
+    class sqlite3_zeta_threepf_writer_finalize: public postintegration_writer_finalize<number>
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor captures repository_sqlite3 object
+        sqlite3_zeta_threepf_writer_finalize(data_manager_sqlite3<number>& m)
+          : mgr(m)
+          {
+          }
+
+        //! destructor is default
+        virtual ~sqlite3_zeta_threepf_writer_finalize() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! commit
+        void operator()(postintegration_writer<number>& writer) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to repository object
+        data_manager_sqlite3<number>& mgr;
+
+      };
+
+
+    template <typename number>
     class sqlite3_fNL_writer_aggregate: public postintegration_writer_aggregate<number>
       {
 
@@ -327,7 +471,7 @@ namespace transport
       public:
 
         //! constructor captures repository_sqlite3 object
-        sqlite3_fNL_writer_aggregate(data_manager_sqlite3<number>& m, derived_data::template_type t)
+        sqlite3_fNL_writer_aggregate(data_manager_sqlite3<number>& m, derived_data::bispectrum_template t)
           : mgr(m),
             type(t)
           {
@@ -353,7 +497,7 @@ namespace transport
         data_manager_sqlite3<number>& mgr;
 
         //! fNL template type
-        derived_data::template_type type;
+        derived_data::bispectrum_template type;
 
       };
 
@@ -381,7 +525,43 @@ namespace transport
       public:
 
         //! commit
-        void operator()(postintegration_writer<number>& writer, postintegration_task<number>* task) override;
+        void operator()(postintegration_writer<number>& writer, postintegration_task<number>& task) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to repository object
+        data_manager_sqlite3<number>& mgr;
+
+      };
+
+
+    template <typename number>
+    class sqlite3_fNL_writer_finalize: public postintegration_writer_finalize<number>
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor captures repository_sqlite3 object
+        sqlite3_fNL_writer_finalize(data_manager_sqlite3<number>& m)
+          : mgr(m)
+          {
+          }
+
+        //! destructor is default
+        virtual ~sqlite3_fNL_writer_finalize() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! commit
+        void operator()(postintegration_writer<number>& writer) override;
 
 
         // INTERNAL DATA

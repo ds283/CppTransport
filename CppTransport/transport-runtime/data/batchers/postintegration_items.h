@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __postintegration_items_H_
-#define __postintegration_items_H_
+#ifndef CPPTRANSPORT_POSTINTEGRATION_ITEMS_H
+#define CPPTRANSPORT_POSTINTEGRATION_ITEMS_H
 
 
 namespace transport
@@ -202,4 +202,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__postintegration_items_H_
+#endif //CPPTRANSPORT_POSTINTEGRATION_ITEMS_H

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __threepf_time_shift_H_
-#define __threepf_time_shift_H_
+#ifndef CPPTRANSPORT_THREEPF_TIME_SHIFT_H
+#define CPPTRANSPORT_THREEPF_TIME_SHIFT_H
 
 
 #include <iostream>
@@ -280,4 +280,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__threepf_time_shift_H_
+#endif //CPPTRANSPORT_THREEPF_TIME_SHIFT_H

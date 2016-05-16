@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __wavenumber_series_H_
-#define __wavenumber_series_H_
+#ifndef CPPTRANSPORT_WAVENUMBER_SERIES_H
+#define CPPTRANSPORT_WAVENUMBER_SERIES_H
 
 
 #include <iostream>
@@ -97,7 +97,7 @@ namespace transport
 		        bool is_spectral_index() const { return(this->compute_index); }
 
 		        //! set spectral index calculation
-		        void set_spectral_index(bool g) { this->compute_index = g; }
+		        wavenumber_series<number>& set_spectral_index(bool g) { this->compute_index = g; return *this; }
 
 
             // DATAPIPE SERVICES
@@ -105,10 +105,10 @@ namespace transport
           public:
 
             //! extract axis data, corresponding to our sample wavenumbers, from datapipe
-            std::vector<double> pull_kconfig_axis(datapipe<number>& pipe, const SQL_twopf_kconfig_query& kquery) const;
+            std::vector<double> pull_kconfig_axis(datapipe<number>& pipe, const SQL_twopf_query& kquery) const;
 
             //! extract axis data, corresponding to our sample wavenumbers, from datapipe
-            std::vector<double> pull_kconfig_axis(datapipe<number>& pipe, const SQL_threepf_kconfig_query& kquery) const;
+            std::vector<double> pull_kconfig_axis(datapipe<number>& pipe, const SQL_threepf_query& kquery) const;
 
 
 		        // LABELLING SERVICES
@@ -170,9 +170,9 @@ namespace transport
 
 
         template <typename number>
-        std::vector<double> wavenumber_series<number>::pull_kconfig_axis(datapipe<number>& pipe, const SQL_twopf_kconfig_query& kquery) const
+        std::vector<double> wavenumber_series<number>::pull_kconfig_axis(datapipe<number>& pipe, const SQL_twopf_query& kquery) const
 	        {
-		        assert(this->x_type == axis_value::k_axis);
+		        assert(this->x_type == axis_value::k);
 
             typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(kquery);
             twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
@@ -184,7 +184,7 @@ namespace transport
 
 		        switch(this->x_type)
 			        {
-		            case axis_value::k_axis:
+		            case axis_value::k:
 			            {
 		                for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -202,7 +202,7 @@ namespace transport
 				            break;
 			            }
 
-		            case axis_value::efolds_exit_axis:
+		            case axis_value::efolds_exit:
 			            {
 		                for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -221,7 +221,7 @@ namespace transport
 
 
         template <typename number>
-        std::vector<double> wavenumber_series<number>::pull_kconfig_axis(datapipe<number>& pipe, const SQL_threepf_kconfig_query& kquery) const
+        std::vector<double> wavenumber_series<number>::pull_kconfig_axis(datapipe<number>& pipe, const SQL_threepf_query& kquery) const
 	        {
             typename datapipe<number>::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(kquery);
             threepf_kconfig_tag<number> tag = pipe.new_threepf_kconfig_tag();
@@ -233,7 +233,7 @@ namespace transport
 
 		        switch(this->x_type)
 			        {
-		            case axis_value::k_axis:
+		            case axis_value::k:
 			            {
 				            // axis consists of k_t values
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
@@ -252,7 +252,7 @@ namespace transport
 				            break;
 			            }
 
-		            case axis_value::efolds_exit_axis:
+		            case axis_value::efolds_exit:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -261,7 +261,7 @@ namespace transport
 		                break;
 			            }
 
-		            case axis_value::alpha_axis:
+		            case axis_value::alpha:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -270,7 +270,7 @@ namespace transport
 		                break;
 			            }
 
-		            case axis_value::beta_axis:
+		            case axis_value::beta:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -279,7 +279,7 @@ namespace transport
 		                break;
 			            }
 
-		            case axis_value::squeezing_fraction_k1_axis:
+		            case axis_value::squeeze_k1:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -288,7 +288,7 @@ namespace transport
 		                break;
 			            }
 
-		            case axis_value::squeezing_fraction_k2_axis:
+		            case axis_value::squeeze_k2:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -297,7 +297,7 @@ namespace transport
 		                break;
 			            }
 
-		            case axis_value::squeezing_fraction_k3_axis:
+		            case axis_value::squeeze_k3:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -361,4 +361,4 @@ namespace transport
 }   // namespace transport
 
 
-#endif //__wavenumber_series_H_
+#endif //CPPTRANSPORT_WAVENUMBER_SERIES_H

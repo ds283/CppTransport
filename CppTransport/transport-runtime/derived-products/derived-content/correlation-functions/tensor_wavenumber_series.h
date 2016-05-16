@@ -50,7 +50,7 @@ namespace transport
 	    {
 
 		    //! tensor two-point function wavenumber data line
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class tensor_twopf_wavenumber_series: public wavenumber_series<number>, public tensor_twopf_line<number>
 			    {
 
@@ -59,8 +59,8 @@ namespace transport
 		      public:
 
 				    //! construct a tensor twopf wavenumber-series object
-				    tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
-				                                   SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+				    tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2> sel,
+				                                   SQL_time_query tq, SQL_twopf_query kq,
 				                                   unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -82,10 +82,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
 				    // DERIVE LINES -- implements a 'derived_line' interface
@@ -128,10 +128,10 @@ namespace transport
           protected:
 
             //! SQL query representing x-axis
-            SQL_twopf_kconfig_query kquery;
+            SQL_twopf_query kquery;
 
             //! SQL query representing different lines
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
 			    };
 
@@ -140,10 +140,10 @@ namespace transport
         // derived_line<> is not called automatically during construction of time_series<>.
         // We have to call it ourselves
         template <typename number>
-        tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
-                                                                               SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+        tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2> sel,
+                                                                               SQL_time_query tq, SQL_twopf_query kq,
                                                                                unsigned int prec)
-	        : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
+	        : derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit }, prec),
 	          tensor_twopf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),
             tquery(tq),
@@ -214,7 +214,7 @@ namespace transport
                                   {
                                     *l_pos *= 1.0 / (2.0*M_PI*M_PI);
                                   }
-                                value = value_type::dimensionless_value;
+                                value = value_type::dimensionless;
                               }
                             else
                               {
@@ -225,7 +225,7 @@ namespace transport
                                     double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
                                     *l_pos *=  1.0 / k_cube;
                                   }
-                                value = value_type::correlation_function_value;
+                                value = value_type::correlation_function;
                               }
 
                             lines.emplace_back(group, this->x_type, value, w_axis, line_data,

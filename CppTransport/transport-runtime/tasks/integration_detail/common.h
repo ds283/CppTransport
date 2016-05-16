@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __integration_task_common_H_
-#define __integration_task_common_H_
+#ifndef CPPTRANSPORT_INTEGRATION_TASK_COMMON_H
+#define CPPTRANSPORT_INTEGRATION_TASK_COMMON_H
 
 
 #include <assert.h>
@@ -54,4 +54,4 @@
 
 
 
-#endif //__integration_task_common_H_
+#endif //CPPTRANSPORT_INTEGRATION_TASK_COMMON_H

@@ -37,6 +37,7 @@
 #include "transport-runtime/version.h"
 #include "transport-runtime/messages.h"
 #include "transport-runtime/exceptions.h"
+#include "transport-runtime/defaults.h"
 
 #include "transport-runtime/serialization/serializable.h"
 #include "transport-runtime/manager/message_handlers.h"
@@ -44,6 +45,10 @@
 
 
 #include "boost/date_time.hpp"
+
+// include repository_forward_declare.h to get correct declaration of template default argument
+// (it can only be given *once*)
+#include "transport-runtime/repository/repository_forward_declare.h"
 
 // need model_manager for model_finder object
 #include "transport-runtime/manager/model_manager.h"

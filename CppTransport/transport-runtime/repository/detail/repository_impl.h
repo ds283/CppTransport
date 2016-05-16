@@ -521,8 +521,6 @@ namespace transport
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        const std::list<std::string>& tags = writer.get_tags();
-
         // set up notes for the new output record, if it exists
         std::list<note> notes;
         if(!writer.is_collecting_statistics())
@@ -534,7 +532,7 @@ namespace transport
 
         // create a new, empty content group record
         std::unique_ptr< content_group_record<integration_payload> >
-          output_record(this->integration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags, mgr));
+          output_record(this->integration_content_group_record_factory(writer, false, notes, mgr));
 
         // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
@@ -616,8 +614,6 @@ namespace transport
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        const std::list<std::string>& tags = writer.get_tags();
-
         // convert to task class
         postintegration_task<number>* tk = rec->get_task();
         assert(tk != nullptr);
@@ -628,7 +624,7 @@ namespace transport
 
         // create a new, empty content group record
         std::unique_ptr<content_group_record<postintegration_payload>>
-          output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<note>(), tags, mgr));
+          output_record(this->postintegration_content_group_record_factory(writer, false, std::list<note>(), mgr));
 
         // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
@@ -717,11 +713,9 @@ namespace transport
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        const std::list<std::string>& tags = writer.get_tags();
-
         // create a new, empty content group record
         std::unique_ptr< content_group_record<output_payload> >
-          output_record(this->output_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<note>(), tags, mgr));
+          output_record(this->output_content_group_record_factory(writer, false, std::list<note>(), mgr));
 
         // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
@@ -793,7 +787,7 @@ namespace transport
         repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(group.second->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(!group.second->check_tags(tags)); } );
 
         if(db.empty())
           {
@@ -819,7 +813,7 @@ namespace transport
         repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second.get()->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(!group.second.get()->check_tags(tags)); } );
 
         if(db.empty())
           {

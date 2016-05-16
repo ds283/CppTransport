@@ -189,25 +189,25 @@ namespace transport
 				    dot_type get_dot_meaning() const { return(this->dot_meaning); }
 
 				    //! set dot meaning
-				    void set_dot_meaning(dot_type t) { this->dot_meaning = t; }
+				    derived_line<number>& set_dot_meaning(dot_type t) { this->dot_meaning = t; return *this; }
 
 				    //! get label meaning
 				    klabel_type get_klabel_meaning() const { return(this->klabel_meaning); }
 
 				    //! set label meaning
-				    void set_klabel_meaning(klabel_type t) { this->klabel_meaning = t; }
+				    derived_line<number>& set_klabel_meaning(klabel_type t) { this->klabel_meaning = t; return *this; }
 
 						//! get current x-axis value type
 						axis_value get_current_x_axis_value() const { return(this->x_type); }
 
 						//! set current x-axis value
-						void set_current_x_axis_value(axis_value v);
+						derived_line<number>& set_current_x_axis_value(axis_value v);
 
 						//! set label text
-						void set_label_text(const std::string& latex, const std::string& non_latex);
+						derived_line<number>& set_label_text(const std::string& latex, const std::string& non_latex);
 
 						//! clear label text
-						void clear_label_text();
+						derived_line<number>& clear_label_text();
 
 						//! has a label been set?
 						bool is_label_set() const { return(this->label_set); }
@@ -222,7 +222,7 @@ namespace transport
 						bool get_label_tags() const { return(this->use_tags); }
 
 						//! set use tags flag
-						void set_label_tags(bool g) { this->use_tags = g; }
+						derived_line<number>& set_label_tags(bool g) { this->use_tags = g; return *this; }
 
 
 				    // DATAPIPE HANDLING
@@ -372,9 +372,9 @@ namespace transport
 
 						// Deserialize: axis type for this derived line
 				    std::string xtype = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS].asString();
-				    if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME)                       x_class = axis_class::time_axis;
-				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER)            x_class = axis_class::wavenumber_axis;
-				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION) x_class = axis_class::threepf_kconfig_axis;
+				    if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME)                       x_class = axis_class::time;
+				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER)            x_class = axis_class::wavenumber;
+				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION) x_class = axis_class::threepf_kconfig;
 				    else
 					    {
 				        std::ostringstream msg;
@@ -390,15 +390,15 @@ namespace transport
 							{
 								// decode this array element
 						    std::string value_string = t->asString();
-								axis_value value = axis_value::efolds_axis;
-								if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     value = axis_value::efolds_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            value = axis_value::k_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           value = axis_value::efolds_exit_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 value = axis_value::alpha_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  value = axis_value::beta_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) value = axis_value::squeezing_fraction_k1_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) value = axis_value::squeezing_fraction_k2_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) value = axis_value::squeezing_fraction_k3_axis;
+								axis_value value = axis_value::efolds;
+								if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     value = axis_value::efolds;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            value = axis_value::k;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           value = axis_value::efolds_exit;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 value = axis_value::alpha;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  value = axis_value::beta;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) value = axis_value::squeeze_k1;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) value = axis_value::squeeze_k2;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) value = axis_value::squeeze_k3;
 								else
 									{
 								    std::ostringstream msg;
@@ -413,14 +413,14 @@ namespace transport
 
 						// Deserialize: current x-axis type
 				    std::string x_type_string = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE].asString();
-				    if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     x_type = axis_value::efolds_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            x_type = axis_value::k_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           x_type = axis_value::efolds_exit_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 x_type = axis_value::alpha_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  x_type = axis_value::beta_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) x_type = axis_value::squeezing_fraction_k1_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) x_type = axis_value::squeezing_fraction_k2_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) x_type = axis_value::squeezing_fraction_k3_axis;
+				    if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     x_type = axis_value::efolds;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            x_type = axis_value::k;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           x_type = axis_value::efolds_exit;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 x_type = axis_value::alpha;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  x_type = axis_value::beta;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) x_type = axis_value::squeeze_k1;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) x_type = axis_value::squeeze_k2;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) x_type = axis_value::squeeze_k3;
 				    else
 					    {
 				        std::ostringstream msg;
@@ -491,7 +491,7 @@ namespace transport
 
 
 				template <typename number>
-				void derived_line<number>::set_current_x_axis_value(axis_value v)
+				derived_line<number>& derived_line<number>::set_current_x_axis_value(axis_value v)
 					{
 				    std::list< axis_value >::iterator fv = std::find(this->supported_x_axes.begin(), this->supported_x_axes.end(), v);
 
@@ -503,11 +503,12 @@ namespace transport
 							}
 
 						this->x_type = v;
+            return *this;
 					}
 
 
 				template <typename number>
-				void derived_line<number>::set_label_text(const std::string& latex, const std::string& non_latex)
+				derived_line<number>& derived_line<number>::set_label_text(const std::string& latex, const std::string& non_latex)
 					{
 						if(latex == "" && non_latex == "")    // treat as an attempt to clear the labels
 							{
@@ -519,15 +520,17 @@ namespace transport
 						    this->non_LaTeX_label = non_latex;
 						    this->label_set       = true;
 							}
+            return *this;
 					}
 
 
 				template <typename number>
-				void derived_line<number>::clear_label_text()
+				derived_line<number>& derived_line<number>::clear_label_text()
 					{
 						this->LaTeX_label.clear();
 						this->non_LaTeX_label.clear();
 						this->label_set = false;
+            return *this;
 					}
 
 
@@ -565,15 +568,15 @@ namespace transport
 						// Serialize: axis type of this derived line
 				    switch(this->x_class)
 							{
-						    case axis_class::time_axis:
+						    case axis_class::time:
 							    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME);
 									break;
 
-						    case axis_class::wavenumber_axis:
+						    case axis_class::wavenumber:
 							    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER);
 									break;
 
-				        case axis_class::threepf_kconfig_axis:
+				        case axis_class::threepf_kconfig:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION);
 						      break;
 							}
@@ -584,35 +587,35 @@ namespace transport
 							{
 								switch(*t)
 									{
-								    case axis_value::efolds_axis:
+								    case axis_value::efolds:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)));
 											break;
 
-								    case axis_value::k_axis:
+								    case axis_value::k:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)));
 											break;
 
-								    case axis_value::efolds_exit_axis:
+								    case axis_value::efolds_exit:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)));
 											break;
 
-								    case axis_value::alpha_axis:
+								    case axis_value::alpha:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)));
 											break;
 
-								    case axis_value::beta_axis:
+								    case axis_value::beta:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)));
 											break;
 
-								    case axis_value::squeezing_fraction_k1_axis:
+								    case axis_value::squeeze_k1:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1)));
 											break;
 
-								    case axis_value::squeezing_fraction_k2_axis:
+								    case axis_value::squeeze_k2:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2)));
 									    break;
 
-								    case axis_value::squeezing_fraction_k3_axis:
+								    case axis_value::squeeze_k3:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3)));
 									    break;
 
@@ -626,35 +629,35 @@ namespace transport
 						// Serialize: current x-axis type
 				    switch(this->x_type)
 					    {
-				        case axis_value::efolds_axis:
+				        case axis_value::efolds:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS);
 				          break;
 
-				        case axis_value::k_axis:
+				        case axis_value::k:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER);
 				          break;
 
-				        case axis_value::efolds_exit_axis:
+				        case axis_value::efolds_exit:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT);
 				          break;
 
-				        case axis_value::alpha_axis:
+				        case axis_value::alpha:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA);
 				          break;
 
-				        case axis_value::beta_axis:
+				        case axis_value::beta:
 					       writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA);
 				          break;
 
-				        case axis_value::squeezing_fraction_k1_axis:
+				        case axis_value::squeeze_k1:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1);
 				          break;
 
-				        case axis_value::squeezing_fraction_k2_axis:
+				        case axis_value::squeeze_k2:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2);
 				          break;
 
-				        case axis_value::squeezing_fraction_k3_axis:
+				        case axis_value::squeeze_k3:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3);
 				          break;
 
@@ -708,15 +711,15 @@ namespace transport
 						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS << " ";
 						switch(this->x_class)
 							{
-						    case axis_class::time_axis:
+						    case axis_class::time:
 							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_TIME_LABEL << '\n';
 									break;
 
-						    case axis_class::wavenumber_axis:
+						    case axis_class::wavenumber:
 									out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_WAVENUMBER_LABEL << '\n';
 									break;
 
-						    case axis_class::threepf_kconfig_axis:
+						    case axis_class::threepf_kconfig:
 							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_THREEPF_CONFIGURATION_LABEL << '\n';
                   break;
 							}
@@ -728,35 +731,35 @@ namespace transport
 							{
 								switch(*t)
 									{
-								    case axis_value::efolds_axis:
+								    case axis_value::efolds:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS, count);
 											break;
 
-								    case axis_value::k_axis:
+								    case axis_value::k:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K, count);
 											break;
 
-								    case axis_value::efolds_exit_axis:
+								    case axis_value::efolds_exit:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT, count);
 											break;
 
-								    case axis_value::alpha_axis:
+								    case axis_value::alpha:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA, count);
 											break;
 
-								    case axis_value::beta_axis:
+								    case axis_value::beta:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA, count);
 											break;
 
-								    case axis_value::squeezing_fraction_k1_axis:
+								    case axis_value::squeeze_k1:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1, count);
 											break;
 
-								    case axis_value::squeezing_fraction_k2_axis:
+								    case axis_value::squeeze_k2:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2, count);
 											break;
 
-								    case axis_value::squeezing_fraction_k3_axis:
+								    case axis_value::squeeze_k3:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3, count);
 											break;
 
@@ -771,35 +774,35 @@ namespace transport
 						out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS << " ";
 				    switch(this->x_type)
 					    {
-				        case axis_value::efolds_axis:
+				        case axis_value::efolds:
 					        out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS << '\n';
 				          break;
 
-				        case axis_value::k_axis:
+				        case axis_value::k:
 					        out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K << '\n';
 				          break;
 
-				        case axis_value::efolds_exit_axis:
+				        case axis_value::efolds_exit:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT << '\n';
 				          break;
 
-				        case axis_value::alpha_axis:
+				        case axis_value::alpha:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA << '\n';
 				          break;
 
-				        case axis_value::beta_axis:
+				        case axis_value::beta:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA << '\n';
 				          break;
 
-				        case axis_value::squeezing_fraction_k1_axis:
+				        case axis_value::squeeze_k1:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1 << '\n';
 				          break;
 
-				        case axis_value::squeezing_fraction_k2_axis:
+				        case axis_value::squeeze_k2:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2 << '\n';
 				          break;
 
-				        case axis_value::squeezing_fraction_k3_axis:
+				        case axis_value::squeeze_k3:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3 << '\n';
 				          break;
 

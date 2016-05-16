@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __range_helper_H_
-#define __range_helper_H_
+#ifndef CPPTRANSPORT_RANGE_HELPER_H
+#define CPPTRANSPORT_RANGE_HELPER_H
 
 
 #include "transport-runtime/concepts/range_detail/common.h"
@@ -42,8 +42,8 @@ namespace transport
 					{
 				    std::string type = reader[CPPTRANSPORT_NODE_RANGE_TYPE].asString();
 
-						if(type == CPPTRANSPORT_NODE_RANGE_STEPPING)       return std::make_unique< stepping_range<value> >(reader);
-						else if(type == CPPTRANSPORT_NODE_RANGE_AGGREGATE) return std::make_unique< aggregation_range<value> >(reader);
+						if(type == CPPTRANSPORT_NODE_RANGE_STEPPING)       return std::make_unique< basic_range<value> >(reader);
+						else if(type == CPPTRANSPORT_NODE_RANGE_AGGREGATE) return std::make_unique< aggregate_range<value> >(reader);
 
 				    std::ostringstream msg;
 				    msg << CPPTRANSPORT_RANGE_UNKNOWN_TYPE << " '" << type << "'";
@@ -55,4 +55,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__range_helper_H_
+#endif //CPPTRANSPORT_RANGE_HELPER_H

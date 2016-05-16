@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __flattener_H_
-#define __flattener_H_
+#ifndef CPPTRANSPORT_FLATTENER_H
+#define CPPTRANSPORT_FLATTENER_H
 
 
 namespace transport
@@ -129,4 +129,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__flattener_H_
+#endif //CPPTRANSPORT_FLATTENER_H

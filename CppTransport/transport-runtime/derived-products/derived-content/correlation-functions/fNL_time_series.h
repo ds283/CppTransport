@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __fNL_time_series_H_
-#define __fNL_time_series_H_
+#ifndef CPPTRANSPORT_FNL_TIME_SERIES_H
+#define CPPTRANSPORT_FNL_TIME_SERIES_H
 
 
 #include <iostream>
@@ -50,7 +50,7 @@ namespace transport
       {
 
         //! fNL time data line
-        template <typename number>
+        template <typename number=default_number_type>
         class fNL_time_series: public time_series<number>, public fNL_line<number>
           {
 
@@ -59,7 +59,7 @@ namespace transport
           public:
 
             //! construct an fNL time series data object
-            fNL_time_series(const fNL_task<number>& tk, SQL_time_config_query tq);
+            fNL_time_series(const fNL_task<number>& tk, SQL_time_query tq);
 
             //! deserialization constructor
             fNL_time_series(Json::Value& reader, task_finder<number>& finder);
@@ -80,7 +80,7 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
 
             // DERIVE LINES -- implements a 'time_series' interface
@@ -127,7 +127,7 @@ namespace transport
           protected:
 
             //! SQL query representing x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
           };
 
@@ -136,8 +136,8 @@ namespace transport
         // for derived_line<> is not called automatically when constructing time_series<>.
         // We have to call it ourselves.
         template <typename number>
-        fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, SQL_time_config_query tq)
-          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }),
+        fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, SQL_time_query tq)
+          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }),
             fNL_line<number>(tk),
             time_series<number>(tk),
             tquery(tq)
@@ -176,7 +176,7 @@ namespace transport
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-            lines.emplace_back(group, this->x_type, value_type::fNL_value, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
+            lines.emplace_back(group, this->x_type, value_type::fNL, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 
             // detach pipe from content group
             this->detach(pipe);
@@ -250,4 +250,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__fNL_time_series_H_
+#endif //CPPTRANSPORT_FNL_TIME_SERIES_H

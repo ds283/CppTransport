@@ -24,8 +24,8 @@
 //
 
 
-#if !defined(__task_configurations_forward_declare_H_) && !defined(__task_configurations_H_)
-#define __task_configurations_forward_declare_H_
+#if !defined(CPPTRANSPORT_TASK_CONFIGURATIONS_FORWARD_DECLARE_H) && !defined(CPPTRANSPORT_TASK_CONFIGURATIONS_H)
+#define CPPTRANSPORT_TASK_CONFIGURATIONS_FORWARD_DECLARE_H
 
 
 namespace transport
@@ -39,4 +39,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__task_configurations_forward_declare_H_
+#endif //CPPTRANSPORT_TASK_CONFIGURATIONS_FORWARD_DECLARE_H

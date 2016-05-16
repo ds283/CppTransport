@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __line_values_H_
-#define __line_values_H_
+#ifndef CPPTRANSPORT_LINE_VALUES_H
+#define CPPTRANSPORT_LINE_VALUES_H
 
 
 #include "transport-runtime/messages.h"
@@ -57,15 +57,15 @@ namespace transport
 					{
 						switch(type)
 							{
-						    case value_type::field_value:                return std::string(CPPTRANSPORT_VALUE_NON_LATEX_FIELD);
-						    case value_type::momentum_value:             return std::string(CPPTRANSPORT_VALUE_NON_LATEX_MOMENTUM);
-						    case value_type::correlation_function_value: return std::string(CPPTRANSPORT_VALUE_NON_LATEX_CORRELATION_FUNCTION);
-						    case value_type::fNL_value:                  return std::string(CPPTRANSPORT_VALUE_NON_LATEX_FNL);
-						    case value_type::r_value:                    return std::string(CPPTRANSPORT_VALUE_NON_LATEX_R);
-						    case value_type::spectral_index_value:       return std::string(CPPTRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX);
-						    case value_type::dimensionless_value:        return std::string("");
-						    case value_type::time_value:                 return std::string(CPPTRANSPORT_VALUE_NON_LATEX_SECONDS);
-						    case value_type::steps_value:                return std::string(CPPTRANSPORT_VALUE_NON_LATEX_STEPS);
+						    case value_type::field:                return std::string(CPPTRANSPORT_VALUE_NON_LATEX_FIELD);
+						    case value_type::momentum:             return std::string(CPPTRANSPORT_VALUE_NON_LATEX_MOMENTUM);
+						    case value_type::correlation_function: return std::string(CPPTRANSPORT_VALUE_NON_LATEX_CORRELATION_FUNCTION);
+						    case value_type::fNL:                  return std::string(CPPTRANSPORT_VALUE_NON_LATEX_FNL);
+						    case value_type::r:                    return std::string(CPPTRANSPORT_VALUE_NON_LATEX_R);
+						    case value_type::spectral_index:       return std::string(CPPTRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX);
+						    case value_type::dimensionless:        return std::string("");
+						    case value_type::time:                 return std::string(CPPTRANSPORT_VALUE_NON_LATEX_SECONDS);
+						    case value_type::steps:                return std::string(CPPTRANSPORT_VALUE_NON_LATEX_STEPS);
               }
 					}
 
@@ -73,15 +73,15 @@ namespace transport
 			    {
 		        switch(type)
 			        {
-		            case value_type::field_value:                return std::string(CPPTRANSPORT_VALUE_LATEX_FIELD);
-		            case value_type::momentum_value:             return std::string(CPPTRANSPORT_VALUE_LATEX_MOMENTUM);
-		            case value_type::correlation_function_value: return std::string(CPPTRANSPORT_VALUE_LATEX_CORRELATION_FUNCTION);
-		            case value_type::fNL_value:                  return std::string(CPPTRANSPORT_VALUE_LATEX_FNL);
-		            case value_type::r_value:                    return std::string(CPPTRANSPORT_VALUE_LATEX_R);
-		            case value_type::spectral_index_value:       return std::string(CPPTRANSPORT_VALUE_LATEX_SPECTRAL_INDEX);
-		            case value_type::dimensionless_value:        return std::string("");
-		            case value_type::time_value:                 return std::string(CPPTRANSPORT_VALUE_LATEX_SECONDS);
-		            case value_type::steps_value:                return std::string(CPPTRANSPORT_VALUE_LATEX_STEPS);
+		            case value_type::field:                return std::string(CPPTRANSPORT_VALUE_LATEX_FIELD);
+		            case value_type::momentum:             return std::string(CPPTRANSPORT_VALUE_LATEX_MOMENTUM);
+		            case value_type::correlation_function: return std::string(CPPTRANSPORT_VALUE_LATEX_CORRELATION_FUNCTION);
+		            case value_type::fNL:                  return std::string(CPPTRANSPORT_VALUE_LATEX_FNL);
+		            case value_type::r:                    return std::string(CPPTRANSPORT_VALUE_LATEX_R);
+		            case value_type::spectral_index:       return std::string(CPPTRANSPORT_VALUE_LATEX_SPECTRAL_INDEX);
+		            case value_type::dimensionless:        return std::string("");
+		            case value_type::time:                 return std::string(CPPTRANSPORT_VALUE_LATEX_SECONDS);
+		            case value_type::steps:                return std::string(CPPTRANSPORT_VALUE_LATEX_STEPS);
               }
 			    }
 
@@ -91,4 +91,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__line_values_H_
+#endif //CPPTRANSPORT_LINE_VALUES_H

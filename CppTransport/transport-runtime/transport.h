@@ -27,6 +27,12 @@
 #define CPPTRANSPORT_TRANSPORT_H
 
 
+#ifdef __INTEL_COMPILER
+// Intel compiler (at least 16.0.1) produces this warning when using boost::escape_dot_string()
+#pragma warning disable 2196
+#endif
+
+
 // expect Boost to be linked with dynamic libraries;
 // note this macro is essential for Boost.Log
 #define BOOST_ALL_DYN_LINK
@@ -49,6 +55,9 @@
 #include "transport-runtime/derived-products/data_products.h"
 
 #include "transport-runtime/manager/task_manager.h"
+
+// derived_data namespace gets aliased to vis_toolkit
+namespace vis_toolkit = transport::derived_data;
 
 
 #endif // CPPTRANSPORT_TRANSPORT_H

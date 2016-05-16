@@ -193,9 +193,29 @@ namespace transport
 
         // parse options from the command line; we do this first so that any options
         // supplied on the command line override options specified in a configuration file
-        boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
-        boost::program_options::store(cmdline_parsed, this->option_map);
-        this->warn_unrecognized_switches(cmdline_parsed);
+        try
+          {
+            boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
+            boost::program_options::store(cmdline_parsed, this->option_map);
+            this->warn_unrecognized_switches(cmdline_parsed);
+          }
+        catch(boost::program_options::ambiguous_option& xe)
+          {
+            this->warn(xe.what());
+          }
+        catch(boost::program_options::invalid_syntax& xe)
+          {
+            this->warn(xe.what());
+          }
+        catch(boost::program_options::invalid_command_line_style& xe)
+          {
+            this->warn(xe.what());
+          }
+        catch(boost::program_options::invalid_command_line_syntax& xe)
+          {
+            this->warn(xe.what());
+          }
+
 
         // parse options from configuration file
         boost::optional< boost::filesystem::path > config_path = this->local_env.config_file_path();
@@ -206,10 +226,25 @@ namespace transport
                 std::ifstream instream((*config_path).string());
                 if(instream)
                   {
-                    // parse contents of file; 'true' means allow unregistered options
-                    boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
-                    boost::program_options::store(file_parsed, this->option_map);
-                    this->warn_unrecognized_switches(file_parsed);
+                    try
+                      {
+                        // parse contents of file; 'true' means allow unregistered options
+                        boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
+                        boost::program_options::store(file_parsed, this->option_map);
+                        this->warn_unrecognized_switches(file_parsed);
+                      }
+                    catch(boost::program_options::ambiguous_option& xe)
+                      {
+                        this->warn(xe.what());
+                      }
+                    catch(boost::program_options::invalid_syntax& xe)
+                      {
+                        this->warn(xe.what());
+                      }
+                    catch(boost::program_options::invalid_config_file_syntax& xe)
+                      {
+                        this->warn(xe.what());
+                      }
                   }
               }
           }
@@ -590,22 +625,23 @@ namespace transport
         repository_graphkit<number> graphkit(*this->repo, this->err, this->warn, this->msg);
         std::unique_ptr<repository_distance_matrix> dmat = graphkit.task_distance_matrix();
 
-        std::list< std::string > required_tasks;
+        // step through list of command-line supplied tasks, building a list
+        // of tasks on which they depend
+        std::set< std::string > required_tasks;
         for(const job_descriptor& job : this->job_queue)
           {
             switch(job.get_type())
               {
                 case job_type::job_task:
                   {
-                    std::unique_ptr< std::list<std::string> > depends = dmat->find_dependencies(job.get_name());
-                    if(depends) required_tasks.merge(*depends);
+                    // use repository_graphkit to compute dependencies for this task
+                    std::unique_ptr< std::set<std::string> > depends = dmat->find_dependencies(job.get_name());
+
+                    // if there were dependencies, merge them into the list
+                    if(depends) required_tasks.insert(depends->begin(), depends->end());
                   }
               }
           }
-
-        // remove duplicates
-        required_tasks.sort();
-        required_tasks.unique();
 
         // required_tasks holds a list of all tasks needed to generate output for the set of tasks specified on
         // the command line
@@ -613,8 +649,7 @@ namespace transport
         this->prune_tasks_with_content(required_tasks);
 
         // required_tasks now contains only those tasks for which output is needed;
-        // we need to prune it for paired tasks and then insert job records for any
-        // remaining tasks which do not already have one
+        // we need to prune it for paired tasks, because these do not need to be handled separately
         this->prune_paired_tasks(required_tasks);
 
         // insert any required job descriptors and sort task list into order
@@ -624,25 +659,37 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::prune_tasks_with_content(std::list<std::string>& required_tasks)
+    void master_controller<number>::prune_tasks_with_content(std::set<std::string>& required_tasks)
       {
-        for(std::list<std::string>::const_iterator t = required_tasks.begin(); t != required_tasks.end(); /* intentionally no update step */)
+        // work through list of tasks needed as dependencies, deciding whether they have content groups
+        for(std::set<std::string>::const_iterator t = required_tasks.begin(); t != required_tasks.end(); /* intentionally no update step */)
           {
             std::unique_ptr< task_record<number> > rec = this->repo->query_task(*t);
             if(rec)
               {
-                if(rec->get_content_groups().size() > 0) t = required_tasks.erase(t);
-                else                                     ++t;
+                // check for presence of content group
+                if(rec->get_content_groups().size() > 0) t = required_tasks.erase(t);   // group present; no need to schedule this task, so erase it from the list. Leaves t pointing to next item.
+                else                                     ++t;                           // no groups present; move on to next item
               }
           }
       }
 
 
     template <typename number>
-    void master_controller<number>::prune_paired_tasks(std::list<std::string>& required_tasks)
+    void master_controller<number>::prune_paired_tasks(std::set<std::string>& required_tasks)
       {
-        for(const std::string& task : required_tasks)
+        // build list of all tasks that will be processed, including tasks explicitly specified on the command line
+        std::set<std::string>& tasks_to_schedule = required_tasks;
+        for(const job_descriptor& job : this->job_queue)
           {
+            tasks_to_schedule.insert(job.get_name());
+          }
+
+        // filter out any tasks in required_tasks which are only there because they're paired
+        for(const std::string& task : tasks_to_schedule)
+          {
+            // determine whether this task has any paired tasks
+            // if so, remove them from required_tasks unless they were specified on the command line
             std::unique_ptr< task_record<number> > rec = this->repo->query_task(task);
             if(rec)
               {
@@ -666,10 +713,14 @@ namespace transport
                       }
                   }
 
+                // if there is a paired task, check whether it should be removed from required_tasks
                 if(!paired_task.empty())
                   {
-                    std::list<std::string>::const_iterator u = std::find(required_tasks.begin(), required_tasks.end(), paired_task);
-                    if(u != required_tasks.end()) required_tasks.erase(u);
+                    std::set<std::string>::const_iterator u = std::find(required_tasks.begin(), required_tasks.end(), paired_task);
+                    std::list<job_descriptor>::const_iterator j = std::find_if(this->job_queue.begin(), this->job_queue.end(), FindJobDescriptorByName(paired_task));
+
+                    // if this paired task wasn't specified on the command line, but is present in required_tasks, then remove it
+                    if(j == this->job_queue.end() && u != required_tasks.end()) required_tasks.erase(u);
                   }
               }
           }
@@ -677,7 +728,7 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::insert_job_descriptors(const std::list<std::string>& tasks, const std::list<std::string>& order)
+    void master_controller<number>::insert_job_descriptors(const std::set<std::string>& required_tasks, const std::list<std::string>& order)
       {
         // set up tags
         std::list<std::string> tags;
@@ -687,7 +738,8 @@ namespace transport
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
           }
 
-        for(const std::string& task : tasks)
+        // add extra tasks to job queue (not yet in any particular order)
+        for(const std::string& task : required_tasks)
           {
             std::list<job_descriptor>::const_iterator j = std::find_if(this->job_queue.cbegin(), this->job_queue.cend(), FindJobDescriptorByName(task));
 

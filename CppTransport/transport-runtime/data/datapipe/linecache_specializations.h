@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __configurations_H_
-#define __configurations_H_
+#ifndef CPPTRANSPORT_CONFIGURATIONS_H
+#define CPPTRANSPORT_CONFIGURATIONS_H
 
 
 namespace transport
@@ -84,4 +84,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__configurations_H_
+#endif //CPPTRANSPORT_CONFIGURATIONS_H

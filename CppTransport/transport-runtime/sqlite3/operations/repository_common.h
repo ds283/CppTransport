@@ -44,25 +44,24 @@
 #include "boost/lexical_cast.hpp"
 
 
-#define CPPTRANSPORT_SQLITE_PACKAGE_TABLE                 "packages"
-#define CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE       "integration_tasks"
-#define CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE   "postintegration_tasks"
-#define CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE            "output_tasks"
-#define CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE        "derived_products"
-#define CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE      "integration_groups"
-#define CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE  "postintegration_groups"
-#define CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE           "output_groups"
-#define CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE  "inflight_content"
-#define CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE     "integration_writers"
-#define CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE "postintegration_writers"
-#define CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE         "output_writers"
-
-
 namespace transport
   {
 
     namespace sqlite3_operations
       {
+
+        constexpr auto CPPTRANSPORT_SQLITE_PACKAGE_TABLE                 = "packages";
+        constexpr auto CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE       = "integration_tasks";
+        constexpr auto CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE   = "postintegration_tasks";
+        constexpr auto CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE            = "output_tasks";
+        constexpr auto CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE        = "derived_products";
+        constexpr auto CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE      = "integration_groups";
+        constexpr auto CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE  = "postintegration_groups";
+        constexpr auto CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE           = "output_groups";
+        constexpr auto CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE  = "inflight_content";
+        constexpr auto CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE     = "integration_writers";
+        constexpr auto CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE = "postintegration_writers";
+        constexpr auto CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE         = "output_writers";
 
         unsigned int internal_count(sqlite3* db, const std::string& name, const std::string& table, const std::string& column)
           {

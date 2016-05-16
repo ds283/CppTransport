@@ -24,8 +24,8 @@
 //
 
 
-#if !defined(__tags_forward_declare_H_) && !defined(__tags_H_)
-#define __tags_forward_declare_H_
+#if !defined(CPPTRANSPORT_TAGS_FORWARD_DECLARE_H) && !defined(CPPTRANSPORT_TAGS_H)
+#define CPPTRANSPORT_TAGS_FORWARD_DECLARE_H
 
 
 namespace transport
@@ -54,4 +54,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__tags_forward_declare_H_
+#endif //CPPTRANSPORT_TAGS_FORWARD_DECLARE_H

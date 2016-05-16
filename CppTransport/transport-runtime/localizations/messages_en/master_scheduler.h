@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __master_scheduler_messages_H_
-#define __master_scheduler_messages_H_
+#ifndef CPPTRANSPORT_MASTER_SCHEDULER_MESSAGES_H
+#define CPPTRANSPORT_MASTER_SCHEDULER_MESSAGES_H
 
 
 #define CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED "Items processed"
@@ -40,4 +40,4 @@
 #define CPPTRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE        "All work items processed"
 
 
-#endif //__master_scheduler_messages_H_
+#endif //CPPTRANSPORT_MASTER_SCHEDULER_MESSAGES_H

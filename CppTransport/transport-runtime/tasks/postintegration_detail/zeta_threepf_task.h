@@ -30,7 +30,7 @@
 
 #include "transport-runtime/tasks/postintegration_detail/common.h"
 #include "transport-runtime/tasks/postintegration_detail/abstract.h"
-#include "transport-runtime/tasks/postintegration_detail/zeta_twopf_list_task.h"
+#include "transport-runtime/tasks/postintegration_detail/zeta_twopf_db_task.h"
 
 
 namespace transport
@@ -40,8 +40,8 @@ namespace transport
 
     //! A 'zeta_threepf_task' task is a postintegration task which produces the zeta three-point
     //! function and associated derived quantities (the reduced bispectrum at the moment)
-    template <typename number>
-    class zeta_threepf_task: public zeta_twopf_list_task<number>
+    template <typename number=default_number_type>
+    class zeta_threepf_task: public zeta_twopf_db_task<number>
 	    {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -129,7 +129,7 @@ namespace transport
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t)
-	    : zeta_twopf_list_task<number>(nm, t),
+	    : zeta_twopf_db_task<number>(nm, t),
 	      ptk_as_threepf(nullptr),
 	      paired(false)
 	    {
@@ -142,7 +142,7 @@ namespace transport
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
-	    : zeta_twopf_list_task<number>(nm, reader, finder),
+	    : zeta_twopf_db_task<number>(nm, reader, finder),
 	      ptk_as_threepf(nullptr)
 	    {
         ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
@@ -156,7 +156,7 @@ namespace transport
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const zeta_threepf_task<number>& obj)
-	    : zeta_twopf_list_task<number>(obj),
+	    : zeta_twopf_db_task<number>(obj),
 	      ptk_as_threepf(nullptr),
 	      paired(obj.paired)
 	    {
@@ -173,7 +173,7 @@ namespace transport
         writer[CPPTRANSPORT_NODE_TASK_TYPE]                   = std::string(CPPTRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF);
         writer[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED] = this->paired;
 
-        this->zeta_twopf_list_task<number>::serialize(writer);
+        this->zeta_twopf_db_task<number>::serialize(writer);
 	    }
 
 	}   // namespace transport

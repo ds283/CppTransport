@@ -61,8 +61,9 @@ namespace transport
     constexpr double       CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION        = (4.0);
 
     constexpr unsigned int CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS           = (10);
-    constexpr double       CPPTRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS        = (4.0);
+    constexpr double       CPPTRANSPORT_DEFAULT_ADAPTIVE_ICS_EFOLDS        = (4.0);
     constexpr double       CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS         = (4.0);
+    constexpr double       CPPTRANSPORT_DEFAULT_RECOMMENDED_SETTLE_EFOLDS  = (2.0);
 
     constexpr bool         CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS = (false);
 
@@ -95,8 +96,8 @@ namespace transport
     // tolerance when merging axis points; points closer than this are considered equivalent
     constexpr double       CPPTRANSPORT_AXIS_MERGE_TOLERANCE               = (1E-8);
 
-    // smallest allowed squeezing in Fergusson--Shellard--Liguori coordinates
-    // current 1E-8, which allows about |ln(1E-8)| ~ 18 e-folds of squeezing
+    // smallest allowed squeezing in Fergusson--Shellard coordinates
+    // currently 1E-8, which allows about |ln(1E-8)| ~ 18 e-folds of squeezing
     constexpr double       CPPTRANSPORT_DEFAULT_SMALLEST_SQUEEZING         = (1E-8);
 
     // tolerance to use when testing whether kc-configurations match our constrints

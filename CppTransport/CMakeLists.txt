@@ -531,10 +531,10 @@ set(TRANSPORT_RUNTIME_CONCEPTS_FILES
 
 set(TRANSPORT_RUNTIME_CONCEPTS_RANGE_DETAIL_FILES
   transport-runtime/concepts/range_detail/abstract.h
-  transport-runtime/concepts/range_detail/aggregation.h
+  transport-runtime/concepts/range_detail/aggregate.h
   transport-runtime/concepts/range_detail/common.h
   transport-runtime/concepts/range_detail/helper.h
-  transport-runtime/concepts/range_detail/stepping.h
+  transport-runtime/concepts/range_detail/basic.h
   )
 
 set(TRANSPORT_RUNTIME_DATA_BATCHERS_FILES
@@ -819,12 +819,13 @@ set(TRANSPORT_RUNTIME_REPOSITORY_DETAIL_FILES
   )
 
 set(TRANSPORT_RUNTIME_REPOSITORY_FILES
-  transport-runtime/repository/inflight.h
-  transport-runtime/repository/json_repository.h
-  transport-runtime/repository/repository.h
-  transport-runtime/repository/repository_toolkit.h
-  transport-runtime/repository/repository_graphkit.h
-  )
+    transport-runtime/repository/inflight.h
+    transport-runtime/repository/json_repository.h
+    transport-runtime/repository/repository.h
+    transport-runtime/repository/repository_toolkit.h
+    transport-runtime/repository/repository_graphkit.h
+    transport-runtime/repository/repository_forward_declare.h
+    )
 
 set(TRANSPORT_RUNTIME_REPOSITORY_RECORDS_DETAIL_FILES
   transport-runtime/repository/records/detail/content_group_decl.h
@@ -901,6 +902,7 @@ set(TRANSPORT_RUNTIME_SQLITE3_OPERATIONS_FILES
   transport-runtime/sqlite3/operations/data_manager_pull.h
   transport-runtime/sqlite3/operations/data_manager_read.h
   transport-runtime/sqlite3/operations/data_manager_write.h
+  transport-runtime/sqlite3/operations/data_manager_finalize.h
   transport-runtime/sqlite3/operations/data_traits.h
   transport-runtime/sqlite3/operations/repository.h
   transport-runtime/sqlite3/operations/repository_admin.h
@@ -950,7 +952,7 @@ set(TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES
   transport-runtime/tasks/postintegration_detail/common.h
   transport-runtime/tasks/postintegration_detail/fNL_task.h
   transport-runtime/tasks/postintegration_detail/zeta_threepf_task.h
-  transport-runtime/tasks/postintegration_detail/zeta_twopf_list_task.h
+  transport-runtime/tasks/postintegration_detail/zeta_twopf_db_task.h
   transport-runtime/tasks/postintegration_detail/zeta_twopf_task.h
   )
 

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __zeta_threepf_line_H_
-#define __zeta_threepf_line_H_
+#ifndef CPPTRANSPORT_ZETA_THREEPF_LINE_H
+#define CPPTRANSPORT_ZETA_THREEPF_LINE_H
 
 
 #include <iostream>
@@ -93,7 +93,7 @@ namespace transport
             bool is_dimensionless() const { return(this->dimensionless); }
 
             //! set dimensionless
-            void set_dimensionless(bool g) { this->dimensionless = g; }
+            zeta_threepf_line<number>& set_dimensionless(bool g) { this->dimensionless = g; return *this; }
 
 
 		        // MANAGE LABEL OPTIONS
@@ -104,19 +104,19 @@ namespace transport
 		        bool get_use_kt_label() const { return(this->use_kt_label); }
 
 		        //! set k_t label setting
-		        void set_use_kt_label(bool g) { this->use_kt_label = g; }
+		        zeta_threepf_line<number>& set_use_kt_label(bool g) { this->use_kt_label = g; return *this; }
 
 		        //! get alpha label setting
 		        bool get_use_alpha_label() const { return(this->use_alpha_label); }
 
 		        //! set alpha label setting
-		        void set_use_alpha_label(bool g) { this->use_alpha_label = g; }
+		        zeta_threepf_line<number>& set_use_alpha_label(bool g) { this->use_alpha_label = g; return *this; }
 
 		        //! get beta label setting
 		        bool get_use_beta_label() const { return(this->use_beta_label); }
 
 		        //! set beta label setting
-		        void set_use_beta_label(bool g) { this->use_beta_label = g; }
+		        zeta_threepf_line<number>& set_use_beta_label(bool g) { this->use_beta_label = g; return *this; }
 
 
 		        // LABELLING SERVICES
@@ -229,4 +229,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_threepf_line_H_
+#endif //CPPTRANSPORT_ZETA_THREEPF_LINE_H

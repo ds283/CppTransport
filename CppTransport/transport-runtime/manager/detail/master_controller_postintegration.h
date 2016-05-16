@@ -74,6 +74,7 @@ namespace transport
               }
             else
               {
+                this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
                 this->schedule_postintegration(rec, z2pf, seeded, seed_group, tags, slave_work_event::event_type::begin_zeta_twopf_assignment, slave_work_event::event_type::end_zeta_twopf_assignment);
@@ -101,6 +102,7 @@ namespace transport
               }
             else
               {
+                this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
                 this->schedule_postintegration(rec, z3pf, seeded, seed_group, tags, slave_work_event::event_type::begin_zeta_threepf_assignment, slave_work_event::event_type::end_zeta_threepf_assignment);
@@ -118,6 +120,7 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
               }
 
+            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
             this->work_scheduler.set_state_size(sizeof(number));
             this->work_scheduler.prepare_queue(*ptk);
             this->schedule_postintegration(rec, zfNL, false, "", tags, slave_work_event::event_type::begin_fNL_assignment, slave_work_event::event_type::end_fNL_assignment);
@@ -128,6 +131,32 @@ namespace transport
             msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec.get_name() << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::validate_content_group(integration_task<number>* tk, const std::list<std::string>& tags)
+      {
+        assert(tk != nullptr);
+
+        integration_content_finder<number> finder(*this->repo);
+
+        // check whether finder can locate a suitable content group for this parent task;
+        // if not, an exception will be thrown which is caught back in the main task processing loop, so this task will be aborted
+        std::unique_ptr< content_group_record<integration_payload> > group = finder(tk->get_name(), tags);
+      }
+
+
+    template <typename number>
+    void master_controller<number>::validate_content_group(postintegration_task<number>* tk, const std::list<std::string>& tags)
+      {
+        assert(tk != nullptr);
+
+        postintegration_content_finder<number> finder(*this->repo);
+
+        // check whether finder can locate a suitable content group for this parent task;
+        // if not, an exception will be thrown which is caught back in the main task processing loop, so this task will be aborted
+        std::unique_ptr< content_group_record<postintegration_payload> > group = finder(tk->get_name(), tags);
       }
 
 
@@ -167,12 +196,8 @@ namespace transport
         // instruct workers to carry out the calculation
         bool success = this->postintegration_task_to_workers(*writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
 
+        // close the writer; performs integrity check and finalization step
         journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
-
-        // perform integrity check; updates writer with a valid list of missing serial numbers if needed
-        writer->check_integrity(tk);
-
-        // close the writer
         this->data_mgr->close_writer(*writer);
 
         // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
@@ -239,19 +264,9 @@ namespace transport
         // instruct workers to carry out the calculation
         bool success = this->paired_postintegration_task_to_workers(*i_writer, *p_writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
 
+        // close both writers; performs integrity check, synchronizes missing serial numbers and performs finalization step
         journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
-
-        // perform integrity check
-        // the integrity check updates each writer with a valid list of missing serial numbers, if needed
-        i_writer->check_integrity(ptk);
-        p_writer->check_integrity(tk);
-
-        // ensure missing serial numbers are synchronized
-        this->data_mgr->synchronize_missing_serials(*i_writer, *p_writer, ptk, tk);
-
-        // close both writers
-        this->data_mgr->close_writer(*i_writer);
-        this->data_mgr->close_writer(*p_writer);
+        this->data_mgr->close_writer(*i_writer, *p_writer);
 
         // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         // if the writers are not committed they automatically abort

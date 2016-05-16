@@ -81,7 +81,7 @@ namespace transport
           public:
 
 		        //! Basic user-facing constructor
-		        threepf_line(const threepf_task<number>& tk, index_selector<3>& sel);
+		        threepf_line(const threepf_task<number>& tk, index_selector<3> sel);
 
 		        //! Deserialization constructor
 		        threepf_line(Json::Value& reader, task_finder<number>& finder);
@@ -95,7 +95,7 @@ namespace transport
             bool is_dimensionless() const { return(this->dimensionless); }
 
             //! set dimensionless
-            void set_dimensionless(bool g) { this->dimensionless = g; }
+            threepf_line<number>& set_dimensionless(bool g) { this->dimensionless = g; return *this; }
 
 
             // MANAGE LABEL OPTIONS
@@ -106,19 +106,19 @@ namespace transport
             bool get_use_kt_label() const { return(this->use_kt_label); }
 
             //! set k_t label setting
-            void set_use_kt_label(bool g) { this->use_kt_label = g; }
+            threepf_line<number>& set_use_kt_label(bool g) { this->use_kt_label = g; return *this; }
 
             //! get alpha label setting
             bool get_use_alpha_label() const { return(this->use_alpha_label); }
 
             //! set alpha label setting
-            void set_use_alpha_label(bool g) { this->use_alpha_label = g; }
+            threepf_line<number>& set_use_alpha_label(bool g) { this->use_alpha_label = g; return *this; }
 
             //! get beta label setting
             bool get_use_beta_label() const { return(this->use_beta_label); }
 
             //! set beta label setting
-            void set_use_beta_label(bool g) { this->use_beta_label = g; }
+            threepf_line<number>& set_use_beta_label(bool g) { this->use_beta_label = g; return *this; }
 
 
 		        // LABELLING SERVICES
@@ -172,7 +172,7 @@ namespace transport
 
 
         template <typename number>
-        threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3>& sel)
+        threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3> sel)
 	        : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 	          gadget(tk),
 	          active_indices(sel),

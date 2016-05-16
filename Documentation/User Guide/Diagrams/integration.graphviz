@@ -1,0 +1,31 @@
+digraph
+  {
+
+    overlap=false;
+    bgcolor="transparent";
+
+    root [label="Content group name",shape=box,style="rounded,filled",fillcolor="#FFE0FF",fontname="Helvetica",fontsize=10];
+
+    db [label="data.sqlite",shape=box,style="rounded,filled",fillcolor="#D0D7F6",fontname="Helvetica",fontsize=10];
+    logs [label="logs",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10]
+    tempfiles [label="tempfiles",shape=box,style="rounded,filled",fillcolor="#F6E5C9",fontname="Helvetica",fontsize=10]
+
+    log0 [label="worker_0_000.log",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+    log1 [label="worker_1_000.log",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+    log2 [label="worker_2_000.log",shape=box,style="rounded,filled",fillcolor="#FFFEAD",fontname="helvetica",fontsize=10];
+
+    tempfile1 [label="worker_1_0.sqlite",shape=box,style="rounded,filled",fillcolor="#D0D7F6",fontname="helvetica",fontsize=10];
+    tempfile2 [label="worker_2_0.sqlite",shape=box,style="rounded,filled",fillcolor="#D0D7F6",fontname="helvetica",fontsize=10];
+
+    root -> db [dir=none];
+    root -> logs [dir=none];
+    root -> tempfiles [dir=none];
+
+    logs -> log0 [dir=none];
+    logs -> log1 [dir=none];
+    logs -> log2 [dir=none];
+
+    tempfiles -> tempfile1 [dir=none];
+    tempfiles -> tempfile2 [dir=none];
+
+  }

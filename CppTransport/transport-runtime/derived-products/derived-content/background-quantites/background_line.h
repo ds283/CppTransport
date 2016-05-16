@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __background_line_H_
-#define __background_line_H_
+#ifndef CPPTRANSPORT_BACKGROUND_LINE_H
+#define CPPTRANSPORT_BACKGROUND_LINE_H
 
 
 #include <iostream>
@@ -57,7 +57,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class background_line: public time_series<number>
 			    {
 
@@ -66,7 +66,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    background_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
+				    background_line(const twopf_db_task<number>& tk, SQL_time_query tq, background_quantity t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    background_line(Json::Value& reader, task_finder<number>& finder);
@@ -88,7 +88,7 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
 
             // INTERFACE
@@ -163,7 +163,7 @@ namespace transport
 		        integration_task_gadget<number> gadget;
 
 		        //! query object
-				    SQL_time_config_query tquery;
+				    SQL_time_query tquery;
 
 				    //! line type
             background_quantity type;
@@ -172,8 +172,8 @@ namespace transport
 
 
 				template <typename number>
-				background_line<number>::background_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+				background_line<number>::background_line(const twopf_db_task<number>& tk, SQL_time_query tq, background_quantity t, unsigned int prec)
+					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),
@@ -289,7 +289,7 @@ namespace transport
 				        line_data[j] = mdl->epsilon(this->gadget.get_integration_task()->get_params(), bg_data[j]);
 					    }
 
-            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
@@ -309,7 +309,7 @@ namespace transport
 		            line_data[j] = mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
-            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
@@ -334,7 +334,7 @@ namespace transport
 		            line_data[j] = a * mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
-            lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
@@ -413,4 +413,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__background_line_H_
+#endif //CPPTRANSPORT_BACKGROUND_LINE_H

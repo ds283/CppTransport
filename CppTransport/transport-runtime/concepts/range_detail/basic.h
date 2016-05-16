@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __range_stepping_H_
-#define __range_stepping_H_
+#ifndef CPPTRANSPORT_RANGE_STEPPING_H
+#define CPPTRANSPORT_RANGE_STEPPING_H
 
 
 #include "transport-runtime/concepts/range_detail/common.h"
@@ -45,11 +45,11 @@ namespace transport
 	{
 
 
-    enum class range_spacing_type { linear_stepping, logarithmic_bottom_stepping, logarithmic_top_stepping };
+    enum class spacing { linear, log_bottom, log_top };
 
 
-    template <typename value>
-    class stepping_range: public range<value>
+    template <typename value=double>
+    class basic_range: public range<value>
 	    {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -57,10 +57,10 @@ namespace transport
       public:
 
         //! Construct a range object with specified minimum & maximum values, number of steps and spacing type.
-        stepping_range(value mn, value mx, unsigned int st, range_spacing_type sp=range_spacing_type::linear_stepping);
+        basic_range(value mn, value mx, unsigned int st, spacing sp=spacing::linear);
 
         //! Deserialization constructor
-        stepping_range(Json::Value& reader);
+        basic_range(Json::Value& reader);
 
 
         // INTERFACE
@@ -80,10 +80,10 @@ namespace transport
         virtual unsigned int size()                  override       { return(this->grid.size()); }
 
         //! Get spacing type
-        range_spacing_type get_spacing_type()        const          { return(this->spacing); }
+        spacing get_spacing_type()                   const          { return(this->type); }
 
         //! Is a simple, linear range?
-        virtual bool is_simple_linear()              const override { return(this->spacing == range_spacing_type::linear_stepping); }
+        virtual bool is_simple_linear()              const override { return(this->type == spacing::linear); }
 
         //! Get grid of entries
         virtual const std::vector<value>& get_grid() override       { return(this->grid); }
@@ -112,7 +112,7 @@ namespace transport
 
       public:
 
-        virtual stepping_range<value>* clone() const override { return new stepping_range<value>(dynamic_cast<const stepping_range<value>&>(*this)); }
+        virtual basic_range<value>* clone() const override { return new basic_range<value>(dynamic_cast<const basic_range<value>&>(*this)); }
 
 
         // SERIALIZATION INTERFACE -- implements a 'serializable' interface
@@ -145,7 +145,7 @@ namespace transport
         unsigned int steps;
 
         //! Spacing type
-        range_spacing_type spacing;
+        spacing type;
 
         //! Grid of values
         std::vector<value> grid;
@@ -154,15 +154,15 @@ namespace transport
 
 
     template <typename value>
-    stepping_range<value>::stepping_range(value mn, value mx, unsigned int st, range_spacing_type sp)
-	    : min(mn), max(mx), steps(st), spacing(sp)
+    basic_range<value>::basic_range(value mn, value mx, unsigned int st, spacing sp)
+	    : min(mn), max(mx), steps(st), type(sp)
 	    {
         this->populate_grid();
 	    }
 
 
     template <typename value>
-    stepping_range<value>::stepping_range(Json::Value& reader)
+    basic_range<value>::basic_range(Json::Value& reader)
 	    {
         double m = reader[CPPTRANSPORT_NODE_MIN].asDouble();
         min = static_cast<value>(m);
@@ -174,9 +174,9 @@ namespace transport
 
         std::string spc_string = reader[CPPTRANSPORT_NODE_SPACING].asString();
 
-        if(spc_string == CPPTRANSPORT_VALUE_LINEAR)                  spacing = range_spacing_type::linear_stepping;
-        else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_BOTTOM) spacing = range_spacing_type::logarithmic_bottom_stepping;
-        else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_TOP)    spacing = range_spacing_type::logarithmic_top_stepping;
+        if(spc_string == CPPTRANSPORT_VALUE_LINEAR)                  type = spacing::linear;
+        else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_BOTTOM) type = spacing::log_bottom;
+        else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_TOP)    type = spacing::log_top;
         else throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_BADLY_FORMED_RANGE);
 
         this->populate_grid();
@@ -184,7 +184,7 @@ namespace transport
 
 
     template <typename value>
-    value stepping_range<value>::operator[](unsigned int d)
+    value basic_range<value>::operator[](unsigned int d)
 	    {
         assert(d < this->grid.size());
         if(d < this->grid.size())
@@ -199,22 +199,22 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::populate_grid(void)
+    void basic_range<value>::populate_grid(void)
 	    {
         this->grid.clear();
         this->grid.reserve(this->steps+1);
 
-        switch(this->spacing)
+        switch(this->type)
 	        {
-            case range_spacing_type::linear_stepping:
+            case spacing::linear:
               this->populate_linear_grid();
 	            break;
 
-            case range_spacing_type::logarithmic_bottom_stepping:
+            case spacing::log_bottom:
 	            this->populate_log_bottom_grid();
               break;
 
-            case range_spacing_type::logarithmic_top_stepping:
+            case spacing::log_top:
               this->populate_log_top_grid();
               break;
 	        }
@@ -227,7 +227,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::populate_linear_grid(void)
+    void basic_range<value>::populate_linear_grid(void)
       {
         if(this->steps == 0)
           {
@@ -245,7 +245,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::populate_log_bottom_grid(void)
+    void basic_range<value>::populate_log_bottom_grid(void)
       {
         if(this->steps == 0)
           {
@@ -279,7 +279,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::populate_log_top_grid(void)
+    void basic_range<value>::populate_log_top_grid(void)
       {
         if(this->steps == 0)
           {
@@ -310,7 +310,7 @@ namespace transport
 
 
     template <typename value>
-    void stepping_range<value>::serialize(Json::Value& writer) const
+    void basic_range<value>::serialize(Json::Value& writer) const
 	    {
         writer[CPPTRANSPORT_NODE_RANGE_TYPE] = std::string(CPPTRANSPORT_NODE_RANGE_STEPPING);
 
@@ -318,17 +318,17 @@ namespace transport
         writer[CPPTRANSPORT_NODE_MAX]   = static_cast<double>(this->max);
         writer[CPPTRANSPORT_NODE_STEPS] = this->steps;
 
-        switch(this->spacing)
+        switch(this->type)
 	        {
-            case range_spacing_type::linear_stepping:
+            case spacing::linear:
 	            writer[CPPTRANSPORT_NODE_SPACING] = std::string(CPPTRANSPORT_VALUE_LINEAR);
 	            break;
 
-            case range_spacing_type::logarithmic_bottom_stepping:
+            case spacing::log_bottom:
 	            writer[CPPTRANSPORT_NODE_SPACING] = std::string(CPPTRANSPORT_VALUE_LOGARITHMIC_BOTTOM);
               break;
 
-            case range_spacing_type::logarithmic_top_stepping:
+            case spacing::log_top:
 	            writer[CPPTRANSPORT_NODE_SPACING] = std::string(CPPTRANSPORT_VALUE_LOGARITHMIC_TOP);
               break;
 	        }
@@ -337,15 +337,15 @@ namespace transport
 
     template <typename value>
     template <typename Stream>
-    void stepping_range<value>::write(Stream& out)
+    void basic_range<value>::write(Stream& out)
       {
         out << CPPTRANSPORT_STEPPING_RANGE_A << this->get_steps() << CPPTRANSPORT_STEPPING_RANGE_B;
 
-        range_spacing_type type = this->get_spacing_type();
+        spacing type = this->get_spacing_type();
 
-        if(type == range_spacing_type::linear_stepping)                  out << CPPTRANSPORT_STEPPING_RANGE_LINEAR;
-        else if(type == range_spacing_type::logarithmic_bottom_stepping) out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
-        else if(type == range_spacing_type::logarithmic_top_stepping)    out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
+        if(type == spacing::linear)                  out << CPPTRANSPORT_STEPPING_RANGE_LINEAR;
+        else if(type == spacing::log_bottom) out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
+        else if(type == spacing::log_top)    out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
 
         out << CPPTRANSPORT_STEPPING_RANGE_C << this->get_min() << ", " << CPPTRANSPORT_STEPPING_RANGE_D << this->get_max() << '\n';
 
@@ -358,22 +358,22 @@ namespace transport
           }
       }
 
-    // can't make stepping_range as const since some methods, eg. get_steps(), get_grid() are not marked const
-    // (for the benefit of aggregation_range, where lazy evaluation of the grid means these methods
+    // can't make basic_range as const since some methods, eg. get_steps(), get_grid() are not marked const
+    // (for the benefit of aggregate_range, where lazy evaluation of the grid means these methods
     // sometimes need to modify the internal state)
     template <typename value, typename Char, typename Traits>
-    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, stepping_range<value>& obj)
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, basic_range<value>& obj)
 	    {
         obj.write(out);
         return(out);
 	    }
 
 
-    // can't make stepping_range as const since some methods, eg. get_steps(), get_grid() are not marked const
-    // (for the benefit of aggregation_range, where lazy evaluation of the grid means these methods
+    // can't make basic_range as const since some methods, eg. get_steps(), get_grid() are not marked const
+    // (for the benefit of aggregate_range, where lazy evaluation of the grid means these methods
     // sometimes need to modify the internal state)
     template <typename value, typename Char, typename Traits, typename Allocator>
-    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, stepping_range<value>& obj)
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, basic_range<value>& obj)
       {
         obj.write(out);
         return(out);
@@ -382,4 +382,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__range_stepping_H_
+#endif //CPPTRANSPORT_RANGE_STEPPING_H

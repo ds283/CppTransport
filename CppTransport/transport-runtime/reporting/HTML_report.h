@@ -310,15 +310,15 @@ namespace transport
 
             //! write details for an SQL time configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& query, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_query& query, HTML_node& parent);
 
             //! write details for an SQL twopf momentum-configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& query, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_query& query, HTML_node& parent);
 
             //! write details for an SQL threepf momentum-configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& query, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_query& query, HTML_node& parent);
 
 
             // SPECIFIC LINES
@@ -2974,21 +2974,21 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& query, HTML_node& parent)
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_query& query, HTML_node& parent)
           {
             this->write_SQL_panel("SQL query for time sample points", query.get_query_string(), parent);
           }
 
 
         template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& query, HTML_node& parent)
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_query& query, HTML_node& parent)
           {
             this->write_SQL_panel("SQL query for 2-point function momentum-configuration points", query.get_query_string(), parent);
           }
 
 
         template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& query, HTML_node& parent)
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_query& query, HTML_node& parent)
           {
             this->write_SQL_panel("SQL query for 3-point function momentum-configuration sample points", query.get_query_string(), parent);
           }
@@ -3899,42 +3899,101 @@ namespace transport
             out << "plt.figure()" << '\n';
 
             unsigned count = 0;
-            out << "x = [ ";
+            double xmin = std::numeric_limits<double>::max();
+            double xmax = std::numeric_limits<double>::min();
+            out << "x = np.array([ ";
             for(const std::tuple<double, double, double>& item : dataset)
               {
                 if(count > 0) out << ", ";
-                out << format_number(std::get<0>(item));
+
+                double x = std::get<0>(item);
+                if(x > xmax) xmax = x;
+                if(x < xmin) xmin = x;
+
+                out << format_number(x);
                 ++count;
               }
-            out << " ]" << '\n';
+            out << " ])" << '\n';
 
             count = 0;
-            out << "y = [ ";
+            double ymin = std::numeric_limits<double>::max();
+            double ymax = std::numeric_limits<double>::min();
+            out << "y = np.array([ ";
             for(const std::tuple<double, double, double>& item : dataset)
               {
                 if(count > 0) out << ", ";
-                out << format_number(std::get<1>(item));
+
+                double y = std::get<1>(item);
+                if(y > ymax) ymax = y;
+                if(y < ymin) ymin = y;
+
+                out << format_number(y);
                 ++count;
               }
-            out << " ]" << '\n';
+            out << " ])" << '\n';
 
             count = 0;
-            out << "colours = [ ";
+            double col_min = std::numeric_limits<double>::max();
+            double col_max = std::numeric_limits<double>::min();
+            out << "colours = np.array([ ";
             for(const std::tuple<double, double, double>& item : dataset)
               {
                 if(count > 0) out << ", ";
-                out << format_number(std::get<2>(item));
+
+                double col = std::get<2>(item);
+                if(col > col_max) col_max = col;
+                if(col < col_min) col_min = col;
+
+                out << format_number(col);
                 ++count;
               }
-            out << " ]" << '\n';
+            out << " ])" << '\n';
 
             out << "colour_map = plt.get_cmap('autumn')" << '\n';
             out << "plt.scatter(x, y, marker='o', c=colours, cmap=colour_map, norm=col.LogNorm())" << '\n';
             out << "plt.colorbar(cmap=colour_map, label=r'" << colour_label << "')" << '\n';
-            if(xlog) out << "plt.xscale('log')" << '\n';
-            if(ylog) out << "plt.yscale('log')" << '\n';
+
+            if(xlog)
+              {
+                out << "plt.xscale('log')" << '\n';
+
+                int max_point = static_cast<int>(std::ceil(std::log10(xmax)));
+                int min_point = static_cast<int>(std::floor(std::log10(xmin)));
+
+                out << "plt.xlim(1E" << min_point << ", 1E" << max_point << ")" << '\n';
+              }
+            else
+              {
+                // allow 5% padding at top and bottom
+                double span = xmax - xmin;
+
+                double lim_min = xmin - 0.05*span;
+                double lim_max = xmax + 0.05*span;
+                out << "plt.xlim(" << lim_min << ", " << lim_max << ")" << '\n';
+              }
+
+            if(ylog)
+              {
+                out << "plt.yscale('log')" << '\n';
+
+                int max_point = static_cast<int>(std::ceil(std::log10(ymax)));
+                int min_point = static_cast<int>(std::floor(std::log10(ymin)));
+
+                out << "plt.ylim(1E" << min_point << ", 1E" << max_point << ")" << '\n';
+              }
+            else
+              {
+                // allow 5% padding at top and bottom
+                double span = ymax - ymin;
+
+                double lim_min = ymin - 0.05*span;
+                double lim_max = ymax + 0.05*span;
+                out << "plt.ylim(" << lim_min << "*, " << lim_max << ")" << '\n';
+              }
+
             if(!xlabel.empty()) out << "plt.xlabel(r'" << xlabel << "')" << '\n';
             if(!ylabel.empty()) out << "plt.ylabel(r'" << ylabel << "')" << '\n';
+
             out << "plt.savefig('" << image_path.string() << "')" << '\n';
             out << "plt.close()" << '\n';
 

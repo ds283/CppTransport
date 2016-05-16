@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __SQL_query_H_
-#define __SQL_query_H_
+#ifndef CPPTRANSPORT_SQL_QUERY_H
+#define CPPTRANSPORT_SQL_QUERY_H
 
 
 #define CPPTRANSPORT_NODE_SQL_QUERY_TYPE "sql-query-type"
@@ -37,4 +37,4 @@
 #include "transport-runtime/derived-products/derived-content/SQL_query/detail/SQL_threepf_query.h"
 
 
-#endif //__SQL_query_H_
+#endif //CPPTRANSPORT_SQL_QUERY_H

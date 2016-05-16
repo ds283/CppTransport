@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __work_queue_H_
-#define __work_queue_H_
+#ifndef CPPTRANSPORT_WORK_QUEUE_H
+#define CPPTRANSPORT_WORK_QUEUE_H
 
 
 #include <iostream>
@@ -348,4 +348,4 @@ namespace transport
 
 
 
-#endif //__work_queue_H_
+#endif //CPPTRANSPORT_WORK_QUEUE_H

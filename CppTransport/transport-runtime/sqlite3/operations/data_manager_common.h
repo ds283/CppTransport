@@ -54,50 +54,72 @@
 #include "transport-runtime/sqlite3/operations/sqlite3_utility.h"
 
 
-#define CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE                   "time_samples"
-#define CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE                  "twopf_samples"
-#define CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE                "threepf_samples"
-#define CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE                   "backg"
-#define CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE            "tensor_twopf"
-#define CPPTRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE                "twopf_re"
-#define CPPTRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE                "twopf_im"
-#define CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_VALUE_TABLE        "threepf_momentum"
-#define CPPTRANSPORT_SQLITE_THREEPF_DERIV_VALUE_TABLE           "threepf_deriv"
-#define CPPTRANSPORT_SQLITE_WORKERS_TABLE                       "worker_data"
-#define CPPTRANSPORT_SQLITE_STATS_TABLE                         "integration_statistics"
-#define CPPTRANSPORT_SQLITE_ICS_TABLE                           "horizon_exit_values"
-#define CPPTRANSPORT_SQLITE_KT_ICS_TABLE                        "kt_horizon_exit_values"
-#define CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE              "zeta_twopf"
-#define CPPTRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE            "zeta_threepf"
-#define CPPTRANSPORT_SQLITE_GAUGE_XFM1_VALUE_TABLE              "gauge_xfm1"
-#define CPPTRANSPORT_SQLITE_GAUGE_XFM2_123_VALUE_TABLE          "gauge_xfm2_123"
-#define CPPTRANSPORT_SQLITE_GAUGE_XFM2_213_VALUE_TABLE          "gauge_xfm2_213"
-#define CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_VALUE_TABLE          "gauge_xfm2_312"
-#define CPPTRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE               "fNL_local"
-#define CPPTRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE                "fNL_equi"
-#define CPPTRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE               "fNL_ortho"
-#define CPPTRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE                 "fNL_DBI"
-
-#define CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE                      "fNL_update"
-#define CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE                    "fNL_insert"
-
-#define CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME                    "tempdb"
-
-// sqlite defaults to a maximum number of columns of 2000
-#define CPPTRANSPORT_DEFAULT_SQLITE_MAX_COLUMN                  2000
-// sqlite defaults to a maximum number of host parameters of 999
-#define CPPTRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER         999
-
-// overhead on number of columns per page
-// 50 is extremely conservative
-#define CPPTRANSPORT_DEFAULT_SQLITE_COLUMN_OVERHEAD             50
-
-
 namespace transport
   {
 
     namespace sqlite3_operations
       {
+
+        constexpr auto CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE                   = "time_samples";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE                  = "twopf_samples";
+        constexpr auto CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE                = "threepf_samples";
+        constexpr auto CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE                   = "backg";
+        constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE            = "tensor_twopf";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE                = "twopf_re";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE                = "twopf_im";
+        constexpr auto CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_VALUE_TABLE        = "threepf_momentum";
+        constexpr auto CPPTRANSPORT_SQLITE_THREEPF_DERIV_VALUE_TABLE           = "threepf_deriv";
+        constexpr auto CPPTRANSPORT_SQLITE_WORKERS_TABLE                       = "worker_data";
+        constexpr auto CPPTRANSPORT_SQLITE_STATS_TABLE                         = "integration_statistics";
+        constexpr auto CPPTRANSPORT_SQLITE_ICS_TABLE                           = "horizon_exit_values";
+        constexpr auto CPPTRANSPORT_SQLITE_KT_ICS_TABLE                        = "kt_horizon_exit_values";
+        constexpr auto CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE              = "zeta_twopf";
+        constexpr auto CPPTRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE            = "zeta_threepf";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM1_VALUE_TABLE              = "gauge_xfm1";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_123_VALUE_TABLE          = "gauge_xfm2_123";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_213_VALUE_TABLE          = "gauge_xfm2_213";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_VALUE_TABLE          = "gauge_xfm2_312";
+        constexpr auto CPPTRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE               = "fNL_local";
+        constexpr auto CPPTRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE                = "fNL_equi";
+        constexpr auto CPPTRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE               = "fNL_ortho";
+        constexpr auto CPPTRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE                 = "fNL_DBI";
+
+        constexpr auto CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE                      = "fNL_update";
+        constexpr auto CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE                    = "fNL_insert";
+
+        constexpr auto CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME                    = "tempdb";
+
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_RE_TIME_INDEX                 = "twopf_re_time";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_RE_K_INDEX                    = "twopf_re_k";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_IM_TIME_INDEX                 = "twopf_im_time";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_IM_K_INDEX                    = "twopf_im_k";
+        constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_TIME_INDEX             = "tensor_twopf_time";
+        constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_K_INDEX                = "tensor_twopf_k";
+        constexpr auto CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_TIME_INDEX         = "threepf_momentum_time";
+        constexpr auto CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_K_INDEX            = "threepf_momentum_k";
+        constexpr auto CPPTRANSPORT_SQLITE_THREEPF_DERIV_TIME_INDEX            = "threepf_deriv_time";
+        constexpr auto CPPTRANSPORT_SQLITE_THREEPF_DERIV_K_INDEX               = "threepf_deriv_k";
+        constexpr auto CPPTRANSPORT_SQLITE_ZETA_TWOPF_TIME_INDEX               = "zeta_twopf_time";
+        constexpr auto CPPTRANSPORT_SQLITE_ZETA_TWOPF_K_INDEX                  = "zeta_twopf_k";
+        constexpr auto CPPTRANSPORT_SQLITE_ZETA_THREEPF_TIME_INDEX             = "zeta_threepf_time";
+        constexpr auto CPPTRANSPORT_SQLITE_ZETA_THREEPF_K_INDEX                = "zeta_threepf_k";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM1_TIME_INDEX               = "gauge_xfm1_time";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM1_K_INDEX                  = "gauge_xfm1_k";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_123_TIME_INDEX           = "gauge_xfm2_123_time";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_123_K_INDEX              = "gauge_xfm2_123_k";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_213_TIME_INDEX           = "gauge_xfm2_213_time";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_213_K_INDEX              = "gauge_xfm2_213_k";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_TIME_INDEX           = "gauge_xfm2_312_time";
+        constexpr auto CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_K_INDEX              = "gauge_xfm2_312_k";
+
+        // sqlite defaults to a maximum number of columns of 2000
+        constexpr unsigned int CPPTRANSPORT_DEFAULT_SQLITE_MAX_COLUMN          = 2000;
+        // sqlite defaults to a maximum number of host parameters of 999
+        constexpr unsigned int CPPTRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER = 999;
+
+        // overhead on number of columns per page
+        // 50 is extremely conservative
+        constexpr unsigned int CPPTRANSPORT_DEFAULT_SQLITE_COLUMN_OVERHEAD     = 50;
 
         enum class foreign_keys_type { foreign_keys, no_foreign_keys };
 
@@ -112,20 +134,20 @@ namespace transport
 
 
         // construct the name of an fNL table
-        inline std::string fNL_table_name(derived_data::template_type type)
+        inline std::string fNL_table_name(derived_data::bispectrum_template type)
           {
             switch(type)
               {
-                case derived_data::template_type::fNL_local_template:
+                case derived_data::bispectrum_template::local:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE);
 
-                case derived_data::template_type::fNL_equi_template:
+                case derived_data::bispectrum_template::equilateral:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE);
 
-                case derived_data::template_type::fNL_ortho_template:
+                case derived_data::bispectrum_template::orthogonal:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE);
 
-                case derived_data::template_type::fNL_DBI_template:
+                case derived_data::bispectrum_template::DBI:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE);
               }
           }

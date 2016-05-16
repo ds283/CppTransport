@@ -129,7 +129,7 @@ namespace transport
 
 
         void generic_store_group(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename,
-                                 const std::string& task, const std::string table)
+                                 const std::string& task, const boost::posix_time::ptime& posix_time, const std::string table)
           {
             unsigned int count = internal_count(db, name, CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
             if(count != 1)
@@ -140,7 +140,7 @@ namespace transport
               }
 
             std::ostringstream store_stmt;
-            store_stmt << "INSERT INTO " << table << " VALUES (@name, @task, @path)";
+            store_stmt << "INSERT INTO " << table << " VALUES (@name, @task, @path, @posix_time)";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -148,6 +148,9 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@task"), task.c_str(), task.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
+
+            std::string posix_time_string = boost::posix_time::to_iso_string(posix_time);
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@posix_time"), posix_time_string.c_str(), posix_time_string.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_OUTPUT_FAIL, SQLITE_DONE);
 
@@ -157,27 +160,31 @@ namespace transport
 
 
         template <typename Payload>
-        void store_group(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& task);
+        void store_group(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename,
+                         const std::string& task, const boost::posix_time::ptime& posix_time);
 
 
         template <>
-        void store_group<integration_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& task)
+        void store_group<integration_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename,
+                                              const std::string& task, const boost::posix_time::ptime& posix_time)
           {
-            generic_store_group(mgr, db, name, filename, task, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE);
+            generic_store_group(mgr, db, name, filename, task, posix_time, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE);
           }
 
 
         template <>
-        void store_group<postintegration_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& task)
+        void store_group<postintegration_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename,
+                                                  const std::string& task, const boost::posix_time::ptime& posix_time)
           {
-            generic_store_group(mgr, db, name, filename, task, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE);
+            generic_store_group(mgr, db, name, filename, task, posix_time, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE);
           }
 
 
         template <>
-        void store_group<output_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& task)
+        void store_group<output_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename,
+                                         const std::string& task, const boost::posix_time::ptime& posix_time)
           {
-            generic_store_group(mgr, db, name, filename, task, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE);
+            generic_store_group(mgr, db, name, filename, task, posix_time, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE);
           }
 
       }   // namespace sqlite3_operations

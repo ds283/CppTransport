@@ -27,9 +27,6 @@
 #define CPPTRANSPORT_REPOSITORY_SQLITE3_DECL_H
 
 
-#include "transport-runtime/sqlite3/detail/repository_sqlite3_decl.h"
-
-
 namespace transport
   {
 
@@ -49,7 +46,7 @@ namespace transport
     //! libjsoncpp and sqlite3 as the database backend.
     //! This implementation replaces two previous ones, the first
     //! using Oracle DBXML and the second using UnQLite.
-    template <typename number>
+    template <typename number=default_number_type>
     class repository_sqlite3: public json_repository<number>
       {
 
@@ -397,25 +394,25 @@ namespace transport
         virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod, transaction_manager& mgr) override;
 
         //! Create a new content group for an integration task
-        virtual std::unique_ptr< content_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                     bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                                                                                     transaction_manager& mgr) override;
+        virtual std::unique_ptr< content_group_record<integration_payload> > integration_content_group_record_factory(integration_writer<number>& writer,
+                                                                                                                      bool lock, const std::list<note>& nt,
+                                                                                                                      transaction_manager& mgr) override;
 
         //! Create a new content group for a postintegration task
-        virtual std::unique_ptr< content_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                             bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                                                                                             transaction_manager& mgr) override;
+        virtual std::unique_ptr< content_group_record<postintegration_payload> > postintegration_content_group_record_factory(postintegration_writer<number>& writer,
+                                                                                                                              bool lock, const std::list<note>& nt,
+                                                                                                                              transaction_manager& mgr) override;
 
         //! Create a new content group for an output task
-        virtual std::unique_ptr< content_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                           bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                                                                           transaction_manager& mgr) override;
+        virtual std::unique_ptr< content_group_record<output_payload> > output_content_group_record_factory(derived_content_writer<number>& writer,
+                                                                                                            bool lock, const std::list<note>& nt,
+                                                                                                            transaction_manager& mgr) override;
 
         //! Implementation -- Create a new content group record
-        template <typename Payload>
-        std::unique_ptr< content_group_record<Payload> > content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                     bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                                                     transaction_manager& mgr);
+        template <typename Payload, typename WriterObject>
+        std::unique_ptr< content_group_record<Payload> > content_group_record_factory(WriterObject& writer,
+                                                                                      bool lock, const std::list<note>& notes,
+                                                                                      transaction_manager& mgr);
 
         // 2. Factories from JSON representations: these are needed as part of the 'json_repository<>' interface
 

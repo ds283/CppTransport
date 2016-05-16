@@ -424,7 +424,7 @@ namespace transport
                 if(check_match(record.get_name(), item.first, true))    // true = insist on exact match
                   {
                     item.second = true;   // mark as a match for this item
-                    std::unique_ptr< std::list<std::string> > dependent_groups = dmat->find_dependent_objects(record.get_name());
+                    std::unique_ptr< std::set<std::string> > dependent_groups = dmat->find_dependent_objects(record.get_name());
 
                     if(dependent_groups)
                       {

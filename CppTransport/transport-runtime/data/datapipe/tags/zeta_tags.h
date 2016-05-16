@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __zeta_tags_H_
-#define __zeta_tags_H_
+#ifndef CPPTRANSPORT_ZETA_TAGS_H
+#define CPPTRANSPORT_ZETA_TAGS_H
 
 
 #include <vector>
@@ -557,4 +557,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_tags_H_
+#endif //CPPTRANSPORT_ZETA_TAGS_H

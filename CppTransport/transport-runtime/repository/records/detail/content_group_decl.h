@@ -674,8 +674,8 @@ namespace transport
         //! Remove tag
         void remove_tag(const std::string& tag);
 
-        //! Check whether we match a set of tags
-        bool check_tags(std::list<std::string> match_tags) const;
+        //! Check whether we match a set of tags; returns true if so, false otherwise
+        bool check_tags(const std::list<std::string>& match_tags) const;
 
 
         // ABSOLUTE PATHS

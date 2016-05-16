@@ -194,9 +194,11 @@ namespace transport
               {
                 std::unique_ptr<sqlite3_twopf_writer_aggregate<number> > aggregate = std::make_unique<sqlite3_twopf_writer_aggregate<number> >(*this);
                 std::unique_ptr<sqlite3_twopf_writer_integrity<number> > integrity = std::make_unique<sqlite3_twopf_writer_integrity<number> >(*this);
+                std::unique_ptr<sqlite3_twopf_writer_finalize<number> >  finalize  = std::make_unique<sqlite3_twopf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
                 break;
               }
 
@@ -204,9 +206,11 @@ namespace transport
               {
                 std::unique_ptr<sqlite3_threepf_writer_aggregate<number> > aggregate = std::make_unique<sqlite3_threepf_writer_aggregate<number> >(*this);
                 std::unique_ptr<sqlite3_threepf_writer_integrity<number> > integrity = std::make_unique<sqlite3_threepf_writer_integrity<number> >(*this);
+                std::unique_ptr<sqlite3_threepf_writer_finalize<number> >  finalize  = std::make_unique<sqlite3_threepf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
                 break;
               }
           }
@@ -217,30 +221,13 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::close_writer(integration_writer<number>& writer)
       {
-        // close sqlite3 handle to principal database
-        sqlite3* db = nullptr;
-        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
+        writer.check_integrity();
 
-        // vacuum the database if it is sufficiently small
-        if(boost::filesystem::file_size(writer.get_abs_container_path()) < CPPTRANSPORT_MAX_VACUUMABLE_SIZE)
-          {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
-            boost::timer::cpu_timer timer;
-            char* errmsg;
-            sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
-            timer.stop();
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
-          }
-        else
-          {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '" << writer.get_abs_container_path().string() << "' of size " << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path()))) << " is very large; automatic maintenance disabled";
-          }
+        // perform any finalization step
+        writer.finalize();
 
-        this->open_containers.remove(db);
-        sqlite3_close(db);
-
-        // physically remove the tempfiles directory
-        boost::filesystem::remove_all(writer.get_abs_tempdir_path());
+        this->close_writer_handle(writer);
       }
 
 
@@ -314,9 +301,11 @@ namespace transport
               {
                 std::unique_ptr< sqlite3_zeta_twopf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_twopf_writer_aggregate<number> >(*this);
                 std::unique_ptr< sqlite3_zeta_twopf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_twopf_writer_integrity<number> >(*this);
+                std::unique_ptr< sqlite3_zeta_twopf_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_zeta_twopf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
 
                 writer.get_products().add_zeta_twopf();
                 break;
@@ -326,9 +315,11 @@ namespace transport
               {
                 std::unique_ptr< sqlite3_zeta_threepf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_threepf_writer_aggregate<number> >(*this);
                 std::unique_ptr< sqlite3_zeta_threepf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_threepf_writer_integrity<number> >(*this);
+                std::unique_ptr< sqlite3_zeta_threepf_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_zeta_threepf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
 
                 writer.get_products().add_zeta_twopf();
                 writer.get_products().add_zeta_threepf();
@@ -342,30 +333,33 @@ namespace transport
 
                 std::unique_ptr< sqlite3_fNL_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_fNL_writer_aggregate<number> >(*this, ztk.get_template());
                 std::unique_ptr< sqlite3_fNL_writer_integrity<number> > integrity = std::make_unique< sqlite3_fNL_writer_integrity<number> >(*this);
+                std::unique_ptr< sqlite3_fNL_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_fNL_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
+                writer.set_finalize_handler(std::move(finalize));
+
                 switch(ztk.get_template())
                   {
-                    case derived_data::template_type::fNL_local_template:
+                    case derived_data::bispectrum_template::local:
                       {
                         writer.get_products().add_fNL_local();
                         break;
                       }
 
-                    case derived_data::template_type::fNL_equi_template:
+                    case derived_data::bispectrum_template::equilateral:
                       {
                         writer.get_products().add_fNL_equi();
                         break;
                       }
 
-                    case derived_data::template_type::fNL_ortho_template:
+                    case derived_data::bispectrum_template::orthogonal:
                       {
                         writer.get_products().add_fNL_ortho();
                         break;
                       }
 
-                    case derived_data::template_type::fNL_DBI_template:
+                    case derived_data::bispectrum_template::DBI:
                       {
                         writer.get_products().add_fNL_DBI();
                         break;
@@ -381,6 +375,40 @@ namespace transport
     // Close a postintegration_writer object
     template <typename number>
     void data_manager_sqlite3<number>::close_writer(postintegration_writer<number>& writer)
+      {
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
+        writer.check_integrity();
+
+        // perform any finalization step
+        writer.finalize();
+
+        this->close_writer_handle(writer);
+      }
+
+
+    // Close a pair of integration_writer, postintegration_writer objects
+    template <typename number>
+    void data_manager_sqlite3<number>::close_writer(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer)
+      {
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
+        i_writer.check_integrity();
+        p_writer.check_integrity();
+
+        // synchronize any missing serial numbers between containers
+        this->synchronize_missing_serials(i_writer, p_writer);
+
+        // perform finalization step
+        i_writer.finalize();
+        p_writer.finalize();
+
+        this->close_writer_handle(i_writer);
+        this->close_writer_handle(p_writer);
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    void data_manager_sqlite3<number>::close_writer_handle(WriterObject& writer)
       {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -398,7 +426,10 @@ namespace transport
           }
         else
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '" << writer.get_abs_container_path().string() << "' of size " << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path()))) << " is very large; automatic maintenance disabled";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '"
+                                                                                     << writer.get_abs_container_path().string() << "' of size "
+                                                                                     << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path())))
+                                                                                     << " is very large; automatic maintenance disabled";
           }
 
         this->open_containers.remove(db);
@@ -913,7 +944,7 @@ namespace transport
     template <typename number>
     fNL_batcher<number>
     data_manager_sqlite3<number>::create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
-                                                            model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher, derived_data::template_type type)
+                                                            model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher, derived_data::bispectrum_template type)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
         boost::filesystem::path lockfile = this->generate_lockfile_path(tempdir, worker);
@@ -946,7 +977,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::template_type type)
+    void data_manager_sqlite3<number>::make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::bispectrum_template type)
       {
         sqlite3_operations::create_fNL_table(mgr, db, type, sqlite3_operations::foreign_keys_type::no_foreign_keys);
       }
@@ -1097,7 +1128,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::template_type type,
+    void data_manager_sqlite3<number>::replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::bispectrum_template type,
                                                                   generic_batcher& batcher, replacement_action action)
       {
         sqlite3* db = nullptr;
@@ -1229,7 +1260,7 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type)
+    bool data_manager_sqlite3<number>::aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::bispectrum_template type)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -1407,143 +1438,198 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                                    const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+                                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                    const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                                    const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+                                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                    const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_im_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                                        const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+                                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                        const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::tensor_twopf_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer,
-                                                                            const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+                                                                            const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                            const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_momentum_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer,
-                                                                         const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+                                                                         const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                         const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_Nderiv_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                                      const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+                                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                      const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                                        const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+                                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                        const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                                      const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase)
+                                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                      const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::gauge_xfm1_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                                          const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+                                                                          const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                          const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::gauge_xfm2_123_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                                          const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+                                                                          const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                          const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::gauge_xfm2_213_item>::sqlite_table());
       }
 
 
     template <typename number>
     void data_manager_sqlite3<number>::drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                                          const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase)
+                                                                          const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                                          const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_k_configurations(mgr, db, writer, serials, dbase,
+        // only drop those serials that are actually missing (otherwise DELETE is expensive)
+        std::set<unsigned int> drop_list;
+        std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::gauge_xfm2_312_item>::sqlite_table());
       }
 
@@ -1556,7 +1642,11 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_statistics(mgr, db, serials, dbase);
+        std::set<unsigned int> present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::configuration_statistics>(db);
+        std::set<unsigned int> drop_list;
+        std::set_intersection(serials.begin(), serials.end(), present.begin(), present.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_statistics(mgr, db, drop_list, dbase);
       }
 
 
@@ -1568,7 +1658,11 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_statistics(mgr, db, serials, dbase);
+        std::set<unsigned int> present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::configuration_statistics>(db);
+        std::set<unsigned int> drop_list;
+        std::set_intersection(serials.begin(), serials.end(), present.begin(), present.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_statistics(mgr, db, drop_list, dbase);
       }
 
 
@@ -1580,7 +1674,11 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(mgr, db, serials, dbase);
+        std::set<unsigned int> present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_item>(db);
+        std::set<unsigned int> drop_list;
+        std::set_intersection(serials.begin(), serials.end(), present.begin(), present.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(mgr, db, drop_list, dbase);
       }
 
 
@@ -1592,8 +1690,125 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(mgr, db, serials, dbase);
-        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(mgr, db, serials, dbase);
+        std::set<unsigned int> present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_item>(db);
+        std::set<unsigned int> drop_list;
+        std::set_intersection(serials.begin(), serials.end(), present.begin(), present.end(), std::inserter(drop_list, drop_list.begin()));
+
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(mgr, db, drop_list, dbase);
+
+        std::set<unsigned int> kt_present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_kt_item>(db);
+        std::set<unsigned int> kt_drop_list;
+        std::set_intersection(serials.begin(), serials.end(), kt_present.begin(), kt_present.end(), std::inserter(kt_drop_list, kt_drop_list.begin()));
+
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(mgr, db, kt_drop_list, dbase);
+      }
+
+
+    // FINALIZE WRITERS
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_twopf_writer(integration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for twopf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_twopf_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_threepf_writer(integration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for threepf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_threepf_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_zeta_twopf_writer(postintegration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_zeta_twopf_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_zeta_threepf_writer(postintegration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_zeta_threepf_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::finalize_fNL_writer(postintegration_writer<number>& writer)
+      {
+        transaction_manager mgr = this->transaction_factory(writer);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for fNL container '" << writer.get_abs_container_path().string() << "'";
+
+        boost::timer::cpu_timer timer;
+
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::finalize_fNL_writer(mgr, db);
+
+        mgr.commit();
+        timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1616,7 +1831,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& query,
+    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_query& query,
                                                         std::vector<time_config>& sample)
       {
         assert(pipe != nullptr);
@@ -1630,7 +1845,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_kconfig_query& query,
+    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_query& query,
                                                           std::vector<twopf_kconfig>& sample)
       {
         assert(pipe != nullptr);
@@ -1644,7 +1859,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_kconfig_query& query,
+    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_query& query,
                                                             std::vector<threepf_kconfig>& sample)
       {
         assert(pipe != nullptr);
@@ -1685,14 +1900,18 @@ namespace transport
         switch(type)
           {
             case twopf_type::real:
-              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
-                                                                                                                    pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
+                                                                                                                      pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
 
             case twopf_type::imag:
-              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
-                                                                                                                    pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
+                                                                                                                      pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
           }
       }
 
@@ -1711,14 +1930,18 @@ namespace transport
         switch(type)
           {
             case threepf_type::momentum:
-              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, k_serial, sample,
-                                                                                                                            pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, k_serial, sample,
+                                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
 
             case threepf_type::Nderiv:
-              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, k_serial, sample,
-                                                                                                                          pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, k_serial, sample,
+                                                                                                                            pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
           }
       }
 
@@ -1786,7 +2009,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                            std::vector<number>& sample, derived_data::template_type type)
+                                                            std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1800,7 +2023,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                           std::vector<number>& sample, derived_data::template_type type)
+                                                           std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1814,7 +2037,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                           std::vector<number>& sample, derived_data::template_type type)
+                                                           std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1840,14 +2063,18 @@ namespace transport
         switch(type)
           {
             case twopf_type::real:
-              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
-                                                                                                                       pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
+                                                                                                                         pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
 
             case twopf_type::imag:
-              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
-                                                                                                                       pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
+                                                                                                                         pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
           }
       }
 
@@ -1866,14 +2093,18 @@ namespace transport
         switch(type)
           {
             case threepf_type::momentum:
-              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, t_serial, sample,
-                                                                                                                               pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, t_serial, sample,
+                                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
 
             case threepf_type::Nderiv:
-              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, t_serial, sample,
-                                                                                                                             pipe->get_worker_number(), pipe->get_N_fields());
-            break;
+              {
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, t_serial, sample,
+                                                                                                                               pipe->get_worker_number(), pipe->get_N_fields());
+                break;
+              }
           }
       }
 
@@ -2003,7 +2234,7 @@ namespace transport
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
-        // find a suitable content group for this task
+        // find a suitable content group for this task; will throw an exception if no suitable content group can be found
         std::unique_ptr< content_group_record<integration_payload> > group = finder(name, tags);
 
         integration_payload& payload = group->get_payload();
@@ -2025,7 +2256,7 @@ namespace transport
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
-        // find a suitable content group for this task
+        // find a suitable content group for this task; will throw an exception if no suitable content group can be found
         std::unique_ptr< content_group_record<postintegration_payload> > group = finder(name, tags);
 
         postintegration_payload& payload = group->get_payload();

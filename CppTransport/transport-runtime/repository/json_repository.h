@@ -54,7 +54,7 @@ namespace transport
 
     // 'json_repository_interface' is one interface for getting data in and out of
     // a repository. It can be implemented by a concrete repository class.
-    template <typename number>
+    template <typename number=default_number_type>
     class json_repository: public repository<number>
       {
 
@@ -62,10 +62,12 @@ namespace transport
 
       public:
 
+        //! constructor
         json_repository(const boost::filesystem::path path, model_manager<number>& f, repository_mode type,
                         local_environment& ev, error_handler e, warning_handler w, message_handler m,
                         package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf);
 
+        //! destructor is default
         virtual ~json_repository() = default;
 
 

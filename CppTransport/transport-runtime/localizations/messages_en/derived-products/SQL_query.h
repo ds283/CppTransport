@@ -24,11 +24,11 @@
 //
 
 
-#ifndef __SQL_query_messages_H_
-#define __SQL_query_messages_H_
+#ifndef CPPTRANSPORT_SQL_QUERY_MESSAGES_H
+#define CPPTRANSPORT_SQL_QUERY_MESSAGES_H
 
 
 #define CPPTRANSPORT_SQL_QUERY_UNKNOWN_TYPE "Internal error: unknown SQL query type"
 
 
-#endif //__SQL_query_messages_H_
+#endif //CPPTRANSPORT_SQL_QUERY_MESSAGES_H

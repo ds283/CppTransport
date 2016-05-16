@@ -537,11 +537,11 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< content_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                                     bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                                                                                                     transaction_manager& mgr)
+    std::unique_ptr< content_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(integration_writer<number>& writer,
+                                                                                                                                      bool lock, const std::list<note>& nt,
+                                                                                                                                      transaction_manager& mgr)
       {
-        return this->content_group_record_factory<integration_payload>(tn, path, lock, nt, tg, mgr);
+        return this->content_group_record_factory<integration_payload>(writer, lock, nt, mgr);
       }
 
 
@@ -553,11 +553,11 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< content_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                                             bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                                                                                                             transaction_manager& mgr)
+    std::unique_ptr< content_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(postintegration_writer<number>& writer,
+                                                                                                                                              bool lock, const std::list<note>& nt,
+                                                                                                                                              transaction_manager& mgr)
       {
-        return this->content_group_record_factory<postintegration_payload>(tn, path, lock, nt, tg, mgr);
+        return this->content_group_record_factory<postintegration_payload>(writer, lock, nt, mgr);
       }
 
 
@@ -569,11 +569,11 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< content_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                           bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                                                                                           transaction_manager& mgr)
+    std::unique_ptr< content_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(derived_content_writer<number>& writer,
+                                                                                                                            bool lock, const std::list<note>& nt,
+                                                                                                                            transaction_manager& mgr)
       {
-        return this->content_group_record_factory<output_payload>(tn, path, lock, nt, tg, mgr);
+        return this->content_group_record_factory<output_payload>(writer, lock, nt, mgr);
       }
 
 
@@ -585,23 +585,29 @@ namespace transport
 
 
     template <typename number>
-    template <typename Payload>
-    std::unique_ptr< content_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                             bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
-                                                                                                             transaction_manager& mgr)
+    template <typename Payload, typename WriterObject>
+    std::unique_ptr< content_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(WriterObject& writer,
+                                                                                                              bool lock, const std::list<note>& notes,
+                                                                                                              transaction_manager& mgr)
       {
+        const std::string& task_name = writer.get_task_name();
+        const boost::filesystem::path& relative_output_path = writer.get_relative_output_path();
+        const std::list<std::string> tags = writer.get_tags();
+        const boost::posix_time::ptime& creation_time = writer.get_creation_time();
+
         count_function counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tn);
+        store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4,
+                                           task_name, creation_time);
 
         // for created records, read/write status is inherited from repository
-        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2,  counter, storer, this->output_store.string(), CPPTRANSPORT_REPO_OUTPUT_EXISTS),
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->output_store.string(), CPPTRANSPORT_REPO_OUTPUT_EXISTS),
                                                this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         typename content_group_record<Payload>::paths_group paths;
         paths.root   = this->get_root_path();
-        paths.output = path;
+        paths.output = relative_output_path;
 
-        return std::make_unique< content_group_record<Payload> >(tn, paths, lock, nt, tg, pkg);
+        return std::make_unique< content_group_record<Payload> >(task_name, paths, lock, notes, tags, pkg);
       }
 
 
@@ -683,6 +689,13 @@ namespace transport
     template <typename TaskType>
     void repository_sqlite3<number>::commit_integration_task(transaction_manager& mgr, const TaskType& tk)
       {
+        if(!tk.is_serializable())
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_NOT_SERIALIZABLE << " '" << tk.get_name() << "'";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -710,6 +723,13 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit(transaction_manager& mgr, const output_task<number>& tk)
       {
+        if(!tk.is_serializable())
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_NOT_SERIALIZABLE << " '" << tk.get_name() << "'";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -783,6 +803,13 @@ namespace transport
     template <typename TaskType>
     void repository_sqlite3<number>::commit_postintegration_task(transaction_manager& mgr, const TaskType& tk)
       {
+        if(!tk.is_serializable())
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_NOT_SERIALIZABLE << " '" << tk.get_name() << "'";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -1728,16 +1755,14 @@ namespace transport
 
             std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(*inflight.second, data_mgr, *rec, worker);
 
-            // carry out an integrity check; this updates the writer with all missing serial numbers
-            // if any are missing, the writer will be marked as failed
-            // also updates writer's metadata with correct number of configurations stored in the container
-            writer->check_integrity(rec->get_task());
-
             // metadata for the writer are likely to be inconsistent
             // try to recover correct metadata directly from the container
             this->recover_integration_metadata(data_mgr, *writer);
 
-            // close writer
+            // close writer, performing integrity check to update all missing serial numbers
+            // if any are missing, the writer will be marked as failed
+            // also updates writer's metadata with correct number of configurations stored in the container
+            // and performs finalization step
             // (closing the writer will remove it from the list of active integrations)
             data_mgr.close_writer(*writer);
 
@@ -1836,11 +1861,11 @@ namespace transport
       {
         std::unique_ptr< postintegration_writer<number> > writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
 
-        // carry out an integrity check; this updates the writer with all missing serial numbers
+        // close writer, performing integrity check to update all missing serial numbers
         // if any are missing, the writer will be marked as failed
-        writer->check_integrity(rec.get_task());
-
-        // close writer
+        // also updates writer's metadata with correct number of configurations stored in the container
+        // and performs finalization step
+        // (closing the writer will remove it from the list of active integrations)
         data_mgr.close_writer(*writer);
 
         // commit output
@@ -1892,20 +1917,17 @@ namespace transport
             std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
             std::unique_ptr< postintegration_writer<number> > p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
 
-            // carry out an integrity check; this updates the writers with all missing serial numbers
-            // if any are missing, the writer will be marked as failed
-            i_writer->check_integrity(i_rec.get_task());
-            p_writer->check_integrity(p_rec.get_task());
-
-            data_mgr.synchronize_missing_serials(*i_writer, *p_writer, i_rec.get_task(), p_rec.get_task());
-
             // metadata for the writer are likely to be inconsistent
             // try to recover correct metadata directly from the container
             this->recover_integration_metadata(data_mgr, *i_writer);
 
-            // close writers
-            data_mgr.close_writer(*i_writer);
-            data_mgr.close_writer(*p_writer);
+            // close writers, performing integrity check to update all missing serial numbers
+            // if any are missing, the writer will be marked as failed
+            // any missing serials are synchornized between the containers
+            // also updates writer's metadata with correct number of configurations stored in the container
+            // and performs finalization step
+            // (closing the writer will remove it from the list of active integrations)
+            data_mgr.close_writer(*i_writer, *p_writer);
 
             // commit output
             // (closing the writers will remove them from the list of active postintegrations)
@@ -2052,21 +2074,21 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::deregister_writer(integration_writer<number>& writer, transaction_manager& mgr)
       {
-        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE);
+        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), sqlite3_operations::CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE);
       }
 
 
     template <typename number>
     void repository_sqlite3<number>::deregister_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
       {
-        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE);
+        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), sqlite3_operations::CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE);
       }
 
 
     template <typename number>
     void repository_sqlite3<number>::deregister_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
       {
-        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE);
+        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), sqlite3_operations::CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE);
       }
 
 
