@@ -286,7 +286,7 @@ Astronomy Centre, University of Sussex, Falmer, Brighton BN1 9QH, UK}
 
 \emailAdd{D.Seery@sussex.ac.uk}
 
-\abstract{{\CppTransport} is a numerical platform which can automatically
+\abstract{{\CppTransport} is a numerical platform that can automatically
 generate and solve the evolution equations for the 2- and 3-point correlation
 functions
 (in field space and for the curvature perturbation $\zeta$)
@@ -825,10 +825,33 @@ is colour-coded according to the language:
 \begin{itemize}
 	\item Shell input or output, blue background: \mintinline{bash}{export PATH=/usr/local/bin:$PATH}
 	\item Configuration files, green background: \mintinline{text}{input = /usr/local/share/cpptransport}
-	\item {\CC} files, yellow background: \mintinline{c++}{class dquad_mpi;}
+	\item {\CC} source code, yellow background: \mintinline{c++}{class dquad_mpi;}
+	\item Python source code, red background: \mintinline{python}{def plot:}
 	\item {\CMake} scripts, olive background: \mintinline{cmake}{TARGET_LINK_LIBRARIES()}
 	\item SQL code, magenta background: \mintinline{sql}{SELECT * FROM}
 \end{itemize}
+{\CppTransport} uses units where $c=\hbar=1$ but the
+reduced Planck mass $\Mp = (8\pi G)^{-1/2}$
+can be set to an arbitrary value.
+
+Each inflationary model can have an arbitrary number of scalar fields. These are
+all taken to be singlets
+labelled by indices $\alpha$, $\beta$, \dots,
+and are written $\phi^\alpha$; their perturbations are $\delta\phi^\alpha$.
+
+{\CppTransport} does not use the slow-roll approximation, and therefore it is necessary
+to deal separately with the scalar field derivatives
+$\dot{\phi}^\alpha$ and $\delta\dot{\phi}^\alpha$.
+We often write these generically as $\pi^\alpha$ and collect them
+into a larger
+set of fields indexed by labels $a$, $b$, \ldots:
+\begin{equation}
+    X^a = (\phi^\alpha, \pi^\alpha)
+    \qquad
+    \text{or}
+    \qquad
+    X^a = (\delta\phi^\alpha, \delta\pi^\alpha) .    
+\end{equation}
 
 \section{Installation}
 
@@ -1511,7 +1534,8 @@ The attributes available within the \block{model} block are:
     you may wish to explicitly set a license which allows re-use
     such as the
     \href{https://creativecommons.org/licenses/}{Creative Commons Attribution license}.
-    (TODO: Funding agencies?)
+    Some funding agencies may express a preference
+    (or even specific requirements) for the licensing of research outputs.
     
     \item \attribute{revision = integer;} \\
     A model description may evolve through multiple iterations during its
@@ -1600,7 +1624,7 @@ output by reading the model description file,
 using it to construct all the information needed
 for concrete calculations, and then writing this information
 into a \emph{template}. We will examine this
-process in more detail in \S\ref{}.
+process in more detail in \S\ref{sec:run-translator}.
 {\CppTransport} allows arbitrary templates to be used,
 although there will not normally be any need to
 modify the supplied examples.
@@ -2691,8 +2715,11 @@ This code involves the following steps:
 \end{enumerate}
 Most {\CppTransport} executables will contain a
 \mintinline{c++}{main()} function of almost exactly this form.
-The general case differs only by providing tasks and derived products,
-which will be explained in \S\ref{} below.
+The general case differs only by providing extra functions
+to generate tasks and derived products,
+which will be explained in \S\ref{sec:add-integration-task}
+and \S\ref{sec:derived-products}
+below.
 
 \begin{advanced}{Custom integration data types}
     \label{advanced:data-type}
@@ -2743,7 +2770,9 @@ which will be explained in \S\ref{} below.
         comparable method for the other floating-point types.)
         This means that, no matter what precision was used during integration,
         {\CppTransport} always stores the results
-        as \mintinline{c++}{double} precision.}
+        as \mintinline{c++}{double} precision.
+        Using higher precision for intermediate values may still be useful,
+        however, to reduce roundoff error in the integrator.}
     Using types with higher precision than \mintinline{c++}{double} will
     increase the computation time
     (eg. switching to \mintinline{c++}{long double}
@@ -3401,7 +3430,7 @@ as determined by the initial conditions package.
 {\CppTransport} refers to wavenumbers normalized in this way as
 \emph{conventionally normalized}. When producing derived products
 it is possible to measure wavenumbers using a number of different
-normalizations, as will be explained in~\S\ref{}.
+normalizations, as will be explained in~\S\ref{sec:examine-k-database}.
 
 If $H$ is nearly constant then a general wavenumber $k$ will exit the
 horizon roughly when $N = \Nstar + \ln k$.
@@ -4627,7 +4656,7 @@ Clicking it toggles a set of summary plots.
     integration time
     (Fig.~\ref{fig:time-scaling}).
     In smooth models where the bispectrum does not exhibit features,
-    and assuming use of adaptive initial conditions (\S\ref{}),
+    and assuming use of adaptive initial conditions (\S\ref{sec:general-integration-options}),
     the strongest dependence is usually on the squeezing parameter
     $k_3 / k_t$, where $k_3$
     is taken to be the shortest side of the momentum triangle.
@@ -7967,7 +7996,9 @@ tends to indicate loss of accuracy during the integration.
 Finally, consider setting up a plot of the amplitudes generated by
 inner-products with the equilateral, orthogonal and local
 templates.
-We can collect these in a separate function:
+We can collect these in a separate function; see Fig.~\ref{code:fNL-code}.
+\begin{figure}
+\begin{minipage}[t][15cm]{\textwidth}
 \begin{minted}{c++}
 void write_fNL_products(transport::repository<>& repo, transport::initial_conditions<>& ics,
                         transport::range<>& ts, transport::range<>& ks)
@@ -8004,6 +8035,9 @@ void write_fNL_products(transport::repository<>& repo, transport::initial_condit
     repo.commit(out_tk);
   }
 \end{minted}
+\end{minipage}
+\caption{\label{code:fNL-code}Function to generate $\fNL$ tasks and derived products}
+\end{figure}
 The resulting plot is shown in Fig.~\ref{fig:fNL-auto-plot} and can be
 compared with the hand-generated version Fig.~\ref{fig:dquad-fNL-plot}.
 \begin{figure}
@@ -8017,7 +8051,6 @@ compared with the hand-generated version Fig.~\ref{fig:dquad-fNL-plot}.
     care and are not necessarily related to the constraints reported
     from experiment.}
 \end{figure}
-
 
 \section{Managing repositories}
 \label{sec:repo-management}
@@ -8037,7 +8070,7 @@ to an ongoing project,
 to highlight features when circulating data to collaborators,
 or to provide enriched documentation for archival purposes.
 
-Finally, it is sometimes desirable to remove content groups from a repostiory.
+Finally, it is sometimes desirable to remove unneeded content groups from a repository.
 Notice, however, that {\CppTransport} does \emph{not} offer an option to remove
 or edit
 the details of initial conditions packages, tasks, or derived products.
