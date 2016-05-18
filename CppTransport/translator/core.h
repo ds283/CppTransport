@@ -35,8 +35,6 @@ constexpr auto CPPTRANSPORT_VERSION                  = "2016.1 RC2";
 constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 201601;
 constexpr auto CPPTRANSPORT_COPYRIGHT                = "(c) University of Sussex 2016";
 
-constexpr auto MODEL_SCRIPT_SUFFIX                   = ".model";
-constexpr auto MODEL_SCRIPT_SUFFIX_LENGTH            = (6);
 constexpr auto TEMPLATE_TAG_SUFFIX                   = "_";
 
 constexpr auto NEWLINE_CHAR                          = "\n";

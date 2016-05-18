@@ -34,6 +34,8 @@
 namespace transport
   {
 
+    // default type used for 'number' template type (ie. used during integration)
+    // if not otherwise specified
     typedef double default_number_type;
 
     constexpr unsigned int CPPTRANSPORT_DEFAULT_WRAP_WIDTH                 = (135);
