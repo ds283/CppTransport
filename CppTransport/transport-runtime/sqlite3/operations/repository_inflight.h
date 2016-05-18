@@ -44,11 +44,12 @@ namespace transport
             std::string filename = posix_time_string;
             if(suffix.length() > 0) filename += "-" + suffix;
 
-            // check if a content group with this filename already exists
-            unsigned int count_inflight        = internal_count(db, filename, CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
-            unsigned int count_integration     = internal_count(db, filename, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE, "name");
-            unsigned int count_postintegration = internal_count(db, filename, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE, "name");
-            unsigned int count_output          = internal_count(db, filename, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE, "name");
+            // check if a content group with this POSIX timestamp already exists
+            // if so, add a -N disambiguating string to the end of the proposed filename
+            unsigned int count_inflight        = internal_count(db, filename, CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "posix_time");
+            unsigned int count_integration     = internal_count(db, filename, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE, "posix_time");
+            unsigned int count_postintegration = internal_count(db, filename, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE, "posix_time");
+            unsigned int count_output          = internal_count(db, filename, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE, "posix_time");
 
             unsigned int count = count_inflight + count_integration + count_postintegration + count_output;
 
@@ -296,8 +297,8 @@ namespace transport
                     sqlite_str    = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
                     gp->seed_group = std::string(sqlite_str);
 
-                    gp->is_collecting_ics   = static_cast<bool>(sqlite3_column_int(stmt, 9));
-                    gp->is_collecting_stats = static_cast<bool>(sqlite3_column_int(stmt, 10));
+                    gp->is_collecting_stats = static_cast<bool>(sqlite3_column_int(stmt, 9));
+                    gp->is_collecting_ics   = static_cast<bool>(sqlite3_column_int(stmt, 10));
 
                     groups.insert(std::make_pair(gp->content_group, std::move(gp)));
                   }

@@ -35,6 +35,7 @@
 #include "transport-runtime/sqlite3/operations/data_manager_pull.h"
 #include "transport-runtime/sqlite3/operations/data_manager_read.h"
 #include "transport-runtime/sqlite3/operations/data_manager_integrity.h"
+#include "transport-runtime/sqlite3/operations/data_manager_finalize.h"
 
 
 #endif //CPPTRANSPORT_DATA_MANAGER_OPERATIONS_H

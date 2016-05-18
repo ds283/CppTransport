@@ -110,6 +110,7 @@ constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONTAINER              = "Container";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_COMPLETE               = "Complete";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_WORKGROUP              = "Workgroup";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_SEEDED                 = "Seeded";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_DATA_TYPE              = "Data type";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_SEED_GROUP             = "Seed group";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_STATISTICS             = "Has statistics";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_ICS                = "Initial conditions";

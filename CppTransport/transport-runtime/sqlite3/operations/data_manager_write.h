@@ -286,7 +286,7 @@ namespace transport
         template <typename number>
         void write_fNL(transaction_manager& mgr, postintegration_batcher<number>* batcher,
                        const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >& batch,
-                       derived_data::template_type type)
+                       derived_data::bispectrum_template type)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);

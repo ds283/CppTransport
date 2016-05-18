@@ -227,8 +227,9 @@ namespace transport
 
         if((itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)    // trying to attach to an integration content group
           {
-            this->type                       = attachment_type::integration_attached;
+            // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
             this->attached_integration_group = this->data_mgr.datapipe_attach_integration_content(this, this->utilities.integration_finder, tk->get_name(), tags);
+            this->type                       = attachment_type::integration_attached;
 
             // remember number of fields associated with this container
             this->N_fields = itk->get_model()->get_N_fields();
@@ -243,8 +244,9 @@ namespace transport
           }
         else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
           {
-            this->type                           = attachment_type::postintegration_attached;
+            // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
             this->attached_postintegration_group = this->data_mgr.datapipe_attach_postintegration_content(this, this->utilities.postintegration_finder, tk->get_name(), tags);
+            this->type                           = attachment_type::postintegration_attached;
 
             this->N_fields = 0;
 
@@ -334,7 +336,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::time_config_handle& datapipe<number>::new_time_config_handle(const derived_data::SQL_time_config_query& query) const
+    typename datapipe<number>::time_config_handle& datapipe<number>::new_time_config_handle(const derived_data::SQL_time_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -344,7 +346,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::twopf_kconfig_handle& datapipe<number>::new_twopf_kconfig_handle(const derived_data::SQL_twopf_kconfig_query& query) const
+    typename datapipe<number>::twopf_kconfig_handle& datapipe<number>::new_twopf_kconfig_handle(const derived_data::SQL_twopf_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -354,7 +356,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::threepf_kconfig_handle& datapipe<number>::new_threepf_kconfig_handle(const derived_data::SQL_threepf_kconfig_query& query) const
+    typename datapipe<number>::threepf_kconfig_handle& datapipe<number>::new_threepf_kconfig_handle(const derived_data::SQL_threepf_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -374,7 +376,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::time_data_handle& datapipe<number>::new_time_data_handle(const derived_data::SQL_time_config_query& query) const
+    typename datapipe<number>::time_data_handle& datapipe<number>::new_time_data_handle(const derived_data::SQL_time_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -384,7 +386,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::kconfig_data_handle& datapipe<number>::new_kconfig_data_handle(const derived_data::SQL_twopf_kconfig_query& query) const
+    typename datapipe<number>::kconfig_data_handle& datapipe<number>::new_kconfig_data_handle(const derived_data::SQL_twopf_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -394,7 +396,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::kconfig_data_handle& datapipe<number>::new_kconfig_data_handle(const derived_data::SQL_threepf_kconfig_query& query) const
+    typename datapipe<number>::kconfig_data_handle& datapipe<number>::new_kconfig_data_handle(const derived_data::SQL_threepf_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -404,7 +406,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::time_zeta_handle& datapipe<number>::new_time_zeta_handle(const derived_data::SQL_time_config_query& query) const
+    typename datapipe<number>::time_zeta_handle& datapipe<number>::new_time_zeta_handle(const derived_data::SQL_time_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -414,7 +416,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::kconfig_zeta_handle& datapipe<number>::new_kconfig_zeta_handle(const derived_data::SQL_twopf_kconfig_query& query) const
+    typename datapipe<number>::kconfig_zeta_handle& datapipe<number>::new_kconfig_zeta_handle(const derived_data::SQL_twopf_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -424,7 +426,7 @@ namespace transport
 
 
     template <typename number>
-    typename datapipe<number>::kconfig_zeta_handle& datapipe<number>::new_kconfig_zeta_handle(const derived_data::SQL_threepf_kconfig_query& query) const
+    typename datapipe<number>::kconfig_zeta_handle& datapipe<number>::new_kconfig_zeta_handle(const derived_data::SQL_threepf_query& query) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -525,21 +527,21 @@ namespace transport
 
 
     template <typename number>
-    fNL_time_data_tag<number> datapipe<number>::new_fNL_time_data_tag(derived_data::template_type type)
+    fNL_time_data_tag<number> datapipe<number>::new_fNL_time_data_tag(derived_data::bispectrum_template type)
       {
         return fNL_time_data_tag<number>(this, type);
       }
 
 
     template <typename number>
-    BT_time_data_tag<number> datapipe<number>::new_BT_time_data_tag(derived_data::template_type type)
+    BT_time_data_tag<number> datapipe<number>::new_BT_time_data_tag(derived_data::bispectrum_template type)
       {
         return BT_time_data_tag<number>(this, type);
       }
 
 
     template <typename number>
-    TT_time_data_tag<number> datapipe<number>::new_TT_time_data_tag(derived_data::template_type type)
+    TT_time_data_tag<number> datapipe<number>::new_TT_time_data_tag(derived_data::bispectrum_template type)
       {
         return TT_time_data_tag<number>(this, type);
       }

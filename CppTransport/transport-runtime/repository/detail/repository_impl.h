@@ -521,8 +521,6 @@ namespace transport
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        const std::list<std::string>& tags = writer.get_tags();
-
         // set up notes for the new output record, if it exists
         std::list<note> notes;
         if(!writer.is_collecting_statistics())
@@ -534,32 +532,34 @@ namespace transport
 
         // create a new, empty content group record
         std::unique_ptr< content_group_record<integration_payload> >
-          output_record(this->integration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags, mgr));
+          output_record(this->integration_content_group_record_factory(writer, false, notes, mgr));
 
         // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate content group with content from the writer
-        output_record->get_payload().set_container_path(writer.get_relative_container_path());
-        output_record->get_payload().set_metadata(writer.get_metadata());
-        output_record->get_payload().set_workgroup_number(writer.get_workgroup_number());
+        // populate payload with content from the writer
+        integration_payload& payload = output_record->get_payload();
+        payload.set_container_path(writer.get_relative_container_path());
+        payload.set_metadata(writer.get_metadata());
+        payload.set_workgroup_number(writer.get_workgroup_number());
+        payload.set_data_type(writer.get_data_type());
 
-        if(writer.is_seeded()) output_record->get_payload().set_seed(writer.get_seed_group());
+        if(writer.is_seeded()) payload.set_seed(writer.get_seed_group());
 
-        output_record->get_payload().set_fail(writer.is_failed());
-        output_record->get_payload().set_failed_serials(writer.get_missing_serials());
+        payload.set_fail(writer.is_failed());
+        payload.set_failed_serials(writer.get_missing_serials());
 
-        output_record->get_payload().set_statistics(writer.is_collecting_statistics());
-        output_record->get_payload().set_initial_conditions(writer.is_collecting_initial_conditions());
+        payload.set_statistics(writer.is_collecting_statistics());
+        payload.set_initial_conditions(writer.is_collecting_initial_conditions());
 
         try
           {
-            output_record->get_payload().set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
+            payload.set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
           }
         catch(boost::filesystem::filesystem_error& xe)
           {
-            output_record->get_payload().set_size(0);
+            payload.set_size(0);
           }
 
         // commit new output record
@@ -614,8 +614,6 @@ namespace transport
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        const std::list<std::string>& tags = writer.get_tags();
-
         // convert to task class
         postintegration_task<number>* tk = rec->get_task();
         assert(tk != nullptr);
@@ -626,41 +624,42 @@ namespace transport
 
         // create a new, empty content group record
         std::unique_ptr<content_group_record<postintegration_payload>>
-          output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<note>(), tags, mgr));
+          output_record(this->postintegration_content_group_record_factory(writer, false, std::list<note>(), mgr));
 
         // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate content group with content from the writer
-        output_record->get_payload().set_container_path(writer.get_relative_container_path());
-        output_record->get_payload().set_metadata(writer.get_metadata());
+        // populate payload with content from the writer
+        postintegration_payload& payload = output_record->get_payload();
+        payload.set_container_path(writer.get_relative_container_path());
+        payload.set_metadata(writer.get_metadata());
 
-        if(writer.is_seeded()) output_record->get_payload().set_seed(writer.get_seed_group());
+        if(writer.is_seeded()) payload.set_seed(writer.get_seed_group());
 
-        output_record->get_payload().set_pair(writer.is_paired());
-        output_record->get_payload().set_parent_group(writer.get_parent_group());
+        payload.set_pair(writer.is_paired());
+        payload.set_parent_group(writer.get_parent_group());
 
-        output_record->get_payload().set_fail(writer.is_failed());
-        output_record->get_payload().set_failed_serials(writer.get_missing_serials());
+        payload.set_fail(writer.is_failed());
+        payload.set_failed_serials(writer.get_missing_serials());
 
         try
           {
-            output_record->get_payload().set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
+            payload.set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
           }
         catch(boost::filesystem::filesystem_error& xe)
           {
-            output_record->get_payload().set_size(0);
+            payload.set_size(0);
           }
 
         // tag this content group with its contents
-        if(writer.get_products().get_zeta_twopf())   output_record->get_payload().get_precomputed_products().add_zeta_twopf();
-        if(writer.get_products().get_zeta_threepf()) output_record->get_payload().get_precomputed_products().add_zeta_threepf();
-        if(writer.get_products().get_zeta_redbsp())  output_record->get_payload().get_precomputed_products().add_zeta_redbsp();
-        if(writer.get_products().get_fNL_local())    output_record->get_payload().get_precomputed_products().add_fNL_local();
-        if(writer.get_products().get_fNL_equi())     output_record->get_payload().get_precomputed_products().add_fNL_equi();
-        if(writer.get_products().get_fNL_ortho())    output_record->get_payload().get_precomputed_products().add_fNL_ortho();
-        if(writer.get_products().get_fNL_DBI())      output_record->get_payload().get_precomputed_products().add_fNL_DBI();
+        if(writer.get_products().get_zeta_twopf())   payload.get_precomputed_products().add_zeta_twopf();
+        if(writer.get_products().get_zeta_threepf()) payload.get_precomputed_products().add_zeta_threepf();
+        if(writer.get_products().get_zeta_redbsp())  payload.get_precomputed_products().add_zeta_redbsp();
+        if(writer.get_products().get_fNL_local())    payload.get_precomputed_products().add_fNL_local();
+        if(writer.get_products().get_fNL_equi())     payload.get_precomputed_products().add_fNL_equi();
+        if(writer.get_products().get_fNL_ortho())    payload.get_precomputed_products().add_fNL_ortho();
+        if(writer.get_products().get_fNL_DBI())      payload.get_precomputed_products().add_fNL_DBI();
 
         // commit new output record
         output_record->commit();
@@ -714,24 +713,23 @@ namespace transport
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        const std::list<std::string>& tags = writer.get_tags();
-
         // create a new, empty content group record
         std::unique_ptr< content_group_record<output_payload> >
-          output_record(this->output_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<note>(), tags, mgr));
+          output_record(this->output_content_group_record_factory(writer, false, std::list<note>(), mgr));
 
         // stamp content group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
         output_record->set_name(writer.get_name());
 
-        // populate content group with content from the writer
+        // populate payload with content from the writer
+        output_payload& payload = output_record->get_payload();
         for(const derived_content& c : writer.get_content())
           {
-            output_record->get_payload().add_derived_content(c);
+            payload.add_derived_content(c);
           }
-        output_record->get_payload().set_metadata(writer.get_metadata());
-        output_record->get_payload().set_fail(false);
-        output_record->get_payload().set_content_groups_summary(writer.get_content_groups());
+        payload.set_metadata(writer.get_metadata());
+        payload.set_fail(false);
+        payload.set_content_groups_summary(writer.get_content_groups());
 
         // commit new output record
         output_record->commit();
@@ -789,7 +787,7 @@ namespace transport
         repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(group.second->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(!group.second->check_tags(tags)); } );
 
         if(db.empty())
           {
@@ -815,7 +813,7 @@ namespace transport
         repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second.get()->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(!group.second.get()->check_tags(tags)); } );
 
         if(db.empty())
           {

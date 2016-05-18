@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __config_tags_H_
-#define __config_tags_H_
+#ifndef CPPTRANSPORT_CONFIG_TAGS_H
+#define CPPTRANSPORT_CONFIG_TAGS_H
 
 
 #include <vector>
@@ -76,7 +76,7 @@ namespace transport
         bool operator==(const time_config_tag<number>& obj) const { return(true); }   // nothing to check
 
         //! pull data corresponding to this tag
-        void pull(derived_data::SQL_time_config_query& query, std::vector<time_config>& data);
+        void pull(derived_data::SQL_time_query& query, std::vector<time_config>& data);
 
         //! emit a log item for this tag
         void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
@@ -136,7 +136,7 @@ namespace transport
         bool operator==(const twopf_kconfig_tag<number>& obj) const { return(true); }     // nothing to check
 
         //! pull data corresponding to this tag
-        void pull(derived_data::SQL_twopf_kconfig_query& query, std::vector<twopf_kconfig>& data);
+        void pull(derived_data::SQL_twopf_query& query, std::vector<twopf_kconfig>& data);
 
         //! emit a log item for this tag
         void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
@@ -196,7 +196,7 @@ namespace transport
         bool operator==(const threepf_kconfig_tag<number>& obj) const { return(true); }     // nothing to check
 
         //! pull data corresponding to this tag
-        void pull(derived_data::SQL_threepf_kconfig_query& query, std::vector<threepf_kconfig>& data);
+        void pull(derived_data::SQL_threepf_query& query, std::vector<threepf_kconfig>& data);
 
         //! emit a log item for this tag
         void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
@@ -235,7 +235,7 @@ namespace transport
 
 
     template <typename number>
-    void time_config_tag<number>::pull(derived_data::SQL_time_config_query& query, std::vector<time_config>& data)
+    void time_config_tag<number>::pull(derived_data::SQL_time_query& query, std::vector<time_config>& data)
 	    {
         // check we are attached to a content group
         // time configuration data can be extracted from any container, so it doesn't matter what sort of group
@@ -253,7 +253,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_kconfig_tag<number>::pull(derived_data::SQL_twopf_kconfig_query& query, std::vector<twopf_kconfig>& data)
+    void twopf_kconfig_tag<number>::pull(derived_data::SQL_twopf_query& query, std::vector<twopf_kconfig>& data)
 	    {
         // TODO: should work out whether this content group can serve twopf configuration data?
         assert(this->pipe->validate_attached());
@@ -269,7 +269,7 @@ namespace transport
 
 
     template <typename number>
-    void threepf_kconfig_tag<number>::pull(derived_data::SQL_threepf_kconfig_query& query, std::vector<threepf_kconfig>& data)
+    void threepf_kconfig_tag<number>::pull(derived_data::SQL_threepf_query& query, std::vector<threepf_kconfig>& data)
 	    {
         // TODO: should work out whether this content group can serve threepf configuration data?
         assert(this->pipe->validate_attached());
@@ -290,4 +290,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__config_tags_H_
+#endif //CPPTRANSPORT_CONFIG_TAGS_H

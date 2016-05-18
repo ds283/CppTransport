@@ -28,6 +28,8 @@
 #define CPPTRANSPORT_TWOPF_TASK_H
 
 
+#include "transport-runtime/defaults.h"
+
 #include "transport-runtime/tasks/integration_detail/common.h"
 #include "transport-runtime/tasks/integration_detail/abstract.h"
 #include "transport-runtime/tasks/integration_detail/twopf_db_task.h"
@@ -38,7 +40,7 @@ namespace transport
 
     // two-point function task
     // we need to specify the wavenumbers k at which we want to sample it
-    template <typename number>
+    template <typename number=default_number_type>
     class twopf_task: public twopf_db_task<number>
 	    {
 
@@ -48,7 +50,7 @@ namespace transport
 
         //! Construct a named two-point function task
         twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                   range<double>& t, range<double>& ks, bool ff=false);
+                   range<double>& t, range<double>& ks, bool adpt_ics=false);
 
         //! deserialization constructor
         twopf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -96,8 +98,8 @@ namespace transport
     // build a twopf task
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                                   range<double>& t, range<double>& ks, bool ff)
-	    : twopf_db_task<number>(nm, i, t, ff)
+                                   range<double>& t, range<double>& ks, bool adpt_ics)
+	    : twopf_db_task<number>(nm, i, t, adpt_ics)
 	    {
         // the mapping from the provided list of ks to the work list is just one-to-one
         for(unsigned int j = 0; j < ks.size(); ++j)
@@ -105,15 +107,19 @@ namespace transport
             this->twopf_db_task<number>::twopf_db->add_record(ks[j]);
 	        }
 
-        std::ostringstream msg;
-        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B;
-        this->get_model()->message(msg.str());
+        std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
+        kv->set_tiling(true);
+        kv->set_title(this->get_name());
+
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
 
         this->compute_horizon_exit_times();
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
-        this->write_time_details();
+        this->write_time_details(*kv);
         this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
+
+        if(this->get_model()->is_verbose()) kv->write(std::cout);
 	    }
 
 

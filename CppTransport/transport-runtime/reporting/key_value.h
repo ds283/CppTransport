@@ -77,7 +77,7 @@ namespace transport
           public:
 
             //! store a new key-value pair
-            void insert_back(const std::string& key, const std::string& value) { db.emplace_back(std::make_pair(key,value)); }
+            void insert_back(std::string key, std::string value) { db.emplace_back(std::make_pair(std::move(key), std::move(value))); }
 
             //! set tiling policy
             void set_tiling(bool t) { this->tile = t; }
@@ -85,11 +85,14 @@ namespace transport
             //! get tiling policy
             bool get_tiling() const { return(this->tile); }
 
+            //! set title
+            void set_title(std::string t) { this->title = std::move(t); }
+
             //! write to a stream
             void write(std::ostream& out, print_options opts=print_options::none);
 
             //! reset
-            void reset() { this->db.clear(); this->tile = false; }
+            void reset() { this->db.clear(); this->tile = false; this->title.clear(); }
 
 
             // INTERNAL API
@@ -124,6 +127,9 @@ namespace transport
             //! tile pairs in columns, or just produce a single list?
             bool tile;
 
+            //! title string, if used
+            std::string title;
+
           };
 
 
@@ -137,6 +143,14 @@ namespace transport
 
             bool colour = this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
             if(opts == print_options::force_simple) colour = false;
+
+            if(!this->title.empty())
+              {
+                if(colour) out << ColourCode(ANSI_colour::bold_green);
+                out << title;
+                if(colour) out << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+              }
 
             unsigned int current_column = 0;
             for(const std::pair< std::string, std::string >& elt : this->db)

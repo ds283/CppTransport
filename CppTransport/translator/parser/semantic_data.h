@@ -59,7 +59,7 @@ class attributes
 
     const std::string get_latex() const { if(this->latex) return *this->latex; else return std::string(); }
 
-    void set_latex(const std::string& ltx, const y::lexeme_type& l) { this->latex.reset(); this->latex = std::make_unique< contexted_value<std::string> >(ltx, l.get_error_context()); }
+    void set_latex(const std::string& ltx, const y::lexeme_type& l);
 
 
 		// INTERNAL DATA
@@ -73,6 +73,20 @@ class attributes
 	};
 
 
+inline void attributes::set_latex(const std::string& ltx, const y::lexeme_type& l)
+  {
+    if(this->latex)
+      {
+        l.error(ERROR_LATEX_REDECLARATION);
+        this->latex->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->latex = std::make_unique< contexted_value<std::string> >(ltx, l.get_error_context());
+      }
+  }
+
+
 class subexpr
 	{
 
@@ -81,7 +95,6 @@ class subexpr
   public:
 
 		subexpr()
-      : value(0)    // initialize value to sensible choice
       {
       }
 
@@ -94,11 +107,11 @@ class subexpr
 
 		const std::string get_latex() const { if(this->latex) return *this->latex; else return std::string(); }
 
-		void set_latex(const std::string& ltx, const y::lexeme_type& l) { this->latex.reset(); this->latex = std::make_unique< contexted_value<std::string> >(ltx, l.get_error_context()); }
+    void set_latex(const std::string& ltx, const y::lexeme_type& l);
 
-		GiNaC::ex get_value() const { return this->value; }
+		GiNaC::ex get_value() const { if(this->value) return *this->value; else return GiNaC::ex(0); }
 
-		void set_value(GiNaC::ex v) { this->value = v; }
+    void set_value(GiNaC::ex v, const y::lexeme_type& l);
 
 
 		// INTERNAL DATA
@@ -109,8 +122,37 @@ class subexpr
 
     std::shared_ptr< contexted_value<std::string> > latex;
 
-    GiNaC::ex value;
+    std::shared_ptr< contexted_value<GiNaC::ex> > value;
+
 	};
+
+
+inline void subexpr::set_value(GiNaC::ex v, const y::lexeme_type& l)
+  {
+    if(this->value)
+      {
+        l.error(ERROR_VALUE_REDECLARATION);
+        this->value->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->value = std::make_unique< contexted_value<GiNaC::ex> >(v, l.get_error_context());
+      }
+  }
+
+
+inline void subexpr::set_latex(const std::string& ltx, const y::lexeme_type& l)
+  {
+    if(this->latex)
+      {
+        l.error(ERROR_LATEX_REDECLARATION);
+        this->latex->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->latex = std::make_unique< contexted_value<std::string> >(ltx, l.get_error_context());
+      }
+  }
 
 
 class author
@@ -131,15 +173,15 @@ class author
 
     const std::string get_name() const { if(this->name) return *this->name; else return std::string(); }
 
-    void set_name(const std::string& n, const y::lexeme_type& l) { this->name.reset(); this->name = std::make_unique< contexted_value<std::string> >(n, l.get_error_context()); }
+    void set_name(const std::string& n, const y::lexeme_type& l);
 
     const std::string get_email() const { if(this->email) return *this->email; else return std::string(); }
 
-    void set_email(const std::string& e, const y::lexeme_type& l) { this->email.reset(); this->email = std::make_unique< contexted_value<std::string> >(e, l.get_error_context()); }
+    void set_email(const std::string& e, const y::lexeme_type& l);
 
     const std::string get_institute() const { if(this->institute) return *this->institute; else return std::string(); }
 
-    void set_institute(const std::string& i, const y::lexeme_type& l) { this->institute.reset(); this->institute = std::make_unique< contexted_value<std::string> >(i, l.get_error_context()); }
+    void set_institute(const std::string& i, const y::lexeme_type& l);
 
 
     // INTERNAL DATA
@@ -155,6 +197,48 @@ class author
     std::shared_ptr< contexted_value<std::string> > institute;
 
   };
+
+
+inline void author::set_institute(const std::string& i, const y::lexeme_type& l)
+  {
+    if(this->institute)
+      {
+        l.error(ERROR_INSTITUTE_REDECLARATION);
+        this->institute->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->institute = std::make_unique< contexted_value<std::string> >(i, l.get_error_context());
+      }
+  }
+
+
+inline void author::set_email(const std::string& e, const y::lexeme_type& l)
+  {
+    if(this->email)
+      {
+        l.error(ERROR_EMAIL_REDECLARATION);
+        this->email->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->email = std::make_unique< contexted_value<std::string> >(e, l.get_error_context());
+      }
+  }
+
+
+inline void author::set_name(const std::string& n, const y::lexeme_type& l)
+  {
+    if(this->name)
+      {
+        l.error(ERROR_AUTHORNAME_REDECLARATION);
+        this->name->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->name = std::make_unique< contexted_value<std::string> >(n, l.get_error_context());
+      }
+  }
 
 
 class string_array

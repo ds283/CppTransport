@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __range_common_H_
-#define __range_common_H_
+#ifndef CPPTRANSPORT_RANGE_COMMON_H
+#define CPPTRANSPORT_RANGE_COMMON_H
 
 
 #include <vector>
@@ -70,4 +70,5 @@ namespace aggregation_range_impl
 #define CPPTRANSPORT_NODE_RANGE_AGGREGATE     "aggregation-type"
 
 
-#endif //__range_common_H_
+#endif //#define CPPTRANSPORT_RANGE_COMMON_H
+

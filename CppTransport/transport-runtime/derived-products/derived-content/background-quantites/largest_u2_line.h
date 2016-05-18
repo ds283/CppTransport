@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __largest_u2_line_H_
-#define __largest_u2_line_H_
+#ifndef CPPTRANSPORT_LARGEST_U2_LINE_H
+#define CPPTRANSPORT_LARGEST_U2_LINE_H
 
 
 #include <iostream>
@@ -51,7 +51,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class largest_u2_line: public time_series<number>
 			    {
 
@@ -60,7 +60,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    largest_u2_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query,
+				    largest_u2_line(const twopf_db_task<number>& tk, SQL_time_query tq, SQL_twopf_query,
                             unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -83,10 +83,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
 				    // DERIVE LIVES -- implements a 'derived_line' interface
@@ -138,17 +138,17 @@ namespace transport
 		        integration_task_gadget<number> gadget;
 
 		        //! time query object
-				    SQL_time_config_query tquery;
+				    SQL_time_query tquery;
 
             //! kconfig query object
-            SQL_twopf_kconfig_query kquery;
+            SQL_twopf_query kquery;
 
 			    };
 
 
 				template <typename number>
-				largest_u2_line<number>::largest_u2_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+				largest_u2_line<number>::largest_u2_line(const twopf_db_task<number>& tk, SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
+					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),
@@ -251,7 +251,7 @@ namespace transport
                     line_data[j] = val;
                   }
 
-                lines.emplace_back(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
+                lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
                                    this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t), messages);
               }
 
@@ -314,4 +314,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__largest_u2_line_H_
+#endif //CPPTRANSPORT_LARGEST_U2_LINE_H

@@ -247,7 +247,7 @@ namespace transport
       public:
 
         //! constructor captures data
-        sqlite3_container_replace_fNL(data_manager_sqlite3<number>& dm, boost::filesystem::path p, unsigned int w, derived_data::template_type t)
+        sqlite3_container_replace_fNL(data_manager_sqlite3<number>& dm, boost::filesystem::path p, unsigned int w, derived_data::bispectrum_template t)
           : data_mgr(dm),
             tempdir(std::move(p)),
             worker(w),
@@ -281,7 +281,7 @@ namespace transport
         unsigned int worker;
 
         //! fNL template type
-        derived_data::template_type type;
+        derived_data::bispectrum_template type;
 
       };
 

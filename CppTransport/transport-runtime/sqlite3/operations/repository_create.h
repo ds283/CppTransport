@@ -77,6 +77,7 @@ namespace transport
               << "name TEXT PRIMARY KEY, "
               << "task TEXT, "
               << "path TEXT, "
+              << "posix_time TEXT, "
               << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "(name));";
             exec(db, i_groups_stmt.str());
 
@@ -85,6 +86,7 @@ namespace transport
               << "name TEXT PRIMARY KEY, "
               << "task TEXT, "
               << "path TEXT, "
+              << "posix_time TEXT, "
               << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << "(name));";
             exec(db, p_groups_stmt.str());
 
@@ -93,6 +95,7 @@ namespace transport
               << "name TEXT PRIMARY KEY, "
               << "task TEXT, "
               << "path TEXT, "
+              << "posix_time TEXT, "
               << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << "(name));";
             exec(db, o_groups_stmt.str());
 

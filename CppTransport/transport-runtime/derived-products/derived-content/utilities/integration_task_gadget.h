@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __integration_task_gadget_H_
-#define __integration_task_gadget_H_
+#ifndef CPPTRANSPORT_INTEGRATION_TASK_GADGET_H
+#define CPPTRANSPORT_INTEGRATION_TASK_GADGET_H
 
 
 #include "transport-runtime/exceptions.h"
@@ -158,4 +158,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__integration_task_gadget_H_
+#endif //CPPTRANSPORT_INTEGRATION_TASK_GADGET_H

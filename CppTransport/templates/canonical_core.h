@@ -152,7 +152,7 @@ namespace transport
       public:
 
         //! constructor
-        $MODEL(error_handler e, warning_handler w, message_handler m);
+        $MODEL(local_environment& e, argument_cache& a);
 
         //! destructor
 		    virtual ~$MODEL();
@@ -410,29 +410,29 @@ namespace transport
 
 
     template <typename number>
-    $MODEL<number>::$MODEL(error_handler e, warning_handler w, message_handler m)
-      : canonical_model<number>("$UNIQUE_ID", $VERSION, std::move(e), std::move(w), std::move(m))
+    $MODEL<number>::$MODEL(local_environment& e, argument_cache& a)
+      : canonical_model<number>("$UNIQUE_ID", $NUMERIC_VERSION, e, a)
       {
-          __A_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __A_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __B_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __B_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __C_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __C_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-          __A_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __A_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __B_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __B_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __C_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __C_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-          __A_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __A_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __B_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __B_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __C_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-          __C_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
         $IF{!fast}
           __dV = new number[$NUMBER_FIELDS];
@@ -897,20 +897,20 @@ namespace transport
         $SET[abc]{C_k3k1k2, "__C_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{C_k3k2k1, "__C_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
 
-        $B_k1k2k3[abc] = $B_PREDEF[abc]{__k1, __k2, __k3, __a};
-        $B_k1k3k2[abc] = $B_PREDEF[abc]{__k1, __k3, __k2, __a};
-        $C_k1k2k3[abc] = $C_PREDEF[abc]{__k1, __k2, __k3, __a};
-        $C_k1k3k2[abc] = $C_PREDEF[abc]{__k1, __k3, __k2, __a};
+        $B_k1k2k3[abc] = $B_TENSOR[abc]{__k1, __k2, __k3, __a};
+        $B_k1k3k2[abc] = $B_TENSOR[abc]{__k1, __k3, __k2, __a};
+        $C_k1k2k3[abc] = $C_TENSOR[abc]{__k1, __k2, __k3, __a};
+        $C_k1k3k2[abc] = $C_TENSOR[abc]{__k1, __k3, __k2, __a};
 
-        $B_k2k3k1[abc] = $B_PREDEF[abc]{__k2, __k3, __k1, __a};
-        $B_k2k1k3[abc] = $B_PREDEF[abc]{__k2, __k1, __k3, __a};
-        $C_k2k3k1[abc] = $C_PREDEF[abc]{__k2, __k3, __k1, __a};
-        $C_k2k1k3[abc] = $C_PREDEF[abc]{__k2, __k1, __k3, __a};
+        $B_k2k3k1[abc] = $B_TENSOR[abc]{__k2, __k3, __k1, __a};
+        $B_k2k1k3[abc] = $B_TENSOR[abc]{__k2, __k1, __k3, __a};
+        $C_k2k3k1[abc] = $C_TENSOR[abc]{__k2, __k3, __k1, __a};
+        $C_k2k1k3[abc] = $C_TENSOR[abc]{__k2, __k1, __k3, __a};
 
-        $B_k3k1k2[abc] = $B_PREDEF[abc]{__k3, __k1, __k2, __a};
-        $B_k3k2k1[abc] = $B_PREDEF[abc]{__k3, __k2, __k1, __a};
-        $C_k3k1k2[abc] = $C_PREDEF[abc]{__k3, __k1, __k2, __a};
-        $C_k3k2k1[abc] = $C_PREDEF[abc]{__k3, __k2, __k1, __a};
+        $B_k3k1k2[abc] = $B_TENSOR[abc]{__k3, __k1, __k2, __a};
+        $B_k3k2k1[abc] = $B_TENSOR[abc]{__k3, __k2, __k1, __a};
+        $C_k3k1k2[abc] = $C_TENSOR[abc]{__k3, __k1, __k2, __a};
+        $C_k3k2k1[abc] = $C_TENSOR[abc]{__k3, __k2, __k1, __a};
 
         unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
         unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
@@ -1123,7 +1123,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a};
+        __u2[FLATTEN($A,$B)] = $U2_TENSOR[AB]{__k, __a};
       }
 
 
@@ -1153,7 +1153,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k1, __k1, __k3, __a};
+        __u3[FLATTEN($A,$B,$C)] = $U3_TENSOR[ABC]{__k1, __k1, __k3, __a};
       }
 
 
@@ -1183,7 +1183,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __A[FIELDS_FLATTEN($a,$b,$c)] = $A_PREDEF[abc]{__k1, __k2, __k3, __a};
+        __A[FIELDS_FLATTEN($a,$b,$c)] = $A_TENSOR[abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1209,7 +1209,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __B[FIELDS_FLATTEN($a,$b,$c)] = $B_PREDEF[abc]{__k1, __k2, __k3, __a};
+        __B[FIELDS_FLATTEN($a,$b,$c)] = $B_TENSOR[abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1228,7 +1228,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __C[FIELDS_FLATTEN($a,$b,$c)] = $C_PREDEF[abc]{__k1, __k2, __k3, __a};
+        __C[FIELDS_FLATTEN($a,$b,$c)] = $C_TENSOR[abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1245,7 +1245,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __M[FIELDS_FLATTEN($a,$b)] = $M_PREDEF[ab];
+        __M[FIELDS_FLATTEN($a,$b)] = $M_TENSOR[ab];
       }
 
 
@@ -1528,7 +1528,7 @@ namespace transport
         // check for nan being produced
         if(std::isnan(__x[$A])) throw integration_produced_nan(__t);
 
-        __dxdt[FLATTEN($A)] = $U1_PREDEF[A];
+        __dxdt[FLATTEN($A)] = $U1_TENSOR[A];
       }
 
 

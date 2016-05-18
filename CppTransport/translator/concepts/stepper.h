@@ -49,19 +49,19 @@ class stepper
 
   public:
 
-    void set_abserr(double d, y::lexeme_type& l) { this->abserr.reset(); this->abserr = std::make_unique< contexted_value<double> >(std::abs(d), l.get_error_context()); }
+    void set_abserr(double d, y::lexeme_type& l);
 
     double get_abserr() const { if(this->abserr) return *this->abserr; else return(DEFAULT_ABS_ERR); }
 
-    void set_relerr(double d, y::lexeme_type& l) { this->relerr.reset(); this->relerr = std::make_unique< contexted_value<double> >(std::abs(d), l.get_error_context()); }
+    void set_relerr(double d, y::lexeme_type& l);
 
     double get_relerr() const { if(this->relerr) return *this->relerr; else return(DEFAULT_REL_ERR); }
 
-    void set_stepsize(double d, y::lexeme_type& l) { this->stepsize.reset(); this->stepsize = std::make_unique< contexted_value<double> >(d, l.get_error_context()); }
+    void set_stepsize(double d, y::lexeme_type& l);
 
     double get_stepsize() const { if(this->stepsize) return *this->stepsize; else return(DEFAULT_STEP_SIZE); }
 
-    void set_name(const std::string& s, y::lexeme_type& l) { this->name.reset(); this->name = std::make_unique< contexted_value<std::string> >(s, l.get_error_context()); }
+    void set_name(const std::string& s, y::lexeme_type& l);
 
     const std::string get_name() const { if(this->name) return *this->name; else return(DEFAULT_STEPPER); }
 
@@ -81,6 +81,62 @@ class stepper
     std::shared_ptr< contexted_value<std::string> > name;
 
   };
+
+
+inline void stepper::set_name(const std::string& s, y::lexeme_type& l)
+  {
+    if(this->name)
+      {
+        l.error(ERROR_STEPPER_REDECLARATION);
+        this->name->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->name = std::make_unique<contexted_value<std::string> >(s, l.get_error_context());
+      }
+  }
+
+
+inline void stepper::set_stepsize(double d, y::lexeme_type& l)
+  {
+    if(this->stepsize)
+      {
+        l.error(ERROR_STEPSIZE_REDECLARATION);
+        this->stepsize->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->stepsize = std::make_unique<contexted_value<double> >(d, l.get_error_context());
+      }
+  }
+
+
+inline void stepper::set_relerr(double d, y::lexeme_type& l)
+  {
+    if(this->relerr)
+      {
+        l.error(ERROR_RELERR_REDECLARATION);
+        this->relerr->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->relerr = std::make_unique<contexted_value<double> >(d, l.get_error_context());
+      }
+  }
+
+
+inline void stepper::set_abserr(double d, y::lexeme_type& l)
+  {
+    if(this->abserr)
+      {
+        l.error(ERROR_ABSERR_REDECLARATION);
+        this->abserr->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->abserr = std::make_unique<contexted_value<double> >(d, l.get_error_context());
+      }
+  }
 
 
 #endif //CPPTRANSPORT_STEPPER_H

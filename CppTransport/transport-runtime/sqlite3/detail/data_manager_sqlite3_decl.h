@@ -100,7 +100,7 @@ namespace transport
         friend class data_manager_sqlite3_transaction_handler<number>;
 
 
-        // WRITER HANDLONG -- implements a 'data_manager' interface
+        // WRITER HANDLING -- implements a 'data_manager' interface
 
       public:
 
@@ -128,6 +128,15 @@ namespace transport
 
         //! Close an open postintegration_writer object
         virtual void close_writer(postintegration_writer<number>& writer) override;
+
+        //! Close a paired integration_writer and postintegration_writer set
+        virtual void close_writer(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer) override;
+
+      protected:
+
+        //! Internal method to close the SQLite container associated with a handle
+        template <typename WriterObject>
+        void close_writer_handle(WriterObject& writer);
 
 
         // WRITE TABLES -- implements a 'data_manager' interface
@@ -208,7 +217,7 @@ namespace transport
                                                               const boost::filesystem::path& logdir,
                                                               unsigned int worker, model<number>* m,
                                                               std::unique_ptr<container_dispatch_function> dispatcher,
-                                                              derived_data::template_type type) override;
+                                                              derived_data::bispectrum_template type) override;
 
       protected:
 
@@ -228,7 +237,7 @@ namespace transport
         void make_temp_zeta_threepf_tables(transaction_manager& mgr, sqlite3* db, unsigned int Nfields);
 
         //! make tables for a temporary fNL container
-        void make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::template_type type);
+        void make_temp_fNL_tables(transaction_manager& mgr, sqlite3* db, derived_data::bispectrum_template type);
 
 
         // AGGREGATION HANDLERS
@@ -251,7 +260,7 @@ namespace transport
         bool aggregate_zeta_threepf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary fNL container
-        bool aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type);
+        bool aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::bispectrum_template type);
 
 
         friend class sqlite3_twopf_writer_aggregate<number>;
@@ -305,45 +314,71 @@ namespace transport
         // DROP GROUPS OF SERIAL NUMBERS
 
         //! drop a set of k-configurations from a twopf-re table; should be provided by implementation
-        virtual void drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                  const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                  const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a twopf-im table; should be provided by implementation
-        virtual void drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                  const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                  const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a tensor twopf table; should be provided by implementation
-        virtual void drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                      const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a threepf-momentum table; should be provided by implementation
-        virtual void drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer,
+                                                          const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                          const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a threepf-deriv table; should be provided by implementation
-        virtual void drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer,
+                                                       const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                       const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a zeta twopf table; should be provided by implementation
-        virtual void drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                    const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
-        virtual void drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                      const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a 1st-order gauge xfm table; should be provided by implementation
-        virtual void drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                    const twopf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 123-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 213-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) override;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 312-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) override;
 
         //! drop statistics for a set of k-configurations
-        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
-        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
         //! drop initial conditions for a set of k-configurations
-        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
-        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
+        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                            const std::set<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                            const std::set<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
 
         friend class sqlite3_twopf_writer_integrity<number>;
@@ -351,6 +386,33 @@ namespace transport
         friend class sqlite3_zeta_twopf_writer_integrity<number>;
         friend class sqlite3_zeta_threepf_writer_integrity<number>;
         friend class sqlite3_fNL_writer_integrity<number>;
+
+
+        // FINALIZATION HANDLERS
+
+      protected:
+
+        //! finalize twopf writer
+        void finalize_twopf_writer(integration_writer<number>& writer);
+
+        //! finalize threepf writer
+        void finalize_threepf_writer(integration_writer<number>& writer);
+
+        //! finalize zeta twopf writer
+        void finalize_zeta_twopf_writer(postintegration_writer<number>& writer);
+
+        //! finalize zeta threepf writer
+        void finalize_zeta_threepf_writer(postintegration_writer<number>& writer);
+
+        //! finalize fNL writer
+        void finalize_fNL_writer(postintegration_writer<number>& writer);
+
+
+        friend class sqlite3_twopf_writer_finalize<number>;
+        friend class sqlite3_threepf_writer_finalize<number>;
+        friend class sqlite3_zeta_twopf_writer_finalize<number>;
+        friend class sqlite3_zeta_threepf_writer_finalize<number>;
+        friend class sqlite3_fNL_writer_finalize<number>;
 
 
         // DATA PIPES -- implements a 'data_manager' interface
@@ -389,15 +451,15 @@ namespace transport
       public:
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& tquery, std::vector<time_config>& sample) override;
+        virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_query& tquery, std::vector<time_config>& sample) override;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        void pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_kconfig_query& kquery, std::vector<twopf_kconfig>& sample) override;
+        void pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_query& kquery, std::vector<twopf_kconfig>& sample) override;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        void pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_kconfig_query& query, std::vector<threepf_kconfig>& sample) override;
+        void pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_query& query, std::vector<threepf_kconfig>& sample) override;
 
         //! Pull a time sample of a background field from a datapipe
         virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, std::vector<number>& sample) override;
@@ -428,15 +490,15 @@ namespace transport
 
         //! Pull a sample of fNL from a datapipe
         virtual void pull_fNL_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                          std::vector<number>& sample, derived_data::template_type type) override;
+                                          std::vector<number>& sample, derived_data::bispectrum_template type) override;
 
         //! Pull a sample of bispectrum.template from a datapipe
         virtual void pull_BT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                         std::vector<number>& sample, derived_data::template_type type) override;
+                                         std::vector<number>& sample, derived_data::bispectrum_template type) override;
 
         //! Pull a sample of template.template from a datapipe
         virtual void pull_TT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                         std::vector<number>& sample, derived_data::template_type type) override;
+                                         std::vector<number>& sample, derived_data::bispectrum_template type) override;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
@@ -510,7 +572,7 @@ namespace transport
                                                  generic_batcher& batcher, replacement_action action);
 
         //! Replace a temporary fNL container with a new one
-        void replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::template_type type,
+        void replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::bispectrum_template type,
                                         generic_batcher& batcher, replacement_action action);
 
         //! Generate the name for a temporary container

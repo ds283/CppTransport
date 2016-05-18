@@ -44,17 +44,17 @@
 #include "transport-runtime/tasks/task_types.h"
 
 
-#define CPPTRANSPORT_NODE_TASK_DESCRIPTION        "description"
+#define CPPTRANSPORT_NODE_TASK_DESCRIPTION            "description"
 
-#define CPPTRANSPORT_NODE_TASK_TYPE               "task-type"
+#define CPPTRANSPORT_NODE_TASK_TYPE                   "task-type"
 
-#define CPPTRANSPORT_NODE_TASK_TYPE_TWOPF         "twopf-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC "threepf-cubic-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_FLS   "threepf-fls-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_OUTPUT        "output-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF    "zeta-twopf-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF  "zeta-threepf-task"
-#define CPPTRANSPORT_NODE_TASK_TYPE_FNL           "fNL-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_TWOPF             "twopf-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC     "threepf-cubic-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_ALPHABETA "threepf-alphabeta-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_OUTPUT            "output-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF        "zeta-twopf-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF      "zeta-threepf-task"
+#define CPPTRANSPORT_NODE_TASK_TYPE_FNL               "fNL-task"
 
 
 namespace transport
@@ -71,11 +71,11 @@ namespace transport
 
 				// CONSTRUCTOR, DESTRUCTOR
 
-				//! Construct a named task
-				task(const std::string& nm);
+				//! Construct a named task with given serializable status
+				task(std::string nm, bool s=true);
 
 				//! Deserialization constructor
-				task(const std::string& nm, Json::Value& reader);
+				task(std::string nm, Json::Value& reader);
 
 				//! Destroy a task
 				virtual ~task() = default;
@@ -88,11 +88,17 @@ namespace transport
 		    //! Get name
 		    const std::string& get_name() const { return(this->name); }
 
+        //! Reset name
+        task<number>& set_name(std::string s) { this->name = std::move(s); return *this; }
+
         //! Set description
-        void set_description(std::string d) { this->description = std::move(d); }
+        task<number>& set_description(std::string d) { this->description = std::move(d); return *this; }
 
         //! Get description
         const std::string& get_description() const { return(this->description); }
+
+        //! Get serializable status
+        bool is_serializable() const { return(this->serializable); }
 
 
 				// CLONE
@@ -123,20 +129,25 @@ namespace transport
         //! Description for this task
         std::string description;
 
+        //! Is this task serializable?
+        bool serializable;
+
 			};
 
 
 		template <typename number>
-		task<number>::task(const std::string& nm)
-			: name(nm)
+		task<number>::task(std::string nm, bool s)
+			: name(std::move(nm)),
+        serializable(s)
 			{
 			}
 
 
 		template <typename number>
-		task<number>::task(const std::string& nm, Json::Value& reader)
-			: name(nm),
-        description(reader[CPPTRANSPORT_NODE_TASK_DESCRIPTION].asString())
+		task<number>::task(std::string nm, Json::Value& reader)
+			: name(std::move(nm)),
+        description(reader[CPPTRANSPORT_NODE_TASK_DESCRIPTION].asString()),
+        serializable(true)
 			{
 			}
 

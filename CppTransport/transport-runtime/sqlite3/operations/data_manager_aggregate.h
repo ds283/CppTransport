@@ -170,7 +170,7 @@ namespace transport
         // some time serial tserial, we want to add our new value to it.
         // For that purpose we use COALESCE.
         template <typename number>
-        void aggregate_fNL(sqlite3* db, postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type)
+        void aggregate_fNL(sqlite3* db, postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::bispectrum_template type)
           {
             aggregation_impl::attach_manager mgr(db, temp_ctr);
 

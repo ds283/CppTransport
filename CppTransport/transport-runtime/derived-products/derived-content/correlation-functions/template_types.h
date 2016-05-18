@@ -36,16 +36,16 @@ namespace transport
 		namespace derived_data
 			{
 
-				enum class template_type { fNL_local_template, fNL_equi_template, fNL_ortho_template, fNL_DBI_template };
+				enum class bispectrum_template { local, equilateral, orthogonal, DBI };
 
-				inline std::string template_type_to_string(template_type type)
+				inline std::string template_type_to_string(bispectrum_template type)
 					{
 						switch(type)
 							{
-						    case template_type::fNL_local_template: return(std::string(CPPTRANSPORT_FNL_LOCAL));
-						    case template_type::fNL_equi_template:  return(std::string(CPPTRANSPORT_FNL_EQUI));
-						    case template_type::fNL_ortho_template: return(std::string(CPPTRANSPORT_FNL_ORTHO));
-                case template_type::fNL_DBI_template:   return(std::string(CPPTRANSPORT_FNL_DBI));
+						    case bispectrum_template::local: 				return(std::string(CPPTRANSPORT_FNL_LOCAL));
+						    case bispectrum_template::equilateral:  return(std::string(CPPTRANSPORT_FNL_EQUI));
+						    case bispectrum_template::orthogonal: 	return(std::string(CPPTRANSPORT_FNL_ORTHO));
+                case bispectrum_template::DBI:   				return(std::string(CPPTRANSPORT_FNL_DBI));
 							}
 					}
 

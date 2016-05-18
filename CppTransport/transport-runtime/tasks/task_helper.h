@@ -62,7 +62,7 @@ namespace transport
 
             if(type == CPPTRANSPORT_NODE_TASK_TYPE_TWOPF)              return std::make_unique< twopf_task<number> >(nm, reader, handle, ics);
             else if(type == CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) return std::make_unique< threepf_cubic_task<number> >(nm, reader, handle, ics);
-            else if(type == CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_FLS)   return std::make_unique< threepf_fls_task<number> >(nm, reader, handle, ics);
+            else if(type == CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_ALPHABETA)   return std::make_unique< threepf_alphabeta_task<number> >(nm, reader, handle, ics);
 
             std::ostringstream msg;
             msg << CPPTRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";

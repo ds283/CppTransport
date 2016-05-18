@@ -279,7 +279,7 @@ namespace transport
         const std::set<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
 
         //! Set list of failed serial numbers
-        void set_failed_serials(const std::set<unsigned int>& f) { this->failed_serials = f; }
+        void set_failed_serials(std::set<unsigned int> f) { this->failed_serials = std::move(f); }
 
         //! Get workgroup number
         unsigned int get_workgroup_number() const { return(this->workgroup_number); }
@@ -288,13 +288,19 @@ namespace transport
         void set_workgroup_number(unsigned int w) { this->workgroup_number = w; }
 
         //! Set seed
-        void set_seed(const std::string& s) { this->seeded = true; this->seed_group = s; }
+        void set_seed(std::string s) { this->seeded = true; this->seed_group = std::move(s); }
 
         //! Query seeded status
         bool is_seeded() const { return(this->seeded); }
 
         //! Query seed group
         const std::string& get_seed_group() const { return(this->seed_group); }
+
+        //! Set data type
+        void set_data_type(std::string s) { this->data_type = std::move(s); }
+
+        //! Get data type
+        const std::string& get_data_type() const { return(this->data_type); }
 
         //! Set statistics flag
         void set_statistics(bool g) { this->statistics = g; }
@@ -354,6 +360,9 @@ namespace transport
 
         //! if this integration was seeded, parent content group
         std::string seed_group;
+
+        //! data type used during integration
+        std::string data_type;
 
         //! does this group have per-configuration statistics?
         bool statistics;
@@ -426,7 +435,7 @@ namespace transport
         const std::set<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
 
         //! Set list of failed serial numbers
-        void set_failed_serials(const std::set<unsigned int>& f) { this->failed_serials = f; }
+        void set_failed_serials(std::set<unsigned int> f) { this->failed_serials = std::move(f); }
 
         //! Set pair
         void set_pair(bool g) { this->paired = g; }
@@ -435,13 +444,13 @@ namespace transport
         bool is_paired() const { return(this->paired); }
 
         //! Set parent content group
-        void set_parent_group(const std::string& p) { this->parent_group = p; }
+        void set_parent_group(std::string p) { this->parent_group = std::move(p); }
 
         //! Query paired gorup
         const std::string& get_parent_group() const { return(this->parent_group); }
 
         //! Set seed
-        void set_seed(const std::string& s) { this->seeded = true; this->seed_group = s; }
+        void set_seed(std::string s) { this->seeded = true; this->seed_group = std::move(s); }
 
         //! Query seeded status
         bool is_seeded() const { return(this->seeded); }
@@ -651,7 +660,7 @@ namespace transport
         const std::list<note>& get_notes() const { return (this->notes); }
 
         //! Add note
-        void add_note(const std::string& note);
+        void add_note(const std::string note);
 
         //! Remove numbered note
         void remove_note(unsigned int number);
@@ -665,8 +674,8 @@ namespace transport
         //! Remove tag
         void remove_tag(const std::string& tag);
 
-        //! Check whether we match a set of tags
-        bool check_tags(std::list<std::string> match_tags) const;
+        //! Check whether we match a set of tags; returns true if so, false otherwise
+        bool check_tags(const std::list<std::string>& match_tags) const;
 
 
         // ABSOLUTE PATHS

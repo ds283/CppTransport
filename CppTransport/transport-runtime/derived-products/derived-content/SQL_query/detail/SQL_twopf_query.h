@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __SQL_twopf_query_H_
-#define __SQL_twopf_query_H_
+#ifndef CPPTRANSPORT_SQL_TWOPF_QUERY_H
+#define CPPTRANSPORT_SQL_TWOPF_QUERY_H
 
 
 #include <string>
@@ -44,7 +44,7 @@ namespace transport
 	    {
 
         //! Manager for SQL-ish query to filter twopf k-configurations
-        class SQL_twopf_kconfig_query: public SQL_query
+        class SQL_twopf_query: public SQL_query
 	        {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -52,13 +52,13 @@ namespace transport
           public:
 
             //! constructor with given SQL query
-            SQL_twopf_kconfig_query(const std::string q);
+            SQL_twopf_query(const std::string q);
 
             //! deserialization constructor
-            SQL_twopf_kconfig_query(Json::Value& reader);
+            SQL_twopf_query(Json::Value& reader);
 
             //! destructor is default
-            virtual ~SQL_twopf_kconfig_query() = default;
+            virtual ~SQL_twopf_query() = default;
 
 		        //! comparison operator -- required by 'linecache'
 		        virtual bool operator==(const SQL_query& obj) const override;
@@ -79,7 +79,7 @@ namespace transport
 
           public:
 
-		        virtual SQL_twopf_kconfig_query* clone() const override { return new SQL_twopf_kconfig_query(dynamic_cast<const SQL_twopf_kconfig_query&>(*this)); }
+		        virtual SQL_twopf_query* clone() const override { return new SQL_twopf_query(dynamic_cast<const SQL_twopf_query&>(*this)); }
 
 
             // SERIALIZATION -- implements a 'serializable' interface
@@ -102,26 +102,26 @@ namespace transport
         // SQL TWOPF QUERY
 
 
-        SQL_twopf_kconfig_query::SQL_twopf_kconfig_query(const std::string q)
+        SQL_twopf_query::SQL_twopf_query(const std::string q)
 	        : query(q)
 	        {
 	        }
 
 
-        SQL_twopf_kconfig_query::SQL_twopf_kconfig_query(Json::Value& reader)
+        SQL_twopf_query::SQL_twopf_query(Json::Value& reader)
 	        {
             query = reader[CPPTRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY].asString();
 	        }
 
 
-        void SQL_twopf_kconfig_query::serialize(Json::Value& writer) const
+        void SQL_twopf_query::serialize(Json::Value& writer) const
 	        {
             writer[CPPTRANSPORT_NODE_SQL_QUERY_TYPE]          = std::string(CPPTRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY_TYPE);
             writer[CPPTRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY] = this->query;
 	        }
 
 
-		    std::string SQL_twopf_kconfig_query::make_query(const SQL_policy& policy, bool serials_only) const
+		    std::string SQL_twopf_query::make_query(const SQL_policy& policy, bool serials_only) const
 			    {
 		        std::ostringstream query;
 
@@ -136,9 +136,9 @@ namespace transport
 			    }
 
 
-		    bool SQL_twopf_kconfig_query::operator==(const SQL_query& query) const
+		    bool SQL_twopf_query::operator==(const SQL_query& query) const
 			    {
-				    const SQL_twopf_kconfig_query* ptr = dynamic_cast<const SQL_twopf_kconfig_query*>(&query);
+				    const SQL_twopf_query* ptr = dynamic_cast<const SQL_twopf_query*>(&query);
 
 				    if(ptr == nullptr) return(false);
 				    return(this->query == ptr->query);
@@ -149,4 +149,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__SQL_twopf_query_H_
+#endif //CPPTRANSPORT_SQL_TWOPF_QUERY_H

@@ -24,11 +24,11 @@
 //
 
 
-#ifndef __sqlite3_utility_messages_H_
-#define __sqlite3_utility_messages_H_
+#ifndef CPPTRANSPORT_SQLITE3_UTILITY_MESSAGES_H
+#define CPPTRANSPORT_SQLITE3_UTILITY_MESSAGES_H
 
 
 #define CPPTRANSPORT_SQLITE_UTILITY_ERROR "SQLite error:"
 
 
-#endif //__sqlite3_utility_messages_H_
+#endif //CPPTRANSPORT_SQLITE3_UTILITY_MESSAGES_H

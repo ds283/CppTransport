@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __fNL_tags_H_
-#define __fNL_tags_H_
+#ifndef CPPTRANSPORT_FNL_TAGS_H
+#define CPPTRANSPORT_FNL_TAGS_H
 
 
 #include <vector>
@@ -60,7 +60,7 @@ namespace transport
 
       public:
 
-        fNL_time_data_tag(datapipe<number>* p, derived_data::template_type ty)
+        fNL_time_data_tag(datapipe<number>* p, derived_data::bispectrum_template ty)
 	        : data_tag<number>(p),
 	          type(ty)
 	        {
@@ -105,7 +105,7 @@ namespace transport
       protected:
 
         //! template type
-        typename derived_data::template_type type;
+        typename derived_data::bispectrum_template type;
 
 	    };
 
@@ -119,7 +119,7 @@ namespace transport
 
       public:
 
-        BT_time_data_tag(datapipe<number>* p, derived_data::template_type ty)
+        BT_time_data_tag(datapipe<number>* p, derived_data::bispectrum_template ty)
 	        : data_tag<number>(p),
 	          type(ty)
 	        {
@@ -164,7 +164,7 @@ namespace transport
       protected:
 
         //! template type
-        typename derived_data::template_type type;
+        typename derived_data::bispectrum_template type;
 
 	    };
 
@@ -178,7 +178,7 @@ namespace transport
 
       public:
 
-        TT_time_data_tag(datapipe<number>* p, derived_data::template_type ty)
+        TT_time_data_tag(datapipe<number>* p, derived_data::bispectrum_template ty)
 	        : data_tag<number>(p),
 	          type(ty)
 	        {
@@ -223,7 +223,7 @@ namespace transport
       protected:
 
         //! template type
-        typename derived_data::template_type type;
+        typename derived_data::bispectrum_template type;
 
 	    };
 
@@ -311,4 +311,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__fNL_tags_H_
+#endif //CPPTRANSPORT_FNL_TAGS_H

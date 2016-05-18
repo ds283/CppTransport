@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __range_abstract_H_
-#define __range_abstract_H_
+#ifndef CPPTRANSPORT_RANGE_ABSTRACT_H
+#define CPPTRANSPORT_RANGE_ABSTRACT_H
 
 
 #include "transport-runtime/concepts/range_detail/common.h"
@@ -34,7 +34,7 @@
 namespace transport
 	{
 
-    template <typename value>
+    template <typename value=double>
     class range: public serializable
 	    {
 
@@ -75,4 +75,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__range_abstract_H_
+#endif //CPPTRANSPORT_RANGE_ABSTRACT_H

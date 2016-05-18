@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __time_series_H_
-#define __time_series_H_
+#ifndef CPPTRANSPORT_TIME_SERIES_H
+#define CPPTRANSPORT_TIME_SERIES_H
 
 
 #include <iostream>
@@ -90,7 +90,7 @@ namespace transport
 		      public:
 
 		        //! extract axis data, corresponding to our sample times, from datapipe
-		        std::vector<double> pull_time_axis(datapipe<number>& pipe, const SQL_time_config_query& tquery) const;
+		        std::vector<double> pull_time_axis(datapipe<number>& pipe, const SQL_time_query& tquery) const;
 
 
 				    // LABELLING SERVICES
@@ -145,9 +145,9 @@ namespace transport
 
 
 		    template <typename number>
-		    std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe, const SQL_time_config_query& tquery) const
+		    std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe, const SQL_time_query& tquery) const
 			    {
-				    assert(this->x_type == axis_value::efolds_axis);
+				    assert(this->x_type == axis_value::efolds);
 		        if(!pipe.validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 
 		        // set-up time sample data
@@ -302,4 +302,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__time_series_H_
+#endif //CPPTRANSPORT_TIME_SERIES_H

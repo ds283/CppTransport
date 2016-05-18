@@ -118,7 +118,7 @@ namespace transport
 
 
     // CLASS FOR $MODEL '*_mpi', ie., an MPI-based implementation
-    template <typename number>
+    template <typename number=default_number_type>
     class $MODEL_mpi : public $MODEL<number>
       {
 
@@ -127,8 +127,8 @@ namespace transport
       public:
 
         //! constructor
-        $MODEL_mpi(error_handler e, warning_handler w, message_handler m)
-          : $MODEL<number>(std::move(e), std::move(w), std::move(m))
+        $MODEL_mpi(local_environment& e, argument_cache& a)
+          : $MODEL<number>(e, a)
           {
 #ifdef CPPTRANSPORT_INSTRUMENT
             twopf_setup_timer.stop();
@@ -984,7 +984,7 @@ namespace transport
 #endif
 
         // evolve the background
-        __background($A) = $U1_PREDEF[A];
+        __background($A) = $U1_TENSOR[A];
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __eps = $EPSILON;
@@ -1000,7 +1000,7 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        $U2_DECLARE[AB] = $U2_PREDEF[AB]{__k, __a};
+        $U2_DECLARE[AB] = $U2_TENSOR[AB]{__k, __a};
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __u_tensor_timer.stop();
@@ -1131,7 +1131,7 @@ namespace transport
 #endif
 
         // evolve the background
-        __background($A) = $U1_PREDEF[A];
+        __background($A) = $U1_TENSOR[A];
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __eps = $EPSILON;
@@ -1160,14 +1160,14 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        $U2_k1_DECLARE[AB] = $U2_PREDEF[AB]{__k1, __a};
-        $U2_k2_DECLARE[AB] = $U2_PREDEF[AB]{__k2, __a};
-        $U2_k3_DECLARE[AB] = $U2_PREDEF[AB]{__k3, __a};
+        $U2_k1_DECLARE[AB] = $U2_TENSOR[AB]{__k1, __a};
+        $U2_k2_DECLARE[AB] = $U2_TENSOR[AB]{__k2, __a};
+        $U2_k3_DECLARE[AB] = $U2_TENSOR[AB]{__k3, __a};
 
         // set up components of the u3 tensor
-        $U3_k1k2k3_DECLARE[ABC] = $U3_PREDEF[ABC]{__k1, __k2, __k3, __a};
-        $U3_k2k1k3_DECLARE[ABC] = $U3_PREDEF[ABC]{__k2, __k1, __k3, __a};
-        $U3_k3k1k2_DECLARE[ABC] = $U3_PREDEF[ABC]{__k3, __k1, __k2, __a};
+        $U3_k1k2k3_DECLARE[ABC] = $U3_TENSOR[ABC]{__k1, __k2, __k3, __a};
+        $U3_k2k1k3_DECLARE[ABC] = $U3_TENSOR[ABC]{__k2, __k1, __k3, __a};
+        $U3_k3k1k2_DECLARE[ABC] = $U3_TENSOR[ABC]{__k3, __k1, __k2, __a};
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __u_tensor_timer.stop();

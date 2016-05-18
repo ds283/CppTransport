@@ -38,6 +38,8 @@
 
 #include "transport-runtime/utilities/spline1d.h"
 
+#include "transport-runtime/reporting/key_value.h"
+
 #include "transport-runtime/defaults.h"
 
 #include "boost/math/tools/roots.hpp"
@@ -53,9 +55,9 @@ namespace transport
     constexpr auto CPPTRANSPORT_NODE_THREEPF_INTEGRABLE = "integrable";
 
     constexpr auto CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING = "k-spacing";
-    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING = "kt-spacing";
-    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING = "alpha-spacing";
-    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING = "beta-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_ALPHABETA_KT_SPACING = "kt-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_ALPHABETA_ALPHA_SPACING = "alpha-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_ALPHABETA_BETA_SPACING = "beta-spacing";
 
 		enum class threepf_ics_exit_type { smallest_wavenumber_exit, kt_wavenumber_exit};
 
@@ -69,7 +71,7 @@ namespace transport
       public:
 
         //! Construct a threepf-task
-        threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff);
+        threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool adpt_ics);
 
         //! deserialization constructor
         threepf_task(const std::string& n, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -144,10 +146,23 @@ namespace transport
         double get_initial_time(const threepf_kconfig& config) const;
 
         //! Set adaptics ics setting
-        virtual void set_adaptive_ics(bool g) override { this->adaptive_ics = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
+        virtual threepf_task<number>& set_adaptive_ics(bool g) override
+          {
+            this->adaptive_ics = g;
+            this->validate_subhorizon_efolds();
+            this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
+            return *this;
+          }
 
         //! Set number of adaptive e-folds
-        virtual void set_adaptive_ics_efolds(double N) override { this->adaptive_ics = true; this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
+        virtual threepf_task<number>& set_adaptive_ics_efolds(double N) override
+          {
+            this->adaptive_ics = true;
+            this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds);
+            this->validate_subhorizon_efolds();
+            this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
+            return *this;
+          }
 
 
         // SERIALIZATION -- implements a 'serialiazble' interface
@@ -195,8 +210,8 @@ namespace transport
 
 
     template <typename number>
-    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff)
-	    : twopf_db_task<number>(nm, i, t, ff),
+    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool adpt_ics)
+	    : twopf_db_task<number>(nm, i, t, adpt_ics),
 	      integrable(true)
 	    {
         threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar);
@@ -339,10 +354,10 @@ namespace transport
             // forward to underlying twopf_db_task to update its database;
             // should be done *before* computing horizon exit times for threepfs, so that horizon exit & massless times
             // for the corresponding twopfs are known
-            this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
 
             // compute horizon exit times & massless times for threepf configuraitons
-            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -362,7 +377,7 @@ namespace transport
 		        sp.set_offset(std::log(t->kt_comoving/3.0));
 
             // update database record with computed exit time
-            t->t_exit = task_impl::find_zero_of_spline(sp, tol);
+            t->t_exit = task_impl::find_zero_of_spline(this->name, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_EXIT, sp, tol);
 
             // determine massless time from pre-computed massless times of corresponding twopf database
             twopf_kconfig_database::record_iterator rec1;
@@ -394,7 +409,7 @@ namespace transport
 			}
 
 
-    template <typename number>
+    template <typename number=default_number_type>
     class threepf_cubic_task: public threepf_task<number>
 	    {
 
@@ -406,7 +421,7 @@ namespace transport
         //! with specified policies
         template <typename StoragePolicy = task_policy_impl::DefaultStoragePolicy, typename TrianglePolicy = task_policy_impl::DefaultCubicTrianglePolicy>
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                           range<double>& t, range<double>& ks, bool ff=false,
+                           range<double>& t, range<double>& ks, bool adpt_ics=false,
                            StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
 
         //! Deserialization constructor
@@ -453,9 +468,9 @@ namespace transport
     template <typename number>
     template <typename StoragePolicy, typename TrianglePolicy>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                                                   range<double>& t, range<double>& ks, bool ff,
+                                                   range<double>& t, range<double>& ks, bool adpt_ics,
                                                    StoragePolicy policy, TrianglePolicy triangle)
-	    : threepf_task<number>(nm, i, t, ff)
+	    : threepf_task<number>(nm, i, t, adpt_ics)
 	    {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
@@ -482,16 +497,20 @@ namespace transport
         if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
-        std::ostringstream msg;
-        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C;
-        this->get_model()->message(msg.str());
+        std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
+        kv->set_tiling(true);
+        kv->set_title(this->get_name());
+
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_THREEPF, boost::lexical_cast<std::string>(this->threepf_db->size()));
 
         this->compute_horizon_exit_times();
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
-        this->write_time_details();
+        this->write_time_details(*kv);
         this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
+
+        if(this->get_model()->is_verbose()) kv->write(std::cout);
 	    }
 
 
@@ -513,8 +532,8 @@ namespace transport
 	    }
 
 
-    template <typename number>
-    class threepf_fls_task: public threepf_task<number>
+    template <typename number=default_number_type>
+    class threepf_alphabeta_task: public threepf_task<number>
 	    {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -522,15 +541,15 @@ namespace transport
       public:
 
         //! Construct a named three-point function task based on sampling at specified values of
-        //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta,
+        //! the Fergusson-Shellard parameters k_t, alpha and beta,
         //! with specified storage policies
-        template <typename StoragePolicy = task_policy_impl::DefaultStoragePolicy, typename TrianglePolicy = task_policy_impl::DefaultFLSTrianglePolicy>
-        threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
-                         range<double>& kts, range<double>& alphas, range<double>& betas, bool ff=false,
-                         StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
+        template <typename StoragePolicy = task_policy_impl::DefaultStoragePolicy, typename TrianglePolicy = task_policy_impl::DefaultAlphaBetaTrianglePolicy>
+        threepf_alphabeta_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
+                               range<double>& kts, range<double>& alphas, range<double>& betas, bool adpt_ics = false,
+                               StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
 
         //! Deserialization constructor
-        threepf_fls_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
+        threepf_alphabeta_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
 
 
         // INTERFACE
@@ -557,7 +576,7 @@ namespace transport
       public:
 
         //! Virtual copy
-        virtual threepf_fls_task<number>* clone() const override { return new threepf_fls_task<number>(static_cast<const threepf_fls_task<number>&>(*this)); }
+        virtual threepf_alphabeta_task<number>* clone() const override { return new threepf_alphabeta_task<number>(static_cast<const threepf_alphabeta_task<number>&>(*this)); }
 
 
         // INTERNAL DATA
@@ -576,13 +595,14 @@ namespace transport
 	    };
 
 
-    // build a threepf task from sampling at specific values of the Fergusson-Shellard-Liguori parameters k_t, alpha, beta
+    // build a threepf task from sampling at specific values of the Fergusson-Shellard parameters k_t, alpha, beta
     template <typename number>
     template <typename StoragePolicy, typename TrianglePolicy>
-    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
-                                               range<double>& kts, range<double>& alphas, range<double>& betas, bool ff,
-                                               StoragePolicy policy, TrianglePolicy triangle)
-	    : threepf_task<number>(nm, i, t, ff)
+    threepf_alphabeta_task<number>::threepf_alphabeta_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
+                                                           range<double>& kts, range<double>& alphas,
+                                                           range<double>& betas, bool adpt_ics,
+                                                           StoragePolicy policy, TrianglePolicy triangle)
+	    : threepf_task<number>(nm, i, t, adpt_ics)
 	    {
         for(unsigned int j = 0; j < kts.size(); ++j)
 	        {
@@ -592,7 +612,8 @@ namespace transport
 	                {
                     if(triangle(alphas[k], betas[l]))     // ask policy object to decide whether this is a triangle
 	                    {
-                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_FLS_record(*this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
+                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_alphabeta_record(
+                          *this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
 
                         if(!new_serial)   // configuration was not stored
                           {
@@ -609,37 +630,41 @@ namespace transport
         alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
         beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();
 
-        std::ostringstream msg;
-        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C;
-        this->get_model()->message(msg.str());
+        std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
+        kv->set_tiling(true);
+        kv->set_title(this->get_name());
+
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
+        kv->insert_back(CPPTRANSPORT_TASK_DATA_THREEPF, boost::lexical_cast<std::string>(this->threepf_db->size()));
 
         this->compute_horizon_exit_times();
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
-        this->write_time_details();
+        this->write_time_details(*kv);
         this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
+
+        if(this->get_model()->is_verbose()) kv->write(std::cout);
 	    }
 
 
     template <typename number>
-    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
+    threepf_alphabeta_task<number>::threepf_alphabeta_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : threepf_task<number>(nm, reader, handle, i)
 	    {
-        kt_spacing    = reader[CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING].asDouble();
-        alpha_spacing = reader[CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING].asDouble();
-        beta_spacing  = reader[CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING].asDouble();
+        kt_spacing    = reader[CPPTRANSPORT_NODE_THREEPF_ALPHABETA_KT_SPACING].asDouble();
+        alpha_spacing = reader[CPPTRANSPORT_NODE_THREEPF_ALPHABETA_ALPHA_SPACING].asDouble();
+        beta_spacing  = reader[CPPTRANSPORT_NODE_THREEPF_ALPHABETA_BETA_SPACING].asDouble();
 	    }
 
 
     template <typename number>
-    void threepf_fls_task<number>::serialize(Json::Value& writer) const
+    void threepf_alphabeta_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[CPPTRANSPORT_NODE_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_FLS);
+        writer[CPPTRANSPORT_NODE_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_ALPHABETA);
 
-        writer[CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING]    = this->kt_spacing;
-        writer[CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING] = this->alpha_spacing;
-        writer[CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING]  = this->beta_spacing;
+        writer[CPPTRANSPORT_NODE_THREEPF_ALPHABETA_KT_SPACING]    = this->kt_spacing;
+        writer[CPPTRANSPORT_NODE_THREEPF_ALPHABETA_ALPHA_SPACING] = this->alpha_spacing;
+        writer[CPPTRANSPORT_NODE_THREEPF_ALPHABETA_BETA_SPACING]  = this->beta_spacing;
 
         this->threepf_task<number>::serialize(writer);
 	    }

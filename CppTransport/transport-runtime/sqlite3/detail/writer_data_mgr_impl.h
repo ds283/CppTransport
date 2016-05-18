@@ -38,9 +38,16 @@ namespace transport
 
 
     template <typename number>
-    void sqlite3_twopf_writer_integrity<number>::operator()(integration_writer<number>& writer, integration_task<number>* task)
+    void sqlite3_twopf_writer_integrity<number>::operator()(integration_writer<number>& writer, integration_task<number>& task)
       {
-        return this->mgr.check_twopf_integrity_handler(writer, task);
+        this->mgr.check_twopf_integrity_handler(writer, task);
+      }
+
+
+    template <typename number>
+    void sqlite3_twopf_writer_finalize<number>::operator()(integration_writer<number>& writer)
+      {
+        this->mgr.finalize_twopf_writer(writer);
       }
 
 
@@ -52,9 +59,16 @@ namespace transport
 
 
     template <typename number>
-    void sqlite3_threepf_writer_integrity<number>::operator()(integration_writer<number>& writer, integration_task<number>* task)
+    void sqlite3_threepf_writer_integrity<number>::operator()(integration_writer<number>& writer, integration_task<number>& task)
       {
-        return this->mgr.check_threepf_integrity_handler(writer, task);
+        this->mgr.check_threepf_integrity_handler(writer, task);
+      }
+
+
+    template <typename number>
+    void sqlite3_threepf_writer_finalize<number>::operator()(integration_writer<number>& writer)
+      {
+        this->mgr.finalize_threepf_writer(writer);
       }
 
 
@@ -66,9 +80,16 @@ namespace transport
 
 
     template <typename number>
-    void sqlite3_zeta_twopf_writer_integrity<number>::operator()(postintegration_writer<number>& writer, postintegration_task<number>* task)
+    void sqlite3_zeta_twopf_writer_integrity<number>::operator()(postintegration_writer<number>& writer, postintegration_task<number>& task)
       {
-        return this->mgr.check_zeta_twopf_integrity_handler(writer, task);
+        this->mgr.check_zeta_twopf_integrity_handler(writer, task);
+      }
+
+
+    template <typename number>
+    void sqlite3_zeta_twopf_writer_finalize<number>::operator()(postintegration_writer<number>& writer)
+      {
+        this->mgr.finalize_zeta_twopf_writer(writer);
       }
 
 
@@ -80,9 +101,16 @@ namespace transport
 
 
     template <typename number>
-    void sqlite3_zeta_threepf_writer_integrity<number>::operator()(postintegration_writer<number>& writer, postintegration_task<number>* task)
+    void sqlite3_zeta_threepf_writer_integrity<number>::operator()(postintegration_writer<number>& writer, postintegration_task<number>& task)
       {
-        return this->mgr.check_zeta_threepf_integrity_handler(writer, task);
+        this->mgr.check_zeta_threepf_integrity_handler(writer, task);
+      }
+
+
+    template <typename number>
+    void sqlite3_zeta_threepf_writer_finalize<number>::operator()(postintegration_writer<number>& writer)
+      {
+        this->mgr.finalize_zeta_threepf_writer(writer);
       }
 
 
@@ -94,9 +122,16 @@ namespace transport
 
 
     template <typename number>
-    void sqlite3_fNL_writer_integrity<number>::operator()(postintegration_writer<number>& writer, postintegration_task<number>* task)
+    void sqlite3_fNL_writer_integrity<number>::operator()(postintegration_writer<number>& writer, postintegration_task<number>& task)
       {
-        return this->mgr.check_fNL_integrity_handler(writer, task);
+        this->mgr.check_fNL_integrity_handler(writer, task);
+      }
+
+
+    template <typename number>
+    void sqlite3_fNL_writer_finalize<number>::operator()(postintegration_writer<number>& writer)
+      {
+        this->mgr.finalize_fNL_writer(writer);
       }
 
 

@@ -159,7 +159,33 @@ namespace transport
       public:
 
         //! check integrity
-        virtual void operator()(postintegration_writer<number>& writer, postintegration_task<number>* task) = 0;
+        virtual void operator()(postintegration_writer<number>& writer, postintegration_task<number>& task) = 0;
+
+      };
+
+
+    //! Finalize object
+    template <typename number>
+    class postintegration_writer_finalize
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        postintegration_writer_finalize() = default;
+
+        //! destructor is default
+        virtual ~postintegration_writer_finalize() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! check integrity
+        virtual void operator()(postintegration_writer<number>& writer) = 0;
 
       };
 
@@ -212,7 +238,15 @@ namespace transport
         void set_integrity_check_handler(std::unique_ptr< postintegration_writer_integrity<number> > c) { this->integrity_h = std::move(c); }
 
         //! Check integrity
-        void check_integrity(postintegration_task<number>* tk) { if(this->integrity_h) (*this->integrity_h)(*this, tk); }
+        //! Normally does not need to be invoked manually, because it is called by data_manager<> in close_writer()
+        void check_integrity() { if(this->integrity_h && this->task) (*this->integrity_h)(*this, *this->task); }
+
+        //! Set finalization callback
+        void set_finalize_handler(std::unique_ptr< postintegration_writer_finalize<number> > f) { this->finalize_h = std::move(f); }
+
+        //! Perform finalization
+        //! Normally does not need to be invoked manually, because it is called by data_manager<> in close_writer()
+        void finalize() { if(this->finalize_h) (*this->finalize_h)(*this); }
 
 
         // PAIRING
@@ -315,6 +349,9 @@ namespace transport
 
         //! Integrity check callback
         std::unique_ptr< postintegration_writer_integrity<number> > integrity_h;
+
+        //! Finalize callback
+        std::unique_ptr< postintegration_writer_finalize<number> > finalize_h;
 
 
         // METADATA

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __SQL_time_query_H_
-#define __SQL_time_query_H_
+#ifndef CPPTRANSPORT_SQL_TIME_QUERY_H
+#define CPPTRANSPORT_SQL_TIME_QUERY_H
 
 
 #include <string>
@@ -44,7 +44,7 @@ namespace transport
 	    {
 
         //! Manager for SQL-ish query to filter time configurations
-        class SQL_time_config_query: public SQL_query
+        class SQL_time_query: public SQL_query
 	        {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -52,13 +52,13 @@ namespace transport
           public:
 
             //! constructor with given SQL query
-            SQL_time_config_query(const std::string q);
+            SQL_time_query(const std::string q);
 
             //! deserialization constructor
-            SQL_time_config_query(Json::Value& reader);
+            SQL_time_query(Json::Value& reader);
 
             //! destructor is default
-            virtual ~SQL_time_config_query() = default;
+            virtual ~SQL_time_query() = default;
 
             //! comparison operator -- required by 'linecache'
             virtual bool operator==(const SQL_query& obj) const override;
@@ -79,7 +79,7 @@ namespace transport
 
           public:
 
-		        virtual SQL_time_config_query* clone() const override { return new SQL_time_config_query(dynamic_cast<const SQL_time_config_query&>(*this)); }
+		        virtual SQL_time_query* clone() const override { return new SQL_time_query(dynamic_cast<const SQL_time_query&>(*this)); }
 
 
             // SERIALIZATION -- implements a 'serializable' interface
@@ -102,26 +102,26 @@ namespace transport
         // SQL TIME QUERY
 
 
-        SQL_time_config_query::SQL_time_config_query(const std::string q)
+        SQL_time_query::SQL_time_query(const std::string q)
 	        : query(q)
 	        {
 	        }
 
 
-        SQL_time_config_query::SQL_time_config_query(Json::Value& reader)
+        SQL_time_query::SQL_time_query(Json::Value& reader)
 	        {
 		        query = reader[CPPTRANSPORT_NODE_SQL_TIME_QUERY].asString();
 	        }
 
 
-        void SQL_time_config_query::serialize(Json::Value& writer) const
+        void SQL_time_query::serialize(Json::Value& writer) const
 	        {
             writer[CPPTRANSPORT_NODE_SQL_QUERY_TYPE] = std::string(CPPTRANSPORT_NODE_SQL_TIME_QUERY_TYPE);
             writer[CPPTRANSPORT_NODE_SQL_TIME_QUERY] = this->query;
 	        }
 
 
-        std::string SQL_time_config_query::make_query(const SQL_policy& policy, bool serials_only) const
+        std::string SQL_time_query::make_query(const SQL_policy& policy, bool serials_only) const
 	        {
             std::ostringstream query;
 
@@ -136,9 +136,9 @@ namespace transport
 	        }
 
 
-        bool SQL_time_config_query::operator==(const SQL_query& query) const
+        bool SQL_time_query::operator==(const SQL_query& query) const
 	        {
-            const SQL_time_config_query* ptr = dynamic_cast<const SQL_time_config_query*>(&query);
+            const SQL_time_query* ptr = dynamic_cast<const SQL_time_query*>(&query);
 
             if(ptr == nullptr) return(false);
             return(this->query == ptr->query);
@@ -149,4 +149,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__SQL_time_query_H_
+#endif //CPPTRANSPORT_SQL_TIME_QUERY_H

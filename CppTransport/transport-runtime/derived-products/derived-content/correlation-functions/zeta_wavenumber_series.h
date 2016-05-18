@@ -51,7 +51,7 @@ namespace transport
 			{
 
 				//! zeta twopf wavenumber-data line
-				template <typename number>
+				template <typename number=default_number_type>
 		    class zeta_twopf_wavenumber_series: public wavenumber_series<number>, public zeta_twopf_line<number>
 			    {
 
@@ -60,8 +60,8 @@ namespace transport
 		      public:
 
 				    //! construct a zeta twopf wavenumber data object
-				    zeta_twopf_wavenumber_series(const zeta_twopf_list_task<number>& tk,
-				                                 SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+				    zeta_twopf_wavenumber_series(const zeta_twopf_db_task<number>& tk,
+				                                 SQL_time_query tq, SQL_twopf_query kq,
 				                                 unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    // deserialization constructor
@@ -83,10 +83,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
 		        // DERIVE LINES -- implements a 'time_series' interface
@@ -129,10 +129,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_twopf_kconfig_query kquery;
+            SQL_twopf_query kquery;
 
             //! SQL query representing different lines
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
 			    };
 
@@ -140,10 +140,10 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    zeta_twopf_wavenumber_series<number>::zeta_twopf_wavenumber_series(const zeta_twopf_list_task<number>& tk,
-                                                                           SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+		    zeta_twopf_wavenumber_series<number>::zeta_twopf_wavenumber_series(const zeta_twopf_db_task<number>& tk,
+                                                                           SQL_time_query tq, SQL_twopf_query kq,
 		                                                                       unsigned int prec)
-			    : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
+			    : derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit }, prec),
 			      zeta_twopf_line<number>(tk),
 			      wavenumber_series<number>(tk),
             tquery(tq),
@@ -205,7 +205,7 @@ namespace transport
                       {
                         *l_pos *= 1.0 / (2.0*M_PI*M_PI);
                       }
-                    value = value_type::dimensionless_value;
+                    value = value_type::dimensionless;
                   }
                 else
                   {
@@ -216,7 +216,7 @@ namespace transport
                         double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
                         *l_pos *=  1.0 / k_cube;
                       }
-                    value = value_type::correlation_function_value;
+                    value = value_type::correlation_function;
                   }
 
                 lines.emplace_back(group, this->x_type, value, w_axis, line_data,
@@ -296,7 +296,7 @@ namespace transport
 
 
 				//! zeta threepf wavenumber data line
-				template <typename number>
+				template <typename number=default_number_type>
 				class zeta_threepf_wavenumber_series: public wavenumber_series<number>, public zeta_threepf_line<number>
 					{
 
@@ -306,7 +306,7 @@ namespace transport
 
 						//! construct a zeta threepf wavenumber-series object
             zeta_threepf_wavenumber_series(const zeta_threepf_task<number>& tk,
-                                           SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                           SQL_time_query tq, SQL_threepf_query kq,
                                            unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! deserialization constructor
@@ -328,10 +328,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_threepf_query& get_k_query() const { return(this->kquery); }
 
 
 				    // DERIVE LINES -- implements a 'derived_line' interface
@@ -374,10 +374,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_threepf_kconfig_query kquery;
+            SQL_threepf_query kquery;
 
             //! SQL query representing different lines
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
           };
 
@@ -386,10 +386,10 @@ namespace transport
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    zeta_threepf_wavenumber_series<number>::zeta_threepf_wavenumber_series(const zeta_threepf_task<number>& tk,
-                                                                               SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                                                               SQL_time_query tq, SQL_threepf_query kq,
 		                                                                           unsigned int prec)
-			    : derived_line<number>(tk, axis_class::wavenumber_axis,
-			                           std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis },
+			    : derived_line<number>(tk, axis_class::wavenumber,
+			                           std::list<axis_value>{ axis_value::k, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 },
 			                           prec),
 			      zeta_threepf_line<number>(tk),
 			      wavenumber_series<number>(tk),
@@ -446,7 +446,7 @@ namespace transport
                 value_type value;
                 if(this->dimensionless)
                   {
-                    value = value_type::dimensionless_value;
+                    value = value_type::dimensionless;
                   }
                 else
                   {
@@ -457,7 +457,7 @@ namespace transport
                         double shape = k_pos->k1_comoving*k_pos->k1_comoving * k_pos->k2_comoving*k_pos->k2_comoving * k_pos->k3_comoving*k_pos->k3_comoving;
                         *l_pos *= 1.0/shape;
                       }
-                    value = value_type::correlation_function_value;
+                    value = value_type::correlation_function;
                   }
 
                 lines.emplace_back(group, this->x_type, value, w_axis, line_data,
@@ -537,7 +537,7 @@ namespace transport
 
 
 		    //! zeta reduced bispectrum wavenumber data line
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class zeta_reduced_bispectrum_wavenumber_series: public wavenumber_series<number>, public zeta_reduced_bispectrum_line<number>
 			    {
 
@@ -547,7 +547,7 @@ namespace transport
 
 		        //! construct a zeta reduced bispectrum wavenumber-series object
 		        zeta_reduced_bispectrum_wavenumber_series(const zeta_threepf_task<number>& tk,
-		                                                  SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+		                                                  SQL_time_query tq, SQL_threepf_query kq,
 		                                                  unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor
@@ -569,10 +569,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_threepf_query& get_k_query() const { return(this->kquery); }
 
 
 		        // DERIVE LINES -- implements a 'derived_line' interface
@@ -615,10 +615,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_threepf_kconfig_query kquery;
+            SQL_threepf_query kquery;
 
             //! SQL query representing different lines
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
 			    };
 
@@ -627,10 +627,10 @@ namespace transport
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    zeta_reduced_bispectrum_wavenumber_series<number>::zeta_reduced_bispectrum_wavenumber_series(const zeta_threepf_task<number>& tk,
-		                                                                                                 SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+		                                                                                                 SQL_time_query tq, SQL_threepf_query kq,
                                                                                                      unsigned int prec)
-			    : derived_line<number>(tk, axis_class::wavenumber_axis,
-			                           std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis },
+			    : derived_line<number>(tk, axis_class::wavenumber,
+			                           std::list<axis_value>{ axis_value::k, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 },
 			                           prec),
 			      zeta_reduced_bispectrum_line<number>(tk),
 			      wavenumber_series<number>(tk),
@@ -679,7 +679,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                lines.emplace_back(group, this->x_type, value_type::fNL_value, w_axis, line_data,
+                lines.emplace_back(group, this->x_type, value_type::fNL, w_axis, line_data,
                                    this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), messages, this->is_spectral_index());
 			        }
 

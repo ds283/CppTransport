@@ -53,7 +53,7 @@ namespace cpp
     // *******************************************************************
 
 
-    static std::string replace_stepper(const struct stepper& s, std::string state_name)
+    static std::string replace_stepper(boost::optional< contexted_value<stepper>& > s, std::string state_name)
       {
         std::ostringstream out;
 
@@ -76,33 +76,45 @@ namespace cpp
         //     size is adjusted during integration according to error control. Dense output is used
         //     to obtain the states x(t) at the time points from the sequence. [runge_kutta_dopri5, bulirsch_stoer]
 
-        const std::string name = s.get_name();
-        if(name == "runge_kutta_dopri5")
+        std::string name;
+
+        if(s)
           {
-            out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< " << state_name << " > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
-          }
-        else if(name == "bulirsch_stoer_dense_out")
-          {
-            out << "boost::numeric::odeint::bulirsch_stoer_dense_out< " << state_name << " >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
-          }
-        else if(name == "bulirsch_stoer")
-	        {
-						out << "boost::numeric::odeint::bulirsch_stoer< " << state_name << " >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
-	        }
-        else if(name == "runge_kutta_fehlberg78")
-          {
-            out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< " << state_name << " > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
-          }
-        else if(name == "runge_kutta_cash_karp45")
-          {
-            out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< " << state_name << " > >(" << s.get_abserr() << ", " << s.get_relerr() << ")";
+            stepper step = *s;
+            name = step.get_name();
+
+            if(name == "runge_kutta_dopri5")
+              {
+                out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+              }
+            else if(name == "bulirsch_stoer_dense_out")
+              {
+                out << "boost::numeric::odeint::bulirsch_stoer_dense_out< " << state_name << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+              }
+            else if(name == "bulirsch_stoer")
+              {
+                out << "boost::numeric::odeint::bulirsch_stoer< " << state_name << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+              }
+            else if(name == "runge_kutta_fehlberg78")
+              {
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+              }
+            else if(name == "runge_kutta_cash_karp45")
+              {
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << ERROR_UNKNOWN_STEPPER << " '" << name << "'";
+                throw macro_packages::rule_apply_fail(msg.str());
+              }
           }
         else
           {
-            std::ostringstream msg;
-            msg << ERROR_UNKNOWN_STEPPER << " '" << name << "'";
-            throw macro_packages::rule_apply_fail(msg.str());
+            throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
           }
+
 
         return(out.str());
       }
@@ -113,7 +125,7 @@ namespace cpp
 
     std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
-        const struct stepper& s = this->data_payload.get_background_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
         return(replace_stepper(s, state_name));
@@ -122,7 +134,7 @@ namespace cpp
 
     std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
-        const struct stepper& s = this->data_payload.get_perturbations_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
         return(replace_stepper(s, state_name));

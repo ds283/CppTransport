@@ -24,15 +24,15 @@
 //
 
 
-#ifndef __range_H_
-#define __range_H_
+#ifndef CPPTRANSPORT_RANGE_H
+#define CPPTRANSPORT_RANGE_H
 
 
 #include "transport-runtime/concepts/range_detail/common.h"
 #include "transport-runtime/concepts/range_detail/abstract.h"
-#include "transport-runtime/concepts/range_detail/stepping.h"
-#include "transport-runtime/concepts/range_detail/aggregation.h"
+#include "transport-runtime/concepts/range_detail/basic.h"
+#include "transport-runtime/concepts/range_detail/aggregate.h"
 #include "transport-runtime/concepts/range_detail/helper.h"
 
 
-#endif //__range_H_
+#endif //CPPTRANSPORT_RANGE_H

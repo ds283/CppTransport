@@ -5,8 +5,8 @@
 //
 
 
-#ifndef __random_string_H_
-#define __random_string_H_
+#ifndef CPPTRANSPORT_RANDOM_STRING_H
+#define CPPTRANSPORT_RANDOM_STRING_H
 
 
 #include <string>
@@ -38,4 +38,4 @@ inline std::string random_string(unsigned int length=10)
   }
 
 
-#endif //__random_string_H_
+#endif //CPPTRANSPORT_RANDOM_STRING_H

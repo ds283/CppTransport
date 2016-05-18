@@ -242,13 +242,15 @@ namespace transport
 
       public:
 
-        //! add record to the database -- specified by wavenumber on each leg
+        //! add record to the database -- specified by 'cubic mesh' of wavenumber on each leg
         template <typename StoragePolicy>
-        boost::optional<unsigned int> add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
+        boost::optional<unsigned int> add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional,
+                                                        double k2_conventional, double k3_conventional, StoragePolicy policy);
 
-        //! add record to the database -- specified by Fergusson-Shellard-Liguori parametrization
+        //! add record to the database -- specified by 'alpha-beta' mesh parametrization
         template <typename StoragePolicy>
-        boost::optional<unsigned int> add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy);
+        boost::optional<unsigned int> add_alphabeta_record(twopf_kconfig_database& twopf_db, double kt_conventional,
+                                                           double alpha, double beta, StoragePolicy policy);
 
         //! add a record to the database -- directly specified;
         //! returns serial number of stored object
@@ -482,7 +484,9 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<unsigned int> threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
+    boost::optional<unsigned int> threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db,
+                                                                              double k1_conventional, double k2_conventional,
+                                                                              double k3_conventional, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -511,7 +515,9 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<unsigned int> threepf_kconfig_database::add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
+    boost::optional<unsigned int> threepf_kconfig_database::add_alphabeta_record(twopf_kconfig_database& twopf_db,
+                                                                                 double kt_conventional, double alpha,
+                                                                                 double beta, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;

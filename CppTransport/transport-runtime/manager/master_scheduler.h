@@ -1008,9 +1008,15 @@ namespace transport
 				// Note that workers who have not yet had any assignments will be at the top of the queue
 		    std::list<work_assignment> assignment_list;
 
-				// try to prevent large chunks of work from being allocate
+				// try to prevent large chunks of work from being allocated -- this can mean one worker gobbles up all the work items,
+        // leaving other workers idle
+        // worker_scale is the geometric mean of (i) the number of workers requiring new assignments, and (ii) the total number
+        // of workers
+        // the maximum allocation per worker is computed by dividing the remaining number of items in the queue by this
+        // geometric mean
 				assert(workers.size() > 0);
 				double worker_scale = sqrt(workers.size() * this->worker_data.size());
+
 				unsigned int max_allocation_per_worker = std::max(static_cast<unsigned int>(1), static_cast<unsigned int>(floor(static_cast<double>(this->queue.size()) / worker_scale)));
 
 				// set up an iterator to point at the next item of work
@@ -1036,15 +1042,24 @@ namespace transport
 							}
 						else
 							{
-								// allocate up to CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY of work,
+								// allocate enough work items to fill up the current scheduling granularity (begins at 60 seconds)
 								// or the mean allocation per worker, whichever is smaller
-						    boost::timer::nanosecond_type time_per_item   = (*t)->get_mean_time_per_work_item();
-						    boost::timer::nanosecond_type granularity     = time_per_item > 0 ? this->current_granularity / (*t)->get_mean_time_per_work_item() : 1.0;
-						    unsigned int                  granularity_int = std::max(static_cast<unsigned int>(1), static_cast<unsigned int>(floor(granularity)));
+						    boost::timer::nanosecond_type time_per_item             = (*t)->get_mean_time_per_work_item();
+						    boost::timer::nanosecond_type items_per_granularity     = time_per_item > 0 ? this->current_granularity / time_per_item : 1.0;
+						    unsigned int                  int_items_per_granularity = std::max(static_cast<unsigned int>(1), static_cast<unsigned int>(floor(items_per_granularity)));
 
-								unsigned int unit_of_work = std::min(this->max_work_allocation, granularity_int);
+                // unit of work is the smallest of (i) the current maximum allocation, currently fixed at 1/5 of the
+                // original queue size, and (ii) the number of items needed to fill
+                // out the current scheduling granularity
+								unsigned int unit_of_work = std::min(this->max_work_allocation, int_items_per_granularity);
 								if(unit_of_work == 0) unit_of_work = 1;
 
+                // actual number of work items allocated is the smallest of the unit of work and
+                // the maximum permitted allocation based on the current queue size
+
+                // this means there are two caps on the number of work items a worker can be allocated
+                // 1 - the maximum allocation of 1/5 original queue size, fixed at the beginning (alterable in principle but not used in current implementation)
+                // 2 - the maximum allocation taking into account current queue size and number of workers needing new jobs
 								unsigned int num_work_items = std::min(unit_of_work, max_allocation_per_worker);
 
 #ifdef CPPTRANSPORT_DEBUG_SCHEDULER

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __SQL_threepf_query_H_
-#define __SQL_threepf_query_H_
+#ifndef CPPTRANSPORT_SQL_THREEPF_QUERY_H
+#define CPPTRANSPORT_SQL_THREEPF_QUERY_H
 
 
 #include <string>
@@ -52,7 +52,7 @@ namespace transport
 
 
 		    //! Manager for SQL-ish query to filter threepf k-configurations
-		    class SQL_threepf_kconfig_query: public SQL_query
+		    class SQL_threepf_query: public SQL_query
 			    {
 
 		        // CONSTRUCTOR, DESTRUCTOR
@@ -60,13 +60,13 @@ namespace transport
 		      public:
 
 		        //! constructor with given SQL query
-		        SQL_threepf_kconfig_query(const std::string q);
+		        SQL_threepf_query(const std::string q);
 
 		        //! deserialization constructor
-		        SQL_threepf_kconfig_query(Json::Value& reader);
+		        SQL_threepf_query(Json::Value& reader);
 
 		        //! destructor is default
-		        virtual ~SQL_threepf_kconfig_query() = default;
+		        virtual ~SQL_threepf_query() = default;
 
 		        //! comparison operator -- required by 'linecache'
 		        virtual bool operator==(const SQL_query& obj) const override;
@@ -98,7 +98,7 @@ namespace transport
 
 		      public:
 
-		        virtual SQL_threepf_kconfig_query* clone() const override { return new SQL_threepf_kconfig_query(dynamic_cast<const SQL_threepf_kconfig_query&>(*this)); }
+		        virtual SQL_threepf_query* clone() const override { return new SQL_threepf_query(dynamic_cast<const SQL_threepf_query&>(*this)); }
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -128,13 +128,13 @@ namespace transport
 
 
 				// initialize static member
-				unsigned int SQL_threepf_kconfig_query::current_id = 0;
+				unsigned int SQL_threepf_query::current_id = 0;
 
 
 		    // SQL THREEPF QUERY
 
 
-		    SQL_threepf_kconfig_query::SQL_threepf_kconfig_query(const std::string q)
+		    SQL_threepf_query::SQL_threepf_query(const std::string q)
 			    : query(q),
 			      config(SQL_config_type::kconfig),
 		        my_id(current_id++)
@@ -142,7 +142,7 @@ namespace transport
 			    }
 
 
-		    SQL_threepf_kconfig_query::SQL_threepf_kconfig_query(Json::Value& reader)
+		    SQL_threepf_query::SQL_threepf_query(Json::Value& reader)
 		      : my_id(current_id++)
 			    {
 		        query = reader[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY].asString();
@@ -158,7 +158,7 @@ namespace transport
 			    }
 
 
-		    void SQL_threepf_kconfig_query::serialize(Json::Value& writer) const
+		    void SQL_threepf_query::serialize(Json::Value& writer) const
 			    {
 		        writer[CPPTRANSPORT_NODE_SQL_QUERY_TYPE]            = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_TYPE);
 		        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY] = this->query;
@@ -184,7 +184,7 @@ namespace transport
 			    }
 
 
-		    std::string SQL_threepf_kconfig_query::make_query(const SQL_policy& policy, bool serials_only) const
+		    std::string SQL_threepf_query::make_query(const SQL_policy& policy, bool serials_only) const
 			    {
 		        std::ostringstream query;
 
@@ -257,9 +257,9 @@ namespace transport
 			    }
 
 
-		    bool SQL_threepf_kconfig_query::operator==(const SQL_query& query) const
+		    bool SQL_threepf_query::operator==(const SQL_query& query) const
 			    {
-		        const SQL_threepf_kconfig_query* ptr = dynamic_cast<const SQL_threepf_kconfig_query*>(&query);
+		        const SQL_threepf_query* ptr = dynamic_cast<const SQL_threepf_query*>(&query);
 
 		        if(ptr == nullptr) return(false);
 		        return(this->query == ptr->query && this->config == ptr->config);
@@ -270,4 +270,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__SQL_threepf_query_H_
+#endif //CPPTRANSPORT_SQL_THREEPF_QUERY_H

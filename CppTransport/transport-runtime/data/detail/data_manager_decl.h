@@ -128,6 +128,9 @@ namespace transport
         //! Close an open postintegration_writer object.
         virtual void close_writer(postintegration_writer<number>& writer) = 0;
 
+        //! Close a paired integration_writer and postintegration_writer set
+        virtual void close_writer(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer) = 0;
+
 
         // WRITE TABLES FOR A DATA CONTAINER
 
@@ -203,7 +206,7 @@ namespace transport
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
         virtual fNL_batcher<number> create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                               unsigned int worker, model<number>* m,
-                                                              std::unique_ptr<container_dispatch_function> dispatcher, derived_data::template_type type) = 0;
+                                                              std::unique_ptr<container_dispatch_function> dispatcher, derived_data::bispectrum_template type) = 0;
 
 
         // INTEGRITY CHECK
@@ -211,23 +214,24 @@ namespace transport
       public:
 
         //! Check integrity for a twopf container
-        void check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
+        void check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>& tk);
 
         //! Check integrity for a threepf container
-        void check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
+        void check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>& tk);
 
         //! Check integrity for a zeta twopf container
-        void check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        void check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& tk);
 
         //! Check integrity for a zeta threepf container
-        void check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        void check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& tk);
 
         //! Check integrity for an fNL container
-        void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& tk);
+
+      protected:
 
         //! Synchronize missing serial numbers between an integration writer and a postintegration writer
-        void synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
-                                         integration_task<number>* i_tk, postintegration_task<number>* p_tk);
+        void synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer);
 
 
         // -- CALCULATE MISSING SERIAL NUMBERS
@@ -273,45 +277,71 @@ namespace transport
       protected:
 
         //! drop a set of k-configurations from a twopf-re table; should be provided by implementation
-        virtual void drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                  const std::set<unsigned int>& serials,const std::set<unsigned int>& missing,
+                                                  const twopf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a twopf-im table; should be provided by implementation
-        virtual void drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                  const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                  const twopf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a tensor twopf table; should be provided by implementation
-        virtual void drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                      const twopf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a threepf-momentum table; should be provided by implementation
-        virtual void drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+        virtual void drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer,
+                                                          const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                          const threepf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a threepf-deriv table; should be provided by implementation
-        virtual void drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+        virtual void drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer,
+                                                       const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                       const threepf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a zeta twopf table; should be provided by implementation
-        virtual void drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                    const twopf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
-        virtual void drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+        virtual void drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                      const threepf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a 1st-order gauge xfm table; should be provided by implementation
-        virtual void drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                    const twopf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 123-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+        virtual void drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 213-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+        virtual void drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) = 0;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 312-order table; should be provided by implementation
-        virtual void drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+        virtual void drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
+                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const threepf_kconfig_database& db) = 0;
 
         //! drop statistics for a set of k-configurations; should be provided by implementation
-        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
-        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                    const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
 
         //! drop initial conditions for a set of k-configurations; should be provided by implementation
-        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
-        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                            const std::set<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
+                                                            const std::set<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
 
 
         // -- INTEGRITY-CHECK UTILITY FUNCTIONS
@@ -374,17 +404,17 @@ namespace transport
       public:
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& tquery,
+        virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_query& tquery,
                                       std::vector<time_config>& sample) = 0;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_kconfig_query& kquery,
+        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_query& kquery,
                                         std::vector<twopf_kconfig>& sample) = 0;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_kconfig_query& kquery,
+        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_query& kquery,
                                           std::vector<threepf_kconfig>& sample) = 0;
 
         //! Pull a time sample of a background field from a datapipe
@@ -417,15 +447,15 @@ namespace transport
 
         //! Pull a sample of fNL from a datapipe
         virtual void pull_fNL_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
-                                          std::vector<number>& sample, derived_data::template_type type) = 0;
+                                          std::vector<number>& sample, derived_data::bispectrum_template type) = 0;
 
         //! Pull a sample of bispectrum.template from a datapipe
         virtual void pull_BT_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
-                                         std::vector<number>& sample, derived_data::template_type type) = 0;
+                                         std::vector<number>& sample, derived_data::bispectrum_template type) = 0;
 
         //! Pull a sample of template.template from a datapipe
         virtual void pull_TT_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
-                                         std::vector<number>& sample, derived_data::template_type type) = 0;
+                                         std::vector<number>& sample, derived_data::bispectrum_template type) = 0;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,

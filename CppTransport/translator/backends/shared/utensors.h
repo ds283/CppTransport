@@ -35,20 +35,20 @@
 namespace macro_packages
   {
 
-    constexpr unsigned int U1_PREDEF_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int U1_PREDEF_TOTAL_INDICES = 1;
+    constexpr unsigned int U1_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int U1_TOTAL_INDICES = 1;
 
-    constexpr unsigned int U2_PREDEF_K_ARGUMENT = 0;
-    constexpr unsigned int U2_PREDEF_A_ARGUMENT = 1;
-    constexpr unsigned int U2_PREDEF_TOTAL_ARGUMENTS = 2;
-    constexpr unsigned int U2_PREDEF_TOTAL_INDICES = 2;
+    constexpr unsigned int U2_K_ARGUMENT = 0;
+    constexpr unsigned int U2_A_ARGUMENT = 1;
+    constexpr unsigned int U2_TOTAL_ARGUMENTS = 2;
+    constexpr unsigned int U2_TOTAL_INDICES = 2;
 
-    constexpr unsigned int U3_PREDEF_K1_ARGUMENT = 0;
-    constexpr unsigned int U3_PREDEF_K2_ARGUMENT = 1;
-    constexpr unsigned int U3_PREDEF_K3_ARGUMENT = 2;
-    constexpr unsigned int U3_PREDEF_A_ARGUMENT = 3;
-    constexpr unsigned int U3_PREDEF_TOTAL_ARGUMENTS = 4;
-    constexpr unsigned int U3_PREDEF_TOTAL_INDICES = 3;
+    constexpr unsigned int U3_K1_ARGUMENT = 0;
+    constexpr unsigned int U3_K2_ARGUMENT = 1;
+    constexpr unsigned int U3_K3_ARGUMENT = 2;
+    constexpr unsigned int U3_A_ARGUMENT = 3;
+    constexpr unsigned int U3_TOTAL_ARGUMENTS = 4;
+    constexpr unsigned int U3_TOTAL_INDICES = 3;
 
 
     class replace_U1 : public cse_map_phase1
@@ -60,7 +60,7 @@ namespace macro_packages
 
         //! constructor
         replace_U1(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_phase1(std::move(n), U1_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_phase1(std::move(n), U1_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
@@ -127,7 +127,7 @@ namespace macro_packages
 
         //! constructor
         replace_U2(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_phase2(std::move(n), U2_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_phase2(std::move(n), U2_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
@@ -194,7 +194,7 @@ namespace macro_packages
 
         //! constructor
         replace_U3(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_phase3(std::move(n), U3_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_phase3(std::move(n), U3_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),

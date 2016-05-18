@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __zeta_timeseries_compute_H_
-#define __zeta_timeseries_compute_H_
+#ifndef CPPTRANSPORT_ZETA_TIMESERIES_COMPUTE_H
+#define CPPTRANSPORT_ZETA_TIMESERIES_COMPUTE_H
 
 
 #include <vector>
@@ -57,7 +57,7 @@ namespace transport
               public:
 
 		            //! constructor
-                handle(datapipe<number>& pipe, twopf_db_task<number>* tk, const SQL_time_config_query& tq, unsigned int Nf);
+                handle(datapipe<number>& pipe, twopf_db_task<number>* tk, const SQL_time_query& tq, unsigned int Nf);
 
 		            //! destructor is default
                 ~handle() = default;
@@ -76,7 +76,7 @@ namespace transport
                 twopf_db_task<number>* tk;
 
 		            //! database SQL query for time axis
-		            const SQL_time_config_query tquery;
+		            const SQL_time_query tquery;
 
                 //! datapipe handle for this set of serial numbers
                 typename datapipe<number>::time_data_handle& t_handle;
@@ -113,7 +113,7 @@ namespace transport
           public:
 
             //! make a handle
-            std::unique_ptr<handle> make_handle(datapipe<number>& pipe, twopf_db_task<number>* tk, const SQL_time_config_query& tq, unsigned int Nf) const;
+            std::unique_ptr<handle> make_handle(datapipe<number>& pipe, twopf_db_task<number>* tk, const SQL_time_query& tq, unsigned int Nf) const;
 
 
             // COMPUTE ZETA PRODUCTS
@@ -140,7 +140,7 @@ namespace transport
 
 
         template <typename number>
-        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_db_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf)
+        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_db_task<number>* t, const SQL_time_query& tq, unsigned int Nf)
           : pipe(p),
             tk(t),
             tquery(tq),
@@ -191,7 +191,7 @@ namespace transport
 
         template <typename number>
         std::unique_ptr<typename zeta_timeseries_compute<number>::handle>
-        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_db_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf) const
+        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_db_task<number>* t, const SQL_time_query& tq, unsigned int Nf) const
           {
             return std::make_unique<handle>(pipe, t, tq, Nf);
           }
@@ -271,7 +271,6 @@ namespace transport
               }
 
             // linear component of the gauge transformation
-            derived_data::SQL_time_config_query tquery("1=1");    // no filtering on time configurations
             for(unsigned int l = 0; l < 2*N_fields; ++l)
               {
                 for(unsigned int m = 0; m < 2*N_fields; ++m)
@@ -316,7 +315,7 @@ namespace transport
                             cf_time_data_tag<number> k3_re_mq_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(m,q), k.k3_serial);
                             cf_time_data_tag<number> k3_im_mq_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(m,q), k.k3_serial);
 
-                            // can only take reference for the last lookup, because previous items may be evited
+                            // can only take reference for the last lookup, because previous items may be evicted
                             const std::vector<number>  k1_re_lp = h.t_handle.lookup_tag(k1_re_lp_tag);
                             const std::vector<number>  k1_im_lp = h.t_handle.lookup_tag(k1_im_lp_tag);
                             const std::vector<number>  k2_re_lp = h.t_handle.lookup_tag(k2_re_lp_tag);
@@ -332,7 +331,7 @@ namespace transport
                             for(unsigned int j = 0; j < h.t_axis.size(); ++j)
                               {
                                 number component1 = gauge_xfm2_123[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * k2k3 * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
-                                number component2 = gauge_xfm2_213[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * k1k2 * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
+                                number component2 = gauge_xfm2_213[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * k1k3 * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
                                 number component3 = gauge_xfm2_312[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * k1k2 * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
 
                                 zeta_threepf[j] += component1;
@@ -382,4 +381,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__zeta_timeseries_compute_H_
+#endif //CPPTRANSPORT_ZETA_TIMESERIES_COMPUTE_H

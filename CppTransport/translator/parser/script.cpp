@@ -180,8 +180,7 @@ std::vector<bool>            fake_context_table;
 
 
 script::script(symbol_factory& s, error_context err_ctx)
-  : potential_set(false),
-    errors_encountered(false),
+  : errors_encountered(false),
     order(index_order::right),
 		sym_factory(s)
   {
@@ -228,8 +227,15 @@ boost::optional<declaration&> script::check_symbol_exists(const std::string& nm)
 
 void script::set_name(const std::string n, const y::lexeme_type& l)
   {
-    this->name.release();
-    this->name = std::make_unique< contexted_value<std::string> >(n, l.get_error_context());
+    if(this->name)
+      {
+        l.error(ERROR_NAME_REDECLARATION);
+        this->name->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->name = std::make_unique< contexted_value<std::string> >(n, l.get_error_context());
+      }
   }
 
 
@@ -241,8 +247,15 @@ boost::optional< contexted_value<std::string>& > script::get_name() const
 
 void script::set_citeguide(const std::string t, const y::lexeme_type& l)
   {
-    this->citeguide.release();
-    this->citeguide = std::make_unique< contexted_value<std::string> >(t, l.get_error_context());
+    if(this->citeguide)
+      {
+        l.error(ERROR_CITEGUIDE_REDECLARATION);
+        this->citeguide->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->citeguide = std::make_unique< contexted_value<std::string> >(t, l.get_error_context());
+      }
   }
 
 
@@ -254,8 +267,15 @@ boost::optional< contexted_value<std::string>& > script::get_citeguide() const
 
 void script::set_description(const std::string d, const y::lexeme_type& l)
   {
-    this->description.release();
-    this->description = std::make_unique< contexted_value<std::string> >(d, l.get_error_context());
+    if(this->description)
+      {
+        l.error(ERROR_DESCRIPTION_REDECLARATION);
+        this->description->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->description = std::make_unique< contexted_value<std::string> >(d, l.get_error_context());
+      }
   }
 
 
@@ -267,8 +287,15 @@ boost::optional< contexted_value<std::string>& > script::get_description() const
 
 void script::set_revision(int r, const y::lexeme_type& l)
   {
-    this->revision.release();
-    this->revision = std::make_unique< contexted_value<unsigned int> >(static_cast<unsigned int>(r), l.get_error_context());
+    if(this->revision)
+      {
+        l.error(ERROR_REVISION_DECLARATION);
+        this->revision->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->revision = std::make_unique< contexted_value<unsigned int> >(static_cast<unsigned int>(r), l.get_error_context());
+      }
   }
 
 
@@ -280,8 +307,15 @@ boost::optional< contexted_value<unsigned int>& > script::get_revision() const
 
 void script::set_license(const std::string lic, const y::lexeme_type& l)
   {
-    this->license.release();
-    this->license = std::make_unique< contexted_value<std::string> >(lic, l.get_error_context());
+    if(this->license)
+      {
+        l.error(ERROR_LICENSE_REDECLARATION);
+        this->license->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->license = std::make_unique< contexted_value<std::string> >(lic, l.get_error_context());
+      }
   }
 
 
@@ -293,8 +327,21 @@ boost::optional< contexted_value<std::string>& > script::get_license() const
 
 void script::set_references(const std::vector< contexted_value<std::string> >& refs)
   {
-    this->references.release();
-    this->references = std::make_unique< std::vector< contexted_value<std::string> > >(refs);
+    if(!refs.empty())
+      {
+        // check whether a reference list has already been declared
+        if(this->references && !this->references->empty())
+          {
+            const std::vector< contexted_value<std::string> >& v = *this->references;
+            refs.front().get_declaration_point().error(ERROR_REFERENCES_REDECLARATION);
+            v.front().get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+          }
+        else
+          {
+            this->references.release();
+            this->references = std::make_unique< std::vector< contexted_value<std::string> > >(refs);
+          }
+      }
   }
 
 
@@ -306,8 +353,21 @@ boost::optional< std::vector< contexted_value<std::string> >& > script::get_refe
 
 void script::set_urls(const std::vector< contexted_value<std::string> >& urls)
   {
-    this->urls.release();
-    this->urls = std::make_unique< std::vector< contexted_value<std::string> > >(urls);
+    if(!urls.empty())
+      {
+        // check whether a URL list has already been declared
+        if(this->urls && !this->urls->empty())
+          {
+            const std::vector< contexted_value<std::string> >& v = *this->urls;
+            urls.front().get_declaration_point().error(ERROR_URLS_REDECLARATION);
+            v.front().get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+          }
+        else
+          {
+            this->urls.release();
+            this->urls = std::make_unique< std::vector< contexted_value<std::string> > >(urls);
+          }
+      }
   }
 
 
@@ -319,8 +379,16 @@ boost::optional< std::vector< contexted_value<std::string> >& > script::get_urls
 
 void script::set_core(const std::string c, const y::lexeme_type& l)
   {
-    this->core.release();
-    this->core = std::make_unique< contexted_value<std::string> >(c, l.get_error_context());
+    // check whether a core template has already been declared
+    if(this->core)
+      {
+        l.error(ERROR_CORE_REDECLARATION);
+        this->core->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->core = std::make_unique< contexted_value<std::string> >(c, l.get_error_context());
+      }
   }
 
 
@@ -332,8 +400,16 @@ boost::optional< contexted_value<std::string>& > script::get_core() const
 
 void script::set_implementation(const std::string i, const y::lexeme_type& l)
   {
-    this->implementation.release();
-    this->implementation = std::make_unique< contexted_value<std::string> >(i, l.get_error_context());
+    // check whether an implementation template has already been declared
+    if(this->implementation)
+      {
+        l.error(ERROR_IMPLEMENTATION_REDECLARATION);
+        this->implementation->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->implementation = std::make_unique< contexted_value<std::string> >(i, l.get_error_context());
+      }
   }
 
 
@@ -345,8 +421,16 @@ boost::optional< contexted_value<std::string>& > script::get_implementation() co
 
 void script::set_model(const std::string m, const y::lexeme_type& l)
   {
-    this->model.release();
-    this->model = std::make_unique< contexted_value<std::string> >(m, l.get_error_context());
+    // check whether a model block has already been declared
+    if(this->model)
+      {
+        l.error(ERROR_MODEL_REDECLARATION);
+        this->model->get_declaration_point().warn(NOTIFY_DUPLICATION_BLOCK_WAS);
+      }
+    else
+      {
+        this->model = std::make_unique< contexted_value<std::string> >(m, l.get_error_context());
+      }
   }
 
 
@@ -435,9 +519,10 @@ void script::print(std::ostream& stream) const
 		    ptr->second->print(stream);
 			}
 
-    if(this->potential_set)
+    if(this->potential)
       {
-        stream << "** Potential = " << this->potential << '\n';
+        GiNaC::ex V = *this->potential;
+        stream << "** Potential = " << V << '\n';
       }
     else
       {
@@ -564,27 +649,43 @@ const author_table& script::get_author() const
   }
 
 
-void script::set_background_stepper(stepper*s)
+void script::set_background_stepper(stepper* s, const y::lexeme_type& l)
   {
-    this->background_stepper = *s;
+    if(this->background_stepper)
+      {
+        l.error(ERROR_BACKGROUND_REDECLARATION);
+        this->background_stepper->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->background_stepper = std::make_unique< contexted_value<stepper> >(*s, l.get_error_context());
+      }
   }
 
 
-void script::set_perturbations_stepper(stepper *s)
+void script::set_perturbations_stepper(stepper *s, const y::lexeme_type& l)
   {
-    this->perturbations_stepper = *s;
+    if(this->perturbations_stepper)
+      {
+        l.error(ERROR_PERTURBATIONS_REDECLARATION);
+        this->perturbations_stepper->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->perturbations_stepper = std::make_unique< contexted_value<stepper> >(*s, l.get_error_context());
+      }
   }
 
 
-const struct stepper& script::get_background_stepper() const
+boost::optional< contexted_value<stepper>& > script::get_background_stepper() const
   {
-    return(this->background_stepper);
+    if(this->background_stepper) return *this->background_stepper; else return boost::none;
   }
 
 
-const struct stepper& script::get_perturbations_stepper() const
+boost::optional< contexted_value<stepper>& > script::get_perturbations_stepper() const
   {
-    return(this->perturbations_stepper);
+    if(this->perturbations_stepper) return *this->perturbations_stepper; else return boost::none;
   }
 
 
@@ -762,30 +863,27 @@ const GiNaC::symbol& script::get_Mp_symbol() const
   }
 
 
-void script::set_potential(GiNaC::ex V)
+void script::set_potential(GiNaC::ex V, const y::lexeme_type& l)
   {
-    this->potential     = V;
-    this->potential_set = true;
-
-//    std::cerr << "Set potential to be V = " << this->potential << '\n';
+    if(this->potential)
+      {
+        l.error(ERROR_POTENTIAL_REDECLARATION);
+        this->potential->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+      }
+    else
+      {
+        this->potential = std::make_unique< contexted_value<GiNaC::ex> >(V, l.get_error_context());
+      }
   }
 
 
-GiNaC::ex script::get_potential() const
+boost::optional< contexted_value<GiNaC::ex>& > script::get_potential() const
   {
-    GiNaC::ex V = GiNaC::numeric(0);    // returned in case no potential has been set
-
-    if(this->potential_set)
-      {
-        V = this->potential;
-      }
-
-    return(V);
+    if(this->potential) return *this->potential; else return boost::none;
   }
 
 
 void script::unset_potential()
   {
-    this->potential     = GiNaC::numeric(0);
-    this->potential_set = false;
+    this->potential.release();
   }

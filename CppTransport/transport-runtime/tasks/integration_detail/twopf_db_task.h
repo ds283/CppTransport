@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_TWOPF_LIST_TASK_H
-#define CPPTRANSPORT_TWOPF_LIST_TASK_H
+#ifndef CPPTRANSPORT_TWOPF_DB_TASK_H
+#define CPPTRANSPORT_TWOPF_DB_TASK_H
 
 
 #include <functional>
@@ -40,11 +40,12 @@
 
 #include "transport-runtime/utilities/spline1d.h"
 
+#include "transport-runtime/reporting/key_value.h"
+
 #include "transport-runtime/defaults.h"
 
 #include "boost/math/tools/roots.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"
-
 
 
 namespace transport
@@ -60,8 +61,9 @@ namespace transport
         class TolerancePredicate
           {
           public:
-            TolerancePredicate(double t)
-              : tol(t)
+            TolerancePredicate(std::string n, double t)
+              : name(std::move(n)),
+                tol(t)
               {
               }
 
@@ -76,26 +78,41 @@ namespace transport
 
                 assert(!std::isinf(frac));
                 assert(!std::isnan(frac));
-                if(std::isinf(frac)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_INF);
-                if(std::isnan(frac)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_NAN);
+
+                // check for invalid results
+                if(std::isinf(frac))
+                  {
+                    std::ostringstream msg;
+                    msg << "'" << name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_INF;
+                    throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+                  }
+                if(std::isnan(frac))
+                  {
+                    std::ostringstream msg;
+                    msg << "'" << name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_NAN;
+                    throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+                  }
 
                 return(std::abs(frac));
               }
 
           private:
             double tol;
+            std::string name;
           };
 
 
         template <typename SplineObject, typename TolerancePolicy>
-        double find_zero_of_spline(SplineObject& sp, TolerancePolicy& tol)
+        double find_zero_of_spline(const std::string& task_name, std::string bracket_error, SplineObject& sp, TolerancePolicy& tol)
           {
             // find root; note use of std::ref, because root finder would normally would take a copy of
             // its system function and this is slow -- we have to copy the whole spline
             assert(sp(sp.get_min_x()) * sp(sp.get_max_x()) < 0.0);
             if(sp(sp.get_min_x()) * sp(sp.get_max_x()) >= 0.0)
               {
-                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET);
+                std::ostringstream msg;
+                msg << "'" << task_name << "': " << bracket_error;
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
 
             boost::uintmax_t max_iter = CPPTRANSPORT_MAX_ITERATIONS;
@@ -115,21 +132,38 @@ namespace transport
             assert(!std::isinf(result.first) && !std::isinf(result.second));
             assert(!std::isnan(result.first) && !std::isnan(result.second));
 
+            // check for invalid return conditions
+
+            // maximum number of iterations exceeded? if so, result need not be accurate
             if(max_iter >= CPPTRANSPORT_MAX_ITERATIONS)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS << "=" << max_iter << "]";
+                msg << "'" << task_name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS << "=" << max_iter << "]";
                 throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
 
-            if(std::isinf(result.first) || std::isinf(result.second)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_INF);
-            if(std::isnan(result.first) || std::isnan(result.second)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_NAN);
+            // infinity returned?
+            if(std::isinf(result.first) || std::isinf(result.second))
+              {
+                std::ostringstream msg;
+                msg << "'" << task_name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_INF;
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+              }
 
+            // NaN returned?
+            if(std::isnan(result.first) || std::isnan(result.second))
+              {
+                std::ostringstream msg;
+                msg << "'" << task_name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_NAN;
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+              }
+
+            // check root is accurate enough
             assert(std::abs(sp(res)) < CPPTRANSPORT_ROOT_FIND_ACCURACY);
             if(std::abs(sp(res)) >= CPPTRANSPORT_ROOT_FIND_ACCURACY)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ZERO_EQ << "=" << sp(res) << "]";
+                msg << "'" << task_name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ZERO_EQ << "=" << sp(res) << "]";
                 throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
 
@@ -154,7 +188,8 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool adpt_ics,
+                      double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
         twopf_db_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -226,7 +261,13 @@ namespace transport
         double get_N_horizon_crossing() const { return(this->ics.get_N_horizon_crossing()); }
 
         //! Get current a* normalization
+        //! This determines the value of the scale factor a(t) at the distinguished scale k*.
+        //! The value supplied is ln(a*), so it can be positive or negative
         double get_astar_normalization() const { return(this->astar_normalization); }
+
+        //! Set current a* normalization
+        //! The value supplied in ln(a*)
+        twopf_db_task<number>& set_astar_normalization(double astar) const { this->astar_normalization = astar; }
 
 
         // INTERFACE - ADAPTIVE INITIAL CONDITIONS
@@ -237,13 +278,26 @@ namespace transport
         bool get_adaptive_ics() const { return(this->adaptive_ics); }
 
         //! Set adaptive ics setting
-        virtual void set_adaptive_ics(bool g) { this->adaptive_ics = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
+        virtual twopf_db_task<number>& set_adaptive_ics(bool g)
+          {
+            this->adaptive_ics = g;
+            this->validate_subhorizon_efolds();
+            this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
+            return *this;
+          }
 
         //! Get number of adaptive e-folds
         double get_adaptive_ics_efolds() const { return(this->adaptive_efolds); }
 
         //! Set adaptive e-folds
-        virtual void set_adaptive_ics_efolds(double N) { this->adaptive_ics = true; this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
+        virtual twopf_db_task<number>& set_adaptive_ics_efolds(double N)
+          {
+            this->adaptive_ics = true;
+            this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds);
+            this->validate_subhorizon_efolds();
+            this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
+            return *this;
+          }
 
         //! Get start time for a twopf configuration
         double get_initial_time(const twopf_kconfig& config) const;
@@ -257,7 +311,7 @@ namespace transport
         unsigned int get_max_refinements() const { return(this->max_refinements); }
 
         //! Set number of allowed time step refinements
-        void set_max_refinements(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); }
+        twopf_db_task<number>& set_max_refinements(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); return *this; }
 
 
 		    // INTERFACE - COLLECTION OF INITIAL CONDITIONS
@@ -268,7 +322,7 @@ namespace transport
 		    bool get_collect_initial_conditions() const { return(this->collect_initial_conditions); }
 
 		    //! Set current collection status
-		    void set_collect_initial_conditions(bool g) { this->collect_initial_conditions = g; }
+		    twopf_db_task<number>& set_collect_initial_conditions(bool g) { this->collect_initial_conditions = g; return *this; }
 
 
         // TIME CONFIGURATION DATABASE
@@ -286,7 +340,7 @@ namespace transport
       protected:
 
         //! output advisory information about horizon crossing times and number of subhorizon efolds
-        void write_time_details();
+        void write_time_details(reporting::key_value& kv);
 
         //! validate intended number of subhorizon efolds (if adaptive ics are being used),
         //! or check that initial conditions allow all modes to be subhorizon at the initial time otherwise
@@ -369,10 +423,10 @@ namespace transport
 
     template <typename number>
     twopf_db_task<number>::twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
-                                             bool ff, double ast)
+                                         bool adpt_ics, double ast)
 	    : integration_task<number>(nm, i, t),
-        adaptive_ics(ff),
-        adaptive_efolds(CPPTRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
+        adaptive_ics(adpt_ics),
+        adaptive_efolds(CPPTRANSPORT_DEFAULT_ADAPTIVE_ICS_EFOLDS),
         max_refinements(CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
         collect_initial_conditions(CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
@@ -471,7 +525,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_db_task<number>::write_time_details()
+    void twopf_db_task<number>::write_time_details(reporting::key_value& kv)
       {
         // compute horizon-crossing time for earliest mode (the one with the smallest wavenumber) and the latest one (the one with the largest wavenumber)
 
@@ -488,28 +542,10 @@ namespace transport
 		    earliest_crossing -= this->get_N_horizon_crossing();
 		    latest_crossing   -= this->get_N_horizon_crossing();
 
-        std::ostringstream msg;
-        msg << "'" << this->get_name() << "': ";
-        msg << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
-          << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
-
-        std::ostringstream early_time;
-		    early_time << std::setprecision(3);
-        if(earliest_crossing > 0) early_time << "+";
-		    early_time << earliest_crossing;
-
-        msg << early_time.str() << ", ";
-
-        msg << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
-          << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
-
-        std::ostringstream late_time;
-		    late_time << std::setprecision(3);
-        if(latest_crossing > 0) late_time << "+";
-        late_time << latest_crossing;
-
-        msg << late_time.str();
-        this->get_model()->message(msg.str());
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_SMALLEST, format_number(this->twopf_db->get_kmin_conventional()));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_LARGEST, format_number(this->twopf_db->get_kmax_conventional()));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_EARLIEST, std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (earliest_crossing > 0 ? "+" : "") + format_number(earliest_crossing, 4));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_LATEST, std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (latest_crossing > 0 ? "+" : "") + format_number(latest_crossing, 4));
 
         this->validate_subhorizon_efolds();
 
@@ -517,24 +553,22 @@ namespace transport
           {
             double end_of_inflation = this->get_N_end_of_inflation();
 
-            std::ostringstream msg2;
-            msg2 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation;
-            this->get_model()->message(msg2.str());
+            kv.insert_back(CPPTRANSPORT_TASK_DATA_END_INFLATION, std::string(CPPTRANSPORT_TASK_DATA_N) + format_number(end_of_inflation, 4));
 
             // check if end time is after the end of inflation
             double end_time = this->times->get_grid().back();
             if(end_time > end_of_inflation)
               {
-                std::ostringstream msg3;
-                msg3 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END;
-                this->get_model()->warn(msg3.str());
+                std::ostringstream message;
+                message << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END;
+                this->get_model()->warn(message.str());
               }
           }
         catch(end_of_inflation_not_found& xe)
           {
-            std::ostringstream msg4;
-            msg4 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION;
-            this->get_model()->warn(msg4.str());
+            std::ostringstream message;
+            message << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION;
+            this->get_model()->warn(message.str());
           }
       }
 
@@ -552,21 +586,58 @@ namespace transport
             if(t->t_massless < earliest_tmassless) earliest_tmassless = t->t_massless;
 	        }
 
-        if(earliest_required < this->get_N_initial())
+        // check for inconsistent configurations or warn about potentially dangerous scenarios, as needed
+        // first, earliest t_massless should be > time of initial conditions
+        // this has to be true otherwise we would have failed to compute t_massless for some configurations
+        // and therefore wouldn't have reached this point
+        if(earliest_tmassless < this->get_N_initial())
           {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
-              << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_VALIDATE_INCONSISTENT;
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        if(!this->adaptive_ics && earliest_tmassless - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+        if(adaptive_ics)
           {
-            std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
-              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
-              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C;
-            this->get_model()->warn(msg.str());
+            // is earliest required time earlier than time of initial conditions?
+            // this can only occur with adaptive_ics; in other cases, the earliest required
+            // time is always the initial time anyway
+            if(earliest_required < this->get_N_initial())
+              {
+                std::ostringstream msg;
+                msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << format_number(this->adaptive_efolds, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << format_number(earliest_required, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_C << format_number(this->get_N_initial(), 4);
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            // does the initial time allow for 'settling'?
+            // if unsure, issue warning
+            if(earliest_required - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_SETTLE_EFOLDS)
+              {
+                std::ostringstream msg;
+                msg << "'" << this->get_name() << ": " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << format_number(this->adaptive_efolds, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << format_number(earliest_required, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_A << " " << format_number(earliest_required - this->get_N_initial(), 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_B;
+                this->get_model()->warn(msg.str());
+              }
+          }
+        else
+          {
+            // if no adaptive initial conditions, then need only check that earliest t_massless gives sufficient
+            // number of massless e-folds
+
+            // note concept of 'settling' doesn't really exist in this case; we have to assume that the initial conditions
+            // are already 'settled', perhaps by using initial_conditions<> to offset them when they were set up
+            if(earliest_tmassless - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+              {
+                std::ostringstream msg;
+                msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << format_number(earliest_tmassless, 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << format_number(earliest_tmassless - this->get_N_initial(), 4) << " "
+                  << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C;
+                this->get_model()->warn(msg.str());
+              }
           }
       }
 
@@ -676,7 +747,7 @@ namespace transport
             spline1d<number> log_aH_sp(N, log_aH);
             spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
-            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -697,7 +768,7 @@ namespace transport
 		        log_aH.set_offset(log(t->k_comoving));
 
             // update database with computed horizon exit time
-		        t->t_exit = task_impl::find_zero_of_spline(log_aH, tol);
+		        t->t_exit = task_impl::find_zero_of_spline(this->name, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_EXIT, log_aH, tol);
             t->t_massless = this->compute_t_massless(*t, t->t_exit, log_a2H2M, tol);
 			    }
 			}
@@ -732,7 +803,7 @@ namespace transport
             // mass matrix becomes relevant some time before horizon exit
 
             log_a2H2M.set_offset(2.0*log_k);
-            t_massless = task_impl::find_zero_of_spline(log_a2H2M, tol);
+            t_massless = task_impl::find_zero_of_spline(this->name, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_MASSLESS, log_a2H2M, tol);
             log_a2H2M.set_offset(0.0);
           }
         else if(!light_at_init && light_at_exit)
@@ -784,15 +855,11 @@ namespace transport
 
         if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() < std::log(xe.get_largest_k()))
           {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL;
-            this->get_model()->warn(msg.str());
+            this->get_model()->warn(CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL);
           }
         else if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() > std::log(xe.get_largest_k()))
           {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL;
-            this->get_model()->warn(msg.str());
+            this->get_model()->warn(CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL);
           }
       }
 
@@ -827,4 +894,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //CPPTRANSPORT_TWOPF_LIST_TASK_H
+#endif //CPPTRANSPORT_TWOPF_DB_TASK_H

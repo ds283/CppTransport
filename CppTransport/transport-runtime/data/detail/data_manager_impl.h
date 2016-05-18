@@ -207,12 +207,11 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* itk)
+    void data_manager<number>::check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>& itk)
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        twopf_task<number>* tk = dynamic_cast< twopf_task<number>* >(itk);
-        assert(tk != nullptr);
+        twopf_task<number>& tk = dynamic_cast< twopf_task<number>& >(itk);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for twopf container '" << writer.get_abs_container_path().string() << "'";
 
@@ -231,7 +230,7 @@ namespace transport
         total_serials.insert(tensor_serials.begin(), tensor_serials.end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk->get_twopf_database());
+        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk.get_twopf_database());
         if(failed.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
@@ -244,16 +243,16 @@ namespace transport
         if(total_serials.size() > 0)
           {
             // advise the user that content is missing; marks set_fail() for writer
-            this->advise_missing_content(writer, total_serials, tk->get_twopf_database());
+            this->advise_missing_content(writer, total_serials, tk.get_twopf_database());
 
             // push list of missing serial numbers to writer and update metadata suitably
-            writer.set_missing_serials(total_serials, tk->get_twopf_database());
+            writer.set_missing_serials(total_serials, tk.get_twopf_database());
 
             // ensure all tables are consistent
-            this->drop_twopf_re_configurations(mgr, writer, total_serials, tk->get_twopf_database());
-            this->drop_tensor_twopf_configurations(mgr, writer, total_serials, tk->get_twopf_database());
-            if(writer.is_collecting_statistics()) this->drop_statistics_configurations(mgr, writer, total_serials, tk->get_twopf_database());
-            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, total_serials, tk->get_twopf_database());
+            this->drop_twopf_re_configurations(mgr, writer, total_serials, twopf_serials, tk.get_twopf_database());
+            this->drop_tensor_twopf_configurations(mgr, writer, total_serials, tensor_serials, tk.get_twopf_database());
+            if(writer.is_collecting_statistics()) this->drop_statistics_configurations(mgr, writer, total_serials, tk.get_twopf_database());
+            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, total_serials, tk.get_twopf_database());
           }
 
         mgr.commit();
@@ -263,12 +262,11 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>* itk)
+    void data_manager<number>::check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>& itk)
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        threepf_task<number>* tk = dynamic_cast< threepf_task<number>* >(itk);
-        assert(tk != nullptr);
+        threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(itk);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for threepf container '" << writer.get_abs_container_path().string() << "'";
 
@@ -299,7 +297,7 @@ namespace transport
         twopf_total_serials.insert(tensor_serials.begin(), tensor_serials.end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk->get_threepf_database());
+        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk.get_threepf_database());
         if(failed.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra threepf configurations not missing from container, but advised as failed by backend:";
@@ -309,7 +307,7 @@ namespace transport
           }
 
         // now check whether any missing twopf configurations might require further threepfs to be dropped for consistency
-        std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk->get_threepf_database());
+        std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk.get_threepf_database());
         threepf_total_serials.insert(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end());
 
         // if any serial numbers are missing, advise the user
@@ -317,24 +315,24 @@ namespace transport
         if(threepf_total_serials.size() > 0)
           {
             // advise the user that content is missing; marks set_fail() for writer
-            this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());
+            this->advise_missing_content(writer, threepf_total_serials, tk.get_threepf_database());
 
             // push list of missing serial numbers to writer and update metadata suitably
-            writer.set_missing_serials(threepf_total_serials, tk->get_threepf_database());
+            writer.set_missing_serials(threepf_total_serials, tk.get_threepf_database());
 
             // ensure all threepf-indexed tables are consistent
-            this->drop_threepf_momentum_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_threepf_deriv_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            if(writer.is_collecting_statistics())         this->drop_statistics_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_threepf_momentum_configurations(mgr, writer, threepf_total_serials, threepf_momentum_serials, tk.get_threepf_database());
+            this->drop_threepf_deriv_configurations(mgr, writer, threepf_total_serials, threepf_deriv_serials, tk.get_threepf_database());
+            if(writer.is_collecting_statistics())         this->drop_statistics_configurations(mgr, writer, threepf_total_serials, tk.get_threepf_database());
+            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, threepf_total_serials, tk.get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
+            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk.get_threepf_database());
 
             // ensure all twopf-indexed tables are consistent
-            this->drop_twopf_re_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
-            this->drop_twopf_im_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
-            this->drop_tensor_twopf_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
+            this->drop_twopf_re_configurations(mgr, writer, twopf_drop, twopf_re_serials, tk.get_twopf_database());
+            this->drop_twopf_im_configurations(mgr, writer, twopf_drop, twopf_im_serials, tk.get_twopf_database());
+            this->drop_tensor_twopf_configurations(mgr, writer, twopf_drop, tensor_serials, tk.get_twopf_database());
           }
 
         mgr.commit();
@@ -344,12 +342,11 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* ptk)
+    void data_manager<number>::check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& ptk)
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        zeta_twopf_task<number>* tk = dynamic_cast< zeta_twopf_task<number>* >(ptk);
-        assert(tk != nullptr);
+        zeta_twopf_task<number>& tk = dynamic_cast< zeta_twopf_task<number>& >(ptk);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
 
@@ -368,7 +365,7 @@ namespace transport
         total_serials.insert(xfm1_serials.begin(), xfm1_serials.end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk->get_twopf_database());
+        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk.get_twopf_database());
         if(failed.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
@@ -381,14 +378,14 @@ namespace transport
         if(total_serials.size() > 0)
           {
             // advise the user that content is missing; marks set_fail() for writer
-            this->advise_missing_content(writer, total_serials, tk->get_twopf_database());
+            this->advise_missing_content(writer, total_serials, tk.get_twopf_database());
 
             // push list of missing serial numbers to writer and update metadata suitably
-            writer.set_missing_serials(total_serials, tk->get_twopf_database());
+            writer.set_missing_serials(total_serials, tk.get_twopf_database());
 
             // ensure all tables are consistent
-            this->drop_zeta_twopf_configurations(mgr, writer, total_serials, tk->get_twopf_database());
-            this->drop_gauge_xfm1_configurations(mgr, writer, total_serials, tk->get_twopf_database());
+            this->drop_zeta_twopf_configurations(mgr, writer, total_serials, twopf_serials, tk.get_twopf_database());
+            this->drop_gauge_xfm1_configurations(mgr, writer, total_serials, xfm1_serials, tk.get_twopf_database());
           }
 
         mgr.commit();
@@ -398,12 +395,11 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* ptk)
+    void data_manager<number>::check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& ptk)
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        zeta_threepf_task<number>* tk = dynamic_cast< zeta_threepf_task<number>* >(ptk);
-        assert(tk != nullptr);
+        zeta_threepf_task<number>& tk = dynamic_cast< zeta_threepf_task<number>& >(ptk);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
 
@@ -438,7 +434,7 @@ namespace transport
         twopf_total_serials.insert(gauge_xfm1_serials.begin(), gauge_xfm1_serials.end());
 
         // compare against backend-supplied list of failed configurations if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk->get_threepf_database());
+        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk.get_threepf_database());
         if(failed.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
@@ -448,7 +444,7 @@ namespace transport
           }
 
         // now check whether any missing twopf configurations might require even further threepfs to be dropped for consistency
-        std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk->get_threepf_database());
+        std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk.get_threepf_database());
         threepf_total_serials.insert(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end());
 
         // if any serial numbers are missing, advise the user
@@ -456,23 +452,23 @@ namespace transport
         if(threepf_total_serials.size() > 0)
           {
             // advise the user that content is missing; marks set_fail() for writer
-            this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());
+            this->advise_missing_content(writer, threepf_total_serials, tk.get_threepf_database());
 
             // push list of missing serial numbers to writer and update metadata suitably
-            writer.set_missing_serials(threepf_total_serials, tk->get_threepf_database());
+            writer.set_missing_serials(threepf_total_serials, tk.get_threepf_database());
 
             // ensure all threepf-indexed tables are consistent
-            this->drop_zeta_threepf_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_123_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_213_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
-            this->drop_gauge_xfm2_312_configurations(mgr, writer, threepf_total_serials, tk->get_threepf_database());
+            this->drop_zeta_threepf_configurations(mgr, writer, threepf_total_serials, threepf_serials, tk.get_threepf_database());
+            this->drop_gauge_xfm2_123_configurations(mgr, writer, threepf_total_serials, gauge_xfm2_123_serials, tk.get_threepf_database());
+            this->drop_gauge_xfm2_213_configurations(mgr, writer, threepf_total_serials, gauge_xfm2_213_serials, tk.get_threepf_database());
+            this->drop_gauge_xfm2_312_configurations(mgr, writer, threepf_total_serials, gauge_xfm2_312_serials, tk.get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
+            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk.get_threepf_database());
 
             // ensure all twopf-indexed tables are consistent
-            this->drop_zeta_twopf_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
-            this->drop_gauge_xfm1_configurations(mgr, writer, twopf_drop, tk->get_twopf_database());
+            this->drop_zeta_twopf_configurations(mgr, writer, twopf_drop, twopf_serials, tk.get_twopf_database());
+            this->drop_gauge_xfm1_configurations(mgr, writer, twopf_drop, gauge_xfm1_serials, tk.get_twopf_database());
           }
 
         mgr.commit();
@@ -482,15 +478,14 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk)
+    void data_manager<number>::check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& tk)
       {
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for fNL container '" << writer.get_abs_container_path().string() << "'";
       }
 
 
     template <typename number>
-    void data_manager<number>::synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
-                                                           integration_task<number>* i_tk, postintegration_task<number>* p_tk)
+    void data_manager<number>::synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer)
       {
         // get serial numbers missing individually from each writer
         std::set<unsigned int> integration_missing = i_writer.get_missing_serials();
@@ -510,7 +505,7 @@ namespace transport
           {
             BOOST_LOG_SEV(i_writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
             i_writer.merge_failure_list(integration_discrepant);
-            i_writer.check_integrity(i_tk);
+            i_writer.check_integrity();   // run manual integrity check; will take account of discrepant serials numbers which have just been added
           }
 
         std::set<unsigned int> postintegration_discrepant;
@@ -521,7 +516,7 @@ namespace transport
           {
             BOOST_LOG_SEV(p_writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
             p_writer.merge_failure_list(postintegration_discrepant);
-            p_writer.check_integrity(p_tk);
+            p_writer.check_integrity();   // run manual integrity check; will take account of discrepant serials numbers which have just been added
           }
       }
 

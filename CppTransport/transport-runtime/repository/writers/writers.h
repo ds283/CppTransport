@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __writers_H_
-#define __writers_H_
+#ifndef CPPTRANSPORT_WRITERS_H
+#define CPPTRANSPORT_WRITERS_H
 
 
 #include "transport-runtime/repository/writers/integration_writer.h"
@@ -33,4 +33,4 @@
 #include "transport-runtime/repository/writers/derived_content_writer.h"
 
 
-#endif //__writers_H_
+#endif //CPPTRANSPORT_WRITERS_H

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __r_time_series_H_
-#define __r_time_series_H_
+#ifndef CPPTRANSPORT_R_TIME_SERIES_H
+#define CPPTRANSPORT_R_TIME_SERIES_H
 
 
 #include <iostream>
@@ -49,7 +49,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
+				template <typename number=default_number_type>
 		    class r_time_series: public time_series<number>, public r_line<number>
 			    {
 
@@ -58,8 +58,8 @@ namespace transport
 		      public:
 
 				    //! construct an r_line time series data object
-				    r_time_series(const zeta_twopf_list_task<number>& tk,
-                          SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+				    r_time_series(const zeta_twopf_db_task<number>& tk,
+                          SQL_time_query tq, SQL_twopf_query kq,
 				                  unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -81,10 +81,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
 				    // DERIVE LINES -- implements a 'time series' interface
@@ -131,10 +131,10 @@ namespace transport
           protected:
 
             //! SQL query representing x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_twopf_kconfig_query kquery;
+            SQL_twopf_query kquery;
 
 			    };
 
@@ -143,9 +143,9 @@ namespace transport
 				// derived_line<> is not called automatically during construction of time_series<>.
 				// We have to call it ourselves
 				template <typename number>
-				r_time_series<number>::r_time_series(const zeta_twopf_list_task<number>& tk,
-				                                     SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+				r_time_series<number>::r_time_series(const zeta_twopf_db_task<number>& tk,
+				                                     SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
+					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 					  r_line<number>(tk),
 					  time_series<number>(tk),
             tquery(tq),
@@ -230,7 +230,7 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        lines.emplace_back(groups, this->x_type, value_type::r_value, t_axis, line_data,
+				        lines.emplace_back(groups, this->x_type, value_type::r, t_axis, line_data,
                                    this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]), messages);
 					    }
 
@@ -311,4 +311,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__r_time_series_H_
+#endif //CPPTRANSPORT_R_TIME_SERIES_H

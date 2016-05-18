@@ -146,7 +146,7 @@ const GiNaC::symbol& translator_data::get_Mp_symbol() const
   }
 
 
-const GiNaC::ex translator_data::get_potential() const
+boost::optional< contexted_value<GiNaC::ex>& > translator_data::get_potential() const
   {
     return(this->driver.get_script().get_potential());
   }
@@ -194,13 +194,13 @@ const std::vector<std::string> translator_data::get_platx_list() const
   }
 
 
-const struct stepper& translator_data::get_background_stepper() const
+boost::optional< contexted_value<stepper>& > translator_data::get_background_stepper() const
   {
     return(this->driver.get_script().get_background_stepper());
   }
 
 
-const struct stepper& translator_data::get_perturbations_stepper() const
+boost::optional< contexted_value<stepper>& > translator_data::get_perturbations_stepper() const
   {
     return(this->driver.get_script().get_perturbations_stepper());
   }

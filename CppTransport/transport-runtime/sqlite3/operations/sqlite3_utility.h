@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __sqlite3_utility_H_
-#define __sqlite3_utility_H_
+#ifndef CPPTRANSPORT_SQLITE3_UTILITY_H
+#define CPPTRANSPORT_SQLITE3_UTILITY_H
 
 
 #include "transport-runtime/messages.h"
@@ -99,4 +99,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__sqlite3_utility_H_
+#endif //CPPTRANSPORT_SQLITE3_UTILITY_H

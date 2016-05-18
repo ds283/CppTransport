@@ -54,6 +54,23 @@
 namespace transport
 	{
 
+
+    // mini 'traits' function for converting integration data type to a textual name
+    template <typename number>
+    std::string data_type_name();
+
+    // specialize for the basic data types; if more complex types are used,
+    // separate specializations will need to be provided
+    template <>
+    std::string data_type_name<float>() { return("float"); }
+
+    template <>
+    std::string data_type_name<double>() { return("double"); }
+
+    template <>
+    std::string data_type_name<long double>() { return("long double"); }
+
+
     // forward-declare integration writer
     template <typename number> class integration_writer;
 
@@ -157,7 +174,33 @@ namespace transport
       public:
 
         //! check integrity
-        virtual void operator()(integration_writer<number>& writer, integration_task<number>* task) = 0;
+        virtual void operator()(integration_writer<number>& writer, integration_task<number>& task) = 0;
+
+      };
+
+
+    //! Finalize object
+    template <typename number>
+    class integration_writer_finalize
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        integration_writer_finalize() = default;
+
+        //! destructor is default
+        virtual ~integration_writer_finalize() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! check integrity
+        virtual void operator()(integration_writer<number>& writer) = 0;
 
       };
 
@@ -212,7 +255,15 @@ namespace transport
         void set_integrity_check_handler(std::unique_ptr< integration_writer_integrity<number> > c) { this->integrity_h = std::move(c); }
 
         //! Check integrity
-        void check_integrity(integration_task<number>* tk) { if(this->integrity_h) (*this->integrity_h)(*this, tk); }
+        //! Normally does not need to be invoked manually, because it is called by data_manager<> in close_writer()
+        void check_integrity() { if(this->integrity_h && this->task) (*this->integrity_h)(*this, *this->task); }
+
+        //! Set finalization callback
+        void set_finalize_handler(std::unique_ptr< integration_writer_finalize<number> > f) { this->finalize_h = std::move(f); }
+
+        //! Perform finalization
+        //! Normally does not need to be invoked manually, because it is called by data_manager<> in close_writer()
+        void finalize() { if(this->finalize_h) (*this->finalize_h)(*this); }
 
 
         // STATISTICS AND OTHER AUXILIARY INFORMATION
@@ -267,6 +318,9 @@ namespace transport
         //! Query seeded group name
         const std::string& get_seed_group() const { return(this->seed_group); }
 
+        //! Get integration data type
+        const std::string& get_data_type() const { return(this->data_type); }
+
 
         // INTEGRITY CHECK
 
@@ -318,6 +372,9 @@ namespace transport
         //! Integrity check callback
         std::unique_ptr< integration_writer_integrity<number> > integrity_h;
 
+        //! Finalize callback
+        std::unique_ptr< integration_writer_finalize<number> > finalize_h;
+
 
         // METADATA
 
@@ -338,6 +395,9 @@ namespace transport
 
         //! name of seed group, if so
         std::string seed_group;
+
+        //! name of data type used during integration
+        const std::string data_type;
 
 
         // FAILURE STATUS
@@ -384,7 +444,8 @@ namespace transport
         task(dynamic_cast< integration_task<number>* >(rec.get_task()->clone())),
         type(rec.get_task_type()),
 	      collect_statistics(rec.get_task()->get_model()->supports_per_configuration_statistics()),
-	      metadata()
+	      metadata(),
+        data_type(data_type_name<number>())
 	    {
 	      twopf_db_task<number>* tk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(rec.get_task());
 	      assert(tk_as_twopf_list != nullptr);

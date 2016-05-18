@@ -40,6 +40,7 @@ namespace macro_packages
 
     constexpr unsigned int TOOL_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int VERSION_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int NUMERIC_VERSION_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int GUARD_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int DATE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int SOURCE_TOTAL_ARGUMENTS = 0;
@@ -152,6 +153,46 @@ namespace macro_packages
         language_printer& printer;
 
       };
+
+
+      class replace_numeric_version : public replacement_rule_simple
+        {
+
+          // CONSTRUCTOR, DESTRUCTOR
+
+        public:
+
+          //! constructor
+          replace_numeric_version(std::string n, translator_data& p, language_printer& prn)
+            : replacement_rule_simple(std::move(n), NUMERIC_VERSION_TOTAL_ARGUMENTS),
+              data_payload(p),
+              printer(prn)
+            {
+            }
+
+          //! destructor
+          virtual ~replace_numeric_version() = default;
+
+
+          // INTERNAL API
+
+        protected:
+
+          //! evaluate
+          virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+          // INTERNAL DATA
+
+        private:
+
+          //! data payload
+          translator_data& data_payload;
+
+          //! language printer
+          language_printer& printer;
+
+        };
 
 
     class replace_guard : public replacement_rule_simple

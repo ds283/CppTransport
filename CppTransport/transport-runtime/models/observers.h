@@ -736,17 +736,17 @@ namespace transport
       public:
 
         threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
-                                                   const work_queue<threepf_kconfig_record>::device_work_list& c,
-                                                   const time_config_database& t,
-                                                   unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
-                                                   unsigned int bg_st,
-                                                   unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
-                                                   unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
-                                                   unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
-                                                   unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
-                                                   unsigned int th_st,
-                                                   boost::timer::nanosecond_type t_int=CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
-                                                   bool s=false, unsigned int p=3);
+                                           const work_queue<threepf_kconfig_record>::device_work_list& c,
+                                           const time_config_database& t,
+                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
+                                           unsigned int bg_st,
+                                           unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+                                           unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+                                           unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+                                           unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+                                           unsigned int th_st,
+                                           boost::timer::nanosecond_type t_int=CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                           bool s=false, unsigned int p=3);
 
 
         // INTERFACE

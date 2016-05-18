@@ -62,7 +62,7 @@ namespace transport
 		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
 
 		    //! fNL writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::template_type)> fNL_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::bispectrum_template)> fNL_writer;
 
         //! linear gauge xfm writer function
         typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm1_item >&)> gauge_xfm1_writer;
@@ -351,7 +351,7 @@ namespace transport
                     const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                     const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                     std::unique_ptr<container_replace_function> r,
-                    handle_type h, unsigned int wn, derived_data::template_type t);
+                    handle_type h, unsigned int wn, derived_data::bispectrum_template t);
 
         //! move constructor
         fNL_batcher(fNL_batcher<number>&&) = default;
@@ -391,7 +391,7 @@ namespace transport
         std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator > fNL_batch;
 
         //! template being used by this batcher
-        derived_data::template_type type;
+        derived_data::bispectrum_template type;
 
 	    };
 
@@ -760,7 +760,7 @@ namespace transport
                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                      const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                                      std::unique_ptr<container_replace_function> r,
-                                     handle_type h, unsigned int wn, derived_data::template_type t)
+                                     handle_type h, unsigned int wn, derived_data::bispectrum_template t)
 	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, std::move(d), std::move(r), h, wn),
 	      writers(w),
 	      type(t)

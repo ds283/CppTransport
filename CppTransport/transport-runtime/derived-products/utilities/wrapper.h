@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __wrapper_H_
-#define __wrapper_H_
+#ifndef CPPTRANSPORT_WRAPPER_H
+#define CPPTRANSPORT_WRAPPER_H
 
 
 #include <iostream>
@@ -148,4 +148,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__wrapper_H_
+#endif //CPPTRANSPORT_WRAPPER_H

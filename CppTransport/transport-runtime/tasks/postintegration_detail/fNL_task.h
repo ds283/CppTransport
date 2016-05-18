@@ -30,7 +30,7 @@
 
 #include "transport-runtime/tasks/postintegration_detail/common.h"
 #include "transport-runtime/tasks/postintegration_detail/abstract.h"
-#include "transport-runtime/tasks/postintegration_detail/zeta_twopf_list_task.h"
+#include "transport-runtime/tasks/postintegration_detail/zeta_twopf_db_task.h"
 #include "transport-runtime/tasks/postintegration_detail/zeta_threepf_task.h"
 
 
@@ -47,7 +47,7 @@ namespace transport
     // FNL TASK
 
     //! An 'fNL_task' is a postintegration task which produces an fNL amplitude
-    template <typename number>
+    template <typename number=default_number_type>
     class fNL_task: public postintegration_task<number>
 	    {
 
@@ -56,7 +56,7 @@ namespace transport
       public:
 
         //! construct an fNL task; this depends on output from a zeta_threepf_task
-        fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::template_type ty=derived_data::template_type::fNL_local_template);
+        fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::bispectrum_template ty=derived_data::bispectrum_template::local);
 
         //! deserialization constructor
         fNL_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder);
@@ -81,10 +81,10 @@ namespace transport
       public:
 
         //! get current template setting
-        derived_data::template_type get_template() const { return(this->type); }
+        derived_data::bispectrum_template get_template() const { return(this->type); }
 
         //! set template setting
-        void set_template(derived_data::template_type t) { this->type = t; }
+        void set_template(derived_data::bispectrum_template t) { this->type = t; }
 
 
         // SERIALIZATION
@@ -106,7 +106,7 @@ namespace transport
       protected:
 
         //! template type
-        derived_data::template_type type;
+        derived_data::bispectrum_template type;
 
 	    };
 
@@ -119,7 +119,7 @@ namespace transport
 
 
     template <typename number>
-    fNL_task<number>::fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::template_type ty)
+    fNL_task<number>::fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::bispectrum_template ty)
 	    : postintegration_task<number>(nm, t),
 	      type(ty)
 	    {
@@ -139,10 +139,10 @@ namespace transport
 	    {
         std::string type_str = reader[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE].asString();
 
-        if     (type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL) type = derived_data::template_type::fNL_local_template;
-        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI)  type = derived_data::template_type::fNL_equi_template;
-        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO) type = derived_data::template_type::fNL_ortho_template;
-        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI)   type = derived_data::template_type::fNL_DBI_template;
+        if     (type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL) type = derived_data::bispectrum_template::local;
+        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI)  type = derived_data::bispectrum_template::equilateral;
+        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO) type = derived_data::bispectrum_template::orthogonal;
+        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI)   type = derived_data::bispectrum_template::DBI;
         else
 	        {
             std::ostringstream msg;
@@ -159,19 +159,19 @@ namespace transport
 
         switch(this->type)
 	        {
-            case derived_data::template_type::fNL_local_template:
+            case derived_data::bispectrum_template::local:
 	            writer[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL);
             break;
 
-            case derived_data::template_type::fNL_equi_template:
+            case derived_data::bispectrum_template::equilateral:
 	            writer[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI);
             break;
 
-            case derived_data::template_type::fNL_ortho_template:
+            case derived_data::bispectrum_template::orthogonal:
 	            writer[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO);
             break;
 
-            case derived_data::template_type::fNL_DBI_template:
+            case derived_data::bispectrum_template::DBI:
 	            writer[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI);
             break;
 

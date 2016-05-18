@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __wavenumber_series_plot_H_
-#define __wavenumber_series_plot_H_
+#ifndef CPPTRANSPORT_WAVENUMBER_SERIES_PLOT_H
+#define CPPTRANSPORT_WAVENUMBER_SERIES_PLOT_H
 
 
 #include "transport-runtime/derived-products/line-collections/line_plot2d.h"
@@ -48,7 +48,7 @@ namespace transport
 				//! wavenumber-series-plot is a convenience class which defines a line-plot2d with
 				//! sensible defaults for a wavenumber series plot
 
-		    template <typename number>
+		    template <typename number=default_number_type>
 		    class wavenumber_series_plot : public line_plot2d<number>
 			    {
 
@@ -115,41 +115,55 @@ namespace transport
 			        {
 								switch(x_axis)
 									{
-								    case axis_value::unset_axis:
-								    case axis_value::k_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX);
-											break;
+								    case axis_value::unset:
+								    case axis_value::k:
+											{
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX);
+												break;
+											}
 
-								    case axis_value::efolds_exit_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_NOLATEX);
-									    break;
+								    case axis_value::efolds_exit:
+											{
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX);
+												else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_NOLATEX);
+												break;
+											}
 
-								    case axis_value::alpha_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_NOLATEX);
-								      break;
+								    case axis_value::alpha:
+											{
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_NOLATEX);
+												break;
+											}
 
-								    case axis_value::beta_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_NOLATEX);
-								      break;
+								    case axis_value::beta:
+											{
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_NOLATEX);
+												break;
+											}
 
-								    case axis_value::squeezing_fraction_k1_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_NOLATEX);
-								      break;
+								    case axis_value::squeeze_k1:
+											{
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_NOLATEX);
+												break;
+											}
 
-								    case axis_value::squeezing_fraction_k2_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_NOLATEX);
-								      break;
+								    case axis_value::squeeze_k2:
+											{
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_NOLATEX);
+												break;
+											}
 
-								    case axis_value::squeezing_fraction_k3_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_NOLATEX);
-								      break;
+								    case axis_value::squeeze_k3:
+											{
+												if(this->use_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_LATEX);
+												else                this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_NOLATEX);
+												break;
+											}
 
 								    default:
 									    assert(false);
@@ -183,4 +197,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__wavenumber_series_plot_H_
+#endif //CPPTRANSPORT_WAVENUMBER_SERIES_PLOT_H

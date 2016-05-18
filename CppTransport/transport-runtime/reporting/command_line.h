@@ -621,12 +621,8 @@ namespace transport
                     ++serial;
                   }
 
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
-                std::cout << CPPTRANSPORT_REPORT_PACKAGE_MODEL_REFERENCES;
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
-                std::cout << '\n';
-
                 kv.set_tiling(false);
+                kv.set_title(CPPTRANSPORT_REPORT_PACKAGE_MODEL_REFERENCES);
                 kv.write(std::cout);
                 std::cout << '\n';
               }
@@ -643,12 +639,8 @@ namespace transport
                     ++serial;
                   }
 
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
-                std::cout << CPPTRANSPORT_REPORT_PACKAGE_MODEL_URLS;
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
-                std::cout << '\n';
-
                 kv.set_tiling(false);
+                kv.set_title(CPPTRANSPORT_REPORT_PACKAGE_MODEL_URLS);
                 kv.write(std::cout);
                 std::cout << '\n';
               }
@@ -664,12 +656,8 @@ namespace transport
                 kv.insert_back(param_names[i], boost::lexical_cast<std::string>(param_vec[i]));
               }
 
-            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
-            std::cout << CPPTRANSPORT_REPORT_PACKAGE_PARAMETERS;
-            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
-            std::cout << '\n';
-
             kv.set_tiling(true);
+            kv.set_title(CPPTRANSPORT_REPORT_PACKAGE_PARAMETERS);
             kv.write(std::cout);
             std::cout << '\n';
 
@@ -682,12 +670,8 @@ namespace transport
                 kv.insert_back(coord_names[i], boost::lexical_cast<std::string>(ics_vec[i]));
               }
 
-            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
-            std::cout << CPPTRANSPORT_REPORT_PACKAGE_ICS;
-            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
-            std::cout << '\n';
-
             kv.set_tiling(true);
+            kv.set_title(CPPTRANSPORT_REPORT_PACKAGE_ICS);
             kv.write(std::cout);
 
             this->force_newline();
@@ -1119,6 +1103,7 @@ namespace transport
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_COMPLETE, payload.is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES);
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_WORKGROUP, boost::lexical_cast<std::string>(payload.get_workgroup_number()));
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEEDED, payload.is_seeded() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_DATA_TYPE, payload.get_data_type());
             if(payload.is_seeded()) kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEED_GROUP, payload.get_seed_group());
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_STATISTICS, payload.has_statistics() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ICS, payload.has_initial_conditions() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
@@ -1142,11 +1127,7 @@ namespace transport
             kv_metadata.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_FAILURES, boost::lexical_cast<std::string>(metadata.total_failures));
 
             std::cout << '\n';
-            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
-            std::cout << CPPTRANSPORT_REPORT_PAYLOAD_METADATA;
-            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
-            std::cout << '\n';
-
+            kv_metadata.set_title(CPPTRANSPORT_REPORT_PAYLOAD_METADATA);
             kv_metadata.set_tiling(false);
             kv_metadata.write(std::cout);
 
@@ -1206,11 +1187,7 @@ namespace transport
             kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_DBI, products.get_fNL_DBI() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
 
             std::cout << '\n';
-            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
-            std::cout << CPPTRANSPORT_REPORT_PAYLOAD_PRECOMPUTED;
-            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
-            std::cout << '\n';
-
+            kv_products.set_title(CPPTRANSPORT_REPORT_PAYLOAD_PRECOMPUTED);
             kv_products.set_tiling(false);
             kv_products.write(std::cout);
 
@@ -1283,7 +1260,7 @@ namespace transport
 
             kv.insert_back(CPPTRANSPORT_REPORT_CREATION_DATE, boost::posix_time::to_simple_string(created));
             kv.insert_back(CPPTRANSPORT_REPORT_LAST_EDIT_DATE, boost::posix_time::to_simple_string(edited));
-            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, boost::lexical_cast<std::string>(rec.get_runtime_API_version()));
+            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, format_version(rec.get_runtime_API_version()));
 
             kv.set_tiling(true);
             kv.write(std::cout);
@@ -1300,7 +1277,7 @@ namespace transport
 
             kv.insert_back(CPPTRANSPORT_REPORT_CREATION_DATE, boost::posix_time::to_simple_string(created));
             kv.insert_back(CPPTRANSPORT_REPORT_LAST_EDIT_DATE, boost::posix_time::to_simple_string(edited));
-            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, boost::lexical_cast<std::string>(rec.get_runtime_API_version()));
+            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, format_version(rec.get_runtime_API_version()));
             kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK, rec.get_task_name());
             if(!type.empty()) kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK_TYPE, type);
             kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_LOCKED, rec.get_lock_status() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
@@ -1312,12 +1289,6 @@ namespace transport
             const std::list<note>& notes = rec.get_notes();
             if(!notes.empty())
               {
-                std::cout << '\n';
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
-                std::cout << CPPTRANSPORT_REPORT_OUTPUT_NOTES;
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
-                std::cout << '\n';
-
                 kv.reset();
 
                 unsigned int serial = 0;
@@ -1331,6 +1302,8 @@ namespace transport
                     ++serial;
                   }
 
+                std::cout << '\n';
+                kv.set_title(CPPTRANSPORT_REPORT_OUTPUT_NOTES);
                 kv.set_tiling(false);
                 kv.write(std::cout);
               }
@@ -1435,12 +1408,6 @@ namespace transport
                     const std::list<note>& notes = item.get_notes();
                     if(!notes.empty())
                       {
-                        std::cout << '\n';
-                        if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold);
-                        std::cout << CPPTRANSPORT_REPORT_OUTPUT_NOTES;
-                        if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
-                        std::cout << '\n';
-
                         kv.reset();
 
                         unsigned int serial = 0;
@@ -1454,6 +1421,8 @@ namespace transport
                             ++serial;
                           }
 
+                        std::cout << '\n';
+                        kv.set_title(CPPTRANSPORT_REPORT_OUTPUT_NOTES);
                         kv.set_tiling(false);
                         kv.write(std::cout);
                       }

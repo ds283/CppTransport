@@ -56,25 +56,31 @@
 
 #define CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE           "fNL_task: can't construct fNL product from non-integrable task"
 
-#define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A           "task with"
-#define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B           "3pf k-configurations and"
-#define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C           "2pf k-configurations"
+#define CPPTRANSPORT_TASK_DATA_NSTAR                   "N*"
+#define CPPTRANSPORT_TASK_DATA_N                       "N="
+
+#define CPPTRANSPORT_TASK_DATA_THREEPF                 "3pf configs"
+#define CPPTRANSPORT_TASK_DATA_TWOPF                   "2pf configs"
+
+#define CPPTRANSPORT_TASK_DATA_LARGEST                 "Largest k"
+#define CPPTRANSPORT_TASK_DATA_SMALLEST                "Smallest k"
+#define CPPTRANSPORT_TASK_DATA_EARLIEST                "Earliest N_exit"
+#define CPPTRANSPORT_TASK_DATA_LATEST                  "Latest N_exit"
+#define CPPTRANSPORT_TASK_DATA_END_INFLATION           "Inflation ends"
 
 #define CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS        "Internal error: missing database entry for k ="
 
-#define CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A             "task with"
-#define CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B             "2pf k-configurations"
+#define CPPTRANSPORT_TASK_TWOPF_VALIDATE_INCONSISTENT  "Internal error: validation of subhorizon efolds is inconsistent"
+#define CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A       "N="
+#define CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B       "adaptive ics -- earliest required time N="
+#define CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_C       "is earlier than time of initial conditions N="
 
-#define CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A      "largest scale kmin="
-#define CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B      "crosses horizon at time N*"
-#define CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C      "smallest scale kmax="
-#define CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D      "crosses horizon at time N*"
+#define CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_A        "allows only"
+#define CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_B        "e-folds for some scales to settle initial conditions; consider checking whether this is sufficient"
+#define CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_C        "earliest massless time N="
 
-#define CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A       "earliest required time N="
-#define CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B       "is earlier than time of initial conditions N="
-
-#define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A      "warning: initial conditions set at time N="
-#define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B      "allow only"
+#define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A      "uniform ics -- earliest massless time N="
+#define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B      "allows only"
 #define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C      "e-folds of massless evolution for some scales"
 
 #define CPPTRANSPORT_TASK_TWOPF_LIST_EARLIEST_STORED   "earliest stored time N="
@@ -87,7 +93,7 @@
 
 #define CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS     "Internal error: missing database entry for k ="
 
-#define CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT           "error: failed to compute horizon exit times for all k-configurations"
+#define CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT           "Error: failed to compute horizon exit times for all k-configurations"
 #define CPPTRANSPORT_TASK_SEARCH_FROM                  "searched from N="
 #define CPPTRANSPORT_TASK_SEARCH_TO                    "to N="
 #define CPPTRANSPORT_TASK_SEARCH_FOUND_END             "[end-of-search fixed by end of inflation]"
@@ -98,12 +104,13 @@
 #define CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE_TIME      "at N="
 #define CPPTRANSPORT_TASK_SEARCH_LARGEST_K             "largest k-mode log(k)="
 #define CPPTRANSPORT_TASK_SEARCH_KAH                   "k/aH="
-#define CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL            "search ended before last k-configuration left the horizon, probably because inflation ended before that could occurØ"
+#define CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL            "search ended before last k-configuration left the horizon, probably because inflation ended before that could occur"
 #define CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL        "search ended after last k-configuration left the horizon, but end of inflation is probably too close"
-#define CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY         "could not compute root of k-aH=0 to sufficient accuracy"
-#define CPPTRANSPORT_TASK_SEARCH_ROOT_INF              "received std::inf result while computing root of k-aH=0"
-#define CPPTRANSPORT_TASK_SEARCH_ROOT_NAN              "received std::nan result while computing root of k-aH=0"
-#define CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET          "extreme values of N did not bracket root of k-aH"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY         "could not compute root to sufficient accuracy"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_INF              "received std::inf result while computing root"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_NAN              "received std::nan result while computing root"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_EXIT     "extreme values of N did not bracket time of horizon exit; check whether range of N contains horizon exit times for all configurations"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_MASSLESS "extreme values of N did not bracket massless point; check whether range of N contains massless time for all configurations"
 #define CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS       "iterations"
 #define CPPTRANSPORT_TASK_SEARCH_ROOT_ZERO_EQ          "abs(y)"
 

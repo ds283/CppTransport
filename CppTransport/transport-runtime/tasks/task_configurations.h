@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __task_configurations_H_
-#define __task_configurations_H_
+#ifndef CPPTRANSPORT_TASK_CONFIGURATIONS_H
+#define CPPTRANSPORT_TASK_CONFIGURATIONS_H
 
 
 #include <iostream>
@@ -176,7 +176,7 @@ namespace transport
         double k2_conventional;
         double k3_conventional;
 
-        //! Fergusson-Shellard-Liguori coordinates for this k-configuration
+        //! Fergusson-Shellard coordinates for this k-configuration
         double kt_comoving;
         double kt_conventional;
         double alpha;
@@ -373,4 +373,4 @@ namespace transport
 	}
 
 
-#endif //__task_configurations_H_
+#endif //CPPTRANSPORT_TASK_CONFIGURATIONS_H

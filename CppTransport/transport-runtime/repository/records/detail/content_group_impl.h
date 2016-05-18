@@ -45,6 +45,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS = "has-statistics";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS = "has-ics";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE = "size";
+    constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATA_TYPE = "data-type";
 
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE = "database-path";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED = "failed";
@@ -132,16 +133,25 @@ namespace transport
 
 
     template <typename Payload>
-    bool content_group_record<Payload>::check_tags(std::list<std::string> match_tags) const
+    bool content_group_record<Payload>::check_tags(const std::list<std::string>& match_tags) const
       {
-        // remove all this group's tags from the matching set.
-        // If any remain after this process, then the match set isn't a subset of the group's tags.
-        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); ++t)
+        // iterate through match_tags, checking whether we can match each one
+        for(const std::string& tag : match_tags)
           {
-            match_tags.remove(*t);
+            std::list<std::string>::const_iterator t = std::find(this->tags.begin(), this->tags.end(), tag);
+
+            // if match, move on to next tag
+            if(t != this->tags.end()) continue;
+
+            // otherwise, allow it to match against the content group name
+            if(tag == this->name) continue;
+
+            // no match, return failure
+            return false;
           }
 
-        return (!match_tags.empty());
+        // all tags matched, return success
+        return true;
       }
 
 
@@ -210,9 +220,9 @@ namespace transport
 
 
     template <typename Payload>
-    void content_group_record<Payload>::add_note(const std::string& note)
+    void content_group_record<Payload>::add_note(const std::string note)
       {
-        this->notes.emplace_back(this->handlers.env.get_userid(), note);
+        this->notes.emplace_back(this->handlers.env.get_userid(), std::move(note));
         this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_note);
         this->metadata.update_last_edit_time();
       }
@@ -337,6 +347,7 @@ namespace transport
         statistics         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
         initial_conditions = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS].asBool();
         size               = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE].asUInt();
+        data_type          = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATA_TYPE].asString();
 
         Json::Value failure_array = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
@@ -358,6 +369,7 @@ namespace transport
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS] = this->statistics;
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS]        = this->initial_conditions;
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE]       = this->size;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATA_TYPE]  = this->data_type;
 
         Json::Value failure_array(Json::arrayValue);
         for(unsigned int n : this->failed_serials)

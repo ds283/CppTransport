@@ -30,6 +30,8 @@
 #include "formatter.h"
 #include "msg_en.h"
 
+#include "boost/lexical_cast.hpp"
+
 
 std::string format_time(boost::timer::nanosecond_type time, unsigned int precision)
 	{
@@ -54,4 +56,16 @@ std::string format_time(boost::timer::nanosecond_type time, unsigned int precisi
     out << std::setprecision(precision) << static_cast<double>(time) / sec << MESSAGE_SECOND_LABEL;
 
     return(out.str());
+	}
+
+
+std::string format_version(unsigned int version)
+	{
+		unsigned int major = version / 100;
+		unsigned int minor = version % 100;
+
+		std::string major_string = boost::lexical_cast<std::string>(major);
+		std::string minor_string = boost::lexical_cast<std::string>(minor);
+
+		return(major_string + "." + minor_string);
 	}

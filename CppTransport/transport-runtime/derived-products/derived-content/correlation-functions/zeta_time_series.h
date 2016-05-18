@@ -51,7 +51,7 @@ namespace transport
       {
 
         //! zeta twopf time data line
-        template <typename number>
+        template <typename number=default_number_type>
         class zeta_twopf_time_series : public time_series<number>, public zeta_twopf_line<number>
           {
 
@@ -60,8 +60,8 @@ namespace transport
           public:
 
             //! construct a zeta two-pf time data object
-            zeta_twopf_time_series(const zeta_twopf_list_task<number>& tk,
-                                   SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
+            zeta_twopf_time_series(const zeta_twopf_db_task<number>& tk,
+                                   SQL_time_query tq, SQL_twopf_query kq,
                                    unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
@@ -83,10 +83,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_twopf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_twopf_query& get_k_query() const { return(this->kquery); }
 
 
             // DERIVE LINES -- implements a 'time_series' interface
@@ -133,10 +133,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_twopf_kconfig_query kquery;
+            SQL_twopf_query kquery;
 
           };
 
@@ -144,9 +144,9 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        zeta_twopf_time_series<number>::zeta_twopf_time_series(const zeta_twopf_list_task<number>& tk,
-                                                               SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-	        : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+        zeta_twopf_time_series<number>::zeta_twopf_time_series(const zeta_twopf_db_task<number>& tk,
+                                                               SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
+	        : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
 	          zeta_twopf_line<number>(tk),
 	          time_series<number>(tk),
             tquery(tq),
@@ -198,7 +198,7 @@ namespace transport
                       {
                         line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
                       }
-                    value = value_type::dimensionless_value;
+                    value = value_type::dimensionless;
                   }
                 else
                   {
@@ -207,7 +207,7 @@ namespace transport
                       {
                         line_data[j] *= 1.0 / k_cube;
                       }
-                    value = value_type::correlation_function_value;
+                    value = value_type::correlation_function;
                   }
 
                 lines.emplace_back(group, this->x_type, value, t_axis, line_data,
@@ -287,7 +287,7 @@ namespace transport
 
 
         //! zeta threepf time data line
-        template <typename number>
+        template <typename number=default_number_type>
         class zeta_threepf_time_series: public time_series<number>, public zeta_threepf_line<number>
           {
 
@@ -297,7 +297,7 @@ namespace transport
 
             //! construct a zeta_threepf_time_series object
             zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
-                                     SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                     SQL_time_query tq, SQL_threepf_query kq,
                                      unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
@@ -319,10 +319,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_threepf_query& get_k_query() const { return(this->kquery); }
 
 
             // DERIVE LINES -- implements a 'derived_line' interface
@@ -365,10 +365,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_threepf_kconfig_query kquery;
+            SQL_threepf_query kquery;
 
           };
 
@@ -377,9 +377,9 @@ namespace transport
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
         zeta_threepf_time_series<number>::zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
-                                                                   SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                                                   SQL_time_query tq, SQL_threepf_query kq,
                                                                    unsigned int prec)
-          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
             zeta_threepf_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -430,7 +430,7 @@ namespace transport
                 value_type value;
                 if(this->dimensionless)
                   {
-                    value = value_type::dimensionless_value;
+                    value = value_type::dimensionless;
                   }
                 else
                   {
@@ -439,7 +439,7 @@ namespace transport
                       {
                         line_data[j] *= 1.0/shape;
                       }
-                    value = value_type::correlation_function_value;
+                    value = value_type::correlation_function;
                   }
 
                 lines.emplace_back(group, this->x_type, value, t_axis, line_data,
@@ -519,7 +519,7 @@ namespace transport
 
 
         //! zeta reduced bispectrum time data line
-        template <typename number>
+        template <typename number=default_number_type>
         class zeta_reduced_bispectrum_time_series: public time_series<number>, public zeta_reduced_bispectrum_line<number>
           {
 
@@ -529,7 +529,7 @@ namespace transport
 
             //! construct a zeta_reduced_bispectrum_time_series object
             zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
-                                                SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                                SQL_time_query tq, SQL_threepf_query kq,
                                                 unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
@@ -551,10 +551,10 @@ namespace transport
           public:
 
             //! get time query
-            const SQL_time_config_query& get_time_query() const { return(this->tquery); }
+            const SQL_time_query& get_time_query() const { return(this->tquery); }
 
             //! get wavenumber query
-            const SQL_threepf_kconfig_query& get_k_query() const { return(this->kquery); }
+            const SQL_threepf_query& get_k_query() const { return(this->kquery); }
 
 
             // DERIVE LINES -- implements a 'derived line' interface
@@ -597,10 +597,10 @@ namespace transport
           protected:
 
             //! SQL query representing the x-axis
-            SQL_time_config_query tquery;
+            SQL_time_query tquery;
 
             //! SQL query representing different lines
-            SQL_threepf_kconfig_query kquery;
+            SQL_threepf_query kquery;
 
           };
 
@@ -609,9 +609,9 @@ namespace transport
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
         zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
-                                                                                         SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
+                                                                                         SQL_time_query tq, SQL_threepf_query kq,
                                                                                          unsigned int prec)
-          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
+          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
             zeta_reduced_bispectrum_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -657,7 +657,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                lines.emplace_back(group, this->x_type, value_type::fNL_value, t_axis, line_data,
+                lines.emplace_back(group, this->x_type, value_type::fNL, t_axis, line_data,
                                    this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t), messages);
               }
 

@@ -1,0 +1,63 @@
+model "dquad"
+  {
+    name        = "Double quadratic inflation";
+    description = "A two-field model with quadratic potentials";
+    citeguide   = "Example from the CppTransport user guide";
+    license     = "CC BY";
+    revision    = 1;
+
+    references  = [ "astro-ph/0504508",
+                    "astro-ph/0511041",
+                    "astro-ph/0603799" ];
+    urls        = [ "http://transportmethod.com" ];
+  };
+
+templates
+  {
+    core           = "canonical_core";
+    implementation = "canonical_mpi";
+  };
+
+background
+  {
+    stepper  = "runge_kutta_dopri5";
+    stepsize = 1E-12;
+    abserr   = 1E-12;
+    relerr   = 1E-12;
+  };
+
+perturbations
+  {
+    stepper  = "runge_kutta_dopri5";
+    stepsize = 1E-12;
+    abserr   = 1E-12;
+    relerr   = 1E-12;
+  };
+
+author "David Seery"
+  {
+    institute = "Astronomy Centre, University of Sussex";
+    email     = "D.Seery@sussex.ac.uk";
+  };
+
+field phi
+  {
+    latex = "\phi";
+  };
+
+field chi
+  {
+    latex = "\chi";
+  };
+
+parameter Mphi
+  {
+    latex = "M_\phi";
+  };
+
+parameter Mchi
+  {
+    latex = "M_\chi";
+  };
+
+potential = Mphi^2 * phi^2 / 2 + Mchi^2 * chi^2 / 2;
