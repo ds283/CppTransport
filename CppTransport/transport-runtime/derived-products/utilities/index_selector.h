@@ -91,10 +91,6 @@ namespace transport
             //! compound subtraction is synonymous with set_off()
             index_selector<indices>& operator-=(const std::array<unsigned int, indices>& rhs) { this->set_off(rhs); return(*this); }
 
-            //! addition, subtraction
-            friend index_selector<indices> operator+ <>(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
-            friend index_selector<indices> operator- <>(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
-
             //! Disable all indices
             index_selector<indices>& none();
 
@@ -356,14 +352,18 @@ namespace transport
         template <unsigned int indices>
         index_selector<indices> operator+(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs)
           {
-            return(index_selector<indices>(lhs) += rhs);
+            index_selector<indices> rval = lhs;
+            rval += rhs;
+            return rval;
           }
 
 
         template <unsigned int indices>
         index_selector<indices> operator-(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs)
           {
-            return(index_selector<indices>(lhs) -= rhs);
+            index_selector<indices> rval = lhs;
+            rval -= rhs;
+            return rval;
           }
 
       }
