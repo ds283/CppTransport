@@ -158,15 +158,15 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
       {
         std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
       }
-    catch(boost::program_options::invalid_syntax& xe)
-      {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
-      }
     catch(boost::program_options::invalid_command_line_style& xe)
       {
         std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
       }
     catch(boost::program_options::invalid_command_line_syntax& xe)
+      {
+        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+      }
+    catch(boost::program_options::invalid_syntax& xe)
       {
         std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
       }
@@ -201,11 +201,11 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
                   {
                     std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
                   }
-                catch(boost::program_options::invalid_syntax& xe)
+                catch(boost::program_options::invalid_config_file_syntax& xe)
                   {
                     std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
                   }
-                catch(boost::program_options::invalid_config_file_syntax& xe)
+                catch(boost::program_options::invalid_syntax& xe)
                   {
                     std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
                   }

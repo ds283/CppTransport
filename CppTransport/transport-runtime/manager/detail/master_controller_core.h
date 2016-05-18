@@ -203,15 +203,15 @@ namespace transport
           {
             this->warn(xe.what());
           }
-        catch(boost::program_options::invalid_syntax& xe)
-          {
-            this->warn(xe.what());
-          }
         catch(boost::program_options::invalid_command_line_style& xe)
           {
             this->warn(xe.what());
           }
         catch(boost::program_options::invalid_command_line_syntax& xe)
+          {
+            this->warn(xe.what());
+          }
+        catch(boost::program_options::invalid_syntax& xe)
           {
             this->warn(xe.what());
           }
@@ -237,11 +237,11 @@ namespace transport
                       {
                         this->warn(xe.what());
                       }
-                    catch(boost::program_options::invalid_syntax& xe)
+                    catch(boost::program_options::invalid_config_file_syntax& xe)
                       {
                         this->warn(xe.what());
                       }
-                    catch(boost::program_options::invalid_config_file_syntax& xe)
+                    catch(boost::program_options::invalid_syntax& xe)
                       {
                         this->warn(xe.what());
                       }
