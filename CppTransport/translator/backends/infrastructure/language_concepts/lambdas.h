@@ -32,6 +32,7 @@
 #include "abstract_index.h"
 #include "expression_cache.h"
 
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 

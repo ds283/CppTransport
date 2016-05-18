@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 23/12/2015.
+// Created by David Seery on 18/05/2016.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,14 +23,14 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_GINAC_PRINT_DELTA_H
-#define CPPTRANSPORT_GINAC_PRINT_DELTA_H
+#ifndef CPPTRANSPORT_DISABLE_WARNINGS_H
+#define CPPTRANSPORT_DISABLE_WARNINGS_H
 
 
-#include "disable_warnings.h"
-#include "ginac/ginac.h"
+#ifdef __INTEL_COMPILER
+// Intel compiler produces warnings about GiNaC_deprecated
+#pragma warning disable 1292
+#endif
 
-void set_up_ginac_printing();
 
-
-#endif //CPPTRANSPORT_GINAC_PRINT_DELTA_H
+#endif //CPPTRANSPORT_DISABLE_WARNINGS_H

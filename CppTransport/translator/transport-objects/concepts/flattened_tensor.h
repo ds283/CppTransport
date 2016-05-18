@@ -28,6 +28,7 @@
 
 
 #include <vector>
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 typedef std::vector< GiNaC::ex > flattened_tensor;

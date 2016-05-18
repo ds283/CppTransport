@@ -28,7 +28,7 @@
 
 
 #ifdef __INTEL_COMPILER
-// Intel compiler (at least 16.0.1) produces this warning when using boost::escape_dot_string()
+// Intel compiler produces this warning when using boost::escape_dot_string()
 #pragma warning disable 2196
 #endif
 

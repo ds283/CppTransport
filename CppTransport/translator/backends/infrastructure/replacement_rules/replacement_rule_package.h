@@ -27,6 +27,7 @@
 #define CPPTRANSPORT_REPLACEMENT_RULE_PACKAGE_H
 
 
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 #include "language_printer.h"

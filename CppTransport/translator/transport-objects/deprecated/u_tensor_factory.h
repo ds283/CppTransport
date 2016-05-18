@@ -32,6 +32,7 @@
 #include "flatten.h"
 #include "ginac_cache.h"
 
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 #include "translator_data.h"
 #include "expression_cache.h"
