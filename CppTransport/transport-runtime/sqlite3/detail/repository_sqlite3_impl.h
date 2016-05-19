@@ -653,7 +653,7 @@ namespace transport
         // check for a package with a duplicate name
         this->check_package_duplicate(ics.get_name());
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
         std::unique_ptr< package_record<number> > record = package_record_factory(ics, mgr);
         record->commit();
       }
@@ -712,7 +712,7 @@ namespace transport
         unsigned int count = sqlite3_operations::count_packages(this->db, tk.get_ics().get_name());
         if(count == 0) this->commit(mgr, tk.get_ics());
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
         std::unique_ptr< integration_task_record<number> > record = integration_task_record_factory(tk, mgr);
         record->commit();
       }
@@ -754,7 +754,7 @@ namespace transport
             if(count == 0) this->commit(mgr, product);
           }
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
         std::unique_ptr< output_task_record<number> > record = output_task_record_factory(tk, mgr);
         record->commit();
       }
@@ -834,7 +834,7 @@ namespace transport
                              CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D);
           }
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
         std::unique_ptr<postintegration_task_record < number> > record(postintegration_task_record_factory(tk, mgr));
         record->commit();
       }
@@ -873,7 +873,7 @@ namespace transport
               }
           }
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
         std::unique_ptr< derived_product_record<number> > record = derived_product_record_factory(d, mgr);
         record->commit();
       }
