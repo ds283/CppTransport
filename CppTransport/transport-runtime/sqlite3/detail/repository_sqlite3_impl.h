@@ -60,6 +60,10 @@ namespace transport
                 msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
                 throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
+
+            // enable foreign key constraints
+            char* errmsg;
+            sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
           }
       }
 
@@ -153,6 +157,10 @@ namespace transport
             msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
             throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
+
+        // enable foreign key constraints
+        char* errmsg;
+        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
 
         sqlite3_operations::create_repository_tables(db);
       }

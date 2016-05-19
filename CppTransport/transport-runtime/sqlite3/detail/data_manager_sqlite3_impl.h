@@ -39,9 +39,11 @@ namespace transport
     template <typename number>
     data_manager_sqlite3<number>::~data_manager_sqlite3()
       {
-        for(std::list<sqlite3*>::iterator t = this->open_containers.begin(); t != this->open_containers.end(); ++t)
+        // close any remaining open containers
+
+        for(sqlite3* h : this->open_containers)
           {
-            int status = sqlite3_close(*t);
+            int status = sqlite3_close(h);
 
             if(status != SQLITE_OK)
               {
@@ -171,9 +173,9 @@ namespace transport
 
         sqlite3_extended_result_codes(db, 1);
 
-        // enable foreign key constraints
+        // attempt to speed up insert by disabling foreign key constraints
         char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+        sqlite3_exec(db, "PRAGMA foreign_keys = OFF;", nullptr, nullptr, &errmsg);
 
         // force temporary databases to be stored in memory, for speed
         sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
@@ -279,10 +281,12 @@ namespace transport
           }
 
         sqlite3_extended_result_codes(db, 1);
-        // leave foreign keys disabled
+
+        // attempt to speed up insert by disabling foreign key constraints
+        char* errmsg;
+        sqlite3_exec(db, "PRAGMA foreign_keys = OFF;", nullptr, nullptr, &errmsg);
 
         // force temporary databases to be stored in memory, for speed
-        char* errmsg;
         sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
 
         // try to speed up SQLite accesses
@@ -716,6 +720,10 @@ namespace transport
               }
             throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
           }
+
+        // attempt to speed up insert by disabling foreign key constraints
+        char* errmsg;
+        sqlite3_exec(db, "PRAGMA foreign_keys = OFF;", nullptr, nullptr, &errmsg);
 
         return(db);
       }
@@ -2341,7 +2349,7 @@ namespace transport
           }
         sqlite3_extended_result_codes(db, 1);
 
-        // enable foreign key constraints
+        // enable foreign key constraints (although databases opened with this function should not be modified)
         char* errmsg;
         sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
 
