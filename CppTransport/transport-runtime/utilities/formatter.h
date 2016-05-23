@@ -30,6 +30,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <type_traits>
 
 #include "transport-runtime/messages.h"
 
@@ -37,13 +38,16 @@
 #include "boost/lexical_cast.hpp"
 
 
-inline std::string format_memory(unsigned int size, unsigned int precision=2)
+template <typename IntegerType>
+std::string format_memory(IntegerType size, unsigned int precision=3)
   {
+    static_assert(std::is_integral<IntegerType>::value, "format_memory requires an integral value type");
+
     std::ostringstream out;
 
-    constexpr unsigned int gigabyte = 1024*1024*1024;
-    constexpr unsigned int megabyte = 1024*1024;
-    constexpr unsigned int kilobyte = 1024;
+    constexpr IntegerType gigabyte = 1024*1024*1024;
+    constexpr IntegerType megabyte = 1024*1024;
+    constexpr IntegerType kilobyte = 1024;
 
     if(size > gigabyte)
       {

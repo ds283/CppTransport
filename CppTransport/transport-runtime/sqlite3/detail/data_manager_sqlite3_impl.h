@@ -401,7 +401,8 @@ namespace transport
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // vacuum the database if it is sufficiently small
-        if(boost::filesystem::file_size(writer.get_abs_container_path()) < CPPTRANSPORT_MAX_VACUUMABLE_SIZE)
+        boost::uintmax_t container_size = boost::filesystem::file_size(writer.get_abs_container_path());
+        if(container_size < CPPTRANSPORT_MAX_VACUUMABLE_SIZE)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
             boost::timer::cpu_timer timer;
@@ -414,7 +415,7 @@ namespace transport
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '"
                                                                                      << writer.get_abs_container_path().string() << "' of size "
-                                                                                     << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path())))
+                                                                                     << format_memory(container_size)
                                                                                      << " is very large; automatic maintenance disabled";
           }
 
