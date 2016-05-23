@@ -6369,9 +6369,17 @@ That process Gantt chart for this job is shown
 in Fig.~\ref{fig:gantt-fNL}.
 \begin{figure}
     \begin{center}
-        \includegraphics[scale=0.5]{Outputs/gantt-fNL}    
+        \includegraphics[scale=0.5]{Outputs/gantt-fNL-arun}
     \end{center}
-    \caption{\label{fig:gantt-fNL}Process Gantt chart for the inner-product task \repoobject{dquad.fNL-local}.}
+    \begin{center}
+    	\includegraphics[scale=0.5]{Outputs/gantt-fNL-chadwick}	
+    \end{center}
+
+    \caption{\label{fig:gantt-fNL}Process Gantt charts for the inner-product task \repoobject{dquad.fNL-local}.
+    Top chart: using a machine with solid-state storage.
+    Bottom chart: using a machine with conventional disk storage.
+    Notice that aggregation is more time consuming using disks.
+    Aggregation was performed using {\SQLite}'s write-ahead logging mode.}
 \end{figure}
 
 \subsubsection{Example: Using the {\SQLite} data container to produce a plot}
