@@ -79,7 +79,7 @@ namespace transport
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_TIME_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_K_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE);
 
-            finalize_impl:analyze(mgr, db);
+            finalize_impl::analyze(mgr, db);
           }
 
 
@@ -102,7 +102,7 @@ namespace transport
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_THREEPF_DERIV_TIME_INDEX, CPPTRANSPORT_SQLITE_THREEPF_DERIV_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_THREEPF_DERIV_K_INDEX, CPPTRANSPORT_SQLITE_THREEPF_DERIV_VALUE_TABLE);
 
-            finalize_impl:analyze(mgr, db);
+            finalize_impl::analyze(mgr, db);
           }
 
 
@@ -116,7 +116,7 @@ namespace transport
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_GAUGE_XFM1_TIME_INDEX, CPPTRANSPORT_SQLITE_GAUGE_XFM1_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_GAUGE_XFM1_K_INDEX, CPPTRANSPORT_SQLITE_GAUGE_XFM1_VALUE_TABLE);
 
-            finalize_impl:analyze(mgr, db);
+            finalize_impl::analyze(mgr, db);
           }
 
 
@@ -142,7 +142,7 @@ namespace transport
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_TIME_INDEX, CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_K_INDEX, CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_VALUE_TABLE);
 
-            finalize_impl:analyze(mgr, db);
+            finalize_impl::analyze(mgr, db);
           }
 
 
@@ -152,7 +152,7 @@ namespace transport
 
             // don't currently create indexes for fNL
 
-            finalize_impl:analyze(mgr, db);
+            finalize_impl::analyze(mgr, db);
           }
 
       }   // namespace sqlite3_operations
