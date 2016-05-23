@@ -1225,7 +1225,7 @@ The precise name of this directory is arbitrary and can be freely changed,
 although it is wise to avoid the names
 \file{\textasciitilde{}/.cpptransport}
 and
-\file{\textasciitilde{}/.cpptransport-runtime}
+\file{\textasciitilde{}/.cpptransport\_runtime}
 which {\CppTransport} expects to be associated with configuration files.
 (See the discussion on p.\pageref{page:config-files} below.)
 If you are installing system-wide the install prefix should
@@ -1379,7 +1379,7 @@ There are two ways to do this:
     The translator will look for a configuration file named
     \file{\textasciitilde{}/.cpptransport},
     and the runtime environment will look for a file named
-    \file{\textasciitilde{}/.cpptransport-runtime}.
+    \file{\textasciitilde{}/.cpptransport\_runtime}.
     The use of separate files
     enables different options to be passed
     to each component.
@@ -1401,7 +1401,7 @@ There are two ways to do this:
     the path to the home directory.
     
     The runtime system requires a separate configuration
-    file called \file{.cpptransport-runtime}
+    file called \file{.cpptransport\_runtime}
     which should include the same line:
     \begin{minted}{text}
         include = /Users/ds283/.cpptransport-packages/share/cpptransport    
@@ -1426,7 +1426,7 @@ These features are enabled using the
 \option{plot-style} option.
 This can be provided on the command line
 (see {\S}\ref{}), but it is usually more convenient to include it in
-the \file{\textasciitilde{}/.cpptransport-runtime} configuration file.
+the \file{\textasciitilde{}/.cpptransport\_runtime} configuration file.
 This file should include a line such as
 \begin{minted}{text}
     plot-style = seaborn    
