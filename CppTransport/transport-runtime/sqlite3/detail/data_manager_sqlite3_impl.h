@@ -173,17 +173,8 @@ namespace transport
 
         sqlite3_extended_result_codes(db, 1);
 
-        // attempt to speed up insert by disabling foreign key constraints
-        char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = OFF;", nullptr, nullptr, &errmsg);
-
-        // force temporary databases to be stored in memory, for speed
-        sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
-
-        // try to speed up SQLite accesses
-//        sqlite3_exec(db, "PRAGMA main.page_size = 4096;", nullptr, nullptr, &errmsg)
-        sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
-        sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
+        // change setting to optimize SQLite performance
+        sqlite3_operations::performance_pragmas(db);
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -282,17 +273,8 @@ namespace transport
 
         sqlite3_extended_result_codes(db, 1);
 
-        // attempt to speed up insert by disabling foreign key constraints
-        char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = OFF;", nullptr, nullptr, &errmsg);
-
-        // force temporary databases to be stored in memory, for speed
-        sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
-
-        // try to speed up SQLite accesses
-//        sqlite3_exec(db, "PRAGMA main.page_size = 4096;", nullptr, nullptr, &errmsg)
-        sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
-        sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
+        // change setting to optimize SQLite performance
+        sqlite3_operations::performance_pragmas(db);
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -721,9 +703,8 @@ namespace transport
             throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
           }
 
-        // attempt to speed up insert by disabling foreign key constraints
-        char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = OFF;", nullptr, nullptr, &errmsg);
+        // change setting to optimize SQLite performance
+        sqlite3_operations::performance_pragmas(db);
 
         return(db);
       }
@@ -2215,16 +2196,8 @@ namespace transport
           }
         sqlite3_extended_result_codes(db, 1);
 
-        // enable foreign key constraints
-        char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
-
-        // force temporary databases to be stored in memory, for speed
-        sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
-
-        // try to speed up SQLite accesses
-        sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
-        sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
+        // set performance-related options
+        sqlite3_operations::reading_pragmas(db);
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -2349,16 +2322,8 @@ namespace transport
           }
         sqlite3_extended_result_codes(db, 1);
 
-        // enable foreign key constraints (although databases opened with this function should not be modified)
-        char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
-
-        // force temporary databases to be stored in memory, for speed
-        sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
-
-        // try to speed up SQLite accesses
-        sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
-        sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
+        // set performance-related options
+        sqlite3_operations::reading_pragmas(db);
 
         return(db);
       }

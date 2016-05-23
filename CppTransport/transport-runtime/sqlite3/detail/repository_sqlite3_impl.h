@@ -61,9 +61,8 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
-            // enable foreign key constraints
-            char* errmsg;
-            sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+            // set performance-related options
+            sqlite3_operations::reading_pragmas(db);
           }
       }
 
