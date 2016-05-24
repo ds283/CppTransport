@@ -174,7 +174,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // change setting to optimize SQLite performance
-        sqlite3_operations::performance_pragmas(db);
+        sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -274,7 +274,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // change setting to optimize SQLite performance
-        sqlite3_operations::performance_pragmas(db);
+        sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -721,7 +721,7 @@ namespace transport
           }
 
         // change setting to optimize SQLite performance
-        sqlite3_operations::performance_pragmas(db);
+        sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
 
         return(db);
       }
@@ -757,7 +757,7 @@ namespace transport
         std::unique_ptr< sqlite3_container_replace_twopf<number> > replacer = std::make_unique< sqlite3_container_replace_twopf<number> >(*this, tempdir, worker, m, tk->get_collect_initial_conditions());
 
         // set up batcher
-        twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, tk, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, group);
+        twopf_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, tk, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, group);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary twopf container " << container;
 
@@ -818,7 +818,7 @@ namespace transport
         std::unique_ptr< sqlite3_container_replace_threepf<number> > replacer = std::make_unique< sqlite3_container_replace_threepf<number> >(*this, tempdir, worker, m, tk->get_collect_initial_conditions());
 
         // set up batcher
-        threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, tk, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, group);
+        threepf_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, tk, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, group);
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary threepf container " << container;
 
         // add this database to our list of open connections
@@ -876,7 +876,7 @@ namespace transport
         std::unique_ptr< sqlite3_container_replace_zeta_twopf<number> > replacer = std::make_unique< sqlite3_container_replace_zeta_twopf<number> >(*this, tempdir, worker, m);
 
         // set up batcher
-        zeta_twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker);
+        zeta_twopf_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary zeta twopf container " << container;
 
@@ -924,7 +924,7 @@ namespace transport
         std::unique_ptr< sqlite3_container_replace_zeta_threepf<number> > replacer = std::make_unique< sqlite3_container_replace_zeta_threepf<number> >(*this, tempdir, worker, m);
 
         // set up batcher
-        zeta_threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker);
+        zeta_threepf_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary zeta threepf container " << container;
 
@@ -970,7 +970,7 @@ namespace transport
         std::unique_ptr< sqlite3_container_replace_fNL<number> > replacer = std::make_unique< sqlite3_container_replace_fNL<number> >(*this, tempdir, worker, type);
 
         // set up batcher
-        fNL_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, type);
+        fNL_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, type);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary " <<
             derived_data::template_type_to_string(type) << " container " << container;
@@ -1872,7 +1872,7 @@ namespace transport
         typename datapipe<number>::utility_callbacks utilities(integration_finder, postintegration_finder, dispatcher);
 
         // set up datapipe
-        return std::make_unique< datapipe<number> >(this->pipe_capacity, logdir, tempdir, worker, *this, utilities, no_log);
+        return std::make_unique< datapipe<number> >(this->get_pipe_capacity(), logdir, tempdir, worker, *this, utilities, no_log);
       }
 
 
@@ -2254,7 +2254,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // set performance-related options
-        sqlite3_operations::reading_pragmas(db);
+        sqlite3_operations::reading_pragmas(db, this->args.get_network_mode());
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -2380,7 +2380,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // set performance-related options
-        sqlite3_operations::reading_pragmas(db);
+        sqlite3_operations::reading_pragmas(db, this->args.get_network_mode());
 
         return(db);
       }

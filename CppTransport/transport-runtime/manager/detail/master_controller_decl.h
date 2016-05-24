@@ -215,7 +215,10 @@ namespace transport
         void log_worker_metadata(WriterObject& writer);
 
         //! Master node: instruct workers to change their checkpoint interval
-        void reset_checkpoint_interval(unsigned int m);
+        void set_local_checkpoint_interval(unsigned int m);
+
+        //! Master node: instruct workers to unset any local checkpoint interval
+        void unset_local_checkpoint_interval();
 
         friend class CheckpointContext<number>;
         friend class CloseDownContext<number>;
@@ -533,7 +536,8 @@ namespace transport
 
             //! constructor accepts and stores reference to controller object
             CheckpointContext(master_controller<number>& c)
-              : controller(c)
+              : controller(c),
+                unset(false)
               {
               }
 
@@ -545,8 +549,8 @@ namespace transport
 
           public:
 
-            //! instruct us to send a reset message on destruction
-            void reset_value(unsigned int t) { this->reset_time = t; }
+            //! instruct us to unset the local checkpoint interval on destruction
+            void requires_unset() { this->unset = true; }
 
 
             // INTERNAL DATA
@@ -556,8 +560,8 @@ namespace transport
             //! reference to controller object
             master_controller<number>& controller;
 
-            //! optional representing checkpoint interval to reset, if required
-            boost::optional<unsigned int> reset_time;
+            //! does a local checkpoint setting need removing?
+            bool unset;
 
           };
 
@@ -565,7 +569,7 @@ namespace transport
         template <typename number>
         CheckpointContext<number>::~CheckpointContext()
           {
-            if(this->reset_time) controller.reset_checkpoint_interval(*this->reset_time);
+            if(this->unset) controller.unset_local_checkpoint_interval();
           }
 
 

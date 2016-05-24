@@ -96,7 +96,7 @@ namespace transport
 
 
 				// apply PRAGMAs to optimize performance
-				inline void performance_pragmas(sqlite3* db)
+				inline void performance_pragmas(sqlite3* db, bool network_filesystem)
 					{
 						// SQLite performance choices:
 						// http://blog.devart.com/increasing-sqlite-performance.html
@@ -111,11 +111,14 @@ namespace transport
 						// if write-ahead log mode is disabled (as it must be if a network filing system is in play)
 						// then put journal into truncate mode
 						// otherwise, enable to write-ahead log
-#ifndef CPPTRANSPORT_NETWORK_FILESYSTEM
-						sqlite3_exec(db, "PRAGMA journal_mode = WAL;", nullptr, nullptr, &errmsg);
-#else
-						sqlite3_exec(db, "PRAGMA journal_mode = TRUNCATE;", nullptr, nullptr, &errmsg);
-#endif
+            if(network_filesystem)
+              {
+                sqlite3_exec(db, "PRAGMA journal_mode = TRUNCATE;", nullptr, nullptr, &errmsg);
+              }
+            else
+              {
+                sqlite3_exec(db, "PRAGMA journal_mode = WAL;", nullptr, nullptr, &errmsg);
+              }
 
 						// force temporary objects to be stored in memory, for speed
 						sqlite3_exec(db, "PRAGMA temp_store = MEMORY;", nullptr, nullptr, &errmsg);
@@ -132,7 +135,7 @@ namespace transport
 
 
 				// apply PRAGMAs to optimize performance
-				inline void reading_pragmas(sqlite3* db)
+				inline void reading_pragmas(sqlite3* db, bool network_filesystem)
 					{
 						// SQLite performance choices:
 						// http://blog.devart.com/increasing-sqlite-performance.html
@@ -145,11 +148,14 @@ namespace transport
 						// if write-ahead log mode is disabled (as it must be if a network filing system is in play)
 						// then put journal into truncate mode
 						// otherwise, enable to write-ahead log
-#ifndef CPPTRANSPORT_NETWORK_FILESYSTEM
-						sqlite3_exec(db, "PRAGMA journal_mode = WAL;", nullptr, nullptr, &errmsg);
-#else
-						sqlite3_exec(db, "PRAGMA journal_mode = TRUNCATE;", nullptr, nullptr, &errmsg);
-#endif
+            if(network_filesystem)
+              {
+                sqlite3_exec(db, "PRAGMA journal_mode = TRUNCATE;", nullptr, nullptr, &errmsg);
+              }
+            else
+              {
+                sqlite3_exec(db, "PRAGMA journal_mode = WAL;", nullptr, nullptr, &errmsg);
+              }
 
 						// force temporary objects to be stored in memory, for speed
 						sqlite3_exec(db, "PRAGMA temp_store = MEMORY;", nullptr, nullptr, &errmsg);

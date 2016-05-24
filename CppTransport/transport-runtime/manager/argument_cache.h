@@ -91,6 +91,12 @@ namespace transport
         //! Set colourized output status
         void set_colour_output(bool g)                            { this->colour_output = g; }
 
+        //! Get network mode
+        bool get_network_mode() const                             { return(this->network_mode); }
+
+        //! Set network mode
+        void set_network_mode(bool m)                             { this->network_mode = m; }
+
 
         // REPOSITORY OPTIONS
 
@@ -125,16 +131,16 @@ namespace transport
       public:
 
         //! Set batcher capacity
-        void set_batcher_capacity(unsigned int c)                 { this->batcher_capacity = c; }
+        void set_batcher_capacity(size_t c)                       { this->batcher_capacity = c; }
 
         //! Get batcher capacity
-        unsigned int get_batcher_capacity() const                 { return(this->batcher_capacity); }
+        size_t get_batcher_capacity() const                       { return(this->batcher_capacity); }
 
         //! Set datapipe capacity
-        void set_datapipe_capacity(unsigned int c)                { this->pipe_capacity = c; }
+        void set_datapipe_capacity(size_t c)                      { this->pipe_capacity = c; }
 
         //! Get datapipe capacity
-        unsigned int get_datapipe_capacity() const                { return(this->pipe_capacity); }
+        size_t get_datapipe_capacity() const                      { return(this->pipe_capacity); }
 
 
         // MPI VISUALIZATION OPTIONS
@@ -220,11 +226,14 @@ namespace transport
         //! colour output?
         bool colour_output;
 
+        //! network mode?
+        bool network_mode;
+
         //! Storage capacity per batcher
-        unsigned int batcher_capacity;
+        size_t batcher_capacity;
 
         //! Data cache capacity per datapipe
-        unsigned int pipe_capacity;
+        size_t pipe_capacity;
 
         //! checkpoint interval in seconds. Zero indicates that checkpointing is disabled
         unsigned int checkpoint_interval;
@@ -252,6 +261,7 @@ namespace transport
             ar & recovery;
             ar & create;
             ar & colour_output;
+            ar & network_mode;
             ar & batcher_capacity;
             ar & pipe_capacity;
             ar & checkpoint_interval;
@@ -270,6 +280,7 @@ namespace transport
         recovery(false),
         create(false),
         colour_output(true),
+        network_mode(false),
         batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
         pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),
         checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL),

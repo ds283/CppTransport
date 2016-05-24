@@ -106,7 +106,7 @@ namespace transport
         arg_cache(ac),
         model_mgr(f),
         gallery(g),
-        data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
+        data_mgr(data_manager_factory<number>(le, ac)),
         journal(w.size()-1),
         err(eh),
         warn(wh),
@@ -129,6 +129,7 @@ namespace transport
           (CPPTRANSPORT_SWITCH_VERSION,                                                                                      CPPTRANSPORT_HELP_VERSION)
           (CPPTRANSPORT_SWITCH_LICENSE,                                                                                      CPPTRANSPORT_HELP_LICENSE)
           (CPPTRANSPORT_SWITCH_INCLUDE,          boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_INCLUDE)
+          (CPPTRANSPORT_SWITCH_NETWORK_MODE,                                                                                 CPPTRANSPORT_HELP_NETWORK_MODE)
           (CPPTRANSPORT_SWITCH_MODELS,                                                                                       CPPTRANSPORT_HELP_MODELS)
           (CPPTRANSPORT_SWITCH_NO_COLOUR,                                                                                    CPPTRANSPORT_HELP_NO_COLOUR);
 
@@ -136,9 +137,9 @@ namespace transport
         configuration.add_options()
           (CPPTRANSPORT_SWITCH_VERBOSE,                                                                                      CPPTRANSPORT_HELP_VERBOSE)
           (CPPTRANSPORT_SWITCH_REPO,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPO)
-          (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CAPACITY)
-          (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_BATCHER_CAPACITY)
-          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY);
+          (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< long int >(),                                CPPTRANSPORT_HELP_CAPACITY)
+          (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< long int >(),                                CPPTRANSPORT_HELP_BATCHER_CAPACITY)
+          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< long int >(),                                CPPTRANSPORT_HELP_CACHE_CAPACITY);
 
         boost::program_options::options_description plotting("Plot style", width);
         plotting.add_options()
@@ -263,8 +264,7 @@ namespace transport
             try
               {
                 this->repo = repository_factory<number>(this->option_map[CPPTRANSPORT_SWITCH_REPO_LONG].template as<std::string>(),
-                                                        this->model_mgr, repository_mode::readwrite,
-                                                        this->local_env, this->err, this->warn, this->msg);
+                                                        this->model_mgr, repository_mode::readwrite, this->local_env, this->arg_cache);
               }
             catch(runtime_exception& xe)
               {
@@ -384,19 +384,19 @@ namespace transport
         // add search paths if any were specified
         if(option_map.count(CPPTRANSPORT_SWITCH_INCLUDE_LONG)) this->arg_cache.set_search_paths(option_map[CPPTRANSPORT_SWITCH_INCLUDE_LONG].as< std::vector<std::string> >());
 
+        if(option_map.count(CPPTRANSPORT_SWITCH_NETWORK_MODE)) this->arg_cache.set_network_mode(true);
+
         // process global capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))
           {
-            int capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<int>() * 1024*1024;            // argument size interpreted in Mb
+            long int capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<long int>() * 1024*1024;            // argument size interpreted in Mb
             if(capacity > 0)
               {
-                unsigned int cp = static_cast<unsigned int>(capacity);
+                size_t cp = static_cast<size_t>(capacity);
 
                 this->arg_cache.set_batcher_capacity(cp);
                 this->arg_cache.set_datapipe_capacity(cp);
-
-                this->data_mgr->set_batcher_capacity(cp);                         // probably not required; only slaves need these values set
-                this->data_mgr->set_pipe_capacity(cp);                            // probably not required; only slaves need these values set
+                // no need to inform data_manager of the change in capacity, since it will pick it up via the argument_cache object
               }
             else
               {
@@ -409,13 +409,13 @@ namespace transport
         // process datapipe capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CACHE_CAPACITY))
           {
-            int capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<int>() * 1024*1024;      // argument size interpreted in Mb
+            long int capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<long int>() * 1024*1024;      // argument size interpreted in Mb
             if(capacity > 0)
               {
-                unsigned int cp = static_cast<unsigned int>(capacity);
+                size_t cp = static_cast<size_t>(capacity);
 
                 this->arg_cache.set_datapipe_capacity(cp);
-                this->data_mgr->set_pipe_capacity(cp);                            // probably not required; only slaves need these values set
+                // no need to inform data_manager of the change in capacity, since it will pick it up via the argument_cache object
               }
             else
               {
@@ -428,13 +428,13 @@ namespace transport
         // process batcher capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_BATCHER_CAPACITY))
           {
-            int capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<int>() * 1024*1024;    // argument size interpreted in Mb
+            long int capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<long int>() * 1024*1024;    // argument size interpreted in Mb
             if(capacity > 0)
               {
-                unsigned int cp = static_cast<unsigned int>(capacity);
+                size_t cp = static_cast<size_t>(capacity);
 
                 this->arg_cache.set_batcher_capacity(cp);
-                this->data_mgr->set_batcher_capacity(cp);                         // probably not required; only slaves need these values set
+                // no need to inform data_manager of the change in capacity, since it will pick it up via the argument_cache object
               }
             else
               {
@@ -561,7 +561,7 @@ namespace transport
                 unsigned int ck = static_cast<unsigned int>(interval);
 
                 this->arg_cache.set_checkpoint_interval(ck);
-                this->data_mgr->set_checkpoint_interval(ck);                   // probably not required; only slaves need these values set
+                // no need to inform data_manager of new checkpoint interval; it will be pick up via the argument_cache object
               }
             else
               {
@@ -1094,7 +1094,7 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::reset_checkpoint_interval(unsigned int m)
+    void master_controller<number>::set_local_checkpoint_interval(unsigned int m)
       {
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
@@ -1103,11 +1103,29 @@ namespace transport
 
         for(unsigned int i = 0; i < world.size()-1; ++i)
           {
-            requests[i] = world.isend(this->worker_rank(i), MPI::RESET_CHECKPOINT, m*60);
+            requests[i] = world.isend(this->worker_rank(i), MPI::SET_LOCAL_CHECKPOINT, m*60);
           }
 
         boost::mpi::wait_all(requests.begin(), requests.end());
-        this->data_mgr->set_checkpoint_interval(m*60);
+        this->data_mgr->set_local_checkpoint_interval(m*60);
+      }
+
+
+    template <typename number>
+    void master_controller<number>::unset_local_checkpoint_interval()
+      {
+        // set up instrument to journal the MPI communication if needed
+        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
+
+        std::vector<boost::mpi::request> requests(world.size()-1);
+
+        for(unsigned int i = 0; i < world.size()-1; ++i)
+          {
+            requests[i] = world.isend(this->worker_rank(i), MPI::UNSET_LOCAL_CHECKPOINT);
+          }
+
+        boost::mpi::wait_all(requests.begin(), requests.end());
+        this->data_mgr->unset_local_checkpoint_interval();
       }
 
 

@@ -55,8 +55,8 @@ namespace transport
       public:
 
         //! Create a data_manager_sqlite3 instance
-        data_manager_sqlite3(unsigned int bcap, unsigned int dcap, unsigned int ckp)
-          : data_manager<number>(bcap, dcap, ckp),
+        data_manager_sqlite3(local_environment& e, argument_cache& a)
+          : data_manager<number>(e, a),
             temporary_container_serial(0)
           {
           }

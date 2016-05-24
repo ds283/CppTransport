@@ -43,7 +43,7 @@ namespace transport
         local_env(le),
         arg_cache(ac),
         finder(f),
-        data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
+        data_mgr(data_manager_factory<number>(le, ac)),
         err(eh),
         warn(wh),
         msg(mh)
@@ -97,11 +97,18 @@ namespace transport
                     break;
                   }
 
-                case MPI::RESET_CHECKPOINT:
+                case MPI::SET_LOCAL_CHECKPOINT:
                   {
                     unsigned int payload;
-                    this->world.recv(MPI::RANK_MASTER, MPI::RESET_CHECKPOINT, payload);
-                    if(this->data_mgr) this->data_mgr->set_checkpoint_interval(payload);
+                    this->world.recv(MPI::RANK_MASTER, MPI::SET_LOCAL_CHECKPOINT, payload);
+                    if(this->data_mgr) this->data_mgr->set_local_checkpoint_interval(payload);
+                    break;
+                  }
+
+                case MPI::UNSET_LOCAL_CHECKPOINT:
+                  {
+                    this->world.recv(MPI::RANK_MASTER, MPI::UNSET_LOCAL_CHECKPOINT);
+                    if(this->data_mgr) this->data_mgr->unset_local_checkpoint_interval();
                     break;
                   }
 
@@ -126,14 +133,13 @@ namespace transport
           {
             boost::filesystem::path repo_path = payload.get_repository_path();
 
-            this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly,
-                                                    this->local_env, this->err, this->warn, this->msg);
+            // set up a repository
+            this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly, this->local_env, this->arg_cache);
 
+            // replace current argument cache with the one provided in the payload
+            // changes in the batcher/pipe capacities and the checkpoint interval will be visible to
+            // the data manager, because it has a reference to the arg_cache member
             this->arg_cache = payload.get_argument_cache();
-
-            this->data_mgr->set_batcher_capacity(this->arg_cache.get_batcher_capacity());
-            this->data_mgr->set_pipe_capacity(this->arg_cache.get_datapipe_capacity());
-            this->data_mgr->set_checkpoint_interval(this->arg_cache.get_checkpoint_interval());
           }
         catch (runtime_exception& xe)
           {

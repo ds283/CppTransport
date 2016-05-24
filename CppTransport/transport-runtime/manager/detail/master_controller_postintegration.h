@@ -226,8 +226,8 @@ namespace transport
             boost::optional<unsigned int> interval = ptk->get_default_checkpoint();
             if(interval)
               {
-                checkpoint_context.reset_value(this->arg_cache.get_checkpoint_interval());
-                this->reset_checkpoint_interval(*interval);
+                checkpoint_context.requires_unset();
+                this->set_local_checkpoint_interval(*interval);
               }
           }
 

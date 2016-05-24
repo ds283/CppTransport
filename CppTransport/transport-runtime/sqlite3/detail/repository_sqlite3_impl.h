@@ -36,9 +36,8 @@ namespace transport
     // Create a repository object associated with a pathname
     template <typename number>
     repository_sqlite3<number>::repository_sqlite3(const boost::filesystem::path path, model_manager<number>& f, repository_mode mode,
-                                                   local_environment& ev, error_handler e, warning_handler w, message_handler m)
-      : json_repository<number>(path, f, mode, ev, e, w, m,
-                                package_finder<number>(*this), task_finder<number>(*this), derived_product_finder<number>(*this)),
+                                                   local_environment& ev, argument_cache& ar)
+      : json_repository<number>(path, f, mode, ev, ar, package_finder<number>(*this), task_finder<number>(*this), derived_product_finder<number>(*this)),
         db(nullptr)
       {
         // check whether object exists in filesystem at the specified path; if not, we create it
@@ -62,7 +61,7 @@ namespace transport
               }
 
             // set performance-related options
-            sqlite3_operations::reading_pragmas(db);
+            sqlite3_operations::reading_pragmas(db, this->args.get_network_mode());
           }
       }
 
