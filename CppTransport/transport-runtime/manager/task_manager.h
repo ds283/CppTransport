@@ -157,14 +157,8 @@ namespace transport
 	      // slave and master are invoked, because environment and world are declared
 	      // prior to slave and master in the class declaration.
         // It's also safe to assume local_env, arg_cache, model_mgr and gallery have been constructed
-	      slave(environment, world, local_env, arg_cache, model_mgr,
-	            error_handler(local_env, arg_cache),
-	            warning_handler(local_env, arg_cache),
-	            message_handler(local_env, arg_cache)),
-	      master(environment, world, local_env, arg_cache, model_mgr, gallery,
-               error_handler(local_env, arg_cache),
-               warning_handler(local_env, arg_cache),
-               message_handler(local_env, arg_cache))
+	      slave(environment, world, local_env, arg_cache, model_mgr),
+	      master(environment, world, local_env, arg_cache, model_mgr, gallery)
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
 	        {

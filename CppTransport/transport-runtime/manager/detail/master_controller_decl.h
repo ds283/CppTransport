@@ -89,8 +89,7 @@ namespace transport
         //! a command-line or configuration-file option
         master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                           local_environment& le, argument_cache& ac, model_manager<number>& f,
-                          task_gallery<number>& g,
-                          error_handler eh, warning_handler wh, message_handler mh);
+                          task_gallery<number>& g);
 
         //! destroy a master manager object
         ~master_controller() = default;

@@ -98,8 +98,7 @@ namespace transport
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                                                  local_environment& le, argument_cache& ac, model_manager<number>& f,
-                                                 task_gallery<number>& g,
-                                                 error_handler eh, warning_handler wh, message_handler mh)
+                                                 task_gallery<number>& g)
       : environment(e),
         world(w),
         local_env(le),
@@ -108,11 +107,11 @@ namespace transport
         gallery(g),
         data_mgr(data_manager_factory<number>(le, ac)),
         journal(w.size()-1),
-        err(eh),
-        warn(wh),
-        msg(mh),
-        cmdline_reports(le, ac, eh, wh, mh),
-        HTML_reports(le, ac, eh, wh, mh)
+        err(error_handler(le, ac)),
+        warn(warning_handler(le, ac)),
+        msg(message_handler(le, ac)),
+        cmdline_reports(le, ac),
+        HTML_reports(le, ac)
       {
       }
 
