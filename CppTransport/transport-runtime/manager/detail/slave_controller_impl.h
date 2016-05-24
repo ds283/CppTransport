@@ -145,10 +145,7 @@ namespace transport
                 this->err(xe.what());
                 repo = nullptr;
               }
-            else
-              {
-                throw xe;
-              }
+            else throw;
           }
       }
 
@@ -228,10 +225,7 @@ namespace transport
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->err(msg.str());
               }
-            else
-              {
-                throw xe;
-              }
+            else throw;
           }
       }
 
@@ -456,10 +450,7 @@ namespace transport
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->err(msg.str());
               }
-            else
-              {
-                throw xe;
-              }
+            else throw;
           }
       }
 
@@ -698,10 +689,7 @@ namespace transport
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->err(msg.str());
               }
-            else
-              {
-                throw xe;
-              }
+            else throw;
           }
       }
 
@@ -1000,7 +988,7 @@ namespace transport
       {
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Sending " << log_message << " message for container " << batcher.get_container_path();
 
-        MPI::data_ready_payload payload(batcher.get_container_path().string());
+        MPI::data_ready_payload payload(batcher.get_container_path());
 
         // advise master process that data is available in the named container
         boost::mpi::request push_msg = this->world.isend(MPI::RANK_MASTER, message, payload);

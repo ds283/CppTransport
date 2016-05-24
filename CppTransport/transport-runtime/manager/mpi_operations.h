@@ -334,21 +334,22 @@ namespace transport
                 data_ready_payload() = default;
 
                 //! Value constructor (used for sending messages)
-                data_ready_payload(const std::string& p)
-                : container_path(p),
+                data_ready_payload(const boost::filesystem::path& p)
+                : container_path(p.string()),
                   timestamp(boost::posix_time::second_clock::universal_time())
                   {
                   }
 
                 //! Get container path
-                const std::string&       get_container_path() const { return(this->container_path); }
+                const boost::filesystem::path  get_container_path() const { return(this->container_path); }
 
                 //! Get timestamp
-                boost::posix_time::ptime get_timestamp()      const { return(this->timestamp); }
+                boost::posix_time::ptime       get_timestamp()      const { return(this->timestamp); }
 
               private:
 
-                //! Path to container
+                //! Path to container; note serialized as a string because boost::filesystem::path serialization
+                //! isn't provided out-of-the-box
                 std::string container_path;
 
                 //! Timestamp

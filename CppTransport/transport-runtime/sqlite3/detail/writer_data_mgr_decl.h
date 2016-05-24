@@ -53,7 +53,7 @@ namespace transport
       public:
 
         //! commit
-        bool operator()(integration_writer<number>& writer, const std::string& product) override;
+        bool operator()(integration_writer<number>& writer, const boost::filesystem::path& product) override;
 
 
         // INTERNAL DATA
@@ -161,7 +161,7 @@ namespace transport
       public:
         
         //! commit
-        bool operator()(integration_writer<number>& writer, const std::string& product) override;
+        bool operator()(integration_writer<number>& writer, const boost::filesystem::path& product) override;
         
         
         // INTERNAL DATA
@@ -269,7 +269,7 @@ namespace transport
       public:
 
         //! commit
-        bool operator()(postintegration_writer<number>& writer, const std::string& product) override;
+        bool operator()(postintegration_writer<number>& writer, const boost::filesystem::path& product) override;
 
 
         // INTERNAL DATA
@@ -377,7 +377,7 @@ namespace transport
       public:
         
         //! commit
-        bool operator()(postintegration_writer<number>& writer, const std::string& product) override;
+        bool operator()(postintegration_writer<number>& writer, const boost::filesystem::path& product) override;
         
         
         // INTERNAL DATA
@@ -486,7 +486,7 @@ namespace transport
       public:
 
         //! commit
-        bool operator()(postintegration_writer<number>& writer, const std::string& product) override;
+        bool operator()(postintegration_writer<number>& writer, const boost::filesystem::path& product) override;
 
 
         // INTERNAL DATA

@@ -412,6 +412,15 @@ namespace transport
         //! message callback
         message_handler msg;
 
+
+        // PROFILING SUPPORT
+
+        //! list of aggregation profile records
+        std::list< aggregation_profiler > aggregation_profiles;
+
+        //! root directory for aggregation profile report, if used
+        boost::optional< boost::filesystem::path > aggregation_profile_root;
+
       };
 
 

@@ -39,6 +39,9 @@
 #define CPPTRANSPORT_SWITCH_BUILDDATA         "build-data"
 #define CPPTRANSPORT_HELP_BUILDDATA           "show build configuration information"
 
+#define CPPTRANSPORT_SWITCH_PROF_AGGREGATE    "profile-aggregation"
+#define CPPTRANSPORT_HELP_PROF_AGGREGATE      "profile database aggregations"
+
 #define CPPTRANSPORT_SWITCH_REPO              "repo,r"
 #define CPPTRANSPORT_SWITCH_REPO_LONG         "repo"
 #define CPPTRANSPORT_HELP_REPO                "specify repository path"

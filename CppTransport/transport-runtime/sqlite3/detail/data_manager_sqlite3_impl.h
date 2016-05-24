@@ -572,16 +572,20 @@ namespace transport
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_backg<number>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::attach_manager mgr(db, seed_container_path);
 
-        sqlite3_operations::aggregate_workers<number>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_backg<number>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(mgr, writer);
+
+        sqlite3_operations::aggregate_workers<number>(mgr, writer);
         if(writer.is_collecting_statistics() && seed.get_payload().has_statistics())
-          sqlite3_operations::aggregate_statistics<number>(db, writer, seed_container_path.string());
+          sqlite3_operations::aggregate_statistics<number>(mgr, writer);
 
         if(writer.is_collecting_initial_conditions() && seed.get_payload().has_initial_conditions())
-          sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, seed_container_path.string());
+          sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(mgr, writer);
+
+        mgr.commit();
 
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -601,22 +605,26 @@ namespace transport
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_backg<number>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::attach_manager mgr(db, seed_container_path);
 
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_Nderiv_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_backg<number>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(mgr, writer);
 
-        sqlite3_operations::aggregate_workers<number>(db, writer, seed_container_path.string());
-        if(writer.is_collecting_statistics() && seed.get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_Nderiv_item>(mgr, writer);
+
+        sqlite3_operations::aggregate_workers<number>(mgr, writer);
+        if(writer.is_collecting_statistics() && seed.get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(mgr, writer);
 
         if(writer.is_collecting_initial_conditions() && seed.get_payload().has_initial_conditions())
           {
-            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, seed_container_path.string());
-            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(db, writer, seed_container_path.string());
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(mgr, writer);
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(mgr, writer);
           }
+
+        mgr.commit();
 
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -636,8 +644,12 @@ namespace transport
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm1_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::attach_manager mgr(db, seed_container_path);
+
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm1_item>(mgr, writer);
+
+        mgr.commit();
 
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -657,13 +669,17 @@ namespace transport
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm1_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::attach_manager mgr(db, seed_container_path);
 
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_123_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_213_item>(db, writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_312_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm1_item>(mgr, writer);
+
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_123_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_213_item>(mgr, writer);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_312_item>(mgr, writer);
+
+        mgr.commit();
 
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -1174,88 +1190,128 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_twopf_batch(integration_writer<number>& writer, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_twopf_batch(integration_writer<number>& writer, const boost::filesystem::path& temp_ctr)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_backg<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, temp_ctr);
+        std::unique_ptr< twopf_aggregation_profile_record > record = std::make_unique< twopf_aggregation_profile_record >(temp_ctr);
+        sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
 
-        sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
-        if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
+        record->backg        = sqlite3_operations::aggregate_backg<number>(mgr, writer);
+        record->twopf_re     = sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(mgr, writer);
+        record->tensor_twopf = sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(mgr, writer);
+
+        record->workers = sqlite3_operations::aggregate_workers<number>(mgr, writer);
+        if(writer.is_collecting_statistics()) record->statistics = sqlite3_operations::aggregate_statistics<number>(mgr, writer);
 
         if(writer.is_collecting_initial_conditions())
-          sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, temp_ctr);
+          record->ics = sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(mgr, writer);
+
+        // commit aggregation and report profiling data
+        mgr.commit();
+        record->stop();
+        writer.get_aggregation_profiler().add_record(std::move(record));
 
         return(true);
       }
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_threepf_batch(integration_writer<number>& writer, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_threepf_batch(integration_writer<number>& writer, const boost::filesystem::path& temp_ctr)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_backg<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_Nderiv_item>(db, writer, temp_ctr);
+        std::unique_ptr< threepf_aggregation_profile_record > record = std::make_unique< threepf_aggregation_profile_record >(temp_ctr);
+        sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
 
-        sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
-        if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
+        record->backg            = sqlite3_operations::aggregate_backg<number>(mgr, writer);
+        record->twopf_re         = sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(mgr, writer);
+        record->twopf_im         = sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(mgr, writer);
+        record->tensor_twopf     = sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(mgr, writer);
+        record->threepf_momentum = sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(mgr, writer);
+        record->threepf_Nderiv   = sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_Nderiv_item>(mgr, writer);
+
+        record->workers = sqlite3_operations::aggregate_workers<number>(mgr, writer);
+        if(writer.is_collecting_statistics()) record->statistics = sqlite3_operations::aggregate_statistics<number>(mgr, writer);
 
         if(writer.is_collecting_initial_conditions())
           {
-            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, temp_ctr);
-            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(db, writer, temp_ctr);
+            record->ics    = sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(mgr, writer);
+            record->ics_kt = sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(mgr, writer);
           }
 
-        return(true);
-      }
-
-
-    template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_zeta_twopf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr)
-      {
-        sqlite3* db = nullptr;
-        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
-
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm1_item>(db, writer, temp_ctr);
+        // commit aggregation and report profiling data
+        mgr.commit();
+        record->stop();
+        writer.get_aggregation_profiler().add_record(std::move(record));
 
         return(true);
       }
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_zeta_threepf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_zeta_twopf_batch(postintegration_writer<number>& writer, const boost::filesystem::path& temp_ctr)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm1_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_123_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_213_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_312_item>(db, writer, temp_ctr);
+        std::unique_ptr< zeta_twopf_aggregation_profile_record > record = std::make_unique< zeta_twopf_aggregation_profile_record >(temp_ctr);
+        sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
+
+        record->twopf      = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(mgr, writer);
+        record->gauge_xfm1 = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm1_item>(mgr, writer);
+
+        // commit aggregation and report profiling data
+        mgr.commit();
+        record->stop();
+        writer.get_aggregation_profiler().add_record(std::move(record));
 
         return(true);
       }
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::bispectrum_template type)
+    bool data_manager_sqlite3<number>::aggregate_zeta_threepf_batch(postintegration_writer<number>& writer, const boost::filesystem::path& temp_ctr)
       {
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_fNL<number>(db, writer, temp_ctr, type);
+        std::unique_ptr< zeta_threepf_aggregation_profile_record > record = std::make_unique< zeta_threepf_aggregation_profile_record >(temp_ctr);
+        sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
+
+        record->twopf          = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(mgr, writer);
+        record->threepf        = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(mgr, writer);
+        record->gauge_xfm1     = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm1_item>(mgr, writer);
+        record->gauge_xfm2_123 = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_123_item>(mgr, writer);
+        record->gauge_xfm2_213 = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_213_item>(mgr, writer);
+        record->gauge_xfm2_312 = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::gauge_xfm2_312_item>(mgr, writer);
+
+        // commit aggregation and report profiling data
+        mgr.commit();
+        record->stop();
+        writer.get_aggregation_profiler().add_record(std::move(record));
+
+        return(true);
+      }
+
+
+    template <typename number>
+    bool data_manager_sqlite3<number>::aggregate_fNL_batch(postintegration_writer<number>& writer, const boost::filesystem::path& temp_ctr, derived_data::bispectrum_template type)
+      {
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        std::unique_ptr< fNL_aggregation_profile_record > record = std::make_unique< fNL_aggregation_profile_record >(temp_ctr);
+        sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
+
+        record->fNL = sqlite3_operations::aggregate_fNL<number>(mgr, writer, type);
+
+        // commit aggregation and report profiling data
+        mgr.commit();
+        record->stop();
+        writer.get_aggregation_profiler().add_record(std::move(record));
 
         return(true);
       }
@@ -1263,15 +1319,15 @@ namespace transport
 
     template <typename number>
     bool data_manager_sqlite3<number>::aggregate_derived_product(derived_content_writer<number>& writer,
-                                                                 const std::string& temp_name, const std::list<std::string>& used_groups)
+                                                                 const std::string& product_name, const std::list<std::string>& used_groups)
       {
         bool success = true;
 
-        boost::optional< derived_data::derived_product<number>& > product = writer.lookup_derived_product(temp_name);
+        boost::optional< derived_data::derived_product<number>& > product = writer.lookup_derived_product(product_name);
 
         if(!product)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Failed to lookup derived product '" << temp_name << "'; skipping this product";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Failed to lookup derived product '" << product_name << "'; skipping this product";
             return(false);
           }
 

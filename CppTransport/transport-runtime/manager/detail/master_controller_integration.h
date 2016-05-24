@@ -81,7 +81,6 @@ namespace transport
                                                          bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                          slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
-
         // check whether this task has a default checkpoint interval
         // if so, instruct workers to change their interval unless we have been overriden by the command line
         CheckpointContext<number> checkpoint_context(*this);
@@ -129,6 +128,7 @@ namespace transport
         // close the writer; performs integrity check and finalization step
         journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
         this->data_mgr->close_writer(*writer);
+        this->aggregation_profiles.push_back(std::move(writer->get_aggregation_profiler()));
 
         // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         // if the writer is not committed it automatically aborts
@@ -259,7 +259,7 @@ namespace transport
 
         try
           {
-            writer.aggregate(payload.get_container_path());
+            writer.aggregate(ctr_path);
           }
         catch(runtime_exception& xe)
           {
@@ -269,10 +269,7 @@ namespace transport
                 writer.set_fail(true);
                 BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << ctr_path.filename().string() << "': " << xe.what();
               }
-            else
-              {
-                throw xe;   // pass on to higher exception handler
-              }
+            else throw;
           }
 
         aggregate_timer.stop();
@@ -288,10 +285,10 @@ namespace transport
 
             // remove temporary container
 //        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
-            if(!boost::filesystem::remove(payload.get_container_path()))
+            if(!boost::filesystem::remove(ctr_path))
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+                msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << ctr_path.string() << "'";
                 this->err(msg.str());
               }
           }

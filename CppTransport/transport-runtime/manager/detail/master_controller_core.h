@@ -179,8 +179,9 @@ namespace transport
 
         boost::program_options::options_description hidden_options;
         hidden_options.add_options()
-          (CPPTRANSPORT_SWITCH_NO_COLOR,  CPPTRANSPORT_HELP_NO_COLOR)
-          (CPPTRANSPORT_SWITCH_BUILDDATA, CPPTRANSPORT_HELP_BUILDDATA);
+          (CPPTRANSPORT_SWITCH_NO_COLOR,                                                                                     CPPTRANSPORT_HELP_NO_COLOR)
+          (CPPTRANSPORT_SWITCH_BUILDDATA,                                                                                    CPPTRANSPORT_HELP_BUILDDATA)
+          (CPPTRANSPORT_SWITCH_PROF_AGGREGATE,   boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PROF_AGGREGATE);
 
         boost::program_options::options_description cmdline_options;
         cmdline_options.add(generic).add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
@@ -275,10 +276,7 @@ namespace transport
                     this->err(xe.what());
                     repo = nullptr;
                   }
-                else
-                  {
-                    throw xe;
-                  }
+                else throw;
               }
           }
 
@@ -362,6 +360,12 @@ namespace transport
           }
 
         if(option_map.count(CPPTRANSPORT_SWITCH_BUILDDATA)) show_build_data();
+        if(option_map.count(CPPTRANSPORT_SWITCH_PROF_AGGREGATE))
+          {
+            boost::filesystem::path r(option_map[CPPTRANSPORT_SWITCH_PROF_AGGREGATE].as< std::string >());
+            if(!r.is_absolute()) r = boost::filesystem::absolute(r);
+            this->aggregation_profile_root = r;
+          }
 
         if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
           {
@@ -611,6 +615,14 @@ namespace transport
         if(this->repo && this->data_mgr)
           {
             this->HTML_reports.report(*this->repo, *this->data_mgr);
+          }
+
+        if(this->aggregation_profile_root)
+          {
+            for(const aggregation_profiler& profiler : this->aggregation_profiles)
+              {
+                profiler.write_to_csv(*this->aggregation_profile_root);
+              }
           }
       }
 
@@ -1194,7 +1206,7 @@ namespace transport
                             this->world.recv(stat->source(), MPI::INTEGRATION_DATA_READY, payload);
                             this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::event_type::integration_aggregation, payload.get_timestamp(), aggregation_counter));
                             aggregation_queue.push_back(std::make_unique< integration_aggregation_record<number> >(this->worker_number(stat->source()), aggregation_counter++, int_agg, int_metadata, payload));
-                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
+                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path().string() << "'";
                           }
                         else
                           {
@@ -1228,7 +1240,7 @@ namespace transport
                             this->world.recv(stat->source(), MPI::POSTINTEGRATION_DATA_READY, payload);
                             this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::event_type::postintegration_aggregation, payload.get_timestamp(), aggregation_counter));
                             aggregation_queue.push_back(std::make_unique< postintegration_aggregation_record<number> >(this->worker_number(stat->source()), aggregation_counter++, post_agg, out_metadata, payload));
-                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
+                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path().string() << "'";
                           }
                         else
                           {
