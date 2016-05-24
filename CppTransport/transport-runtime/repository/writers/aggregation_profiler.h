@@ -58,35 +58,35 @@ namespace transport
         template <>
         struct record_traits<aggregation_profile_record_type::twopf>
           {
-            std::string                get_filename() { return "twopf"; }
+            std::string                get_filename() { return "twopf.csv"; }
             std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "backg", "twopf_re", "tensor_twopf", "statistics", "ics", "workers" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::threepf>
           {
-            std::string                get_filename() { return "threepf"; }
+            std::string                get_filename() { return "threepf.csv"; }
             std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "backg", "twopf_re", "twopf_im", "threepf_momentum", "threepf_Nderiv", "tensor_twopf", "statistics", "ics", "ics_kt", "workers" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::zeta_twopf>
           {
-            std::string                get_filename() { return "zeta_twopf"; }
+            std::string                get_filename() { return "zeta_twopf.csv"; }
             std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "twopf", "gauge_xfm1" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::zeta_threepf>
           {
-            std::string                get_filename() { return "zeta_threepf"; }
+            std::string                get_filename() { return "zeta_threepf.csv"; }
             std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "twopf", "threepf", "gauge_xfm1", "gauge_xfm2_123", "gauge_xfm2_213", "gauge_xfm2_312" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::fNL>
           {
-            std::string                get_filename() { return "fNL"; }
+            std::string                get_filename() { return "fNL.csv"; }
             std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "fNL" }; }
           };
 
