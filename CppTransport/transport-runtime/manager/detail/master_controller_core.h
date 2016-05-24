@@ -129,7 +129,6 @@ namespace transport
           (CPPTRANSPORT_SWITCH_VERSION,                                                                                      CPPTRANSPORT_HELP_VERSION)
           (CPPTRANSPORT_SWITCH_LICENSE,                                                                                      CPPTRANSPORT_HELP_LICENSE)
           (CPPTRANSPORT_SWITCH_INCLUDE,          boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_INCLUDE)
-          (CPPTRANSPORT_SWITCH_NETWORK_MODE,                                                                                 CPPTRANSPORT_HELP_NETWORK_MODE)
           (CPPTRANSPORT_SWITCH_MODELS,                                                                                       CPPTRANSPORT_HELP_MODELS)
           (CPPTRANSPORT_SWITCH_NO_COLOUR,                                                                                    CPPTRANSPORT_HELP_NO_COLOUR);
 
@@ -139,7 +138,8 @@ namespace transport
           (CPPTRANSPORT_SWITCH_REPO,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPO)
           (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< long int >(),                                CPPTRANSPORT_HELP_CAPACITY)
           (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< long int >(),                                CPPTRANSPORT_HELP_BATCHER_CAPACITY)
-          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< long int >(),                                CPPTRANSPORT_HELP_CACHE_CAPACITY);
+          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< long int >(),                                CPPTRANSPORT_HELP_CACHE_CAPACITY)
+          (CPPTRANSPORT_SWITCH_NETWORK_MODE,                                                                                 CPPTRANSPORT_HELP_NETWORK_MODE);
 
         boost::program_options::options_description plotting("Plot style", width);
         plotting.add_options()
