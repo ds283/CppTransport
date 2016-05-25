@@ -59,35 +59,35 @@ namespace transport
         struct record_traits<aggregation_profile_record_type::twopf>
           {
             std::string                get_filename() { return "twopf.csv"; }
-            std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "backg", "twopf_re", "tensor_twopf", "statistics", "ics", "workers" }; }
+            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "backg", "twopf_re", "tensor_twopf", "statistics", "ics", "workers" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::threepf>
           {
             std::string                get_filename() { return "threepf.csv"; }
-            std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "backg", "twopf_re", "twopf_im", "threepf_momentum", "threepf_Nderiv", "tensor_twopf", "statistics", "ics", "ics_kt", "workers" }; }
+            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "backg", "twopf_re", "twopf_im", "threepf_momentum", "threepf_Nderiv", "tensor_twopf", "statistics", "ics", "ics_kt", "workers" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::zeta_twopf>
           {
             std::string                get_filename() { return "zeta_twopf.csv"; }
-            std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "twopf", "gauge_xfm1" }; }
+            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "twopf", "gauge_xfm1" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::zeta_threepf>
           {
             std::string                get_filename() { return "zeta_threepf.csv"; }
-            std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "twopf", "threepf", "gauge_xfm1", "gauge_xfm2_123", "gauge_xfm2_213", "gauge_xfm2_312" }; }
+            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "twopf", "threepf", "gauge_xfm1", "gauge_xfm2_123", "gauge_xfm2_213", "gauge_xfm2_312" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::fNL>
           {
             std::string                get_filename() { return "fNL.csv"; }
-            std::vector< std::string > get_headings() { return { "size", "attach", "detach", "total", "fNL" }; }
+            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "fNL" }; }
           };
 
 
@@ -111,7 +111,7 @@ namespace transport
     class aggregation_profile_record
       {
       public:
-        aggregation_profile_record(const boost::filesystem::path& p);
+        aggregation_profile_record(const boost::filesystem::path& c, const boost::filesystem::path& t);
         virtual ~aggregation_profile_record() = default;
 
       public:
@@ -120,7 +120,8 @@ namespace transport
         void stop();
 
       public:
-        boost::optional< boost::uintmax_t > database_size;
+        boost::optional< boost::uintmax_t > container_size;
+        boost::optional< boost::uintmax_t > temporary_size;
         boost::optional< boost::timer::nanosecond_type > attach_time;
         boost::optional< boost::timer::nanosecond_type > detach_time;
         boost::optional< boost::timer::nanosecond_type > total_time;
@@ -130,11 +131,15 @@ namespace transport
       };
 
 
-    aggregation_profile_record::aggregation_profile_record(const boost::filesystem::path& p)
+    aggregation_profile_record::aggregation_profile_record(const boost::filesystem::path& c, const boost::filesystem::path& t)
       {
-        if(boost::filesystem::exists(p) && boost::filesystem::is_regular_file(p))
+        if(boost::filesystem::exists(c) && boost::filesystem::is_regular_file(c))
           {
-            this->database_size = boost::filesystem::file_size(p);
+            this->container_size = boost::filesystem::file_size(c);
+          }
+        if(boost::filesystem::exists(t) && boost::filesystem::is_regular_file(t))
+          {
+            this->temporary_size = boost::filesystem::file_size(t);
           }
       }
 
@@ -148,7 +153,8 @@ namespace transport
 
     void aggregation_profile_record::write_row(std::ofstream& out) const
       {
-        out << aggregation_profiler_impl::format(this->database_size)
+        out << aggregation_profiler_impl::format(this->container_size)
+            << "," << aggregation_profiler_impl::format(this->temporary_size)
             << "," << aggregation_profiler_impl::format(this->attach_time)
             << "," << aggregation_profiler_impl::format(this->detach_time)
             << "," << aggregation_profiler_impl::format(this->total_time);
@@ -159,8 +165,8 @@ namespace transport
     class twopf_aggregation_profile_record: public aggregation_profile_record
       {
       public:
-        twopf_aggregation_profile_record(const boost::filesystem::path& p)
-          : aggregation_profile_record(p)
+        twopf_aggregation_profile_record(const boost::filesystem::path& c, const boost::filesystem::path& t)
+          : aggregation_profile_record(c, t)
           {
           }
 
@@ -194,8 +200,8 @@ namespace transport
     class threepf_aggregation_profile_record: public aggregation_profile_record
       {
       public:
-        threepf_aggregation_profile_record(const boost::filesystem::path& p)
-          : aggregation_profile_record(p)
+        threepf_aggregation_profile_record(const boost::filesystem::path& c, const boost::filesystem::path& t)
+          : aggregation_profile_record(c, t)
           {
           }
 
@@ -237,8 +243,8 @@ namespace transport
     class zeta_twopf_aggregation_profile_record: public aggregation_profile_record
       {
       public:
-        zeta_twopf_aggregation_profile_record(const boost::filesystem::path& p)
-          : aggregation_profile_record(p)
+        zeta_twopf_aggregation_profile_record(const boost::filesystem::path& c, const boost::filesystem::path& t)
+          : aggregation_profile_record(c, t)
           {
           }
 
@@ -264,8 +270,8 @@ namespace transport
     class zeta_threepf_aggregation_profile_record: public aggregation_profile_record
       {
       public:
-        zeta_threepf_aggregation_profile_record(const boost::filesystem::path& p)
-          : aggregation_profile_record(p)
+        zeta_threepf_aggregation_profile_record(const boost::filesystem::path& c, const boost::filesystem::path& t)
+          : aggregation_profile_record(c, t)
           {
           }
 
@@ -299,8 +305,8 @@ namespace transport
     class fNL_aggregation_profile_record: public aggregation_profile_record
       {
       public:
-        fNL_aggregation_profile_record(const boost::filesystem::path& p)
-          : aggregation_profile_record(p)
+        fNL_aggregation_profile_record(const boost::filesystem::path& c, const boost::filesystem::path& t)
+          : aggregation_profile_record(c, t)
           {
           }
 

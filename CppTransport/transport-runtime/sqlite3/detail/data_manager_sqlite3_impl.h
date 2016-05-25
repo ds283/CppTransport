@@ -1195,7 +1195,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::unique_ptr< twopf_aggregation_profile_record > record = std::make_unique< twopf_aggregation_profile_record >(temp_ctr);
+        std::unique_ptr< twopf_aggregation_profile_record > record = std::make_unique< twopf_aggregation_profile_record >(writer.get_abs_container_path(), temp_ctr);
         sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
 
         record->backg        = sqlite3_operations::aggregate_backg<number>(mgr, writer);
@@ -1223,7 +1223,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::unique_ptr< threepf_aggregation_profile_record > record = std::make_unique< threepf_aggregation_profile_record >(temp_ctr);
+        std::unique_ptr< threepf_aggregation_profile_record > record = std::make_unique< threepf_aggregation_profile_record >(writer.get_abs_container_path(), temp_ctr);
         sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
 
         record->backg            = sqlite3_operations::aggregate_backg<number>(mgr, writer);
@@ -1257,7 +1257,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::unique_ptr< zeta_twopf_aggregation_profile_record > record = std::make_unique< zeta_twopf_aggregation_profile_record >(temp_ctr);
+        std::unique_ptr< zeta_twopf_aggregation_profile_record > record = std::make_unique< zeta_twopf_aggregation_profile_record >(writer.get_abs_container_path(), temp_ctr);
         sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
 
         record->twopf      = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(mgr, writer);
@@ -1278,7 +1278,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::unique_ptr< zeta_threepf_aggregation_profile_record > record = std::make_unique< zeta_threepf_aggregation_profile_record >(temp_ctr);
+        std::unique_ptr< zeta_threepf_aggregation_profile_record > record = std::make_unique< zeta_threepf_aggregation_profile_record >(writer.get_abs_container_path(), temp_ctr);
         sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
 
         record->twopf          = sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(mgr, writer);
@@ -1303,7 +1303,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::unique_ptr< fNL_aggregation_profile_record > record = std::make_unique< fNL_aggregation_profile_record >(temp_ctr);
+        std::unique_ptr< fNL_aggregation_profile_record > record = std::make_unique< fNL_aggregation_profile_record >(writer.get_abs_container_path(), temp_ctr);
         sqlite3_operations::attach_manager mgr(db, temp_ctr, *record);
 
         record->fNL = sqlite3_operations::aggregate_fNL<number>(mgr, writer, type);
