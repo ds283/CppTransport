@@ -160,9 +160,10 @@ namespace transport
 
         // Aggregate the background value table from a temporary container into a principal container
         template <typename number>
-        boost::timer::nanosecond_type aggregate_backg(attach_manager& mgr, integration_writer<number>& writer)
+        aggregation_table_data aggregate_backg(attach_manager& mgr, integration_writer<number>& writer)
           {
             boost::timer::cpu_timer timer;
+            sqlite3* db = mgr.get_db_connexion();
 
             // we use INSERT OR IGNORE for the background
             // if there are errors during an integration we roll back all twopf and threepf values associated with
@@ -175,27 +176,28 @@ namespace transport
               << "INSERT OR IGNORE INTO " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE
               << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ";";
 
-            exec(mgr.get_db_connexion(), copy_stmt.str(), CPPTRANSPORT_DATACTR_BACKGROUND_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_BACKGROUND_COPY);
 
             timer.stop();
-            return timer.elapsed().wall;
+            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
           }
 
 
 		    template <typename number, typename WriterObject, typename ValueType>
-		    boost::timer::nanosecond_type aggregate_table(attach_manager& mgr, WriterObject& writer)
+		    aggregation_table_data aggregate_table(attach_manager& mgr, WriterObject& writer)
 			    {
             boost::timer::cpu_timer timer;
+            sqlite3* db = mgr.get_db_connexion();
 
             std::ostringstream copy_stmt;
 				    copy_stmt
 				      << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
 			        << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << data_traits<number, ValueType>::sqlite_table() << ";";
 
-				    exec(mgr.get_db_connexion(), copy_stmt.str(), data_traits<number, ValueType>::copy_error_msg());
+				    exec(db, copy_stmt.str(), data_traits<number, ValueType>::copy_error_msg());
 
             timer.stop();
-            return timer.elapsed().wall;
+            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
 			    }
 
 
@@ -204,10 +206,9 @@ namespace transport
         // some time serial tserial, we want to add our new value to it.
         // For that purpose we use COALESCE.
         template <typename number>
-        boost::timer::nanosecond_type aggregate_fNL(attach_manager& mgr, postintegration_writer<number>& writer, derived_data::bispectrum_template type)
+        aggregation_table_data aggregate_fNL(attach_manager& mgr, postintegration_writer<number>& writer, derived_data::bispectrum_template type)
           {
             boost::timer::cpu_timer timer;
-
             sqlite3* db = mgr.get_db_connexion();
 
             // create a temporary table with updated values
@@ -234,67 +235,71 @@ namespace transport
               << " FROM temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
 
             exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_FNL_COPY);
+            size_t changes = static_cast<size_t>(sqlite3_changes(db));
 
             std::stringstream drop_stmt;
             drop_stmt << "DROP TABLE temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
             exec(db, drop_stmt.str(), CPPTRANSPORT_DATACTR_FNL_COPY);
 
             timer.stop();
-            return timer.elapsed().wall;
+            return aggregation_table_data(timer.elapsed().wall, changes);
           }
 
 
         // Aggregate a worker info table from a temporary container into the principal container
         template <typename number>
-        boost::timer::nanosecond_type aggregate_workers(attach_manager& mgr, integration_writer<number>& writer)
+        aggregation_table_data aggregate_workers(attach_manager& mgr, integration_writer<number>& writer)
 	        {
             boost::timer::cpu_timer timer;
+            sqlite3* db = mgr.get_db_connexion();
 
             std::ostringstream copy_stmt;
             copy_stmt
 	            << "INSERT OR IGNORE INTO " << CPPTRANSPORT_SQLITE_WORKERS_TABLE
 	            << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << CPPTRANSPORT_SQLITE_WORKERS_TABLE << ";";
 
-            exec(mgr.get_db_connexion(), copy_stmt.str(), CPPTRANSPORT_DATACTR_WORKERS_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_WORKERS_COPY);
 
             timer.stop();
-            return timer.elapsed().wall;
+            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
 	        }
 
 
         // Aggregate a statistics value table from a temporary container into the principal container
         template <typename number>
-        boost::timer::nanosecond_type aggregate_statistics(attach_manager& mgr, integration_writer<number>& writer)
+        aggregation_table_data aggregate_statistics(attach_manager& mgr, integration_writer<number>& writer)
 	        {
             boost::timer::cpu_timer timer;
+            sqlite3* db = mgr.get_db_connexion();
 
             std::ostringstream copy_stmt;
             copy_stmt
 	            << "INSERT INTO " << CPPTRANSPORT_SQLITE_STATS_TABLE
 	            << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << CPPTRANSPORT_SQLITE_STATS_TABLE << ";";
 
-            exec(mgr.get_db_connexion(), copy_stmt.str(), CPPTRANSPORT_DATACTR_STATISTICS_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_STATISTICS_COPY);
 
             timer.stop();
-            return timer.elapsed().wall;
+            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
 	        }
 
 
         // Aggregate an initial-conditions value table frmo a temporary container into a principal container
         template <typename number, typename ValueType>
-        boost::timer::nanosecond_type aggregate_ics(attach_manager& mgr, integration_writer<number>& writer)
+        aggregation_table_data aggregate_ics(attach_manager& mgr, integration_writer<number>& writer)
 	        {
             boost::timer::cpu_timer timer;
+            sqlite3* db = mgr.get_db_connexion();
 
             std::ostringstream copy_stmt;
             copy_stmt
 	            << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
 	            << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << data_traits<number, ValueType>::sqlite_table() << ";";
 
-            exec(mgr.get_db_connexion(), copy_stmt.str(), CPPTRANSPORT_DATACTR_ICS_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_ICS_COPY);
 
             timer.stop();
-            return timer.elapsed().wall;
+            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
 	        }
 
 

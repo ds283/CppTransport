@@ -50,6 +50,20 @@ namespace transport
       };
 
 
+    class aggregation_table_data
+      {
+      public:
+        aggregation_table_data(boost::timer::nanosecond_type t, size_t r)
+          : time(t),
+            rows(r)
+          {
+          }
+      public:
+        boost::timer::nanosecond_type time;
+        size_t rows;
+      };
+
+
     namespace aggregation_profiler_impl
       {
 
@@ -58,41 +72,72 @@ namespace transport
         template <>
         struct record_traits<aggregation_profile_record_type::twopf>
           {
-            std::string                get_filename() { return "twopf.csv"; }
-            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "backg", "twopf_re", "tensor_twopf", "statistics", "ics", "workers" }; }
+            std::string                  get_filename() { return "twopf.csv"; }
+            std::array< std::string, 6 > get_headings() { return { "backg", "twopf_re", "tensor_twopf",
+                                                                   "statistics", "ics", "workers" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::threepf>
           {
-            std::string                get_filename() { return "threepf.csv"; }
-            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "backg", "twopf_re", "twopf_im", "threepf_momentum", "threepf_Nderiv", "tensor_twopf", "statistics", "ics", "ics_kt", "workers" }; }
+            std::string                   get_filename() { return "threepf.csv"; }
+            std::array< std::string, 10 > get_headings() { return { "backg", "twopf_re", "twopf_im",
+                                                                    "threepf_momentum", "threepf_Nderiv",
+                                                                    "tensor_twopf", "statistics", "ics",
+                                                                    "ics_kt", "workers" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::zeta_twopf>
           {
-            std::string                get_filename() { return "zeta_twopf.csv"; }
-            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "twopf", "gauge_xfm1" }; }
+            std::string                  get_filename() { return "zeta_twopf.csv"; }
+            std::array< std::string, 2 > get_headings() { return { "twopf", "gauge_xfm1" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::zeta_threepf>
           {
-            std::string                get_filename() { return "zeta_threepf.csv"; }
-            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "twopf", "threepf", "gauge_xfm1", "gauge_xfm2_123", "gauge_xfm2_213", "gauge_xfm2_312" }; }
+            std::string                  get_filename() { return "zeta_threepf.csv"; }
+            std::array< std::string, 6 > get_headings() { return { "twopf", "threepf", "gauge_xfm1",
+                                                                   "gauge_xfm2_123", "gauge_xfm2_213",
+                                                                   "gauge_xfm2_312" }; }
           };
 
         template <>
         struct record_traits<aggregation_profile_record_type::fNL>
           {
-            std::string                get_filename() { return "fNL.csv"; }
-            std::vector< std::string > get_headings() { return { "ctr_size", "temp_size", "attach", "detach", "total", "fNL" }; }
+            std::string                  get_filename() { return "fNL.csv"; }
+            std::array< std::string, 1 > get_headings() { return { "fNL" }; }
           };
 
 
-        template <typename ValueType>
-        std::string format(const boost::optional<ValueType>& v)
+        std::string format(const boost::optional<aggregation_table_data>& v)
+          {
+            if(v)
+              {
+                return format_number(static_cast<double>(v->time)/1E9, 6) + "," + boost::lexical_cast<std::string>(v->rows);
+              }
+            else
+              {
+                return "NaN,NaN";
+              }
+          }
+
+
+        std::string format(const boost::optional<boost::timer::nanosecond_type>& v)
+          {
+            if(v)
+              {
+                return format_number(static_cast<double>(*v)/1E9);
+              }
+            else
+              {
+                return "NaN";
+              }
+          }
+
+
+        std::string format(const boost::optional<boost::uintmax_t>& v)
           {
             if(v)
               {
@@ -102,6 +147,28 @@ namespace transport
               {
                 return "NaN";
               }
+          }
+
+
+        template <enum aggregation_profile_record_type type>
+        void write_headings(std::ofstream& out)
+          {
+            const std::array< std::string, 5 > basic_headings = { "ctr_size", "temp_size", "attach", "detach", "total" };
+            const auto type_headings = aggregation_profiler_impl::record_traits<type>().get_headings();
+
+            unsigned int count = 0;
+            for(const std::string& col_title : basic_headings)
+              {
+                if(count > 0) out << ",";
+                out << col_title;
+                ++count;
+              }
+
+            for(const std::string& col_title : type_headings)
+              {
+                out << "," << col_title << "_time," << col_title << "_rows";
+              }
+            out << '\n';
           }
 
 
@@ -175,12 +242,12 @@ namespace transport
         void write_row(std::ofstream& out) const override;
 
       public:
-        boost::optional< boost::timer::nanosecond_type > backg;
-        boost::optional< boost::timer::nanosecond_type > twopf_re;
-        boost::optional< boost::timer::nanosecond_type > tensor_twopf;
-        boost::optional< boost::timer::nanosecond_type > statistics;
-        boost::optional< boost::timer::nanosecond_type > ics;
-        boost::optional< boost::timer::nanosecond_type > workers;
+        boost::optional< aggregation_table_data > backg;
+        boost::optional< aggregation_table_data > twopf_re;
+        boost::optional< aggregation_table_data > tensor_twopf;
+        boost::optional< aggregation_table_data > statistics;
+        boost::optional< aggregation_table_data > ics;
+        boost::optional< aggregation_table_data > workers;
       };
 
 
@@ -210,16 +277,16 @@ namespace transport
         void write_row(std::ofstream& out) const override;
 
       public:
-        boost::optional< boost::timer::nanosecond_type > backg;
-        boost::optional< boost::timer::nanosecond_type > twopf_re;
-        boost::optional< boost::timer::nanosecond_type > twopf_im;
-        boost::optional< boost::timer::nanosecond_type > threepf_momentum;
-        boost::optional< boost::timer::nanosecond_type > threepf_Nderiv;
-        boost::optional< boost::timer::nanosecond_type > tensor_twopf;
-        boost::optional< boost::timer::nanosecond_type > statistics;
-        boost::optional< boost::timer::nanosecond_type > ics;
-        boost::optional< boost::timer::nanosecond_type > ics_kt;
-        boost::optional< boost::timer::nanosecond_type > workers;
+        boost::optional< aggregation_table_data > backg;
+        boost::optional< aggregation_table_data > twopf_re;
+        boost::optional< aggregation_table_data > twopf_im;
+        boost::optional< aggregation_table_data > threepf_momentum;
+        boost::optional< aggregation_table_data > threepf_Nderiv;
+        boost::optional< aggregation_table_data > tensor_twopf;
+        boost::optional< aggregation_table_data > statistics;
+        boost::optional< aggregation_table_data > ics;
+        boost::optional< aggregation_table_data > ics_kt;
+        boost::optional< aggregation_table_data > workers;
       };
 
 
@@ -253,8 +320,8 @@ namespace transport
         void write_row(std::ofstream& out) const override;
 
       public:
-        boost::optional< boost::timer::nanosecond_type > twopf;
-        boost::optional< boost::timer::nanosecond_type > gauge_xfm1;
+        boost::optional< aggregation_table_data > twopf;
+        boost::optional< aggregation_table_data > gauge_xfm1;
       };
 
 
@@ -280,12 +347,12 @@ namespace transport
         void write_row(std::ofstream& out) const override;
 
       public:
-        boost::optional< boost::timer::nanosecond_type > twopf;
-        boost::optional< boost::timer::nanosecond_type > threepf;
-        boost::optional< boost::timer::nanosecond_type > gauge_xfm1;
-        boost::optional< boost::timer::nanosecond_type > gauge_xfm2_123;
-        boost::optional< boost::timer::nanosecond_type > gauge_xfm2_213;
-        boost::optional< boost::timer::nanosecond_type > gauge_xfm2_312;
+        boost::optional< aggregation_table_data > twopf;
+        boost::optional< aggregation_table_data > threepf;
+        boost::optional< aggregation_table_data > gauge_xfm1;
+        boost::optional< aggregation_table_data > gauge_xfm2_123;
+        boost::optional< aggregation_table_data > gauge_xfm2_213;
+        boost::optional< aggregation_table_data > gauge_xfm2_312;
       };
 
 
@@ -315,7 +382,7 @@ namespace transport
         void write_row(std::ofstream& out) const override;
 
       public:
-        boost::optional< boost::timer::nanosecond_type > fNL;
+        boost::optional< aggregation_table_data > fNL;
       };
 
 
@@ -440,15 +507,7 @@ namespace transport
         boost::filesystem::path file = folder / aggregation_profiler_impl::record_traits<type>().get_filename();
         std::ofstream out(file.string(), std::ios::out | std::ios::trunc);
 
-        auto headings = aggregation_profiler_impl::record_traits<type>().get_headings();
-        unsigned int count = 0;
-        for(const std::string& col_title : headings)
-          {
-            if(count > 0) out << ",";
-            out << col_title;
-            ++count;
-          }
-        out << '\n';
+        aggregation_profiler_impl::write_headings<type>(out);
 
         for(const std::unique_ptr< aggregation_profile_record >& rec : this->events_db)
           {
