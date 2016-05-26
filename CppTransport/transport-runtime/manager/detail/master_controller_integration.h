@@ -231,7 +231,7 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time required for for task '" << writer.get_task_name() << "' " << format_time(i_metadata.total_wallclock_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time required for task '" << writer.get_task_name() << "' " << format_time(i_metadata.total_wallclock_time);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total aggregation time required by master process = " << format_time(i_metadata.total_aggregation_time);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ AGGREGATE PERFORMANCE STATISTICS";

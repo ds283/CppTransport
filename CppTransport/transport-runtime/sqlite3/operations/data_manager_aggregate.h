@@ -202,7 +202,7 @@ namespace transport
 
 
         // Aggregate an fNL value table from a temporary container
-        // Aggregation of fNL values is slightly different, because if an existing result is present for for
+        // Aggregation of fNL values is slightly different, because if an existing result is present for
         // some time serial tserial, we want to add our new value to it.
         // For that purpose we use COALESCE.
         template <typename number>
