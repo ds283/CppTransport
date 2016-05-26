@@ -134,8 +134,8 @@ namespace transport
 					}
 
 
-				// apply PRAGMAs to optimize performance
-				inline void reading_pragmas(sqlite3* db, bool network_filesystem)
+				// apply PRAGMAs to maximize consistency
+				inline void consistency_pragmas(sqlite3* db, bool network_filesystem)
 					{
 						// SQLite performance choices:
 						// http://blog.devart.com/increasing-sqlite-performance.html

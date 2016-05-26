@@ -173,8 +173,12 @@ namespace transport
 
         sqlite3_extended_result_codes(db, 1);
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+#else
         // change setting to optimize SQLite performance
         sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
+#endif
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -273,8 +277,12 @@ namespace transport
 
         sqlite3_extended_result_codes(db, 1);
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+#else
         // change setting to optimize SQLite performance
         sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
+#endif
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -720,8 +728,12 @@ namespace transport
             throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
           }
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+#else
         // change setting to optimize SQLite performance
         sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
+#endif
 
         return(db);
       }
@@ -2254,7 +2266,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // set performance-related options
-        sqlite3_operations::reading_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -2380,7 +2392,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // set performance-related options
-        sqlite3_operations::reading_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 
         return(db);
       }

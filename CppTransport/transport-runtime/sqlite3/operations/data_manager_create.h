@@ -202,9 +202,13 @@ namespace transport
 			        << "os_version    TEXT, "
 			        << "os_release    TEXT, "
 			        << "architecture  TEXT, "
-			        << "cpu_vendor_id TEXT, "
-			        << "PRIMARY KEY (workgroup, worker)"
-			        << ");";
+			        << "cpu_vendor_id TEXT";
+
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            create_stmt << ", PRIMARY KEY (workgroup, worker)"
+#endif
+
+            create_stmt << ");";
 
 		        exec(db, create_stmt.str());
 			    }
@@ -266,7 +270,9 @@ namespace transport
 		            create_stmt << ", coord" << i << " DOUBLE";
 			        }
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
 		        create_stmt << ", PRIMARY KEY (kserial, page)";
+#endif
 
 		        if(keys == foreign_keys_type::foreign_keys)
 			        {
@@ -307,7 +313,9 @@ namespace transport
 		            create_stmt << ", coord" << i << " DOUBLE";
 			        }
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
 		        create_stmt << ", PRIMARY KEY (tserial, page)";
+#endif
 
 		        if(keys == foreign_keys_type::foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
 		        create_stmt << ");";
@@ -336,7 +344,10 @@ namespace transport
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
             create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
+#endif
+
             if(keys == foreign_keys_type::foreign_keys)
               {
                 create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
@@ -368,8 +379,11 @@ namespace transport
 			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << "("
 			        << "tserial       INTEGER, "
 			        << "kserial       INTEGER, "
-			        << "twopf         DOUBLE, "
-			        << "PRIMARY KEY (tserial, kserial)";
+			        << "twopf         DOUBLE";
+
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            create_stmt << ", PRIMARY KEY (tserial, kserial)";
+#endif
 
 		        if(keys == foreign_keys_type::foreign_keys)
 			        {
@@ -391,8 +405,11 @@ namespace transport
 			        << "tserial       INTEGER, "
 			        << "kserial       INTEGER, "
 			        << "threepf       DOUBLE, "
-              << "redbsp        DOUBLE, "
-			        << "PRIMARY KEY (tserial, kserial)";
+              << "redbsp        DOUBLE";
+
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            create_stmt << "PRIMARY KEY (tserial, kserial)";
+#endif
 
 		        if(keys == foreign_keys_type::foreign_keys)
 			        {
@@ -414,8 +431,11 @@ namespace transport
 			        << "tserial INTEGER, "
               << "BB      DOUBLE, "
 			        << "BT      DOUBLE, "
-			        << "TT      DOUBLE, "
-			        << "PRIMARY KEY (tserial)";
+			        << "TT      DOUBLE";
+
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            create_stmt << "PRIMARY KEY (tserial)";
+#endif
 
 		        if(keys == foreign_keys_type::foreign_keys)
 			        {

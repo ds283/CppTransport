@@ -61,7 +61,7 @@ namespace transport
               }
 
             // set performance-related options
-            sqlite3_operations::reading_pragmas(db, this->args.get_network_mode());
+            sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
           }
       }
 

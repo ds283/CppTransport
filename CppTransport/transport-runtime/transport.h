@@ -37,6 +37,13 @@
 // note this macro is essential for Boost.Log
 #define BOOST_ALL_DYN_LINK
 
+
+// enable to force strict checks on referential integrity
+// in the database.
+// Not enabled by default because it is much slower
+// #define CPPTRANSPORT_STRICT_CONSISTENCY
+
+
 #include "transport-runtime/messages.h"
 #include "transport-runtime/defaults.h"
 
