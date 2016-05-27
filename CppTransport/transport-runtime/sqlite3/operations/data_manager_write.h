@@ -38,6 +38,44 @@ namespace transport
     namespace sqlite3_operations
       {
 
+        namespace data_manager_write_impl
+          {
+
+            template <typename ValueType>
+            class UnpagedPrimaryKeyCompare
+              {
+              public:
+                bool operator()(const std::unique_ptr<ValueType>& A, const std::unique_ptr<ValueType>& B)
+                {
+                  // for unpaged objects we can just compare unique ID
+                  return A->get_unique() < B->get_unique();
+                }
+              };
+
+
+            template <typename ValueType>
+            class PagedPrimaryKeyCompare
+              {
+              public:
+                bool operator()(const std::unique_ptr<ValueType>& A, const std::unique_ptr<ValueType>& B)
+                  {
+                    return A->get_unique(0) < B->get_unique(0);
+                  }
+              };
+
+
+            template <typename number>
+            class StatisticsPrimaryKeyCompare
+              {
+              public:
+                bool operator()(const std::unique_ptr<typename integration_items<number>::configuration_statistics>& A, const std::unique_ptr<typename integration_items<number>::configuration_statistics>& B)
+                  {
+                    return A->serial < B->serial;
+                  }
+              };
+
+          }
+
 		    // Write host information
 		    template <typename number>
 		    void write_host_info(transaction_manager& mgr, integration_batcher<number>* batcher)
@@ -93,7 +131,7 @@ namespace transport
 
         // Write a batch of per-configuration statistics values
         template <typename number>
-        void write_stats(transaction_manager& mgr, integration_batcher<number>* batcher, const std::vector< std::unique_ptr< typename integration_items<number>::configuration_statistics > >& batch)
+        void write_stats(transaction_manager& mgr, integration_batcher<number>* batcher, std::vector< std::unique_ptr< typename integration_items<number>::configuration_statistics > >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -111,6 +149,10 @@ namespace transport
             const int refinements_id = sqlite3_bind_parameter_index(stmt, "@refinements");
             const int workgroup_id = sqlite3_bind_parameter_index(stmt, "@workgroup");
             const int worker_id = sqlite3_bind_parameter_index(stmt, "@worker");
+
+            // sort batch into ascending primary key order;
+            // sorting is done in-place for performance
+            std::sort(batch.begin(), batch.end(), data_manager_write_impl::StatisticsPrimaryKeyCompare<number>());
 
             for(const std::unique_ptr< typename integration_items<number>::configuration_statistics >& item : batch)
               {
@@ -133,7 +175,7 @@ namespace transport
 
 
         template <typename number, typename ValueType>
-        void write_coordinate_output(transaction_manager& mgr, integration_batcher<number>* batcher, const std::vector< std::unique_ptr<ValueType> >& batch)
+        void write_coordinate_output(transaction_manager& mgr, integration_batcher<number>* batcher, std::vector< std::unique_ptr<ValueType> >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -177,6 +219,10 @@ namespace transport
                 coord_ids[i] = sqlite3_bind_parameter_index(stmt, coord_names[i].c_str());
               }
 
+            // sort batch into ascending primary key order;
+            // sorting is done in-place for performance
+            std::sort(batch.begin(), batch.end(), data_manager_write_impl::PagedPrimaryKeyCompare<ValueType>());
+
             for(const std::unique_ptr<ValueType>& item : batch)
               {
                 for(unsigned int page = 0; page < num_pages; ++page)
@@ -212,7 +258,7 @@ namespace transport
 
 
 		    template <typename number, typename BatcherType, typename ValueType>
-		    void write_paged_output(transaction_manager& mgr, BatcherType* batcher, const std::vector< std::unique_ptr<ValueType> >& batch)
+		    void write_paged_output(transaction_manager& mgr, BatcherType* batcher, std::vector< std::unique_ptr<ValueType> >& batch)
 			    {
 				    sqlite3* db = nullptr;
 				    batcher->get_manager_handle(&db);
@@ -255,6 +301,10 @@ namespace transport
                 ele_ids[i] = sqlite3_bind_parameter_index(stmt, ele_names[i].c_str());
               }
 
+            // sort batch into ascending primary key order;
+            // sorting is done in-place for performance
+            std::sort(batch.begin(), batch.end(), data_manager_write_impl::PagedPrimaryKeyCompare<ValueType>());
+
             for(const std::unique_ptr<ValueType>& item : batch)
 			        {
 		            for(unsigned int page = 0; page < num_pages; ++page)
@@ -285,7 +335,7 @@ namespace transport
 
         // Write a batch of unpaged values
         template <typename number, typename BatcherType, typename ValueType >
-        void write_unpaged(transaction_manager& mgr, BatcherType* batcher, const std::vector< std::unique_ptr<ValueType> >& batch)
+        void write_unpaged(transaction_manager& mgr, BatcherType* batcher, std::vector< std::unique_ptr<ValueType> >& batch)
 	        {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -306,6 +356,10 @@ namespace transport
             const int kserial_id = sqlite3_bind_parameter_index(stmt, "@kserial");
             const int column_id  = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::column_name()).c_str());
             const int redbsp_id  = data_traits<number, ValueType>::has_redbsp ? sqlite3_bind_parameter_index(stmt, "@redbsp") : 0;
+
+            // sort batch into ascending primary key order;
+            // sorting is done in-place for performance
+            std::sort(batch.begin(), batch.end(), data_manager_write_impl::UnpagedPrimaryKeyCompare<ValueType>());
 
             for(const std::unique_ptr<ValueType>& item : batch)
 	            {
@@ -361,6 +415,7 @@ namespace transport
             const int BT_id      = sqlite3_bind_parameter_index(stmt, "@BT");
             const int TT_id      = sqlite3_bind_parameter_index(stmt, "@TT");
 
+            // cache will already be sorted in ascending order of primary key = time_serial
             for(const typename postintegration_items<number>::fNL_cache::value_type& item : batch)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));

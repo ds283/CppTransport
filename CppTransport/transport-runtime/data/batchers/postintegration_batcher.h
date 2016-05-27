@@ -56,25 +56,25 @@ namespace transport
         typedef std::function<transaction_manager(postintegration_batcher<number>*)> transaction_factory;
 
 		    //! Zeta 2pf writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)> zeta_twopf_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)> zeta_twopf_writer;
 
 		    //! Zeta 3pf writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_threepf_item> >&)> zeta_threepf_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_threepf_item> >&)> zeta_threepf_writer;
 
 		    //! fNL writer function
 		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const typename postintegration_items<number>::fNL_cache&, derived_data::bispectrum_template)> fNL_writer;
 
         //! linear gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm1_item> >&)> gauge_xfm1_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm1_item> >&)> gauge_xfm1_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_123_item> >&)> gauge_xfm2_123_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_123_item> >&)> gauge_xfm2_123_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_213_item> >&)> gauge_xfm2_213_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_213_item> >&)> gauge_xfm2_213_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_312_item> >&)> gauge_xfm2_312_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_312_item> >&)> gauge_xfm2_312_writer;
 
 			};
 

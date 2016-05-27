@@ -62,31 +62,31 @@ namespace transport
         typedef std::function<transaction_manager(integration_batcher<number>*)> transaction_factory;
 
 		    //! Background writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::backg_item> >&)> backg_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::backg_item> >&)> backg_writer;
 
 		    //! Two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::twopf_re_item> >&)> twopf_re_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::twopf_re_item> >&)> twopf_re_writer;
 
 		    //! Two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::twopf_im_item> >&)> twopf_im_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::twopf_im_item> >&)> twopf_im_writer;
 
 		    //! Tensor two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::tensor_twopf_item> >&)> tensor_twopf_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::tensor_twopf_item> >&)> tensor_twopf_writer;
 
 		    //! Three-point function writer function for momentum insertions
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::threepf_momentum_item> >&)> threepf_momentum_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::threepf_momentum_item> >&)> threepf_momentum_writer;
 
         //! Three-point function writer function for derivative insertions
-        typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::threepf_Nderiv_item> >&)> threepf_Nderiv_writer;
+        typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::threepf_Nderiv_item> >&)> threepf_Nderiv_writer;
 
 		    //! Per-configuration statistics writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::configuration_statistics> >&)> stats_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::configuration_statistics> >&)> stats_writer;
 
 				//! Per-configuration initial conditions writer function
-				typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::ics_item> >&)> ics_writer;
+				typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::ics_item> >&)> ics_writer;
 
 		    //! Per-configuration initial conditions writer function - kt variant
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::ics_kt_item> >&)> ics_kt_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::ics_kt_item> >&)> ics_kt_writer;
 
 		    //! Host information writer function
 		    typedef std::function<void(transaction_manager&, integration_batcher<number>*)> host_info_writer;
