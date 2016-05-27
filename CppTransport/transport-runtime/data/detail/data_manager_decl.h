@@ -191,19 +191,22 @@ namespace transport
                                                                       std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
-        virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+        virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(zeta_twopf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                            const boost::filesystem::path& logdir,
                                                                             unsigned int worker, model<number>* m,
                                                                             std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for zeta threepf data. Returns a batcher which can be used for writing to the container.
-        virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+        virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(zeta_threepf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                                const boost::filesystem::path& logdir,
                                                                                 unsigned int worker, model<number>* m,
                                                                                 std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
-        virtual fNL_batcher<number> create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                              unsigned int worker, model<number>* m,
-                                                              std::unique_ptr<container_dispatch_function> dispatcher, derived_data::bispectrum_template type) = 0;
+        virtual fNL_batcher<number> create_temp_fNL_container(fNL_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                              const boost::filesystem::path& logdir, unsigned int worker, model<number>* m,
+                                                              std::unique_ptr<container_dispatch_function> dispatcher,
+                                                              derived_data::bispectrum_template type) = 0;
 
 
         // INTEGRITY CHECK

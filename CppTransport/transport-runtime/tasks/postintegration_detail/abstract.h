@@ -53,7 +53,7 @@ namespace transport
 
       public:
 
-        //! Construct a named postintegration_task with supplied parent integration_task
+        //! Construct a named postintegration_task with supplied parent derivable_task
         postintegration_task(const std::string& nm, const derivable_task<number>& t);
 
         //! deserialization constructor

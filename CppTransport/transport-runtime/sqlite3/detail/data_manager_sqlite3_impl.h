@@ -866,7 +866,8 @@ namespace transport
 
     template <typename number>
     zeta_twopf_batcher<number>
-    data_manager_sqlite3<number>::create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
+    data_manager_sqlite3<number>::create_temp_zeta_twopf_container(zeta_twopf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                   const boost::filesystem::path& logdir, unsigned int worker,
                                                                    model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
@@ -888,7 +889,7 @@ namespace transport
         std::unique_ptr< sqlite3_container_replace_zeta_twopf<number> > replacer = std::make_unique< sqlite3_container_replace_zeta_twopf<number> >(*this, tempdir, worker, m);
 
         // set up batcher
-        zeta_twopf_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker);
+        zeta_twopf_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, tk, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary zeta twopf container " << container;
 
@@ -910,7 +911,7 @@ namespace transport
 
     template <typename number>
     zeta_threepf_batcher<number>
-    data_manager_sqlite3<number>::create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
+    data_manager_sqlite3<number>::create_temp_zeta_threepf_container(zeta_threepf_task<number>* tk, const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
                                                                      model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
@@ -936,7 +937,7 @@ namespace transport
         std::unique_ptr< sqlite3_container_replace_zeta_threepf<number> > replacer = std::make_unique< sqlite3_container_replace_zeta_threepf<number> >(*this, tempdir, worker, m);
 
         // set up batcher
-        zeta_threepf_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker);
+        zeta_threepf_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, tk, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary zeta threepf container " << container;
 
@@ -961,7 +962,7 @@ namespace transport
 
     template <typename number>
     fNL_batcher<number>
-    data_manager_sqlite3<number>::create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
+    data_manager_sqlite3<number>::create_temp_fNL_container(fNL_task<number>* tk, const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
                                                             model<number>* m, std::unique_ptr<container_dispatch_function> dispatcher, derived_data::bispectrum_template type)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
@@ -982,7 +983,7 @@ namespace transport
         std::unique_ptr< sqlite3_container_replace_fNL<number> > replacer = std::make_unique< sqlite3_container_replace_fNL<number> >(*this, tempdir, worker, type);
 
         // set up batcher
-        fNL_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, type);
+        fNL_batcher<number> batcher(this->get_batcher_capacity(), this->get_checkpoint_interval(), m, tk, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, type);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary " <<
             derived_data::template_type_to_string(type) << " container " << container;

@@ -103,7 +103,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+        integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m, integration_task<number>* tk,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                             handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
@@ -225,9 +225,6 @@ namespace transport
         //! Push a background sample
         void push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values);
 
-		    //! Push a set of initial conditions
-        void push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
-
 
         // UNBATCH
 
@@ -250,17 +247,20 @@ namespace transport
         //! Cache of per-configuration statistics
         std::vector< typename integration_items<number>::configuration_statistics > stats_batch;
 
-        //! initial conditions cache
-        std::vector< typename integration_items<number>::ics_item > ics_batch;
-
 
         // OTHER INTERNAL DATA
 
 		    //! pointer to parent model
         model<number>* mdl;
 
-        //! Cache number of fields associated with this integration
+        //! pointer to parent task
+        integration_task<number>* parent_task;
+
+        //! cache number of fields associated with this integration
         const unsigned int Nfields;
+
+        //! cache number of time configurations
+        const size_t time_db_size;
 
 
         // INTEGRATION EVENT TRACKING
@@ -363,6 +363,9 @@ namespace transport
 
         void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
+        //! Push a set of initial conditions
+        void push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
+
         virtual void unbatch(unsigned int source_serial) override;
 
 
@@ -416,10 +419,13 @@ namespace transport
         const writer_group writers;
 
         //! twopf cache
-        std::vector< typename integration_items<number>::twopf_re_item >     twopf_batch;
+        std::vector<typename integration_items<number>::twopf_re_item> twopf_batch;
 
         //! tensor twopf cache
         std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
+
+        //! initial conditions cache
+        std::vector<typename integration_items<number>::ics_item> ics_batch;
 
         //! cache for linear part of gauge transformation
         std::vector<number> gauge_xfm1;
@@ -432,6 +438,9 @@ namespace transport
 
         //! Paired zeta batcher, if present
         zeta_twopf_batcher<number>* paired_batcher;
+
+        //! cache number of k-configurations in database
+        const size_t kconfig_db_size;
 
 
         // COMPUTATION AGENT
@@ -532,6 +541,9 @@ namespace transport
                                  const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                  const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
 
+        //! Push a set of initial conditions
+        void push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
+
 		    void push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
 
         virtual void unbatch(unsigned int source_serial) override;
@@ -584,6 +596,9 @@ namespace transport
         //! threepf Nderiv-insertions cache
         std::vector<typename integration_items<number>::threepf_Nderiv_item> threepf_Nderiv_batch;
 
+        //! initial conditions cache
+        std::vector<typename integration_items<number>::ics_item> ics_batch;
+
         //! k_t initial conditions cache
         std::vector<typename integration_items<number>::ics_kt_item> kt_ics_batch;
 
@@ -602,11 +617,14 @@ namespace transport
 
         // PAIRING
 
-        //! threepf-task associated with this batcher (for computing gauge transfroms etc.)
+        //! threepf-task associated with this batcher (for computing gauge transforms etc.)
         threepf_task<number>* parent_task;
 
         //! Paired zeta batcher, if present
         zeta_threepf_batcher<number>* paired_batcher;
+
+        //! cache number of k-configurations in database
+        const size_t kconfig_db_size;
 
 
         // COMPUTATION AGENT
@@ -622,13 +640,15 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    integration_batcher<number>::integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+    integration_batcher<number>::integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m, integration_task<number>* tk,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                                      handle_type h, unsigned int w, unsigned int g, bool ics)
 	    : generic_batcher(cap, ckp, cp, lp, std::move(d), std::move(r), h, w, g),
         Nfields(m->get_N_fields()),
         mdl(m),
+        parent_task(tk),
+        time_db_size(tk->get_stored_time_config_database().size()),
 	      num_integrations(0),
 	      integration_time(0),
 	      max_integration_time(0),
@@ -681,15 +701,7 @@ namespace transport
 
 		    if(this->collect_statistics)
 			    {
-		        typename integration_items<number>::configuration_statistics stats;
-
-		        stats.serial      = kserial;
-		        stats.integration = integration;
-		        stats.batching    = batching;
-		        stats.refinements = refinements;
-		        stats.steps       = steps;
-
-		        this->stats_batch.push_back(stats);
+		        this->stats_batch.emplace_back(kserial, integration, batching, refinements, steps);
 			    }
 
         if(this->flush_due)
@@ -712,34 +724,9 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
-        typename integration_items<number>::backg_item item;
-
-        item.time_serial   = time_serial;
-        item.source_serial = source_serial;
-        item.coords        = values;
-
-        this->backg_batch.push_back(item);
+        this->backg_batch.emplace_back(time_serial, source_serial, values, this->time_db_size);
         this->check_for_flush();
 	    }
-
-
-		template <typename number>
-		void integration_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
-			{
-		    if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
-
-				if(this->collect_initial_conditions)
-					{
-						typename integration_items<number>::ics_item ics;
-
-				    ics.source_serial = k_serial;
-						ics.texit         = t_exit;
-				    ics.coords        = values;
-
-						this->ics_batch.push_back(ics);
-						this->check_for_flush();
-					}
-			}
 
 
     template <typename number>
@@ -837,10 +824,11 @@ namespace transport
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                          std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                          handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, ckp, m, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
+        kconfig_db_size(tk->get_twopf_database().size()),
         compute_agent(m, tk)
 	    {
         assert(this->parent_task != nullptr);
@@ -855,15 +843,7 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
 
-        typename integration_items<number>::twopf_re_item item;
-
-        item.time_serial    = time_serial;
-        item.kconfig_serial = k_serial;
-        item.source_serial  = source_serial;
-        item.elements       = values;
-
-        this->twopf_batch.push_back(item);
-
+        this->twopf_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
         if(this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
 
         this->check_for_flush();
@@ -891,16 +871,22 @@ namespace transport
 	    {
         if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
-        typename integration_items<number>::tensor_twopf_item item;
-
-        item.time_serial    = time_serial;
-        item.kconfig_serial = k_serial;
-        item.source_serial  = source_serial;
-        item.elements       = values;
-
-        this->tensor_twopf_batch.push_back(item);
+        this->tensor_twopf_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
         this->check_for_flush();
 	    }
+
+
+    template <typename number>
+    void twopf_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
+      {
+        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
+
+        if(this->collect_initial_conditions)
+          {
+            this->ics_batch.emplace_back(k_serial, t_exit, values, this->kconfig_db_size);
+            this->check_for_flush();
+          }
+      }
 
 
     template <typename number>
@@ -1021,10 +1007,11 @@ namespace transport
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                              std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                              handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, ckp, m, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
+        kconfig_db_size(tk->get_threepf_database().size()),
         compute_agent(m, tk)
 	    {
         assert(this->parent_task != nullptr);
@@ -1047,27 +1034,13 @@ namespace transport
           {
             case twopf_type::real:
               {
-                typename integration_items<number>::twopf_re_item item;
-
-                item.time_serial    = time_serial;
-                item.kconfig_serial = k_serial;
-                item.source_serial  = source_serial;
-                item.elements       = values;
-
-                this->twopf_re_batch.push_back(item);
+                this->twopf_re_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
                 break;
               }
 
             case twopf_type::imag:
               {
-                typename integration_items<number>::twopf_im_item item;
-
-                item.time_serial    = time_serial;
-                item.kconfig_serial = k_serial;
-                item.source_serial  = source_serial;
-                item.elements       = values;
-
-                this->twopf_im_batch.push_back(item);
+                this->twopf_im_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
                 break;
               }
           }
@@ -1102,24 +1075,12 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
 
-        typename integration_items<number>::threepf_momentum_item momentum_item;
-        typename integration_items<number>::threepf_Nderiv_item   Nderiv_item;
-
         // momentum three-point function can be copied across directly
-        momentum_item.time_serial    = time_serial;
-        momentum_item.kconfig_serial = kconfig.serial;
-        momentum_item.source_serial  = source_serial;
-        momentum_item.elements       = values;
-
-        this->threepf_momentum_batch.push_back(momentum_item);
+        this->threepf_momentum_batch.emplace_back(time_serial, kconfig.serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
 
         // derivative three-point function needs extra shifts in order to convert any momentum insertions
         // into time-derivative insertions
-        Nderiv_item.time_serial    = time_serial;
-        Nderiv_item.kconfig_serial = kconfig.serial;
-        Nderiv_item.source_serial  = source_serial;
-
-        Nderiv_item.elements.resize(values.size());
+        std::vector<number> Nderiv_values(values.size());
         for(unsigned int i = 0; i < 2*this->Nfields; ++i)
           {
             for(unsigned int j = 0; j < 2*this->Nfields; ++j)
@@ -1130,12 +1091,12 @@ namespace transport
 
                     this->compute_agent.shift(i, j, k, kconfig, time_serial, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, tpf);
 
-                    Nderiv_item.elements[this->mdl->flatten(i,j,k)] = tpf;
+                    Nderiv_values[this->mdl->flatten(i,j,k)] = tpf;
                   }
               }
           }
 
-        this->threepf_Nderiv_batch.push_back(Nderiv_item);
+        this->threepf_Nderiv_batch.emplace_back(time_serial, kconfig.serial, source_serial, Nderiv_values, this->time_db_size, this->kconfig_db_size);
 
         if(this->paired_batcher != nullptr)
           this->push_paired_threepf(time_serial, t, kconfig, source_serial, values,
@@ -1175,14 +1136,7 @@ namespace transport
 	    {
         if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
-        typename integration_items<number>::tensor_twopf_item item;
-
-        item.time_serial    = time_serial;
-        item.kconfig_serial = k_serial;
-        item.source_serial  = source_serial;
-        item.elements       = values;
-
-        this->tensor_twopf_batch.push_back(item);
+        this->tensor_twopf_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
         this->check_for_flush();
 	    }
 
@@ -1202,19 +1156,26 @@ namespace transport
 
 
     template <typename number>
+    void threepf_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
+      {
+        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
+
+        if(this->collect_initial_conditions)
+          {
+            this->ics_batch.emplace_back(k_serial, t_exit, values, this->kconfig_db_size);
+            this->check_for_flush();
+          }
+      }
+
+
+    template <typename number>
     void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 	    {
         if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
         if(this->collect_initial_conditions)
 	        {
-            typename integration_items<number>::ics_kt_item ics;
-
-            ics.source_serial = k_serial;
-		        ics.texit         = t_exit;
-            ics.coords        = values;
-
-            this->kt_ics_batch.push_back(ics);
+            this->kt_ics_batch.emplace_back(k_serial, t_exit, values, this->kconfig_db_size);
             this->check_for_flush();
 	        }
 	    }

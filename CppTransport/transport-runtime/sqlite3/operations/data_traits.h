@@ -47,6 +47,7 @@ namespace transport
 						static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
 						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE); }
 						static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 				    static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_TWOPF_DATATAB_FAIL); }
 						static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_TWOPF_COPY); }
 					};
@@ -56,6 +57,7 @@ namespace transport
 			    {
 		        static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
 		        static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 		        static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_TWOPF_DATATAB_FAIL); }
 		        static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
 		        static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_TWOPF_COPY); }
@@ -66,6 +68,7 @@ namespace transport
 					{
 						static int number_elements(unsigned int Nfields) { return(4); }
 						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_TENSOR_TWOPF_DATATAB_FAIL); }
 				    static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
 				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_TENSOR_TWOPF_COPY); }
@@ -76,6 +79,7 @@ namespace transport
 					{
 						static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields * 2*Nfields); }
 						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_THREEPF_MOMENTUM_DATATAB_FAIL); }
 				    static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
 				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_THREEPF_MOMENTUM_COPY); }
@@ -86,6 +90,7 @@ namespace transport
           {
             static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields * 2*Nfields); }
             static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_THREEPF_DERIV_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
             static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_THREEPF_DERIV_DATATAB_FAIL); }
             static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
             static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_THREEPF_DERIV_COPY); }
@@ -103,6 +108,7 @@ namespace transport
 				    static int number_elements(unsigned int Nfields) { return(2*Nfields); }
 				    static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_ICS_TABLE); }
 				    static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_ICS_INSERT_FAIL); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 				    static const std::string sqlite_serial_column()  { return("kserial"); }
 				    static const bool has_texit = true;
 			    };
@@ -113,6 +119,7 @@ namespace transport
 		        static int number_elements(unsigned int Nfields) { return(2*Nfields); }
 		        static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_KT_ICS_TABLE); }
 		        static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_ICS_INSERT_FAIL); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 		        static const std::string sqlite_serial_column()  { return("kserial"); }
 				    static const bool has_texit = true;
 			    };
@@ -123,6 +130,7 @@ namespace transport
 						static int number_elements(unsigned int Nfields) { return(2*Nfields); }
 						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE); }
 						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_BACKG_DATATAB_FAIL); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 				    static const std::string sqlite_serial_column()  { return("tserial"); }
 						static const bool has_texit = false;
 					};
@@ -131,6 +139,7 @@ namespace transport
 				template<typename number> struct data_traits<number, typename postintegration_items<number>::zeta_twopf_item>
 					{
 						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_ZETA_TWOPF_DATATAB_FAIL); }
 				    static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
 				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_ZETA_TWOPF_COPY); }
@@ -142,6 +151,7 @@ namespace transport
 				template<typename number> struct data_traits<number, typename postintegration_items<number>::zeta_threepf_item>
 					{
 						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
 						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_ZETA_THREEPF_DATATAB_FAIL); }
 				    static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
 				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_ZETA_THREEPF_COPY); }
@@ -161,6 +171,7 @@ namespace transport
           {
             static int number_elements(unsigned int Nfields) { return(2*Nfields); }
             static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM1_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
             static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE1_DATATAB_FAIL); }
             static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
             static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM1_COPY); }
@@ -171,6 +182,7 @@ namespace transport
           {
             static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
             static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM2_123_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
             static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE2_DATATAB_FAIL); }
             static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
             static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM2_COPY); }
@@ -181,6 +193,7 @@ namespace transport
           {
             static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
             static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM2_213_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
             static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE2_DATATAB_FAIL); }
             static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
             static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM2_COPY); }
@@ -191,6 +204,7 @@ namespace transport
           {
             static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
             static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_VALUE_TABLE); }
+            static const std::string sqlite_unique_column()  { return("unique_id"); }
             static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE2_DATATAB_FAIL); }
             static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
             static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM2_COPY); }

@@ -151,34 +151,53 @@ namespace transport
             std::ostringstream insert_stmt;
             insert_stmt
 	            << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
-	            << " VALUES (@" << data_traits<number, ValueType>::sqlite_serial_column() << ", @page";
+	            << " VALUES (@" << data_traits<number, ValueType>::sqlite_unique_column() << ", @" << data_traits<number, ValueType>::sqlite_serial_column() << ", @page";
 
 		        if(data_traits<number, ValueType>::has_texit) insert_stmt << ", @t_exit";
 
+            std::vector<std::string> coord_names(num_cols);
             for(unsigned int i = 0; i < num_cols; ++i)
               {
-                insert_stmt << ", @coord" << i;
+                std::string id = std::string("@coord") + boost::lexical_cast<std::string>(i);
+                coord_names[i] = id;
+                insert_stmt << ", " << id;
               }
             insert_stmt << ");";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
+            const int unique_id = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::sqlite_unique_column()).c_str());
+            const int serial_id = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::sqlite_serial_column()).c_str());
+            const int page_id   = sqlite3_bind_parameter_index(stmt, "@page");
+
+            std::vector<int> coord_ids(num_cols);
+            for(unsigned int i = 0; i < num_cols; ++i)
+              {
+                coord_ids[i] = sqlite3_bind_parameter_index(stmt, coord_names[i].c_str());
+              }
+
             for(const ValueType& item : batch)
               {
                 for(unsigned int page = 0; page < num_pages; ++page)
 	                {
-                    check_stmt(db, sqlite3_bind_int(stmt, 1, item.get_serial()));
-		                check_stmt(db, sqlite3_bind_int(stmt, 2, page));
 
-		                if(data_traits<number, ValueType>::has_texit) check_stmt(db, sqlite3_bind_double(stmt, 3, item.get_texit()));
+                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item.get_unique(page)));
+                    check_stmt(db, sqlite3_bind_int(stmt, serial_id, item.get_serial()));
+		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));
+
+		                if(data_traits<number, ValueType>::has_texit)
+                      {
+                        const int texit_id = sqlite3_bind_parameter_index(stmt, "@t_exit");
+                        check_stmt(db, sqlite3_bind_double(stmt, texit_id, item.get_texit()));
+                      }
 
 		                for(unsigned int i = 0; i < num_cols; ++i)
 			                {
 				                unsigned int index = page*num_cols + i;
 				                number       value = index < 2*Nfields ? item.coords[index] : 0.0;
 
-		                    check_stmt(db, sqlite3_bind_double(stmt, i+3+(data_traits<number, ValueType>::has_texit ? 1 : 0), static_cast<double>(value)));    // 'number' must be castable to double
+		                    check_stmt(db, sqlite3_bind_double(stmt, coord_ids[i], static_cast<double>(value)));    // 'number' must be castable to double
 			                }
 
 		                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
@@ -209,31 +228,48 @@ namespace transport
 		        unsigned int num_pages = (num_elements - 1)/num_cols + 1;
 
 		        std::ostringstream insert_stmt;
-		        insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table() << " VALUES (@tserial, @kserial, @page";
+		        insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
+              << " VALUES (" << "@" << data_traits<number, ValueType>::sqlite_unique_column()
+              << ", @tserial, @kserial, @page";
 
+            std::vector<std::string> ele_names(num_cols);
 		        for(unsigned int i = 0; i < num_cols; ++i)
 			        {
-		            insert_stmt << ", @ele" << i;
+                std::string id = std::string("@ele") + boost::lexical_cast<std::string>(i);
+                ele_names[i] = id;
+                insert_stmt << ", " << id;
 			        }
 		        insert_stmt << ");";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
+            const int unique_id  = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::sqlite_unique_column()).c_str());
+            const int tserial_id = sqlite3_bind_parameter_index(stmt, "@tserial");
+            const int kserial_id = sqlite3_bind_parameter_index(stmt, "@kserial");
+            const int page_id    = sqlite3_bind_parameter_index(stmt, "@page");
+
+            std::vector<int> ele_ids(num_cols);
+            for(unsigned int i = 0; i < num_cols; ++i)
+              {
+                ele_ids[i] = sqlite3_bind_parameter_index(stmt, ele_names[i].c_str());
+              }
+
             for(const ValueType& item : batch)
 			        {
 		            for(unsigned int page = 0; page < num_pages; ++page)
 			            {
-		                check_stmt(db, sqlite3_bind_int(stmt, 1, item.time_serial));
-		                check_stmt(db, sqlite3_bind_int(stmt, 2, item.kconfig_serial));
-		                check_stmt(db, sqlite3_bind_int(stmt, 3, page));
+                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item.get_unique(page)));
+		                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item.time_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item.kconfig_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));
 
 		                for(unsigned int i = 0; i < num_cols; ++i)
 			                {
 		                    unsigned int index = page*num_cols + i;
 		                    number       value = index < num_elements ? item.elements[index] : 0.0;
 
-		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
+		                    check_stmt(db, sqlite3_bind_double(stmt, ele_ids[i], static_cast<double>(value)));    // 'number' must be castable to double
 			                }
 
 		                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
@@ -247,7 +283,7 @@ namespace transport
 			    }
 
 
-        // Write a batch of zeta twopf values
+        // Write a batch of unpaged values
         template <typename number, typename BatcherType, typename ValueType >
         void write_unpaged(transaction_manager& mgr, BatcherType* batcher, const std::vector<ValueType>& batch)
 	        {
@@ -255,19 +291,32 @@ namespace transport
             batcher->get_manager_handle(&db);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table() << " VALUES (@tserial, @kserial, @" << data_traits<number, ValueType>::column_name();
+            insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
+              << " VALUES (@" << data_traits<number, ValueType>::sqlite_unique_column()
+              << ", @tserial, @kserial, @" << data_traits<number, ValueType>::column_name();
+
             if(data_traits<number, ValueType>::has_redbsp) insert_stmt << ", @redbsp";
             insert_stmt << ");";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
+            const int unique_id  = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::sqlite_unique_column()).c_str());
+            const int tserial_id = sqlite3_bind_parameter_index(stmt, "@tserial");
+            const int kserial_id = sqlite3_bind_parameter_index(stmt, "@kserial");
+            const int column_id  = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::column_name()).c_str());
+            const int redbsp_id  = data_traits<number, ValueType>::has_redbsp ? sqlite3_bind_parameter_index(stmt, "@redbsp") : 0;
+
             for(const ValueType& item : batch)
 	            {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, item.time_serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, item.kconfig_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(item.value)));
-                if(data_traits<number, ValueType>::has_redbsp) check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(item.redbsp)));
+                check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item.get_unique()));
+                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item.time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item.kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, column_id, static_cast<double>(item.value)));
+                if(data_traits<number, ValueType>::has_redbsp)
+                  {
+                    check_stmt(db, sqlite3_bind_double(stmt, redbsp_id, static_cast<double>(item.redbsp)));
+                  }
 
                 check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 
@@ -308,12 +357,17 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
+            const int tserial_id = sqlite3_bind_parameter_index(stmt, "@tserial");
+            const int BB_id      = sqlite3_bind_parameter_index(stmt, "@BB");
+            const int BT_id      = sqlite3_bind_parameter_index(stmt, "@BT");
+            const int TT_id      = sqlite3_bind_parameter_index(stmt, "@TT");
+
             for(const typename postintegration_items<number>::fNL_item& item : batch)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, item.time_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>(item.BB)));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(item.BT)));
-                check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(item.TT)));
+                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item.time_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, BB_id, static_cast<double>(item.BB)));
+                check_stmt(db, sqlite3_bind_double(stmt, BT_id, static_cast<double>(item.BT)));
+                check_stmt(db, sqlite3_bind_double(stmt, TT_id, static_cast<double>(item.TT)));
 
                 check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
 

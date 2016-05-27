@@ -33,23 +33,44 @@ namespace transport
 
     // data structures for storing individual sample points from each integration
 
+    // NOTE when generating unique identifiers, it's important that they in approximately increasing order
+    // This speeds up INSERT performance dramatically and is critical for getting good aggregation speeds
+    // see http://stackoverflow.com/questions/788568/sqlite3-disabling-primary-key-index-while-inserting
+
     template <typename number>
     class postintegration_items
 	    {
 
       public:
-
-
+        
         //! Stores a zeta twopf configuration
         class zeta_twopf_item
 	        {
           public:
+            zeta_twopf_item(unsigned int ts, unsigned int ks, unsigned int ss, number v, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                value(v),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique() const { return(time_serial*kconfig_items + kconfig_serial); }
 
             //! time serial number for this configuration
             unsigned int time_serial;
 
             //! kconfig serial number of this configuration
             unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
             unsigned int source_serial;
@@ -68,12 +89,31 @@ namespace transport
         class zeta_threepf_item
 	        {
           public:
+            zeta_threepf_item(unsigned int ts, unsigned int ks, unsigned int ss, number v, number rb, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                value(v),
+                redbsp(rb),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique() const { return(time_serial*kconfig_items + kconfig_serial); }
 
             //! time serial number for this configuration
             unsigned int time_serial;
 
             //! kconfig serial number of this configuration
             unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
             unsigned int source_serial;
@@ -97,6 +137,13 @@ namespace transport
         class fNL_item
 	        {
           public:
+            fNL_item(unsigned int ts, number bb, number bt, number tt)
+              : time_serial(ts),
+                BB(bb),
+                BT(bt),
+                TT(tt)
+              {
+              }
 
             //! time serial number for this configuration
             unsigned int time_serial;
@@ -116,15 +163,33 @@ namespace transport
         class gauge_xfm1_item
           {
           public:
+            gauge_xfm1_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int        source_serial;
+            unsigned int source_serial;
 
             // values
             std::vector<number> elements;
@@ -135,15 +200,33 @@ namespace transport
         class gauge_xfm2_123_item
           {
           public:
+            gauge_xfm2_123_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int        source_serial;
+            unsigned int source_serial;
 
             // values
             std::vector<number> elements;
@@ -154,15 +237,33 @@ namespace transport
         class gauge_xfm2_213_item
           {
           public:
+            gauge_xfm2_213_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int        source_serial;
+            unsigned int source_serial;
 
             // values
             std::vector<number> elements;
@@ -173,15 +274,33 @@ namespace transport
         class gauge_xfm2_312_item
           {
           public:
+            gauge_xfm2_312_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int        source_serial;
+            unsigned int source_serial;
 
             // values
             std::vector<number> elements;

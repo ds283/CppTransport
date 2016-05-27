@@ -731,7 +731,7 @@ namespace transport
             std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold postintegration output
-            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher));
+            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(z2pf, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher));
 
             // is this 2pf task paired?
             if(z2pf->is_paired())
@@ -781,7 +781,7 @@ namespace transport
             std::unique_ptr< slave_container_dispatch<number> > p_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(p_dispatcher));
+            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(z3pf, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(p_dispatcher));
 
             if(z3pf->is_paired())
               {
@@ -841,7 +841,7 @@ namespace transport
             std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher), zfNL->get_template());
+            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(zfNL, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher), zfNL->get_template());
 
             this->schedule_postintegration(zfNL, ptk, payload, batcher);
           }
