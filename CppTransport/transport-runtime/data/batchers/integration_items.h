@@ -37,6 +37,8 @@ namespace transport
     // This speeds up INSERT performance dramatically and is critical for getting good aggregation speeds
     // see http://stackoverflow.com/questions/788568/sqlite3-disabling-primary-key-index-while-inserting
 
+    // (the data_manager_write routines later sort into order so perhaps we could be more relaxed)
+
     template <typename number>
     class integration_items
 	    {

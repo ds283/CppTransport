@@ -37,12 +37,14 @@ namespace transport
     // This speeds up INSERT performance dramatically and is critical for getting good aggregation speeds
     // see http://stackoverflow.com/questions/788568/sqlite3-disabling-primary-key-index-while-inserting
 
+    // (the data_manager_write routines later sort into order so perhaps we could be more relaxed)
+
     template <typename number>
     class postintegration_items
 	    {
 
       public:
-        
+
         //! Stores a zeta twopf configuration
         class zeta_twopf_item
 	        {
@@ -310,11 +312,15 @@ namespace transport
 		    struct fNL_item_comparator
 			    {
 		      public:
-				    bool operator() (const fNL_item& A, const fNL_item& B)
+				    bool operator() (const std::unique_ptr<fNL_item>& A, const std::unique_ptr<fNL_item>& B)
 					    {
-						    return(A.time_serial < B.time_serial);
+						    return(A->time_serial < B->time_serial);
 					    }
 			    };
+
+
+        typedef std::set< std::unique_ptr<fNL_item>, fNL_item_comparator > fNL_cache;
+
 
 	    };
 

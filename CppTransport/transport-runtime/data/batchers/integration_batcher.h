@@ -62,31 +62,31 @@ namespace transport
         typedef std::function<transaction_manager(integration_batcher<number>*)> transaction_factory;
 
 		    //! Background writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::backg_item>&)> backg_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::backg_item> >&)> backg_writer;
 
 		    //! Two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_re_item>&)> twopf_re_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::twopf_re_item> >&)> twopf_re_writer;
 
 		    //! Two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_im_item>&)> twopf_im_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::twopf_im_item> >&)> twopf_im_writer;
 
 		    //! Tensor two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::tensor_twopf_item>&)> tensor_twopf_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::tensor_twopf_item> >&)> tensor_twopf_writer;
 
 		    //! Three-point function writer function for momentum insertions
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_momentum_item>&)> threepf_momentum_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::threepf_momentum_item> >&)> threepf_momentum_writer;
 
         //! Three-point function writer function for derivative insertions
-        typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_Nderiv_item>&)> threepf_Nderiv_writer;
+        typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::threepf_Nderiv_item> >&)> threepf_Nderiv_writer;
 
 		    //! Per-configuration statistics writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::configuration_statistics>&)> stats_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::configuration_statistics> >&)> stats_writer;
 
 				//! Per-configuration initial conditions writer function
-				typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_item>&)> ics_writer;
+				typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::ics_item> >&)> ics_writer;
 
 		    //! Per-configuration initial conditions writer function - kt variant
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_kt_item>&)> ics_kt_writer;
+		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, const std::vector<std::unique_ptr< typename integration_items<number>::ics_kt_item> >&)> ics_kt_writer;
 
 		    //! Host information writer function
 		    typedef std::function<void(transaction_manager&, integration_batcher<number>*)> host_info_writer;
@@ -242,10 +242,10 @@ namespace transport
         // CACHES
 
         //! Cache of background pushes
-        std::vector< typename integration_items<number>::backg_item > backg_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::backg_item > > backg_batch;
 
         //! Cache of per-configuration statistics
-        std::vector< typename integration_items<number>::configuration_statistics > stats_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::configuration_statistics > > stats_batch;
 
 
         // OTHER INTERNAL DATA
@@ -419,13 +419,13 @@ namespace transport
         const writer_group writers;
 
         //! twopf cache
-        std::vector<typename integration_items<number>::twopf_re_item> twopf_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::twopf_re_item > > twopf_batch;
 
         //! tensor twopf cache
-        std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::tensor_twopf_item > > tensor_twopf_batch;
 
         //! initial conditions cache
-        std::vector<typename integration_items<number>::ics_item> ics_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::ics_item > > ics_batch;
 
         //! cache for linear part of gauge transformation
         std::vector<number> gauge_xfm1;
@@ -582,25 +582,25 @@ namespace transport
         const writer_group writers;
 
         //! real twopf cache
-        std::vector<typename integration_items<number>::twopf_re_item> twopf_re_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::twopf_re_item > > twopf_re_batch;
 
         //! imaginary twopf cache
-        std::vector<typename integration_items<number>::twopf_im_item> twopf_im_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::twopf_im_item > > twopf_im_batch;
 
         //! tensor twopf cache
-        std::vector<typename integration_items<number>::tensor_twopf_item> tensor_twopf_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::tensor_twopf_item > > tensor_twopf_batch;
 
         //! threepf momentum-insertions cache
-        std::vector<typename integration_items<number>::threepf_momentum_item> threepf_momentum_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::threepf_momentum_item > > threepf_momentum_batch;
 
         //! threepf Nderiv-insertions cache
-        std::vector<typename integration_items<number>::threepf_Nderiv_item> threepf_Nderiv_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::threepf_Nderiv_item > > threepf_Nderiv_batch;
 
         //! initial conditions cache
-        std::vector<typename integration_items<number>::ics_item> ics_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::ics_item > > ics_batch;
 
         //! k_t initial conditions cache
-        std::vector<typename integration_items<number>::ics_kt_item> kt_ics_batch;
+        std::vector< std::unique_ptr< typename integration_items<number>::ics_kt_item > > kt_ics_batch;
 
         //! cache for linear part of gauge transformation
         std::vector<number> gauge_xfm1;
@@ -701,7 +701,7 @@ namespace transport
 
 		    if(this->collect_statistics)
 			    {
-		        this->stats_batch.emplace_back(kserial, integration, batching, refinements, steps);
+		        this->stats_batch.emplace_back(std::make_unique<typename integration_items<number>::configuration_statistics>(kserial, integration, batching, refinements, steps));
 			    }
 
         if(this->flush_due)
@@ -724,7 +724,7 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
-        this->backg_batch.emplace_back(time_serial, source_serial, values, this->time_db_size);
+        this->backg_batch.emplace_back(std::make_unique<typename integration_items<number>::backg_item>(time_serial, source_serial, values, this->time_db_size));
         this->check_for_flush();
 	    }
 
@@ -843,7 +843,7 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
 
-        this->twopf_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
+        this->twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_re_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
         if(this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
 
         this->check_for_flush();
@@ -871,7 +871,7 @@ namespace transport
 	    {
         if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
-        this->tensor_twopf_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
+        this->tensor_twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::tensor_twopf_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
@@ -883,7 +883,7 @@ namespace transport
 
         if(this->collect_initial_conditions)
           {
-            this->ics_batch.emplace_back(k_serial, t_exit, values, this->kconfig_db_size);
+            this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size));
             this->check_for_flush();
           }
       }
@@ -1034,13 +1034,13 @@ namespace transport
           {
             case twopf_type::real:
               {
-                this->twopf_re_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
+                this->twopf_re_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_re_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
                 break;
               }
 
             case twopf_type::imag:
               {
-                this->twopf_im_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
+                this->twopf_im_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_im_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
                 break;
               }
           }
@@ -1076,7 +1076,7 @@ namespace transport
         if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
 
         // momentum three-point function can be copied across directly
-        this->threepf_momentum_batch.emplace_back(time_serial, kconfig.serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
+        this->threepf_momentum_batch.emplace_back(std::make_unique<typename integration_items<number>::threepf_momentum_item>(time_serial, kconfig.serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
 
         // derivative three-point function needs extra shifts in order to convert any momentum insertions
         // into time-derivative insertions
@@ -1096,7 +1096,7 @@ namespace transport
               }
           }
 
-        this->threepf_Nderiv_batch.emplace_back(time_serial, kconfig.serial, source_serial, Nderiv_values, this->time_db_size, this->kconfig_db_size);
+        this->threepf_Nderiv_batch.emplace_back(std::make_unique<typename integration_items<number>::threepf_Nderiv_item>(time_serial, kconfig.serial, source_serial, Nderiv_values, this->time_db_size, this->kconfig_db_size));
 
         if(this->paired_batcher != nullptr)
           this->push_paired_threepf(time_serial, t, kconfig, source_serial, values,
@@ -1136,7 +1136,7 @@ namespace transport
 	    {
         if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
-        this->tensor_twopf_batch.emplace_back(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size);
+        this->tensor_twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::tensor_twopf_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
@@ -1162,7 +1162,7 @@ namespace transport
 
         if(this->collect_initial_conditions)
           {
-            this->ics_batch.emplace_back(k_serial, t_exit, values, this->kconfig_db_size);
+            this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size));
             this->check_for_flush();
           }
       }
@@ -1175,7 +1175,7 @@ namespace transport
 
         if(this->collect_initial_conditions)
 	        {
-            this->kt_ics_batch.emplace_back(k_serial, t_exit, values, this->kconfig_db_size);
+            this->kt_ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_kt_item>(k_serial, t_exit, values, this->kconfig_db_size));
             this->check_for_flush();
 	        }
 	    }

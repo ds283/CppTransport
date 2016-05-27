@@ -56,25 +56,25 @@ namespace transport
         typedef std::function<transaction_manager(postintegration_batcher<number>*)> transaction_factory;
 
 		    //! Zeta 2pf writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_twopf_item >&)> zeta_twopf_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)> zeta_twopf_writer;
 
 		    //! Zeta 3pf writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_threepf_item> >&)> zeta_threepf_writer;
 
 		    //! fNL writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::bispectrum_template)> fNL_writer;
+		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const typename postintegration_items<number>::fNL_cache&, derived_data::bispectrum_template)> fNL_writer;
 
         //! linear gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm1_item >&)> gauge_xfm1_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm1_item> >&)> gauge_xfm1_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_123_item >&)> gauge_xfm2_123_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_123_item> >&)> gauge_xfm2_123_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_213_item >&)> gauge_xfm2_213_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_213_item> >&)> gauge_xfm2_213_writer;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_312_item >&)> gauge_xfm2_312_writer;
+        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_312_item> >&)> gauge_xfm2_312_writer;
 
 			};
 
@@ -249,10 +249,10 @@ namespace transport
         // CACHES
 
         //! zeta twopf cache
-        std::vector< typename postintegration_items<number>::zeta_twopf_item > twopf_batch;
+        std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> > twopf_batch;
 
         //! linear gauge-xfm cache
-        std::vector< typename postintegration_items<number>::gauge_xfm1_item > gauge_xfm1_batch;
+        std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm1_item> > gauge_xfm1_batch;
 
 	    };
 
@@ -343,22 +343,22 @@ namespace transport
         // CACHES
 
         //! zeta twopf cache
-        std::vector< typename postintegration_items<number>::zeta_twopf_item > twopf_batch;
+        std::vector< std::unique_ptr< typename postintegration_items<number>::zeta_twopf_item> > twopf_batch;
 
         //! zeta threepf cache
-        std::vector< typename postintegration_items<number>::zeta_threepf_item > threepf_batch;
+        std::vector< std::unique_ptr< typename postintegration_items<number>::zeta_threepf_item> > threepf_batch;
 
         //! linear gauge-xfm cache
-        std::vector< typename postintegration_items<number>::gauge_xfm1_item > gauge_xfm1_batch;
+        std::vector< std::unique_ptr< typename postintegration_items<number>::gauge_xfm1_item> > gauge_xfm1_batch;
 
         //! quadratic gauge-xfm cache for the 123 permutation
-        std::vector< typename postintegration_items<number>::gauge_xfm2_123_item > gauge_xfm2_123_batch;
+        std::vector< std::unique_ptr< typename postintegration_items<number>::gauge_xfm2_123_item> > gauge_xfm2_123_batch;
 
         //! quadratic gauge-xfm cache for the 213 permutation
-        std::vector< typename postintegration_items<number>::gauge_xfm2_213_item > gauge_xfm2_213_batch;
+        std::vector< std::unique_ptr< typename postintegration_items<number>::gauge_xfm2_213_item> > gauge_xfm2_213_batch;
 
         //! quadratic gauge-xfm cache for the 312 permutation
-        std::vector< typename postintegration_items<number>::gauge_xfm2_312_item > gauge_xfm2_312_batch;
+        std::vector< std::unique_ptr< typename postintegration_items<number>::gauge_xfm2_312_item> > gauge_xfm2_312_batch;
 
 	    };
 
@@ -433,8 +433,7 @@ namespace transport
         // CACHES
 
         //! fNL cache
-        typedef std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator > fNL_cache;
-        fNL_cache fNL_batch;
+        typename postintegration_items<number>::fNL_cache fNL_batch;
 
         //! template being used by this batcher
         derived_data::bispectrum_template type;
@@ -530,7 +529,7 @@ namespace transport
     template <typename number>
     void zeta_twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial)
 	    {
-        this->twopf_batch.emplace_back(time_serial, k_serial, source_serial, zeta_twopf, this->time_db_size, this->kconfig_db_size);
+        this->twopf_batch.emplace_back(std::make_unique<typename postintegration_items<number>::zeta_twopf_item>(time_serial, k_serial, source_serial, zeta_twopf, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
@@ -538,7 +537,7 @@ namespace transport
     template <typename number>
     void zeta_twopf_batcher<number>::push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
       {
-        this->gauge_xfm1_batch.emplace_back(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size);
+        this->gauge_xfm1_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
       }
 
@@ -619,7 +618,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial)
 	    {
-        this->twopf_batch.emplace_back(time_serial, k_serial, source_serial, zeta_twopf, this->time_db_size, this->kconfig_db_size);
+        this->twopf_batch.emplace_back(std::make_unique<typename postintegration_items<number>::zeta_twopf_item>(time_serial, k_serial, source_serial, zeta_twopf, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
@@ -627,7 +626,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, unsigned int source_serial)
 	    {
-        this->threepf_batch.emplace_back(time_serial, k_serial, source_serial, zeta_threepf, redbsp, this->time_db_size, this->kconfig_db_size);
+        this->threepf_batch.emplace_back(std::make_unique<typename postintegration_items<number>::zeta_threepf_item>(time_serial, k_serial, source_serial, zeta_threepf, redbsp, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
@@ -635,7 +634,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
       {
-        this->gauge_xfm1_batch.emplace_back(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size);
+        this->gauge_xfm1_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
       }
 
@@ -643,7 +642,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_gauge_xfm2_123(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_123_batch.emplace_back(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size);
+        this->gauge_xfm2_123_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_123_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
       }
 
@@ -651,7 +650,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_gauge_xfm2_213(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_213_batch.emplace_back(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size);
+        this->gauge_xfm2_213_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_213_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
       }
 
@@ -659,7 +658,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_gauge_xfm2_312(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_312_batch.emplace_back(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size);
+        this->gauge_xfm2_312_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_312_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
       }
 
@@ -767,23 +766,23 @@ namespace transport
     template <typename number>
     void fNL_batcher<number>::push_fNL(unsigned int time_serial, number BB, number BT, number TT)
 	    {
-        typename postintegration_items<number>::fNL_item item(time_serial, BB, BT, TT);
+        std::unique_ptr<typename postintegration_items<number>::fNL_item> item = std::make_unique<typename postintegration_items<number>::fNL_item>(time_serial, BB, BT, TT);
 
 		    // if an existing item with this serial number exists, we want to accumulate the BT and TT values
 		    // we then have to remove the existing record before inserting an updated one -- elements in a std::set
 		    // are always const and therefore read-only
         // at least searching in a set is fairly efficient, O(log N)
-        typename fNL_cache::iterator t = this->fNL_batch.find(item);
+        typename postintegration_items<number>::fNL_cache::iterator t = this->fNL_batch.find(item);
 
 		    if(t != this->fNL_batch.end())
 			    {
-            item.BB += t->BB;
-				    item.BT += t->BT;
-				    item.TT += t->TT;
+            item->BB += (*t)->BB;
+				    item->BT += (*t)->BT;
+				    item->TT += (*t)->TT;
 				    this->fNL_batch.erase(t);
 			    }
 
-        this->fNL_batch.insert(item);
+        this->fNL_batch.insert(std::move(item));
         this->check_for_flush();
 	    }
 

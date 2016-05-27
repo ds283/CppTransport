@@ -93,7 +93,7 @@ namespace transport
 
         // Write a batch of per-configuration statistics values
         template <typename number>
-        void write_stats(transaction_manager& mgr, integration_batcher<number>* batcher, const std::vector< typename integration_items<number>::configuration_statistics >& batch)
+        void write_stats(transaction_manager& mgr, integration_batcher<number>* batcher, const std::vector< std::unique_ptr< typename integration_items<number>::configuration_statistics > >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -112,13 +112,13 @@ namespace transport
             const int workgroup_id = sqlite3_bind_parameter_index(stmt, "@workgroup");
             const int worker_id = sqlite3_bind_parameter_index(stmt, "@worker");
 
-            for(const typename integration_items<number>::configuration_statistics& item : batch)
+            for(const std::unique_ptr< typename integration_items<number>::configuration_statistics >& item : batch)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item.serial));
-                check_stmt(db, sqlite3_bind_int64(stmt, integration_time_id, item.integration));
-                check_stmt(db, sqlite3_bind_int64(stmt, batch_time_id, item.batching));
-                check_stmt(db, sqlite3_bind_int(stmt, steps_id, item.steps));
-		            check_stmt(db, sqlite3_bind_int(stmt, refinements_id, item.refinements));
+                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->serial));
+                check_stmt(db, sqlite3_bind_int64(stmt, integration_time_id, item->integration));
+                check_stmt(db, sqlite3_bind_int64(stmt, batch_time_id, item->batching));
+                check_stmt(db, sqlite3_bind_int(stmt, steps_id, item->steps));
+		            check_stmt(db, sqlite3_bind_int(stmt, refinements_id, item->refinements));
 		            check_stmt(db, sqlite3_bind_int(stmt, workgroup_id, batcher->get_worker_group()));
                 check_stmt(db, sqlite3_bind_int(stmt, worker_id, batcher->get_worker_number()));
 
@@ -133,7 +133,7 @@ namespace transport
 
 
         template <typename number, typename ValueType>
-        void write_coordinate_output(transaction_manager& mgr, integration_batcher<number>* batcher, const std::vector<ValueType>& batch)
+        void write_coordinate_output(transaction_manager& mgr, integration_batcher<number>* batcher, const std::vector< std::unique_ptr<ValueType> >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -177,25 +177,25 @@ namespace transport
                 coord_ids[i] = sqlite3_bind_parameter_index(stmt, coord_names[i].c_str());
               }
 
-            for(const ValueType& item : batch)
+            for(const std::unique_ptr<ValueType>& item : batch)
               {
                 for(unsigned int page = 0; page < num_pages; ++page)
 	                {
 
-                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item.get_unique(page)));
-                    check_stmt(db, sqlite3_bind_int(stmt, serial_id, item.get_serial()));
+                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page)));
+                    check_stmt(db, sqlite3_bind_int(stmt, serial_id, item->get_serial()));
 		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));
 
 		                if(data_traits<number, ValueType>::has_texit)
                       {
                         const int texit_id = sqlite3_bind_parameter_index(stmt, "@t_exit");
-                        check_stmt(db, sqlite3_bind_double(stmt, texit_id, item.get_texit()));
+                        check_stmt(db, sqlite3_bind_double(stmt, texit_id, item->get_texit()));
                       }
 
 		                for(unsigned int i = 0; i < num_cols; ++i)
 			                {
 				                unsigned int index = page*num_cols + i;
-				                number       value = index < 2*Nfields ? item.coords[index] : 0.0;
+				                number       value = index < 2*Nfields ? item->coords[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, coord_ids[i], static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -212,7 +212,7 @@ namespace transport
 
 
 		    template <typename number, typename BatcherType, typename ValueType>
-		    void write_paged_output(transaction_manager& mgr, BatcherType* batcher, const std::vector<ValueType>& batch)
+		    void write_paged_output(transaction_manager& mgr, BatcherType* batcher, const std::vector< std::unique_ptr<ValueType> >& batch)
 			    {
 				    sqlite3* db = nullptr;
 				    batcher->get_manager_handle(&db);
@@ -255,19 +255,19 @@ namespace transport
                 ele_ids[i] = sqlite3_bind_parameter_index(stmt, ele_names[i].c_str());
               }
 
-            for(const ValueType& item : batch)
+            for(const std::unique_ptr<ValueType>& item : batch)
 			        {
 		            for(unsigned int page = 0; page < num_pages; ++page)
 			            {
-                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item.get_unique(page)));
-		                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item.time_serial));
-		                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item.kconfig_serial));
+                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page)));
+		                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));
 
 		                for(unsigned int i = 0; i < num_cols; ++i)
 			                {
 		                    unsigned int index = page*num_cols + i;
-		                    number       value = index < num_elements ? item.elements[index] : 0.0;
+		                    number       value = index < num_elements ? item->elements[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, ele_ids[i], static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -285,7 +285,7 @@ namespace transport
 
         // Write a batch of unpaged values
         template <typename number, typename BatcherType, typename ValueType >
-        void write_unpaged(transaction_manager& mgr, BatcherType* batcher, const std::vector<ValueType>& batch)
+        void write_unpaged(transaction_manager& mgr, BatcherType* batcher, const std::vector< std::unique_ptr<ValueType> >& batch)
 	        {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -307,15 +307,15 @@ namespace transport
             const int column_id  = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::column_name()).c_str());
             const int redbsp_id  = data_traits<number, ValueType>::has_redbsp ? sqlite3_bind_parameter_index(stmt, "@redbsp") : 0;
 
-            for(const ValueType& item : batch)
+            for(const std::unique_ptr<ValueType>& item : batch)
 	            {
-                check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item.get_unique()));
-                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item.time_serial));
-                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item.kconfig_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, column_id, static_cast<double>(item.value)));
+                check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique()));
+                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, column_id, static_cast<double>(item->value)));
                 if(data_traits<number, ValueType>::has_redbsp)
                   {
-                    check_stmt(db, sqlite3_bind_double(stmt, redbsp_id, static_cast<double>(item.redbsp)));
+                    check_stmt(db, sqlite3_bind_double(stmt, redbsp_id, static_cast<double>(item->redbsp)));
                   }
 
                 check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
@@ -334,8 +334,7 @@ namespace transport
 		    // For that purpose we use COALESCE.
         template <typename number>
         void write_fNL(transaction_manager& mgr, postintegration_batcher<number>* batcher,
-                       const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >& batch,
-                       derived_data::bispectrum_template type)
+                       const typename postintegration_items<number>::fNL_cache& batch, derived_data::bispectrum_template type)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -362,12 +361,12 @@ namespace transport
             const int BT_id      = sqlite3_bind_parameter_index(stmt, "@BT");
             const int TT_id      = sqlite3_bind_parameter_index(stmt, "@TT");
 
-            for(const typename postintegration_items<number>::fNL_item& item : batch)
+            for(const typename postintegration_items<number>::fNL_cache::value_type& item : batch)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item.time_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, BB_id, static_cast<double>(item.BB)));
-                check_stmt(db, sqlite3_bind_double(stmt, BT_id, static_cast<double>(item.BT)));
-                check_stmt(db, sqlite3_bind_double(stmt, TT_id, static_cast<double>(item.TT)));
+                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, BB_id, static_cast<double>(item->BB)));
+                check_stmt(db, sqlite3_bind_double(stmt, BT_id, static_cast<double>(item->BT)));
+                check_stmt(db, sqlite3_bind_double(stmt, TT_id, static_cast<double>(item->TT)));
 
                 check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
 
