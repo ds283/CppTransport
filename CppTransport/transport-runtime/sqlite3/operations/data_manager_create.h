@@ -235,12 +235,16 @@ namespace transport
 		            switch(type)
 			            {
 		                case kconfiguration_type::twopf_configs:
-			                create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
-		                  break;
+                      {
+                        create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
+                        break;
+                      }
 
 		                case kconfiguration_type::threepf_configs:
-			                create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
-		                  break;
+                      {
+                        create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
+                        break;
+                      }
 			            }
 		            create_stmt << "(serial)";
 
@@ -278,12 +282,16 @@ namespace transport
 		            switch(type)
 			            {
 		                case kconfiguration_type::twopf_configs:
-			                create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
-		                  break;
+                      {
+                        create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
+                        break;
+                      }
 
 		                case kconfiguration_type::threepf_configs:
-			                create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
-		                  break;
+                      {
+                        create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
+                        break;
+                      }
 			            }
 		            create_stmt << "(serial)";
 			        }
