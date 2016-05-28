@@ -59,7 +59,10 @@ namespace transport
               public:
                 bool operator()(const std::unique_ptr<ValueType>& A, const std::unique_ptr<ValueType>& B)
                   {
-                    return A->get_unique(0) < B->get_unique(0);
+                    // detect kconfig_serial and time_serial ordering by pretending to be page 0 of a 1 page group
+                    // because rows are ordered by page in multipage groups, this will get all rows in
+                    // ascending primary key order
+                    return A->get_unique(0,1) < B->get_unique(0,1);
                   }
               };
 
@@ -228,7 +231,7 @@ namespace transport
                 for(unsigned int page = 0; page < num_pages; ++page)
 	                {
 
-                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page)));
+                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page, num_pages)));
                     check_stmt(db, sqlite3_bind_int(stmt, serial_id, item->get_serial()));
 		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));
 
@@ -309,7 +312,7 @@ namespace transport
 			        {
 		            for(unsigned int page = 0; page < num_pages; ++page)
 			            {
-                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page)));
+                    check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page, num_pages)));
 		                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));

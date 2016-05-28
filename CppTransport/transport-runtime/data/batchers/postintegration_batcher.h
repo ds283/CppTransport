@@ -55,6 +55,9 @@ namespace transport
         //! Transaction factory
         typedef std::function<transaction_manager(postintegration_batcher<number>*)> transaction_factory;
 
+        // Write functions don't take const referefences for each cache because the cache is sorted in-place
+        // This sort step is important -- it dramatically improves SQLite performance
+
 		    //! Zeta 2pf writer function
 		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)> zeta_twopf_writer;
 

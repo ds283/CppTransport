@@ -61,6 +61,9 @@ namespace transport
         //! Transaction factory
         typedef std::function<transaction_manager(integration_batcher<number>*)> transaction_factory;
 
+        // Write functions don't take const referefences for each cache because the cache is sorted in-place
+        // This sort step is important -- it dramatically improves SQLite performance
+
 		    //! Background writer function
 		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::backg_item> >&)> backg_writer;
 

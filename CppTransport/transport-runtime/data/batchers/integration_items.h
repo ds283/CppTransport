@@ -58,7 +58,7 @@ namespace transport
               }
 
             //! make unique identifier
-            unsigned long int get_unique(unsigned int page) const { return(page*time_items + time_serial); }
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(time_serial*pages + page); }
 
             //! time serial number for this configuration
             unsigned int time_serial;
@@ -96,7 +96,7 @@ namespace transport
               }
 
             //! make unique identifier
-            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
             unsigned int time_serial;
@@ -135,7 +135,7 @@ namespace transport
               }
 
             //! make unique identifier
-            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
             unsigned int time_serial;
@@ -173,7 +173,7 @@ namespace transport
               }
 
             //! make unique identifier
-            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
             unsigned int time_serial;
@@ -211,7 +211,7 @@ namespace transport
               }
 
             //! make unique identifier
-            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
             unsigned int time_serial;
@@ -249,7 +249,7 @@ namespace transport
               }
 
             //! make unique identifier
-            unsigned long int get_unique(unsigned int page) const { return(page*time_items*kconfig_items + kconfig_serial*time_items + time_serial); }
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
             unsigned int time_serial;
@@ -316,7 +316,7 @@ namespace transport
               }
 
             //! make unique identifier
-            unsigned long int get_unique(unsigned int page) const { return(page*kconfig_items + source_serial); }
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(source_serial*pages + page); }
 
             //! number of kconfiguration serial numbers in job
             unsigned int kconfig_items;
@@ -348,7 +348,7 @@ namespace transport
               }
 
             //! make unique identifier
-            unsigned long int get_unique(unsigned int page) const { return(page*kconfig_items + source_serial); }
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(source_serial*pages + page); }
 
             //! cache unique identifier
             unsigned int unique_id;
