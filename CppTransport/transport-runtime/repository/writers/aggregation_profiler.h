@@ -111,11 +111,12 @@ namespace transport
           };
 
 
-        std::string format(const boost::optional<aggregation_table_data>& v)
+        constexpr boost::timer::nanosecond_type second = 1E9;
+        std::string format(const boost::optional<aggregation_table_data>& v, boost::timer::nanosecond_type normalization=second)
           {
             if(v)
               {
-                return format_number(static_cast<double>(v->time)/1E9, 6) + "," + boost::lexical_cast<std::string>(v->rows);
+                return format_number(static_cast<double>(v->time) / normalization, 6) + "," + boost::lexical_cast<std::string>(v->rows);
               }
             else
               {
@@ -124,11 +125,11 @@ namespace transport
           }
 
 
-        std::string format(const boost::optional<boost::timer::nanosecond_type>& v)
+        std::string format(const boost::optional<boost::timer::nanosecond_type>& v, boost::timer::nanosecond_type normalization=second)
           {
             if(v)
               {
-                return format_number(static_cast<double>(*v)/1E9);
+                return format_number(static_cast<double>(*v) / normalization, 6);
               }
             else
               {
@@ -137,11 +138,27 @@ namespace transport
           }
 
 
-        std::string format(const boost::optional<boost::uintmax_t>& v)
+        constexpr boost::uintmax_t megabyte = 1024*1024;
+        std::string format(const boost::optional<boost::uintmax_t>& v, boost::uintmax_t normalization=megabyte)
           {
             if(v)
               {
-                return boost::lexical_cast<std::string>(*v);
+                return format_number(static_cast<double>(*v) / normalization, 6);
+              }
+            else
+              {
+                return "NaN";
+              }
+          }
+
+
+        std::string format(size_t rows, const boost::optional<boost::timer::nanosecond_type>& time, boost::timer::nanosecond_type normalization=second)
+          {
+            if(time)
+              {
+                double seconds = static_cast<double>(*time) / normalization;
+                double rows_sec = static_cast<double>(rows) / seconds;
+                return format_number(rows_sec, 6);
               }
             else
               {
@@ -153,7 +170,7 @@ namespace transport
         template <enum aggregation_profile_record_type type>
         void write_headings(std::ofstream& out)
           {
-            const std::array< std::string, 5 > basic_headings = { "ctr_size", "temp_size", "attach", "detach", "total" };
+            const std::array< std::string, 6 > basic_headings = { "ctr_size_Mb", "temp_size_Mb", "attach", "detach", "total", "inserts_sec" };
             const auto type_headings = aggregation_profiler_impl::record_traits<type>().get_headings();
 
             unsigned int count = 0;
@@ -183,6 +200,7 @@ namespace transport
 
       public:
         virtual aggregation_profile_record_type get_type() const = 0;
+        virtual size_t get_rows() const = 0;
         virtual void write_row(std::ofstream& out) const;
         void stop();
 
@@ -220,11 +238,13 @@ namespace transport
 
     void aggregation_profile_record::write_row(std::ofstream& out) const
       {
-        out << aggregation_profiler_impl::format(this->container_size)
-            << "," << aggregation_profiler_impl::format(this->temporary_size)
-            << "," << aggregation_profiler_impl::format(this->attach_time)
-            << "," << aggregation_profiler_impl::format(this->detach_time)
-            << "," << aggregation_profiler_impl::format(this->total_time);
+        out << aggregation_profiler_impl::format(this->container_size)            // will be formatted in Mb
+            << "," << aggregation_profiler_impl::format(this->temporary_size)     // will be formatted in Mb
+            << "," << aggregation_profiler_impl::format(this->attach_time)        // will be formatted in seconds
+            << "," << aggregation_profiler_impl::format(this->detach_time)        // will be formatted in seconds
+            << "," << aggregation_profiler_impl::format(this->total_time)         // will be formatted in seconds
+            << "," << aggregation_profiler_impl::format(this->get_rows(), this->total_time);
+
         // newline must be supplied by implementations
       }
 
@@ -239,6 +259,7 @@ namespace transport
 
       public:
         aggregation_profile_record_type get_type() const override { return aggregation_profile_record_type::twopf; }
+        size_t get_rows() const override;
         void write_row(std::ofstream& out) const override;
 
       public:
@@ -264,6 +285,20 @@ namespace transport
       }
 
 
+    size_t twopf_aggregation_profile_record::get_rows() const
+      {
+        size_t rows = 0;
+        if(this->backg) rows += this->backg->rows;
+        if(this->twopf_re) rows += this->twopf_re->rows;
+        if(this->tensor_twopf) rows += this->tensor_twopf->rows;
+        if(this->statistics) rows += this->statistics->rows;
+        if(this->ics) rows += this->ics->rows;
+        if(this->workers) rows += this->workers->rows;
+
+        return rows;
+      }
+
+
     class threepf_aggregation_profile_record: public aggregation_profile_record
       {
       public:
@@ -274,6 +309,7 @@ namespace transport
 
       public:
         aggregation_profile_record_type get_type() const override { return aggregation_profile_record_type::threepf; }
+        size_t get_rows() const override;
         void write_row(std::ofstream& out) const override;
 
       public:
@@ -307,6 +343,24 @@ namespace transport
       }
 
 
+    size_t threepf_aggregation_profile_record::get_rows() const
+      {
+        size_t rows = 0;
+        if(this->backg) rows += this->backg->rows;
+        if(this->twopf_re) rows += this->twopf_re->rows;
+        if(this->twopf_im) rows += this->twopf_im->rows;
+        if(this->threepf_momentum) rows += this->threepf_momentum->rows;
+        if(this->threepf_Nderiv) rows += this->threepf_Nderiv->rows;
+        if(this->tensor_twopf) rows += this->tensor_twopf->rows;
+        if(this->statistics) rows += this->statistics->rows;
+        if(this->ics) rows += this->ics->rows;
+        if(this->ics_kt) rows += this->ics_kt->rows;
+        if(this->workers) rows += this->workers->rows;
+
+        return rows;
+      }
+
+
     class zeta_twopf_aggregation_profile_record: public aggregation_profile_record
       {
       public:
@@ -317,6 +371,7 @@ namespace transport
 
       public:
         aggregation_profile_record_type get_type() const override { return aggregation_profile_record_type::zeta_twopf; }
+        size_t get_rows() const override;
         void write_row(std::ofstream& out) const override;
 
       public:
@@ -334,6 +389,16 @@ namespace transport
       }
 
 
+    size_t zeta_twopf_aggregation_profile_record::get_rows() const
+      {
+        size_t rows = 0;
+        if(this->twopf) rows += this->twopf->rows;
+        if(this->gauge_xfm1) rows += this->gauge_xfm1->rows;
+
+        return rows;
+      }
+
+
     class zeta_threepf_aggregation_profile_record: public aggregation_profile_record
       {
       public:
@@ -344,6 +409,7 @@ namespace transport
 
       public:
         aggregation_profile_record_type get_type() const override { return aggregation_profile_record_type::zeta_threepf; }
+        size_t get_rows() const override;
         void write_row(std::ofstream& out) const override;
 
       public:
@@ -369,6 +435,20 @@ namespace transport
       }
 
 
+    size_t zeta_threepf_aggregation_profile_record::get_rows() const
+      {
+        size_t rows = 0;
+        if(this->twopf) rows += this->twopf->rows;
+        if(this->threepf) rows += this->threepf->rows;
+        if(this->gauge_xfm1) rows += this->gauge_xfm1->rows;
+        if(this->gauge_xfm2_123) rows += this->gauge_xfm2_123->rows;
+        if(this->gauge_xfm2_213) rows += this->gauge_xfm2_213->rows;
+        if(this->gauge_xfm2_312) rows += this->gauge_xfm2_312->rows;
+
+        return rows;
+      }
+
+
     class fNL_aggregation_profile_record: public aggregation_profile_record
       {
       public:
@@ -379,6 +459,7 @@ namespace transport
 
       public:
         aggregation_profile_record_type get_type() const override { return aggregation_profile_record_type::fNL; }
+        size_t get_rows() const override;
         void write_row(std::ofstream& out) const override;
 
       public:
@@ -391,6 +472,15 @@ namespace transport
         this->aggregation_profile_record::write_row(out);
         out << "," << aggregation_profiler_impl::format(this->fNL)
             << '\n';
+      }
+
+
+    size_t fNL_aggregation_profile_record::get_rows() const
+      {
+        size_t rows = 0;
+        if(this->fNL) rows += this->fNL->rows;
+
+        return rows;
       }
 
 
