@@ -111,6 +111,7 @@ namespace transport
             static const std::string sqlite_unique_column()  { return("unique_id"); }
 				    static const std::string sqlite_serial_column()  { return("kserial"); }
 				    static const bool has_texit = true;
+            static const bool requires_primary_key = false;
 			    };
 
 
@@ -122,6 +123,7 @@ namespace transport
             static const std::string sqlite_unique_column()  { return("unique_id"); }
 		        static const std::string sqlite_serial_column()  { return("kserial"); }
 				    static const bool has_texit = true;
+            static const bool requires_primary_key = false;
 			    };
 
 
@@ -133,6 +135,7 @@ namespace transport
             static const std::string sqlite_unique_column()  { return("unique_id"); }
 				    static const std::string sqlite_serial_column()  { return("tserial"); }
 						static const bool has_texit = false;
+            static const bool requires_primary_key = true;
 					};
 
 

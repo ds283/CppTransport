@@ -196,7 +196,8 @@ namespace transport
             std::ostringstream insert_stmt;
             insert_stmt
 	            << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
-	            << " VALUES (@" << data_traits<number, ValueType>::sqlite_unique_column() << ", @" << data_traits<number, ValueType>::sqlite_serial_column() << ", @page";
+	            << " VALUES (@" << data_traits<number, ValueType>::sqlite_unique_column()
+              << ", @" << data_traits<number, ValueType>::sqlite_serial_column() << ", @page";
 
 		        if(data_traits<number, ValueType>::has_texit) insert_stmt << ", @t_exit";
 
@@ -222,16 +223,29 @@ namespace transport
                 coord_ids[i] = sqlite3_bind_parameter_index(stmt, coord_names[i].c_str());
               }
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
             // sort batch into ascending primary key order;
             // sorting is done in-place for performance
             std::sort(batch.begin(), batch.end(), data_manager_write_impl::PagedPrimaryKeyCompare<ValueType>());
+#else
+            if(data_traits<number, ValueType>::requires_primary_key)
+              {
+                std::sort(batch.begin(), batch.end(), data_manager_write_impl::PagedPrimaryKeyCompare<ValueType>());
+              }
+#endif
 
             for(const std::unique_ptr<ValueType>& item : batch)
               {
                 for(unsigned int page = 0; page < num_pages; ++page)
 	                {
-
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
                     check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page, num_pages)));
+#else
+                    if(data_traits<number, ValueType>::requires_primary_key)
+                      {
+                        check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page, num_pages)));
+                      }
+#endif
                     check_stmt(db, sqlite3_bind_int(stmt, serial_id, item->get_serial()));
 		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));
 
@@ -304,15 +318,19 @@ namespace transport
                 ele_ids[i] = sqlite3_bind_parameter_index(stmt, ele_names[i].c_str());
               }
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
             // sort batch into ascending primary key order;
             // sorting is done in-place for performance
             std::sort(batch.begin(), batch.end(), data_manager_write_impl::PagedPrimaryKeyCompare<ValueType>());
+#endif
 
             for(const std::unique_ptr<ValueType>& item : batch)
 			        {
 		            for(unsigned int page = 0; page < num_pages; ++page)
 			            {
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
                     check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique(page, num_pages)));
+#endif
 		                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));
@@ -360,13 +378,17 @@ namespace transport
             const int column_id  = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::column_name()).c_str());
             const int redbsp_id  = data_traits<number, ValueType>::has_redbsp ? sqlite3_bind_parameter_index(stmt, "@redbsp") : 0;
 
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
             // sort batch into ascending primary key order;
             // sorting is done in-place for performance
             std::sort(batch.begin(), batch.end(), data_manager_write_impl::UnpagedPrimaryKeyCompare<ValueType>());
+#endif
 
             for(const std::unique_ptr<ValueType>& item : batch)
 	            {
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
                 check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique()));
+#endif
                 check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
                 check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
                 check_stmt(db, sqlite3_bind_double(stmt, column_id, static_cast<double>(item->value)));

@@ -41,7 +41,7 @@
 // enable to force strict checks on referential integrity
 // in the database.
 // Not enabled by default because it is much slower
-// #define CPPTRANSPORT_STRICT_CONSISTENCY
+//#define CPPTRANSPORT_STRICT_CONSISTENCY
 
 
 #include "transport-runtime/messages.h"

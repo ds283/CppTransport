@@ -258,7 +258,8 @@ namespace transport
 
 		    // Create table for initial conditions, if they are being collected
 				template <typename number, typename ValueType>
-		    void create_ics_table(transaction_manager& mgr, sqlite3* db, unsigned int Nfields, foreign_keys_type keys=foreign_keys_type::no_foreign_keys,
+		    void create_ics_table(transaction_manager& mgr, sqlite3* db, unsigned int Nfields,
+                              foreign_keys_type keys=foreign_keys_type::no_foreign_keys,
 		                          kconfiguration_type type= kconfiguration_type::twopf_configs)
 			    {
 		        unsigned int num_cols = std::min(2*Nfields, max_columns);
@@ -266,7 +267,7 @@ namespace transport
 		        std::ostringstream create_stmt;
 		        create_stmt
 			        << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
-              << "unique_id INTEGER PRIMARY KEY"
+              << "unique_id INTEGER, "
 			        << "kserial   INTEGER, "
 			        << "page      INTEGER, "
 			        << "t_exit    DOUBLE";
@@ -275,6 +276,10 @@ namespace transport
 			        {
 		            create_stmt << ", coord" << i << " DOUBLE";
 			        }
+
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            create_stmt << ", PRIMARY KEY(unique_id)";
+#endif
 
 		        if(keys == foreign_keys_type::foreign_keys)
 			        {
@@ -311,7 +316,7 @@ namespace transport
 		        std::ostringstream create_stmt;
 		        create_stmt
 			        << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
-              << "unique_id INTEGER PRIMARY KEY, "
+              << "unique_id INTEGER PRIMARY KEY, "      // background always needs a PRIMARY KEY so we can avoid duplicate entries (using INSERT OR IGNORE)
 			        << "tserial   INTEGER, "
 			        << "page      INTEGER";
 
@@ -338,7 +343,7 @@ namespace transport
             std::ostringstream create_stmt;
             create_stmt
               << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
-              << "unique_id INTEGER PRIMARY KEY, "
+              << "unique_id INTEGER, "
               << "tserial   INTEGER, "
               << "kserial   INTEGER, "
               << "page      INTEGER";
@@ -347,6 +352,10 @@ namespace transport
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
+
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            create_stmt << ", PRIMARY KEY(unique_id)";
+#endif
 
             if(keys == foreign_keys_type::foreign_keys)
               {
@@ -381,12 +390,16 @@ namespace transport
 		        std::ostringstream create_stmt;
 		        create_stmt
 			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << "("
-              << "unique_id INTEGER PRIMARY KEY, "
+              << "unique_id INTEGER, "
 			        << "tserial   INTEGER, "
 			        << "kserial   INTEGER, "
 			        << "twopf     DOUBLE";
 
-		        if(keys == foreign_keys_type::foreign_keys)
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            create_stmt << ", PRIMARY KEY(unique_id)";
+#endif
+
+            if(keys == foreign_keys_type::foreign_keys)
 			        {
 		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
 			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
@@ -403,13 +416,17 @@ namespace transport
 		        std::ostringstream create_stmt;
 		        create_stmt
 			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << "("
-              << "unique_id INTEGER PRIMARY KEY, "
+              << "unique_id INTEGER, "
 			        << "tserial   INTEGER, "
 			        << "kserial   INTEGER, "
 			        << "threepf   DOUBLE, "
               << "redbsp    DOUBLE";
 
-		        if(keys == foreign_keys_type::foreign_keys)
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            create_stmt << ", PRIMARY KEY(unique_id)";
+#endif
+
+            if(keys == foreign_keys_type::foreign_keys)
 			        {
 		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
 			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
@@ -426,7 +443,7 @@ namespace transport
 		        std::ostringstream create_stmt;
 		        create_stmt
 			        << "CREATE TABLE " << fNL_table_name(type) << "("
-			        << "tserial INTEGER PRIMARY KEY, "
+			        << "tserial INTEGER PRIMARY KEY, "      // fNL table always needs a PRIMARY KEY so we can aggregate values correctly
               << "BB      DOUBLE, "
 			        << "BT      DOUBLE, "
 			        << "TT      DOUBLE";
