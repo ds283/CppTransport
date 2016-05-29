@@ -322,12 +322,14 @@ namespace transport
             unsigned int kconfig_items;
 
 				    //! kconfig serial number
-				    unsigned int        source_serial;
-				    unsigned int        get_serial() const { return(this->source_serial); }
+            unsigned int source_serial;
+
+            unsigned int get_serial() const { return (this->source_serial); }
 
 				    //! time of horizon exit
-				    double              texit;
-				    double              get_texit() const { return(this->texit); }
+            double texit;
+            
+            double get_texit() const { return (this->texit); }
 
 		        //! values
 		        std::vector<number> coords;
@@ -349,9 +351,6 @@ namespace transport
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(source_serial*pages + page); }
-
-            //! cache unique identifier
-            unsigned int unique_id;
 
             //! number of kconfiguration serial numbers in job
             unsigned int kconfig_items;
