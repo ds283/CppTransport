@@ -142,7 +142,8 @@ namespace transport
 
         boost::program_options::options_description plotting("Plot style", width);
         plotting.add_options()
-          (CPPTRANSPORT_PLOT_STYLE,              boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PLOT_STYLE);
+          (CPPTRANSPORT_SWITCH_PLOT_STYLE,        boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PLOT_STYLE)
+          (CPPTRANSPORT_SWITCH_MPL_BACKEND,       boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_MPL_BACKEND);
 
         boost::program_options::options_description journaling("Journaling options", width);
         journaling.add_options()
@@ -576,12 +577,23 @@ namespace transport
     void master_controller<number>::recognize_plot_switches(boost::program_options::variables_map& option_map)
       {
         // process plotting environment, if provided
-        if(option_map.count(CPPTRANSPORT_PLOT_STYLE_LONG))
+        if(option_map.count(CPPTRANSPORT_SWITCH_PLOT_STYLE_LONG))
           {
-            if(!this->arg_cache.set_plot_environment(option_map[CPPTRANSPORT_PLOT_STYLE_LONG].as<std::string>()))
+            if(!this->arg_cache.set_plot_environment(option_map[CPPTRANSPORT_SWITCH_PLOT_STYLE_LONG].as<std::string>()))
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_UNKNOWN_PLOT_STYLE << " '" << option_map[CPPTRANSPORT_PLOT_STYLE_LONG].as<std::string>() << "'";
+                msg << CPPTRANSPORT_UNKNOWN_PLOT_STYLE << " '" << option_map[CPPTRANSPORT_SWITCH_PLOT_STYLE_LONG].as<std::string>() << "'";
+                this->warn(msg.str());
+              }
+          }
+
+        // process Matplotlib environment, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_MPL_BACKEND))
+          {
+            if(!this->arg_cache.set_matplotlib_backend(option_map[CPPTRANSPORT_SWITCH_MPL_BACKEND].as<std::string>()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNKNOWN_MPL_BACKEND << " '" << option_map[CPPTRANSPORT_SWITCH_MPL_BACKEND].as<std::string>() << "'";
                 this->warn(msg.str());
               }
           }

@@ -38,6 +38,7 @@
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/list.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/algorithm/string.hpp"
 
 
 namespace transport
@@ -49,6 +50,15 @@ namespace transport
         matplotlib_ggplot,
         matplotlib_ticks,
         seaborn
+      };
+
+    enum class matplotlib_backend
+      {
+        unset,
+        Agg,
+        Cairo,
+        MacOSX,
+        PDF
       };
 
 
@@ -177,11 +187,16 @@ namespace transport
       public:
 
         //! Set plotting environment; returns true if environment was recognized or false if it was not
-        bool set_plot_environment(const std::string& e);
+        bool set_plot_environment(std::string e);
+
+        //! Set Matplotlib backend; returns true if backend was recognized or galse if it was not
+        bool set_matplotlib_backend(std::string e);
 
         //! Get plotting environment
-        plot_style get_plot_environment() const                   { return(this->plot_env); }
+        plot_style get_plot_environment() const { return this->plot_env; }
 
+        /// Get Matplotlib backend
+        matplotlib_backend get_matplotlib_backend() const { return this->mpl_backend; }
 
         // SEARCH PATHS
 
@@ -238,8 +253,11 @@ namespace transport
         //! checkpoint interval in seconds. Zero indicates that checkpointing is disabled
         unsigned int checkpoint_interval;
 
-        //! plotting environemtn
+        //! plotting environment
         plot_style plot_env;
+
+        //! Matplotlib backend
+        matplotlib_backend mpl_backend;
 
         //! search paths for assets, eg. jQuery, bootstrap ...
         //! have to use std::string internally since boost::filesystem::path won't serialize
@@ -266,6 +284,7 @@ namespace transport
             ar & pipe_capacity;
             ar & checkpoint_interval;
             ar & plot_env;
+            ar & mpl_backend;
             ar & search_paths;
           }
 
@@ -284,17 +303,33 @@ namespace transport
         batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
         pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),
         checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL),
-        plot_env(plot_style::raw_matplotlib)
+        plot_env(plot_style::raw_matplotlib),
+        mpl_backend(matplotlib_backend::unset)
 	    {
 	    }
 
 
-    bool argument_cache::set_plot_environment(const std::string& e)
+    bool argument_cache::set_plot_environment(std::string e)
       {
+        boost::algorithm::to_lower(e);
+
         if(e == "raw")          { this->plot_env = plot_style::raw_matplotlib; return true; }
         else if(e == "ggplot")  { this->plot_env = plot_style::matplotlib_ggplot; return true; }
         else if(e == "ticks")   { this->plot_env = plot_style::matplotlib_ticks; return true; }
         else if(e == "seaborn") { this->plot_env = plot_style::seaborn; return true; }
+
+        return false;
+      }
+
+
+    bool argument_cache::set_matplotlib_backend(std::string e)
+      {
+        boost::algorithm::to_lower(e);
+
+        if(e == "agg")         { this->mpl_backend = matplotlib_backend::Agg; return true; }
+        else if(e == "cairo")  { this->mpl_backend = matplotlib_backend::Cairo; return true; }
+        else if(e == "macosx") { this->mpl_backend = matplotlib_backend::MacOSX; return true; }
+        else if(e == "pdf")    { this->mpl_backend = matplotlib_backend::PDF; return true; }
 
         return false;
       }

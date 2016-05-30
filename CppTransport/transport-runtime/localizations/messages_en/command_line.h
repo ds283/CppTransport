@@ -99,9 +99,12 @@
 #define CPPTRANSPORT_SWITCH_NO_COLOR          "no-color"
 #define CPPTRANSPORT_HELP_NO_COLOR            "disable colourized output"
 
-#define CPPTRANSPORT_PLOT_STYLE               "plot-style,p"
-#define CPPTRANSPORT_PLOT_STYLE_LONG          "plot-style"
+#define CPPTRANSPORT_SWITCH_PLOT_STYLE        "plot-style,p"
+#define CPPTRANSPORT_SWITCH_PLOT_STYLE_LONG   "plot-style"
 #define CPPTRANSPORT_HELP_PLOT_STYLE          "set plotting style"
+
+#define CPPTRANSPORT_SWITCH_MPL_BACKEND       "mpl-backend"
+#define CPPTRANSPORT_HELP_MPL_BACKEND         "set Matplotlib backend"
 
 #define CPPTRANSPORT_SWITCH_STATUS            "status"
 #define CPPTRANSPORT_HELP_STATUS              "summarize current status of repository"
