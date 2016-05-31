@@ -56,8 +56,9 @@ namespace transport
             p_tasks_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << "("
               << "name   TEXT PRIMARY KEY, "
               << "parent TEXT, "
-              << "path   TEXT, "
-              << "FOREIGN KEY(parent) REFERENCES " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "(name));";
+              << "path   TEXT);";
+            // can't have foreign key constraints in this table, because parent task could be of integration or postintegration type
+//              << "FOREIGN KEY(parent) REFERENCES " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "(name));";
             exec(db, p_tasks_stmt.str());
 
             std::ostringstream o_tasks_stmt;

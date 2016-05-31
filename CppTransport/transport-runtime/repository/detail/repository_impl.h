@@ -111,14 +111,15 @@ namespace transport
 
     template <typename number>
     repository<number>::repository(const boost::filesystem::path path, model_manager <number>& f, repository_mode mode,
-                                   local_environment& ev, error_handler e, warning_handler w, message_handler m,
+                                   local_environment& ev, argument_cache& ar,
                                    package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf)
       : root_path(path.is_absolute() ? path : boost::filesystem::absolute(path)),
         access_mode(mode),
         env(ev),
-        error(e),
-        warning(w),
-        message(m),
+        args(ar),
+        error(error_handler(ev, ar)),
+        warning(warning_handler(ev, ar)),
+        message(message_handler(ev, ar)),
         m_finder(f),
         pkg_finder(pf),
         tk_finder(tf),

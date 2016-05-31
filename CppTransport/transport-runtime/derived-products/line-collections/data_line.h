@@ -214,7 +214,7 @@ namespace transport
 
 				                this->zip(a, d, data);
 			                }
-		                else throw xe;
+		                else throw;
 			            }
               }
           }

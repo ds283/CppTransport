@@ -25,8 +25,11 @@ ENDIF()
 
 IF(CLANG)
 
-  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast")
+  # suppress missing override warnings which are automatically enabled in recent
+  # versions of Clang. These produce a slew of warnings from GiNaC >= 1.7
+  # also suppress unknown attribute warnings which produce errors for GiNaC_deprecated
+  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -Wno-inconsistent-missing-override -Wno-unknown-attributes")
+  SET(CMAKE_C_FLAGS_RELEASE "-Ofast -Wno-inconsistent-missing-override -Wno-unknown-attributes")
 
 ELSEIF(GCC)
 

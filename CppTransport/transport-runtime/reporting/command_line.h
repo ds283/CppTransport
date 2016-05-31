@@ -124,13 +124,12 @@ namespace transport
           public:
 
             //! constructor
-            command_line(local_environment& e, argument_cache& c,
-                         error_handler eh, warning_handler wh, message_handler mh)
+            command_line(local_environment& e, argument_cache& c)
               : env(e),
                 arg_cache(c),
-                err(eh),
-                warn(wh),
-                msg(mh),
+                err(error_handler(e, c)),
+                warn(warning_handler(e, c)),
+                msg(message_handler(e, c)),
                 newline(false),
                 include_tasks(false),
                 include_inflight(false)

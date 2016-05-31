@@ -76,6 +76,7 @@
 
 #define CPPTRANSPORT_UNKNOWN_SWITCH                  "Ignored unknown command-line switch"
 #define CPPTRANSPORT_UNKNOWN_PLOT_STYLE              "Ignored unknown plot style"
+#define CPPTRANSPORT_UNKNOWN_MPL_BACKEND             "Ignored unknown Matplotlib backend"
 
 
 #define CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT  "Error processing derived product"

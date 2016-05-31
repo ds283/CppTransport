@@ -73,10 +73,9 @@ namespace transport
 
     template <typename number>
     std::unique_ptr<json_repository<number> > repository_factory(const std::string& path, model_manager<number>& finder,
-                                                                 repository_mode mode, local_environment& ev,
-                                                                 error_handler e, warning_handler w, message_handler m)
+                                                                 repository_mode mode, local_environment& ev, argument_cache& ar)
       {
-        return std::make_unique<repository_sqlite3<number> >(path, finder, mode, ev, e, w, m);
+        return std::make_unique<repository_sqlite3<number> >(path, finder, mode, ev, ar);
       }
 
   }   // namespace transport

@@ -27,8 +27,6 @@
 #define CPPTRANSPORT_DATA_MANAGER_DECL_H
 
 
-#include <transport-runtime/data/metadata.h>
-
 namespace transport
   {
 
@@ -43,10 +41,9 @@ namespace transport
       public:
 
         //! Create a data_manager instance with a nominated capacity per batcher
-        data_manager(unsigned int bcap, unsigned int dcap, unsigned int ckp)
-          : batcher_capacity(bcap),
-            pipe_capacity(dcap),
-            checkpoint_interval(ckp),
+        data_manager(local_environment& e, argument_cache& a)
+          : env(e),
+            args(a),
             transactions(0)
           {
           }
@@ -63,16 +60,12 @@ namespace transport
       public:
 
         //! Return the maximum memory available for batchers on this worker
-        size_t get_batcher_capacity() const { return (this->batcher_capacity); }
-
-        //! Set the maximum memory avilable for batchers on this worker
-        void set_batcher_capacity(size_t size) { this->batcher_capacity = size; }
+        //! note, argument_cache stores the capacity in bytes so no conversion is needed
+        size_t get_batcher_capacity() const { return this->args.get_batcher_capacity(); }
 
         //! Return the maximum memory available for data cache on this worker
-        size_t get_pipe_capacity() const { return (this->pipe_capacity); }
-
-        //! Set capacity available for data cache on this worker
-        void set_pipe_capacity(size_t size) { this->pipe_capacity = size; }
+        //! note, argument_cache stores the capacity in bytes so no conversion is needed
+        size_t get_pipe_capacity() const { return this->args.get_datapipe_capacity(); }
 
 
         // CHECKPOINTING ADMIN
@@ -80,10 +73,14 @@ namespace transport
       public:
 
         //! Return checkpointing interval, measured in seconds
-        unsigned int get_checkpoint_interval() const { return (this->checkpoint_interval); }
+        //! note, argument_cache stores the checkpoint interval in seconds so no conversion is needed
+        unsigned int get_checkpoint_interval() const { if(this->local_checkpoint) return *this->local_checkpoint; else return this->args.get_checkpoint_interval(); }
 
-        //! Set checkpointing interval in seconds. Setting a value of 0 disables checkpointing
-        void set_checkpoint_interval(unsigned int interval) { this->checkpoint_interval = interval; }
+        //! Set local checkpoint interval: overrides value from argument cache
+        void set_local_checkpoint_interval(unsigned int m) { this->local_checkpoint = m; }
+
+        //! Unset local checkpoint interval
+        void unset_local_checkpoint_interval() { this->local_checkpoint.reset(); }
 
 
         // TRANSACTIONS
@@ -194,19 +191,22 @@ namespace transport
                                                                       std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
-        virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+        virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(zeta_twopf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                            const boost::filesystem::path& logdir,
                                                                             unsigned int worker, model<number>* m,
                                                                             std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for zeta threepf data. Returns a batcher which can be used for writing to the container.
-        virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+        virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(zeta_threepf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                                const boost::filesystem::path& logdir,
                                                                                 unsigned int worker, model<number>* m,
                                                                                 std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
-        virtual fNL_batcher<number> create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                              unsigned int worker, model<number>* m,
-                                                              std::unique_ptr<container_dispatch_function> dispatcher, derived_data::bispectrum_template type) = 0;
+        virtual fNL_batcher<number> create_temp_fNL_container(fNL_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                              const boost::filesystem::path& logdir, unsigned int worker, model<number>* m,
+                                                              std::unique_ptr<container_dispatch_function> dispatcher,
+                                                              derived_data::bispectrum_template type) = 0;
 
 
         // INTEGRITY CHECK
@@ -501,14 +501,19 @@ namespace transport
 
       protected:
 
-        //! Capacity available for batchers
-        unsigned int batcher_capacity;
+        // RUNTIME AGENTS
 
-        //! Capacity available for data cache
-        unsigned int pipe_capacity;
+        //! local environment policy class
+        local_environment& env;
 
-        //! Checkpointing interval. 0 indicates that checkpointing is disabled
-        unsigned int checkpoint_interval;
+        //! argument policy class
+        argument_cache& args;
+
+
+        // CHECKPOINTING
+
+        //! optional local checkpoint value, overrides value taken from argument cache
+        boost::optional< unsigned int > local_checkpoint;
 
 
         // TRANSACTIONS

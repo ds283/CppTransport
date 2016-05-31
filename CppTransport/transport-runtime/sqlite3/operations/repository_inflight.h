@@ -193,7 +193,11 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@tempdir"), tempdir_path.string().c_str(), tempdir_path.string().length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@workgroup_number"), workgroup_number));
             check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@seeded"), static_cast<int>(is_seeded)));
-            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@seed_group"), seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
+            if(is_seeded)
+              {
+                // don't set seed_group field unless seeded; SQLite allows NULL to satisfy the foreign key constraint, but not an empty string
+                check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@seed_group"), seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
+              }
             check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@collect_stats"), static_cast<int>(is_collecting_stats)));
             check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@collect_ics"), static_cast<int>(is_collecting_ics)));
 
@@ -225,7 +229,11 @@ namespace transport
             check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@paired"), static_cast<int>(is_paired)));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@parent"), parent_group.c_str(), parent_group.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@seeded"), static_cast<int>(is_seeded)));
-            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@seed_group"), seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
+            if(is_seeded)
+              {
+                // don't set seed_group field unless seeded; SQLite allows NULL to satisfy the foreign key constraint, but not an empty string
+                check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@seed_group"), seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
+              }
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_POSTINTEGRATION_WRITER_FAIL, SQLITE_DONE);
 

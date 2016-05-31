@@ -55,7 +55,9 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@task"), task.c_str(), task.length(), SQLITE_STATIC));
 
-            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_DELETE_OUTPUT_FAIL, SQLITE_DONE);
+            std::ostringstream fail_msg;
+            fail_msg << CPPTRANSPORT_REPO_DELETE_OUTPUT_FAIL << " '" << name << "' " << CPPTRANSPORT_REPO_BACKEND_FAIL;
+            check_stmt(db, sqlite3_step(stmt), fail_msg.str(), SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));

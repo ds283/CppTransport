@@ -352,9 +352,9 @@ namespace transport
 	        {
 	        }
 
-        bool operator()(const Item& it)
+        bool operator()(const std::unique_ptr<Item>& it)
 	        {
-            return(it.source_serial == this->source_serial);
+            return(it->source_serial == this->source_serial);
 	        }
 
       private:

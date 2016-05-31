@@ -80,6 +80,42 @@ namespace transport
         if(!env.has_python()) return;
         if(!env.has_matplotlib()) return;
 
+        matplotlib_backend backend = this->args.get_matplotlib_backend();
+
+        switch(backend)
+          {
+            case matplotlib_backend::unset:
+              break;
+
+            case matplotlib_backend::Agg:
+              {
+                outf << "import matplotlib as mpl" << '\n';
+                outf << "mpl.use('Agg')" << '\n';
+                break;
+              }
+
+            case matplotlib_backend::Cairo:
+              {
+                outf << "import matplotlib as mpl" << '\n';
+                outf << "mpl.use('Cairo')" << '\n';
+                break;
+              }
+
+            case matplotlib_backend::MacOSX:
+              {
+                outf << "import matplotlib as mpl" << '\n';
+                outf << "mpl.use('MacOSX')" << '\n';
+                break;
+              }
+
+            case matplotlib_backend::PDF:
+              {
+                outf << "import matplotlib as mpl" << '\n';
+                outf << "mpl.use('PDF')" << '\n';
+                break;
+              }
+          }
+
         plot_style style = this->args.get_plot_environment();
 
         outf << "import matplotlib.pyplot as plt" << '\n';

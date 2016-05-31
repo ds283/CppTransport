@@ -64,7 +64,7 @@ namespace transport
 
         //! constructor
         json_repository(const boost::filesystem::path path, model_manager<number>& f, repository_mode type,
-                        local_environment& ev, error_handler e, warning_handler w, message_handler m,
+                        local_environment& ev, argument_cache& ar,
                         package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf);
 
         //! destructor is default
@@ -138,9 +138,9 @@ namespace transport
 
     template <typename number>
     json_repository<number>::json_repository(const boost::filesystem::path path, model_manager<number>& f, repository_mode type,
-                                             local_environment& ev, error_handler e, warning_handler w, message_handler m,
+                                             local_environment& ev, argument_cache& ar,
                                              package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf)
-	    : repository<number>(path, f, type, ev, e, w, m, pf, tf, dpf)
+	    : repository<number>(path, f, type, ev, ar, pf, tf, dpf)
 	    {
 	    }
 

@@ -865,6 +865,7 @@ set(TRANSPORT_RUNTIME_REPOSITORY_WRITERS_FILES
   transport-runtime/repository/writers/integration_writer.h
   transport-runtime/repository/writers/postintegration_writer.h
   transport-runtime/repository/writers/writers.h
+  transport-runtime/repository/writers/aggregation_profiler.h
   )
 
 set(TRANSPORT_RUNTIME_SCHEDULER_FILES

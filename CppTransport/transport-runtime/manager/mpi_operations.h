@@ -70,7 +70,8 @@ namespace transport
 		        const unsigned int NEW_WORK_ASSIGNMENT        = 92;
 		        const unsigned int NEW_WORK_ACKNOWLEDGMENT    = 93;
             const unsigned int REPORT_ERROR               = 94;
-            const unsigned int RESET_CHECKPOINT           = 95;
+            const unsigned int SET_LOCAL_CHECKPOINT       = 95;
+            const unsigned int UNSET_LOCAL_CHECKPOINT     = 96;
 		        const unsigned int END_OF_WORK                = 97;
 		        const unsigned int WORKER_CLOSE_DOWN          = 98;
             const unsigned int TERMINATE                  = 99;
@@ -334,21 +335,22 @@ namespace transport
                 data_ready_payload() = default;
 
                 //! Value constructor (used for sending messages)
-                data_ready_payload(const std::string& p)
-                : container_path(p),
+                data_ready_payload(const boost::filesystem::path& p)
+                : container_path(p.string()),
                   timestamp(boost::posix_time::second_clock::universal_time())
                   {
                   }
 
                 //! Get container path
-                const std::string&       get_container_path() const { return(this->container_path); }
+                const boost::filesystem::path  get_container_path() const { return(this->container_path); }
 
                 //! Get timestamp
-                boost::posix_time::ptime get_timestamp()      const { return(this->timestamp); }
+                boost::posix_time::ptime       get_timestamp()      const { return(this->timestamp); }
 
               private:
 
-                //! Path to container
+                //! Path to container; note serialized as a string because boost::filesystem::path serialization
+                //! isn't provided out-of-the-box
                 std::string container_path;
 
                 //! Timestamp

@@ -47,7 +47,9 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
-            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+            std::ostringstream fail_msg;
+            fail_msg << CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL << " '" << name << "' " << CPPTRANSPORT_REPO_BACKEND_FAIL;
+            check_stmt(db, sqlite3_step(stmt), fail_msg.str(), SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
@@ -56,7 +58,7 @@ namespace transport
 
         void store_integration_task(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& pkg)
           {
-            std::stringstream store_stmt;
+            std::ostringstream store_stmt;
             store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << " VALUES (@name, @package, @path)";
 
             sqlite3_stmt* stmt;
@@ -66,7 +68,9 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@package"), pkg.c_str(), pkg.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
-            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_TASK_FAIL, SQLITE_DONE);
+            std::ostringstream fail_msg;
+            fail_msg << CPPTRANSPORT_REPO_STORE_TASK_FAIL << " '" << name << "' " << CPPTRANSPORT_REPO_BACKEND_FAIL;
+            check_stmt(db, sqlite3_step(stmt), fail_msg.str(), SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
@@ -85,7 +89,9 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@parent"), parent.c_str(), parent.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
-            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_TASK_FAIL, SQLITE_DONE);
+            std::ostringstream fail_msg;
+            fail_msg << CPPTRANSPORT_REPO_STORE_TASK_FAIL << " '" << name << "' " << CPPTRANSPORT_REPO_BACKEND_FAIL;
+            check_stmt(db, sqlite3_step(stmt), fail_msg.str(), SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
@@ -103,7 +109,9 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
-            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_TASK_FAIL, SQLITE_DONE);
+            std::ostringstream fail_msg;
+            fail_msg << CPPTRANSPORT_REPO_STORE_TASK_FAIL << " '" << name << "' " << CPPTRANSPORT_REPO_BACKEND_FAIL;
+            check_stmt(db, sqlite3_step(stmt), fail_msg.str(), SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
@@ -121,7 +129,9 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
-            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PRODUCT_FAIL, SQLITE_DONE);
+            std::ostringstream fail_msg;
+            fail_msg << CPPTRANSPORT_REPO_STORE_PRODUCT_FAIL << " '" << name << "' " << CPPTRANSPORT_REPO_BACKEND_FAIL;
+            check_stmt(db, sqlite3_step(stmt), fail_msg.str(), SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
@@ -152,7 +162,9 @@ namespace transport
             std::string posix_time_string = boost::posix_time::to_iso_string(posix_time);
             check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@posix_time"), posix_time_string.c_str(), posix_time_string.length(), SQLITE_STATIC));
 
-            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_OUTPUT_FAIL, SQLITE_DONE);
+            std::ostringstream fail_msg;
+            fail_msg << CPPTRANSPORT_REPO_STORE_OUTPUT_FAIL << " '" << name << "' " << CPPTRANSPORT_REPO_BACKEND_FAIL;
+            check_stmt(db, sqlite3_step(stmt), fail_msg.str(), SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));

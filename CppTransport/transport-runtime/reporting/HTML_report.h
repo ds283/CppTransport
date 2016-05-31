@@ -58,13 +58,12 @@ namespace transport
           public:
 
             //! constructor
-            HTML_report(local_environment& e, argument_cache& c,
-                        error_handler eh, warning_handler wh, message_handler mh)
+            HTML_report(local_environment& e, argument_cache& c)
               : env(e),
                 arg_cache(c),
-                err(eh),
-                warn(wh),
-                msg(mh),
+                err(error_handler(e, c)),
+                warn(warning_handler(e, c)),
+                msg(message_handler(e, c)),
                 button_id(0),
                 misc_precision(CPPTRANSPORT_DEFAULT_HTML_MISC_PRECISION),
                 efolds_precision(CPPTRANSPORT_DEFAULT_HTML_EFOLDS_PRECISION),

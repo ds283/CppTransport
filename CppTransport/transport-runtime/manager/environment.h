@@ -130,6 +130,18 @@ namespace transport
         //! detect Matplotlib installation
         void detect_matplotlib();
 
+        //! detect whether base Matplotlib import works
+        void detect_matplotlib_base();
+
+        //! detect whether we need to specify a backend
+        void detect_matplotlib_needs_backend();
+
+        //! detect whether style sheets are available
+        void detect_matplotlib_stylesheets();
+
+        //! detect whether axes tick labels can be set
+        void detect_matplotlib_has_tick_labels();
+
         //! detect seaborn installation
         void detect_seaborn();
 
@@ -410,6 +422,18 @@ namespace transport
             return;
           }
 
+        this->detect_matplotlib_base();
+        this->matplotlib_cached = true;
+        if(!this->matplotlib_available) return;
+
+        this->detect_matplotlib_needs_backend();
+        this->detect_matplotlib_stylesheets();
+        this->detect_matplotlib_has_tick_labels();
+      }
+
+
+    void local_environment::detect_matplotlib_base()
+      {
         // get name of temporary file
         boost::filesystem::path temp_mpl = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 
@@ -418,34 +442,52 @@ namespace transport
         outf.close();
 
         this->matplotlib_available = this->execute_python(temp_mpl) == 0;
+      }
 
-        if(!this->matplotlib_available) return;
 
+    void local_environment::detect_matplotlib_needs_backend()
+      {
+        // get name of temporary file
+        boost::filesystem::path temp_mpl = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+
+        std::ofstream outf(temp_mpl.string(), std::ios_base::out | std::ios_base::trunc);
+        outf << "import matplotlib.pyplot as plt" << '\n';
+        outf << "plt.figure()" << '\n';
+        outf.close();
+
+        if(this->execute_python(temp_mpl) == 0) return;
+      }
+
+
+    void local_environment::detect_matplotlib_stylesheets()
+      {
         // get name of second temporary file
         boost::filesystem::path temp_sheets = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 
-        std::ofstream outf2(temp_sheets.string(), std::ios_base::out | std::ios_base::trunc);
-        outf2 << "import matplotlib.pyplot as plt" << '\n';
-        outf2 << "plt.style.use('ggplot')" << '\n';
-        outf2.close();
+        std::ofstream outf(temp_sheets.string(), std::ios_base::out | std::ios_base::trunc);
+        outf << "import matplotlib.pyplot as plt" << '\n';
+        outf << "plt.style.use('ggplot')" << '\n';
+        outf.close();
 
         this->matplotlib_style_sheets = this->execute_python(temp_sheets) == 0;
+      }
 
+
+    void local_environment::detect_matplotlib_has_tick_labels()
+      {
         // get name of third temporary file
         boost::filesystem::path temp_ticks = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 
-        std::ofstream outf3(temp_ticks.string(), std::ios_base::out | std::ios_base::trunc);
-        outf3 << "import matplotlib.pyplot as plt" << '\n';
-        outf3 << "plt.figure()" << '\n';
-        outf3 << "left = [ 0, 1, 2 ]" << '\n';
-        outf3 << "height = [ 1, 2, 3 ]" << '\n';
-        outf3 << "label = [ '1', '2', '3' ]" << '\n';
-        outf3 << "plt.bar(left, height, tick_label=label)" << '\n';
-        outf3.close();
+        std::ofstream outf(temp_ticks.string(), std::ios_base::out | std::ios_base::trunc);
+        outf << "import matplotlib.pyplot as plt" << '\n';
+        outf << "plt.figure()" << '\n';
+        outf << "left = [ 0, 1, 2 ]" << '\n';
+        outf << "height = [ 1, 2, 3 ]" << '\n';
+        outf << "label = [ '1', '2', '3' ]" << '\n';
+        outf << "plt.bar(left, height, tick_label=label)" << '\n';
+        outf.close();
 
         this->matplotlib_tick_label = this->execute_python(temp_ticks) == 0;
-
-        this->matplotlib_cached = true;
       }
 
 
