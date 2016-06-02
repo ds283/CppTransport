@@ -261,7 +261,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string());
+            return(std::string("\"\""));
           }
       }
 
@@ -275,7 +275,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string());
+            return(std::string("\"\""));
           }
       }
 
@@ -322,7 +322,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string());
+            return(std::string("{}"));
           }
       }
 
@@ -341,7 +341,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string());
+            return(std::string("{}"));
           }
       }
 
