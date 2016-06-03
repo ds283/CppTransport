@@ -302,8 +302,11 @@ namespace transport
 
                     gp->is_seeded = static_cast<bool>(sqlite3_column_int(stmt, 7));
 
-                    sqlite_str    = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
-                    gp->seed_group = std::string(sqlite_str);
+                    if(gp->is_seeded)   // seed_group column will be NULL if not seeded, so don't try to use it
+                      {
+                        sqlite_str    = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+                        if(sqlite_str != nullptr) gp->seed_group = std::string(sqlite_str);
+                      }
 
                     gp->is_collecting_stats = static_cast<bool>(sqlite3_column_int(stmt, 9));
                     gp->is_collecting_ics   = static_cast<bool>(sqlite3_column_int(stmt, 10));
@@ -357,8 +360,11 @@ namespace transport
 
                     gp->is_seeded = static_cast<bool>(sqlite3_column_int(stmt, 8));
 
-                    sqlite_str    = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 9));
-                    gp->seed_group = std::string(sqlite_str);
+                    if(gp->is_seeded)   // seed_group column will be NULL if not seeded, so don't try to use it
+                      {
+                        sqlite_str    = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+                        if(sqlite_str != nullptr) gp->seed_group = std::string(sqlite_str);
+                      }
 
                     groups.insert(std::make_pair(gp->content_group, std::move(gp)));
                   }
