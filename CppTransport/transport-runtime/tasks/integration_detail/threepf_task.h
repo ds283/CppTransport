@@ -299,8 +299,8 @@ namespace transport
 			        {
 		            double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
-		            twopf_kconfig_database::record_iterator rec;
-                if(!this->twopf_db->find(kmin, rec))
+		            twopf_kconfig_database::const_record_iterator rec = this->twopf_db->find(kmin);
+                if(rec == this->twopf_db->record_cend())
                   {
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << kmin;
@@ -380,24 +380,24 @@ namespace transport
             t->t_exit = task_impl::find_zero_of_spline(this->name, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_EXIT, sp, tol);
 
             // determine massless time from pre-computed massless times of corresponding twopf database
-            twopf_kconfig_database::record_iterator rec1;
-            if(!this->twopf_db->find(t->k1_conventional, rec1))
+            twopf_kconfig_database::const_record_iterator rec1 = this->twopf_db->find(t->k1_conventional);
+            if(rec1 == this->twopf_db->record_cend())
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k1_conventional;
                 throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
               }
 
-            twopf_kconfig_database::record_iterator rec2;
-            if(!this->twopf_db->find(t->k2_conventional, rec2))
+            twopf_kconfig_database::const_record_iterator rec2 = this->twopf_db->find(t->k2_conventional);
+            if(rec2 == this->twopf_db->record_cend())
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k2_conventional;
                 throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
               }
 
-            twopf_kconfig_database::record_iterator rec3;
-            if(!this->twopf_db->find(t->k3_conventional, rec3))
+            twopf_kconfig_database::const_record_iterator rec3 = this->twopf_db->find(t->k3_conventional);
+            if(rec3 == this->twopf_db->record_cend())
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k3_conventional;
@@ -482,9 +482,9 @@ namespace transport
 	                {
                     if(triangle(j, k, l, ks[j], ks[k], ks[l]))      // ask policy object whether this is a triangle
 	                    {
-                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
+                        boost::optional<threepf_kconfig_database::record_iterator> record = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
 
-                        if(!new_serial)  // configuration was not stored
+                        if(!record)  // storage policy declined to store this configuration
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }
@@ -612,10 +612,10 @@ namespace transport
 	                {
                     if(triangle(alphas[k], betas[l]))     // ask policy object to decide whether this is a triangle
 	                    {
-                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_alphabeta_record(
-                          *this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
+                        boost::optional<threepf_kconfig_database::record_iterator> record
+													= this->threepf_task<number>::threepf_db->add_alphabeta_record(*this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
 
-                        if(!new_serial)   // configuration was not stored
+                        if(!record)   // storage policy declined to store this configuration
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }

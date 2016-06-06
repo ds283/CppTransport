@@ -543,15 +543,18 @@ namespace transport
       public:
 
         //! Read the worker information table for a container
-        virtual worker_information_db read_worker_information(const boost::filesystem::path& ctr_path) const override;
+        virtual worker_information_db read_worker_information(const boost::filesystem::path& ctr_path) override;
 
         //! Read the timing table for a container (supposing one to be present)
-        virtual timing_db read_timing_information(const boost::filesystem::path& ctr_path) const override;
+        virtual timing_db read_timing_information(const boost::filesystem::path& ctr_path) override;
 
       protected:
 
         //! utility function to open a SQLite3 container
-        sqlite3* open_container(const boost::filesystem::path& ctr_path) const;
+        sqlite3* open_container(const boost::filesystem::path& ctr_path);
+
+        //! utility function to close a SQLite3 container
+        void close_container(sqlite3* db);
 
 
         // INTERNAL UTILITY FUNCTIONS

@@ -728,6 +728,8 @@ namespace transport
             throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
           }
 
+        sqlite3_extended_result_codes(db, 1);
+
 #ifdef CPPTRANSPORT_STRICT_CONSISTENCY
         sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 #else
@@ -2264,6 +2266,7 @@ namespace transport
               }
             throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
           }
+
         sqlite3_extended_result_codes(db, 1);
 
         // set performance-related options
@@ -2337,33 +2340,29 @@ namespace transport
 
 
     template <typename number>
-    worker_information_db data_manager_sqlite3<number>::read_worker_information(const boost::filesystem::path& ctr_path) const
+    worker_information_db data_manager_sqlite3<number>::read_worker_information(const boost::filesystem::path& ctr_path)
       {
         sqlite3* db = this->open_container(ctr_path);
-
         worker_information_db worker_db = sqlite3_operations::read_worker_table(db);
-
-        sqlite3_close(db);
+        this->close_container(db);
 
         return(std::move(worker_db));
       }
 
 
     template <typename number>
-    timing_db data_manager_sqlite3<number>::read_timing_information(const boost::filesystem::path& ctr_path) const
+    timing_db data_manager_sqlite3<number>::read_timing_information(const boost::filesystem::path& ctr_path)
       {
         sqlite3* db = this->open_container(ctr_path);
-
         timing_db timing_data = sqlite3_operations::read_statistics_table(db);
-
-        sqlite3_close(db);
+        this->close_container(db);
 
         return(std::move(timing_data));
       }
 
 
     template <typename number>
-    sqlite3* data_manager_sqlite3<number>::open_container(const boost::filesystem::path& ctr_path) const
+    sqlite3* data_manager_sqlite3<number>::open_container(const boost::filesystem::path& ctr_path)
       {
         if(!boost::filesystem::exists(ctr_path))
           {
@@ -2390,12 +2389,25 @@ namespace transport
               }
             throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
           }
+
         sqlite3_extended_result_codes(db, 1);
 
         // set performance-related options
         sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 
+        //
+        this->open_containers.push_back(db);
+
         return(db);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::close_container(sqlite3* db)
+      {
+        assert(db != nullptr);
+        sqlite3_close(db);
+        this->open_containers.remove(db);
       }
 
 

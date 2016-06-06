@@ -60,7 +60,9 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
-            // set performance-related options
+            sqlite3_extended_result_codes(db, 1);
+
+            // switch performance-related options to enforce maximum consistency
             sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
           }
       }
@@ -156,9 +158,10 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
-        // enable foreign key constraints
-        char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+        sqlite3_extended_result_codes(db, 1);
+
+        // switch performance-related options to enforce maximum consistency
+        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 
         sqlite3_operations::create_repository_tables(db);
       }
