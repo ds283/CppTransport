@@ -645,9 +645,9 @@ namespace transport
     template <typename number>
     double twopf_db_task<number>::get_earliest_recordable_time(double largest_conventional_k) const
       {
-        twopf_kconfig_database::record_iterator rec;
+        twopf_kconfig_database::const_record_iterator rec = this->twopf_db->find(largest_conventional_k);
 
-        if(!this->twopf_db->find(largest_conventional_k, rec))
+        if(rec == this->twopf_db->record_cend())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS << " " << largest_conventional_k;

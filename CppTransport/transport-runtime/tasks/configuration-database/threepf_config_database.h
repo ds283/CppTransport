@@ -244,18 +244,18 @@ namespace transport
 
         //! add record to the database -- specified by 'cubic mesh' of wavenumber on each leg
         template <typename StoragePolicy>
-        boost::optional<unsigned int> add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional,
-                                                        double k2_conventional, double k3_conventional, StoragePolicy policy);
+        boost::optional<threepf_kconfig_database::record_iterator> add_k1k2k3_record(twopf_kconfig_database& twopf_db,
+                                                                                     double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
 
         //! add record to the database -- specified by 'alpha-beta' mesh parametrization
         template <typename StoragePolicy>
-        boost::optional<unsigned int> add_alphabeta_record(twopf_kconfig_database& twopf_db, double kt_conventional,
-                                                           double alpha, double beta, StoragePolicy policy);
+        boost::optional<threepf_kconfig_database::record_iterator> add_alphabeta_record(twopf_kconfig_database& twopf_db,
+                                                                                        double kt_conventional, double alpha, double beta, StoragePolicy policy);
 
         //! add a record to the database -- directly specified;
         //! returns serial number of stored object
         template <typename StoragePolicy>
-        boost::optional<unsigned int> add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
+        boost::optional<threepf_kconfig_database::record_iterator> add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
 		    //! lookup record with a given serial number -- non const version
 		    record_iterator lookup(unsigned int serial);
@@ -484,9 +484,8 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<unsigned int> threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db,
-                                                                              double k1_conventional, double k2_conventional,
-                                                                              double k3_conventional, StoragePolicy policy)
+    boost::optional<threepf_kconfig_database::record_iterator> threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db,
+                                                                                                           double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -515,9 +514,8 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<unsigned int> threepf_kconfig_database::add_alphabeta_record(twopf_kconfig_database& twopf_db,
-                                                                                 double kt_conventional, double alpha,
-                                                                                 double beta, StoragePolicy policy)
+    boost::optional<threepf_kconfig_database::record_iterator> threepf_kconfig_database::add_alphabeta_record(twopf_kconfig_database& twopf_db,
+                                                                                                              double kt_conventional, double alpha, double beta, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -547,70 +545,108 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<unsigned int> threepf_kconfig_database::add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
+    boost::optional<threepf_kconfig_database::record_iterator> threepf_kconfig_database::add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
       {
         // populate serial numbers in configuration record before
         // passing to storage policy
         config.serial = this->serial++;
 
-        bool k1_stored;
-        bool k2_stored;
-        bool k3_stored;
+        bool k1_new_insert = false;
+        bool k2_new_insert = false;
+        bool k3_new_insert = false;
 
         // perform reverse-lookup to find whether twopf kconfig database records already exist for these k_i
-        twopf_kconfig_database::record_iterator rec;
-        k1_stored = twopf_db.find(config.k1_conventional, rec);
-        if(k1_stored) config.k1_serial = (*rec)->serial;
-        else          config.k1_serial = twopf_db.add_record(config.k1_conventional);
+        twopf_kconfig_database::record_iterator k1_rec = twopf_db.find(config.k1_conventional);
+        if(k1_rec != twopf_db.record_end())
+          {
+            config.k1_serial = (*k1_rec)->serial;
+          }
+        else
+          {
+            k1_rec = twopf_db.add_record(config.k1_conventional);
+            k1_new_insert = true;
+            config.k1_serial = (*k1_rec)->serial;
+          }
 
-        k2_stored = twopf_db.find(config.k2_conventional, rec);
-        if(k2_stored) config.k2_serial = (*rec)->serial;
-        else          config.k2_serial = twopf_db.add_record(config.k2_conventional);
+        twopf_kconfig_database::record_iterator k2_rec = twopf_db.find(config.k2_conventional);
+        if(k2_rec != twopf_db.record_end())
+          {
+            config.k2_serial = (*k2_rec)->serial;
+          }
+        else
+          {
+            k2_rec = twopf_db.add_record(config.k2_conventional);
+            k2_new_insert = true;
+            config.k2_serial = (*k2_rec)->serial;
+          }
 
-        k3_stored = twopf_db.find(config.k3_conventional, rec);
-        if(k3_stored) config.k3_serial = (*rec)->serial;
-        else          config.k3_serial = twopf_db.add_record(config.k3_conventional);
+        twopf_kconfig_database::record_iterator k3_rec = twopf_db.find(config.k3_conventional);
+        if(k3_rec != twopf_db.record_end())
+          {
+            config.k3_serial = (*k3_rec)->serial;
+          }
+        else
+          {
+            k3_rec = twopf_db.add_record(config.k3_conventional);
+            k3_new_insert = true;
+            config.k3_serial = (*k3_rec)->serial;
+          }
 
+        // let policy object decide whether to store
         storage_outcome result = policy(config);
-        if(result == storage_outcome::accept)   // policy confirms that this configuration should be retained
-          {
-            if(config.kt_conventional > this->ktmax_conventional) this->ktmax_conventional = config.kt_conventional;
-            if(config.kt_conventional < this->ktmin_conventional) this->ktmin_conventional = config.kt_conventional;
-            if(config.kt_comoving > this->ktmax_comoving) this->ktmax_comoving = config.kt_comoving;
-            if(config.kt_comoving < this->ktmin_comoving) this->ktmin_comoving = config.kt_comoving;
 
-            double k_max_conventional = std::max(std::max(config.k1_conventional, config.k2_conventional), config.k3_conventional);
-            double k_min_conventional = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
-            double k_max_comoving     = std::max(std::max(config.k1_comoving, config.k2_comoving), config.k3_comoving);
-            double k_min_comoving     = std::min(std::min(config.k1_comoving, config.k2_comoving), config.k3_comoving);
+				if(result == storage_outcome::reject_remove) // policy declined to store this configuration
+					{
+            // reset current serial number
+            --this->serial;
 
-            if(k_max_conventional > this->kmax_2pf_conventional) this->kmax_2pf_conventional = k_max_conventional;
-            if(k_min_conventional < this->kmin_2pf_conventional) this->kmin_2pf_conventional = k_min_conventional;
-            if(k_max_comoving > this->kmax_2pf_comoving)         this->kmax_2pf_comoving     = k_max_comoving;
-            if(k_min_comoving < this->kmin_2pf_comoving)         this->kmin_2pf_comoving     = k_min_comoving;
+						// unwind any twopf configurations added
+						if(k1_new_insert) twopf_db.delete_record(config.k1_serial);
+						if(k2_new_insert) twopf_db.delete_record(config.k2_serial);
+						if(k3_new_insert) twopf_db.delete_record(config.k3_serial);
 
-            this->database.emplace(config.serial,
-                                   threepf_kconfig_record(config, this->store_background,
-                                                          !k1_stored, !k2_stored, !k3_stored));
-            this->store_background = false;
+						return boost::none;
+					}
+				else if(result == storage_outcome::reject_retain) // policy declined to store this configuration, but should keep 2pf records
+					{
+            // reset current serial number
+            --this->serial;
 
-            this->modified = true;
+						return boost::none;
+					}
 
-            return(config.serial);
-          }
+				// otherwise, policy confirms that this configuration should be retained
 
-        // policy declined to store this configuration
+				if(config.kt_conventional > this->ktmax_conventional) this->ktmax_conventional = config.kt_conventional;
+				if(config.kt_conventional < this->ktmin_conventional) this->ktmin_conventional = config.kt_conventional;
+				if(config.kt_comoving > this->ktmax_comoving) this->ktmax_comoving = config.kt_comoving;
+				if(config.kt_comoving < this->ktmin_comoving) this->ktmin_comoving = config.kt_comoving;
 
-        if(result == storage_outcome::reject_remove)
-          {
-            // unwind any twopf configurations added
-            if(!k1_stored) twopf_db.delete_record(config.k1_serial);
-            if(!k2_stored) twopf_db.delete_record(config.k2_serial);
-            if(!k3_stored) twopf_db.delete_record(config.k3_serial);
-            twopf_db.rebuild_cache();
-          }
+				double k_max_conventional = std::max(std::max(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+				double k_min_conventional = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+				double k_max_comoving     = std::max(std::max(config.k1_comoving, config.k2_comoving), config.k3_comoving);
+				double k_min_comoving     = std::min(std::min(config.k1_comoving, config.k2_comoving), config.k3_comoving);
 
-        return boost::optional<unsigned int>();
+				if(k_max_conventional > this->kmax_2pf_conventional) this->kmax_2pf_conventional = k_max_conventional;
+				if(k_min_conventional < this->kmin_2pf_conventional) this->kmin_2pf_conventional = k_min_conventional;
+				if(k_max_comoving > this->kmax_2pf_comoving)         this->kmax_2pf_comoving     = k_max_comoving;
+				if(k_min_comoving < this->kmin_2pf_comoving)         this->kmin_2pf_comoving     = k_min_comoving;
+
+        // determine whether constituent 2pf values need to be stored with this configuration
+        bool k1_store = !k1_rec->is_stored();
+        if(k1_store) k1_rec->set_stored();
+
+        bool k2_store = !k2_rec->is_stored();
+        if(k2_store) k2_rec->set_stored();
+
+        bool k3_store = !k3_rec->is_stored();
+        if(k3_store) k3_rec->set_stored();
+
+        std::pair<database_type::iterator, bool> emplaced_value= this->database.emplace(config.serial, threepf_kconfig_record(config, this->store_background, k1_store, k2_store, k3_store));
+				this->store_background = false;
+
+				this->modified = emplaced_value.second;
+        return threepf_kconfig_database::record_iterator(emplaced_value.first);
       }
 
 
@@ -646,24 +682,39 @@ namespace transport
         sqlite3_stmt* stmt;
         sqlite3_operations::check_stmt(handle, sqlite3_prepare_v2(handle, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
+        const int serial_id = sqlite3_bind_parameter_index(stmt, "@serial");
+        const int kt_conventional_id = sqlite3_bind_parameter_index(stmt, "@kt_conventional");
+        const int kt_comoving_id = sqlite3_bind_parameter_index(stmt, "@kt_comoving");
+        const int alpha_id = sqlite3_bind_parameter_index(stmt, "@alpha");
+        const int beta_id = sqlite3_bind_parameter_index(stmt, "@beta");
+        const int wavenumber1_id = sqlite3_bind_parameter_index(stmt, "@wavenumber1");
+        const int wavenumber2_id = sqlite3_bind_parameter_index(stmt, "@wavenumber2");
+        const int wavenumber3_id = sqlite3_bind_parameter_index(stmt, "@wavenumber3");
+        const int t_exit_id = sqlite3_bind_parameter_index(stmt, "@t_exit_kt");
+        const int t_massless_id = sqlite3_bind_parameter_index(stmt, "@t_massless");
+        const int store_bg_id = sqlite3_bind_parameter_index(stmt, "@store_bg");
+        const int store_k1_id = sqlite3_bind_parameter_index(stmt, "@store_k1");
+        const int store_k2_id = sqlite3_bind_parameter_index(stmt, "@store_k2");
+        const int store_k3_id = sqlite3_bind_parameter_index(stmt, "@store_k3");
+
         sqlite3_operations::exec(handle, "BEGIN TRANSACTION");
 
         for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t)
           {
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->kt_conventional));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 3, t->second->kt_comoving));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 4, t->second->alpha));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 5, t->second->beta));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 6, t->second->k1_serial));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 7, t->second->k2_serial));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 8, t->second->k3_serial));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 9, t->second->t_exit));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 10, t->second->t_massless));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 11, t->second.is_background_stored()));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 12, t->second.is_twopf_k1_stored()));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 13, t->second.is_twopf_k2_stored()));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 14, t->second.is_twopf_k3_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, serial_id, t->second->serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, kt_conventional_id, t->second->kt_conventional));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, kt_comoving_id, t->second->kt_comoving));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, alpha_id, t->second->alpha));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, beta_id, t->second->beta));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, wavenumber1_id, t->second->k1_serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, wavenumber2_id, t->second->k2_serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, wavenumber3_id, t->second->k3_serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, t_exit_id, t->second->t_exit));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, t_massless_id, t->second->t_massless));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, store_bg_id, t->second.is_background_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, store_k1_id, t->second.is_twopf_k1_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, store_k2_id, t->second.is_twopf_k2_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, store_k3_id, t->second.is_twopf_k3_stored()));
 
             sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 
