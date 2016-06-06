@@ -172,6 +172,9 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
+        sqlite3_extended_result_codes(handle, 1);
+        sqlite3_operations::consistency_pragmas(handle, this->tk->get_model()->is_network_mode());
+
         // ingest task data
         tk = integration_task_helper::deserialize<number>(this->name, reader, handle, f);
 
@@ -221,6 +224,9 @@ namespace transport
             msg << CPPTRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
             throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
+
+        sqlite3_extended_result_codes(handle, 1);
+        sqlite3_operations::consistency_pragmas(handle, this->tk->get_model()->is_network_mode());
 
         this->tk->write_kconfig_database(handle);
 
