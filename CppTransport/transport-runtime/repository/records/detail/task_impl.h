@@ -141,7 +141,7 @@ namespace transport
 
 
     template <typename number>
-    integration_task_record<number>::integration_task_record(Json::Value& reader, const boost::filesystem::path& repo_root,
+    integration_task_record<number>::integration_task_record(Json::Value& reader, const boost::filesystem::path& repo_root, bool network_mode,
                                                              package_finder<number>& f, repository_record::handler_package& pkg)
       : task_record<number>(reader, pkg)
       {
@@ -173,7 +173,7 @@ namespace transport
           }
 
         sqlite3_extended_result_codes(handle, 1);
-        sqlite3_operations::consistency_pragmas(handle, this->tk->get_model()->is_network_mode());
+        sqlite3_operations::consistency_pragmas(handle, network_mode);
 
         // ingest task data
         tk = integration_task_helper::deserialize<number>(this->name, reader, handle, f);
@@ -214,7 +214,7 @@ namespace transport
 
 
     template <typename number>
-    void integration_task_record<number>::write_kconfig_database(const boost::filesystem::path& db_path) const
+    void integration_task_record<number>::write_kconfig_database(const boost::filesystem::path& db_path, bool network_mode) const
       {
         // create database
         sqlite3* handle;
@@ -226,7 +226,7 @@ namespace transport
           }
 
         sqlite3_extended_result_codes(handle, 1);
-        sqlite3_operations::consistency_pragmas(handle, this->tk->get_model()->is_network_mode());
+        sqlite3_operations::consistency_pragmas(handle, network_mode);
 
         this->tk->write_kconfig_database(handle);
 

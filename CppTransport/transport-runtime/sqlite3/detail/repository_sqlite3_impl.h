@@ -358,7 +358,7 @@ namespace transport
 
         if(record.get_task()->is_kconfig_database_modified())   // only write out the full database if it is needed
           {
-            record.write_kconfig_database(abs_temporary);
+            record.write_kconfig_database(abs_temporary, this->args.get_network_mode());
 
             // if this succeeded, add this record to the transaction journal
             mgr.journal_deposit(abs_temporary, abs_database);
@@ -438,7 +438,7 @@ namespace transport
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
                                                this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
-        return std::make_unique< integration_task_record<number> >(reader, this->root_path, this->pkg_finder, pkg);
+        return std::make_unique< integration_task_record<number> >(reader, this->root_path, this->args.get_network_mode(), this->pkg_finder, pkg);
       }
 
 

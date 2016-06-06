@@ -358,9 +358,6 @@ namespace transport
         //! expose verbose option setting
         bool is_verbose() const { return this->args.get_verbose(); }
 
-        //! expose network filesystem setting
-        bool is_network_mode() const { return this->args.get_network_mode(); }
-
 
         // INTERNAL UTILITY FUNCTIONS
 
