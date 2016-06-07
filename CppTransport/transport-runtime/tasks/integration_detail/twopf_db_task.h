@@ -616,7 +616,7 @@ namespace transport
             if(earliest_required - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_SETTLE_EFOLDS)
               {
                 std::ostringstream msg;
-                msg << "'" << this->get_name() << ": " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << format_number(this->adaptive_efolds, 4) << " "
+                msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << format_number(this->adaptive_efolds, 4) << " "
                   << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << format_number(earliest_required, 4) << " "
                   << CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_A << " " << format_number(earliest_required - this->get_N_initial(), 4) << " "
                   << CPPTRANSPORT_TASK_TWOPF_LIST_SETTLING_B;
