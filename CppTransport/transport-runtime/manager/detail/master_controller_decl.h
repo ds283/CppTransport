@@ -89,8 +89,7 @@ namespace transport
         //! a command-line or configuration-file option
         master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                           local_environment& le, argument_cache& ac, model_manager<number>& f,
-                          task_gallery<number>& g,
-                          error_handler eh, warning_handler wh, message_handler mh);
+                          task_gallery<number>& g);
 
         //! destroy a master manager object
         ~master_controller() = default;
@@ -215,7 +214,10 @@ namespace transport
         void log_worker_metadata(WriterObject& writer);
 
         //! Master node: instruct workers to change their checkpoint interval
-        void reset_checkpoint_interval(unsigned int m);
+        void set_local_checkpoint_interval(unsigned int m);
+
+        //! Master node: instruct workers to unset any local checkpoint interval
+        void unset_local_checkpoint_interval();
 
         friend class CheckpointContext<number>;
         friend class CloseDownContext<number>;
@@ -412,6 +414,15 @@ namespace transport
         //! message callback
         message_handler msg;
 
+
+        // PROFILING SUPPORT
+
+        //! list of aggregation profile records
+        std::list< aggregation_profiler > aggregation_profiles;
+
+        //! root directory for aggregation profile report, if used
+        boost::optional< boost::filesystem::path > aggregation_profile_root;
+
       };
 
 
@@ -524,7 +535,8 @@ namespace transport
 
             //! constructor accepts and stores reference to controller object
             CheckpointContext(master_controller<number>& c)
-              : controller(c)
+              : controller(c),
+                unset(false)
               {
               }
 
@@ -536,8 +548,8 @@ namespace transport
 
           public:
 
-            //! instruct us to send a reset message on destruction
-            void reset_value(unsigned int t) { this->reset_time = t; }
+            //! instruct us to unset the local checkpoint interval on destruction
+            void requires_unset() { this->unset = true; }
 
 
             // INTERNAL DATA
@@ -547,8 +559,8 @@ namespace transport
             //! reference to controller object
             master_controller<number>& controller;
 
-            //! optional representing checkpoint interval to reset, if required
-            boost::optional<unsigned int> reset_time;
+            //! does a local checkpoint setting need removing?
+            bool unset;
 
           };
 
@@ -556,7 +568,7 @@ namespace transport
         template <typename number>
         CheckpointContext<number>::~CheckpointContext()
           {
-            if(this->reset_time) controller.reset_checkpoint_interval(*this->reset_time);
+            if(this->unset) controller.unset_local_checkpoint_interval();
           }
 
 

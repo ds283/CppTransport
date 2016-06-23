@@ -12,6 +12,7 @@
     #include "script.h"
     #include "lexical.h"
 
+    #include "disable_warnings.h"
     #include "ginac/ginac.h"
 
     namespace y {
@@ -35,7 +36,8 @@
     #include "y_driver.h"
     #include "error.h"
 
-    #include "ginac/ginac.h"
+    #include "disable_warnings.h"
+#include "ginac/ginac.h"
 
     static int yylex(y::y_parser::semantic_type* yylval,
                      y::y_parser::location_type* yyloc,

@@ -189,6 +189,7 @@ namespace transport
 	        {
             boost::timer::cpu_timer timer;
 
+            // zeta_npf and redbsp are cleared by zeta_computer.threepf() and reallocated, but gauge_xfm_nnn must be sized correctly on entry
             this->zeta_computer.threepf(*handle, zeta_npf, redbsp, gauge_xfm2_123, gauge_xfm2_213, gauge_xfm2_312, *(list[i]));
 		        assert(zeta_npf.size() == time_values.size());
 

@@ -55,8 +55,8 @@ namespace transport
       public:
 
         //! Create a data_manager_sqlite3 instance
-        data_manager_sqlite3(unsigned int bcap, unsigned int dcap, unsigned int ckp)
-          : data_manager<number>(bcap, dcap, ckp),
+        data_manager_sqlite3(local_environment& e, argument_cache& a)
+          : data_manager<number>(e, a),
             temporary_container_serial(0)
           {
           }
@@ -201,19 +201,22 @@ namespace transport
                                                                       std::unique_ptr<container_dispatch_function> dispatcher) override;
 
         //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
-        virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir,
+        virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(zeta_twopf_task<number>* tk,
+                                                                            const boost::filesystem::path& tempdir,
                                                                             const boost::filesystem::path& logdir,
                                                                             unsigned int worker, model<number>* m,
                                                                             std::unique_ptr<container_dispatch_function> dispatcher) override;
 
         //! Create a temporary container for zeta threepf data. Returns a batcher which can be used for writing to the container.
-        virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir,
+        virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(zeta_threepf_task<number>* tk,
+                                                                                const boost::filesystem::path& tempdir,
                                                                                 const boost::filesystem::path& logdir,
                                                                                 unsigned int worker, model<number>* m,
                                                                                 std::unique_ptr<container_dispatch_function> dispatcher) override;
 
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
-        virtual fNL_batcher<number> create_temp_fNL_container(const boost::filesystem::path& tempdir,
+        virtual fNL_batcher<number> create_temp_fNL_container(fNL_task<number>* tk,
+                                                              const boost::filesystem::path& tempdir,
                                                               const boost::filesystem::path& logdir,
                                                               unsigned int worker, model<number>* m,
                                                               std::unique_ptr<container_dispatch_function> dispatcher,
@@ -245,22 +248,22 @@ namespace transport
       protected:
 
         //! Aggregate a temporary twopf container into a principal container
-        bool aggregate_twopf_batch(integration_writer<number>& writer, const std::string& temp_ctr);
+        bool aggregate_twopf_batch(integration_writer<number>& writer, const boost::filesystem::path& temp_ctr);
 
         //! Aggregate a temporary threepf container into a principal container
-        bool aggregate_threepf_batch(integration_writer<number>& writer, const std::string& temp_ctr);
+        bool aggregate_threepf_batch(integration_writer<number>& writer, const boost::filesystem::path& temp_ctr);
 
         //! Aggregate a derived product
         bool aggregate_derived_product(derived_content_writer<number>& writer, const std::string& temp_name, const std::list<std::string>& used_groups);
 
         //! Aggregate a temporary zeta_twopf container
-        bool aggregate_zeta_twopf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr);
+        bool aggregate_zeta_twopf_batch(postintegration_writer<number>& writer, const boost::filesystem::path& temp_ctr);
 
         //! Aggregate a temporary zeta_threepf container
-        bool aggregate_zeta_threepf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr);
+        bool aggregate_zeta_threepf_batch(postintegration_writer<number>& writer, const boost::filesystem::path& temp_ctr);
 
         //! Aggregate a temporary fNL container
-        bool aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::bispectrum_template type);
+        bool aggregate_fNL_batch(postintegration_writer<number>& writer, const boost::filesystem::path& temp_ctr, derived_data::bispectrum_template type);
 
 
         friend class sqlite3_twopf_writer_aggregate<number>;
@@ -540,15 +543,18 @@ namespace transport
       public:
 
         //! Read the worker information table for a container
-        virtual worker_information_db read_worker_information(const boost::filesystem::path& ctr_path) const override;
+        virtual worker_information_db read_worker_information(const boost::filesystem::path& ctr_path) override;
 
         //! Read the timing table for a container (supposing one to be present)
-        virtual timing_db read_timing_information(const boost::filesystem::path& ctr_path) const override;
+        virtual timing_db read_timing_information(const boost::filesystem::path& ctr_path) override;
 
       protected:
 
         //! utility function to open a SQLite3 container
-        sqlite3* open_container(const boost::filesystem::path& ctr_path) const;
+        sqlite3* open_container(const boost::filesystem::path& ctr_path);
+
+        //! utility function to close a SQLite3 container
+        void close_container(sqlite3* db);
 
 
         // INTERNAL UTILITY FUNCTIONS

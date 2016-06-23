@@ -30,6 +30,7 @@
 
 #include <unordered_map>
 
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 

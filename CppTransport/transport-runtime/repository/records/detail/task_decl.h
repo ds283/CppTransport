@@ -117,7 +117,7 @@ namespace transport
         integration_task_record(const integration_task_record& obj);
 
         //! deserialization constructor
-        integration_task_record(Json::Value& reader, const boost::filesystem::path& repo_root,
+        integration_task_record(Json::Value& reader, const boost::filesystem::path& repo_root, bool network_mode,
                                 package_finder<number>& f, repository_record::handler_package& pkg);
 
         //! destructor is default
@@ -149,7 +149,7 @@ namespace transport
         void set_relative_kconfig_database_path(const boost::filesystem::path& p) { this->kconfig_db = p; }
 
         //! Write kconfiguration database
-        void write_kconfig_database(const boost::filesystem::path& db_path) const;
+        void write_kconfig_database(const boost::filesystem::path& db_path, bool network_mode) const;
 
 
         // ADMINISTRATION

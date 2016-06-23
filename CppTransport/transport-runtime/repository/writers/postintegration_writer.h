@@ -41,6 +41,7 @@
 
 #include "transport-runtime/derived-products/derived-content/correlation-functions/template_types.h"
 
+#include "transport-runtime/repository/writers/aggregation_profiler.h"
 #include "transport-runtime/repository/records/repository_records_decl.h"
 #include "transport-runtime/repository/writers/generic_writer.h"
 
@@ -133,7 +134,7 @@ namespace transport
       public:
 
         //! aggregate
-        virtual bool operator()(postintegration_writer<number>& writer, const std::string& product) = 0;
+        virtual bool operator()(postintegration_writer<number>& writer, const boost::filesystem::path& product) = 0;
 
       };
 
@@ -224,7 +225,7 @@ namespace transport
         void set_aggregation_handler(std::unique_ptr< postintegration_writer_aggregate<number> > c) { this->aggregate_h = std::move(c); }
 
         //! Aggregate a product
-        bool aggregate(const std::string& product);
+        bool aggregate(const boost::filesystem::path& product);
 
 
         // DATABASE FUNCTIONS
@@ -329,6 +330,14 @@ namespace transport
 		    precomputed_products& get_products() { return(this->contents); }
 
 
+        // PROFILING SUPPORT
+
+      public:
+
+        //! get aggregation profiler
+        aggregation_profiler& get_aggregation_profiler() { return(this->agg_profile); }
+
+
         // INTERNAL DATA
 
       private:
@@ -400,6 +409,12 @@ namespace transport
 		    //! record products associated with this writer
 		    precomputed_products contents;
 
+
+        // PROFILING SUPPORT
+
+        //! profile gadget
+        aggregation_profiler agg_profile;
+
 	    };
 
 
@@ -420,7 +435,8 @@ namespace transport
         integrity_h(nullptr),
         task(dynamic_cast< postintegration_task<number>* >(rec.get_task()->clone())),
         type(rec.get_task_type()),
-	      metadata()
+	      metadata(),
+        agg_profile(n)
 	    {
 	    }
 
@@ -437,7 +453,7 @@ namespace transport
 
 
     template <typename number>
-    bool postintegration_writer<number>::aggregate(const std::string& product)
+    bool postintegration_writer<number>::aggregate(const boost::filesystem::path& product)
 	    {
         if(!this->aggregate_h)
 	        {

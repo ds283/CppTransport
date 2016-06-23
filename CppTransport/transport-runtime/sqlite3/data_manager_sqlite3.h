@@ -81,9 +81,9 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< data_manager<number> > data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int ckp)
+    std::unique_ptr< data_manager<number> > data_manager_factory(local_environment& e, argument_cache& a)
       {
-        return std::make_unique< data_manager_sqlite3<number> >(bcap, dcap, ckp);
+        return std::make_unique< data_manager_sqlite3<number> >(e, a);
       }
 
   };   // namespace transport

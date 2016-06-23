@@ -52,8 +52,7 @@ namespace transport
         //! unlike a master controller, there is no option to supply a repository;
         //! one has to be provided by a master controller over MPI later
         slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                         local_environment& le, argument_cache& ac, model_manager<number>& f,
-                         error_handler eh, warning_handler wh, message_handler mh);
+                         local_environment& le, argument_cache& ac, model_manager<number>& f);
 
         //! destroy a slave manager object
         ~slave_controller() = default;

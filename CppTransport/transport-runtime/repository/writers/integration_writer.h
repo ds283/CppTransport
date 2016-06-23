@@ -39,6 +39,7 @@
 #include "transport-runtime/exceptions.h"
 #include "transport-runtime/localizations/messages_en.h"
 
+#include "transport-runtime/repository/writers/aggregation_profiler.h"
 #include "transport-runtime/repository/records/repository_records_decl.h"
 #include "transport-runtime/repository/writers/generic_writer.h"
 
@@ -148,7 +149,7 @@ namespace transport
       public:
 
         //! aggregate
-        virtual bool operator()(integration_writer<number>& writer, const std::string& product) = 0;
+        virtual bool operator()(integration_writer<number>& writer, const boost::filesystem::path& product) = 0;
 
       };
 
@@ -241,7 +242,7 @@ namespace transport
         void set_aggregation_handler(std::unique_ptr< integration_writer_aggregate<number> > c) { this->aggregate_h = std::move(c); }
 
         //! Aggregate a product
-        bool aggregate(const std::string& product);
+        bool aggregate(const boost::filesystem::path& product);
 
 
         // DATABASE FUNCTIONS
@@ -351,6 +352,14 @@ namespace transport
           }
 
 
+        // PROFILING SUPPORT
+
+      public:
+
+        //! get aggregation profiler
+        aggregation_profiler& get_aggregation_profiler() { return(this->agg_profile); }
+
+
         // INTERNAL DATA
 
       private:
@@ -422,6 +431,12 @@ namespace transport
 		    //! are we collecting initial conditions data?
 		    bool collect_initial_conditions;
 
+
+        // PROFILING SUPPORT
+
+        //! profile gadget
+        aggregation_profiler agg_profile;
+
 	    };
 
 
@@ -445,7 +460,8 @@ namespace transport
         type(rec.get_task_type()),
 	      collect_statistics(rec.get_task()->get_model()->supports_per_configuration_statistics()),
 	      metadata(),
-        data_type(data_type_name<number>())
+        data_type(data_type_name<number>()),
+        agg_profile(n)
 	    {
 	      twopf_db_task<number>* tk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(rec.get_task());
 	      assert(tk_as_twopf_list != nullptr);
@@ -473,7 +489,7 @@ namespace transport
 
 
 		template <typename number>
-    bool integration_writer<number>::aggregate(const std::string& product)
+    bool integration_writer<number>::aggregate(const boost::filesystem::path& product)
 	    {
         if(!this->aggregate_h)
 	        {

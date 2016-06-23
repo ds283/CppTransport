@@ -94,6 +94,83 @@ namespace transport
 			        }
 			    }
 
+
+				// apply PRAGMAs to optimize performance
+				inline void performance_pragmas(sqlite3* db, bool network_filesystem)
+					{
+						// SQLite performance choices:
+						// http://blog.devart.com/increasing-sqlite-performance.html
+						// https://wiki.mozilla.org/Performance/Avoid_SQLite_In_Your_Next_Firefox_Feature#Important_Pragmas
+						// http://stackoverflow.com/questions/784173/what-are-the-performance-characteristics-of-sqlite-with-very-large-database-file
+
+						// attempt to speed up insertions by disabling foreign key constraints
+						// during initial writes
+						char* errmsg;
+						sqlite3_exec(db, "PRAGMA foreign_keys = OFF;", nullptr, nullptr, &errmsg);
+
+						// if write-ahead log mode is disabled (as it must be if a network filing system is in play)
+						// then put journal into truncate mode
+						// otherwise, enable to write-ahead log
+            if(network_filesystem)
+              {
+                sqlite3_exec(db, "PRAGMA journal_mode = TRUNCATE;", nullptr, nullptr, &errmsg);
+              }
+            else
+              {
+                sqlite3_exec(db, "PRAGMA journal_mode = WAL;", nullptr, nullptr, &errmsg);
+              }
+
+						// force temporary objects to be stored in memory, for speed
+						sqlite3_exec(db, "PRAGMA temp_store = MEMORY;", nullptr, nullptr, &errmsg);
+
+						// set SYNCHRONOUS mode to 'Normal' rather than 'Full'
+						sqlite3_exec(db, "PRAGMA synchronous = NORMAL;", nullptr, nullptr, &errmsg);
+
+						// CACHE_SIZE unlikely to make much difference except in windows
+						sqlite3_exec(db, "PRAGMA cache_size = 10000;", nullptr, nullptr, &errmsg);
+
+						// PAGE_SIZE unlikely to make much difference except in windows
+						sqlite3_exec(db, "PRAGMA page_size = 4096;", nullptr, nullptr, &errmsg);
+					}
+
+
+				// apply PRAGMAs to maximize consistency
+				inline void consistency_pragmas(sqlite3* db, bool network_filesystem)
+					{
+						// SQLite performance choices:
+						// http://blog.devart.com/increasing-sqlite-performance.html
+						// https://wiki.mozilla.org/Performance/Avoid_SQLite_In_Your_Next_Firefox_Feature#Important_Pragmas
+						// http://stackoverflow.com/questions/784173/what-are-the-performance-characteristics-of-sqlite-with-very-large-database-file
+
+						char* errmsg;
+						sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+
+						// if write-ahead log mode is disabled (as it must be if a network filing system is in play)
+						// then put journal into truncate mode
+						// otherwise, enable to write-ahead log
+            if(network_filesystem)
+              {
+                sqlite3_exec(db, "PRAGMA journal_mode = TRUNCATE;", nullptr, nullptr, &errmsg);
+              }
+            else
+              {
+                sqlite3_exec(db, "PRAGMA journal_mode = WAL;", nullptr, nullptr, &errmsg);
+              }
+
+						// force temporary objects to be stored in memory, for speed
+						sqlite3_exec(db, "PRAGMA temp_store = MEMORY;", nullptr, nullptr, &errmsg);
+
+						// set SYNCHRONOUS mode to 'Normal' rather than 'Full'
+						sqlite3_exec(db, "PRAGMA synchronous = NORMAL;", nullptr, nullptr, &errmsg);
+
+						// CACHE_SIZE unlikely to make much difference except in windows
+						sqlite3_exec(db, "PRAGMA cache_size = 10000;", nullptr, nullptr, &errmsg);
+
+						// PAGE_SIZE unlikely to make much difference except in windows
+						sqlite3_exec(db, "PRAGMA page_size = 4096;", nullptr, nullptr, &errmsg);
+					}
+
+
 			}   // namespace sqlite3_operations
 
 	}   // namespace transport

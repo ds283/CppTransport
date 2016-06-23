@@ -69,6 +69,7 @@
 #include <utility>
 #include <stdexcept>
 
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 #include "language_printer.h"

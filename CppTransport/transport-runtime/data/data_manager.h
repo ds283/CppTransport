@@ -33,6 +33,9 @@
 #include <functional>
 #include <memory>
 
+#include "transport-runtime/manager/environment.h"
+#include "transport-runtime/manager/argument_cache.h"
+
 // forward-declare model if needed
 #include "transport-runtime/models/model_forward_declare.h"
 

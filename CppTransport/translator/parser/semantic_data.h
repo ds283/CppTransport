@@ -38,6 +38,7 @@
 #include "contexted_value.h"
 #include "y_common.h"
 
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 

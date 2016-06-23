@@ -28,7 +28,7 @@
 
 
 #ifdef __INTEL_COMPILER
-// Intel compiler (at least 16.0.1) produces this warning when using boost::escape_dot_string()
+// Intel compiler produces this warning when using boost::escape_dot_string()
 #pragma warning disable 2196
 #endif
 
@@ -36,6 +36,13 @@
 // expect Boost to be linked with dynamic libraries;
 // note this macro is essential for Boost.Log
 #define BOOST_ALL_DYN_LINK
+
+
+// enable to force strict checks on referential integrity
+// in the database.
+// Not enabled by default because it is much slower
+//#define CPPTRANSPORT_STRICT_CONSISTENCY
+
 
 #include "transport-runtime/messages.h"
 #include "transport-runtime/defaults.h"

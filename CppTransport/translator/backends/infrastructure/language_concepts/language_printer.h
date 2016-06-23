@@ -34,6 +34,7 @@
 #include "abstract_index.h"
 #include "lambdas.h"
 
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 #include "boost/optional.hpp"

@@ -73,15 +73,26 @@ namespace transport
       public:
 
         //! store background from this configuration?
-        bool is_background_stored() const { return(this->store_background); }
+        bool is_background_stored() const { return this->store_background; }
 
         //! dereference to get k-config object
         twopf_kconfig& operator*() { return(this->record); }
-        const twopf_kconfig& operator*() const { return(this->record); }
+        const twopf_kconfig& operator*() const { return this->record; }
 
         //! provide member access into k-config object
         twopf_kconfig* operator->() { return(&this->record); }
-        const twopf_kconfig* operator->() const { return(&this->record); }
+        const twopf_kconfig* operator->() const { return &this->record; }
+
+
+        // FOR USE WITH HIGHER N-POINT FUNCTION TASKS
+
+      public:
+
+        //! is this twopf already stored?
+        bool is_stored() const { return this->stored; }
+
+        //! mark this twopf as stored
+        void set_stored() { this->stored = true; }
 
 
         // INTERNAL DATA
@@ -94,12 +105,19 @@ namespace transport
         //! store the background for this configuration?
         bool store_background;
 
+
+        // FOR USE WITH HIGHER N-POINT FUNCTION TASKS
+
+        //! is this twopf stored?
+        bool stored;
+
       };
 
 
     twopf_kconfig_record::twopf_kconfig_record(twopf_kconfig& k, bool s)
       : record(k),
-        store_background(s)
+        store_background(s),
+        stored(false)
       {
       }
 
@@ -248,7 +266,7 @@ namespace transport
         //! add record to the database
 
 		    //! The record shouldn't already exist. No checks are made to test for duplicates
-        unsigned int add_record(double k_conventional);
+        twopf_kconfig_database::record_iterator add_record(double k_conventional);
 
         //! lookup record with a given serial number -- non const version
         record_iterator lookup(unsigned int serial);
@@ -256,11 +274,16 @@ namespace transport
         //! lookup record with a given serial number -- const version
         const_record_iterator lookup(unsigned int serial) const;
 
-        //! check for existence of a record with a given conventionally-normalized k
-        bool find(double k_conventional, twopf_kconfig_database::record_iterator&) const;
+        //! check for existence of a record with a given conventionally-normalized k -- non const version
+        twopf_kconfig_database::record_iterator find(double k_conventional);
+
+        //! check for existence of a record with a given conventionally-normalized k -- const version
+        twopf_kconfig_database::const_record_iterator find(double k_conventional) const;
 
         //! remove a record specified by serial number
         void delete_record(unsigned int serial);
+
+      protected:
 
         //! rebuild caches after deleting records
         void rebuild_cache();
@@ -365,7 +388,8 @@ namespace transport
 		      << "twopf_kconfig.comoving     AS comoving, "
 		      << "twopf_kconfig.t_exit       AS t_exit, "
           << "twopf_kconfig.t_massless   AS t_massless, "
-		      << "twopf_kconfig.store_bg     AS store_bg "
+		      << "twopf_kconfig.store_bg     AS store_bg, "
+          << "twopf_kconfig.is_stored    AS is_stored "
 		      << "FROM twopf_kconfig;";
 
 		    sqlite3_stmt* stmt;
@@ -392,10 +416,12 @@ namespace transport
 				        if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
 				        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
-						    bool store = (sqlite3_column_int(stmt, 5) != 0);
+						    bool store_background = (sqlite3_column_int(stmt, 5) != 0);
+                bool is_stored = (sqlite3_column_int(stmt, 6) != 0);
 
-				        std::pair<database_type::iterator, bool> emplaced_value = this->database.emplace(config.serial, twopf_kconfig_record(config, store));
+				        std::pair<database_type::iterator, bool> emplaced_value = this->database.emplace(config.serial, twopf_kconfig_record(config, store_background));
 						    assert(emplaced_value.second);
+                if(is_stored) emplaced_value.first->second.set_stored();
 
 						    // insert index record
 						    this->index_on_k.emplace(config.k_conventional, emplaced_value.first);
@@ -422,7 +448,7 @@ namespace transport
 	    }
 
 
-    unsigned int twopf_kconfig_database::add_record(double k_conventional)
+    twopf_kconfig_database::record_iterator twopf_kconfig_database::add_record(double k_conventional)
       {
         // insert a record into the database
         twopf_kconfig config;
@@ -439,21 +465,20 @@ namespace transport
         if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
         std::pair<database_type::iterator, bool> emplaced_value = this->database.emplace(config.serial, twopf_kconfig_record(config, this->store_background));
-        assert(emplaced_value.second);
 
         // insert index record
         this->index_on_k.emplace(config.k_conventional, emplaced_value.first);
 
         this->store_background = false;
-		    this->modified = true;
+		    this->modified = emplaced_value.second;
 
-        return(config.serial);
+        return twopf_kconfig_database::record_iterator(emplaced_value.first);
       }
 
 
     twopf_kconfig_database::record_iterator twopf_kconfig_database::lookup(unsigned int serial)
       {
-        database_type::iterator t = this->database.find(serial);        // find has logarithmic complexity
+        database_type::iterator t = this->database.find(serial);		// find has logarithmic complexity
 
 		    return twopf_kconfig_database::record_iterator(t);
       }
@@ -461,24 +486,30 @@ namespace transport
 
     twopf_kconfig_database::const_record_iterator twopf_kconfig_database::lookup(unsigned int serial) const
 	    {
-        database_type::const_iterator t = this->database.find(serial);  // find has logarithmic complexity
+        database_type::const_iterator t = this->database.find(serial);		// find has logarithmic complexity
 
         return twopf_kconfig_database::const_record_iterator(t);
 	    }
 
 
-    bool twopf_kconfig_database::find(double k_conventional, twopf_kconfig_database::record_iterator& rec) const
+    twopf_kconfig_database::record_iterator twopf_kconfig_database::find(double k_conventional)
       {
-        index_type::const_iterator t = this->index_on_k.find(k_conventional);   // find has logarithmic complexity
+        index_type::const_iterator t = this->index_on_k.find(k_conventional);		// find has logarithmic complexity
 
-		    if(t != this->index_on_k.end())
-			    {
-				    rec = twopf_kconfig_database::record_iterator(t->second);
-				    return(true);
-			    }
+				if(t == this->index_on_k.end()) return this->record_end();
 
-		    return(false);
+				return twopf_kconfig_database::record_iterator(t->second);
       }
+
+
+		twopf_kconfig_database::const_record_iterator twopf_kconfig_database::find(double k_conventional) const
+			{
+				index_type::const_iterator t = this->index_on_k.find(k_conventional);		// find has logarithmic complexity
+
+				if(t == this->index_on_k.end()) return this->record_cend();
+
+				return twopf_kconfig_database::record_iterator(t->second);
+			}
 
 
     void twopf_kconfig_database::delete_record(unsigned int serial)
@@ -488,11 +519,17 @@ namespace transport
 
         this->database.erase(t);
         this->index_on_k.erase(u);
+
+        this->rebuild_cache();
       }
 
 
     void twopf_kconfig_database::rebuild_cache()
       {
+        // reset serial number
+        this->serial = 0;
+
+        // reset cached largest/smallest values
         this->kmax_conventional = - std::numeric_limits<double>::max();
         this->kmin_conventional = std::numeric_limits<double>::max();
         this->kmax_comoving = - std::numeric_limits<double>::max();
@@ -500,6 +537,8 @@ namespace transport
 
         for(const std::pair<unsigned int, twopf_kconfig_record>& rec : this->database)
           {
+            if(rec.second->serial >= this->serial)                   this->serial = rec.second->serial+1;
+
             if(rec.second->k_conventional > this->kmax_conventional) this->kmax_conventional = rec.second->k_conventional;
             if(rec.second->k_conventional < this->kmin_conventional) this->kmin_conventional = rec.second->k_conventional;
             if(rec.second->k_comoving > this->kmax_comoving)         this->kmax_comoving     = rec.second->k_comoving;
@@ -518,27 +557,37 @@ namespace transport
 		      << "conventional DOUBLE, "
 			    << "comoving     DOUBLE, "
           << "t_exit       DOUBLE, "
-          << "t_massless       DOUBLE, "
-          << "store_bg     INTEGER);";
+          << "t_massless   DOUBLE, "
+          << "store_bg     INTEGER, "
+          << "is_stored    INTEGER);";
 
         sqlite3_operations::exec(handle, create_stmt.str(), CPPTRANSPORT_TWOPF_DATABASE_WRITE_FAIL);
 
         std::ostringstream insert_stmt;
-		    insert_stmt << "INSERT INTO twopf_kconfig VALUES (@serial, @conventional, @comoving, @t_exit, @t_massless, @store_bg);";
+		    insert_stmt << "INSERT INTO twopf_kconfig VALUES (@serial, @conventional, @comoving, @t_exit, @t_massless, @store_bg, @is_stored);";
 
 		    sqlite3_stmt* stmt;
         sqlite3_operations::check_stmt(handle, sqlite3_prepare_v2(handle, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+        const int serial_id = sqlite3_bind_parameter_index(stmt, "@serial");
+        const int conventional_id = sqlite3_bind_parameter_index(stmt, "@conventional");
+        const int comoving_id = sqlite3_bind_parameter_index(stmt, "@comoving");
+        const int t_exit_id = sqlite3_bind_parameter_index(stmt, "@t_exit");
+        const int t_massless_id = sqlite3_bind_parameter_index(stmt, "@t_massless");
+        const int store_bg_id = sqlite3_bind_parameter_index(stmt, "@store_bg");
+        const int is_stored_id = sqlite3_bind_parameter_index(stmt, "@is_stored");
 
         sqlite3_operations::exec(handle, "BEGIN TRANSACTION");
 
         for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t)
           {
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->k_conventional));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 3, t->second->k_comoving));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 4, t->second->t_exit));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 5, t->second->t_massless));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 6, t->second.is_background_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, serial_id, t->second->serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, conventional_id, t->second->k_conventional));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, comoving_id, t->second->k_comoving));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, t_exit_id, t->second->t_exit));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, t_massless_id, t->second->t_massless));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, store_bg_id, static_cast<int>(t->second.is_background_stored())));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, is_stored_id, static_cast<int>(t->second.is_stored())));
 
             sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), CPPTRANSPORT_TWOPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 

@@ -32,6 +32,7 @@
 
 #include "timing_instrument.h"
 
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 

@@ -33,21 +33,40 @@ namespace transport
 
     // data structures for storing individual sample points from each integration
 
+    // NOTE when generating unique identifiers, it's important that they in approximately increasing order
+    // This speeds up INSERT performance dramatically and is critical for getting good aggregation speeds
+    // see http://stackoverflow.com/questions/788568/sqlite3-disabling-primary-key-index-while-inserting
+
+    // (the data_manager_write routines later sort into order so perhaps we could be more relaxed)
+
     template <typename number>
     class integration_items
 	    {
 
       public:
 
-
         //! Stores a background field configuration associated with single time-point
         class backg_item
 	        {
           public:
+            backg_item(unsigned ts, unsigned int ss, const std::vector<number>& co, unsigned int ti)
+              : time_serial(ts),
+                source_serial(ss),
+                coords(co),
+                time_items(ti)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(time_serial*pages + page); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
-            unsigned int        get_serial() const { return(this->time_serial); }
+            unsigned int time_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            unsigned int get_serial() const { return (this->time_serial); }
 
             //! values
             std::vector<number> coords;
@@ -58,7 +77,6 @@ namespace transport
 		        //! get_texit() not needed for backg_item but allowed here to prevent template specialization failure
 		        //! TODO: would be nice to simplify this
 		        double get_texit() const { return(0.0); }
-
 	        };
 
 
@@ -67,18 +85,36 @@ namespace transport
         class twopf_re_item
 	        {
           public:
+            twopf_re_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             // values
             std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int        source_serial;
+            unsigned int source_serial;
 
 	        };
 
@@ -88,18 +124,36 @@ namespace transport
         class twopf_im_item
 	        {
           public:
+            twopf_im_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             // values
             std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int        source_serial;
+            unsigned int source_serial;
 
 	        };
 
@@ -108,18 +162,36 @@ namespace transport
         class tensor_twopf_item
 	        {
           public:
+            tensor_twopf_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             // values
             std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int        source_serial;
+            unsigned int source_serial;
 	        };
 
 
@@ -128,18 +200,36 @@ namespace transport
         class threepf_momentum_item
 	        {
           public:
+            threepf_momentum_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! values
             std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch
-            unsigned int        source_serial;
+            unsigned int source_serial;
 	        };
 
 
@@ -148,18 +238,36 @@ namespace transport
         class threepf_Nderiv_item
           {
           public:
+            threepf_Nderiv_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
-            unsigned int        time_serial;
+            unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int        kconfig_serial;
+            unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! values
             std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch
-            unsigned int        source_serial;
+            unsigned int source_serial;
           };
 
 
@@ -168,9 +276,17 @@ namespace transport
         class configuration_statistics
 	        {
           public:
+            configuration_statistics(unsigned int s, boost::timer::nanosecond_type i, boost::timer::nanosecond_type b, unsigned int r, size_t st)
+              : serial(s),
+                integration(i),
+                batching(b),
+                refinements(r),
+                steps(st)
+              {
+              }
 
             //! kconfig serial number for this configuration
-            unsigned int                  serial;
+            unsigned int serial;
 
             //! time spent integrating, in nanoseconds
             boost::timer::nanosecond_type integration;
@@ -179,10 +295,10 @@ namespace transport
             boost::timer::nanosecond_type batching;
 
             //! number of stepsize refinements needed for this configuration
-            unsigned int                  refinements;
+            unsigned int refinements;
 
             //! number of steps taken by the stepper
-            size_t                        steps;
+            size_t steps;
 	        };
 
 
@@ -191,14 +307,29 @@ namespace transport
 		    class ics_item
 			    {
 		      public:
+            ics_item(unsigned int ss, double tx, const std::vector<number>& co, unsigned int ki)
+              : source_serial(ss),
+                texit(tx),
+                coords(co),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(source_serial*pages + page); }
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
 				    //! kconfig serial number
-				    unsigned int        source_serial;
-				    unsigned int        get_serial() const { return(this->source_serial); }
+            unsigned int source_serial;
+
+            unsigned int get_serial() const { return (this->source_serial); }
 
 				    //! time of horizon exit
-				    double              texit;
-				    double              get_texit() const { return(this->texit); }
+            double texit;
+            
+            double get_texit() const { return (this->texit); }
 
 		        //! values
 		        std::vector<number> coords;
@@ -210,14 +341,29 @@ namespace transport
         class ics_kt_item
 	        {
           public:
+            ics_kt_item(unsigned int ss, double tx, const std::vector<number>& co, unsigned int ki)
+              : source_serial(ss),
+                texit(tx),
+                coords(co),
+                kconfig_items(ki)
+              {
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(source_serial*pages + page); }
+
+            //! number of kconfiguration serial numbers in job
+            unsigned int kconfig_items;
 
             //! kconfig serial number
-            unsigned int        source_serial;
-            unsigned int        get_serial() const { return(this->source_serial); }
+            unsigned int source_serial;
+
+            unsigned int get_serial() const { return (this->source_serial); }
 
             //! time of horizon exit
-            double              texit;
-            double              get_texit() const { return(this->texit); }
+            double texit;
+
+            double get_texit() const { return (this->texit); }
 
             //! values
             std::vector<number> coords;

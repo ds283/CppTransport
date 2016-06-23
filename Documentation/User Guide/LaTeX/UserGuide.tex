@@ -850,7 +850,7 @@ set of fields indexed by labels $a$, $b$, \ldots:
     \qquad
     \text{or}
     \qquad
-    X^a = (\delta\phi^\alpha, \delta\pi^\alpha) .    
+    \delta X^a = (\delta\phi^\alpha, \delta\pi^\alpha) .    
 \end{equation}
 
 \section{Installation}
@@ -1225,7 +1225,7 @@ The precise name of this directory is arbitrary and can be freely changed,
 although it is wise to avoid the names
 \file{\textasciitilde{}/.cpptransport}
 and
-\file{\textasciitilde{}/.cpptransport-runtime}
+\file{\textasciitilde{}/.cpptransport\_runtime}
 which {\CppTransport} expects to be associated with configuration files.
 (See the discussion on p.\pageref{page:config-files} below.)
 If you are installing system-wide the install prefix should
@@ -1379,7 +1379,7 @@ There are two ways to do this:
     The translator will look for a configuration file named
     \file{\textasciitilde{}/.cpptransport},
     and the runtime environment will look for a file named
-    \file{\textasciitilde{}/.cpptransport-runtime}.
+    \file{\textasciitilde{}/.cpptransport\_runtime}.
     The use of separate files
     enables different options to be passed
     to each component.
@@ -1401,7 +1401,7 @@ There are two ways to do this:
     the path to the home directory.
     
     The runtime system requires a separate configuration
-    file called \file{.cpptransport-runtime}
+    file called \file{.cpptransport\_runtime}
     which should include the same line:
     \begin{minted}{text}
         include = /Users/ds283/.cpptransport-packages/share/cpptransport    
@@ -1426,7 +1426,7 @@ These features are enabled using the
 \option{plot-style} option.
 This can be provided on the command line
 (see {\S}\ref{}), but it is usually more convenient to include it in
-the \file{\textasciitilde{}/.cpptransport-runtime} configuration file.
+the \file{\textasciitilde{}/.cpptransport\_runtime} configuration file.
 This file should include a line such as
 \begin{minted}{text}
     plot-style = seaborn    
@@ -1440,6 +1440,31 @@ and
 \mintinline{text}{seaborn}.
 If you wish to use a different style it is possible to generate {\Python} scripts
 from an output task and insert any required customization by hand.
+
+If you are running {\CppTransport} via SSH or a similar remote login, you may need
+to force {\Matplotlib} to use a noninteractive backend.
+By default {\CppTransport} will use whatever backend has already been configured;
+for more details, \href{http://matplotlib.org/faq/usage_faq.html#what-is-a-backend}{see
+the {\Matplotlib} documentation}.
+If {\Matplotlib} has been configured to use an interactive backend this will usually
+fail for jobs started via remote login.
+To fix this you should force {\CppTransport} to use a noninteractive backend
+using the \option{{-}{-}mpl-backend} option.
+The allowed backends are
+\mintinline{text}{Agg},
+\mintinline{text}{Cairo},
+\mintinline{text}{PDF}
+and
+\mintinline{text}{MacOSX}.
+The Cairo renderer sometimes has problems with {\LaTeX}-formatted text. The
+\mintinline{text}{Agg} backend is a good choice unless you know you need something
+different.
+To set this permanently, add line line
+\begin{minted}{text}
+    mpl-backend = Agg    
+\end{minted}
+to your
+\file{\textasciitilde{}/.cpptransport\_runtime} file.
 
 \para{Using {\Graphviz}}
 As for {\Python},
@@ -3699,6 +3724,22 @@ might include the lines
 #$ -pe openmpi 36
 mpiexec -n 36 ...
 \end{minted}
+\begin{warning}
+    If you are using {\CppTransport} on a network filing system
+    such as NFS or Lustre (which is often the case when running on a cluster),
+    you should add an extra command-line
+    switch \option{{-}{-}network-mode}
+    to the {\CppTransport} executable.
+    
+    In order to maximize performance, {\CppTransport}
+    enables `write-ahead logging' mode in the underlying
+    {\SQLite} database manager.
+    This gives a significant performance improvement but is
+    not compatible with network filing systems
+    and must be disabled for reliable operation.
+\end{warning}
+
+
 
 \subsubsection{Examining the repository wavenumber configuration databases}
 \label{sec:examine-k-database}
@@ -4168,6 +4209,7 @@ additionally display the
 same information shown by \option{{-}{-}inflight}.
 
 \subsection{What happens while an integration task is in progress}
+\label{sec:what-happens}
 Now let us consider what happened while each integration task was in progress.
 Out the outset, when {\CppTransport} comes to process each new task,
 it acquires a unique content group name derived from the current time.
@@ -4285,6 +4327,7 @@ A typical integration will involve the following sequence of steps.
 \end{enumerate}
 
 \subsection{Using checkpoints and recovery to minimize data loss}
+\label{sec:checkpointing}
 The amount of memory available to each worker can be adjusted using
 the command-line option
 \option{{-}{-}caches}.
@@ -4700,19 +4743,25 @@ The integration report shows how the intrinsic computation cost scales
 with configuration, and helps identify regions where it is cheap or
 expensive to add
 configurations.
-These scalings are set partly by general properties of any inflationary phase,
+These scalings are set partly by the nature of the problem,
 partly by detailed microphysical interactions
 determined by each specific model,
-and partly by the integration scheme and its use of `transport' or evolution
+and partly by the integration scheme employed by
+{\CppTransport} and its use of `transport' or evolution
 equations.
 
-These intrinsic scalings are one component
-of the overall numerical efficiency achieved by {\CppTransport}.
-The remaining component is determined by how effectively the master process is able to
+These intrinsic scalings are one factor
+contribuitng
+to the overall numerical efficiency achieved by {\CppTransport}.
+The remainder is determined by how effectively the master process is able to
 feed tasks to its workers.
 {\CppTransport} tries to adjust its scheduling strategy to respond to environmental
-pressures. It is frequently successful, but under some circumstances the master
-process may become overwhelmed.
+pressures. It is frequently successful but under some circumstances the master
+process may become overwhelmed,
+meaning that new batches of work are not allocated to workers
+in a timely fashion.
+This leads to workers idling while they wait for new work, described
+as a `stall'.
 For this reason it can be useful to check
 what the workers are doing, and in particular whether progress is being
 inhibited by stalls.
@@ -4722,11 +4771,13 @@ Specifying the option \option{{-}{-}gantt} on the command line
 will cause
 {\CppTransport} to produce a Gantt-like timeline showing the activity of
 each worker.
-Bars are colour-coded according to the type of activity, and a legend is included.
+Bars are colour-coded according to the type of activity, and a legend is included
+identifying each colour.
 The \option{{-}{-}gantt} option
 should be followed by a filename, and the output format will be determined by
 its extension.
-Any format supported by {\Matplotlib} can be used, of which the most useful
+Any format supported by the {\Matplotlib}
+backend can be used, of which the most useful
 choices are usually SVG (\file{.svg} extension),
 PDF (\file{.pdf}), or PNG (\file{.png}) if a bitmap format is desired.
 Alternatively, specifying a \file{.py} extension will produce a Python script
@@ -4749,16 +4800,44 @@ to write a custom code which parses each record and generates a suitable output.
 {\CppTransport} makes default choices which usually prevent significant stalls.
 Stalls are more likely in the following circumstances:
 \begin{itemize}
-    \item if the main data container \file{data.sqlite} becomes very large.
-    Exactly how large is `large' can depend on the filing system and
-    physical properties of the storage medium.
-    However, as a guide, testing has shown that
-    database insertions with {\SQLite}
-    may begin slow down for container sizes $\gtrsim 20 \Gb$.
-    If insertions are slow, then each aggregation performed by the master
-    process will also be slow.
-    This can mean that worker processes are left waiting
-    for new work.
+    \item if the repository is located on a slow filing system.
+    Besides allocating work to each worker process, the master process is
+    responsible for aggregating their results into the main data container
+    \file{data.sqlite}.
+    The time taken for each aggregation is dominated by the time required
+    for a bulk \mintinline{sql}{INSERT} of rows from each temporary container
+    into the main database.
+    
+    Depending how many configurations are being computed, and how many time
+    sample points are being retained,
+    the main database may become very large.
+    {\CppTransport} has been optimized so that
+    \mintinline{sql}{INSERT} performance is roughly independent of the database
+    size,
+    but its performance may begin to degrade if the database becomes extremely
+    large (bigger than several tens of $\Gb$).
+    On a fast internal SSD
+    {\CppTransport} typically achieves $\sim 2\times 10^5$
+    \mintinline{sql}{INSERT}s per second.
+    On a conventional hard disc, either internal or attached via a fast interface
+    such as USB or Thunderbolt,
+    it achieves $\sim 5 \times 10^4$
+    \mintinline{sql}{INSERT}s per second.
+    Network filing systems are often somewhat slower.
+    If you are forced into this situation then it is preferable
+    to use the fastest available disk
+    (eg. a Lustre-type system rather than NFS)
+    in order to prevent aggregations from becoming too slow.
+    
+    With a slower filing system it can be a good strategy to
+    set a checkpoint interval (or adjust the cache capacity)
+    so that aggregations are distributed over the lifetime of the job.
+    This means that master can be carrying out productive activity while the
+    workers are busy with calculations.
+    The downside of this approach is that a worker may finish its current
+    allocation while the master is performing aggregation.
+    If this will happens it will stall until the master is free to
+    allocate new work.
     
     To mitigate this effect, {\CppTransport} monitors how long is spent
     performing aggregations and adjusts the amount of work it offers
@@ -4766,61 +4845,81 @@ Stalls are more likely in the following circumstances:
     Initially it will attempt to allocate $60\second$ of work,
     but if aggregations are taking a long time
     it will try to allocate \emph{up to}
-    ten times the current mean aggregation time.%
+    ten times the current mean aggregation time.
+    This reduces the probability that a worker will finish its current
+    allocation while the master is performing aggregation.%
         \footnote{In practice it may allocate less work in order to balance the
         number of work items assigned to each worker process.}
-    This is intended to prevent the workers continually having to wait for
-    new work, but increases the risk that the allocation becomes unbalanced
+    However, conversely, it increases the risk that the allocation becomes unbalanced
     in the sense that some workers run out of work items while other workers
     still have a long queue.
+
+    \semibold{Alternative strategies.}
+    Aggregation times are typically not long enough to be problematic.
+    When writing to a hard disk {\CppTransport} can typically aggregate a $\sim 5 Gb$
+    main database in just a few minutes.
+    Problems are likely to occur only in extreme scenarios, where a database grows to
+    many tens of $\Gb$ while simultaneously being used over NFS.
+
+%    It could be adjusted in at least two ways. First, instead of the embedded
+%    {\SQLite} manager, {\CppTransport} could be modified to use an out-of-process
+%    manager such as MySQL or PostgreSQL.
+%    Under some circumstances (but not always) these might offer more
+%    performance than {\SQLite}.
+%    However,
+%    use a separate database server process
+%    would make installation and deployment of {\CppTransport} more complex.
+%    Also, relocating repositories would become nontrivial because the
+%    corresponding databases would need migration
+%    from one database server to another.
     
-    This slowdown is a tradeoff based on use of the {\SQLite} database manager.%
-        \footnote{It will also depend on the current database schema.
-        It is possible that
-        future versions of {\CppTransport} may be able to use a more
-        efficient schema.}
-    It could be adjusted in at least two ways. First, instead of the embedded
-    {\SQLite} manager, {\CppTransport} could be modified to use an out-of-process
-    manager such as MySQL or PostgreSQL.
-    Under some circumstances (but not always) these might offer more
-    performance than {\SQLite}.
-    However,
-    use a separate database server process
-    would make installation and deployment of {\CppTransport} more complex.
-    Also, relocating repositories would become nontrivial because the
-    corresponding databases would need migration
-    from one database server to another.
+%    A different option would be to abandon the use of an SQL database entirely
+%    and use a format such as \href{https://www.hdfgroup.org/HDF5/}{HDF5}.
+%    This would be significantly faster than any SQL database, but also significantly
+%    more difficult for an end-user to extract data---in particular,
+%    any analysis would need to be performed using
+%    purpose-written code rather than SQL queries in a database manager application,
+%    because HDF5 is largely intended to be handled via a programming interface.
     
-    A different option would be to abandon the use of an SQL database entirely
-    and use a format such as \href{https://www.hdfgroup.org/HDF5/}{HDF5}.
-    This would be significantly faster than any SQL database, but also significantly
-    more difficult for an end-user to extract data---in particular,
-    any analysis would need to be performed using
-    purpose-written code rather than SQL queries in a database manager application,
-    because HDF5 is largely intended to be handled via a programming interface.
-    
-    The current implementation retains the advantages of
-    powerful SQL queries and easily-portable single-file databases,
-    and should be suitable for most users.
-    It should simply be borne in mind that as an increasing number of
-    wavenumber configurations are sampled,
-    one should decrease the number of time samples.
-    Using this strategy it is normally possible to keep database sizes in check.
-    For example, Ref.~\cite{Byrnes:2015dub} used a version of {\CppTransport}
-    to sample roughly $5 \times 10^6$ bispectrum configurations
-    in a two-field model.
-    Retaining only a single time-sample point gave very good database performance and
-    a $\sim 9 \Gb$ file.
-    Of course, the required storage would increase in a model with more fields.
+%    The current implementation retains the advantages of
+%    powerful SQL queries and easily-portable single-file databases,
+%    and should be suitable for most users.
+%    It should simply be borne in mind that as an increasing number of
+%    wavenumber configurations are sampled,
+%    one should decrease the number of time samples.
+%    Using this strategy it is normally possible to keep database sizes in check.
+%    For example, Ref.~\cite{Byrnes:2015dub} used a version of {\CppTransport}
+%    to sample roughly $5 \times 10^6$ bispectrum configurations
+%    in a two-field model.
+%    Retaining only a single time-sample point gave very good database performance and
+%    a $\sim 9 \Gb$ file.
+%    Of course, the required storage would increase in a model with more fields.
     
     \item if a large number of workers are used with a slow filing system.
     Using many workers will generate a large number of aggregation requests,
     and if the filing system is too slow these can overwhelm the master process.
-    To mitigate this it may be possible to increase the buffer size, generating
-    fewer aggregation requests. 
-    Otherwise, at present, contention from multiple workers often sets
-    an effective upper limit on the number of worker processes that can be used in
-    practice.
+    There are possible mitigations:
+    \begin{itemize}
+        \item if you are not using a network filing system, ensure that
+        you are not passing the command-line option
+        \option{{-}{-}network-mode}.
+        If used this disables {\SQLite}'s write-ahead log mode which confers
+        a significant performance advantage.
+        
+        \item ensure that you are not defining the
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} macro during compilation.
+        If used, this roughly doubles aggregation times.
+        See~\S\ref{sec:strict-consistency}.
+        
+        \item experiment with different buffer sizes or checkpoint intervals,
+        which will change how aggregation events
+        are distributed over the lifetime of the job.
+        In some scenarios it is faster to perform a small number of large aggregations
+        near the end.
+        In other scenarios it can be faster to perform frequent aggregations
+        throughout the job, because this makes use of time when the master
+        process would otherwise be idle.
+    \end{itemize}
 \end{itemize}
 \begin{figure}
     \begin{center}
@@ -4837,7 +4936,7 @@ Stalls are more likely in the following circumstances:
     master process was aggregating temporary databases.
     (In many cases the time spent aggregating was too short to register
     on the plot. This test was performed on a machine with an SSD; on
-    a machine with a hard disk, aggregation times are typically longer.)
+    a machine with a hard disk, aggregation times are usually a few times longer.)
     The aquamarine bar on the far right-hand side
     shows database activity associated
     with checking integrity and performing routine maintenance.}
@@ -4858,11 +4957,12 @@ In this case it is necessary to extract data for the raw $n$-point functions.
 Another reason for needing this data is simply that you may
 wish to produce your own customized plots.
 
+\subsubsection{Table definitions}
 This data can be retrieved from the main {\SQLite} container
 \file{data.sqlite}
 associated with each content group.
-As explained above, this is done using SQL queries.
-The end result is a powerful method to easily extract appropriate subsets
+As explained above, this is done using SQL queries---yielding
+a powerful method to easily extract appropriate subsets
 of the data, formatted in any convenient way.
 
 The {\SQLite} container for any integration task contains the following tables
@@ -4895,6 +4995,7 @@ and columns:
     \item \mintinline{sql}{backg} --- contains the time evolution of the background fields \\
     \label{sqltable:backg}
     \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row \\
         \mintinline{sql}{tserial} & reference to serial number
         \mintinline{sql}{time_samples.serial} identifying the time sample
         point for this row \\
@@ -4913,6 +5014,11 @@ and columns:
 
     \item \mintinline{sql}{twopf_re} --- contains real part of field-space 2-point function \\
     \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
         \mintinline{sql}{tserial} & reference to serial number
         \mintinline{sql}{time_samples.serial} identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number
@@ -4921,7 +5027,7 @@ and columns:
         \mintinline{sql}{eleN} below \\
         \mintinline{sql}{eleN} \ldots & \semibold{dimensionless components} of the real part of the field-space 2-point
         function, packed in a `right-most' ordering defined as follows.
-        Set $\langle X^a(\vect{k}_1) X^b(\vect{k}_2) \rangle = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
+        Set $\langle \delta X^a(\vect{k}_1) \delta X^b(\vect{k}_2) \rangle = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
         \Sigma^{ab}$, where $a$, $b$ range over the fields and their
         canonical momenta
         (which for the purposes of the 2-point function are the same as the
@@ -4942,6 +5048,11 @@ and columns:
     \item \mintinline{sql}{tensor_twopf} --- contains the tensor 2-point function \\
     \label{sqltable:tensor-twopf}
     \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
         \mintinline{sql}{tserial} & reference to serial number
         \mintinline{sql}{time_samples.serial} identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number
@@ -4964,7 +5075,6 @@ and columns:
         then the quantity stored is
         $\Re(k^3 \Sigma_{ss'})$.
     \end{tabular}
-
         
     \item \mintinline{sql}{integration_statistics} --- contains integration metadata \\
     \label{sqltables:statistics}
@@ -5015,7 +5125,7 @@ In addition, tasks sampling the 3-point function include the following extra tab
     \mintinline{sql}{twopf_re}.
     
     \item \mintinline{sql}{threepf_momentum} \\
-    \mintinline{sql}{threepf_deriv} --- contain
+    \mintinline{sql}{threepf_deriv} --- contains
     the real part of the field-space 3-point function \\
     These tables share the same schema. The difference is that
     \mintinline{sql}{threepf_momentum} stores correlation functions defined using
@@ -5035,6 +5145,11 @@ In addition, tasks sampling the 3-point function include the following extra tab
     then it is the correlation functions involving derivatives that are required.
     \\
     \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
         \mintinline{sql}{tserial} & reference to serial number
         \mintinline{sql}{time_samples.serial} identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number
@@ -5045,7 +5160,7 @@ In addition, tasks sampling the 3-point function include the following extra tab
         of the real part of the field-space 3-point
         function, packed in a `right-most' ordering as for the 2-point function.
         That is, if
-        $\langle X^a(\vect{k}_1) X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle =
+        $\langle \delta X^a(\vect{k}_1) \delta X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle =
         (2\pi)^3 \delta(\sum_i \vect{k}_i) \alpha^{abc}$,
         then
         $N = D^2 \times \#a + D \times \#b + \#c$.
@@ -5058,6 +5173,52 @@ In addition, tasks sampling the 3-point function include the following extra tab
     \end{tabular}
 \end{enumerate}    
 \end{sqltablelist}
+
+\subsubsection{Strict consistency checking}
+In rare circumstances it may be useful to enforce strict consistency checks
+within the database.
+These checks ensure that there is only entry for each time- and wavenumber-configuration
+combination,
+and also ensure that the serial numbers
+recorded in each data table
+(such as \mintinline{sql}{backg}, \mintinline{sql}{twopf_re} and so on)
+refer to valid entries in the sample tables
+\mintinline{sql}{time_samples},
+\mintinline{sql}{twopf_samples}
+and
+\mintinline{sql}{threepf_samples}.
+The price paid for such checks is substantially reduced
+\mintinline{sql}{INSERT} performance during aggregation, by at least a factor of
+two but sometimes more.
+
+To enable strict database checks, edit the main header file
+\file{transport.h}
+to define the macro
+\mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY}, or define it by hand
+before including any {\CppTransport} headers.
+When enabled, this forces {\CppTransport} to use the
+\mintinline{sql}{unique_id} fields in each data table.
+These contain a unique integer encoding the
+time-sample, wavenumber-sample and page number for the row.
+The extra time cost arises because for each
+\mintinline{sql}{INSERT} {\SQLite} must check
+the existing database to ensure there are no conflicts.
+In a worst-case scenario
+this means that \mintinline{sql}{INSERT} performance could degrade
+in proportion to the size of the main database, although typically
+this is not realized because {\CppTransport} takes special measures to avoid it.
+Nevertheless, if these checks are performed then
+\emph{some} degradation must be expected as the size of the database
+grows.
+
+Normally it is best to leave strict checks disabled unless you need them for some special
+purpose. For example, this situation might arise if
+you want uniqueness to be enforced via
+\mintinline{sql}{PRIMARY KEY} constraints after the database has been constructed;
+{\SQLite} does not allow primary keys to be added later.
+Alternatively you could consider post-processing the database to add your
+own unique identifiers and creating a
+\mintinline{sql}{UNIQUE} index.
 
 \section{Options for integration tasks}
 \label{sec:int-options}
@@ -5483,7 +5644,7 @@ If we are interested only in connected correlation functions
 then we are free to reorder the fields inside any
 equal-time
 correlation function
-$\langle X^a(\vect{k}_1) X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle$
+$\langle \delta X^a(\vect{k}_1) \delta X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle$
 because the failure of any pair of $X$s to commute will produce
 contact terms.
 Because {\CppTransport} solves the correlation functions for
@@ -5918,6 +6079,11 @@ the following tables:
 	
 	\item \mintinline{sql}{zeta_twopf} --- contains the real part of the $\zeta$ 2-point function \\
     \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
         \mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
         identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
@@ -5935,18 +6101,18 @@ the following tables:
     \begin{equation}
     	\zeta(\vect{k}) =
     	N_a(\vect{k})
-    	X^a(\vect{k})	
+    	\delta X^a(\vect{k})	
     	+
     	\frac{1}{2}
     	\int \frac{\d^3 q}{(2\pi)^3} \frac{\d^3 r}{(2\pi)^3}
     	\delta(\vect{k} - \vect{q} - \vect{r})
     	N_{ab}(\vect{q},\vect{r})
-    	X^a(\vect{q})
-    	X^b(\vect{r})
+    	\delta X^a(\vect{q})
+    	\delta X^b(\vect{r})
     	+ \cdots ,
     	\label{eq:gauge-xfm}
     \end{equation}
-	where $X^a$, $X^b$ (and so on) label fluctuations over the full phase space
+	where $\delta X^a$, $\delta X^b$ (and so on) label fluctuations over the full phase space
 	of fields and their derivatives with respect to $N$,
 	and the omitted terms represented by `$\cdots$' are higher order
 	$X$.
@@ -5969,6 +6135,11 @@ the following tables:
     momentum independent, {\CppTransport} does not assume this will always be the
     case and records the gauge transformation for each momentum configuration. \\
     \begin{tabular}{p{2.5cm}p{11.5cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
     	\mintinline{sql}{tserial} & 	reference to serial number \mintinline{sql}{times_samples.serial}
         identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
@@ -5985,7 +6156,7 @@ the following tables:
 		the gauge transformation~\eqref{eq:gauge-xfm} is taken to be written in
 		terms of \emph{derivatives}, as in Ref.~\cite{Dias:2014msa}, and not canonical momenta.
 		
-		Notice that because $\zeta$ is dimensionless but the $X^a$ have dimensions of
+		Notice that because $\zeta$ is dimensionless but the $\delta X^a$ have dimensions of
 		mass, $N_a$ has dimensions of inverse mass. It therefore scales with the
 		value assigned to the Planck scale $\Mp$.
     \end{tabular}
@@ -6004,6 +6175,11 @@ write the following tables to the data container:
 	
 	\item \mintinline{sql}{threepf} --- contains the real part of the $\zeta$ 3-point function \\
 	\begin{tabular}{p{2.5cm}p{11.5cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
         \mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
         identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
@@ -6041,6 +6217,11 @@ write the following tables to the data container:
     \end{tabular}
 	The columns in each table are: \\
 	\begin{tabular}{p{2.5cm}p{11.5cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
 		\mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
         identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
@@ -6342,9 +6523,17 @@ That process Gantt chart for this job is shown
 in Fig.~\ref{fig:gantt-fNL}.
 \begin{figure}
     \begin{center}
-        \includegraphics[scale=0.5]{Outputs/gantt-fNL}    
+        \includegraphics[scale=0.5]{Outputs/gantt-fNL-arun}
     \end{center}
-    \caption{\label{fig:gantt-fNL}Process Gantt chart for the inner-product task \repoobject{dquad.fNL-local}.}
+    \begin{center}
+    	\includegraphics[scale=0.5]{Outputs/gantt-fNL-taff}	
+    \end{center}
+
+    \caption{\label{fig:gantt-fNL}Process Gantt charts for the inner-product task \repoobject{dquad.fNL-local}.
+    Top chart: using a machine with solid-state storage.
+    Bottom chart: using a machine with an external USB3 hard disk.
+    Notice that aggregation is more time consuming using disks.
+    Aggregation was performed using {\SQLite}'s write-ahead logging mode.}
 \end{figure}
 
 \subsubsection{Example: Using the {\SQLite} data container to produce a plot}
@@ -7747,7 +7936,7 @@ query expressions to restrict the configuration that are included.
 
 \end{itemize}
 
-\subsection{Enabling or disabling indices in a \mintinline{c++}{index_selector<>}}
+\subsection{Enabling or disabling indices in an \mintinline{c++}{index_selector<>}}
 \label{sec:index-selector}
 
 In~\S\ref{sec:example-backg-evolve}--\ref{sec:derived-lines}
@@ -8055,6 +8244,7 @@ compared with the hand-generated version Fig.~\ref{fig:dquad-fNL-plot}.
 \section{Managing repositories}
 \label{sec:repo-management}
 
+\subsection{Managing records}
 \S\ref{sec:apply-tags} explained the system of `tags' used to control which
 content groups are selected as data sources
 for postintegration or output tags.
@@ -8082,7 +8272,7 @@ If it is necessary to make adjustments to any of these definitions, it is
 preferable to add a new definition with a different name or to write into a new
 repository.
 
-\subsection{Specifying which objects to modify}
+\subsubsection{Specifying which objects to modify}
 \label{sec:specify-objects}
 {\CppTransport} allows modifications to be applied to many different
 repository records simultaneously.
@@ -8101,7 +8291,7 @@ as a regular expression and attempt to match it to any available content groups.
 For example, to match any content group produced in 2016 we could write
 \option{{-}{-}object \{2016.*\}}.
 
-\subsection{Adding and removing tags}
+\subsubsection{Adding and removing tags}
 \label{sec:add-remove-tags}
 
 Adding tags is accomplished using the
@@ -8113,7 +8303,7 @@ an argument provided to \option{{-}{-}object}.
 To remove a tag from all such groups use
 \option{{-}{-}delete-tag}.
 
-\subsection{Adding and removing notes}
+\subsubsection{Adding and removing notes}
 \label{sec:add-remove-notes}
 
 To add notes, use
@@ -8135,7 +8325,7 @@ removed.
     the removal in batches.    
 \end{warning}
 
-\subsection{Deleting content groups}
+\subsubsection{Deleting content groups}
 \label{sec:delete-content}
 
 To delete an unwanted content group use \option{{-}{-}delete}.
@@ -8143,13 +8333,210 @@ To delete an unwanted content group use \option{{-}{-}delete}.
 as data sources for other groups that remain in the repository,
 because this would disrupt its ability to provide a provenance for those groups.
 
-\subsection{Lock and unlock groups}
+\subsubsection{Lock and unlock groups}
 \label{sec:lock-unlock}
 
 Finally, groups can be \emph{locked} to prevent modifications. To do this use the
 \option{{-}{-}lock} switch.
 Locked groups cannot be altered or deleted until they are unlocked using
 \option{{-}{-}unlock}.
+
+\subsection{Summary of command-line options}
+This section summarizes the command-line
+options recognized by {\CppTransport} executables.
+\vspace{3mm}
+
+\noindent Housekeeping functions:
+\begin{itemize}
+	\item \option{{-}{-}help} \\
+	Display brief usage information and a list of all available options.
+	
+	\item \option{{-}{-}version} \\
+	Show version of {\CppTransport} used to build the model headers,
+	and the version of the runtime system. These need not be the same,
+	although {\CppTransport} requires the runtime system to be at least as recent
+	as the version used to build the headers.
+	
+	\item \option{{-}{-}license} \\
+	Display licensing information.
+	
+	\item \option{{-}{-}models} \\
+	Show list of models understood by this executable.
+	
+	\item \option{{-}{-}no-colour} or \option{{-}{-}no-color} \\
+	Do not produce colourized output.
+	Normally {\CppTransport} will detect whether the terminal
+	in which it is running can support colour.
+	However, if you are redirecting {\CppTransport}'s output to a file
+	then you may wish to manually suppress the use of colour.
+	
+	\item \option{{-}{-}include}, or abbreviate to \option{-I} \\
+	Adds the following path to the list of paths searched for resources.
+	Currently, the only resources needed by {\CppTransport}
+	are those used by the HTML report generator.
+\end{itemize}
+
+\noindent Configuration options:
+\begin{itemize}
+	\item \option{{-}{-}verbose}, or abbreviate to \option{-v} \\
+	Display extra status and update messages.
+	
+	\item \option{{-}{-}repo}, or abbreviate to \option{-r} \\
+	Should be followed by a path identifying the repository to be used.
+	If the repository does not exist then new, blank repository is created.
+	
+	\item \option{{-}{-}caches} \\
+	\option{{-}{-}batch-cache} \\
+	\option{{-}{-}datapipe-cache} \\
+	Followed by a cache size in Mb. Sets the corresponding cache size
+	(or both caches, if the option \option{{-}{-}caches} is used).
+	The \emph{batching cache} is used to temporarily
+	hold the data products from integration in memory before
+	flushing them to disk; see~\S\ref{sec:what-happens}.
+	The \emph{datapipe cache} stores data used to generate derived products.
+	This normally requires database access, which can be time consuming on a slow
+	filing system. Storing data in memory can give a significant performance
+	boost if the same data is re-used.
+	
+	\item \option{{-}{-}network-mode} \\
+	Disable use of the {\SQLite} write-ahead log. Must be used if the repository
+	is stored on a network filing system such as NFS or Lustre, but should
+	otherwise be omitted.
+\end{itemize}
+
+\noindent Job specification:
+\begin{itemize}
+	\item \option{{-}{-}create} \\
+	Write records held by this executable into the repository (\S\ref{sec:examine-k-database}).
+	
+	\item \option{{-}{-}task} \\
+	Followed by the name of task. Adds the named task to the list of work.
+	
+	\item \option{{-}{-}tag} \\
+	Specify a tag to be attached to any content groups generated by this
+	{\CppTransport} job.
+	For postintegration or output tasks,
+	filters the available content groups to those which share the specified tag.
+	Can be repeated multiple times to specify more than one tag.
+	
+	\item \option{{-}{-}checkpoint} \\
+	Set the checkpoint interval, measured in minutes.
+	Overrides any default checkpoints set by individual tasks.
+	
+	\item \option{{-}{-}seed} \\
+	Seed jobs using the specified content group.	
+\end{itemize}
+
+\noindent Repository actions:
+\begin{itemize}
+	\item \option{{-}{-}object} \\
+	Select objects to be modified.
+	Regular expressions can be used between curly braces
+	\mintinline{bash}+{+
+	$\cdots$
+	\mintinline{bash}+}+.
+	
+	\item \option{{-}{-}lock} \\
+	Lock repository records (preventing modification or deletion)
+	for content groups matching the object specification list.
+	
+	\item \option{{-}{-}unlock} \\
+	Unlock repository records matching the object specification list.
+	
+	\item \option{{-}{-}add-tag} \\
+	Add the specified tag to content groups matching the object specification
+	list. Can be repeated multiple times to add more than one tag.
+	
+	\item \option{{-}{-}delete-tag} \\
+	Remove the specified tag from content groups matching the object specification
+	list. Can be repeated to delete multiple tags.
+	
+	\item \option{{-}{-}add-note} \\
+	Add the specified note (which should be quoted if it contains spaces)
+	to any content groups
+	matching the object specification list. Can be repeated to add multiple notes.
+	
+	\item \option{{-}{-}delete-note} \\
+	Specifies a note to remove by number (check the repository record using
+	\option{{-}{-}info} to obtain a list of notes).
+	Can be applied to multiple content groups, but will remove the same numbered
+	note from each list.
+	
+	\item \option{{-}{-}delete} \\
+	Remove content groups matching the object specification list, provided no
+	other content groups depend on them.
+	
+	Notice that operations can be chained. For example,
+	\option{{-}{-}unlock} and
+	\option{{-}{-}delete} can be specified
+	at the same time, in which case unlocking is performed
+	\emph{before} deletion.
+	The same applies to other operations such as
+	adding or removing tags and notes.
+	If \option{{-}{-}lock} is specified then the record is locked
+	only after all other operations have been processed.
+\end{itemize}
+
+\noindent Repository reporting and status:
+\begin{itemize}
+	\item \option{{-}{-}record} \\
+	Perform recovery on the repository; see~\S\ref{sec:checkpointing}.
+	
+	\item \option{{-}{-}status} \\
+	Print brief report showing repository status.
+	Includes available tasks and the number of content groups
+	attached to each task, in addition to the details of any
+	in-flight jobs.
+	
+	\item \option{{-}{-}inflight} \\
+	Similar to \option{{-}{-}status}, but shows details of in-flight jobs only.
+	
+	\item \option{{-}{-}info} \\
+	Report on a specified repository record.
+	Matches any objects whose names begin with the specified string, so it is
+	not necessary to write the name out exactly.
+	Alternatively, a regular expression can be provided by wrapping
+	it in curly braces
+	\mintinline{bash}+{+ $\cdots$ \mintinline{bash}+}+.
+	
+	\item \option{{-}{-}provenance} \\
+	Report on the provenance of a specified output content group.
+	The provenance report shows all content groups which contributed
+	to each derived product generated as part of the group.
+	Name matching is as for \option{{-}{-}info}.
+	
+	\item \option{{-}{-}html} \\
+	Write a HTML-format report on the contents of the repository to
+	the specified folder.
+\end{itemize}
+
+\noindent Plotting options:
+\begin{itemize}
+	\item \option{{-}{-}plot-style}, or abbreviate to \option{-p} \\
+	Select a plotting style. See the discussion in~\S\ref{sec:environment}.	
+	
+	\item \option{{-}{-}mpl-backend} \\
+	Force {\CppTransport} to use a specified {\Matplotlib} backend.
+	See the discussion in~\S\ref{sec:environment}.
+\end{itemize}
+
+
+\noindent Journaling options:
+\begin{itemize}
+	\item \option{{-}{-}gantt} \\
+	Write a process Gantt chart, showing the activities of each process
+	in a multiprocess MPI job, to the specified file.
+	Any output format supported by {\Matplotlib} may be used,
+	selected by its extension.
+	Alternatively the extension \file{.py} may be specified to
+	obtain the Python script suitable for generating the plot.
+	
+	\item \option{{-}{-}journal} \\
+	Write a (very detailed) JSON-format journal showing the MPI
+	communication between workers. Mostly of value when debugging.
+\end{itemize}
+
+
 
 %\section{Conclusions} 
 %

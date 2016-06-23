@@ -49,6 +49,7 @@
 #include "y_common.h"
 
 #include "symbol_factory.h"
+#include "disable_warnings.h"
 #include "ginac/ginac.h"
 
 #include "boost/optional.hpp"

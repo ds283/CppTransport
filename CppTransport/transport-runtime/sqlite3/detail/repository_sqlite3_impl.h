@@ -36,9 +36,8 @@ namespace transport
     // Create a repository object associated with a pathname
     template <typename number>
     repository_sqlite3<number>::repository_sqlite3(const boost::filesystem::path path, model_manager<number>& f, repository_mode mode,
-                                                   local_environment& ev, error_handler e, warning_handler w, message_handler m)
-      : json_repository<number>(path, f, mode, ev, e, w, m,
-                                package_finder<number>(*this), task_finder<number>(*this), derived_product_finder<number>(*this)),
+                                                   local_environment& ev, argument_cache& ar)
+      : json_repository<number>(path, f, mode, ev, ar, package_finder<number>(*this), task_finder<number>(*this), derived_product_finder<number>(*this)),
         db(nullptr)
       {
         // check whether object exists in filesystem at the specified path; if not, we create it
@@ -60,6 +59,11 @@ namespace transport
                 msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
                 throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
+
+            sqlite3_extended_result_codes(db, 1);
+
+            // switch performance-related options to enforce maximum consistency
+            sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
           }
       }
 
@@ -153,6 +157,11 @@ namespace transport
             msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
             throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
+
+        sqlite3_extended_result_codes(db, 1);
+
+        // switch performance-related options to enforce maximum consistency
+        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 
         sqlite3_operations::create_repository_tables(db);
       }
@@ -349,7 +358,7 @@ namespace transport
 
         if(record.get_task()->is_kconfig_database_modified())   // only write out the full database if it is needed
           {
-            record.write_kconfig_database(abs_temporary);
+            record.write_kconfig_database(abs_temporary, this->args.get_network_mode());
 
             // if this succeeded, add this record to the transaction journal
             mgr.journal_deposit(abs_temporary, abs_database);
@@ -429,7 +438,7 @@ namespace transport
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
                                                this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
-        return std::make_unique< integration_task_record<number> >(reader, this->root_path, this->pkg_finder, pkg);
+        return std::make_unique< integration_task_record<number> >(reader, this->root_path, this->args.get_network_mode(), this->pkg_finder, pkg);
       }
 
 
@@ -645,7 +654,7 @@ namespace transport
         // check for a package with a duplicate name
         this->check_package_duplicate(ics.get_name());
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
         std::unique_ptr< package_record<number> > record = package_record_factory(ics, mgr);
         record->commit();
       }
@@ -699,13 +708,14 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
-        std::unique_ptr< integration_task_record<number> > record = integration_task_record_factory(tk, mgr);
-        record->commit();
-
-        // check whether the initial conditions package for this task is already present; if not, insert it
+        // check whether the initial conditions package for this task is already present; if not, insert it;
+        // this has to be done first in order to enforce foreign key constraints in the repository database
         unsigned int count = sqlite3_operations::count_packages(this->db, tk.get_ics().get_name());
         if(count == 0) this->commit(mgr, tk.get_ics());
+
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
+        std::unique_ptr< integration_task_record<number> > record = integration_task_record_factory(tk, mgr);
+        record->commit();
       }
 
 
@@ -733,11 +743,9 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
-        std::unique_ptr< output_task_record<number> > record = output_task_record_factory(tk, mgr);
-        record->commit();
-
         // check whether derived products on which this task depends have already been committed to the database
+        // if not, commit them; we need their records to be available in order to enforce foreign key constraints
+        // in the database
         const typename std::vector< output_task_element<number> > elements = tk.get_elements();
 
         for(const output_task_element<number>& elt : elements)
@@ -746,6 +754,10 @@ namespace transport
             unsigned int count = sqlite3_operations::count_products(this->db, product.get_name());
             if(count == 0) this->commit(mgr, product);
           }
+
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
+        std::unique_ptr< output_task_record<number> > record = output_task_record_factory(tk, mgr);
+        record->commit();
       }
 
 
@@ -813,17 +825,19 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
+        // check whether parent task is already committed to the database;
+        // if not, commit it; we need it to be available to enforce foreign key constraints in the database
+        unsigned int count = sqlite3_operations::count_tasks(this->db, tk.get_parent_task()->get_name());
+        if(count == 0)
+          {
+            this->autocommit(mgr, *tk.get_parent_task(), tk.get_name(),
+                             CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B,
+                             CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D);
+          }
+
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
         std::unique_ptr<postintegration_task_record < number> > record(postintegration_task_record_factory(tk, mgr));
         record->commit();
-
-        // check whether parent task is already committed to the database
-        unsigned int count = sqlite3_operations::count_tasks(this->db, tk.get_parent_task()->get_name());
-        if(count > 0) return;
-
-        this->autocommit(mgr, *tk.get_parent_task(), tk.get_name(),
-                         CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B,
-                         CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D);
       }
 
 
@@ -843,11 +857,8 @@ namespace transport
         // check for a derived product with a duplicate name
         this->check_product_duplicate(d.get_name());
 
-        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
-        std::unique_ptr< derived_product_record<number> > record = derived_product_record_factory(d, mgr);
-        record->commit();
-
-        // check whether all tasks on which this derived product depends are already in the database
+        // check whether all tasks on which this derived product depends are already in the database;
+        // if not, commit them: we need their records to be available to enforce foreign key constraints
         typename std::list<derivable_task<number>*> task_list;
         d.get_task_list(task_list);
 
@@ -862,6 +873,10 @@ namespace transport
                                  CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C, CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D);
               }
           }
+
+        // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
+        std::unique_ptr< derived_product_record<number> > record = derived_product_record_factory(d, mgr);
+        record->commit();
       }
 
 

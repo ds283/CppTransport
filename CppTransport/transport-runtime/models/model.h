@@ -154,28 +154,28 @@ namespace transport
       public:
 
         //! Return UID identifying the model
-        const std::string&                      get_identity_string() const { return(this->uid); }
+        const std::string& get_identity_string() const { return (this->uid); }
 
         //! Return version of translator used to produce the header
-        unsigned int                            get_translator_version() const { return(this->tver); }
+        unsigned int get_translator_version() const { return (this->tver); }
 
         //! Return name of the model implemented by this object
-        virtual const std::string&              get_name() const = 0;
+        virtual const std::string& get_name() const = 0;
 
         //! Return authors of the model implemented by this object
-        virtual const author_db&                get_authors() const = 0;
+        virtual const author_db& get_authors() const = 0;
 
         //! Return citation guideance for the model implemented by this object
-        virtual const std::string&              get_citeguide() const = 0;
+        virtual const std::string& get_citeguide() const = 0;
 
         //! Return description for the model implemented by this object
-        virtual const std::string&              get_description() const = 0;
+        virtual const std::string& get_description() const = 0;
 
         //! Return license for the model implemented by this object
-        virtual const std::string&              get_license() const = 0;
+        virtual const std::string& get_license() const = 0;
 
         //! Return revision for the model implemented by this object
-        virtual unsigned int                    get_revision() const = 0;
+        virtual unsigned int get_revision() const = 0;
 
         //! Return reference list for the model implemented by this object
         virtual const std::vector<std::string>& get_references() const = 0;
@@ -184,25 +184,25 @@ namespace transport
         virtual const std::vector<std::string>& get_urls() const = 0;
 
         //! Return name of backend used to do the computation
-        virtual const std::string&              get_backend() const = 0;
+        virtual const std::string& get_backend() const = 0;
 
         //! Return name of stepper used to do background evolution in the computation
-        virtual const std::string&              get_back_stepper() const = 0;
+        virtual const std::string& get_back_stepper() const = 0;
 
         //! Return name of stepper used to do perturbation evolution in the computation
-        virtual const std::string&              get_pert_stepper() const = 0;
+        virtual const std::string& get_pert_stepper() const = 0;
 
         //! Return (abs, rel) tolerance of stepper used to do background evolution
-        virtual std::pair< double, double >     get_back_tol() const = 0;
+        virtual std::pair<double, double> get_back_tol() const = 0;
 
         //! Return (abs, rel) tolerance of stepper used to do perturbation evolution
-        virtual std::pair< double, double >     get_pert_tol() const = 0;
+        virtual std::pair<double, double> get_pert_tol() const = 0;
 
         //! Return number of fields belonging to the model implemented by this object
-        virtual unsigned int                    get_N_fields() const = 0;
+        virtual unsigned int get_N_fields() const = 0;
 
         //! Return number of parameters required by the model implemented by this object
-        virtual unsigned int                    get_N_params() const = 0;
+        virtual unsigned int get_N_params() const = 0;
 
         //! Return vector of field names for the model implemented by this object
         virtual const std::vector<std::string>& get_field_names() const = 0;
@@ -356,7 +356,7 @@ namespace transport
         std::unique_ptr<reporting::key_value> make_key_value() { return std::make_unique<reporting::key_value>(this->env, this->args); }
 
         //! expose verbose option setting
-        bool is_verbose() const { return(this->args.get_verbose()); }
+        bool is_verbose() const { return this->args.get_verbose(); }
 
 
         // INTERNAL UTILITY FUNCTIONS

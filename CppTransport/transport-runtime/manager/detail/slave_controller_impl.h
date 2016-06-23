@@ -36,17 +36,16 @@ namespace transport
 
     template <typename number>
     slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                               local_environment& le, argument_cache& ac, model_manager<number>& f,
-                                               error_handler eh, warning_handler wh, message_handler mh)
+                                               local_environment& le, argument_cache& ac, model_manager<number>& f)
       : environment(e),
         world(w),
         local_env(le),
         arg_cache(ac),
         finder(f),
-        data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
-        err(eh),
-        warn(wh),
-        msg(mh)
+        data_mgr(data_manager_factory<number>(le, ac)),
+        err(error_handler(le, ac)),
+        warn(warning_handler(le, ac)),
+        msg(message_handler(le, ac))
       {
       }
 
@@ -97,11 +96,18 @@ namespace transport
                     break;
                   }
 
-                case MPI::RESET_CHECKPOINT:
+                case MPI::SET_LOCAL_CHECKPOINT:
                   {
                     unsigned int payload;
-                    this->world.recv(MPI::RANK_MASTER, MPI::RESET_CHECKPOINT, payload);
-                    if(this->data_mgr) this->data_mgr->set_checkpoint_interval(payload);
+                    this->world.recv(MPI::RANK_MASTER, MPI::SET_LOCAL_CHECKPOINT, payload);
+                    if(this->data_mgr) this->data_mgr->set_local_checkpoint_interval(payload);
+                    break;
+                  }
+
+                case MPI::UNSET_LOCAL_CHECKPOINT:
+                  {
+                    this->world.recv(MPI::RANK_MASTER, MPI::UNSET_LOCAL_CHECKPOINT);
+                    if(this->data_mgr) this->data_mgr->unset_local_checkpoint_interval();
                     break;
                   }
 
@@ -126,14 +132,13 @@ namespace transport
           {
             boost::filesystem::path repo_path = payload.get_repository_path();
 
-            this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly,
-                                                    this->local_env, this->err, this->warn, this->msg);
+            // set up a repository
+            this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly, this->local_env, this->arg_cache);
 
+            // replace current argument cache with the one provided in the payload
+            // changes in the batcher/pipe capacities and the checkpoint interval will be visible to
+            // the data manager, because it has a reference to the arg_cache member
             this->arg_cache = payload.get_argument_cache();
-
-            this->data_mgr->set_batcher_capacity(this->arg_cache.get_batcher_capacity());
-            this->data_mgr->set_pipe_capacity(this->arg_cache.get_datapipe_capacity());
-            this->data_mgr->set_checkpoint_interval(this->arg_cache.get_checkpoint_interval());
           }
         catch (runtime_exception& xe)
           {
@@ -145,10 +150,7 @@ namespace transport
                 this->err(xe.what());
                 repo = nullptr;
               }
-            else
-              {
-                throw xe;
-              }
+            else throw;
           }
       }
 
@@ -228,10 +230,7 @@ namespace transport
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->err(msg.str());
               }
-            else
-              {
-                throw xe;
-              }
+            else throw;
           }
       }
 
@@ -456,10 +455,7 @@ namespace transport
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->err(msg.str());
               }
-            else
-              {
-                throw xe;
-              }
+            else throw;
           }
       }
 
@@ -698,10 +694,7 @@ namespace transport
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->err(msg.str());
               }
-            else
-              {
-                throw xe;
-              }
+            else throw;
           }
       }
 
@@ -738,7 +731,7 @@ namespace transport
             std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold postintegration output
-            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher));
+            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(z2pf, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher));
 
             // is this 2pf task paired?
             if(z2pf->is_paired())
@@ -788,7 +781,7 @@ namespace transport
             std::unique_ptr< slave_container_dispatch<number> > p_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(p_dispatcher));
+            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(z3pf, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(p_dispatcher));
 
             if(z3pf->is_paired())
               {
@@ -848,7 +841,7 @@ namespace transport
             std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher), zfNL->get_template());
+            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(zfNL, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher), zfNL->get_template());
 
             this->schedule_postintegration(zfNL, ptk, payload, batcher);
           }
@@ -1000,7 +993,7 @@ namespace transport
       {
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Sending " << log_message << " message for container " << batcher.get_container_path();
 
-        MPI::data_ready_payload payload(batcher.get_container_path().string());
+        MPI::data_ready_payload payload(batcher.get_container_path());
 
         // advise master process that data is available in the named container
         boost::mpi::request push_msg = this->world.isend(MPI::RANK_MASTER, message, payload);

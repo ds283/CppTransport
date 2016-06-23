@@ -31,7 +31,7 @@ namespace transport
   {
 
     template <typename number>
-    bool sqlite3_twopf_writer_aggregate<number>::operator()(integration_writer<number>& writer, const std::string& product)
+    bool sqlite3_twopf_writer_aggregate<number>::operator()(integration_writer<number>& writer, const boost::filesystem::path& product)
       {
         return this->mgr.aggregate_twopf_batch(writer, product);
       }
@@ -52,7 +52,7 @@ namespace transport
 
 
     template <typename number>
-    bool sqlite3_threepf_writer_aggregate<number>::operator()(integration_writer<number>& writer, const std::string& product)
+    bool sqlite3_threepf_writer_aggregate<number>::operator()(integration_writer<number>& writer, const boost::filesystem::path& product)
       {
         return this->mgr.aggregate_threepf_batch(writer, product);
       }
@@ -73,7 +73,7 @@ namespace transport
 
 
     template <typename number>
-    bool sqlite3_zeta_twopf_writer_aggregate<number>::operator()(postintegration_writer<number>& writer, const std::string& product)
+    bool sqlite3_zeta_twopf_writer_aggregate<number>::operator()(postintegration_writer<number>& writer, const boost::filesystem::path& product)
       {
         return this->mgr.aggregate_zeta_twopf_batch(writer, product);
       }
@@ -94,7 +94,7 @@ namespace transport
 
 
     template <typename number>
-    bool sqlite3_zeta_threepf_writer_aggregate<number>::operator()(postintegration_writer<number>& writer, const std::string& product)
+    bool sqlite3_zeta_threepf_writer_aggregate<number>::operator()(postintegration_writer<number>& writer, const boost::filesystem::path& product)
       {
         return this->mgr.aggregate_zeta_threepf_batch(writer, product);
       }
@@ -115,7 +115,7 @@ namespace transport
 
 
     template <typename number>
-    bool sqlite3_fNL_writer_aggregate<number>::operator()(postintegration_writer<number>& writer, const std::string& product)
+    bool sqlite3_fNL_writer_aggregate<number>::operator()(postintegration_writer<number>& writer, const boost::filesystem::path& product)
       {
         return this->mgr.aggregate_fNL_batch(writer, product, this->type);
       }
