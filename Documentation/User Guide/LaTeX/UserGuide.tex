@@ -850,7 +850,7 @@ set of fields indexed by labels $a$, $b$, \ldots:
     \qquad
     \text{or}
     \qquad
-    X^a = (\delta\phi^\alpha, \delta\pi^\alpha) .    
+    \delta X^a = (\delta\phi^\alpha, \delta\pi^\alpha) .    
 \end{equation}
 
 \section{Installation}
@@ -5027,7 +5027,7 @@ and columns:
         \mintinline{sql}{eleN} below \\
         \mintinline{sql}{eleN} \ldots & \semibold{dimensionless components} of the real part of the field-space 2-point
         function, packed in a `right-most' ordering defined as follows.
-        Set $\langle X^a(\vect{k}_1) X^b(\vect{k}_2) \rangle = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
+        Set $\langle \delta X^a(\vect{k}_1) \delta X^b(\vect{k}_2) \rangle = (2\pi)^3 \delta(\vect{k}_1 + \vect{k}_2)
         \Sigma^{ab}$, where $a$, $b$ range over the fields and their
         canonical momenta
         (which for the purposes of the 2-point function are the same as the
@@ -5160,7 +5160,7 @@ In addition, tasks sampling the 3-point function include the following extra tab
         of the real part of the field-space 3-point
         function, packed in a `right-most' ordering as for the 2-point function.
         That is, if
-        $\langle X^a(\vect{k}_1) X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle =
+        $\langle \delta X^a(\vect{k}_1) \delta X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle =
         (2\pi)^3 \delta(\sum_i \vect{k}_i) \alpha^{abc}$,
         then
         $N = D^2 \times \#a + D \times \#b + \#c$.
@@ -5198,7 +5198,7 @@ to define the macro
 before including any {\CppTransport} headers.
 When enabled, this forces {\CppTransport} to use the
 \mintinline{sql}{unique_id} fields in each data table.
-These contain a unique integer encoding
+These contain a unique integer encoding the
 time-sample, wavenumber-sample and page number for the row.
 The extra time cost arises because for each
 \mintinline{sql}{INSERT} {\SQLite} must check
@@ -5644,7 +5644,7 @@ If we are interested only in connected correlation functions
 then we are free to reorder the fields inside any
 equal-time
 correlation function
-$\langle X^a(\vect{k}_1) X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle$
+$\langle \delta X^a(\vect{k}_1) \delta X^b(\vect{k}_2) X^c(\vect{k}_3) \rangle$
 because the failure of any pair of $X$s to commute will produce
 contact terms.
 Because {\CppTransport} solves the correlation functions for
@@ -6079,6 +6079,11 @@ the following tables:
 	
 	\item \mintinline{sql}{zeta_twopf} --- contains the real part of the $\zeta$ 2-point function \\
     \begin{tabular}{p{2.5cm}p{11.2cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
         \mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
         identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
@@ -6096,18 +6101,18 @@ the following tables:
     \begin{equation}
     	\zeta(\vect{k}) =
     	N_a(\vect{k})
-    	X^a(\vect{k})	
+    	\delta X^a(\vect{k})	
     	+
     	\frac{1}{2}
     	\int \frac{\d^3 q}{(2\pi)^3} \frac{\d^3 r}{(2\pi)^3}
     	\delta(\vect{k} - \vect{q} - \vect{r})
     	N_{ab}(\vect{q},\vect{r})
-    	X^a(\vect{q})
-    	X^b(\vect{r})
+    	\delta X^a(\vect{q})
+    	\delta X^b(\vect{r})
     	+ \cdots ,
     	\label{eq:gauge-xfm}
     \end{equation}
-	where $X^a$, $X^b$ (and so on) label fluctuations over the full phase space
+	where $\delta X^a$, $\delta X^b$ (and so on) label fluctuations over the full phase space
 	of fields and their derivatives with respect to $N$,
 	and the omitted terms represented by `$\cdots$' are higher order
 	$X$.
@@ -6130,6 +6135,11 @@ the following tables:
     momentum independent, {\CppTransport} does not assume this will always be the
     case and records the gauge transformation for each momentum configuration. \\
     \begin{tabular}{p{2.5cm}p{11.5cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
     	\mintinline{sql}{tserial} & 	reference to serial number \mintinline{sql}{times_samples.serial}
         identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
@@ -6146,7 +6156,7 @@ the following tables:
 		the gauge transformation~\eqref{eq:gauge-xfm} is taken to be written in
 		terms of \emph{derivatives}, as in Ref.~\cite{Dias:2014msa}, and not canonical momenta.
 		
-		Notice that because $\zeta$ is dimensionless but the $X^a$ have dimensions of
+		Notice that because $\zeta$ is dimensionless but the $\delta X^a$ have dimensions of
 		mass, $N_a$ has dimensions of inverse mass. It therefore scales with the
 		value assigned to the Planck scale $\Mp$.
     \end{tabular}
@@ -6165,6 +6175,11 @@ write the following tables to the data container:
 	
 	\item \mintinline{sql}{threepf} --- contains the real part of the $\zeta$ 3-point function \\
 	\begin{tabular}{p{2.5cm}p{11.5cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
         \mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
         identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
@@ -6202,6 +6217,11 @@ write the following tables to the data container:
     \end{tabular}
 	The columns in each table are: \\
 	\begin{tabular}{p{2.5cm}p{11.5cm}}
+        \mintinline{sql}{unique_id} & unique identifier labelling this row. Not used
+        unless strict data consistency checks are enabled
+        by defining the macro
+        \mintinline{c++}{CPPTRANSPORT_STRICT_CONSISTENCY} during
+        compilation. See~\S\ref{sec:strict-consistency}. \\
 		\mintinline{sql}{tserial} & reference to serial number \mintinline{sql}{times_samples.serial}
         identifying the time sample point for this row \\
         \mintinline{sql}{kserial} & reference to serial number \mintinline{sql}{twopf_samples.serial}
@@ -7916,7 +7936,7 @@ query expressions to restrict the configuration that are included.
 
 \end{itemize}
 
-\subsection{Enabling or disabling indices in a \mintinline{c++}{index_selector<>}}
+\subsection{Enabling or disabling indices in an \mintinline{c++}{index_selector<>}}
 \label{sec:index-selector}
 
 In~\S\ref{sec:example-backg-evolve}--\ref{sec:derived-lines}
