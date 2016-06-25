@@ -34,70 +34,39 @@
 
 void input_stack::push(const boost::filesystem::path name)
   {
-    struct inclusion incl;
-
-    incl.line = 1;
-    incl.name = name;
-
-    this->inclusions.push_front(incl);
+    this->inclusions.emplace_front(name, 1);
   }
 
 
 void input_stack::set_line(unsigned int line)
   {
-    if(inclusions.size() == 0)
-      {
-        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
-      }
-    else
-      {
-        this->inclusions[0].line = line;
-      }
+    if(inclusions.size() == 0) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
+
+    this->inclusions.front().line = line;
   }
 
 
 unsigned int input_stack::increment_line()
   {
-    unsigned int rval = 0;
+    if(inclusions.size() == 0) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
 
-    if(inclusions.size() == 0)
-      {
-        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
-      }
-    else
-      {
-        rval = ++this->inclusions[0].line;
-      }
-    return(rval);
+    return ++this->inclusions.front().line;
   }
 
 
 unsigned int input_stack::get_line() const
   {
-    unsigned int rval = 0;
+    if(inclusions.size() == 0) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
 
-    if(inclusions.size() == 0)
-      {
-        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
-      }
-    else
-      {
-        rval = this->inclusions[0].line;
-      }
-    return(rval);
+    return this->inclusions.front().line;
   }
 
 
 void input_stack::pop()
   {
-    if(inclusions.size() > 0)
-      {
-        this->inclusions.pop_front();
-      }
-    else
-      {
-        throw std::runtime_error(ERROR_FILESTACK_TOO_SHORT);
-      }
+    if(inclusions.size() == 0) throw std::runtime_error(ERROR_FILESTACK_TOO_SHORT);
+
+    this->inclusions.pop_front();
   }
 
 
@@ -111,21 +80,23 @@ std::string input_stack::write(size_t level) const
   {
     std::ostringstream out;
 
-    if(this->inclusions.size() < level)
-      {
-        level = (unsigned int)this->inclusions.size();
-      }
+    if(this->inclusions.size() < level) level = static_cast<unsigned int>(this->inclusions.size());
 
     if(level >= 1)
       {
-        out << this->inclusions[0].line << " " << OUTPUT_STACK_OF << " " << this->inclusions[0].name;
+        const inclusion& item = this->inclusions.front();
+        out << item.line << " " << OUTPUT_STACK_OF << " " << item.name;
       }
 
-    for(int i = 1; i < level; ++i)
+    unsigned int level_counter = 1;
+    for(inclusion_stack::const_iterator t = this->inclusions.begin()++; t != this->inclusions.end() && level_counter < level; ++t)
       {
+        const inclusion& item = *t;
         out << '\n'
-            << OUTPUT_STACK_WRAP_PAD << OUTPUT_STACK_INCLUDED_FROM << " " << this->inclusions[i].line
-            << " " << OUTPUT_STACK_OF_FILE << " " << this->inclusions[i].name;
+            << OUTPUT_STACK_WRAP_PAD << OUTPUT_STACK_INCLUDED_FROM << " " << item.line
+            << " " << OUTPUT_STACK_OF_FILE << " " << item.name;
+
+        ++level_counter;
       }
 
     return(out.str());

@@ -133,7 +133,7 @@ lexstream<Keywords, Characters>::lexstream(lexstream_data& p,
     if(!this->parse(data_payload.get_model_input()))
       {
         std::ostringstream msg;
-        msg << ERROR_OPEN_TOPLEVEL << " '" << data_payload.get_model_input() << "'";
+        msg << ERROR_OPEN_TOPLEVEL << " '" << data_payload.get_model_input().string() << "'";
 
         error_context err_context(stack, data_payload.get_error_handler(), data_payload.get_warning_handler());
         err_context.error(msg.str());
