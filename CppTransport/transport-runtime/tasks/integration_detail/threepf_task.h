@@ -62,7 +62,7 @@ namespace transport
 		enum class threepf_ics_exit_type { smallest_wavenumber_exit, kt_wavenumber_exit};
 
     // three-point function task
-    template <typename number>
+    template <typename number=default_number_type>
     class threepf_task: public twopf_db_task<number>
 	    {
 
