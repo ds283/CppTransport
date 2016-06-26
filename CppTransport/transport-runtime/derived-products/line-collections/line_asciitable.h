@@ -96,8 +96,8 @@ namespace transport
 							    }
 
                 // set format to CSV or TSV if it is specified
-                if(this->filename.extension().string() == "csv") format = table_format::csv;
-                if(this->filename.extension().string() == "tsv") format = table_format::tsv;
+                if(this->filename.extension().string() == ".csv") format = table_format::csv;
+                if(this->filename.extension().string() == ".tsv") format = table_format::tsv;
 					    }
 
 				    //! Deserialization constructor
