@@ -283,7 +283,7 @@ namespace transport
 
 								for(unsigned int i = 0; i < data.size(); ++i)
 									{
-								    typename std::deque< typename line_collection<number>::output_value > values = data[i].get_values();
+								    const typename std::deque< typename line_collection<number>::output_value >& values = data[i].get_values();
 
 										assert(values.size() == x.size());
 

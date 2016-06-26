@@ -354,8 +354,6 @@ namespace transport
                            const std::vector<std::string>& columns, const std::vector<double>& xs,
                            const std::vector< std::vector<number> >& ys, const std::string tag)
 	    {
-        assert(xs.size() == ys.size());
-
         // format data into a set of column titles
         std::vector<column_descriptor> table_columns;
         std::vector< std::vector<std::string> > table(columns.size() + 1);
@@ -381,6 +379,8 @@ namespace transport
         // now aggregate the remaining columns
         for(const std::vector<number>& col : ys)
           {
+            assert(xs.size() == col.size());
+
             for(const double y : col)
               {
                 std::ostringstream entry;
