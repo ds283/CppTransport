@@ -162,6 +162,9 @@ namespace transport
 
       };
 
+
+    enum class asciitable_format { justified, csv, tsv };
+
     class asciitable
 	    {
 
@@ -191,15 +194,28 @@ namespace transport
 
 		    //! Write columns of numbers; the data in ys should be stored column-wise
         template <typename number>
-        void write(std::string x_name, const std::vector<std::string>& columns,
-                   const std::vector<double>& xs, const std::vector<std::vector<number> >& ys,
-                   const std::string tag = "");
+        void write_formatted_data(std::string x_name, const std::vector<std::string>& columns,
+                                  const std::vector<double>& xs, const std::vector<std::vector<number> >& ys,
+                                  const std::string tag = "", asciitable_format format=asciitable_format::justified);
 
         //! Write columns of text; the data in table should be stored column-wise;
         //! vector of column descriptors is not marked const since the descriptors need to cache internal state
         //! while writing out the table
         void write(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
-                   const std::string tag = "");
+                   const std::string tag = "", asciitable_format format=asciitable_format::justified);
+
+
+        // LAYOUT ENGINES
+
+      protected:
+
+        //! Justified layout
+        void write_justified(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
+                             const std::string tag);
+
+        //! CSV layout
+        void write_csv(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
+                       const std::string tag, const std::string separator=",");
 
 
         // INTERFACE -- SET PROPERTIES
@@ -263,7 +279,34 @@ namespace transport
 
 
     void asciitable::write(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
-                           const std::string tag)
+                           const std::string tag, asciitable_format format)
+      {
+        // determine which layout engine to use
+        switch (format)
+          {
+            case asciitable_format::justified:
+              {
+                this->write_justified(columns, table, tag);
+                break;
+              }
+
+            case asciitable_format::csv:
+              {
+                this->write_csv(columns, table, tag, ",");
+                break;
+              }
+
+            case asciitable_format::tsv:
+              {
+                this->write_csv(columns, table, tag, "\t");
+                break;
+              }
+          }
+      }
+
+
+    void asciitable::write_justified(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
+                                     const std::string tag)
       {
         assert(columns.size() == table.size());
         if(columns.size() != table.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS);
@@ -349,10 +392,51 @@ namespace transport
       }
 
 
+    void asciitable::write_csv(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
+                               const std::string tag, const std::string separator)
+      {
+        assert(columns.size() == table.size());
+        if(columns.size() != table.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS);
+
+        // write out tag if one has been given
+        if(!tag.empty())
+          {
+            this->stream << "// " << tag << '\n';
+          }
+
+        size_t column_height = 0;
+
+        // write out column headings
+        unsigned int col = 0;
+        for(column_descriptor& desc : columns)
+          {
+            if(col > 0) this->stream << separator;
+            this->stream << '\"' << desc.get_name() << '\"';
+
+            if(table[col].size() > column_height) column_height = table[col].size();
+            ++col;
+          }
+        this->stream << '\n';
+
+        // write out column data
+        for(size_t i = 0; i < column_height; ++i)
+          {
+            for(size_t j = 0; j < table.size(); ++j)
+              {
+                std::string entry = i < table[j].size() ? (table[j])[i] : "";
+                if(j > 0) this->stream << separator;
+                this->stream << entry;
+              }
+            this->stream << '\n';
+          }
+      }
+
+
     template <typename number>
-    void asciitable::write(std::string x_name,
-                           const std::vector<std::string>& columns, const std::vector<double>& xs,
-                           const std::vector< std::vector<number> >& ys, const std::string tag)
+    void asciitable::write_formatted_data(std::string x_name,
+                                          const std::vector<std::string>& columns, const std::vector<double>& xs,
+                                          const std::vector<std::vector<number> >& ys, const std::string tag,
+                                          asciitable_format format)
 	    {
         // format data into a set of column titles
         std::vector<column_descriptor> table_columns;
@@ -399,7 +483,7 @@ namespace transport
             ++current_column;
           }
 
-        this->write(table_columns, table, tag);
+        this->write(table_columns, table, tag, format);
 	    }
 
   }   // namespace transport
