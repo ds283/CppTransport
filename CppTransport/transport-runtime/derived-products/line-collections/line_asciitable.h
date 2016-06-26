@@ -309,7 +309,7 @@ namespace transport
 						    std::copy(axis.begin(), axis.end(), std::back_inserter(x));
 
 								// copy values into array ys
-                // the entries in ys are stored columnwise
+                // the entries in ys are stored columnwise, ie. first index is column, second index is row
 						    std::vector< std::vector<number> > ys(labels.size());
 
 								for(unsigned int j = 0; j < ys.size(); ++j)

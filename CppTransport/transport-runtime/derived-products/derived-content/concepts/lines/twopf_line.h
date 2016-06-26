@@ -168,7 +168,7 @@ namespace transport
 		        gadget(tk),
 		        active_indices(sel),
 		        twopf_meaning(twopf_type::real),
-		        dimensionless(false)
+		        dimensionless(true)
 			    {
 		        if(active_indices.get_number_fields() != gadget.get_N_fields())
 			        {
