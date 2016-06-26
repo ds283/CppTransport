@@ -5039,7 +5039,8 @@ and columns:
         fields first, in the order defined in the model description file,
         followed by momenta, in the same order as the fields.
         
-        The quantity stored is $\Re(k^3 \Sigma^{ab})$, where $k = |\vect{k}_1| = |\vect{k}_2|$
+        The quantity stored is $\Re(k^3 \Sigma^{ab})$,
+        where $k = |\vect{k}_1| = |\vect{k}_2|$
         is the common magnitude of the momenta.
         This is independent of the comoving normalization, making the results
         easy to remap into whatever units are convenient.
@@ -7146,7 +7147,12 @@ economical expression.
 \end{itemize}
 
 \subsubsection{Plot-specific options}
-In addition, there are a number of options which are specific to plots.
+\label{sec:plot-options}
+In addition, there are a number of options which are specific to plots,
+ie. the objects
+\mintinline{c++}{time_series_plot<>}
+and
+\mintinline{c++}{wavenumber_series_plot<>}.
 As usual, the \mintinline{c++}{set_*} methods can be chained.
 
 \para{Axis handling}
@@ -7283,6 +7289,32 @@ The following options determine labelling:
     
     Enabled by default.
 \end{itemize}
+
+\subsubsection{Table-specific options}
+\label{sec:table-options}
+For the table objects
+\mintinline{c++}{time_series_table<>}
+and
+\mintinline{c++}{wavenumber_series_table<>}
+there is an option to select the table format:
+\begin{itemize}
+    \item \mintinline{c++}{vis_toolkit::table_format get_format()} \\
+    \mintinline{c++}{set_format(vis_toolkit::table_format f)} \\
+    Determine the format of the table. The allowed options are: \\
+    \begin{tabular}{p{6.5cm}p{7cm}}
+        \mintinline{c++}{vis_toolkit::table_format::justified} & aligned in columns, padded with spaces \\
+        \mintinline{c++}{vis_toolkit::table_format::csv} & comma-separated value \\
+        \mintinline{c++}{vis_toolkit::table_format::tsv} & tab-separated value
+    \end{tabular} \\
+    The default format is determined from the filename
+    extension. If this is
+    \file{.csv} or \file{.tsv}
+    then the format is set to CSV or TSV respectively.
+    The other allowed formats are
+    \file{.txt}, \file{.data}
+    and \file{.dat} which use justified output.
+\end{itemize}
+
 
 \subsection{Available derived lines}
 \label{sec:derived-lines}
@@ -7444,6 +7476,7 @@ have additional options:
     \begin{equation}
         \DimlessSigma = \frac{k^3}{2\pi^2} \Sigma .
     \end{equation}
+    Enabled by default.
 \end{itemize}
 The field-space two-point function lines
 \mintinline{c++}{twopf_time_series}
@@ -7487,6 +7520,7 @@ These lines have additional options:
     \begin{equation}
         \DimlessB = (k_1 k_2 k_3)^2 \alpha .
     \end{equation}
+    Enabled by default.
     
     \item \mintinline{c++}{bool get_use_kt_label()} \\
     \mintinline{c++}{set_use_kt_label(bool)} \\
