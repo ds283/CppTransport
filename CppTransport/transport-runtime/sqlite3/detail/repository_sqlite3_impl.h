@@ -63,7 +63,7 @@ namespace transport
             sqlite3_extended_result_codes(db, 1);
 
             // switch performance-related options to enforce maximum consistency
-            sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+            sqlite3_operations::consistency_pragmas(db);
           }
       }
 
@@ -161,7 +161,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // switch performance-related options to enforce maximum consistency
-        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::consistency_pragmas(db);
 
         sqlite3_operations::create_repository_tables(db);
       }

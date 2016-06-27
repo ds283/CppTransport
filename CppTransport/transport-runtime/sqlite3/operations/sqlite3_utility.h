@@ -40,6 +40,8 @@ namespace transport
 		    // error-check an exec statement
 		    inline void exec(sqlite3* db, const std::string& stmt, const std::string& err)
 			    {
+            assert(db != nullptr);
+
 		        char* errmsg;
 
 		        int status = sqlite3_exec(db, stmt.c_str(), nullptr, nullptr, &errmsg);
@@ -56,6 +58,8 @@ namespace transport
 		    // error-check an exec statement
 		    inline void exec(sqlite3* db, const std::string& stmt)
 			    {
+            assert(db != nullptr);
+
 		        char* errmsg;
 
 		        int status = sqlite3_exec(db, stmt.c_str(), nullptr, nullptr, &errmsg);
@@ -72,6 +76,8 @@ namespace transport
 		    // error-check a non-exec statement
 		    inline void check_stmt(sqlite3* db, int status, const std::string& err, int check_code=SQLITE_OK)
 			    {
+            assert(db != nullptr);
+
 		        if(status != check_code)
 			        {
 		            std::ostringstream msg;
@@ -84,20 +90,23 @@ namespace transport
 		    // error-check a non-exec statement
 		    inline void check_stmt(sqlite3* db, int status, int check_code=SQLITE_OK)
 			    {
+            assert(db != nullptr);
+
 		        if(status != check_code)
 			        {
 		            std::ostringstream msg;
 		            msg << CPPTRANSPORT_SQLITE_UTILITY_ERROR << " " << sqlite3_errmsg(db) << " [status=" << status << "]";
-//		            std::cerr << msg.str() << '\n';
-//				        assert(false);
 		            throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
 			        }
 			    }
 
 
-				// apply PRAGMAs to optimize performance
-				inline void performance_pragmas(sqlite3* db, bool network_filesystem)
+				// apply PRAGMAs to optimize performance when writing
+        // a database container for the first time
+				inline void container_write_pragmas(sqlite3* db, bool network_filesystem)
 					{
+            assert(db != nullptr);
+
 						// SQLite performance choices:
 						// http://blog.devart.com/increasing-sqlite-performance.html
 						// https://wiki.mozilla.org/Performance/Avoid_SQLite_In_Your_Next_Firefox_Feature#Important_Pragmas
@@ -134,8 +143,8 @@ namespace transport
 					}
 
 
-				// apply PRAGMAs to maximize consistency
-				inline void consistency_pragmas(sqlite3* db, bool network_filesystem)
+				// apply PRAGMAs to maximize consistency when reading a database container
+				inline void consistency_pragmas(sqlite3* db)
 					{
 						// SQLite performance choices:
 						// http://blog.devart.com/increasing-sqlite-performance.html
@@ -145,17 +154,7 @@ namespace transport
 						char* errmsg;
 						sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
 
-						// if write-ahead log mode is disabled (as it must be if a network filing system is in play)
-						// then put journal into truncate mode
-						// otherwise, enable to write-ahead log
-            if(network_filesystem)
-              {
-                sqlite3_exec(db, "PRAGMA journal_mode = TRUNCATE;", nullptr, nullptr, &errmsg);
-              }
-            else
-              {
-                sqlite3_exec(db, "PRAGMA journal_mode = WAL;", nullptr, nullptr, &errmsg);
-              }
+            // don't change the journal mode
 
 						// force temporary objects to be stored in memory, for speed
 						sqlite3_exec(db, "PRAGMA temp_store = MEMORY;", nullptr, nullptr, &errmsg);
@@ -169,6 +168,16 @@ namespace transport
 						// PAGE_SIZE unlikely to make much difference except in windows
 						sqlite3_exec(db, "PRAGMA page_size = 4096;", nullptr, nullptr, &errmsg);
 					}
+
+
+        // force a database into TRUNCATE journal mode
+        inline void force_truncate_journal(sqlite3* db)
+          {
+            assert(db != nullptr);
+
+            char* errmsg;
+            sqlite3_exec(db, "PRAGMA journal_mode = TRUNCATE;", nullptr, nullptr, &errmsg);
+          }
 
 
 			}   // namespace sqlite3_operations

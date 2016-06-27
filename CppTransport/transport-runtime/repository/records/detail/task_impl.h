@@ -173,7 +173,7 @@ namespace transport
           }
 
         sqlite3_extended_result_codes(handle, 1);
-        sqlite3_operations::consistency_pragmas(handle, network_mode);
+        sqlite3_operations::consistency_pragmas(handle);
 
         // ingest task data
         tk = integration_task_helper::deserialize<number>(this->name, reader, handle, f);
@@ -226,7 +226,7 @@ namespace transport
           }
 
         sqlite3_extended_result_codes(handle, 1);
-        sqlite3_operations::consistency_pragmas(handle, network_mode);
+        sqlite3_operations::consistency_pragmas(handle);
 
         this->tk->write_kconfig_database(handle);
 
