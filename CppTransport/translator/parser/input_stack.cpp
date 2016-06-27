@@ -89,7 +89,7 @@ std::string input_stack::write(size_t level) const
       }
 
     unsigned int level_counter = 1;
-    for(inclusion_stack::const_iterator t = this->inclusions.begin()++; t != this->inclusions.end() && level_counter < level; ++t)
+    for(inclusion_stack::const_iterator t = ++this->inclusions.begin(); t != this->inclusions.end() && level_counter < level; ++t)
       {
         const inclusion& item = *t;
         out << '\n'
