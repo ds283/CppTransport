@@ -39,6 +39,8 @@
 #include "boost/uuid/uuid_io.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 
+#include "openssl/md5.h"
+
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
 
@@ -193,8 +195,19 @@ namespace macro_packages
               }
           }
 
+        // hash using MD5 so we are guaranteed to get the same result on all platforms
+        unsigned char result[MD5_DIGEST_LENGTH];
+        MD5(reinterpret_cast<const unsigned char*>(uid_str.str().c_str()), uid_str.str().length(), result);
+
+        std::ostringstream id_str;
+        for(unsigned int i = 0; i < MD5_DIGEST_LENGTH; ++i)
+          {
+            id_str << std::setw(2) << static_cast<int>(result[i]);
+          }
+
+        // convert hash to UUID-like format for convenience
         boost::uuids::string_generator gen;
-        boost::uuids::uuid id = gen(uid_str.str());
+        boost::uuids::uuid id = gen(id_str.str());
 
         return(boost::uuids::to_string(id));
       }
