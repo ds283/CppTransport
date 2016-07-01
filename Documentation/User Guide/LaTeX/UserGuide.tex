@@ -130,6 +130,7 @@
 \newcommand{\DataGrip}{{\packagefont DataGrip}}
 \newcommand{\Sqliteman}{{\packagefont Sqliteman}}
 \newcommand{\DBeaver}{{\packagefont DBeaver}}
+\newcommand{\OpenSSL}{{\packagefont OpenSSL}}
 
 \newcommand{\Boost}{{\packagefont Boost}}
 \newcommand{\odeint}{{\packagefont odeint}}
@@ -992,10 +993,16 @@ a packaging system.
 This is almost certain to be installed on every Linux or OS X machine,
 but some extra developer files may be required.
 
+\item \semibold{The {\OpenSSL} library.}
+This is needed to calculate MD5 hashes, which {\CppTransport} uses
+to uniquely identify models. The MD5 algorithm is used to give consistent results
+on all platforms.
+
 \end{itemize}
 Typically, some of
 these dependencies
-(such as {\CMake}, an {\MPI} implementation, Boost, SQLite) will already
+(such as {\CMake}, an {\MPI} implementation, Boost, {\SQLite}, {\OpenSSL})
+will already
 be available in a managed HPC environment
 such as a compute cluster.
 All of them
@@ -1086,7 +1093,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
     The dependencies for {\CppTransport}
     can be installed simultaneously by typing
     \begin{minted}{bash}
-        sudo port install cmake openmpi boost +openmpi ginac 
+        sudo port install cmake openmpi boost +openmpi ginac openssl
     \end{minted}
     (Note that the combination
     \mintinline{bash}{boost +openmpi} is a single item and instructs
@@ -1115,6 +1122,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
 \end{enumerate}
 
 \para{Using {\Homebrew}}
+The procedure is similar for Homebrew.
 
 \begin{itemize}
     \item Install {\Homebrew} by following the instructions at
@@ -1122,7 +1130,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
     
     \item To install the major {\CppTransport} dependencies, execute
     \begin{minted}{bash}
-        brew install cmake openmpi ginac
+        brew install cmake openmpi ginac openssl
         brew install boost --c++11 --with-mpi --without-single 
     \end{minted}
 
@@ -1151,7 +1159,7 @@ Debian-based distribution.
 
 From a terminal, issue the command:
 \begin{minted}{bash}
-    sudo apt-get install libsqlite3-dev libboost-all-dev libginac-dev libopenmpi-dev cmake python-matplotlib python-seaborn graphviz git texlive texlive-latex-extra texlive-fonts-recommended
+    sudo apt-get install libsqlite3-dev libboost-all-dev libginac-dev libopenmpi-dev libssl-dev cmake python-matplotlib python-seaborn graphviz git texlive texlive-latex-extra texlive-fonts-recommended
 \end{minted}
 This will download and install all required packages and their dependencies.
 Depending what is already available on your machine, this may be a sizeable
@@ -1171,7 +1179,7 @@ These are commercial products, but free licenses are available
 to researchers with an academic email address.
 In particular, {\DataGrip} is a good candidate
 for a tool to manage or interrogate the SQL databases which
-{\CppTransport} produces.
+{\CppTransport} produces (see~\S\ref{sec:examine-k-database}).
 
 \subsection{Building the translator}
 \label{sec:build-translator}
@@ -1247,17 +1255,7 @@ and the location of the {\CC}
 compiler as the value
 of \cmakevar{CMAKE\_CXX\_COMPILER}.
 
-If configuration is successful, build the translator%
-	\footnote{If you are using a recent version of {\GiNaC}
-	from the 1.7 series, you may see a large number of warnings
-	during compilation
-	of the form
-	\begin{center}
-		\ttfamily
-		warning: `class\_name' overrides a member function but is not marked 'override'
-	\end{center}
-	These are harmless and presumably will be fixed in a later release
-	of {\GiNaC}.}
+If configuration is successful, build the translator
 and then install:
 \begin{minted}{bash}
 	make CppTransport -j4
