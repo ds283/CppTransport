@@ -118,5 +118,8 @@
 
 #define CPPTRANSPORT_REPO_COMMIT_READONLY             "Internal error: Attempt to commit read-only record"
 
+#define CPPTRANSPORT_REPOSITORY_MODE_READONLY         "read-only"
+#define CPPTRANSPORT_REPOSITORY_MODE_READWRITE        "read-write"
+
 
 #endif // CPPTRANSPORT_MESSAGES_EN_REPOSITORY_H

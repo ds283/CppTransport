@@ -37,6 +37,23 @@ namespace transport
         readwrite
       };
 
+
+    inline std::string to_string(repository_mode m)
+      {
+        switch(m)
+          {
+            case repository_mode::readonly:
+              {
+                return std::string(CPPTRANSPORT_REPOSITORY_MODE_READONLY);
+              }
+
+            case repository_mode::readwrite:
+              {
+                return std::string(CPPTRANSPORT_REPOSITORY_MODE_READWRITE);
+              }
+          }
+      }
+
   }
 
 
