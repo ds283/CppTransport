@@ -46,11 +46,7 @@
 #include "boost/log/utility/formatting_ostream.hpp"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT        "line-asciitable"
 
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION   "precision"
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL     "x-label"
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET "x-label-set"
 
 
 namespace transport
@@ -58,6 +54,18 @@ namespace transport
 
 		namespace derived_data
 			{
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT        = "line-asciitable";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION   = "precision";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL     = "x-label";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET = "x-label-set";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_FORMAT      = "format";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_JUSTIFIED   = "justified";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_CSV         = "csv";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_TSV         = "tsv";
+
+				enum class table_format { justified, csv, tsv };
 
 				template <typename number>
 		    class line_asciitable: public line_collection<number>
@@ -68,19 +76,28 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    line_asciitable(const std::string& name, const boost::filesystem::path& filename, unsigned int prec=CPPTRANSPORT_DEFAULT_TABLE_PRECISION)
+				    line_asciitable(const std::string& name, const boost::filesystem::path& filename,
+                            table_format f=table_format::justified,
+                            unsigned int prec=CPPTRANSPORT_DEFAULT_TABLE_PRECISION)
 		          : line_collection<number>(name, filename),
+                format(f),
 				        x_label_set(false),
 				        precision(prec)
 				    {
 						    if(this->filename.extension().string() != ".txt" &&
 							     this->filename.extension().string() != ".dat" &&
-							     this->filename.extension().string() != ".data")
+							     this->filename.extension().string() != ".data" &&
+                   this->filename.extension().string() != ".csv" &&
+                   this->filename.extension().string() != ".tsv")
 							    {
 						        std::ostringstream msg;
 								    msg << CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_UNSUPPORTED_FORMAT << " " << filename.extension();
 								    throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 							    }
+
+                // set format to CSV or TSV if it is specified
+                if(this->filename.extension().string() == ".csv") format = table_format::csv;
+                if(this->filename.extension().string() == ".tsv") format = table_format::tsv;
 					    }
 
 				    //! Deserialization constructor
@@ -148,11 +165,16 @@ namespace transport
 				    //! set x-axis text label
 				    line_asciitable<number>& set_x_label(const std::string& l) { this->internal_set_x_label(l); this->x_label_set = true; return *this; }
 
+            //! get table format
+            table_format get_format() const { return(this->format); }
+
+            //! set table format
+            line_asciitable<number>& set_format(table_format f) { this->format = f; return *this; }
+
 		      protected:
 
 				    void internal_set_x_label(const std::string& l) { this->x_label = l; }
 
-		      public:
 
 		        // SETTING DEFAULTS
 
@@ -200,6 +222,9 @@ namespace transport
 		        //! which labels have been explicitly set?
 		        bool x_label_set;
 
+            //! table format
+            table_format format;
+
 			    };
 
 
@@ -210,6 +235,17 @@ namespace transport
 						precision   = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION].asUInt();
 						x_label     = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL].asString();
 						x_label_set = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET].asBool();
+
+            std::string fm = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_FORMAT].asString();
+            if     (fm == std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_JUSTIFIED)) format = table_format::justified;
+            else if(fm == std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_CSV))       format = table_format::csv;
+            else if(fm == std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_TSV))       format = table_format::tsv;
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_UNSUPPORTED_TYPE << " '" << fm << "'";
+                throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
+              }
 					}
 
 
@@ -273,7 +309,7 @@ namespace transport
 						    std::copy(axis.begin(), axis.end(), std::back_inserter(x));
 
 								// copy values into array ys
-                // the entries in ys are stored columnwise
+                // the entries in ys are stored columnwise, ie. first index is column, second index is row
 						    std::vector< std::vector<number> > ys(labels.size());
 
 								for(unsigned int j = 0; j < ys.size(); ++j)
@@ -283,7 +319,7 @@ namespace transport
 
 								for(unsigned int i = 0; i < data.size(); ++i)
 									{
-								    typename std::deque< typename line_collection<number>::output_value > values = data[i].get_values();
+								    const typename std::deque< typename line_collection<number>::output_value >& values = data[i].get_values();
 
 										assert(values.size() == x.size());
 
@@ -293,7 +329,26 @@ namespace transport
 											}
 									}
 
-								writer.write(this->x_label, labels, x, ys, "");
+                switch(this->format)
+                  {
+                    case table_format::justified:
+                      {
+                        writer.write_formatted_data(this->x_label, labels, x, ys, "", asciitable_format::justified);
+                        break;
+                      }
+
+                    case table_format::csv:
+                      {
+                        writer.write_formatted_data(this->x_label, labels, x, ys, "", asciitable_format::csv);
+                        break;
+                      }
+
+                    case table_format::tsv:
+                      {
+                        writer.write_formatted_data(this->x_label, labels, x, ys, "", asciitable_format::tsv);
+                        break;
+                      }
+                  }
 							}
 						else
 							{
@@ -311,6 +366,27 @@ namespace transport
 				    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION]   = this->precision;
 				    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL]     = this->x_label;
 				    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET] = this->x_label_set;
+
+            switch(this->format)
+              {
+                case table_format::justified:
+                  {
+                    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_FORMAT] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_JUSTIFIED);
+                    break;
+                  }
+
+                case table_format::csv:
+                  {
+                    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_FORMAT] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_CSV);
+                    break;
+                  }
+
+                case table_format::tsv:
+                  {
+                    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_FORMAT] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_TSV);
+                    break;
+                  }
+              }
 
 						// call next serializer
 						this->line_collection<number>::serialize(writer);

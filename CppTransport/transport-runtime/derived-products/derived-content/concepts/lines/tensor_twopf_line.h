@@ -147,7 +147,7 @@ namespace transport
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        gadget(tk),
 		        active_indices(sel),
-            dimensionless(false)
+            dimensionless(true)
 			    {
 				    if(active_indices.get_number_fields() != 2)
 					    {

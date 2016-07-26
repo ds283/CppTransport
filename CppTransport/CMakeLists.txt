@@ -56,6 +56,9 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS log system filesystem random timer date_t
 # find GiNaC library
 FIND_PACKAGE(GiNaC REQUIRED)
 
+# find OpenSSL libraries
+FIND_PACKAGE(OpenSSL REQUIRED)
+
 
 # handle non-standard external dependencies
 ADD_CUSTOM_TARGET(DEPS ALL)
@@ -163,7 +166,7 @@ ADD_EXECUTABLE(CppTransport
 
 ADD_DEPENDENCIES(CppTransport DEPS)
 
-TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
 TARGET_COMPILE_OPTIONS(CppTransport PRIVATE -std=c++14)
 
 TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
@@ -191,6 +194,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/utilities
   ${Boost_INCLUDE_DIRS}
   ${GINAC_INCLUDE_DIRS}
+  ${OPENSSL_INCLUDE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   )
 

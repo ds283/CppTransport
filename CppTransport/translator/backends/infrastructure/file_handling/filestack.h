@@ -41,13 +41,25 @@ class filestack
 
   public:
 
-    // TODO: intended to be explicitly defaulted, but Intel compiler prior to v16 complains
-    virtual ~filestack()
-      {
-      }
+    //! constructor is default
+    filestack() = default;
+
+    //! destructor is default
+    virtual ~filestack() = default;
 
 
-		// INTERFACE
+    // STACK MANAGEMENT
+
+  public:
+
+    //! pop a filename from the top of the stack
+    virtual void pop() = 0;
+
+    //! get size of inclusion stack
+    virtual size_t size() const = 0;
+
+
+		// CONTEXT TRACKING
 
   public:
 
@@ -60,13 +72,21 @@ class filestack
     // get line number information for the item on top of the stack
     virtual unsigned int get_line() const = 0;
 
-    // pop a filename from the top of the stack
-    virtual void pop() = 0;
 
-    // generate a list of included files, suitable for producing an error report
-    // the list is truncated at depth 'level' to avoid excess verbosity
+    // CONTEXT PRINTING
+
+  public:
+
+    //! print context up to given level
     virtual std::string write(size_t level) const = 0;
+
+    //! print context, no maximum level
     virtual std::string write()             const = 0;
+
+
+    // CLONE
+
+  public:
 
     virtual filestack* clone() const = 0;
 

@@ -38,31 +38,86 @@
 
 class input_stack: public filestack_derivation_helper<input_stack>
   {
+
   public:
 
     // data structure for tracking the source of any lexeme
-    struct inclusion
+    class inclusion
       {
-        boost::filesystem::path  name;
-        unsigned int             line;
+
+      public:
+        inclusion(boost::filesystem::path p, unsigned int l)
+          : name(std::move(p)),
+            line(l)
+          {
+          }
+
+      public:
+
+        const boost::filesystem::path name;
+        unsigned int                  line;
+
       };
 
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor is default
+    input_stack() = default;
+
+    //! destructor is default
     virtual ~input_stack() = default;
 
-    void         push                  (const boost::filesystem::path name);
 
-    virtual void         set_line      (unsigned int line) override;
+    // STACK MANAGEMENT -- implements a 'filestack' interface
+
+  public:
+
+    //! push item on to stack
+    void push(const boost::filesystem::path name);
+
+    //! pop item from stack
+    void pop() override;
+
+    //! get size of inclusion stack
+    size_t size() const override { return this->inclusions.size(); }
+
+
+    // CONTEXT TRACKING
+
+  public:
+
+    //! set current line number within file
+    virtual void set_line(unsigned int line) override;
+
+    //! increment current line number
     virtual unsigned int increment_line() override;
-    virtual unsigned int get_line      () const override;
 
-    virtual void         pop           () override;
+    //! return current line number
+    virtual unsigned int get_line() const override;
 
-    virtual std::string  write         (size_t level) const override;
-    virtual std::string  write         () const override;
+
+    // CONTEXT PRINTING
+
+  public:
+
+    //! print context up to given level
+    virtual std::string write(size_t level) const override;
+
+    //! print context, no maximum level
+    virtual std::string write() const override;
+
+
+    // INTERNAL DATA
 
   protected:
 
-    std::deque<struct inclusion> inclusions;
+    //! inclusion stack
+    //! can't use a real stack data type because for context management we need to walk through it,
+    //! and a real stack only exposes the top element
+    typedef std::deque<inclusion> inclusion_stack;
+    inclusion_stack inclusions;
 
   };
 

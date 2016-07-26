@@ -27,6 +27,10 @@
 #define CPPTRANSPORT_REPOSITORY_SQLITE3_IMPL_H
 
 
+#include <thread>
+#include <chrono>
+
+
 namespace transport
   {
 
@@ -63,7 +67,7 @@ namespace transport
             sqlite3_extended_result_codes(db, 1);
 
             // switch performance-related options to enforce maximum consistency
-            sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+            sqlite3_operations::consistency_pragmas(db);
           }
       }
 
@@ -161,7 +165,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // switch performance-related options to enforce maximum consistency
-        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::consistency_pragmas(db);
 
         sqlite3_operations::create_repository_tables(db);
       }
@@ -171,11 +175,44 @@ namespace transport
     template <typename number>
     repository_sqlite3<number>::~repository_sqlite3()
       {
-        // close open handles if it exists
+        // close open handle, if one is present
         if(this->db != nullptr)
           {
-            // perform routine maintenance if in read/write mode
-            if(this->access_mode == repository_mode::readwrite) sqlite3_operations::exec(this->db, "VACUUM;");
+            if(this->access_mode == repository_mode::readwrite)
+              {
+                // perform routine maintenance if in read/write mode
+                // if any other workers have open connexions to the database then the VACUUM command will
+                // fail
+                // to accommodate this we allow a small number of retries, which should be sufficient
+                // to allow other workers to terminate
+
+                bool finished = false;
+                unsigned int tries = 0;
+
+                constexpr unsigned int MAX_VACUUM_ATTEMPTS = 5;         // make 5 attempts to vacuum the database
+                constexpr unsigned int VACUUM_WAIT_DURATION_MS = 100;   // wait for 100 ms = 0.1 seconds between attempts
+
+                while(!finished && tries < MAX_VACUUM_ATTEMPTS)
+                  {
+                    try
+                      {
+                        sqlite3_operations::exec(this->db, "VACUUM;");
+                        finished = true;
+                      }
+                    catch(runtime_exception& xe)
+                      {
+                        ++tries;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(VACUUM_WAIT_DURATION_MS));
+                      }
+                    catch(std::exception& xe)
+                      {
+                        ++tries;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(VACUUM_WAIT_DURATION_MS));
+                      }
+                  }
+
+                if(!finished) this->error(CPPTRANSPORT_REPO_CANT_VACUUM);
+              }
 
             sqlite3_close(this->db);
           }
