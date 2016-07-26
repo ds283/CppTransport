@@ -31,6 +31,7 @@
 #define CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_LABEL_PRECISION    "Table output precision"
 
 #define CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_UNSUPPORTED_FORMAT "line_asciitable error: Unsupported output format"
+#define CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_UNSUPPORTED_TYPE   "line_asciitable error: Unknown table type"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_LINE_ASCIITABLE_PRODUCT_H

@@ -41,10 +41,13 @@
 class macro_agent;
 
 
-enum class process_type { process_core, process_implementation };
+enum class process_type
+  {
+    process_core, process_implementation
+  };
 
 
-class output_stack: public filestack_derivation_helper<output_stack>
+class output_stack : public filestack_derivation_helper<output_stack>
   {
 
   public:
@@ -54,73 +57,100 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
       public:
 
-		    inclusion(const boost::filesystem::path i, unsigned int l, buffer& b, macro_agent& a, enum process_type t)
-			    : in(std::move(i)),
-			      line(l),
-			      buf(b),
-			      agent(a),
-			      type(t)
-			    {
-			    }
+        inclusion(boost::filesystem::path i, unsigned int l, buffer& b, macro_agent& a, enum process_type t)
+          : in(std::move(i)),
+            line(l),
+            buf(b),
+            agent(a),
+            type(t)
+          {
+          }
+
 
       public:
 
-        boost::filesystem::path in;
-        unsigned int            line;
-        buffer&                 buf;
-		    macro_agent&            agent;
-        enum process_type       type;
+        const boost::filesystem::path in;
+        unsigned int line;
+        buffer& buf;
+        macro_agent& agent;
+        const enum process_type type;
 
       };
 
 
-		// CONSTRUCTOR, DESTRUCTOR
+    // CONSTRUCTOR, DESTRUCTOR
 
   public:
 
-    // TODO: intended to be explicitly defaulted, but Intel compiler prior to v16 complains
-    virtual ~output_stack()
-      {
-      }
+    //! constructor is default
+    output_stack() = default;
+
+    //! destructor is default
+    virtual ~output_stack() = default;
 
 
-		// INTERFACE - implements a 'filestack' interface
-
-  public:
-
-		// PUSH AND POP
-
-    // push an object to the top of the stack
-    void                      push          (const boost::filesystem::path in, buffer& buf, macro_agent& agent, enum process_type type);
-
-    virtual void              pop           () override;
-
-		// HANDLE LINE NUMBERS
-
-    virtual void              set_line      (unsigned int line) override;
-    virtual unsigned int      increment_line() override;
-    virtual unsigned int      get_line      () const override;
-
-		// STRINGIZE
-
-    virtual std::string       write         (size_t level) const override;
-    virtual std::string       write         () const override;
-
-
-		// INTERFACE - specific to output_stack
+    // STACK MANAGEMENT -- implements a 'filestack' interface
 
   public:
 
-    buffer&           top_buffer            ();
-    macro_agent&      top_macro_package     ();
-    enum process_type top_process_type      () const;
+    // push object to the top of the stack
+    void push(const boost::filesystem::path in, buffer& buf, macro_agent& agent, enum process_type type);
+
+    //! pop object from top of tstack
+    void pop() override;
+
+    //! get size of inclusion stack
+    size_t size() const override { return this->inclusions.size(); }
 
 
-		// INTERNAL DATA
+    // CONTEXT TRACKING
+
+  public:
+
+    //! set current line number within file
+    virtual void set_line(unsigned int line) override;
+
+    //! increment current line number
+    virtual unsigned int increment_line() override;
+
+    //! return current line number
+    virtual unsigned int get_line() const override;
+
+
+    // CONTEXT PRINTING
+
+  public:
+
+    //! print context up to given level
+    virtual std::string write(size_t level) const override;
+
+    //! print context, no maximum level
+    virtual std::string write() const override;
+
+
+    // INTERFACE - specific to output_stack
+
+  public:
+
+    //! return current top-of-stack buffer
+    buffer& top_buffer();
+
+    //! return current top-of-stack macro package
+    macro_agent& top_macro_package();
+
+    //! return current top-of-stack process type (core, implementation)
+    enum process_type top_process_type() const;
+
+
+    // INTERNAL DATA
 
   protected:
 
-    std::deque<struct inclusion> inclusions;
+    //! inclusion stack
+    //! can't use a real stack data type because for context management we need to walk through it,
+    //! and a real stack only exposes the top element
+    typedef std::deque<inclusion> inclusion_stack;
+    inclusion_stack inclusions;
 
   };
 

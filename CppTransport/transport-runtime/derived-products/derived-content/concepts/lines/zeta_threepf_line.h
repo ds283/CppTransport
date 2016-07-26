@@ -168,7 +168,10 @@ namespace transport
 		    template <typename number>
 		    zeta_threepf_line<number>::zeta_threepf_line(const zeta_threepf_task<number>& tk)
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
-		        use_kt_label(true), use_alpha_label(false), use_beta_label(false)
+		        use_kt_label(true),
+            use_alpha_label(false),
+            use_beta_label(false),
+            dimensionless(true)
 			    {
           }
 

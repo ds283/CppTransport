@@ -64,5 +64,7 @@
 #define CPPTRANSPORT_BADLY_FORMED_PARAMS                    "Repository error: badly formed JSON for 'parameters' group"
 #define CPPTRANSPORT_BADLY_FORMED_ICS                       "Repository error: badly formed JSON for 'initial_conditions' group"
 
+#define CPPTRANSPORT_REPO_CANT_VACUUM                       "Repository error: could not perform database maintenance"
+
 
 #endif // CPPTRANSPORT_MESSAGES_EN_REPOSITORY_SQLITE_H

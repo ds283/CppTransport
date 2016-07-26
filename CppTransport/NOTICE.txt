@@ -6,8 +6,8 @@ The CppTransport sources incorporate portions of the following open source proje
 http://www.ginac.de/pipermail/ginac-list/2010-May/001631.html
 License: GPL-2
 This is incorporated in the source files
-CppTransport/translator/backends/infrastructure/language_concepts/cse.cpp
-CppTransport/translator/backends/infrastructure/language_concepts/cse.h
+translator/backends/infrastructure/language_concepts/cse.cpp
+translator/backends/infrastructure/language_concepts/cse.h
 
 ====
 
@@ -15,7 +15,7 @@ The CppTransport translator and runtime system are linked to the following
 libraries. The build process assumes they are available on the system,
 but does not automatically install them.
 
-The CppTransport sources do not include source code (or derivatives of thee source code)
+The CppTransport sources do not include source code (or derivatives of the source code)
 from these libraries; they only link to them as external resources.
 
 * GiNaC (used by translator)
@@ -29,6 +29,10 @@ License: Boost Software License
 * SQLite3 (used by runtime system)
 https://www.sqlite.org
 License: Public Domain (https://www.sqlite.org/copyright.html)
+
+* OpenSSL (used by runtime system)
+https://www.openssl.org
+License: OpenSSL license (https://www.openssl.org/source/license.html)
 
 ====
 

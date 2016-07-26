@@ -178,7 +178,8 @@ namespace transport
 	          active_indices(sel),
 	          use_kt_label(true),
 	          use_alpha_label(false),
-	          use_beta_label(false)
+	          use_beta_label(false),
+            dimensionless(true)
 	        {
             if(active_indices.get_number_fields() != this->gadget.get_N_fields())
 	            {

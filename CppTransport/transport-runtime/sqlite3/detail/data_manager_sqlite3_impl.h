@@ -177,7 +177,7 @@ namespace transport
         sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 #else
         // change setting to optimize SQLite performance
-        sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::container_write_pragmas(db, this->args.get_network_mode());
 #endif
 
         // remember this connexion
@@ -281,7 +281,7 @@ namespace transport
         sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 #else
         // change setting to optimize SQLite performance
-        sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::container_write_pragmas(db, this->args.get_network_mode());
 #endif
 
         // remember this connexion
@@ -734,7 +734,7 @@ namespace transport
         sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
 #else
         // change setting to optimize SQLite performance
-        sqlite3_operations::performance_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::container_write_pragmas(db, this->args.get_network_mode());
 #endif
 
         return(db);
@@ -1784,6 +1784,13 @@ namespace transport
         sqlite3_operations::finalize_twopf_writer(mgr, db);
 
         mgr.commit();
+
+        // we move the journal mode to TRUNCATE before finalizing
+        // the Xerial JDBC driver does not play nicely with WAL journals, which prevents use of eg. DataGrip
+        // with containers that have been set to use WAL
+        // (the journal mode can only be changed outside a transaction, so we have to do this after mgr.commit())
+        sqlite3_operations::force_truncate_journal(db);
+
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
@@ -1805,6 +1812,13 @@ namespace transport
         sqlite3_operations::finalize_threepf_writer(mgr, db);
 
         mgr.commit();
+
+        // we move the journal mode to TRUNCATE before finalizing
+        // the Xerial JDBC driver does not play nicely with WAL journals, which prevents use of eg. DataGrip
+        // with containers that have been set to use WAL
+        // (the journal mode can only be changed outside a transaction, so we have to do this after mgr.commit())
+        sqlite3_operations::force_truncate_journal(db);
+
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
@@ -1826,6 +1840,13 @@ namespace transport
         sqlite3_operations::finalize_zeta_twopf_writer(mgr, db);
 
         mgr.commit();
+
+        // we move the journal mode to TRUNCATE before finalizing
+        // the Xerial JDBC driver does not play nicely with WAL journals, which prevents use of eg. DataGrip
+        // with containers that have been set to use WAL
+        // (the journal mode can only be changed outside a transaction, so we have to do this after mgr.commit())
+        sqlite3_operations::force_truncate_journal(db);
+
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
@@ -1847,6 +1868,13 @@ namespace transport
         sqlite3_operations::finalize_zeta_threepf_writer(mgr, db);
 
         mgr.commit();
+
+        // we move the journal mode to TRUNCATE before finalizing
+        // the Xerial JDBC driver does not play nicely with WAL journals, which prevents use of eg. DataGrip
+        // with containers that have been set to use WAL
+        // (the journal mode can only be changed outside a transaction, so we have to do this after mgr.commit())
+        sqlite3_operations::force_truncate_journal(db);
+
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
@@ -1868,6 +1896,13 @@ namespace transport
         sqlite3_operations::finalize_fNL_writer(mgr, db);
 
         mgr.commit();
+
+        // we move the journal mode to TRUNCATE before finalizing
+        // the Xerial JDBC driver does not play nicely with WAL journals, which prevents use of eg. DataGrip
+        // with containers that have been set to use WAL
+        // (the journal mode can only be changed outside a transaction, so we have to do this after mgr.commit())
+        sqlite3_operations::force_truncate_journal(db);
+
         timer.stop();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
@@ -2270,7 +2305,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // set performance-related options
-        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::consistency_pragmas(db);
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -2393,7 +2428,7 @@ namespace transport
         sqlite3_extended_result_codes(db, 1);
 
         // set performance-related options
-        sqlite3_operations::consistency_pragmas(db, this->args.get_network_mode());
+        sqlite3_operations::consistency_pragmas(db);
 
         //
         this->open_containers.push_back(db);

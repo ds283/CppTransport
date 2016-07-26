@@ -4285,7 +4285,8 @@ namespace transport
                             img.add_attribute("class", "img-responsive imgproduct").add_attribute("src", relative_asset_location.string()).add_attribute("alt", filename.string());
                             it.add_element(img);
                           }
-                        else if(extension.string() == ".txt")
+                        else if(extension.string() == ".txt" || extension.string() == ".dat" || extension.string() == ".data"
+                                || extension.string() == ".csv" || extension.string() == ".tsv")
                           {
                             HTML_node well("div");
                             well.add_attribute("class", "well topskip");

@@ -105,7 +105,7 @@
 
 \newcommand{\BINGO}{{\packagefont BINGO}}
 
-\newcommand{\MTEasyPy}{{\packagefont MTEasyPy}}
+\newcommand{\PyTransport}{{\packagefont PyTransport}}
 \newcommand{\CppTransport}{{\packagefont CppTransport}}
 
 \newcommand{\Xcode}{{\packagefont Xcode}}
@@ -130,9 +130,16 @@
 \newcommand{\DataGrip}{{\packagefont DataGrip}}
 \newcommand{\Sqliteman}{{\packagefont Sqliteman}}
 \newcommand{\DBeaver}{{\packagefont DBeaver}}
+\newcommand{\OpenSSL}{{\packagefont OpenSSL}}
+\newcommand{\SPLINTER}{{\packagefont SPLINTER}}
+\newcommand{\JsonCpp}{{\packagefont JsonCPP}}
+\newcommand{\Eigen}{{\packagefont Eigen}}
 
 \newcommand{\Boost}{{\packagefont Boost}}
 \newcommand{\odeint}{{\packagefont odeint}}
+
+\newcommand{\jQuery}{{\packagefont jQuery}}
+\newcommand{\DataTables}{{\packagefont DataTables}}
 
 \newcommand{\CMake}{{\packagefont CMake}}
 
@@ -276,12 +283,10 @@
 \begin{document}
 \title{\fontseries{s}\selectfont {\CppTransport}: a platform to
 automate calculation of inflationary correlation functions
-%\\
-%{\Large \it -- the transport approach with code
 \vspace{5mm}\hrule}
-\author{\fontseries{s}\selectfont David Seery}
+\author{\fontseries{s}\selectfont\large David Seery}
 
-\affiliation{\vspace{2mm}
+\affiliation{\vspace{2mm}\small
 Astronomy Centre, University of Sussex, Falmer, Brighton BN1 9QH, UK}
 
 \emailAdd{D.Seery@sussex.ac.uk}
@@ -304,8 +309,13 @@ manual intervention.
 It is intended to be used as a collaborative platform,
 promoting the rapid investigation of models and
 systematizing their comparison with observation.
-This document describes how to install and use the system,
-and illustrates its use through some simple examples.}
+This guide describes how to install and use the system,
+and illustrates its use through some simple examples.
+\par\vspace{2cm}
+\mbox{}\hfill
+\includegraphics[scale=0.1]{LOGO-ERC}
+\quad
+\includegraphics[scale=0.5]{LOGO-STFC}}
 
 \maketitle
 \newpage
@@ -328,11 +338,11 @@ to infer something about the microphysical modes whose fluctuations
 were responsible.
 
 Information about the pattern of correlations visible within our Hubble patch
-can be extracted from any observable which traces the condensed matter
+can be extracted from any observable that traces the condensed matter
 distribution.
 To determine the viability of some particular inflationary model
 we must compare these observations with predictions
-which carefully account for the precise character of quantum
+that carefully account for the precise character of quantum
 fluctuations given the field content, mass scales and coupling constants of the model.
 
 Unfortunately these calculations are challenging.
@@ -391,9 +401,9 @@ even if this is possible we have only exchanged the problem
 for computation of the hard
 component
 $\langle \cdots \rangle_{t_\ast}$.
-If it is not universal
-this is
-no easier than
+If this hard component is not universal,
+then the problem
+is no easier than
 calculation with which we started.
 
 A different way in which~\eqref{eq:deltaN-approx}
@@ -433,7 +443,7 @@ the calculation in each case.
 
 \subsection{Automated calculation of inflationary correlation functions}
 To do better we would prefer a completely general method
-which could be used to obtain accurate predictions for each $n$-point
+that could be used to obtain accurate predictions for each $n$-point
 function, no matter what mass spectrum
 is involved or what physical
 processes contribute to the hard component.
@@ -524,7 +534,7 @@ In these cases, conversion of formal Feynman integrals into concrete
 numerical results
 usually
 depends on techniques such as Wick rotation
-which are difficult to implement without an analytic
+that are difficult to implement without an analytic
 expression for the integrand.
 Such expressions are seldom available
 for the time-dependent backgrounds required by cosmology,
@@ -542,17 +552,17 @@ This formulation is based on direct computation of the $n$-point functions
 by an evolution or `transport' equation,
 allowing most of the complexities of field theory to be absorbed into
 calculation of suitable initial conditions.
-In inflation these initial conditions are universal,
-provided the calculation is started at sufficiently early times where
+In inflation these initial conditions \emph{are} universal,
+\emph{provided} the calculation is started at sufficiently early times where
 all scalar fields can be approximated as massless.
 Therefore, obtaining suitable initial conditions becomes a one-time
 cost, the results of which are easy to compute numerically.
-The remaining challenge is to implement the evolution equations which
+The remaining challenge is to implement the evolution equations that
 bring these initial conditions
 to the final time of interest.
 These also have a universal form,
 parametrized by coefficient matrices
-which depend only algebraically on the model at hand.
+that depend only algebraically on the model at hand.
 
 Using this scheme it becomes possible to implement automated
 calculation of inflationary correlation functions in the same sense
@@ -560,7 +570,7 @@ as the tools used in collider phenomenology.
 By performing suitable symbolic calculations we can
 compute the necessary coefficient matrices for any model,
 and given knowledge of these matrices it is straightforward to generate
-specialized code which implements the necessary evolution equations.
+specialized code that implements the necessary evolution equations.
 When compiled this code will take advantage of any opportunities for
 optimization detected by the compiler, making evaluation of
 each correlation function as rapid as possible.
@@ -571,7 +581,7 @@ late-universe observable of interest.
 
 \subsection{The {\CppTransport} platform}
 
-{\CppTransport} is a platform which implements
+{\CppTransport} is a platform that implements
 this prescription.
 It is the result of three years of development, amounting to roughly 60,000
 lines of {\CC},
@@ -603,7 +613,7 @@ and consists of three major components:
     
     \item The remaining component is a \emph{visualization and reporting suite}
     (15,000 lines)
-    which can process the raw integration data to produce observable
+    that can process the raw integration data to produce observable
     quantities
     and present the results as plots or tables.
     The reporting component generates interactive HTML
@@ -626,7 +636,7 @@ To investigate some particular model normally requires the following steps:
     using the {\CppTransport} translator.
     
     \item Produce a short {\CC} code
-    which couples the runtime system to some number of model implementations produced by
+    that couples the runtime system to some number of model implementations produced by
     the translator---at least one, but up to as many as required.
     Each implementation is pulled in as a header file via the \mintinline{c++}{#include}
     directive.
@@ -634,7 +644,7 @@ To investigate some particular model normally requires the following steps:
     any number of \emph{integration tasks},
     \emph{post-processing tasks}
     and \emph{output tasks}
-    which describe the work to be done:
+    that describe the work to be done:
     \begin{itemize}
         \item \emph{Integration tasks} associate a single model with a fixed choice
         for the parameters required by its Lagrangian, and initial conditions for
@@ -658,7 +668,7 @@ To investigate some particular model normally requires the following steps:
     \end{itemize}
     
     \item When compiled and executed, the code writes all details of its tasks into
-    a \emph{repository}---an on-disk database which is used to aggregate
+    a \emph{repository}---an on-disk database that is used to aggregate
     information about the tasks and the numerical results they produce.
     
     \item The runtime system uses the information stored in a repository to
@@ -743,13 +753,13 @@ The main features of the platform are:
     {\CppTransport} uses for its data storage.
     Because SQL is an industry-standard technology
     there is a rich ecosystem of existing
-    tools which can be used to
+    tools that can be used to
     read SQLite databases and perform real-time SQL queries.
-    This enables powerful GUI-based workflows which allow
+    This enables powerful GUI-based workflows that allow
     \semibold{scientific exploitation and analysis without
     extensive programming}.
 
-    \item A \semibold{fully parallelized} {\MPI}-based implementation which
+    \item A \semibold{fully parallelized} {\MPI}-based implementation that
     scales from laptop-class hardware up to many cores, using
     \semibold{adaptive load-balancing} to keep all cores fed with work.
     A \semibold{transactional design} means it is safe to run multiple
@@ -861,7 +871,7 @@ set of fields indexed by labels $a$, $b$, \ldots:
 {\CppTransport} is written in modern {\CC} and requires a relatively recent compiler
 with support for {\CC}14.
 It has been confirmed to build
-correctly with the three major toolchains used in physics and cosmology---%
+correctly with the three major {\CC} toolchains---%
 \href{http://clang.llvm.org}{Clang}
 (including Apple Clang),
 \href{https://gcc.gnu.org}{gcc} and the
@@ -871,7 +881,7 @@ are $\geq$ gcc 5.0
 and $\geq$ Intel 16.0.
 Versions of gcc prior to 5.0 have insufficient standard library support,
 and versions of the Intel compiler prior to 16.0
-contain bugs which prevent a successful build.%
+contain bugs that prevent a successful build.%
     \footnote{On Linux, the Intel compiler normally depends on the
     standard library supplied with gcc.
     This means that gcc $\geq$ 5.0 should also be available.}
@@ -879,9 +889,9 @@ Any moderately recent version of Clang should work correctly.
 
 In the absence of specialized requirements
 it is usually simplest to build with the default
-toolchain.
+toolchain on your platform.
 On Linux the default compiler
-will be gcc, and for versions of OS X later than 10.7
+will normally be gcc, and for versions of OS X later than 10.7
 it will be Clang.
 Testing has shown that there is little to be gained by switching between
 different compilers, although the Intel compiler can give better performance
@@ -892,20 +902,17 @@ by building executables for individual models using the Intel compiler,
 even if the base {\CppTransport} system is built with the default system
 toolchain.%
     \footnote{This can go wrong if there are binary incompatibilities
-    between compiled code generated by different compilers.
-    In testing we have found that Clang and the Intel compiler normally
-    produce compatible output, but gcc and the Intel compiler
-    exhibit differences in the {\GiNaC} library.}
+    between compiled code generated by different compilers.}
 
 \para{Dependencies}
 {\CppTransport} is packaged to minimize its pre-requisites and
 dependencies.
-Nevertheless, there are inevitably some libraries and tools which must be present
+Nevertheless, there are inevitably some libraries and tools that must be present
 before installation can be attempted.
 These dependencies have been organized by splitting them into two groups.
 The
 first
-group contains those which \emph{must} be installed system-wide
+group contains those that must be installed system-wide
 (and therefore may be not be installable by individual users in a cluster environment),
 or which are very commonly available from package management systems.
 The second contains more specialized libraries.
@@ -921,7 +928,7 @@ and
 do not require user intervention.
 
 \para{Pre-requisite dependencies}
-The pre-requisite dependencies which must be installed prior to
+The dependencies that must be installed prior to
 building {\CppTransport} are:
 
 \begin{itemize}
@@ -933,7 +940,7 @@ which
 is responsible for finding the various libraries and system files
 needed by {\CppTransport}.
 It is also responsible for downloading and installing those dependencies
-which {\CppTransport} manages internally.
+that {\CppTransport} manages internally.
 Once all resources are available, CMake automatically builds and installs
 the {\CppTransport} platform.
 
@@ -992,10 +999,16 @@ a packaging system.
 This is almost certain to be installed on every Linux or OS X machine,
 but some extra developer files may be required.
 
+\item \semibold{The {\OpenSSL} library.}
+This is needed to calculate MD5 hashes, which {\CppTransport} uses
+to uniquely identify models. The MD5 algorithm is used to give consistent results
+on all platforms.
+
 \end{itemize}
 Typically, some of
 these dependencies
-(such as {\CMake}, an {\MPI} implementation, Boost, SQLite) will already
+(such as {\CMake}, an {\MPI} implementation, Boost, {\SQLite}, {\OpenSSL})
+will already
 be available in a managed HPC environment
 such as a compute cluster.
 All of them
@@ -1007,13 +1020,17 @@ and are available using the
 or 
 \href{http://brew.sh}{\Homebrew}
 package-management systems for OS X.
-Unless there are compelling reasons to install in some other way,
-packaged versions of this kind normally represent
+{\CppTransport} is agnostic about
+how these libraries are installed,
+but
+unless there are compelling reasons to install in some other way
+the
+packaged versions normally represent
 the most convenient approach.
 
 In addition {\CppTransport} can use certain external programs
 if they are available, but does not depend on them for its
-core functionality of computing $n$-point functions:
+core functionality:
 \begin{itemize}
     \item Using output tasks to generate plots
     depends on \href{https://www.python.org}{\Python} and the
@@ -1023,9 +1040,10 @@ core functionality of computing $n$-point functions:
     product plots at a later date.
     (This provides a means to customize the plot format, if desired.)
     
-    If it is available {\CppTransport} can use the
+    If the
     \href{https://stanford.edu/~mwaskom/software/seaborn}{\seaborn}
-    statistical library to style the plots it generates.
+    statistical library is available, {\CppTransport} can use
+    it to style its plots.
     
     \item If the \href{http://www.graphviz.org}{\Graphviz} tools are
     available, the HTML report generator will produce a dependency diagram
@@ -1034,8 +1052,40 @@ core functionality of computing $n$-point functions:
     post-processing tasks.
 \end{itemize}
 
+\subsection{Downloading the {\CppTransport} platform}
+\label{sec:downloading}
+
+The {\CppTransport} sources can be downloaded from various locations:
+\begin{itemize}
+    \item Citeable archives tagged with a unique
+    DOI and containing the source code are deposited
+    at the CERN/OpenAIRE Zenodo repository
+    \begin{center}
+        \url{https://zenodo.org/record/58710}    
+    \end{center}
+
+    \item The same tar archives can be downloaded from
+    \url{http://transportmethod.com}, or
+    from {\CppTransport}'s GitHub homepage:
+    \begin{center}
+        \url{https://github.com/ds283/CppTransport/releases}    
+    \end{center}    
+    
+    \item If you wish to install a pre-release version of {\CppTransport},
+    or contribute to its development, you can fork or clone the
+    git repository from GitHub. 
+\end{itemize}
+
+\para{Reporting issues}
+Bug reports, feature requests or other issues are best reported
+using the issue tracker on the GitHub page:
+\begin{center}
+    \url{https://github.com/ds283/CppTransport/issues}    
+\end{center}
+
 
 \subsection{Building the translator and installing the runtime system}
+\label{sec:build-install}
 
 This section describes how to install {\CppTransport},
 with explicit summaries for handling dependencies in a number of
@@ -1086,7 +1136,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
     The dependencies for {\CppTransport}
     can be installed simultaneously by typing
     \begin{minted}{bash}
-        sudo port install cmake openmpi boost +openmpi ginac 
+        sudo port install cmake openmpi boost +openmpi ginac openssl
     \end{minted}
     (Note that the combination
     \mintinline{bash}{boost +openmpi} is a single item and instructs
@@ -1115,6 +1165,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
 \end{enumerate}
 
 \para{Using {\Homebrew}}
+The procedure is similar for Homebrew.
 
 \begin{itemize}
     \item Install {\Homebrew} by following the instructions at
@@ -1122,7 +1173,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
     
     \item To install the major {\CppTransport} dependencies, execute
     \begin{minted}{bash}
-        brew install cmake openmpi ginac
+        brew install cmake openmpi ginac openssl
         brew install boost --c++11 --with-mpi --without-single 
     \end{minted}
 
@@ -1143,7 +1194,7 @@ To install {\CppTransport}'s dependencies using {\MacPorts}:
 
 \end{itemize}
 
-\subsubsection{Installing dependencies in Ubuntu 16.04}
+\subsubsection{Installing dependencies on Ubuntu 16.04}
 Most Linux distributions will include packages for all
 {\CppTransport} dependencies. For illustration we describe the process for
 Ubuntu 16.04, but the process will be nearly unchanged for any
@@ -1151,7 +1202,7 @@ Debian-based distribution.
 
 From a terminal, issue the command:
 \begin{minted}{bash}
-    sudo apt-get install libsqlite3-dev libboost-all-dev libginac-dev libopenmpi-dev cmake python-matplotlib python-seaborn graphviz git texlive texlive-latex-extra texlive-fonts-recommended
+    sudo apt-get install libsqlite3-dev libboost-all-dev libginac-dev libopenmpi-dev libssl-dev cmake python-matplotlib python-seaborn graphviz git texlive texlive-latex-extra texlive-fonts-recommended
 \end{minted}
 This will download and install all required packages and their dependencies.
 Depending what is already available on your machine, this may be a sizeable
@@ -1170,15 +1221,20 @@ platforms which are available through ubuntu-make.
 These are commercial products, but free licenses are available
 to researchers with an academic email address.
 In particular, {\DataGrip} is a good candidate
-for a tool to manage or interrogate the SQL databases which
-{\CppTransport} produces.
+for a tool to manage or interrogate the SQL databases that
+{\CppTransport} produces (see~\S\ref{sec:examine-k-database}).
 
 \subsection{Building the translator}
 \label{sec:build-translator}
 
 Once all dependencies are installed it is possible to build {\CppTransport}.
-It is packaged as a \file{.tar.gz} archive containing the source tree.
-Download this archive and place it in a suitable directory, then unpack the
+Assuming you have downloaded the source code
+from \href{http://zenodo.org}{zenodo.org},
+\href{http://transportmethod.com}{transportmethod.com}
+or as a specific release from
+\href{https://github.com/ds283/CppTransport}{GitHub},
+it will be packaged as a \file{.tar.gz} archive containing the source tree.
+Place this archive in a suitable directory, then unpack the
 archive by typing
 \begin{minted}{bash}
 	tar xvf CppTransport_2016_01.tar.gz
@@ -1189,7 +1245,7 @@ The {\CppTransport} source code will be unpacked into a directory
 with the name \file{CppTransport}.
 The build process proceeds by entering this directory,
 creating a \emph{new} directory called
-\file{build} which will hold temporary files,
+\file{build} that will hold temporary files,
 and then configuring {\CMake} to use your preferred compiler
 and install to your preferred location.
 
@@ -1247,17 +1303,7 @@ and the location of the {\CC}
 compiler as the value
 of \cmakevar{CMAKE\_CXX\_COMPILER}.
 
-If configuration is successful, build the translator%
-	\footnote{If you are using a recent version of {\GiNaC}
-	from the 1.7 series, you may see a large number of warnings
-	during compilation
-	of the form
-	\begin{center}
-		\ttfamily
-		warning: `class\_name' overrides a member function but is not marked 'override'
-	\end{center}
-	These are harmless and presumably will be fixed in a later release
-	of {\GiNaC}.}
+If configuration is successful, build the translator
 and then install:
 \begin{minted}{bash}
 	make CppTransport -j4
@@ -1319,7 +1365,7 @@ You may find that this file already contains a line of the form
 although the precise list of colon-separated paths may be different.
 If not, or there was no existing
 \file{.profile} script,
-add a new entry which points to the \file{bin}
+add a new entry that points to the \file{bin}
 directory under your installation prefix.
 For example, for a user named \texttt{ds283}
 the resulting line might be
@@ -1425,7 +1471,7 @@ then {\CppTransport} can use these features to produce more attractive output.
 These features are enabled using the
 \option{plot-style} option.
 This can be provided on the command line
-(see {\S}\ref{}), but it is usually more convenient to include it in
+(see {\S}\ref{sec:option-summary}), but it is usually more convenient to include it in
 the \file{\textasciitilde{}/.cpptransport\_runtime} configuration file.
 This file should include a line such as
 \begin{minted}{text}
@@ -1484,7 +1530,7 @@ The template can be modified if required, but in practice this is
 not normally necessary.
 
 The model description file consists of a number of \emph{blocks}
-which declare properties and attributes for the model.
+that declare properties and attributes for the model.
 They generally take the
 form
 \begin{center}
@@ -1526,7 +1572,7 @@ they are embedded within the custom {\CC}
 output and subsequently attached to any data products
 that it is used to generate.
 By specifying this data we reduce the risk of
-`orphaned' code or data which cannot be traced back
+`orphaned' code or data that cannot be traced back
 to a specific combination of model,
 parameters and initial conditions.
 
@@ -1556,7 +1602,7 @@ The attributes available within the \block{model} block are:
     If you intend to make your description file publicly available (eg. on the
     arXiv or via a data repository service such as
     \href{http://www.zenodo.org}{zenodo.org}),
-    you may wish to explicitly set a license which allows re-use
+    you may wish to explicitly set a license that allows re-use
     such as the
     \href{https://creativecommons.org/licenses/}{Creative Commons Attribution license}.
     Some funding agencies may express a preference
@@ -1580,7 +1626,7 @@ The attributes available within the \block{model} block are:
     
     \item \attribute{references = [ string, string, ... ];} \\
     Attach a comma-separated list of strings
-    which reference publications associated with this model.
+    that reference publications associated with this model.
     The string are free-format and can be used for any suitable
     purpose. For example, you may wish to identify papers by their
     arXiv number or by DOI.
@@ -1680,7 +1726,7 @@ of initial conditions and mass matrices, which are
 the same no matter how we choose to solve the
 equations of motion for each correlation function.
 The \emph{implementation} class defines a {\CC}
-class which integrates these equations.
+class that integrates these equations.
 
 In principle {\CppTransport} can support many different
 implementations. For example, these could use different resources
@@ -1691,7 +1737,7 @@ Currently only an {\MPI}-based CPU integrator is supplied
 because
 testing has shown that---for the specific
 system of differential equations
-which {\CppTransport} needs to solve---
+that {\CppTransport} needs to solve---
 it is not straightforward to extract
 good performance from GPUs.
 This difficulty is partially driven by memory requirements,
@@ -1869,7 +1915,7 @@ and any parameters appearing in the Lagrangian.
 This is done by giving
 a \block{field} block for each field, and a \block{parameter} block
 for each parameter.
-The tag for each block is a symbolic name which can be used to refer
+The tag for each block is a symbolic name that can be used to refer
 to the corresponding quantity in the potential.
 Currently, only one attribute is available which is used to give
 a {\LaTeX} name for the quantity:
@@ -2002,7 +2048,7 @@ the Planck mass.
 In more complex cases, single-line expressions become difficult to read
 or debug and it is preferable to break the potential down into subexpressions.
 {\CppTransport} provides a \block{subexpr} block for this purpose.
-Its tag is the symbol which will be used to refer to the subexpression,
+Its tag is the symbol that will be used to refer to the subexpression,
 and the block accepts two attributes:
 \begin{itemize}
     \item \attribute{latex = "string";} \\
@@ -2035,7 +2081,7 @@ This potential is designed to contain an inflationary
 valley with a turn.
 The quantities $M$ and $m_\phi$ are mass scales, and
 $\phi_0$, $\Delta\theta$ and $s$ are
-constants which parametrize the turn.
+constants that parametrize the turn.
 Assuming we have defined
 suitable fields \descfile{phi}, \descfile{chi}
 and parameters \descfile{M}, \descfile{mphi}, \descfile{phi0}
@@ -2076,7 +2122,7 @@ the potential can be broken down into subexpressions:
 \label{sec:run-translator}
 Once the model description is complete,
 the translator is run to produce
-{\CC} classes which implement the transport equations for it.
+{\CC} classes that implement the transport equations for it.
 Provided your environment has been set up as described in
 \S\ref{sec:environment} it should be possible to
 invoke the translator simply by typing
@@ -2112,7 +2158,7 @@ Some of these perform simple housekeeping functions:
 Others affect the files read or written by the translator:
 \begin{itemize}
     \item \option{{-}{-}include}, or abbreviate to \option{-I} \\
-    Should be followed by a path which is added to the list
+    Should be followed by a path to be added to the list
     of paths searched when looking for template files.
     For example, if extra templates have been written
     (or installed in a different location),
@@ -2127,7 +2173,7 @@ Others affect the files read or written by the translator:
     command line.
     
     \item \option{{-}{-}core-output} \\
-    Followed by a path which specifies the file to which the
+    Followed by a path that specifies the file to which the
     customized \emph{core template} should be written.
     By default  the name
     \file{tag\_core.h} is used, where \file{tag} is the tag
@@ -2136,7 +2182,7 @@ Others affect the files read or written by the translator:
     to specify a filename explicitly.
     
     \item \option{{-}{-}implementation-output} \\
-    Followed by a path which specifies the file to which the
+    Followed by a path that specifies the file to which the
     customized \emph{implementation template} should be written.
     By default  the name
     \file{tag\_implementation.h} is used, where \file{tag} is the tag
@@ -2173,7 +2219,7 @@ These options may also be specified in the
 file discussed on p.\pageref{page:config-files}.
 Each option should be placed on a new line,
 without the leading \option{{-}{-}}.
-Options such as \option{{-}{-}include} which accept an argument
+Options such as \option{{-}{-}include} that accept an argument
 should be written in the format
 \mintinline{text}{option = argument},
 such as
@@ -2252,7 +2298,7 @@ respectively.
 
 \para{Unrolling index sets}
 In addition to these simple rewriting rules, the translator
-must be able to generate code which implements the transport equations
+must be able to generate code that implements the transport equations
 for the two- and three-point functions.
 Writing these correlation functions as
 \begin{equation}
@@ -2318,7 +2364,7 @@ The transport equation for the three-point function can
 be represented similarly.
 
 During translation these compact expressions must be unpacked into
-valid {\CC} which performs the required calculations.
+valid {\CC} that performs the required calculations.
 There are $N^2$ independent equations for the two-point function,
 each of which entails a sum over one dummy index.
 Therefore the overall size for this set of equations scales as $\Or(N^3)$.
@@ -2350,7 +2396,7 @@ make some limited tradeoffs between the space cost and execution time:
     	\href{https://en.wikipedia.org/wiki/Loop_unrolling}{loop optimization technique}.}
     	    
     Unrolling allows the {\CC} compiler to generate simple linear code
-    which performs all the required computations without branches
+    that performs all the required computations without branches
     or jumps, which would be required by loops
     and may incur performance penalties.
     Also,
@@ -2379,7 +2425,7 @@ make some limited tradeoffs between the space cost and execution time:
     {\CC} \mintinline{c++}{for}-loop.
     For example, the translator
     might unpack the line
-    \mintinline{text}{dSigma[$A][$B] $= $U2_TENSOR[AC] Sigma[$C][$B];}
+    \mintinline{text}{dSigma[$A][$B] $= $U2_TENSOR[AC] * Sigma[$C][$B];}
     into
     \begin{minted}{c++}
         for(int A = 0; A < 2*N; ++A)
@@ -2401,7 +2447,7 @@ make some limited tradeoffs between the space cost and execution time:
     The loop-based representation is considerably more economical with space,
     because its storage requirements do not grow with $N$.%
         \footnote{To be explicit, it is the storage requirements to
-        express the \emph{algorithm itself} which are under discussion
+        express the \emph{algorithm itself} that are under discussion
         here. The storage requirements for the state variables
         \mintinline{c++}{Sigma} and \mintinline{c++}{dSigma}
         always scale with $N$.}
@@ -2449,7 +2495,7 @@ the elements of a tensor such as ${u^\alpha}_\beta$
 are stored in temporary arrays (such as
 \mintinline{c++}{U2_TENSOR[][]} in the above example)
 because this is required for
-large index sets which `roll up' into
+large index sets that `roll up' into
 \mintinline{c++}{for}-loops.
 Depending on the compiler settings, this use
 of temporary arrays may inhibit some
@@ -2553,7 +2599,7 @@ or
 These expressions often share common building blocks, such as the
 Hubble rate $H$ or the slow-roll parameter $\epsilon$, which
 {\CppTransport} tries to factor out intelligently.
-Even when this has been done there may be further common pieces which
+Even when this has been done there may be further common pieces that
 can be extracted.
 For example, after common sub-expression elimination,
 {\CppTransport} would translate the expression $(A+B+1)^2/(A+B)$ into
@@ -2598,7 +2644,7 @@ calculations. This involves
 connecting the translated
 files to other components of
 {\CppTransport},
-especially those which are needed to carry out integration tasks.
+especially those that are needed to carry out integration tasks.
 To do so we create a short {\CC} program;
 for the double-quadratic example this could be called
 \file{dquad.cpp}.
@@ -2698,7 +2744,7 @@ This code involves the following steps:
         
         To create the instance we use the \mintinline{c++}{task_manager<>} method
         \mintinline{c++}{create_model()}.
-        This is a templated method which requires the name of the
+        This is a templated method that requires the name of the
         instance class to be provided between angle brackets;
         here, this is
         \mintinline{c++}{< transport::dquad_mpi<> >}.
@@ -2716,7 +2762,7 @@ This code involves the following steps:
         Notice that there is no need to explicitly deallocate the pointer
         \mintinline{c++}{model}.
         It is deallocated automatically when the
-        smart pointer which manages it is destroyed.
+        smart pointer that manages it is destroyed.
         
         \item \semibold{Pass control to the task manager.}
         It is possible to create instances of as many implementation classes
@@ -2758,7 +2804,7 @@ below.
     such as \mintinline{c++}{double} (or other parameters)
     between the brackets.    
     For {\CppTransport}, the customization takes place in the integration engine,
-    which is capable of integrating the transport equations using any
+    that is capable of integrating the transport equations using any
     suitable data type.
     If no type name is given, as in the example above,
     the integrator will default to
@@ -2829,7 +2875,7 @@ is not always convenient because it is necessary to locate the
 libraries on which the runtime system depends.
 The recommended way to build is using a {\CMake} build script.
 When {\CppTransport} is installed, it provides some
-{\CMake} tools which are intended to simplify this process.
+{\CMake} tools that are intended to simplify this process.
 
 The {\CMake} build script should be called \file{CMakeLists.txt} and
 placed in the same directory as the
@@ -2871,7 +2917,7 @@ The steps involved are:
         PROJECT(dquad)
     \end{minted}
     are required by {\CMake}.
-    They specify the minimum version of the {\CMake} tool which is required
+    They specify the minimum version of the {\CMake} tool that is required
     (here version 3.0) and the name of the project being built.
     
     \item The line
@@ -2988,7 +3034,7 @@ The steps involved are:
         above in order to generate these files.
         
         \item Finally, we set up a second target
-        \cmakevar{dquad} which consists of the
+        \cmakevar{dquad} that consists of the
         finished executable and make this depend on the
         \cmakevar{Generator} target declared above.
         {\CMake} then knows that the files associated with \cmakevar{Generator}
@@ -3003,7 +3049,7 @@ The steps involved are:
         extra compiler flags to the
         \cmakevar{dquad} target.
         The flag \cmakevar{-std=c++14} is required, because it
-        enables certain {\CC}14 features which are used by the {\CppTransport}
+        enables certain {\CC}14 features that are used by the {\CppTransport}
         platform.
         Other code generation or optimization options can be specified here;
         an example is the switch \option{-mavx} which informs the compiler
@@ -3028,7 +3074,7 @@ The steps involved are:
         Note, however, that \option{-xHost} should be used with caution if you
         plan to run executables in a heterogeneous cluster environment
         because different machines may support different instruction set enhancements.
-        If the executable requires instructions which are not available on
+        If the executable requires instructions that are not available on
         the host machine it will terminate with an error message.
     \end{enumerate}
 \end{enumerate}
@@ -3105,7 +3151,7 @@ If you are not familiar with constructing callable objects
 then a simple option is to use the {\CC}11 \emph{lambda} feature.
 This is a shorthand way to notate functions.
 First,  declare a function
-\mintinline{c++}{write_tasks()} which accepts
+\mintinline{c++}{write_tasks()} that accepts
 two arguments:
 a \mintinline{c++}{repository<>} and a model pointer:
 \begin{minted}{c++}
@@ -3126,7 +3172,7 @@ immediately prior to the call to
     It is not necessary to lambdas
     if a different solution is preferable.
     For example, it is also possible supply an instance of any
-    class which provides a call operator
+    class that provides a call operator
     \mintinline{c++}{operator()}.
 \end{advanced}
 
@@ -3135,7 +3181,7 @@ is the function
 \begin{center}
     \mintinline{c++}{[=](transport::repository<>& repo) -> void { write_tasks(repo, model.get()); }}
 \end{center}
-This is a lambda expression. It represents an object which behaves as a callable function,
+This is a lambda expression. It represents an object that behaves as a callable function,
 taking a single \mintinline{c++}{repository<>} as an argument.
 The function body is the code enclosed by braces
 \mintinline{c++}{{ ... }}.
@@ -3218,7 +3264,7 @@ With our choices we can construct a suitable parameter package using:
 	  }
 \end{minted}
 To aid readability it can be helpful to use named temporary variables
-that give meaning to numbers which are quoted directly.
+that give meaning to numbers that are quoted directly.
 We could have achieved the same effect by writing
 the single-line construction
 \begin{minted}{c++}
@@ -3283,7 +3329,7 @@ This information can be specified in two ways:
 	\item as an initial time $\Ninit$ (specified in e-folds)
 	together with the number of e-folds $\Npre$ from
 	$\Ninit$ to the horizon-crossing time of a distinguished
-	scale $\kstar$ (at time $\Nstar$) which is used as a reference.
+	scale $\kstar$ (at time $\Nstar$) that is used as a reference.
 	
 	\item as an initial time $\Nzero$
 	together with the horizon-crossing $\Nstar$
@@ -3353,7 +3399,7 @@ corresponding to $\Nzero$, $\Nstar$ and $\Npre$.
 The remaining task is to set up a series of sample points, both for
 time and wavenumber configuration.
 To assist in doing so, {\CppTransport} provides a mechanism
-to construct arbitrary meshes which are unions
+to construct arbitrary meshes that are unions
 of ranges built using
 linear or logarithmic spacing.
 The building blocks of these meshes
@@ -3368,7 +3414,7 @@ It constructs a range of \mintinline{c++}{N}+1 sample points between
 and
 \mintinline{c++}{hi}
 (inclusive)
-which divide the interval
+that divide the interval
 [\mintinline{c++}{lo}, \mintinline{c++}{hi}] into $N$ parts.
 The parameter \mintinline{c++}{spacing} should be one of:
 \begin{itemize}
@@ -3414,7 +3460,7 @@ The ability to construct arbitrary meshes
 makes it possible to sample certain regions densely and others
 sparsely. For example, it is possible to sample densely
 in regions (either of time or wavenumber configuration)
-which exhibit sharp features
+that exhibit sharp features
 while sampling sparsely elsewhere to keep the overall data volume
 manageable.
 
@@ -3490,7 +3536,7 @@ this calculation is expensive.
 If the 3-point function is not required
 (perhaps only a power-spectrum analysis is contemplated)
 then it is much faster to omit it.
-A task which computes \emph{only} the two-point function
+A task that computes \emph{only} the two-point function
 is represented by an object of type
 \mintinline{c++}{transport::twopf_task<>}:
 \begin{minted}{c++}
@@ -3520,7 +3566,7 @@ $(k_1, k_2, k_3)$ built from the Cartesian product
 \mintinline{c++}{ks} $\times$
 \mintinline{c++}{ks} $\times$
 \mintinline{c++}{ks},
-after filtering out configurations which do not correspond to
+after filtering out configurations that do not correspond to
 a physical triangle.
 Note that
 this is only one way to construct a 3-point function task.
@@ -3528,7 +3574,7 @@ There are other ways to specify the wavenumber configurations
 to be sampled, including use of
 Fergusson--Shellard $(k_t, \alpha, \beta)$ parameters.
 It is also possible to adjust the default
-policies which determine which configurations
+policies that determine which configurations
 are regarded as physical triangles and whether all
 configurations produced by the Cartesian product should
 be retained for integration.
@@ -3598,7 +3644,7 @@ This directory contains up to four items:
     is not hidden should it need to be recovered (or processed electronically)
     without {\CppTransport}.
     
-    In addition, \file{database.sqlite} stores information about jobs which
+    In addition, \file{database.sqlite} stores information about jobs that
     are currently running on the repository. This assists in automatically
     recovering data should there be a crash.
     
@@ -3694,7 +3740,7 @@ for running tasks it must be $\geq 2$.
 It is seldom worth launching more processes than
 there are physical cores to run them on,
 except for some 
-products which support two
+products that support two
 threads per core.
 Intel calls this technology \emph{hyperthreading}
 and it is available on certain i7 and Xeon
@@ -3834,13 +3880,13 @@ For tasks that sample the 3-point function it is frequently
 useful to inspect the list of wavenumber configurations that will
 be computed.
 There are two ways to do this.
-The simplest, suitable for tasks which do not sample
+The simplest, suitable for tasks that do not sample
 too many configurations, is to run an HTML report
 on the repository.
 This writes details of the tasks into an easily-browsable
 HTML document.
 The second option is slightly less simple but
-better suited to tasks which sample a large number of configurations.
+better suited to tasks that sample a large number of configurations.
 The list of sample points is written into SQLite databases
 held in the \file{repository/tasks} directory,
 and
@@ -4029,9 +4075,9 @@ named
 \mintinline{sql}{twopf_kconfig}
 and
 \mintinline{sql}{threepf_kconfig}
-for a task which also samples the 3-point function.
+for a task that also samples the 3-point function.
 These tables list the data described above, in addition
-to some columns which are not displayed in the HTML table.
+to some columns that are not displayed in the HTML table.
 First, each wavenumber $k$ or $k_t$ is listed twice with
 conventional and comoving normalizations.
 Second, there are extra columns with names
@@ -4045,7 +4091,7 @@ directly but refer to the serial number of the corresponding entry
 in the 2pf configuration table.
 This helps to ensure that the database remains internally
 self-consistent.
-To display a table which lists the side lengths explicitly
+To display a table that lists the side lengths explicitly
 requires an SQL query:
 \begin{minted}{sql}
     SELECT
@@ -4211,7 +4257,7 @@ same information shown by \option{{-}{-}inflight}.
 \subsection{What happens while an integration task is in progress}
 \label{sec:what-happens}
 Now let us consider what happened while each integration task was in progress.
-Out the outset, when {\CppTransport} comes to process each new task,
+At the outset, when {\CppTransport} comes to process each new task,
 it acquires a unique content group name derived from the current time.
 A folder with this name is created in the
 \file{output} directory of the repository, under a subdirectory
@@ -4231,7 +4277,7 @@ Each content group directory has the structure shown in Fig.~\ref{fig:integratio
 There are three items at the top level:
 \begin{itemize}
     \item A {\SQLite} database named \file{data.sqlite}.
-    This is the main data container which stores the output produced by the job.
+    This is the main data container that stores the output produced by the job.
     It is just a normal {\SQLite} database, so it can be inspected
     using the database management tools described in~\S\ref{sec:examine-k-database}.
     
@@ -4242,7 +4288,7 @@ There are three items at the top level:
     named \file{worker\_N\_yyy.log}
     where $N$ is a number identifying the process---the master has $N=0$ and
     the workers have $N > 0$---and \file{yyy} is a unique suffix
-    which is usually \file{000}.
+    that is usually \file{000}.
     
     Often it is unnecessary to inspect the logs, but they provide useful information
     if an integration task is not behaving as expected.
@@ -4314,7 +4360,7 @@ A typical integration will involve the following sequence of steps.
     \item Eventually all work items have been processed
     and their results aggregated into the main container.
     At this point the task manager performs an integrity check
-    which attempts to detect any missing items.
+    that attempts to detect any missing items.
     It then generates a repository record for the content group.
     If the integrity check was successful the group is marked
     as complete.
@@ -4465,7 +4511,7 @@ the various tables held in the database container.
 Currently,
 recovery is a global repository operation. When
 \option{{-}{-}recovery} is specified, {\CppTransport}
-will perform recovery for all tasks which are currently registered as in-flight.
+will perform recovery for all tasks that are currently registered as in-flight.
 If you have multiple tasks running against the same repository and need to
 perform recovery, you may wish to to wait until no more active tasks remain
 or manually terminate the remaining active processes.
@@ -4565,7 +4611,7 @@ between different content groups,
 it becomes difficult to navigate the repository
 using \option{{-}{-}info} from the command line.
 In such cases it is often more convenient to generate an HTML report
-which summarizes the repository contents.
+that summarizes the repository contents.
 We used these reports in~\S\ref{sec:examine-k-database}
 to examine the wavenumber configurations
 sampled as part of
@@ -4684,17 +4730,17 @@ Clicking it toggles a set of summary plots.
     this distribution is shown in Fig.~\ref{fig:time-distribution};
     it is roughly a power law.
     This is fairly typical for
-    {\CppTransport} tasks which sample a range of different configurations:
+    {\CppTransport} tasks that sample a range of different configurations:
     most configurations integrate relatively quickly
     (here $\lesssim 0.1 \second$),
     but there is a heavy tail of
     rare configurations
-    which take much longer
+    that take much longer
     (here, a few $\times$ $10^0 \second$).
     These expensive configurations are usually those that probe the
     squeezed limit of the 3-point function.
     
-    \item For tasks which sample the 3-point function, {\CppTransport}
+    \item For tasks that sample the 3-point function, {\CppTransport}
     includes extra plots showing configuration dependence of the
     integration time
     (Fig.~\ref{fig:time-scaling}).
@@ -4791,13 +4837,13 @@ An example chart for the
 If more detail is required then {\CppTransport} can produce an activity
 journal in JSON format using the
 \option{{-}{-}journal} command-line argument.
-It accepts a single parameter which is interpreted as the filename of the
+It accepts a single parameter that is interpreted as the filename of the
 output journal.
 To use the journal for practical analysis it will probably be necessary
-to write a custom code which parses each record and generates a suitable output.
+to write a custom code that parses each record and generates a suitable output.
 
 \para{Avoiding stalls}
-{\CppTransport} makes default choices which usually prevent significant stalls.
+{\CppTransport} makes default choices that usually prevent significant stalls.
 Stalls are more likely in the following circumstances:
 \begin{itemize}
     \item if the repository is located on a slow filing system.
@@ -4856,7 +4902,7 @@ Stalls are more likely in the following circumstances:
 
     \semibold{Alternative strategies.}
     Aggregation times are typically not long enough to be problematic.
-    When writing to a hard disk {\CppTransport} can typically aggregate a $\sim 5 Gb$
+    When writing to a hard disk {\CppTransport} can typically aggregate a $\sim 5 \Gb$
     main database in just a few minutes.
     Problems are likely to occur only in extreme scenarios, where a database grows to
     many tens of $\Gb$ while simultaneously being used over NFS.
@@ -4903,7 +4949,7 @@ Stalls are more likely in the following circumstances:
         \item if you are not using a network filing system, ensure that
         you are not passing the command-line option
         \option{{-}{-}network-mode}.
-        If used this disables {\SQLite}'s write-ahead log mode which confers
+        If used this disables {\SQLite}'s write-ahead log mode that confers
         a significant performance advantage.
         
         \item ensure that you are not defining the
@@ -5034,12 +5080,13 @@ and columns:
         derivatives with respect to $N$).
         Then $N$ = $D \times \#a + \#b$, if $D$ is the dimension of phase
         space (two times the number of fields)
-        and $\#$ is the map which assigns a numerical
+        and $\#$ is the map that assigns a numerical
         value to a species in following order:
         fields first, in the order defined in the model description file,
         followed by momenta, in the same order as the fields.
         
-        The quantity stored is $\Re(k^3 \Sigma^{ab})$, where $k = |\vect{k}_1| = |\vect{k}_2|$
+        The quantity stored is $\Re(k^3 \Sigma^{ab})$,
+        where $k = |\vect{k}_1| = |\vect{k}_2|$
         is the common magnitude of the momenta.
         This is independent of the comoving normalization, making the results
         easy to remap into whatever units are convenient.
@@ -5132,7 +5179,7 @@ In addition, tasks sampling the 3-point function include the following extra tab
     the canonical momenta (rescaled by $a^3$), whereas
     \mintinline{sql}{threepf_deriv} stores correlation functions defined using
     derivatives with respect to $N$.
-    These have a nontrivial relationship which is not easy to reconstruct without
+    These have a nontrivial relationship that is not easy to reconstruct without
     access to model-dependent information, and specifically the $A$, $B$ and
     $C$ tensors defined by Dias et al.~\cite{}.
     To mitigate difficulties with reconstructing one or other of these
@@ -5175,6 +5222,7 @@ In addition, tasks sampling the 3-point function include the following extra tab
 \end{sqltablelist}
 
 \subsubsection{Strict consistency checking}
+\label{sec:strict-consistency}
 In rare circumstances it may be useful to enforce strict consistency checks
 within the database.
 These checks ensure that there is only entry for each time- and wavenumber-configuration
@@ -5371,18 +5419,18 @@ objects used in~\S\ref{sec:add-integration-task}.
     To assist comparison of the results produced by {\CppTransport} with
     other methods of computing $n$-point functions,
     it is possible to have {\CppTransport} write extra
-    table sinto the {\SQLite} container which gives the field-values
+    table sinto the {\SQLite} container that gives the field-values
     at horizon exit for each configuration.
     For tasks computing the 2-point function only,
     {\CppTransport} will write a table called
     \mintinline{sql}{horizon_exit_values}
-    which
-    fields values at horizon exit for the corresponding wavenumber.
+    that records the
+    field values at horizon exit for the corresponding wavenumber.
     For tasks computing the 3-point function {\CppTransport}
     writes two tables:
     for each configuration,
     \mintinline{sql}{horizon_exit_values}
-    contains field values at horizon-exit for the
+    records field values at horizon-exit for the
     wavenumber which exits
     earliest.
     In addition \mintinline{sql}{kt_horizon_exit_values}
@@ -5494,7 +5542,7 @@ is convenient for some purposes but awkward for others.
 In particular, if the intention is to sample a series of wavenumber configurations
 probing the squeezed limit of the bispectrum then there may be more efficient
 ways to proceed.
-A good choice is to work with parameters which directly specify the configuration
+A good choice is to work with parameters that directly specify the configuration
 shape.
 For this purpose {\CppTransport} uses the $(\alpha, \beta)$ parameters
 introduced by Fergusson \& Shellard~\cite{Fergusson:2006pr}; see Eq.~\eqref{eq:alpha-beta}.
@@ -5538,13 +5586,13 @@ Rather than wastefully compute these, {\CppTransport} allows them to be omitted 
 specifying a \emph{storage policy}.
 
 If supplied, a storage policy should be an instance of a callable object
-which accepts a reference to a \mintinline{c++}{transport::threepf_kconfig}
+that accepts a reference to a \mintinline{c++}{transport::threepf_kconfig}
 object and returns a valid \mintinline{c++}{transport::storage_outcome}:
 \begin{minted}[linenos=false,xleftmargin=0pt]{c++}
     transport::storage_outcome (StoragePolicy)(const transport::threepf_kconfig& config)
 \end{minted}
 The \mintinline{c++}{transport::threepf_kconfig} data structure specifies
-the configuration which is to be inspected. Its fields are public data members:
+the configuration that is to be inspected. Its fields are public data members:
 \begin{itemize}
     \item \mintinline{c++}{serial} \\
     The proposed unique serial number for this configuration.
@@ -5581,10 +5629,10 @@ To reject, it should return either:
     When constructing this configuration, it may have been necessary to assign
     unique serial numbers to new configurations for the two-point function.
     This will happen if at least one leg of the bispectrum corresponds to a wavenumber
-    which has not yet been allocated a unique number.
+    that has not yet been allocated a unique number.
     
     If \mintinline{c++}{reject_remove} is specified then {\CppTransport} will
-    reject the configuration and deallocate any serial numbers which were speculatively
+    reject the configuration and deallocate any serial numbers that were speculatively
     assigned to `new' two-point function configurations.
     
     \item \mintinline{c++}{transport::storage_outcome::reject_retain} \\
@@ -5596,7 +5644,7 @@ To reject, it should return either:
     Suppose the range \mintinline{c++}{ks} contains a set
     $\{ k_1, k_2, \ldots, k_m \}$ of wavenumbers, ordered so that
     $k_i < k_j$ if $i < j$.
-    Therefore $k_m$ corresponds to the shortest physical scale which will be sampled.
+    Therefore $k_m$ corresponds to the shortest physical scale that will be sampled.
     The set of isosceles triangles containing this mode
     is given by the configurations
     $(k_m, k_i, k_i)$ for all $i$, and a suitable storage policy picking out
@@ -5658,7 +5706,7 @@ For some purposes, however, it is convenient to drop this restriction
 or to adopt a different ordering. One use case is to produce
 bispectrum shape plots in the $(\alpha, \beta)$ plane.
 The restriction $k_1 \geq k_2 \geq k_3$ implies that
-{\CppTransport} will produce correlation functions which cover only
+{\CppTransport} will produce correlation functions that cover only
 $1/3! = 1/6$ of the allowed $(\alpha, \beta)$ space,
 and in principle the remaining
 regions can be determined by suitable transformations
@@ -5674,7 +5722,7 @@ them on a rectangular mesh, it can be simpler
 to absorb the factor of 6 computation cost and have
 {\CppTransport} compute these points directly.
 
-A triangle policy is an instance of a callable object which
+A triangle policy is an instance of a callable object that
 determines whether a given configuration forms a triangle.
 The `cubic' and `$\alpha\beta$' constructors require different types of policy:
 \begin{itemize}
@@ -5748,7 +5796,7 @@ observed density perturbation---although it may happen
 that
 these observable statistics
 also depend on post-inflationary
-physics which is not handled by {\CppTransport}.
+physics that is not handled by {\CppTransport}.
 In such cases the $\zeta$ correlation functions produced by
 the {\CppTransport} platform should be used as initial
 conditions for a Boltzmann solver (or equivalent)
@@ -5760,7 +5808,7 @@ Post-processing or `postintegration' tasks accept output
 from integration tasks (or other postintegration tasks)
 and convert it into some other form.
 To produce $\zeta$ correlation functions we need to specify
-post-processing tasks which can perform the gauge transformation
+post-processing tasks that can perform the gauge transformation
 from field space into $\zeta$.
 
 Returning to the example of double-quadratic inflation,
@@ -5964,7 +6012,7 @@ Each output task draws its data from a collection of integration and
 postintegration tasks such as \repoobject{dquad.threepf}
 and \repoobject{dquad.threepf-zeta}.
 By specifying a collection of tags while executing the output task we can cause it
-to select input data which satisfy specific labels
+to select input data that satisfy specific labels
 such as 
 \grouptag{stepper-dopri5}
 or
@@ -5980,7 +6028,7 @@ meaning that in principle it is possible to use this feature
 to follow chains
 of groups back to an original integration content group.
 In practice, however, this kind of dependency tracking is best performed
-using HTML reports. These can generate dependency diagrams which summarize the
+using HTML reports. These can generate dependency diagrams that summarize the
 interrelation between content groups more efficiently than a large number of tags.
 
 The option to specify content groups by name remains useful
@@ -6048,7 +6096,7 @@ more quickly than unpaired tasks.
 It is possible to specify independent checkpoint intervals for the tasks
 in an integration/postintegration pair, but in the event of failure
 the data stored in each container will be synchronized.
-In practice this means that data in one container which has no counterpart
+In practice this means that data in one container that has no counterpart
 in the other will be discarded,
 and therefore there is no real use case for unequal checkpoint intervals.
 
@@ -6149,7 +6197,7 @@ the following tables:
         \mintinline{sql}{eleM} \ldots & components of $N_a$ for this
         momentum configuration, packed with $M= \#a$.
         Here, as in~\S\ref{sec:using-integration-container}, `$\#$'
-        is the map which takes a species label to its numeric equivalent
+        is the map that takes a species label to its numeric equivalent
         defined by the order of declaration in the model description file.
         All fields come first, followed by all field derivatives in the same order.
         Notice that
@@ -6165,7 +6213,7 @@ the following tables:
 
 \subsubsection{$\zeta$ three-point function tasks}
 In addition to the generic tables described above,
-postintegration tasks which generate the $\zeta$ three-point function also
+postintegration tasks that generate the $\zeta$ three-point function also
 write the following tables to the data container:
 \begin{sqltablelist}
 \begin{enumerate}
@@ -6464,10 +6512,10 @@ the
     tk3_linear.set_description("Compute time history of the 3-point function on a linear grid");
 
     transport::zeta_threepf_task<> ztk3_linear("dquad.threepf-linear-zeta", tk3_linear);
-    ztk3_linear.set_description("Convert the output from dquad.threepf-linear into zeta 2 and 3-point functions");
+    ztk3_linear.set_description("Convert the output from dquad.threepf-linear into zeta" " 2 and 3-point functions");
 
     transport::fNL_task<> fNL_local("dquad.fNL-local", ztk3_linear, transport::bispectrum_template::local);
-    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with local template");
+    fNL_local.set_description("Compute inner product of double-quadratic bispectrum" " with local template");
 
     repo.commit(fNL_local);    
 \end{minted}
@@ -6539,7 +6587,7 @@ in Fig.~\ref{fig:gantt-fNL}.
 \subsubsection{Example: Using the {\SQLite} data container to produce a plot}
 In~\S\ref{sec:derived-products}
 we will see how to generate a derived product
-which plots the time history of
+that plots the time history of
 $\fNLlocal$ in this model.
 As for other types of data-generating task, however, it is also possible to extract
 raw data from the {\SQLite} database
@@ -6570,7 +6618,7 @@ into its container:
 \end{sqltablelist}
 As an example, consider what would be required to compute
 $\fNL^i$ from this database and plot it.
-The first step is to construct an SQL query which computes the
+The first step is to construct an SQL query that computes the
 required combination
 of the columns \mintinline{sql}{BT}
 and \mintinline{sql}{TT}.
@@ -6619,7 +6667,7 @@ This is accomplished by the SQL
 \end{minted}
 Most database managers will allow the results of this query to be saved
 in any suitable format.
-`Comma Separated Value' or CSV is usually a good choice which has
+`Comma Separated Value' or CSV is usually a good choice that has
 widespread support among third party tools.
 Once the data has been exported we can plot it as we wish,
 by using a suitable tool such as
@@ -6697,7 +6745,7 @@ Outputs are built from a series of building blocks:
     
     \item \semibold{derived \emph{products}} are groups of derived lines,
     presented either as a table or as a plot.
-    A single derived product can include lines which draw data from many different
+    A single derived product can include lines that draw data from many different
     integration or postintegration tasks.
     However, only groups of lines that share a common type of $x$-axis can be
     aggregated into a single derived product.
@@ -6727,7 +6775,7 @@ SQL databases, a natural and efficient
 means to perform this selection is to use
 SQL expressions as building blocks.
 
-{\CppTransport} provides three classes which encapsulate SQL expressions suitable
+{\CppTransport} provides three classes that encapsulate SQL expressions suitable
 for selecting a group of time of configuration sample points.
 \mintinline{c++}{SQL_time_query} is used to select time samples,
 and
@@ -6746,8 +6794,8 @@ Each of these accepts a single argument, which is the SQL
 expression to use.
 
 \para{Selecting times}
-For example, to build a trivial query which selects all configurations
-we require an expression which is always true, such as
+For example, to build a trivial query that selects all configurations
+we require an expression that is always true, such as
 \mintinline{sql}{1=1}.
 For example:
 \begin{minted}{c++}
@@ -6761,7 +6809,7 @@ we could use
 	tserial IN (SELECT MAX(tserial) FROM time_samples)
 \end{minted}
 The function \mintinline{sql}{MAX} is provided by SQL.
-There is also a \mintinline{sql}{MIN} function which can be used to select
+There is also a \mintinline{sql}{MIN} function that can be used to select
 the earliest time available in the database,
 or we can combine these to get two sample points---both the earliest \emph{and}
 latest times,
@@ -6783,13 +6831,13 @@ using an expression such as
 	conventional > 10 AND conventional < 50	
 \end{minted}
 The available column names are those
-which apply to the corresponding SQL table, as described in~\S\ref{sec:using-integration-container}.
+that apply to the corresponding SQL table, as described in~\S\ref{sec:using-integration-container}.
 This means that we could also select configurations based on their horizon-exit
 time via the column
 \mintinline{sql}{t_exit}
 or their massless point
 \mintinline{sql}{t_massless}.
-So, for example, we could select all wavenumbers $k$ which leave the horizon in
+So, for example, we could select all wavenumbers $k$ that leave the horizon in
 some specified e-folding interval using
 \begin{minted}{sql}
 	t_exit > 0.0 AND t_exit < 10.0	
@@ -6821,9 +6869,9 @@ consider building a plot showing the time evolution of the background
 fields and their derivatives.
 To keep our function
 \mintinline{c++}{write_tasks()} from becoming excessively long, we break it
-into two parts: one which builds the sample points and initial conditions,
-and another which builds tasks and derived products.
-Later, we will add further tasks and products which can go in separate functions.
+into two parts: one that builds the sample points and initial conditions,
+and another that builds tasks and derived products.
+Later, we will add further tasks and products; these can go in separate functions.
 Our prototypes are now
 \begin{minted}{c++}
 	void write_tasks(transport::repository<>& repo, transport::dquad_mpi<>* model);
@@ -6869,10 +6917,10 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
 
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
     tk3.set_adaptive_ics_efolds(54.0);
-    tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9");
+    tk3.set_description("Compute time history of the 3-point function on a cubic lattice" " from k ~ e^3 to k ~ e^9");
 
     transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
-    ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
+    ztk3.set_description("Convert the output from dquad.threepf into zeta 2-" " and 3-point functions");
 
     vis_toolkit::SQL_time_query all_times("1=1");
 
@@ -6948,14 +6996,14 @@ The steps involved here are:
 	
 	As an alternative it is possible to specify a filename with extension
 	\file{.py}.
-	This causes {\CppTransport} to write a Python script which will produce
+	This causes {\CppTransport} to write a Python script that will produce
 	the plot, but it does not execute it---the script \emph{is} the derived
 	product.
 	This gives an opportunity to apply custom formatting or to apply
-	adjustments which {\CppTransport} cannot make automatically.
+	adjustments that {\CppTransport} cannot make automatically.
 	
 	\item By default, the plot includes a legend
-	which is placed in the upper right-hand corner.
+	that is placed in the upper right-hand corner.
 	In this case it will overlay the lines, so we elect to move it to the bottom
 	left-hand corner using the
 	\mintinline{c++}{set_legend_position()} method.
@@ -6983,7 +7031,7 @@ To test, build the executable and launch the task
 	$ mpiexec -n 4 dquad -v -r test-output --create --task dquad.output.zeta	
 \end{minted}
 As usual, {\CppTransport} will schedule execution of any tasks needed to produce
-content groups which feed later tasks in the chain:
+content groups that feed later tasks in the chain:
 \begin{minted}[linenos=false,xleftmargin=0pt,bgcolor=blue!10]{text}
     Task manager: processing task 'dquad.threepf' (1 of 2)
     Committed content group '20160516T135141' for task 'dquad.threepf' at 2016-May-16 15:00:18
@@ -7011,12 +7059,12 @@ Inside this folder, each content group
 is placed in a directory with name given by the content group name.
 Each derived product is generated inside this directory, with the filename
 specified when the derived product was set up.
-There is also the usual \file{logs} folder which contains detailed logging
+There is also the usual \file{logs} folder that contains detailed logging
 from the master and worker processes while the task was in progress.
 
 \para{Reporting on output content groups}
 Asking {\CppTransport} to report on \repoobject{dquad.output.zeta} shows the derived products
-which are generated as part of the task, and lists each associated content group:
+that are generated as part of the task, and lists each associated content group:
 \begin{minted}[bgcolor=blue!10]{text}
     $ ./dquad -r test-output/ --info dquad.output.zeta
 dquad.output.zeta -- output task
@@ -7030,7 +7078,7 @@ dquad.output.zeta -- output task
     20160516T140133    2016-May-16 14:01:33  2016-May-16 14:01:43
 \end{minted}
 If we instead report on the content group generated by this task, {\CppTransport} will summarize
-the content groups which were used to feed data into its derived products:
+the content groups that were used to feed data into its derived products:
 \begin{minted}[bgcolor=blue!10]{text}
     $ ./dquad -r test-output/ --info 20160516T140133
     20160516T140133 -- derived content
@@ -7065,7 +7113,7 @@ dependencies similar to that provided by the
 Also, if {\Graphviz} is installed, it will produce a dependency diagram
 showing the interrelation of
 initial conditions packages,
-tasks and content groups which
+tasks and content groups that
 yielded the data for this product.
 An example for the background fields plot is shown in Fig.~\ref{fig:bg-dependencies}.
 \begin{figure}
@@ -7134,7 +7182,7 @@ economical expression.
 	Determine whether absolute $y$-values are used. Enabled by default for plots.
 	
 	If a logarithmic $y$-axis is in use, {\CppTransport} will detect whether
-	absolute values are needed for lines which have negative values.
+	absolute values are needed for lines that have negative values.
 	
 	\item \mintinline{c++}{bool get_use_LaTeX()} \\
 	\mintinline{c++}{set_use_LaTeX()} \\
@@ -7146,7 +7194,12 @@ economical expression.
 \end{itemize}
 
 \subsubsection{Plot-specific options}
-In addition, there are a number of options which are specific to plots.
+\label{sec:plot-options}
+In addition, there are a number of options that are specific to plots,
+ie. the objects
+\mintinline{c++}{time_series_plot<>}
+and
+\mintinline{c++}{wavenumber_series_plot<>}.
 As usual, the \mintinline{c++}{set_*} methods can be chained.
 
 \para{Axis handling}
@@ -7283,6 +7336,32 @@ The following options determine labelling:
     
     Enabled by default.
 \end{itemize}
+
+\subsubsection{Table-specific options}
+\label{sec:table-options}
+For the table objects
+\mintinline{c++}{time_series_table<>}
+and
+\mintinline{c++}{wavenumber_series_table<>}
+there is an option to select the table format:
+\begin{itemize}
+    \item \mintinline{c++}{vis_toolkit::table_format get_format()} \\
+    \mintinline{c++}{set_format(vis_toolkit::table_format f)} \\
+    Determine the format of the table. The allowed options are: \\
+    \begin{tabular}{p{6.5cm}p{7cm}}
+        \mintinline{c++}{vis_toolkit::table_format::justified} & aligned in columns, padded with spaces \\
+        \mintinline{c++}{vis_toolkit::table_format::csv} & comma-separated value \\
+        \mintinline{c++}{vis_toolkit::table_format::tsv} & tab-separated value
+    \end{tabular} \\
+    The default format is determined from the filename
+    extension. If this is
+    \file{.csv} or \file{.tsv}
+    then the format is set to CSV or TSV respectively.
+    The other allowed formats are
+    \file{.txt}, \file{.data}
+    and \file{.dat}. These use justified output.
+\end{itemize}
+
 
 \subsection{Available derived lines}
 \label{sec:derived-lines}
@@ -7444,10 +7523,11 @@ have additional options:
     \begin{equation}
         \DimlessSigma = \frac{k^3}{2\pi^2} \Sigma .
     \end{equation}
+    Enabled by default.
 \end{itemize}
 The field-space two-point function lines
 \mintinline{c++}{twopf_time_series}
-and \mintinline{c++}{twopf_wavenumber_series} have an additional option which
+and \mintinline{c++}{twopf_wavenumber_series} have an additional option that
 allows them to be switched between
 real and imaginary values, where available.
 \begin{itemize}
@@ -7487,6 +7567,7 @@ These lines have additional options:
     \begin{equation}
         \DimlessB = (k_1 k_2 k_3)^2 \alpha .
     \end{equation}
+    Enabled by default.
     
     \item \mintinline{c++}{bool get_use_kt_label()} \\
     \mintinline{c++}{set_use_kt_label(bool)} \\
@@ -7736,7 +7817,7 @@ as separate columns in a table or lines in a plot.
 
 \subsubsection{Wavenumber series}
 \label{sec:wavenumber-series}
-For each quantity which is wavenumber-configuration dependent there is a corresponding
+For each quantity that is wavenumber-configuration dependent there is a corresponding
 wavenumber series.
 We describe these using the same conventions used for time series
 in~\S\ref{sec:time-series}.
@@ -7781,7 +7862,7 @@ The calculation of spectral indices is enabled using
 
     For example, to measure the spectral index associated with
     variations of the squeezing $k_i/k_t$ at fixed scale, we should keep
-    $k_t$ fixed. The SQL query expression which selects those configurations
+    $k_t$ fixed. The SQL query expression that selects those configurations
     to include should enforce this constraint.
 
     Likewise, to measure the spectral index associated with variations of
@@ -7801,7 +7882,7 @@ The calculation of spectral indices is enabled using
     This tends to introduce some spurious jitter into the spectral index.
     Second, with a large number of sample points the spline tends to
     be overfit. {\CppTransport} tries to compensate for this by using a
-    $p$-spline (a `penalized' spline which tries to smoothly interpolate
+    $p$-spline (a `penalized' spline that tries to smoothly interpolate
     between sample points, rather than strictly passing through each point),
     but it is not always successful.
     
@@ -7897,7 +7978,7 @@ The calculation of spectral indices is enabled using
 
 \subsubsection{Integration cost analysis}
 
-Finally, a special set of derived lines exist which do not represent
+Finally, a special set of derived lines exist that do not represent
 data or observables, but rather provide metadata about the
 performance of the integration.
 These can be used to provide more targeted versions of the
@@ -7945,7 +8026,7 @@ for derived lines generated by objects with multiple indices, a
 \mintinline{c++}{index_selector<>} object must be supplied
 to select which indices should be included.
 
-Constructing a selector requires specifying a template argument which fixes the
+Constructing a selector requires specifying a template argument that fixes the
 number of indices.
 The constructor accepts a single argument giving the number
 of fields.
@@ -7964,7 +8045,7 @@ Once constructed, a selector provides methods
 \mintinline{c++}{all()}
 and
 \mintinline{c++}{none()}
-which explicitly enable or disable all components.
+that explicitly enable or disable all components.
 It is also possible to enable or disable individual
 components by supplying a tuple of numbers representing
 the component in question.
@@ -8127,7 +8208,7 @@ Although only the squeezing ratio $k_3/k_t$ is plotted on the $x$-axis,
 the configurations are also varying in $k_t$.
 To get a smooth line---for example, suitable for computing a spectral index---it
 would be necessary to switch to an $\alpha\beta$-type mesh
-which would allow sampling from different values of $k_3/k_t$ at
+that would allow sampling from different values of $k_3/k_t$ at
 \emph{fixed} $k_t$.
 \begin{figure}
     \begin{center}
@@ -8146,7 +8227,7 @@ limit characterized by conservation of $\zeta$ (as it does for the double quadra
 
 However, it is also useful to plot the time \emph{evolution} of individual
 quantities. This is especially useful to check for any anomalies in the integration
-which might make the final data products inaccurate.
+that might make the final data products inaccurate.
 As a sanity check, it is useful to plot the evolution of the raw 3-point
 functions for at least a few scales.
 \begin{minted}{c++}
@@ -8197,16 +8278,16 @@ void write_fNL_products(transport::repository<>& repo, transport::initial_condit
     tk.set_description("Compute time history of the 3-point function on a linear grid");
 
     transport::zeta_threepf_task<> ztk("dquad.threepf-linear-zeta", tk);
-    ztk.set_description("Convert the output from dquad.threepf-linear into zeta 2 and 3-point functions");
+    ztk.set_description( "Convert the output from dquad.threepf-linear into zeta 2 and 3-point functions");
 
     transport::fNL_task<> fNL_local("dquad.fNL-local", ztk, vis_toolkit::bispectrum_template::local);
-    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with local template");
+    fNL_local.set_description( "Compute inner product of double-quadratic bispectrum with local template");
 
     transport::fNL_task<> fNL_equi("dquad.fNL-equi", ztk, vis_toolkit::bispectrum_template::equilateral);
-    fNL_equi.set_description("Compute inner product of double-quadratic bispectrum with equilateral template");
+    fNL_equi.set_description( "Compute inner product of double-quadratic bispectrum with equilateral template");
 
     transport::fNL_task<> fNL_ortho("dquad.fNL-ortho", ztk, vis_toolkit::bispectrum_template::orthogonal);
-    fNL_ortho.set_description("Compute inner product of double-quadratic bispectrum with orthogonal template");
+    fNL_ortho.set_description( "Compute inner product of double-quadratic bispectrum with orthogonal template");
 
     vis_toolkit::SQL_time_query all_times("1=1");
 
@@ -8225,6 +8306,7 @@ void write_fNL_products(transport::repository<>& repo, transport::initial_condit
   }
 \end{minted}
 \end{minipage}
+\vspace{1cm}
 \caption{\label{code:fNL-code}Function to generate $\fNL$ tasks and derived products}
 \end{figure}
 The resulting plot is shown in Fig.~\ref{fig:fNL-auto-plot} and can be
@@ -8329,7 +8411,7 @@ removed.
 \label{sec:delete-content}
 
 To delete an unwanted content group use \option{{-}{-}delete}.
-{\CppTransport} will not allow you to delete content groups which were used
+{\CppTransport} will not allow you to delete content groups that were used
 as data sources for other groups that remain in the repository,
 because this would disrupt its ability to provide a provenance for those groups.
 
@@ -8342,6 +8424,7 @@ Locked groups cannot be altered or deleted until they are unlocked using
 \option{{-}{-}unlock}.
 
 \subsection{Summary of command-line options}
+\label{sec:option-summary}
 This section summarizes the command-line
 options recognized by {\CppTransport} executables.
 \vspace{3mm}
@@ -8416,7 +8499,7 @@ options recognized by {\CppTransport} executables.
 	Specify a tag to be attached to any content groups generated by this
 	{\CppTransport} job.
 	For postintegration or output tasks,
-	filters the available content groups to those which share the specified tag.
+	filters the available content groups to those that share the specified tag.
 	Can be repeated multiple times to specify more than one tag.
 	
 	\item \option{{-}{-}checkpoint} \\
@@ -8501,7 +8584,7 @@ options recognized by {\CppTransport} executables.
 	
 	\item \option{{-}{-}provenance} \\
 	Report on the provenance of a specified output content group.
-	The provenance report shows all content groups which contributed
+	The provenance report shows all content groups that contributed
 	to each derived product generated as part of the group.
 	Name matching is as for \option{{-}{-}info}.
 	
@@ -8594,6 +8677,103 @@ the work described in this document have been supported by:
 \appendix
 
 \section{Third-party software used by {\CppTransport}}
+
+The {\CppTransport} sources incorporate portions of the following open source projects:
+
+\begin{itemize}
+    \item The GinacPrint common subexpression elimination algorithm made available by Doug Baker.
+    \begin{center}
+        \url{http://www.ginac.de/pipermail/ginac-list/2010-May/001631.html}
+    \end{center}
+    License: GPL-2 \\
+    This is incorporated in the source files
+    \begin{center}
+    \file{translator/backends/infrastructure/language\_concepts/cse.cpp} \\
+    \file{translator/backends/infrastructure/language\_concepts/cse.h}
+    \end{center}
+\end{itemize}
+The {\CppTransport} translator and runtime system are linked to the following
+libraries. The build process assumes they are available on the system,
+but does not automatically install them.
+
+The {\CppTransport} sources do not include source code (or derivatives of the source code)
+from these libraries; they only link to them as external resources.    
+\begin{itemize}
+    \item {\GiNaC} (used by translator) \\
+    \url{http://www.ginac.de} \\
+    License: GPL-2
+    
+    \item The {\Boost} libraries (used by translator and runtime system) \\
+    \url{http://www.boost.org} \\
+    License: Boost Software License
+    
+    \item {\SQLite} (used by runtime system) \\
+    \url{https://www.sqlite.org} \\
+    License: Public Domain (\url{https://www.sqlite.org/copyright.html})
+    
+    \item {\OpenSSL} (used by runtime system) \\
+    \url{https://www.openssl.org} \\
+    License: OpenSSL License (\url{https://www.openssl.org/source/license.html})
+\end{itemize}
+In addition, the {\CppTransport} build process automatically downloads
+and installs the following libraries. They are statically linked to executables
+constructed by (1) running the translator and (2) building the resulting code
+using the provided runtime system.
+
+The {\CppTransport} sources do not include source code (or derivatives of the source code)
+from these libraries. Compiled executables using the provided runtime system
+link to them only as external resources.
+\begin{itemize}
+    \item {\SPLINTER} \\
+    \url{https://github.com/bgrimstad/splinter} \\
+    License: Mozilla public license (see \file{thirdparty/License/SPLINTER.txt})
+    
+    \item {\JsonCpp} \\
+    \url{https://github.com/open-source-parsers/jsoncpp} \\
+    License: MIT License (see \file{thirdparty/License/JsonCpp.txt})
+\end{itemize}
+{\CppTransport} also depends on the {\Eigen} library using the version
+bundled as part of {\SPLINTER}.
+\begin{itemize}    
+    \item {\Eigen} \\
+    \url{http://eigen.tuxfamily.org/index.php?title=Main\_Page} \\
+    License: Mozilla public license
+    (for details, see files installed by the {\SPLINTER} build process)
+\end{itemize}    
+Also, the {\CppTransport} platform bundles parts of the following open source
+projects. These parts are included in the Git repository for {\CppTransport}
+or the installation tarball in the \file{thirdparty/} directory.
+
+The {\CppTransport}
+sources do not include source code (or derivatives of the source code)
+from this projects. It depends on them only as external resources that are
+used by HTML reports.
+\begin{itemize} 
+    \item {\jQuery} \\
+    \url{https://jquery.com/download/} \\
+    License: MIT License
+    (see \file{thirdparty/License/jQuery.txt})
+    
+    \item Twitter Bootstrap \\
+    \url{http://getbootstrap.com} \\
+    License: MIT License
+    (see \file{thirdparty/License/Bootstrap.txt})
+    
+    \item {\packagefont bootstrap-tab-history} \\
+    \url{http://mnarayan01.github.io/bootstrap-tab-history/} \\
+    License: Apache License
+    (see \file{thirdparty/License/bootstrap-tab-history.txt})
+    
+    \item {\DataTables} \\
+    \url{https://datatables.net} \\
+    License: MIT License
+    (see \file{thirdparty/License/DataTables.txt})
+    
+    \item {\packagefont Prism.js} \\
+    \url{http://prismjs.com} \\
+    License: MIT license
+    (see \file{thirdparty/License/prism.txt})
+\end{itemize}
 
 \bibliographystyle{JHEP}
 \bibliography{paper}

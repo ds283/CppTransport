@@ -55,15 +55,29 @@ namespace transport
           public:
 
 		        //! Construct a dataline object from a sequence of axis and data points
-            data_line(const std::list<std::string>& g, axis_value at, value_type vt, const std::vector<double>& a, const std::vector<number>& d,
-                      const std::string& Ll, const std::string& nLl,
+            data_line(std::list<std::string> g, axis_value at, value_type vt,
+                      const std::vector<double>& a, const std::vector<number>& d,
+                      std::string Ll, std::string nLl,
                       slave_message_buffer& msg, bool spectral_index=false);
 
             //! Construct a dataline object from a sequence of axis and data points
-            data_line(const std::string& g, axis_value at, value_type vt, const std::vector<double>& a, const std::vector<number>& d,
-                      const std::string& Ll, const std::string& nLl,
+            //! convenience person that accepts a std::initializer_list
+            data_line(std::initializer_list<std::string> g, axis_value at, value_type vt,
+                      const std::vector<double>& a, const std::vector<number>& d,
+                      std::string Ll, std::string nLl,
                       slave_message_buffer& msg, bool spectral_index=false)
-              : data_line(std::list<std::string>{g}, at, vt, a, d, Ll, nLl, msg, spectral_index)
+              : data_line(std::list<std::string>(g), at, vt, a, d, std::move(Ll), std::move(nLl), msg, spectral_index)
+              {
+              }
+
+            //! Construct a dataline object from a sequence of axis and data points
+            //! convenience version that automatically wraps a string representing a single-item
+            //! provenance list into a std::list<>
+            data_line(std::string g, axis_value at, value_type vt,
+                      const std::vector<double>& a, const std::vector<number>& d,
+                      std::string Ll, std::string nLl,
+                      slave_message_buffer& msg, bool spectral_index=false)
+              : data_line({g}, at, vt, a, d, std::move(Ll), std::move(nLl), msg, spectral_index)
               {
               }
 
@@ -149,15 +163,15 @@ namespace transport
 
 
         template <typename number>
-        data_line<number>::data_line(const std::list<std::string>& g, axis_value at, value_type vt,
+        data_line<number>::data_line(std::list<std::string> g, axis_value at, value_type vt,
                                      const std::vector<double>& a, const std::vector<number>& d,
-                                     const std::string& Ll, const std::string& nLl,
+                                     std::string Ll, std::string nLl,
                                      slave_message_buffer& msg, bool spectral_index)
-	        : groups(g),
+	        : groups(std::move(g)),
             x_type(at),
 	          y_type(spectral_index ? value_type::spectral_index : vt),
-	          LaTeX_label(Ll),
-	          non_LaTeX_label(nLl),
+	          LaTeX_label(std::move(Ll)),
+	          non_LaTeX_label(std::move(nLl)),
             data_type(data_line_type::continuous_data),
             messages(msg)
           {

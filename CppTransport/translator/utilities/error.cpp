@@ -82,21 +82,21 @@ void warn(const std::string& msg, const argument_cache& cache, const local_envir
   {
     std::ostringstream out;
 
-    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
-
     try
       {
-        out << ERROR_MESSAGE_AT_LINE << " " << context.get_filestack().write(level) << '\n';
+        const filestack& stack = context.get_filestack();
+        if(stack.size() > 0) out << ERROR_MESSAGE_AT_LINE << " " << stack.write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
       }
     catch(std::runtime_error& xe)
       {
       }
 
-    out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
+    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
+    out << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "");
 
     if(context.has_full_context())
       {
-        out << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
+        out << '\n' << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
 
         out << ERROR_MESSAGE_WRAP_PAD;
         for(unsigned int i = 0; i < context.get_position(); ++i)
@@ -114,21 +114,21 @@ void error(const std::string& msg, const argument_cache& cache, const local_envi
   {
     std::ostringstream out;
 
-    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
-
     try
       {
-        out << ERROR_MESSAGE_AT_LINE << " " << context.get_filestack().write(level) << '\n';
+        const filestack& stack = context.get_filestack();
+        if(stack.size() > 0) out << ERROR_MESSAGE_AT_LINE << " " << stack.write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
       }
     catch(std::runtime_error& xe)
       {
       }
 
-    out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
+    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
+    out << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "");
 
     if(context.has_full_context())
       {
-        out << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
+        out << '\n' << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
 
         out << ERROR_MESSAGE_WRAP_PAD;
         for(unsigned int i = 0; i < context.get_position(); ++i)
