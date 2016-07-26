@@ -1874,7 +1874,7 @@ blocks.
 In principle these are intended to identify the authors
 of the \emph{model description} rather than to assign
 credit for the original model,
-that can be done via the
+which can be done via the
 \attribute{references} attribute
 of the \block{model} block.
 
@@ -2425,7 +2425,7 @@ make some limited tradeoffs between the space cost and execution time:
     {\CC} \mintinline{c++}{for}-loop.
     For example, the translator
     might unpack the line
-    \mintinline{text}{dSigma[$A][$B] $= $U2_TENSOR[AC] Sigma[$C][$B];}
+    \mintinline{text}{dSigma[$A][$B] $= $U2_TENSOR[AC] * Sigma[$C][$B];}
     into
     \begin{minted}{c++}
         for(int A = 0; A < 2*N; ++A)
@@ -4902,7 +4902,7 @@ Stalls are more likely in the following circumstances:
 
     \semibold{Alternative strategies.}
     Aggregation times are typically not long enough to be problematic.
-    When writing to a hard disk {\CppTransport} can typically aggregate a $\sim 5 Gb$
+    When writing to a hard disk {\CppTransport} can typically aggregate a $\sim 5 \Gb$
     main database in just a few minutes.
     Problems are likely to occur only in extreme scenarios, where a database grows to
     many tens of $\Gb$ while simultaneously being used over NFS.
@@ -5222,6 +5222,7 @@ In addition, tasks sampling the 3-point function include the following extra tab
 \end{sqltablelist}
 
 \subsubsection{Strict consistency checking}
+\label{sec:strict-consistency}
 In rare circumstances it may be useful to enforce strict consistency checks
 within the database.
 These checks ensure that there is only entry for each time- and wavenumber-configuration
