@@ -11,11 +11,11 @@ The numerical results produced by **CppTransport** are accurate to tree-level, i
 
 The present version of **CppTransport** has been written by David Seery at the University of Sussex. It implements a formalism developed by Mafalda Dias, Jonathan Frazer, David Mulryne and David Seery.
 
-A number of different system tools implementing the same formalism, but with slightly different design goals, have been developed. These include a Python platform and a Mathematica platform. These tools are available from [transportmethod.com](http://transportmethod.com).
+A number of different tools implementing the same formalism, but with slightly different design goals, have been developed. These include a Python platform and a Mathematica platform. These tools are available from [transportmethod.com](http://transportmethod.com).
 
 # Releases
 
-The current release of CppTransport is 2016.1 (26 July 2016). This release can be cited via a DOI linking to a deposit at [zenodo.org](https://zenodo.org/record/58710).
+The current release of CppTransport is 2016.1 (26 July 2016). This release can be identified via a DOI linking to a deposit at [zenodo.org](https://zenodo.org/record/58710).
 
 * 2016.1 (26 July 2016) [Source code DOI:10.5281/zenodo.58710](http://dx.doi.org/10.5281/zenodo.58710) | [User guide DOI:10.5281/zenodo.58714](http://dx.doi.org/10.5281/zenodo.58714)
 
