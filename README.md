@@ -25,6 +25,14 @@ The current release of CppTransport is 2016.1 (26 July 2016). This release can b
 
 The **CppTransport** platform depends on, or incorporates, portions of other open source projects. For details, see the file NOTICE.txt.
 
+# Examples and cookbook
+
+A long worked example of double-quadratic inflation is included in the [user guide](http://dx.doi.org/10.5281/zenodo.58714).
+
+Alternatively, the C++ codes and model description files required to reproduce the plots in Dias et al. (2016) are available in a [separate GitHub repository](https://github.com/ds283/transport-paper).
+
+Some examples and cookbook-style snippets for common tasks are collected on the [Wiki](https://github.com/ds283/CppTransport/wiki).
+
 # How to cite *CppTransport*
 
 If you use **CppTransport** to produce numerical results supporting your research, then we would appreciate a citation to the main reference:
@@ -47,7 +55,7 @@ Concrete numerical details are described in the paper *Numerical evaluation of t
 
 A full list of references is given in the **CppTransport** documentation, or can be found at [transportmethod.com](https://transportmethod.com/method/).
 
-# Credits
+# Acknowledgments
 
 Development of the **CppTransport** platform has been supported by the grant *Precision tests of the inflationary scenario*, funded by the European Union’s Seventh Framework Programme (FP/2007–2013) and ERC Grant Agreement No. 308082.
 
