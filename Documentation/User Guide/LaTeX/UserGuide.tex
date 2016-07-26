@@ -1061,14 +1061,14 @@ The {\CppTransport} sources can be downloaded from various locations:
     DOI and containing the source code are deposited
     at the CERN/OpenAIRE Zenodo repository
     \begin{center}
-        \url{http://zenodo.org}    
+        \url{https://zenodo.org/record/58710}    
     \end{center}
 
     \item The same tar archives can be downloaded from
     \url{http://transportmethod.com}, or
     from {\CppTransport}'s GitHub homepage:
     \begin{center}
-        \url{https://github.com/ds283/CppTransport}    
+        \url{https://github.com/ds283/CppTransport/releases}    
     \end{center}    
     
     \item If you wish to install a pre-release version of {\CppTransport},
@@ -1194,7 +1194,7 @@ The procedure is similar for Homebrew.
 
 \end{itemize}
 
-\subsubsection{Installing dependencies in Ubuntu 16.04}
+\subsubsection{Installing dependencies on Ubuntu 16.04}
 Most Linux distributions will include packages for all
 {\CppTransport} dependencies. For illustration we describe the process for
 Ubuntu 16.04, but the process will be nearly unchanged for any
@@ -6512,10 +6512,10 @@ the
     tk3_linear.set_description("Compute time history of the 3-point function on a linear grid");
 
     transport::zeta_threepf_task<> ztk3_linear("dquad.threepf-linear-zeta", tk3_linear);
-    ztk3_linear.set_description("Convert the output from dquad.threepf-linear into zeta 2 and 3-point functions");
+    ztk3_linear.set_description("Convert the output from dquad.threepf-linear into zeta" " 2 and 3-point functions");
 
     transport::fNL_task<> fNL_local("dquad.fNL-local", ztk3_linear, transport::bispectrum_template::local);
-    fNL_local.set_description("Compute inner product of double-quadratic bispectrum with local template");
+    fNL_local.set_description("Compute inner product of double-quadratic bispectrum" " with local template");
 
     repo.commit(fNL_local);    
 \end{minted}
@@ -6917,10 +6917,10 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
 
     transport::threepf_cubic_task<> tk3("dquad.threepf", ics, ts, ks);
     tk3.set_adaptive_ics_efolds(54.0);
-    tk3.set_description("Compute time history of the 3-point function on a cubic lattice from k ~ e^3 to k ~ e^9");
+    tk3.set_description("Compute time history of the 3-point function on a cubic lattice" " from k ~ e^3 to k ~ e^9");
 
     transport::zeta_threepf_task<> ztk3("dquad.threepf-zeta", tk3);
-    ztk3.set_description("Convert the output from dquad.threepf into zeta 2- and 3-point functions");
+    ztk3.set_description("Convert the output from dquad.threepf into zeta 2-" " and 3-point functions");
 
     vis_toolkit::SQL_time_query all_times("1=1");
 
