@@ -11,7 +11,13 @@ The numerical results produced by **CppTransport** are accurate to tree-level, i
 
 The present version of **CppTransport** has been written by David Seery at the University of Sussex. It implements a formalism developed by Mafalda Dias, Jonathan Frazer, David Mulryne and David Seery.
 
-A different system implementing the same formalism, but with slightly different design goals, has been developed by David Mulryne at Queen Mary, University of London. It is available from **xyz**.
+A number of different system tools implementing the same formalism, but with slightly different design goals, have been developed. These include a Python platform and a Mathematica platform. These tools are available from [transportmethod.com](http://transportmethod.com).
+
+# Releases
+
+The current release of CppTransport is 2016.1 (26 July 2016). This release can be cited via a DOI linking to a deposit at [zenodo.org](https://zenodo.org/record/58710).
+
+* 2016.1 (26 July 2016) [Source code DOI:10.5281/zenodo.58710](http://dx.doi.org/10.5281/zenodo.58710) | [User guide DOI:10.5281/zenodo.58714](http://dx.doi.org/10.5281/zenodo.58714)
 
 # Licensing
 
@@ -21,19 +27,25 @@ The **CppTransport** platform depends on, or incorporates, portions of other ope
 
 # How to cite *CppTransport*
 
-If you use **CppTransport** to produce numerical results supporting your research, then we would appreciate a citation to the principal paper which describes the numerical scheme used for integration of the 2- and 3-point functions:
+If you use **CppTransport** to produce numerical results supporting your research, then we would appreciate a citation to the main reference:
 
 * *Numerical evaluation of the bispectrum in multiple-field inflation*, Mafalda Dias, Jonathan Frazer, David Mulryne and David Seery. arXiv:16xx.yyyyy DOI:
 
 Specific documentation for **CppTransport** can be cited using
 
-* *CppTransport*: a platform to automate calculation of inflationary correlation functions, David Seery. arXiv:16xx.yyyyy DOI:
+* *CppTransport*: a platform to automate calculation of inflationary correlation functions, David Seery. arXiv:16xx.yyyyy [DOI:10.5281/zenodo.58714](http://dx.doi.org/10.5281/zenodo.58714)
 
-If you are looking for references to the original literature, then the use of evolution equations to compute n-point functions synthesized during an inflationary epoch (including all quantum effects) was described in
+### Original literature
+
+The use of evolution equations to compute n-point functions synthesized during an inflationary epoch (including all quantum effects) was described in
 
 * *Transporting non-Gaussianity from sub to super-horizon scales*, David J. Mulryne. JCAP 1309 (2013) 010 [arXiv:1302.3842](http://arxiv.org/abs/arXiv:1302.3842) [DOI:10.1088/1475-7516/2013/09/010](http://dx.doi.org/10.1088/1475-7516/2013/09/010)
 
-A full list of references is given in the **CppTransport** documentation.
+Concrete numerical details are described in the paper *Numerical evaluation of the bispectrum in multiple-field inflation* listed above, or were first given for the two-point function in
+
+* *Computing observables in curved multifield models of inflation - A guide (with code) to the transport method*, Mafalda Dias, Jonathan Frazer and David Seery. JCAP 1512 (2015) 12 030 [arXiv:1502.03125](http://arxiv.org/abs/arXiv:1502.03125) [DOI:10.1088/1475-7516/2015/12/030](http://dx.doi.org/10.1088/1475-7516/2015/12/030)
+
+A full list of references is given in the **CppTransport** documentation, or can be found at [transportmethod.com](https://transportmethod.com/method/).
 
 # Credits
 
