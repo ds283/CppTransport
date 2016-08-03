@@ -5393,24 +5393,17 @@ objects used in~\S\ref{sec:add-integration-task}.
     The normalization of these correlation functions does not depend on
     $\astar$
     and therefore they are simple to remap into whatever wavenumber
-    normalization is convenient for the problem at hand. In particular, you should
-    not normally adjust $\astar$
-    to match your final normalization convention because it could inhibit
-    performance of the integrator.
+    normalization is convenient for the problem at hand.
      
     By default {\CppTransport} sets
-    $\astar = 4$.
-    The current transport implementation uses
-    \emph{dimensionful} correlation
-    functions (although this may change in future),
-    and therefore while the choice of $\astar$ has no effect
-    of the final values it does affect the magnitude of intermediate
-    terms.
-    The default value $\astar = 4$ is intended to give good performance
-    for typical models.
-    
-    If the integration engine is not performing well, it may be possible
-    to obtain an improvement by adjusting $\astar$.
+    $\astar = \exp(0) = 1$.
+    The current implementation of the
+    transport integrator uses dimensionless
+    correlation functions, and therefore the numerical
+    solutions are independent of its value.
+    As a result this setting can mostly be ignored, unless
+    you want a specific normalization for the purpose of producing
+    plots or tables.
     
     \item \mintinline{c++}{bool get_collect_initial_conditions()} \\
     \mintinline{c++}{set_collect_initial_conditions(bool)} \\
