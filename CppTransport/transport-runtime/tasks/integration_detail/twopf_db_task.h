@@ -266,7 +266,7 @@ namespace transport
         double get_astar_normalization() const { return(this->astar_normalization); }
 
         //! Set current a* normalization
-        //! The value supplied in ln(a*)
+        //! The value supplied is ln(a*), not a* itself
         twopf_db_task<number>& set_astar_normalization(double astar) const { this->astar_normalization = astar; }
 
 
@@ -430,7 +430,7 @@ namespace transport
         max_refinements(CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
         collect_initial_conditions(CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
-        kstar(i.get_model()->compute_kstar(this))
+        kstar(i.get_model()->compute_kstar(this))     // compute k* for our choice of horizon-crossing time
       {
 		    twopf_db = std::make_shared<twopf_kconfig_database>(kstar);
 	    }

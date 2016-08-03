@@ -250,13 +250,13 @@ namespace transport
                            threepf_batcher<number>& batcher, unsigned int refinement_level);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                               const twopf_db_task<number>* tk, const std::vector<number>& ic, bool imaginary = false);
+                               const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0, bool imaginary = false);
 
         void populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                const twopf_db_task<number>* tk, const std::vector<number>& ic);
+                                const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0);
 
         void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
-                                 double Ninit, const twopf_db_task<number>* tk, const std::vector<number>& ic);
+                                 double Ninit, const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0);
 
 
         // INTERNAL DATA
@@ -712,12 +712,14 @@ namespace transport
             double t_exit = tk->get_ics_exit_time(*kconfig);
             batcher.push_ics(kconfig->serial, t_exit, ics_1);
           }
+    
+        // observers expect all correlation functions to be dimensionless and rescaled by the same factors
+    
+        // fix initial conditions - tensors (use dimensionless correlation functions)
+        this->populate_tensor_ic(x, $MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
 
-        // fix initial conditions - tensors
-        this->populate_tensor_ic(x, $MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
-
-        // fix initial conditions - 2pf
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
+        // fix initial conditions - 2pf (use dimensionless correlation functions)
+        this->populate_twopf_ic(x, $MODEL_pool::twopf_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
 
         // up to this point the calculation has been done in the user-supplied time variable.
         // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
@@ -738,36 +740,39 @@ namespace transport
 
 
     // make initial conditions for each component of the 2pf
-    // x         - state vector *containing* space for the 2pf (doesn't have to be entirely the 2pf)
-    // start     - starting position of twopf components within the state vector
-    // kmode     - *comoving normalized* wavenumber for which we will compute the twopf
-    // Ninit     - initial time
-    // p         - parameters
-    // ics       - iniitial conditions for the background fields (or fields+momenta)
-    // imaginary - whether to populate using real or imaginary components of the 2pf
+    // x           - state vector *containing* space for the 2pf (doesn't have to be entirely the 2pf)
+    // start       - starting position of twopf components within the state vector
+    // kmode       - *comoving normalized* wavenumber for which we will compute the twopf
+    // Ninit       - initial time
+    // tk          - parent task
+    // ics         - initial conditions for the background fields (or fields+momenta)
+    // k_normalize - used to adjust ics to be dimensionless, or just 1.0 to get raw correlation function
+    // imaginary   - whether to populate using real or imaginary components of the 2pf
     template <typename number>
     void $MODEL_mpi<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                               const twopf_db_task<number>* tk, const std::vector<number>& ics, bool imaginary)
+                                               const twopf_db_task<number>* tk, const std::vector<number>& ics, double k_normalize, bool imaginary)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::twopf_size);
 
-        x[start + FLATTEN($A,$B)] = imaginary ? this->make_twopf_im_ic($A, $B, kmode, Ninit, tk, ics) : this->make_twopf_re_ic($A, $B, kmode, Ninit, tk, ics);
+        // populate components of the 2pf
+        x[start + FLATTEN($A,$B)] = imaginary ? this->make_twopf_im_ic($A, $B, kmode, Ninit, tk, ics, k_normalize) : this->make_twopf_re_ic($A, $B, kmode, Ninit, tk, ics, k_normalize);
       }
 
 
     // make initial conditions for the tensor twopf
     template <typename number>
     void $MODEL_mpi<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                const twopf_db_task<number>* tk, const std::vector<number>& ics)
+                                                const twopf_db_task<number>* tk, const std::vector<number>& ics, double k_normalize)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::tensor_size);
 
-        x[start + TENSOR_FLATTEN(0,0)] = this->make_twopf_tensor_ic(0, 0, kmode, Ninit, tk, ics);
-        x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_ic(0, 1, kmode, Ninit, tk, ics);
-        x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_ic(1, 0, kmode, Ninit, tk, ics);
-        x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_ic(1, 1, kmode, Ninit, tk, ics);
+        // populate components of the 2pf
+        x[start + TENSOR_FLATTEN(0,0)] = this->make_twopf_tensor_ic(0, 0, kmode, Ninit, tk, ics, k_normalize);
+        x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_ic(0, 1, kmode, Ninit, tk, ics, k_normalize);
+        x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_ic(1, 0, kmode, Ninit, tk, ics, k_normalize);
+        x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_ic(1, 1, kmode, Ninit, tk, ics, k_normalize);
       }
 
 
@@ -880,23 +885,25 @@ namespace transport
             batcher.push_kt_ics(kconfig->serial, t_exit_2, ics_2);
           }
 
-        // fix initial conditions - tensors
-        this->populate_tensor_ic(x, $MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics);
-        this->populate_tensor_ic(x, $MODEL_pool::tensor_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics);
-        this->populate_tensor_ic(x, $MODEL_pool::tensor_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics);
+        // observers expect all correlation functions to be dimensionless and rescaled by the same factors
+        
+        // fix initial conditions - tensors (use dimensionless correlation functions, all rescaled by k_t to be consistent)
+        this->populate_tensor_ic(x, $MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_tensor_ic(x, $MODEL_pool::tensor_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_tensor_ic(x, $MODEL_pool::tensor_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
 
-        // fix initial conditions - real 2pfs
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, false);
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, false);
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, false);
+        // fix initial conditions - real 2pfs (use dimensionless correlation functions, all rescaled by k_t to be consistent)
+        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
+        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
+        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
 
-        // fix initial conditions - imaginary 2pfs
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, true);
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, true);
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, true);
+        // fix initial conditions - imaginary 2pfs (use dimensionless correlation functions, all rescaled by k_t to be consistent)
+        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
+        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
+        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
 
-        // fix initial conditions - threepf
-        this->populate_threepf_ic(x, $MODEL_pool::threepf_start, *kconfig, *(time_db.value_begin()), tk, ics);
+        // fix initial conditions - threepf (use dimensionless correlation functions)
+        this->populate_threepf_ic(x, $MODEL_pool::threepf_start, *kconfig, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
 
         // up to this point the calculation has been done in the user-supplied time variable.
         // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
@@ -919,12 +926,13 @@ namespace transport
     template <typename number>
     void $MODEL_mpi<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
                                                  const threepf_kconfig& kconfig, double Ninit,
-                                                 const twopf_db_task<number>* tk, const std::vector<number>& ics)
+                                                 const twopf_db_task<number>* tk, const std::vector<number>& ics,
+                                                 double k_normalize)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::threepf_size);
 
-        x[start + FLATTEN($A,$B,$C)] = this->make_threepf_ic($A, $B, $C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, tk, ics);
+        x[start + FLATTEN($A,$B,$C)] = this->make_threepf_ic($A, $B, $C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, tk, ics, k_normalize);
       }
 
 

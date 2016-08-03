@@ -279,17 +279,17 @@ namespace transport
       protected:
 
         number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                const twopf_db_task<number>* __task, const std::vector<number>& __fields);
+                                const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k_norm);
 
         number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                const twopf_db_task<number>* __task, const std::vector<number>& __fields);
+                                const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k_norm);
 
         number make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                    const twopf_db_task<number>* __task, const std::vector<number>& __fields);
+                                    const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k_norm);
 
         number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                double kmode_1, double kmode_2, double kmode_3, double __Ninit,
-                               const twopf_db_task<number>* __task, const std::vector<number>& __fields);
+                               const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k_norm);
 
 
         // INTERNAL DATA
@@ -669,7 +669,8 @@ namespace transport
     // __fields -- vector of initial conditions for the background fields (or fields+momenta)
     template <typename number>
     number $MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                            const twopf_db_task<number>* __task, const std::vector<number>& __fields)
+                                            const twopf_db_task<number>* __task, const std::vector<number>& __fields,
+                                            double __k_norm)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -747,14 +748,16 @@ namespace transport
             assert(false);
           }
 
-        return(__tpf);
+        // return value, rescaled to give dimensionless correlation function
+        return(__tpf * __k_norm*__k_norm*__k_norm);
       }
 
 
   // set up initial conditions for the imaginary part of the equal-time two-point function
   template <typename number>
   number $MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                          const twopf_db_task<number>* __task, const std::vector<number>& __fields)
+                                          const twopf_db_task<number>* __task, const std::vector<number>& __fields,
+                                          double __k_norm)
     {
       $RESOURCE_RELEASE
       __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -793,15 +796,17 @@ namespace transport
 
           __tpf = - __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
-
-      return(__tpf);
+    
+      // return value, rescaled to give dimensionless correlation function
+      return(__tpf * __k_norm*__k_norm*__k_norm);
     }
 
 
     // set up initial conditions for the real part of the equal-time tensor two-point function
     template <typename number>
     number $MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                                const twopf_db_task<number>* __task, const std::vector<number>& __fields)
+                                                const twopf_db_task<number>* __task, const std::vector<number>& __fields,
+                                                double __k_norm)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -841,8 +846,9 @@ namespace transport
           {
             assert(false);
           }
-
-        return(__tpf);
+    
+        // return value, rescaled to give dimensionless correlation function
+        return(__tpf * __k_norm*__k_norm*__k_norm);
       }
 
 
@@ -850,7 +856,8 @@ namespace transport
     template <typename number>
     number $MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                            double __k1, double __k2, double __k3, double __Ninit,
-                                           const twopf_db_task<number>* __task, const std::vector<number>& __fields)
+                                           const twopf_db_task<number>* __task, const std::vector<number>& __fields,
+                                           double __k_norm)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1043,8 +1050,9 @@ namespace transport
             default:
               assert(false);
           }
-
-        return(__tpf);
+    
+        // return value, rescaled to give dimensionless correlation function
+        return(__tpf * __k_norm*__k_norm*__k_norm*__k_norm*__k_norm*__k_norm);
       }
 
 
