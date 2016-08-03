@@ -66,7 +66,7 @@ def add_folder(tree_path, archive_path, archive):
 
 
 package_dir = "packages/pkg"
-version = "2016_01"
+version = "2016_02"
 archive_file = "CppTransport" + "_" + version + ".tar.gz"
 
 # tree_path points to the position of some object within the source tree

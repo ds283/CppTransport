@@ -60,7 +60,7 @@ namespace transport
     constexpr double       CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH    = (1000.0);
 
     // default normalization of scale factor ln a(t) at horizon exit of k=1 mode
-    constexpr double       CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION        = (4.0);
+    constexpr double       CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION        = (0.0);
 
     constexpr unsigned int CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS           = (10);
     constexpr double       CPPTRANSPORT_DEFAULT_ADAPTIVE_ICS_EFOLDS        = (4.0);

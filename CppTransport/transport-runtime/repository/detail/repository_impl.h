@@ -790,6 +790,7 @@ namespace transport
         // remove items from the list which have mismatching tags
         repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(!group.second->check_tags(tags)); } );
 
+        // if no matching groups, raise an exception
         if(db.empty())
           {
             std::ostringstream msg;
@@ -797,8 +798,12 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
+        // items are stored in integration_content_db according to their key, which is a lexical datestamp
+        // this means that the earliest content group will be at the front, and the most recent content
+        // group at the back
+        
         std::unique_ptr< content_group_record<integration_payload> > rval;
-        (*db.begin()).second.swap(rval);
+        (*db.rbegin()).second.swap(rval);
         return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
@@ -816,15 +821,20 @@ namespace transport
         // remove items from the list which have mismatching tags
         repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(!group.second.get()->check_tags(tags)); } );
 
+        // if no matching groups, raise an exception
         if(db.empty())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_CONTENT_GROUPS << " '" << name << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
+    
+        // items are stored in postintegration_content_db according to their key, which is a lexical datestamp
+        // this means that the earliest content group will be at the front, and the most recent content
+        // group at the back
 
         std::unique_ptr< content_group_record<postintegration_payload> > rval;
-        (*db.begin()).second.swap(rval);
+        (*db.rbegin()).second.swap(rval);
         return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
