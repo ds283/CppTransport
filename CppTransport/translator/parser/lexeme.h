@@ -227,7 +227,9 @@ namespace lexeme    // package in a unique namespace
                         err_context.warn(msg.str());
                       }
                   }
-                else if(buffer.length() > 1 && buffer[0] == '0')
+                else if(buffer.length() > 1 && buffer[0] == '0'
+                        && buffer.find(".", 1) == std::string::npos
+                        && buffer.find("e", 1) == std::string::npos && buffer.find("E", 1) == std::string::npos)    // don't attempt to convert strings containing a decimal point or E notation
                   {
                     if((sscanf(buffer.c_str(), "%o%n", &z, &offset) == 1) && offset == buffer.length())
                       {
