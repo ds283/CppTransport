@@ -76,8 +76,11 @@ class lexstream
 
   private:
 
+    //! parse a named file
     bool parse(const boost::filesystem::path& file);
 
+    //! convert the stream associated with a lexfile descriptor into lexemes;
+    //! called by parse()
     void lexicalize(lexfile& input);
 
     std::string get_lexeme(lexfile& input, enum lexeme::buffer_type& type);
@@ -252,6 +255,10 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
 
     while(input.current_state() == lexfile_outcome::ok)
       {
+        // cache current input line and character position, so error messages are contexted at the *start* of each lexeme rather than the end
+        std::shared_ptr<std::string> context_line = input.get_current_line();
+        unsigned int                 context_pos  = input.get_current_char_pos();
+        
         enum lexeme::buffer_type type;
         std::string              word = this->get_lexeme(input, type);
 
@@ -267,18 +274,22 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
 
                         if(word == "include")                                     // inclusion directive
                           {
+                            // recache context data
+                            std::shared_ptr<std::string> include_context_line = input.get_current_line();
+                            unsigned int                 include_context_pos  = input.get_current_char_pos();
+                            
                             word = this->get_lexeme(input, type);
 
                             if(type != lexeme::buffer_type::string_literal)
                               {
-                                error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                                error_context err_ctx(this->stack, include_context_line, include_context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 err_ctx.error(ERROR_INCLUDE_DIRECTIVE);
                               }
                             else
                               {
                                 if(!this->parse(word))
                                   {
-                                    error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                                    error_context err_ctx(this->stack, context_line, context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
 
                                     std::ostringstream msg;
                                     msg << ERROR_INCLUDE_FILE << " '" << word << "'";
@@ -290,7 +301,7 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                     else
                       {
                         // note: this updates context, depending what the lexeme is recognized as
-                        error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                        error_context err_ctx(this->stack, context_line, context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                         this->lexeme_list.emplace_back(word, type, context, this->unique++, err_ctx,
                                                        this->ktable, this->kmap, this->ctable, this->cmap, this->ccontext);
                       }
@@ -302,7 +313,7 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                 case lexeme::buffer_type::string_literal:
                   {
                     // note: this updates context, depending what the lexeme is recognized as
-                    error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                    error_context err_ctx(this->stack, context_line, context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                     this->lexeme_list.emplace_back(word, type, context, this->unique++, err_ctx,
                                                    this->ktable, this->kmap, this->ctable, this->cmap, this->ccontext);
                     break;
