@@ -182,9 +182,9 @@
 #define WARNING_TEMPORARY_NO_TAG_SET          "Temporary pool being written, but no location set: defaults to end-of-buffer"
 
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "
-#define WARNING_HEX_CONVERSION_B              "indicates hex, but did not convert: treated as decmial"
+#define WARNING_HEX_CONVERSION_B              "indicates hex, but did not convert"
 #define WARNING_OCTAL_CONVERSION_A            "Leading '0' in "
-#define WARNING_OCTAL_CONVERSION_B            "indicates octal, but did not convert: treated as decimal"
+#define WARNING_OCTAL_CONVERSION_B            "indicates octal, but did not convert"
 
 #define WARNING_RECURSION_DEPTH               "Maximum depth of recursive macro substitution exceeded (max"
 

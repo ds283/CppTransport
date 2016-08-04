@@ -359,8 +359,10 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
 
                     if(c == '.') dot = true;
                     if(c == 'x') hex = true;
-
-                    eng = false;  // not expecting an exponent (so '+' and '-' should not be considered part of this lexeme, unless:
+    
+                    // not expecting an exponent (so '+' and '-' should not be considered part of this lexeme, unless
+                    // they immediately follow an 'e' or an 'E'
+                    eng = false;
                     if((c == 'e' || c == 'E') && hex == false) eng = true;
 
                     input.eat();

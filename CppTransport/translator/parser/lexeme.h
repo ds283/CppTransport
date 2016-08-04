@@ -213,6 +213,32 @@ namespace lexeme    // package in a unique namespace
               {
                 type = lexeme_type::unknown;
 
+                if(buffer.length() >= 2 && buffer[0] == '0' && buffer[1] == 'x')    // allow >= 2 to catch just '0x' on its own
+                  {
+                    if((sscanf(buffer.c_str(), "%x%n", &z, &offset) == 1) && offset == buffer.length())
+                      {
+                        type = lexeme_type::integer;
+                      }
+                    else
+                      {
+                        std::ostringstream msg;
+                        msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
+                        err_context.warn(msg.str());
+                      }
+                  }
+                else if(buffer.length() > 1 && buffer[0] == '0')
+                  {
+                    if((sscanf(buffer.c_str(), "%o%n", &z, &offset) == 1) && offset == buffer.length())
+                      {
+                        type = lexeme_type::integer;
+                      }
+                    else
+                      {
+                        std::ostringstream msg;
+                        msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
+                        err_context.warn(msg.str());
+                      }
+                  }
                 if((sscanf(buffer.c_str(), "%i%n", &z, &offset) == 1) && offset == buffer.length())
                   {
                     type = lexeme_type::integer;
@@ -229,24 +255,13 @@ namespace lexeme    // package in a unique namespace
                   {
                     type = lexeme_type::decimal;
                   }
-                else
+                  
+                // check for successful conversion
+                if(type == lexeme_type::unknown)
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
                     err_context.error(msg.str());
-                  }
-
-                if(type == lexeme_type::integer && buffer[0] == '0' && buffer[1] == 'x')
-                  {
-                    std::ostringstream msg;
-                    msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
-                    err_context.warn(msg.str());
-                  }
-                else if(type == lexeme_type::integer && buffer[0] == '0')
-                  {
-                    std::ostringstream msg;
-                    msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
-                    err_context.warn(msg.str());
                   }
 
                 context = minus_context::binary; // unary minus can't follow a number
