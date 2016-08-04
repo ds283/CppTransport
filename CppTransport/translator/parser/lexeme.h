@@ -184,8 +184,7 @@ namespace lexeme    // package in a unique namespace
 	      ccontext(ctx),
         err_context(std::move(err_ctx))
 	    {
-        bool ok     = false;
-        int  offset = 0;
+        int offset = 0;
 
         switch(t)
 	        {
@@ -196,6 +195,7 @@ namespace lexeme    // package in a unique namespace
 
                 context = minus_context::binary; // unary minus can't follow an identifier
 
+                // check whether this literal matches a keyword
                 for(unsigned int i = 0; i < this->ktable.size(); ++i)
                   {
                     if(buffer == ktable[i])
@@ -204,6 +204,7 @@ namespace lexeme    // package in a unique namespace
                         k       = km[i];
                         str     = "";
                         context = minus_context::unary; // unary minus can always follow a keyword (eg. built-in function)
+                        break;
                       }
                   }
                 break;
@@ -270,6 +271,8 @@ namespace lexeme    // package in a unique namespace
 
             case buffer_type::character:
               {
+                bool found_match = false;
+
                 type = lexeme_type::unknown;
 
                 for(unsigned int i = 0; i < this->ctable.size(); ++i)
@@ -279,6 +282,7 @@ namespace lexeme    // package in a unique namespace
                     std::string match  = ctable[i];
                     size_t      pos;
 
+                    // check for @binary or @unary distinguishing tags in the character
                     if((pos = match.find(UNARY_TAG)) != std::string::npos)
                       {
                         unary = true;
@@ -289,18 +293,20 @@ namespace lexeme    // package in a unique namespace
                         binary = true;
                         match.erase(pos, LENGTH_BINARY_TAG);
                       }
+
                     if(buffer == match
                        && (!unary || (unary && context == minus_context::unary))
                        && (!binary || (binary && context == minus_context::binary)))
                       {
-                        type    = lexeme_type::character;
-                        s       = cmap[i];
-                        context = ccontext[i] ? minus_context::unary : minus_context::binary;
-                        ok      = true;
+                        type        = lexeme_type::character;
+                        s           = cmap[i];
+                        context     = ccontext[i] ? minus_context::unary : minus_context::binary;
+                        found_match = true;
+                        break;
                       }
                   }
 
-                if(!ok)
+                if(!found_match)
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
@@ -312,7 +318,7 @@ namespace lexeme    // package in a unique namespace
 
             case buffer_type::string_literal:
               {
-                type  = lexeme_type::string;
+                type    = lexeme_type::string;
                 str     = buffer;
                 context = minus_context::unary; // binary minus can't follow a string
                 break;
