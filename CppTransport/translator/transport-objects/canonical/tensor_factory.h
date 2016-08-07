@@ -78,6 +78,9 @@ namespace canonical
 
         //! obtain an A-tensor
         virtual std::unique_ptr<A> make_A(language_printer& p, cse& cw) override;
+    
+        //! obtain an Atilde-tensor
+        virtual std::unique_ptr<Atilde> make_Atilde(language_printer& p, cse& cw) override;
 
         //! obtain a B-tensor
         virtual std::unique_ptr<B> make_B(language_printer& p, cse& cw) override;

@@ -31,6 +31,7 @@
 #include "dddV.h"
 #include "SR_velocity.h"
 #include "A.h"
+#include "Atilde.h"
 #include "B.h"
 #include "C.h"
 #include "M.h"
@@ -84,6 +85,13 @@ namespace canonical
     std::unique_ptr<A> tensor_factory::make_A(language_printer& p, cse& cw)
       {
         std::unique_ptr<canonical_A> obj = std::make_unique<canonical_A>(p, cw, this->cache, this->cres, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::move(obj);      // require std::move() here because there is no implicit conversion for upcast
+      }
+    
+    
+    std::unique_ptr<Atilde> tensor_factory::make_Atilde(language_printer& p, cse& cw)
+      {
+        std::unique_ptr<canonical_Atilde> obj = std::make_unique<canonical_Atilde>(p, cw, this->cache, this->cres, this->shared, this->compute_timer, this->fl, this->traits);
         return std::move(obj);      // require std::move() here because there is no implicit conversion for upcast
       }
 

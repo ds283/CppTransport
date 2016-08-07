@@ -42,7 +42,14 @@ namespace macro_packages
     constexpr unsigned int A_A_ARGUMENT = 3;
     constexpr unsigned int A_TOTAL_ARGUMENTS = 4;
     constexpr unsigned int A_TOTAL_INDICES = 3;
-
+    
+    constexpr unsigned int ATILDE_K1_ARGUMENT = 0;
+    constexpr unsigned int ATILDE_K2_ARGUMENT = 1;
+    constexpr unsigned int ATILDE_K3_ARGUMENT = 2;
+    constexpr unsigned int ATILDE_A_ARGUMENT = 3;
+    constexpr unsigned int ATILDE_TOTAL_ARGUMENTS = 4;
+    constexpr unsigned int ATILDE_TOTAL_INDICES = 3;
+    
     constexpr unsigned int B_K1_ARGUMENT = 0;
     constexpr unsigned int B_K2_ARGUMENT = 1;
     constexpr unsigned int B_K3_ARGUMENT = 2;
@@ -125,6 +132,73 @@ namespace macro_packages
         //! A-tensor object
         std::unique_ptr<A> A_tensor;
 
+      };
+    
+    
+    class replace_Atilde : public cse_map_field3
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        replace_Atilde(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
+          : cse_map_field3(std::move(n), ATILDE_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+            printer(prn),
+            cse_worker(cw),
+            lambda_mgr(lm),
+            shared(f.get_shared_resources()),
+            sym_factory(s)
+          {
+            Atilde_tensor = f.make_Atilde(prn, cw);
+          }
+        
+        //! destructor
+        virtual ~replace_Atilde() = default;
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! determine unroll status
+        enum unroll_behaviour get_unroll() const override { return this->Atilde_tensor->get_unroll(); }
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! evaluate
+        virtual void pre_hook(const macro_argument_list& args) override;
+        
+        //! evaluate
+        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! reference to shared resource
+        shared_resources& shared;
+        
+        //! CSE worker
+        cse& cse_worker;
+        
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+        
+        //! language printer
+        language_printer& printer;
+        
+        //! symbol factory
+        symbol_factory& sym_factory;
+        
+        //! A-tensor object
+        std::unique_ptr<Atilde> Atilde_tensor;
+        
       };
 
 

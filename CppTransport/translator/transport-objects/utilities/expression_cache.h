@@ -37,6 +37,7 @@ enum class expression_item_types
     U2_item, U2_lambda,
     U3_item, U3_lambda,
     A_item, A_lambda,
+    Atilde_item, Atilde_lambda,
     B_item, B_lambda,
     C_item, C_lambda,
     M_item, M_lambda,
