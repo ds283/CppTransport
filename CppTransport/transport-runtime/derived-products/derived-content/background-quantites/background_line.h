@@ -258,16 +258,22 @@ namespace transport
 				    switch(this->type)
 					    {
 				        case background_quantity::epsilon:
-					        this->epsilon_line(group, pipe, lines, tags, messages, t_axis, bg_data);
-					        break;
+                  {
+                    this->epsilon_line(group, pipe, lines, tags, messages, t_axis, bg_data);
+                    break;
+                  }
 
 				        case background_quantity::Hubble:
-					        this->Hubble_line(group, pipe, lines, tags, messages, t_axis, bg_data);
-					        break;
+                  {
+                    this->Hubble_line(group, pipe, lines, tags, messages, t_axis, bg_data);
+                    break;
+                  }
 
 				        case background_quantity::aHubble:
-					        this->aHubble_line(group, pipe, lines, tags, messages, t_axis, bg_data);
-					        break;
+                  {
+                    this->aHubble_line(group, pipe, lines, tags, messages, t_axis, bg_data);
+                    break;
+                  }
 					    }
 
 				    this->detach(pipe);
@@ -353,64 +359,76 @@ namespace transport
 								switch(this->type)
 									{
 								    case background_quantity::epsilon:
-									    label = "$" + std::string(CPPTRANSPORT_LATEX_EPSILON_SYMBOL) + "$";
-											break;
-
-								    case background_quantity::Hubble:
-									    label = "$" + std::string(CPPTRANSPORT_LATEX_HUBBLE_SYMBOL) + "$";
-											break;
-
+                      {
+                        label = "$" + std::string(CPPTRANSPORT_LATEX_EPSILON_SYMBOL) + "$";
+                        break;
+                      }
+                    
+                    case background_quantity::Hubble:
+                      {
+                        label = "$" + std::string(CPPTRANSPORT_LATEX_HUBBLE_SYMBOL) + "$";
+                        break;
+                      }
+                    
                     case background_quantity::aHubble:
-									    label = "$" + std::string(CPPTRANSPORT_LATEX_A_HUBBLE_SYMBOL) + "$";
-											break;
-									}
-							}
-
-						return(label);
-					}
-
-
-		    template <typename number>
-		    std::string background_line<number>::get_non_LaTeX_label() const
-			    {
-		        std::string label;
-
-		        if(this->label_set)
-			        {
-		            label = this->non_LaTeX_label;
-			        }
-		        else
-			        {
-		            switch(this->type)
-			            {
-		                case background_quantity::epsilon:
-			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_EPSILON_SYMBOL) + "$";
-		                  break;
-
-		                case background_quantity::Hubble:
-			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_HUBBLE_SYMBOL) + "$";
-	  	                break;
-
-                    case background_quantity::aHubble:
-			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_A_HUBBLE_SYMBOL) + "$";
-  		                break;
-			            }
-			        }
-
-		        return(label);
-			    }
+                      {
+                        label = "$" + std::string(CPPTRANSPORT_LATEX_A_HUBBLE_SYMBOL) + "$";
+                        break;
+                      }
+                  }
+              }
+            
+            return(label);
+          }
 
 
-				template <typename number>
-				void background_line<number>::write(std::ostream& out)
-					{
-						// TODO: implement me
-					}
+template <typename number>
+std::string background_line<number>::get_non_LaTeX_label() const
+  {
+    std::string label;
+    
+    if(this->label_set)
+      {
+        label = this->non_LaTeX_label;
+      }
+    else
+      {
+        switch(this->type)
+          {
+            case background_quantity::epsilon:
+              {
+                label = std::string(CPPTRANSPORT_NONLATEX_EPSILON_SYMBOL);
+                break;
+              }
+    
+            case background_quantity::Hubble:
+              {
+                label = std::string(CPPTRANSPORT_NONLATEX_HUBBLE_SYMBOL);
+                break;
+              }
+    
+            case background_quantity::aHubble:
+              {
+                label = std::string(CPPTRANSPORT_NONLATEX_A_HUBBLE_SYMBOL);
+                break;
+              }
+          }
+      }
+    
+    return(label);
+  }
 
-			}   // namespace derived_data
 
-
-	}   // namespace transport
+template <typename number>
+void background_line<number>::write(std::ostream& out)
+  {
+    // TODO: implement me
+  }
+  
+}   // namespace derived_data
+  
+  
+}   // namespace transport
 
 
 #endif //CPPTRANSPORT_BACKGROUND_LINE_H
