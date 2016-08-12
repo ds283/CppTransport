@@ -966,9 +966,9 @@ namespace transport
                 __tpf += __a*__a * __Hsq * (__A_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))] + __A_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) / 2.0;
                 
                 // these components are dimension 1
-                __tpf += __a*__a * __Hsq * (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * ( (__k1+__k2)*__k3 / (__k1*__k2) - __Ksq*__k3 / (__k1*__k2*__k3)) / 2.0;
-                __tpf += __a*__a * __Hsq * (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * ( (__k1+__k3)*__k2 / (__k1*__k3) - __Ksq*__k2 / (__k1*__k2*__k3)) / 2.0;
-                __tpf += __a*__a * __Hsq * (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * ( (__k2+__k3)*__k1 / (__k2*__k3) - __Ksq*__k1 / (__k1*__k2*__k3)) / 2.0;
+                __tpf += __a*__a * __Hsq * (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * ( (__k1+__k2)*__k3 / (__k1*__k2) - __Ksq / (__k1*__k2)) / 2.0;
+                __tpf += __a*__a * __Hsq * (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * ( (__k1+__k3)*__k2 / (__k1*__k3) - __Ksq / (__k1*__k3)) / 2.0;
+                __tpf += __a*__a * __Hsq * (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * ( (__k2+__k3)*__k1 / (__k2*__k3) - __Ksq / (__k2*__k3)) / 2.0;
 
                 __tpf *= __prefactor / __kprod3;
 
