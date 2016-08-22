@@ -325,7 +325,6 @@ namespace transport
 		template <typename number>
 		std::vector<number> threepf_task<number>::get_ics_exit_vector(const threepf_kconfig& config, threepf_ics_exit_type type) const
 			{
-
 				return this->integration_task<number>::get_ics_vector(this->get_ics_exit_time(config, type));
 			}
 
