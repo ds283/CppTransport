@@ -1510,8 +1510,16 @@ namespace transport
             this->make_data_element("<var>N</var><sub>*</sub>", format_number(tk.get_N_horizon_crossing(), this->efolds_precision) + " e-folds", col1_list);
             this->make_data_element("Subhorizon e-folds", format_number(tk.get_N_subhorizon_efolds(), this->efolds_precision) + " e-folds", col1_list);
             this->make_data_element("Maximum refinements", boost::lexical_cast<std::string>(tk.get_max_refinements()), col1_list);
-
-            this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation(), this->efolds_precision) + " e-folds", col2_list);
+    
+            try
+              {
+                this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation(), this->efolds_precision) + " e-folds", col2_list);
+              }
+            catch(end_of_inflation_not_found& xe)
+              {
+                // silently ignore
+              }
+    
             this->make_data_element("ln <var>a</var><sub>*</sub>", format_number(tk.get_astar_normalization(), this->misc_precision), col2_list);
             this->make_data_element("Adaptive ICs", tk.get_adaptive_ics() ? format_number(tk.get_adaptive_ics_efolds(), this->efolds_precision) + " e-folds" : "No", col2_list);
             this->make_data_element("Collect ICs", tk.get_collect_initial_conditions() ? "Yes" : "No", col2_list);

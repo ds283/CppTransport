@@ -252,7 +252,7 @@ namespace transport
 	        {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_NO_TIMES;
-            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::FATAL_ERROR, msg.str());
 	        }
 
         // the sampling points don't have to begin at the initial time, but they shouldn't be earlier than it
@@ -262,7 +262,7 @@ namespace transport
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
               << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
               << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << i.get_N_initial() << ")";
-            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::FATAL_ERROR, msg.str());
 	        }
 	    }
 
@@ -322,8 +322,24 @@ namespace transport
 					    }
 						catch (end_of_inflation_not_found& xe)
 							{
-								// need do nothing
+								// silently ignore; end of inflation will not be serialized with the task
 							}
+            catch(Hsq_is_negative& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_HSQ_IS_NEGATIVE << " " << xe.what();
+                this->get_model()->error(msg.str());
+            
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(integration_produced_nan& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
+                this->get_model()->error(msg.str());
+            
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
 			    }
 
         Json::Value time_data(Json::objectValue);
@@ -346,9 +362,32 @@ namespace transport
 	    {
         if(this->cached_end_of_inflation) return(this->end_of_inflation);
 
-		    this->end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
-		    this->cached_end_of_inflation = true;
-
+        try
+          {
+            this->end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
+            this->cached_end_of_inflation = true;
+          }
+        catch(end_of_inflation_not_found& xe)
+          {
+            throw;
+          }
+        catch(Hsq_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_HSQ_IS_NEGATIVE << " " << xe.what();
+            this->get_model()->error(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(integration_produced_nan& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
+            this->get_model()->error(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        
 		    return(this->end_of_inflation);
 	    }
 
@@ -357,9 +396,32 @@ namespace transport
     double integration_task<number>::get_N_end_of_inflation() const
 	    {
         if(this->cached_end_of_inflation) return(this->end_of_inflation);
-
-        double end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
-        return(end_of_inflation);
+    
+        try
+          {
+            double end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
+            return(end_of_inflation);
+          }
+        catch(end_of_inflation_not_found& xe)
+          {
+            throw;
+          }
+        catch(Hsq_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_HSQ_IS_NEGATIVE << " " << xe.what();
+            this->get_model()->error(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(integration_produced_nan& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
+            this->get_model()->error(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
 	    }
 
 

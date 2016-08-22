@@ -250,7 +250,7 @@ namespace transport
 
         if(ctx.size() == 0)
           {
-            throw std::logic_error(CPPTRANSPORT_NO_DEVICES);
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_NO_DEVICES);
           }
       }
 
