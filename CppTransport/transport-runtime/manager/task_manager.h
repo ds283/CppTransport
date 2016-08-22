@@ -153,6 +153,7 @@ namespace transport
 	    : environment(argc, argv),
         // it's safe to assume local_env and arg_cache have been constructed at this point
         model_mgr(local_env, arg_cache),
+        gallery(local_env, arg_cache),
 	      // note it is safe to assume environment and world have been constructed when the constructor for
 	      // slave and master are invoked, because environment and world are declared
 	      // prior to slave and master in the class declaration.
