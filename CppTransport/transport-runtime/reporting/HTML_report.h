@@ -3317,7 +3317,7 @@ namespace transport
         template <typename number>
         void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::largest_u3_line<number>& line, HTML_node& parent)
           {
-            this->derived_line_title("largest element of u<sub>3</sub> tensor &mdash; time date", parent);
+            this->derived_line_title("largest element of u<sub>3</sub> tensor &mdash; time data", parent);
 
             this->write_generic_derived_line(bundle, line, parent);
             this->write_SQL_query(bundle, line.get_time_query(), parent);
