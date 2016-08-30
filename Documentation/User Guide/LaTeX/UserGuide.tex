@@ -731,7 +731,15 @@ The main features of the platform are:
     around the time of horizon exit.
     It makes no use of approximations
     such as the separate universe method or the slow-roll
-    expansion.
+    expansion.%
+        \footnote{In order to obtain accurate estimates of
+        the initial conditions,
+        the slow-roll approximation should be
+        approximately satisfied at the initial time.
+        For more details, see the accompanying technical
+        paper~\cite{DiasFrazerMulryneSeery}.
+        This also contains a discussion of the validity
+        of the tree-level approximation.}
     
     \item An \semibold{SQL-based workflow} based on
     the \href{http://sqlite.org}{\SQLite} database
@@ -1528,6 +1536,47 @@ This code is constructed from a supplied template by applying
 well-defined replacement rules.
 The template can be modified if required, but in practice this is
 not normally necessary.
+
+\begin{warning}
+    \noindent
+    \semibold{Will {\CppTransport} work for my model?}---%
+    Before using {\CppTransport} to study a model, you should
+    carefully evaluate whether it satisfies the criteria for
+    applicability of the underlying numerical scheme.
+    For more details see the accompanying technical paper~\cite{DiasFrazerMulryneSeery}.
+    The key considerations are:
+    \begin{itemize}
+        \item \semibold{Is it possible to find an initial time
+        at which the slow-roll conditions approximately apply?}
+        {\CppTransport} needs initial estimates of the two- and three-point
+        correlation functions, which are obtained from analytic methods
+        that use the slow-roll approximation.
+
+        Although the slow-roll conditions normally do not have to be strongly satisfied
+        at the initial time, they should be \emph{approximately} satisfied in order
+        that the analytic estimates fall within the basin of attraction of the true
+        numerical solution. Usually the initial conditions will safely relax
+        to this true value, although there is no guarantee that this will always happen.
+        
+        \item \semibold{Does the tree approximation apply?}
+        {\CppTransport} implements a numerical scheme that computes tree-level
+        estimates of each correlation function. For many models this is safe,
+        but you should exercise caution if:
+        \begin{itemize}
+            \item loop corrections are already important for S-matrix processes such
+            scattering or decays
+            \item copious particle production could allow significant contributions to
+            the curvature perturbation $\zeta$ from multiparticle production channels.
+            Multiparticle channels such as $n \rightarrow 1$ decay for $n \geq 2$
+            make loop-level contributions to expectation values, even if the
+            $n \rightarrow 1$ process itself is tree-level when considered as
+            an S-matrix element.
+            For more details, see~{\S}3.1 of Ref.~\cite{DiasFrazerMulryneSeery}.
+            \item production of finite-wavenumber modes can significantly drain energy
+            from the zero-mode, as in warm inflation or trapped inflation.
+        \end{itemize}
+    \end{itemize}
+\end{warning}
 
 The model description file consists of a number of \emph{blocks}
 that declare properties and attributes for the model.
