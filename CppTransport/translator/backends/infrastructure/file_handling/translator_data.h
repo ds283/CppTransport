@@ -137,9 +137,9 @@ class translator_data
 
     boost::optional< std::vector< contexted_value<std::string> >& > get_urls() const;
 
-    unsigned int     get_number_fields() const;
+    unsigned int get_number_fields() const;
 
-    unsigned int     get_number_parameters() const;
+    unsigned int get_number_parameters() const;
 
     enum index_order get_index_order() const;
 
