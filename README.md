@@ -20,9 +20,9 @@ A number of different tools implementing the same formalism, but with slightly d
 
 # Releases
 
-The current release of CppTransport is 2016.3 (??? 2016). This release can be identified via a DOI linking to a deposit at [zenodo.org](https://zenodo.org/record/59403). The same .tar.gz archives for each release are also available directly from [GitHub](https://github.com/ds283/CppTransport/releases), but for citations please use the [zenodo.org](https://zenodo.org) versions.
+The current release of CppTransport is 2016.3 (31 August 2016). This release can be identified via a DOI linking to a deposit at [zenodo.org](https://zenodo.org/record/59403). The same .tar.gz archives for each release are also available directly from [GitHub](https://github.com/ds283/CppTransport/releases), but for citations please use the [zenodo.org](https://zenodo.org) versions.
 
-* 2016.3 (???)
+* 2016.3 (31 August 2016) [Source code DOI:10.5281/zenodo.61237](http://dx.doi.org/10.5281/zenodo.61237) | [User guide DOI:10.5281/zenodo.61239](http://dx.doi.org/10.5281/zenodo.61239)
 * 2016.2 (3 August 2016) [Source code DOI:10.5281/zenodo.59403](http://dx.doi.org/10.5281/zenodo.59403) | [User guide DOI:10.5281/zenodo.59406](http://dx.doi.org/10.5281/zenodo.59406)
 * 2016.1 (26 July 2016) [Source code DOI:10.5281/zenodo.58710](http://dx.doi.org/10.5281/zenodo.58710) | [User guide DOI:10.5281/zenodo.58714](http://dx.doi.org/10.5281/zenodo.58714)
 
