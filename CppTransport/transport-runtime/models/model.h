@@ -457,7 +457,26 @@ namespace transport
             // set up a new task object for this integration
             background_task<number> tk(ics, times);
 
-            this->backend_process_backg(&tk, history, true);
+            try
+              {
+                this->backend_process_backg(&tk, history, true);
+              }
+            catch(Hsq_is_negative& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_HSQ_IS_NEGATIVE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(integration_produced_nan& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
+                this->error_h(msg.str());
+    
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
 
             if(history.size() > 0)
               {
@@ -466,7 +485,7 @@ namespace transport
             else
               {
                 assert(false);
-                throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
               }
           }
       }
@@ -502,8 +521,27 @@ namespace transport
         initial_conditions<number> new_ics(tk->get_params(), tk->get_ics().get_vector(), tk->get_N_initial(), tk->get_N_subhorizon_efolds());
 
         background_task<number> new_task(new_ics, times);
-
-        this->backend_process_backg(&new_task, history, true);
+    
+        try
+          {
+            this->backend_process_backg(&new_task, history, true);
+          }
+        catch(Hsq_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_HSQ_IS_NEGATIVE << " " << xe.what();
+            this->error_h(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(integration_produced_nan& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
+            this->error_h(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
 
         if(history.size() > 0)
           {
@@ -518,7 +556,7 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
       }
 

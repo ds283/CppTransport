@@ -37,6 +37,7 @@ namespace transport
 
      enum class exception_type
        {
+          FATAL_ERROR,                                       // unrecoverable error
           RUNTIME_ERROR,                                     // generic runtime error
           SCHEDULING_ERROR,                                  // error while scheduling a task
           TASK_STRUCTURE_ERROR,                              // disallowed configuration while building task hierarchy

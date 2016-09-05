@@ -105,7 +105,9 @@ namespace transport
           public:
 
             device_queue(const context::device& dev, unsigned int size)
-              : device(dev), total_items(0), state_size(size)
+              : device(dev),
+                total_items(0),
+                state_size(size)
               {
                 // push empty queue onto list
                 queue_list.push_back(device_work_list(state_size));
@@ -242,7 +244,9 @@ namespace transport
 
     template <typename ItemType>
     work_queue<ItemType>::work_queue(const context& c, unsigned int size)
-      : ctx(c), total_items(0), state_size(size)
+      : ctx(c),
+        total_items(0),
+        state_size(size)
       {
         this->clear();
 
@@ -250,7 +254,7 @@ namespace transport
 
         if(ctx.size() == 0)
           {
-            throw std::logic_error(CPPTRANSPORT_NO_DEVICES);
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_NO_DEVICES);
           }
       }
 
@@ -272,16 +276,16 @@ namespace transport
     void work_queue<ItemType>::enqueue_work_item(const ItemType& item)
       {
         bool inserted = false;
-        for(typename std::vector<device_queue>::iterator t = this->device_list.begin(); t != this->device_list.end(); ++t)
+        for(device_queue& q : this->device_list)
           {
             // compute difference between current weight and desired weight
             // is positive if queue is too short, negative if queue is too long
-            double this_delta = (static_cast<double>((*t).get_total_items()) / this->total_items) - (*t).get_weight();
+            double this_delta = (static_cast<double>(q.get_total_items()) / this->total_items) - q.get_weight();
 
             // insert this item into the first queue which is shorter than desired
             if(this_delta < 0.0)
               {
-                (*t).enqueue_item(item);
+                q.enqueue_item(item);
                 inserted = true;
                 break;
               }
@@ -304,12 +308,12 @@ namespace transport
         << '\n' << '\n';
 
         unsigned int d = 0;
-        for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = this->device_list.begin(); t != this->device_list.end(); ++t, ++d)
+        for(const typename work_queue<ItemType>::device_queue& q : this->device_list)
           {
-            out << d << ". " << (*t).get_device().get_name() << " (" << CPPTRANSPORT_WORK_QUEUE_WEIGHT << " = " << (*t).get_weight() << "), ";
-            if((*t).get_device().get_mem_type() == context::device::bounded)
+            out << d << ". " << q.get_device().get_name() << " (" << CPPTRANSPORT_WORK_QUEUE_WEIGHT << " = " << q.get_weight() << "), ";
+            if(q.get_device().get_mem_type() == context::device::bounded)
               {
-                out << CPPTRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory((*t).get_device().get_mem_size());
+                out << CPPTRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory(q.get_device().get_mem_size());
               }
             else
               {
@@ -318,13 +322,13 @@ namespace transport
             out << '\n';
 
             // loop through the queues on this device, emitting them:
-            out << "   " << (*t).size() << " "
-            << ((*t).size() > 1 ? CPPTRANSPORT_WORK_QUEUE_QUEUES : CPPTRANSPORT_WORK_QUEUE_QUEUE)
+            out << "   " << q.size() << " "
+            << (q.size() > 1 ? CPPTRANSPORT_WORK_QUEUE_QUEUES : CPPTRANSPORT_WORK_QUEUE_QUEUE)
             << '\n' << '\n';
 
-            for(unsigned int i = 0; i < (*t).size(); ++i)
+            for(unsigned int i = 0; i < q.size(); ++i)
               {
-                const typename work_queue<ItemType>::device_work_list& work = (*t)[i];
+                const typename work_queue<ItemType>::device_work_list& work = q[i];
 
                 out << "   ** " << CPPTRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << '\n';
                 for(unsigned int j = 0; j < work.size(); ++j)
@@ -333,6 +337,8 @@ namespace transport
                   }
                 out << '\n';
               }
+            
+            ++d;
           }
       }
 

@@ -867,6 +867,8 @@ namespace transport
 
         $IF{!fast}
           $MODEL_compute_dV(__raw_params, __fields, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __ddV);
+          $MODEL_compute_dddV(__raw_params, __fields, __dddV);
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -875,6 +877,8 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $RESOURCE_DV{__dV}
+          $RESOURCE_DDV{__ddV}
+          $RESOURCE_DDDV{__dddV}
         $ENDIF
 
         const auto __Hsq = $HUBBLE_SQ;
@@ -893,31 +897,43 @@ namespace transport
         $SET[abc]{B_k1k3k2, "__B_k1k3k2[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{C_k1k2k3, "__C_k1k2k3[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{C_k1k3k2, "__C_k1k3k2[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{Atilde_k1k2k3, "__A_k1k2k3[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{Atilde_k1k3k2, "__A_k1k3k2[FIELDS_FLATTEN($a,$b,$c)]"}
 
         $SET[abc]{B_k2k3k1, "__B_k2k3k1[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{B_k2k1k3, "__B_k2k1k3[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{C_k2k3k1, "__C_k2k3k1[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{C_k2k1k3, "__C_k2k1k3[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{Atilde_k2k3k1, "__A_k2k3k1[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{Atilde_k2k1k3, "__A_k2k1k3[FIELDS_FLATTEN($a,$b,$c)]"}
 
         $SET[abc]{B_k3k1k2, "__B_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{B_k3k2k1, "__B_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{C_k3k1k2, "__C_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
         $SET[abc]{C_k3k2k1, "__C_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{Atilde_k3k1k2, "__A_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{Atilde_k3k2k1, "__A_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
 
         $B_k1k2k3[abc] = $B_TENSOR[abc]{__k1, __k2, __k3, __a};
         $B_k1k3k2[abc] = $B_TENSOR[abc]{__k1, __k3, __k2, __a};
         $C_k1k2k3[abc] = $C_TENSOR[abc]{__k1, __k2, __k3, __a};
         $C_k1k3k2[abc] = $C_TENSOR[abc]{__k1, __k3, __k2, __a};
+        $Atilde_k1k2k3[abc] = $ATILDE_TENSOR[abc]{__k1, __k2, __k3, __a};
+        $Atilde_k1k3k2[abc] = $ATILDE_TENSOR[abc]{__k1, __k3, __k2, __a};
 
         $B_k2k3k1[abc] = $B_TENSOR[abc]{__k2, __k3, __k1, __a};
         $B_k2k1k3[abc] = $B_TENSOR[abc]{__k2, __k1, __k3, __a};
         $C_k2k3k1[abc] = $C_TENSOR[abc]{__k2, __k3, __k1, __a};
         $C_k2k1k3[abc] = $C_TENSOR[abc]{__k2, __k1, __k3, __a};
+        $Atilde_k2k3k1[abc] = $ATILDE_TENSOR[abc]{__k2, __k3, __k1, __a};
+        $Atilde_k2k1k3[abc] = $ATILDE_TENSOR[abc]{__k2, __k1, __k3, __a};
 
         $B_k3k1k2[abc] = $B_TENSOR[abc]{__k3, __k1, __k2, __a};
         $B_k3k2k1[abc] = $B_TENSOR[abc]{__k3, __k2, __k1, __a};
         $C_k3k1k2[abc] = $C_TENSOR[abc]{__k3, __k1, __k2, __a};
         $C_k3k2k1[abc] = $C_TENSOR[abc]{__k3, __k2, __k1, __a};
+        $Atilde_k3k1k2[abc] = $ATILDE_TENSOR[abc]{__k3, __k1, __k2, __a};
+        $Atilde_k3k2k1[abc] = $ATILDE_TENSOR[abc]{__k3, __k2, __k1, __a};
 
         unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
         unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
@@ -929,10 +945,11 @@ namespace transport
             case 3:   // field-field-field correlation function
               {
                 assert(total_fields == 3);
+
                 // prefactor here is dimension 5
                 auto __prefactor = (__k1*__k1) * (__k2*__k2) * (__k3*__k3) / (__kt * __a*__a*__a*__a);
 
-                // these components are dimension 3, so suppressed by two powers of Mp
+                // these components are dimension 1
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
                 __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
                 __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
@@ -942,8 +959,19 @@ namespace transport
                 __tpf += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k2/2.0;
                 __tpf += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k3/2.0;
                 __tpf += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k3/2.0;
+                
+                // these components are dimension 1
+                __tpf += __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) / 2.0;
+                __tpf += __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) / 2.0;
+                __tpf += __a*__a * __Hsq * (__A_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))] + __A_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) / 2.0;
+                
+                // these components are dimension 1
+                __tpf += __a*__a * __Hsq * (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * ( (__k1+__k2)*__k3 / (__k1*__k2) - __Ksq / (__k1*__k2)) / 2.0;
+                __tpf += __a*__a * __Hsq * (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * ( (__k1+__k3)*__k2 / (__k1*__k3) - __Ksq / (__k1*__k3)) / 2.0;
+                __tpf += __a*__a * __Hsq * (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * ( (__k2+__k3)*__k1 / (__k2*__k3) - __Ksq / (__k2*__k3)) / 2.0;
 
                 __tpf *= __prefactor / __kprod3;
+
                 break;
               }
 
@@ -953,33 +981,40 @@ namespace transport
 
                 auto __momentum_k = (IS_MOMENTUM(__i) ? __k1 : 0.0) + (IS_MOMENTUM(__j) ? __k2 : 0.0) + (IS_MOMENTUM(__k) ? __k3 : 0.0);
 
-                // note the leading + sign, switched from written notes, from d/dN = d/(H dt) = d/(aH d\tau) = -\tau d/d\tau
-                // this prefactor has dimension 2
-                auto __prefactor_1 = __momentum_k*__momentum_k*(__kt-__momentum_k) / (__kt * __a*__a*__a*__a);
+                // prefactor has dimension 3
+                auto __prefactor = __k1*__k2*__k3 / (__kt * __a*__a*__a*__a);
+                
+                // component of prefactor that should not be symmetrized; has dimension 2
+                auto __mom_factor_1 = __momentum_k*__momentum_k*(__kt-__momentum_k);
 
-                // these components are dimension 6, so suppressed by two powers of Mp
+                // these components are dimension 1
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                auto __tpf_1  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k1*__k2*__k3 * __k2dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_1 += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1*__k2*__k3 * __k1dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_1 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1*__k2*__k3 * __k1dotk2 / (2.0*__Mp*__Mp);
+                auto __tpf_1  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
 
-                // these components are dimension 4
-                     __tpf_1 += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*__k3 / 2.0;
-                     __tpf_1 += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k1*__k3*__k3*__k2 / 2.0;
-                     __tpf_1 += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k2*__k3*__k3*__k1 / 2.0;
+                // these components are dimension 1
+                     __tpf_1 += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k2 / 2.0;
+                     __tpf_1 += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k3 / 2.0;
+                     __tpf_1 += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k3 / 2.0;
+                
+                // these components are dimension 1
+                     __tpf_1 += __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) / 2.0;
+                     __tpf_1 += __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) / 2.0;
+                     __tpf_1 += __a*__a * __Hsq * (__A_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))] + __A_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) / 2.0;
+                
+                __tpf = __prefactor * __mom_factor_1 * __tpf_1 / __kprod3;
 
-                __tpf = __prefactor_1 * __tpf_1;
+                // this prefactor has dimension 3
+                auto __mom_factor_2 = __momentum_k;
 
-                // this prefactor has dimension 3; the leading minus sign is again switched
-                auto __prefactor_2 = __momentum_k*__k1*__k2*__k3 / (__kt * __a*__a*__a*__a);
-
-                // these components are dimension 5, so suppressed by two powers of Mp
+                // these components are dimension 3
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                auto __tpf_2  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __k1*__k2*__k3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_2 += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __k1*__k2*__k3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_2 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                auto __tpf_2  = - (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_2 += - (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_2 += - (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
-                // these componennts are dimension 3
+                // these components are dimension 3
                      __tpf_2 += (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
                      __tpf_2 += (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k1*__k3*__k3*(1.0+__k2/__kt) / 2.0;
                      __tpf_2 += (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k2*__k3*__k3*(1.0+__k1/__kt) / 2.0;
@@ -988,10 +1023,14 @@ namespace transport
                      __tpf_2 += (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k1*__k1*__k2*__k3 / 2.0;
                      __tpf_2 += (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k2*__k2*__k1*__k3 / 2.0;
                      __tpf_2 += (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k3*__k3*__k1*__k2 / 2.0;
+                
+                // these components are dimension 3
+                     __tpf_2 += - __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
+                     __tpf_2 += - __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
+                     __tpf_2 += - __a*__a * __Hsq * (__A_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))] + __A_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
 
-                __tpf += __prefactor_2 * __tpf_2;
+                __tpf += __prefactor * __mom_factor_2 * __tpf_2 / __kprod3;
 
-                __tpf *= (1.0 / __kprod3);
                 break;
               }
 
@@ -1000,23 +1039,44 @@ namespace transport
                 assert(total_fields == 1);
 
                 // this prefactor has dimension 3
-                auto __prefactor = - (__k1*__k1 * __k2*__k2 * __k3*__k3) / (__kt * __Hsq * __a*__a*__a*__a*__a*__a);
+                auto __prefactor = (__k1*__k2*__k3) / (__kt * __Hsq * __a*__a*__a*__a*__a*__a);
 
-                // this term (really another part of the prefactor -- but shouldn't be symmetrized) has dimension 2)
-                auto __mom_factor = (IS_FIELD(__i) ? __k2*__k3 : 0.0) + (IS_FIELD(__j) ? __k1*__k3 : 0.0) + (IS_FIELD(__k) ? __k1*__k2 : 0.0);
-
-                // these components have dimension 3, so suppressed by two powers of Mp
-                // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                // component of prefactor that should not be symmetrized
+                auto __mom_factor1 = (IS_FIELD(__i) ? __k2*__k2*__k3*__k3*__k1 : 0.0) + (IS_FIELD(__j) ? __k1*__k1*__k3*__k3*__k2 : 0.0) + (IS_FIELD(__k) ? __k1*__k1*__k2*__k2*__k3 : 0.0);
 
                 // these components have dimension 1
-                __tpf += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * __k1*__k2 / 2.0;
-                __tpf += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * __k1*__k3 / 2.0;
-                __tpf += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * __k2*__k3 / 2.0;
+                // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
+                auto __tpf_1  = - (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += - (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += - (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
 
-                __tpf *= __prefactor * __mom_factor / __kprod3;
+                // these components have dimension 1
+                     __tpf_1 += (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * __k1*__k2 / 2.0;
+                     __tpf_1 += (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * __k1*__k3 / 2.0;
+                     __tpf_1 += (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * __k2*__k3 / 2.0;
+                
+                // these components have dimension 1
+                     __tpf_1 += - __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) / 2.0;
+                     __tpf_1 += - __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) / 2.0;
+                     __tpf_1 += - __a*__a * __Hsq * (__A_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))] + __A_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) / 2.0;
+
+                // these components have dimension 1
+                     __tpf_1 += - __a*__a * __Hsq * (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * (__k1+__k2)*__k3 / (__k1*__k2) / 2.0;
+                     __tpf_1 += - __a*__a * __Hsq * (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * (__k1+__k3)*__k2 / (__k1*__k3) / 2.0;
+                     __tpf_1 += - __a*__a * __Hsq * (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * (__k2+__k3)*__k1 / (__k2*__k3) / 2.0;
+    
+                __tpf = __prefactor * __mom_factor1 * __tpf_1 / __kprod3;
+
+                // prefactor has dimension 4
+                auto __mom_factor2 = (IS_FIELD(__i) ? __k2*__k2*__k3*__k3 : 0.0) + (IS_FIELD(__j) ? __k1*__k1*__k3*__k3 : 0.0) + (IS_FIELD(__k) ? __k1*__k1*__k2*__k2 : 0.0);
+                
+                // these components have dimension 2
+                auto __tpf_2  = __a*__a * __Hsq * (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * __k3 / 2.0;
+                     __tpf_2 += __a*__a * __Hsq * (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * __k2 / 2.0;
+                     __tpf_2 += __a*__a * __Hsq * (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * __k1 / 2.0;
+                
+                __tpf += __prefactor * __mom_factor2 * __tpf_2 / __kprod3;
+
                 break;
               }
 
@@ -1024,26 +1084,32 @@ namespace transport
               {
                 assert(total_fields == 0);
 
-                // prefactor is dimension 3; note the leading - sign, switched from written notes, from d/dN = d/(H dt) = d/(aH d\tau) = -\tau d/d\tau
-                auto __prefactor = -(__k1*__k1) * (__k2*__k2) * (__k3*__k3) / (__kt * __Hsq * __a*__a*__a*__a*__a*__a);
+                // prefactor is dimension 3
+                auto __prefactor = (__k1*__k1) * (__k2*__k2) * (__k3*__k3) / (__kt * __Hsq * __a*__a*__a*__a*__a*__a);
 
-                // these components are dimension 5, so suppress by two powers of Mp
+                // these components are dimension 3
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __k1*__k2*__k3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __k1*__k2*__k3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
-                // these components are dimension 2
-                __tpf += (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
-                __tpf += (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k1*__k3*__k3*(1.0+__k2/__kt) / 2.0;
-                __tpf += (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k2*__k3*__k3*(1.0+__k1/__kt) / 2.0;
+                // these components are dimension 3
+                __tpf += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
+                __tpf += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k1*__k3*__k3*(1.0+__k2/__kt) / 2.0;
+                __tpf += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k2*__k3*__k3*(1.0+__k1/__kt) / 2.0;
 
-                // these components are dimension 2
-                __tpf += (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k1*__k1*__k2*__k3/2.0;
-                __tpf += (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k2*__k2*__k1*__k3/2.0;
-                __tpf += (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k3*__k3*__k1*__k2/2.0;
+                // these components are dimension 3
+                __tpf += - (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k1*__k1*__k2*__k3/2.0;
+                __tpf += - (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k2*__k2*__k1*__k3/2.0;
+                __tpf += - (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k3*__k3*__k1*__k2/2.0;
+                
+                // these components are dimension 3
+                __tpf += __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
+                __tpf += __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
+                __tpf += __a*__a * __Hsq * (__A_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))] + __A_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
 
                 __tpf *= __prefactor / __kprod3;
+
                 break;
               }
 

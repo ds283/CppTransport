@@ -128,6 +128,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/dddV.cpp
   translator/transport-objects/canonical/SR_velocity.cpp
   translator/transport-objects/canonical/A.cpp
+  translator/transport-objects/canonical/Atilde.cpp
   translator/transport-objects/canonical/B.cpp
   translator/transport-objects/canonical/C.cpp
   translator/transport-objects/canonical/M.cpp

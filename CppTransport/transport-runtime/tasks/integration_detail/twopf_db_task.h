@@ -741,6 +741,7 @@ namespace transport
         try
           {
             this->get_model()->compute_aH(this, N, log_aH, log_a2H2M, largest_k);
+    
             assert(N.size() == log_aH.size());
             assert(N.size() == log_a2H2M.size());
 
@@ -752,7 +753,23 @@ namespace transport
         catch(failed_to_compute_horizon_exit& xe)
           {
             this->compute_horizon_exit_times_fail(xe);
-            exit(EXIT_FAILURE);
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(Hsq_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_HSQ_IS_NEGATIVE << " " << xe.what();
+            this->get_model()->error(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(integration_produced_nan& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
+            this->get_model()->error(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
 			};
 

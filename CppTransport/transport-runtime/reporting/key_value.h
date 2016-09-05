@@ -180,9 +180,10 @@ namespace transport
 
         void key_value::compute_columns(unsigned int& columns, unsigned int& column_width, print_options opts)
           {
-            unsigned int width = CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH;
-            if(opts != print_options::force_simple) this->env.detect_terminal_width();
+            unsigned int width = (opts == print_options::force_simple ? CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH : this->env.detect_terminal_width());
 
+            // set up default return values; these will be overwritten later if we use
+            // a multicolumn configuration
             columns = 1;
             column_width = width;
 

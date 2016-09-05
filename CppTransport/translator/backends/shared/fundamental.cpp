@@ -158,42 +158,11 @@ namespace macro_packages
         boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
         if(nm_value) uid_str << static_cast<std::string>(*nm_value);
 
-        const author_table& au_table = this->data_payload.get_author();
-        for(const author_table::value_type& item : au_table)
-          {
-            const author_declaration& decl = *item.second;
-            uid_str << decl.get_name() << decl.get_email() << decl.get_institute();
-          }
-
-        boost::optional< contexted_value<std::string>& > tg_value = this->data_payload.get_citeguide();
-        if(tg_value) uid_str << static_cast<std::string>(*tg_value);
-
-        boost::optional< contexted_value<std::string>& > dc_value = this->data_payload.get_description();
-        if(dc_value) uid_str << static_cast<std::string>(*dc_value);
-
         boost::optional< contexted_value<std::string>& > lc_value = this->data_payload.get_license();
         if(lc_value) uid_str << static_cast<std::string>(*lc_value);
-
+        
         boost::optional< contexted_value<unsigned int>& > rv_value = this->data_payload.get_revision();
         if(rv_value) uid_str << static_cast<unsigned int>(*rv_value);
-
-        boost::optional< std::vector< contexted_value<std::string> >& > rf_value = this->data_payload.get_references();
-        if(rf_value)
-          {
-            for(const contexted_value<std::string>& v : *rf_value)
-              {
-                uid_str << static_cast<std::string>(v);
-              }
-          }
-
-        boost::optional< std::vector< contexted_value<std::string> >& > ul_value = this->data_payload.get_urls();
-        if(ul_value)
-          {
-            for(const contexted_value<std::string>& v : *ul_value)
-              {
-                uid_str << static_cast<std::string>(v);
-              }
-          }
 
         // hash using MD5 so we are guaranteed to get the same result on all platforms
         unsigned char result[MD5_DIGEST_LENGTH];
@@ -222,7 +191,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string(DEFAULT_MODEL_NAME));
+            return(std::string("\"\""));
           }
       }
 
@@ -302,7 +271,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string());
+            return(std::string("\"\""));
           }
       }
 
