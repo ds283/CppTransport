@@ -46,6 +46,7 @@
 #include "ddV.h"
 #include "dddV.h"
 #include "A.h"
+#include "Atilde.h"
 #include "B.h"
 #include "C.h"
 #include "M.h"
@@ -102,6 +103,9 @@ class tensor_factory
 
     //! obtain an A-tensor
     virtual std::unique_ptr<A> make_A(language_printer& p, cse& cw) = 0;
+    
+    //! obtain an Atilde-tensor
+    virtual std::unique_ptr<Atilde> make_Atilde(language_printer& p, cse& cw) = 0;
 
     //! obtain a B-tensor
     virtual std::unique_ptr<B> make_B(language_printer& p, cse& cw) = 0;

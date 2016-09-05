@@ -184,8 +184,7 @@ namespace lexeme    // package in a unique namespace
 	      ccontext(ctx),
         err_context(std::move(err_ctx))
 	    {
-        bool ok     = false;
-        int  offset = 0;
+        int offset = 0;
 
         switch(t)
 	        {
@@ -196,6 +195,7 @@ namespace lexeme    // package in a unique namespace
 
                 context = minus_context::binary; // unary minus can't follow an identifier
 
+                // check whether this literal matches a keyword
                 for(unsigned int i = 0; i < this->ktable.size(); ++i)
                   {
                     if(buffer == ktable[i])
@@ -204,6 +204,7 @@ namespace lexeme    // package in a unique namespace
                         k       = km[i];
                         str     = "";
                         context = minus_context::unary; // unary minus can always follow a keyword (eg. built-in function)
+                        break;
                       }
                   }
                 break;
@@ -213,6 +214,34 @@ namespace lexeme    // package in a unique namespace
               {
                 type = lexeme_type::unknown;
 
+                if(buffer.length() >= 2 && buffer[0] == '0' && buffer[1] == 'x')    // allow >= 2 to catch just '0x' on its own
+                  {
+                    if((sscanf(buffer.c_str(), "%x%n", &z, &offset) == 1) && offset == buffer.length())
+                      {
+                        type = lexeme_type::integer;
+                      }
+                    else
+                      {
+                        std::ostringstream msg;
+                        msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
+                        err_context.warn(msg.str());
+                      }
+                  }
+                else if(buffer.length() > 1 && buffer[0] == '0'
+                        && buffer.find(".", 1) == std::string::npos
+                        && buffer.find("e", 1) == std::string::npos && buffer.find("E", 1) == std::string::npos)    // don't attempt to convert strings containing a decimal point or E notation
+                  {
+                    if((sscanf(buffer.c_str(), "%o%n", &z, &offset) == 1) && offset == buffer.length())
+                      {
+                        type = lexeme_type::integer;
+                      }
+                    else
+                      {
+                        std::ostringstream msg;
+                        msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
+                        err_context.warn(msg.str());
+                      }
+                  }
                 if((sscanf(buffer.c_str(), "%i%n", &z, &offset) == 1) && offset == buffer.length())
                   {
                     type = lexeme_type::integer;
@@ -229,24 +258,13 @@ namespace lexeme    // package in a unique namespace
                   {
                     type = lexeme_type::decimal;
                   }
-                else
+                  
+                // check for successful conversion
+                if(type == lexeme_type::unknown)
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
                     err_context.error(msg.str());
-                  }
-
-                if(type == lexeme_type::integer && buffer[0] == '0' && buffer[1] == 'x')
-                  {
-                    std::ostringstream msg;
-                    msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
-                    err_context.warn(msg.str());
-                  }
-                else if(type == lexeme_type::integer && buffer[0] == '0')
-                  {
-                    std::ostringstream msg;
-                    msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
-                    err_context.warn(msg.str());
                   }
 
                 context = minus_context::binary; // unary minus can't follow a number
@@ -255,6 +273,8 @@ namespace lexeme    // package in a unique namespace
 
             case buffer_type::character:
               {
+                bool found_match = false;
+
                 type = lexeme_type::unknown;
 
                 for(unsigned int i = 0; i < this->ctable.size(); ++i)
@@ -264,6 +284,7 @@ namespace lexeme    // package in a unique namespace
                     std::string match  = ctable[i];
                     size_t      pos;
 
+                    // check for @binary or @unary distinguishing tags in the character
                     if((pos = match.find(UNARY_TAG)) != std::string::npos)
                       {
                         unary = true;
@@ -274,18 +295,20 @@ namespace lexeme    // package in a unique namespace
                         binary = true;
                         match.erase(pos, LENGTH_BINARY_TAG);
                       }
+
                     if(buffer == match
                        && (!unary || (unary && context == minus_context::unary))
                        && (!binary || (binary && context == minus_context::binary)))
                       {
-                        type    = lexeme_type::character;
-                        s       = cmap[i];
-                        context = ccontext[i] ? minus_context::unary : minus_context::binary;
-                        ok      = true;
+                        type        = lexeme_type::character;
+                        s           = cmap[i];
+                        context     = ccontext[i] ? minus_context::unary : minus_context::binary;
+                        found_match = true;
+                        break;
                       }
                   }
 
-                if(!ok)
+                if(!found_match)
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
@@ -297,7 +320,7 @@ namespace lexeme    // package in a unique namespace
 
             case buffer_type::string_literal:
               {
-                type  = lexeme_type::string;
+                type    = lexeme_type::string;
                 str     = buffer;
                 context = minus_context::unary; // binary minus can't follow a string
                 break;

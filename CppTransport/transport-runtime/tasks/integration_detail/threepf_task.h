@@ -325,7 +325,6 @@ namespace transport
 		template <typename number>
 		std::vector<number> threepf_task<number>::get_ics_exit_vector(const threepf_kconfig& config, threepf_ics_exit_type type) const
 			{
-
 				return this->integration_task<number>::get_ics_vector(this->get_ics_exit_time(config, type));
 			}
 
@@ -362,7 +361,23 @@ namespace transport
         catch(failed_to_compute_horizon_exit& xe)
           {
             this->compute_horizon_exit_times_fail(xe);
-            exit(EXIT_FAILURE);
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(Hsq_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_HSQ_IS_NEGATIVE << " " << xe.what();
+            this->get_model()->error(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(integration_produced_nan& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
+            this->get_model()->error(msg.str());
+    
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
 	    };
 

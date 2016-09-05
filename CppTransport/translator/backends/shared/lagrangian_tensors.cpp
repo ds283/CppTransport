@@ -40,6 +40,7 @@ namespace macro_packages
       : replacement_rule_package(f, cw, lm, p, prn)
       {
         index_package.emplace_back(BIND_SYMBOL(replace_A, "A_TENSOR"));
+        index_package.emplace_back(BIND_SYMBOL(replace_Atilde, "ATILDE_TENSOR"));
         index_package.emplace_back(BIND_SYMBOL(replace_B, "B_TENSOR"));
         index_package.emplace_back(BIND_SYMBOL(replace_C, "C_TENSOR"));
         index_package.emplace_back(BIND_SYMBOL(replace_M, "M_TENSOR"));
@@ -57,6 +58,18 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[A_A_ARGUMENT]);
 
         std::unique_ptr<flattened_tensor> container = this->A_tensor->compute(k1, k2, k3, a);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    void replace_Atilde::pre_hook(const macro_argument_list& args)
+      {
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[ATILDE_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[ATILDE_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[ATILDE_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[ATILDE_A_ARGUMENT]);
+        
+        std::unique_ptr<flattened_tensor> container = this->Atilde_tensor->compute(k1, k2, k3, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
@@ -103,6 +116,18 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[A_A_ARGUMENT]);
 
         std::unique_ptr<atomic_lambda> lambda = this->A_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        return this->lambda_mgr.cache(std::move(lambda));
+      }
+    
+    
+    std::string replace_Atilde::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[ATILDE_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[ATILDE_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[ATILDE_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[ATILDE_A_ARGUMENT]);
+        
+        std::unique_ptr<atomic_lambda> lambda = this->Atilde_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 

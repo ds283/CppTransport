@@ -104,23 +104,24 @@ const std::vector<enum character_type> character_map =
     character_type::tilde, character_type::ampersand, character_type::circumflex,
     character_type::ampersat, character_type::ellipsis,
     character_type::rightarrow
-                                         };
+  };
 
 // keep track of which characters can precede a unary minus
-// this is an open bracket '(', and the binary operators
-// which bind tighter: *, /, ^
-// plus anything which isn't part of an expression
+// this is most characters except the close bracket ')',
+// which signals the end of a subexpression and must be followed by a binary minus
+// otherwise, arithmetic operators such as +, -, *, /, ^ can all be followed by a unary minus
+// A unary minus can itself be followed by a unary minus, too
 const std::vector<bool> character_unary_context =
   {
     true, true, true, false,
     true, true, true, true, true, true,
-    false, false, false, false, true, true, true, true,
+    true, true, true, true, true, true, true, true,
     true, true, true, true, true
   };
 
 
-static std::string  strip_dot_h(const std::string& pathname);
-static std::string  leafname   (const std::string& pathname);
+static std::string strip_dot_h(const std::string& pathname);
+static std::string leafname   (const std::string& pathname);
 
 
 translation_unit::translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e)
