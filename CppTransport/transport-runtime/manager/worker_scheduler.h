@@ -258,6 +258,7 @@ namespace transport
 		        number_aggregations(0),
 		        total_work_time(0),
             estimated_completion(boost::posix_time::not_a_date_time),
+            estimated_cpu_time(0),
 		        work_items_completed(0),
 		        work_items_in_flight(0),
             finished(false)
@@ -332,7 +333,10 @@ namespace transport
 		    void populate_update_information(reporting::key_value& updates, reporting::key_value& notifications);
 
         //! get current estimated time-of-completion
-        const boost::posix_time::ptime& get_estimated_completion() const { return(this->estimated_completion); }
+        const boost::posix_time::ptime& get_estimated_completion() const { return this->estimated_completion; }
+        
+        //! get current estimtaed CPU time
+        const boost::timer::nanosecond_type& get_estimated_CPU_time() const { return this->estimated_cpu_time; }
 
 
 		    // INTERFACE -- MANAGE WORK ASSIGNMENTS
@@ -452,13 +456,10 @@ namespace transport
 		    unsigned int number_aggregations;
 
 
-		    // STATUS AND TIME-TO-COMPLETION
+		    // CURRENT STATUS
 
 		    //! Keep track of time elapsed
 		    boost::timer::cpu_timer timer;
-
-        //! Current estimate of completion time
-        boost::posix_time::ptime estimated_completion;
 
 		    //! Keep track of total time spent doing work, to estimate a time-to-completion
 		    boost::timer::nanosecond_type total_work_time;
@@ -474,6 +475,15 @@ namespace transport
 
         //! work complete?
         bool finished;
+        
+        
+        // ESTIMATED TIME TO COMPLETION
+    
+        //! Current estimate of completion time
+        boost::posix_time::ptime estimated_completion;
+    
+        //! Current estimate of expected CPU time
+        boost::timer::nanosecond_type estimated_cpu_time;
 
 
         // RANDOM NUMBER GENERATORS
@@ -867,15 +877,17 @@ namespace transport
 
                     boost::posix_time::time_duration duration = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
 
-                    // update cached expected completion time
+                    // update cached expected completion time and expected total CPU time
                     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 								    this->estimated_completion = now + duration;
+                    this->estimated_cpu_time = this->total_work_time + mean_time_per_item * (this->work_items_in_flight + this->queue.size());
 
                     std::ostringstream estimate_msg;
                     estimate_msg << boost::posix_time::to_simple_string(this->estimated_completion) << " ("
                       << format_time(estimated_time_remaining) << " " << CPPTRANSPORT_WORKER_SCHEDULER_FROM_NOW << ")";
 
                     notifications.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_COMPLETION_ESTIMATE, estimate_msg.str());
+                    notifications.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_CPU_TIME_ESTIMATE, format_time(this->estimated_cpu_time));
 									}
 							}
 
