@@ -65,6 +65,9 @@
 #define CPPTRANSPORT_PROCESSING_TASK_A               "Task manager: processing task"
 #define CPPTRANSPORT_PROCESSING_TASK_OF              "of"
 
+#define CPPTRANSPORT_PROCESSING_GANTT_CHART          "Task manager: generating process Gantt chart"
+#define CPPTRANSPORT_PROCESSING_ACTIVITY_JOURNAL     "Task manager: generating activity journal"
+
 #define CPPTRANSPORT_PROCESSED_TASKS_A               "Task manager: processed"
 #define CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR      "database task"
 #define CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL        "database tasks"

@@ -84,10 +84,11 @@ namespace transport
         //! Slave node: initialize ourselves
         void initialize(const MPI::slave_setup_payload& payload);
 
-        //! Slave node: Pass scheduling data to the master node
+        //! Slave node: Pass scheduling data to the master node given a model instance
         void send_worker_data(model<number>* m);
 
-        //! Slave node: Pass scheduling data to the master node
+        //! Slave node: Pass scheduling data to the master node, no known model instance
+        //! This defaults to identifying ourselves as a CPU node
         void send_worker_data(void);
 
 
@@ -208,6 +209,15 @@ namespace transport
 
         //! message callback
         message_handler msg;
+        
+        
+        // TIMERS
+        
+        //! track time spent performing work
+        boost::timer::cpu_timer busy_timer;
+        
+        //! track time spent idling
+        boost::timer::cpu_timer idle_timer;
 
       };
 

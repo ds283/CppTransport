@@ -47,21 +47,29 @@ namespace transport
         warn(warning_handler(le, ac)),
         msg(message_handler(le, ac))
       {
+        // start busy timer and stop idle timer
+        busy_timer.stop();
+        idle_timer.stop();
       }
 
 
     template <typename number>
     void slave_controller<number>::wait_for_tasks(void)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         if(this->get_rank() == 0) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_WAIT_MASTER);
 
         bool finished = false;
 
         while(!finished)
           {
-            // wait until a message is available from master
+            // wait until a message is available from master, tracking the time we spend waiting
+            timers.idle();
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::NEW_INTEGRATION:
@@ -88,10 +96,10 @@ namespace transport
                     break;
                   }
 
-                case MPI::INFORMATION_REQUEST:
+                case MPI::WORKER_SETUP:
                   {
                     MPI::slave_setup_payload payload;
-                    this->world.recv(MPI::RANK_MASTER, MPI::INFORMATION_REQUEST, payload);
+                    this->world.recv(MPI::RANK_MASTER, MPI::WORKER_SETUP, payload);
                     this->initialize(payload);
                     break;
                   }
@@ -119,7 +127,9 @@ namespace transport
                   }
 
                 default:
-                  throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_UNEXPECTED_MPI);
+                  {
+                    throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_UNEXPECTED_MPI);
+                  }
               }
           }
       }
@@ -128,6 +138,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::initialize(const MPI::slave_setup_payload& payload)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         try
           {
             boost::filesystem::path repo_path = payload.get_repository_path();
@@ -160,8 +173,14 @@ namespace transport
       {
         assert(m != nullptr);
 
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
+        // interrogate model instance for capacity and priority
         MPI::slave_information_payload payload(m->get_backend_type(), m->get_backend_memory(), m->get_backend_priority());
-        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+
+        // send worker identification payload, then wait until it has been received
+        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_IDENTIFICATION, payload);
         resp_msg.wait();
       }
 
@@ -169,9 +188,14 @@ namespace transport
     template <typename number>
     void slave_controller<number>::send_worker_data(void)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
+        // no model instance, so default to a CPU with 0 capacity and unit priority
         MPI::slave_information_payload payload(worker_type::cpu, 0, 1);
 
-        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+        // send worker identification payload, then wait until it has been received
+        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_IDENTIFICATION, payload);
         resp_msg.wait();
       }
 
@@ -179,6 +203,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::process_task(const MPI::new_integration_payload& payload)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
@@ -240,6 +267,9 @@ namespace transport
       {
         assert(tk != nullptr);
 
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         model<number>* m = tk->get_model();
         assert(m != nullptr);
 
@@ -294,17 +324,21 @@ namespace transport
     template <typename TaskObject, typename BatchObject>
     void slave_controller<number>::schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, unsigned int state_size)
       {
-        // dispatch integration to the underlying model
-
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
+    
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
 
+        // dispatch integration to the underlying model
         bool complete = false;
         while(!complete)
           {
-            // wait for messages from scheduler
+            // wait for messages from scheduler, tracking idle time
+            timers.idle();
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::NEW_WORK_ASSIGNMENT:
@@ -403,6 +437,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::process_task(const MPI::new_derived_content_payload& payload)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
@@ -464,7 +501,10 @@ namespace transport
     void slave_controller<number>::schedule_output(output_task<number>* tk, const MPI::new_derived_content_payload& payload)
       {
         assert(tk != nullptr);  // should be guaranteed
-
+    
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        
         // send scheduling information to the master process; here, report ourselves as a CPU
         // since there is currently no capacity to process output tasks on a GPU
         this->send_worker_data();
@@ -483,13 +523,15 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << *tk;
-
+        
         bool complete = false;
         while(!complete)
           {
-            // wait for messages from scheduler
+            // wait for messages from scheduler, tracking idle time
+            timers.idle();
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::NEW_WORK_ASSIGNMENT:
@@ -641,6 +683,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::process_task(const MPI::new_postintegration_payload& payload)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
@@ -654,15 +699,11 @@ namespace transport
               {
                 case task_type::integration:
                   {
-//                    std::ostringstream msg;
-//                    msg << CPPTRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
 
                 case task_type::output:
                   {
-//                    std::ostringstream msg;
-//                    msg << CPPTRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
 
@@ -703,6 +744,9 @@ namespace transport
     void slave_controller<number>::dispatch_postintegration_task(postintegration_task<number>* tk, const MPI::new_postintegration_payload& payload)
       {
         assert(tk != nullptr);
+
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
 
         // send scheduling information to the master process; here, report ourselves as a CPU
         // since there is currently no capacity to process postintegration tasks on a GPU
@@ -824,7 +868,7 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
               }
 
-            // get parent^2 task
+            // get parent task
             threepf_task<number>* pptk = dynamic_cast<threepf_task<number>*>(ptk->get_parent_task());
 
             assert(pptk != nullptr);
@@ -862,6 +906,9 @@ namespace transport
         assert(tk != nullptr);    // should be guaranteed
         assert(ptk != nullptr);   // should be guaranteed
 
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
@@ -881,9 +928,11 @@ namespace transport
         bool complete = false;
         while(!complete)
           {
-            // wait for messages from scheduler
+            // wait for messages from scheduler, tracking idle time
+            timers.idle();
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::NEW_WORK_ASSIGNMENT:
@@ -991,6 +1040,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::push_temp_container(generic_batcher& batcher, unsigned int message, std::string log_message)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Sending " << log_message << " message for container " << batcher.get_container_path();
 
         MPI::data_ready_payload payload(batcher.get_container_path());
@@ -1005,6 +1057,9 @@ namespace transport
     void slave_controller<number>::push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product,
                                                         const std::list<std::string>& used_groups)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         assert(pipe != nullptr);
         assert(product != nullptr);
 

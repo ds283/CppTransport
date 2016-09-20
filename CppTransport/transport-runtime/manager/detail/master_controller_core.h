@@ -113,12 +113,18 @@ namespace transport
         cmdline_reports(le, ac),
         HTML_reports(le, ac)
       {
+        // stop both busy and idle timers
+        busy_timer.stop();
+        idle_timer.stop();
       }
 
 
     template <typename number>
     void master_controller<number>::process_arguments(int argc, char* argv[])
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         unsigned int width = this->local_env.detect_terminal_width();
 
         // set up Boost::program_options descriptors for command-line arguments
@@ -603,6 +609,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::pre_process_tasks()
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // perform recovery if requested
         if(this->arg_cache.get_recovery_mode() && this->repo) this->repo->perform_recovery(*this->data_mgr, this->get_rank());
 
@@ -618,6 +627,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::post_process_tasks()
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         if(this->repo)
           {
             this->cmdline_reports.report(*this->repo);
@@ -812,107 +824,121 @@ namespace transport
     template <typename number>
     void master_controller<number>::execute_tasks()
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         if(!(this->get_rank() == 0)) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_EXEC_SLAVE);
 
         // set up worker scope
-        // WorkerBundle will send SETUP messages to all workers if the repository is not null
+        // WorkerBundle will send WORKER_SETUP messages to all workers if the repository is not null
         // when it goes out of scope its destructor will send TERMINATE messages
         // this way, even if we break out of this function by an exception,
         // the workers should all get TERMINATE instructions
-        WorkerBundle<number> bundle(this->environment, this->world, this->repo.get(), this->journal, this->arg_cache);
+        WorkerBundle<number> bundle(this->environment, this->world, this->repo.get(), this->journal, this->arg_cache,
+                                    this->busy_timer, this->idle_timer);
 
         if(!this->repo)
           {
             this->err(CPPTRANSPORT_REPO_NONE);
+            return;
           }
-        else
+        
+        // validate that requested tasks can be read from the database
+        // any whic can't be read are removed from the job queue and a warning issued
+        this->validate_tasks();
+    
+        // schedule extra tasks if any explicitly-required tasks depend on content from
+        // a second task, but no content group is available
+        this->autocomplete_task_schedule();
+    
+        unsigned int tasks_complete = 0;
+        unsigned int tasks_processed = 0;
+        for(const job_descriptor& job : this->job_queue)
           {
-            boost::timer::cpu_timer timer;
-
-            // validate that requested tasks can be read from the database
-            // any whic can't be read are removed from the job queue and a warning issued
-            this->validate_tasks();
-
-            // schedule extra tasks if any explicitly-required tasks depend on content from
-            // a second task, but no content group is available
-            this->autocomplete_task_schedule();
-
-            unsigned int tasks_complete = 0;
-            unsigned int tasks_processed = 0;
-            for(const job_descriptor& job : this->job_queue)
-              {
-                // emit notification if we are processing multiple tasks
-                if(this->job_queue.size() > 1)
-                  {
-                    std::ostringstream msg;
-                    msg << CPPTRANSPORT_PROCESSING_TASK_A << " '" << job.get_name() << "' (" << tasks_processed+1 << " " << CPPTRANSPORT_PROCESSING_TASK_OF << " " << this->job_queue.size() << ")";
-                    this->msg(msg.str(), message_handler::highlight::heading);
-                  }
-
-                switch(job.get_type())
-                  {
-                    case job_type::job_task:
-                      {
-                        try
-                          {
-                            this->process_task(job);
-                            tasks_complete++;
-                          }
-                        catch(runtime_exception& xe)
-                          {
-#ifdef TRACE_OUTPUT
-                            std::cout << "TRACE_OUTPUT J" << '\n';
-#endif
-                            this->err(xe.what());
-                          }
-                        catch(std::exception& xe)
-                          {
-#ifdef TRACE_OUTPUT
-                            std::cout << "TRACE_OUTPUT K" << '\n';
-#endif
-                            std::ostringstream msg;
-                            msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
-                            err(msg.str());
-                          }
-                        break;
-                      }
-                  }
-
-                ++tasks_processed;
-              }
-
-            timer.stop();
-
-            if(tasks_complete > 0)
+            // emit notification of next task to process, if we are processing multiple tasks
+            if(this->job_queue.size() > 1)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_PROCESSED_TASKS_A << " " << tasks_complete << " ";
-                if(tasks_complete > 1)
-                  {
-                    msg << CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL;
-                  }
-                else
-                  {
-                    msg << CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR;
-                  }
-                msg << " " << CPPTRANSPORT_PROCESSED_TASKS_C << " " << format_time(timer.elapsed().wall);
-                msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_D << " ";
-
-                boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-                msg << boost::posix_time::to_simple_string(now);
-
-                this->msg(msg.str());
+                msg << CPPTRANSPORT_PROCESSING_TASK_A << " '" << job.get_name() << "' (" << tasks_processed + 1 << " "
+                    << CPPTRANSPORT_PROCESSING_TASK_OF << " " << this->job_queue.size() << ")";
+                this->msg(msg.str(), message_handler::highlight::heading);
               }
+        
+            switch(job.get_type())
+              {
+                case job_type::job_task:
+                  {
+                    try
+                      {
+                        this->process_task(job);
+                        ++tasks_complete;           // increment number of tasks successfully completed
+                      }
+                    catch(runtime_exception& xe)
+                      {
+#ifdef TRACE_OUTPUT
+                        std::cout << "TRACE_OUTPUT J" << '\n';
+#endif
+                        this->err(xe.what());
+                      }
+                    catch(std::exception& xe)
+                      {
+#ifdef TRACE_OUTPUT
+                        std::cout << "TRACE_OUTPUT K" << '\n';
+#endif
+                        std::ostringstream msg;
+                        msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
+                        this->err(msg.str());
+                      }
+                    break;
+                  }
+              }
+        
+            ++tasks_processed;                      // increment number of tasks processed (not necessarily successfully)
           }
-
-        if(this->arg_cache.get_gantt_chart()) this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename(), this->local_env, this->arg_cache);
-        if(this->arg_cache.get_journal())     this->journal.make_journal(this->arg_cache.get_journal_filename(), this->local_env, this->arg_cache);
+    
+        // produce activity reports if they have been requested
+        if(this->arg_cache.get_gantt_chart())
+          {
+            this->msg(CPPTRANSPORT_PROCESSING_GANTT_CHART, message_handler::highlight::heading);
+            this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename(), this->local_env, this->arg_cache);
+          }
+        
+        if(this->arg_cache.get_journal())
+          {
+            this->msg(CPPTRANSPORT_PROCESSING_ACTIVITY_JOURNAL, message_handler::highlight::heading);
+            this->journal.make_journal(this->arg_cache.get_journal_filename(), this->local_env, this->arg_cache);
+          }
+    
+        // issue advisory
+        if(tasks_complete > 0)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_PROCESSED_TASKS_A << " " << tasks_complete << " ";
+            if(tasks_complete > 1)
+              {
+                msg << CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL;
+              }
+            else
+              {
+                msg << CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR;
+              }
+            msg << " " << CPPTRANSPORT_PROCESSED_TASKS_C << " " << format_time(this->busy_timer.elapsed().wall + this->idle_timer.elapsed().wall);
+            msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_D << " ";
+        
+            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+            msg << boost::posix_time::to_simple_string(now);
+        
+            this->msg(msg.str());
+          }
       }
 
 
     template <typename number>
     void master_controller<number>::process_task(const job_descriptor& job)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         std::unique_ptr< task_record<number> > record;
 
         try
@@ -983,12 +1009,16 @@ namespace transport
           }
       }
 
+    
     // WORKER HANDLING
 
 
     template <typename number>
-    void master_controller<number>::set_up_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
+    void master_controller<number>::capture_worker_properties(boost::log::sources::severity_logger<base_writer::log_severity_level>& log)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
@@ -1003,10 +1033,10 @@ namespace transport
 
             switch(stat.tag())
               {
-                case MPI::INFORMATION_RESPONSE:
+                case MPI::WORKER_IDENTIFICATION:
                   {
                     MPI::slave_information_payload payload;
-                    this->world.recv(stat.source(), MPI::INFORMATION_RESPONSE, payload);
+                    this->world.recv(stat.source(), MPI::WORKER_IDENTIFICATION, payload);
                     this->work_scheduler.initialize_worker(log, this->worker_number(stat.source()), payload);
                     break;
                   }
@@ -1026,8 +1056,11 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::close_down_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
+    void master_controller<number>::workers_end_of_task(boost::log::sources::severity_logger<base_writer::log_severity_level>& log)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Notifying workers of end-of-work";
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
@@ -1045,6 +1078,9 @@ namespace transport
     template <typename WriterObject>
     void master_controller<number>::check_for_progress_update(WriterObject& writer)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // emit update message giving current status if required
         if(this->work_scheduler.update_available())     // an update exists
           {
@@ -1090,6 +1126,9 @@ namespace transport
     template <typename WriterObject>
     void master_controller<number>::log_worker_metadata(WriterObject& writer)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         std::vector< master_scheduler::worker_metadata > metadata = this->work_scheduler.get_metadata();
 
         for(const master_scheduler::worker_metadata& t : metadata)
@@ -1107,6 +1146,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::set_local_checkpoint_interval(unsigned int m)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
@@ -1117,7 +1159,10 @@ namespace transport
             requests[i] = world.isend(this->worker_rank(i), MPI::SET_LOCAL_CHECKPOINT, m*60);
           }
 
+        timers.idle();
         boost::mpi::wait_all(requests.begin(), requests.end());
+        timers.busy();
+
         this->data_mgr->set_local_checkpoint_interval(m*60);
       }
 
@@ -1125,6 +1170,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::unset_local_checkpoint_interval()
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
@@ -1135,7 +1183,10 @@ namespace transport
             requests[i] = world.isend(this->worker_rank(i), MPI::UNSET_LOCAL_CHECKPOINT);
           }
 
+        timers.idle();
         boost::mpi::wait_all(requests.begin(), requests.end());
+        timers.busy();
+
         this->data_mgr->unset_local_checkpoint_interval();
       }
 
@@ -1143,6 +1194,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
@@ -1172,7 +1226,9 @@ namespace transport
           }
 
         // wait for all assignments to be received
+        timers.idle();
         boost::mpi::wait_all(msg_status.begin(), msg_status.end());
+        timers.busy();
       }
 
 
@@ -1182,6 +1238,9 @@ namespace transport
                                                  integration_metadata& int_metadata, output_metadata& out_metadata, std::list<std::string>& content_groups,
                                                  WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
         bool success = true;
 
         boost::log::sources::severity_logger< base_writer::log_severity_level >& log = writer.get_log();
@@ -1191,9 +1250,9 @@ namespace transport
         std::list< std::unique_ptr<aggregation_record> > aggregation_queue;
 
         // wait for workers to report their characteristics
-        this->set_up_workers(log);
+        this->capture_worker_properties(log);
 
-        // CloseDownContext object is responsible for calling this->close_down_workers()
+        // CloseDownContext object is responsible for calling this->workers_end_of_task()
         // when needed; should do so even if we exit this function via an exception
         CloseDownContext<number> closedown_handler(*this, log);
 
@@ -1202,8 +1261,10 @@ namespace transport
         bool emit_agg_queue_msg = true;
 
         // poll workers, scattering work and aggregating the results until work items are exhausted
+        timers.idle();
         while(!this->work_scheduler.all_inactive())
           {
+            timers.busy();
             // send closedown instruction if no more work
             if(this->work_scheduler.is_finished() && !closedown_handler()) closedown_handler.send_closedown();
 
@@ -1215,10 +1276,13 @@ namespace transport
               }
 
             // check whether any messages are waiting in the queue
+            timers.idle();
             boost::optional<boost::mpi::status> stat = this->world.iprobe();
 
             while(stat) // consume messages until no more are available
               {
+                timers.busy();
+
                 // update time of last received message and reset flag which enables logging
                 last_msg = boost::posix_time::second_clock::universal_time();
                 emit_agg_queue_msg = true;
@@ -1409,6 +1473,7 @@ namespace transport
                       }
                   }
 
+                timers.idle();
                 stat = this->world.iprobe();  // check for another message
               }
 
@@ -1417,6 +1482,8 @@ namespace transport
             // check whether any aggregations are in the queue, and process them if we have been idle for sufficiently long
             if(aggregation_queue.size() > 0)
               {
+                timers.busy();
+
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
                 boost::posix_time::time_duration idle_time = now - last_msg;
                 if(idle_time.total_seconds() > 5)
@@ -1433,6 +1500,7 @@ namespace transport
               }
           }
 
+        timers.busy();
         this->check_for_progress_update(writer);
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();

@@ -200,7 +200,7 @@ namespace transport
             try
               {
                 // we must get to execute_tasks() if at all possible, because it sets up a WorkerBundle
-                // instance that is responsible for issuing SETUP/TERMINATION notices to workers
+                // instance that is responsible for issuing WORKER_SETUP/TERMINATION notices to workers
                 // if the WorkerBundle never gets instantiated then no TERMINATION notices will ever be issued,
                 // so the MPI job will hang even if the master node exits
                 this->master.execute_tasks();

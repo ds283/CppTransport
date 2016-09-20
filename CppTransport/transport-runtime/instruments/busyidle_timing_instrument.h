@@ -32,7 +32,7 @@
 namespace transport
   {
     
-    class dual_timing_instrument
+    class busyidle_timing_instrument
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -40,10 +40,12 @@ namespace transport
       public:
         
         //! constructor captures 'busy' and 'idle' timers
-        //! and sets them into busy mode
-        dual_timing_instrument(boost::timer::cpu_timer& b, boost::timer::cpu_timer& i)
-          : busy_timer(b),
-            idle_timer(i)
+        //! and sets them into the busy state.
+        //! We use the allow_stop mode of timing_instrument otherwise we risk having
+        //! both timers running simultaneously
+        busyidle_timing_instrument(boost::timer::cpu_timer& b, boost::timer::cpu_timer& i)
+          : busy_timer(b, timing_instrument_mode::allow_stop),
+            idle_timer(i, timing_instrument_mode::allow_stop)
           {
             busy_timer.resume();
             idle_timer.stop();
@@ -51,21 +53,21 @@ namespace transport
         
         //! destructor is default; destruction of timing_instrument objects
         //! will reset timers to whatever state they had on entry
-        ~dual_timing_instrument() = default;
+        ~busyidle_timing_instrument() = default;
         
         
         // INTERFACE
         
       public:
         
-        //! switch to busy
+        //! switch to busy state
         void busy()
           {
             this->idle_timer.stop();
             this->busy_timer.resume();
           }
         
-        //! switch to idle
+        //! switch to idle state
         void idle()
           {
             this->busy_timer.stop();

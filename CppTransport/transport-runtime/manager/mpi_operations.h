@@ -65,8 +65,8 @@ namespace transport
             const unsigned int POSTINTEGRATION_DATA_READY = 22;
             const unsigned int POSTINTEGRATION_FAIL       = 29;
 
-            const unsigned int INFORMATION_REQUEST        = 90;
-		        const unsigned int INFORMATION_RESPONSE       = 91;
+            const unsigned int WORKER_SETUP               = 90;
+		        const unsigned int WORKER_IDENTIFICATION      = 91;
 		        const unsigned int NEW_WORK_ASSIGNMENT        = 92;
 		        const unsigned int NEW_WORK_ACKNOWLEDGMENT    = 93;
             const unsigned int REPORT_ERROR               = 94;

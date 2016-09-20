@@ -706,6 +706,7 @@ set(TRANSPORT_RUNTIME_FILES
 
 set(TRANSPORT_RUNTIME_INSTRUMENTS_FILES
   transport-runtime/instruments/timing_instrument.h
+  transport-runtime/instruments/busyidle_timing_instrument.h
   )
 
 set(TRANSPORT_RUNTIME_LOCALIZATIONS_FILES

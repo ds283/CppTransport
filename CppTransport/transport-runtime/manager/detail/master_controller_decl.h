@@ -57,6 +57,8 @@
 #include "transport-runtime/reporting/command_line.h"
 #include "transport-runtime/reporting/HTML_report.h"
 
+#include "transport-runtime/instruments/busyidle_timing_instrument.h"
+
 
 #include "boost/mpi.hpp"
 #include "boost/serialization/string.hpp"
@@ -190,11 +192,13 @@ namespace transport
 
       protected:
 
-        //! Master node: set up workers in preparation for a new task
-        void set_up_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
+        //! Master node: capture properties reported by workers
+        //! (via WORKER_IDENTIFICATION messages) in preparation for a new task
+        void capture_worker_properties(boost::log::sources::severity_logger<base_writer::log_severity_level>& log);
 
-        //! Master node: close down workers after completion of a task
-        void close_down_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
+        //! Master node: inform workers that there is no more work associated
+        //! with the current task
+        void workers_end_of_task(boost::log::sources::severity_logger<base_writer::log_severity_level>& log);
 
         //! Master node: main loop: poll workers for events
         template <typename WriterObject>
@@ -422,6 +426,15 @@ namespace transport
 
         //! root directory for aggregation profile report, if used
         boost::optional< boost::filesystem::path > aggregation_profile_root;
+    
+    
+        // TIMERS
+    
+        //! track time spent performing work
+        boost::timer::cpu_timer busy_timer;
+    
+        //! track time spent idling
+        boost::timer::cpu_timer idle_timer;
 
       };
 
@@ -437,11 +450,12 @@ namespace transport
 
           public:
 
-            //! constructor
+            //! constructor performs setup of workers belonging to the MPI environment
             WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
-                         repository<number>* r, work_journal& j, argument_cache& a);
+                         repository<number>* r, work_journal& j, argument_cache& a,
+                         boost::timer::cpu_timer& bt, boost::timer::cpu_timer& it);
 
-            //! destructor
+            //! destructor handles terminatiaon of workers belonging to the MPI environment
             ~WorkerBundle();
 
 
@@ -472,25 +486,36 @@ namespace transport
 
             //! reference to argument cache
             argument_cache& args;
+            
+            //! reference to busy timer
+            boost::timer::cpu_timer& busy_timer;
 
+            //! reference to idle timer
+            boost::timer::cpu_timer& idle_timer;
           };
 
 
         template <typename number>
         WorkerBundle<number>::WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
-                                           repository<number>* r, work_journal& j, argument_cache& a)
+                                           repository<number>* r, work_journal& j, argument_cache& a,
+                                           boost::timer::cpu_timer& bt, boost::timer::cpu_timer& it)
           : env(e),
             world(c),
             repo(r),
             journal(j),
-            args(a)
+            args(a),
+            busy_timer(bt),
+            idle_timer(it)
           {
+            // capture busy/idle timers and switch to busy mode
+            busyidle_timing_instrument timers(busy_timer, idle_timer);
+            
             // set up instrument to journal the MPI communication if needed
             journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
             std::vector<boost::mpi::request> requests(world.size()-1);
 
-            // if repository is initialized, send SETUP message
+            // if repository is initialized, send WORKER_SETUP message
             if(repo != nullptr)
               {
                 // request information from each worker, and pass all necessary setup details
@@ -498,10 +523,12 @@ namespace transport
 
                 for(unsigned int i = 0; i < world.size()-1; ++i)
                   {
-                    requests[i] = world.isend(this->worker_rank(i), MPI::INFORMATION_REQUEST, payload);
+                    requests[i] = world.isend(this->worker_rank(i), MPI::WORKER_SETUP, payload);
                   }
 
                 // wait for all messages to be received, then return
+                // there is no scheduled response to this message, so we don't need to wait for one
+                timers.idle();
                 boost::mpi::wait_all(requests.begin(), requests.end());
               }
           }
@@ -510,6 +537,9 @@ namespace transport
         template <typename number>
         WorkerBundle<number>::~WorkerBundle()
           {
+            // capture busy/idle timers and switch to busy mode
+            busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+
             // set up instrument to journal the MPI communication if needed
             journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
@@ -521,6 +551,7 @@ namespace transport
               }
 
             // wait for all messages to be received, then exit ourselves
+            timers.idle();
             boost::mpi::wait_all(requests.begin(), requests.end());
           }
 
@@ -600,7 +631,11 @@ namespace transport
             bool operator()() const { return(this->sent_closedown); }
 
             //! send closedown message
-            void send_closedown() { this->controller.close_down_workers(log); this->sent_closedown = true; }
+            void send_closedown()
+              {
+                this->controller.workers_end_of_task(log);
+                this->sent_closedown = true;
+              }
 
 
             // INTERNAL DATA
