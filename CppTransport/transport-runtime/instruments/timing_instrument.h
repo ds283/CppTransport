@@ -40,15 +40,18 @@ class timing_instrument
     //! constructor
     timing_instrument(boost::timer::cpu_timer& cp)
       : captured_timer(cp),
-        was_stopped(cp.is_stopped())
+        was_stopped(cp.is_stopped()),
+        stopped(false)
       {
+        // restart timer if it was previously stopped, otherwise just let it keep going
         if(was_stopped) captured_timer.resume();
       }
 
     //! destructor
     ~timing_instrument()
       {
-        if(was_stopped) captured_timer.stop();
+        // stop timer if it was stopped on capture, provided stop() has not already been called
+        if(!stopped && was_stopped) captured_timer.stop();
       }
 
 
@@ -57,7 +60,16 @@ class timing_instrument
   public:
 
     //! stop the timer (if it was previously stopped)
-    void stop() { if(was_stopped) captured_timer.stop(); }
+    void stop()
+      {
+        // stop timer if it was stopped on capture, and flag that stop() has been called
+        // on this instrument
+        if(!this->stopped && was_stopped)
+          {
+            captured_timer.stop();
+            this->stopped = true;
+          }
+      }
 
 
     // INTERNAL DATA
@@ -69,6 +81,9 @@ class timing_instrument
 
     //! record whether timer was stopped on construction
     bool was_stopped;
+    
+    //! record whether stop() has been called on this instrument
+    bool stopped;
 
   };
 
