@@ -52,7 +52,7 @@ namespace transport
             enum class print_options
               {
                 none,
-                force_simple
+                fixed_width
               };
 
 
@@ -64,7 +64,8 @@ namespace transport
             key_value(local_environment& e, argument_cache& a)
               : env(e),
                 arg_cache(a),
-                tile(false)
+                tile(false),
+                fix_width(CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH)
               {
               }
 
@@ -87,6 +88,9 @@ namespace transport
 
             //! set title
             void set_title(std::string t) { this->title = std::move(t); }
+            
+            //! set fixed width (not used unless the appropriate option given to write())
+            void set_fixed_width(size_t w) { this->fix_width = w; }
 
             //! write to a stream
             void write(std::ostream& out, print_options opts=print_options::none);
@@ -126,6 +130,9 @@ namespace transport
 
             //! tile pairs in columns, or just produce a single list?
             bool tile;
+            
+            //! fixed width, if used
+            size_t fix_width;
 
             //! title string, if used
             std::string title;
@@ -142,7 +149,7 @@ namespace transport
             if(tile) this->compute_columns(columns, column_width, opts);
 
             bool colour = this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
-            if(opts == print_options::force_simple) colour = false;
+            if(opts == print_options::fixed_width) colour = false;    // assume fixed width means we don't know anything about the terminal's properties
 
             if(!this->title.empty())
               {
@@ -180,7 +187,7 @@ namespace transport
 
         void key_value::compute_columns(unsigned int& columns, unsigned int& column_width, print_options opts)
           {
-            unsigned int width = (opts == print_options::force_simple ? CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH : this->env.detect_terminal_width());
+            unsigned int width = (opts == print_options::fixed_width ? this->fix_width : this->env.detect_terminal_width());
 
             // set up default return values; these will be overwritten later if we use
             // a multicolumn configuration

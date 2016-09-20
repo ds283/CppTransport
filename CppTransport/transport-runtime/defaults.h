@@ -51,7 +51,7 @@ namespace transport
     constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_DATABASE_PRECISION    = 6;
     constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE   = 10;
 
-    constexpr unsigned int CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH             = (80);
+    constexpr unsigned int CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH             = (135);
 
     constexpr double       CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE          = (1E-8);
     constexpr unsigned int CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS             = (5);
