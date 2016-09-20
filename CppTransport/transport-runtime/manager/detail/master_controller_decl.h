@@ -44,7 +44,8 @@
 #include "transport-runtime/repository/json_repository.h"
 #include "transport-runtime/data/data_manager.h"
 
-#include "transport-runtime/manager/master_scheduler.h"
+#include "transport-runtime/manager/worker_scheduler.h"
+#include "transport-runtime/manager/worker_manager.h"
 #include "transport-runtime/manager/work_journal.h"
 #include "transport-runtime/manager/argument_cache.h"
 #include "transport-runtime/manager/environment.h"
@@ -400,8 +401,11 @@ namespace transport
 
         // DATA AND STATE
 
-        //! scheduler
-        master_scheduler work_scheduler;
+        //! work scheduler
+        worker_scheduler work_scheduler;
+        
+        //! worker manager
+        worker_manager worker_manager;
 
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;

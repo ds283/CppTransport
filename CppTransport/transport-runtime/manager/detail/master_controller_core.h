@@ -111,7 +111,9 @@ namespace transport
         warn(warning_handler(le, ac)),
         msg(message_handler(le, ac)),
         cmdline_reports(le, ac),
-        HTML_reports(le, ac)
+        HTML_reports(le, ac),
+        work_scheduler(w.size()-1),
+        worker_manager(w.size()-1)
       {
         // stop both busy and idle timers
         busy_timer.stop();
@@ -1025,7 +1027,8 @@ namespace transport
         // rebuild information about our workers; this information
         // it is updated whenever we start a new task, because the details can vary
         // between model instances (eg. CPU or GPU backends)
-        this->work_scheduler.reset(this->world.size()-1);
+        this->work_scheduler.reset();
+        this->worker_manager.new_task();
 
         while(!this->work_scheduler.is_ready())
           {
@@ -1113,8 +1116,8 @@ namespace transport
             this->repo->advise_completion_time(writer.get_name(), this->work_scheduler.get_estimated_completion());
 
             update_msg << '\n';
-            update_data.write(update_msg, reporting::key_value::print_options::force_simple);
-            notifications.write(update_msg, reporting::key_value::print_options::force_simple);
+            update_data.write(update_msg, reporting::key_value::print_options::fixed_width);
+            notifications.write(update_msg, reporting::key_value::print_options::fixed_width);
 
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: " << update_msg.str();
             this->log_worker_metadata(writer);
@@ -1129,17 +1132,34 @@ namespace transport
         // capture busy/idle timers and switch to busy mode
         busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
 
-        std::vector< master_scheduler::worker_metadata > metadata = this->work_scheduler.get_metadata();
-
-        for(const master_scheduler::worker_metadata& t : metadata)
+        bool write_separator = false;
+        for(unsigned int i = 0; i < this->work_scheduler.size(); ++i)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "## Worker " << t.get_number() << ": active = " << t.get_active()
-                                                                                     << ", assigned = " << t.get_assigned()
-                                                                                     << ", total time = " << format_time(t.get_total_elapsed_time())
-                                                                                     << ", items processed = " << t.get_total_items_processed()
-                                                                                     << ", mean time per item = " << (t.get_total_items_processed() > 0 ? format_time(t.get_total_elapsed_time() / t.get_total_items_processed()) : "n/a")
-                                                                                     << ", last contact at " << boost::posix_time::to_simple_string(t.get_last_contact_time());
+            const worker_information& info = this->work_scheduler[i];
+            const worker_management_data& data = this->worker_manager[i];
+            
+            reporting::key_value kv(this->local_env, this->arg_cache);
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_NUMBER, boost::lexical_cast<std::string>(info.get_number()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_PROCESSED_ITEMS, boost::lexical_cast<std::string>(info.get_number_items()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_ASSIGNED, info.is_assigned() ? CPPTRANSPORT_WORKER_DATA_YES : CPPTRANSPORT_WORKER_DATA_NO);
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_INTEGRATION_TIME, format_time(info.get_total_time()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_MEAN_TIME_PER_ITEM, format_time(info.get_mean_time_per_work_item()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LAST_CONTACT, boost::posix_time::to_simple_string(data.get_last_contact_time()));
+            
+            std::ostringstream msg;
+            kv.set_tiling(true);
+            kv.write(msg);
+            
+            if(!write_separator)
+              {
+                BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "####################";
+                write_separator = true;
+              }
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << msg.str();
           }
+    
+        // omit closing #s if we didn't write any opening ones
+        if(write_separator) BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "####################";
       }
 
 
@@ -1201,7 +1221,7 @@ namespace transport
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
         // generate a list of work assignments
-        std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work(log);
+        std::list<work_assignment> work = this->work_scheduler.assign_work(log);
 
         BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Generating new work assignments for " << work.size() << " worker" << (work.size() > 1 ? "s" : "") << " (" << this->work_scheduler.get_queue_size() << " work items remain in queue)";
 
@@ -1209,7 +1229,7 @@ namespace transport
         std::vector<boost::mpi::request> msg_status(work.size());
 
         unsigned int c = 0;
-        for(const master_scheduler::work_assignment& assgn : work)
+        for(const work_assignment& assgn : work)
           {
             MPI::work_assignment_payload payload(assgn.get_items());
 
@@ -1257,7 +1277,7 @@ namespace transport
         CloseDownContext<number> closedown_handler(*this, log);
 
         // record time of last-received message, so we can determine for how long we have been idle
-        boost::posix_time::ptime last_msg = boost::posix_time::second_clock::universal_time();
+        boost::posix_time::ptime last_msg_time = boost::posix_time::second_clock::universal_time();
         bool emit_agg_queue_msg = true;
 
         // poll workers, scattering work and aggregating the results until work items are exhausted
@@ -1284,10 +1304,10 @@ namespace transport
                 timers.busy();
 
                 // update time of last received message and reset flag which enables logging
-                last_msg = boost::posix_time::second_clock::universal_time();
+                last_msg_time = boost::posix_time::second_clock::universal_time();
                 emit_agg_queue_msg = true;
 
-                this->work_scheduler.update_contact_time(this->worker_number(stat->source()), last_msg);
+                this->worker_manager.update_contact_time(this->worker_number(stat->source()), last_msg_time);
 
                 switch(stat->tag())
                   {
@@ -1485,7 +1505,7 @@ namespace transport
                 timers.busy();
 
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                boost::posix_time::time_duration idle_time = now - last_msg;
+                boost::posix_time::time_duration idle_time = now - last_msg_time;
                 if(idle_time.total_seconds() > 5)
                   {
                     if(emit_agg_queue_msg)

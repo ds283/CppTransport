@@ -738,7 +738,8 @@ set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/json_repository_interface.h
   transport-runtime/localizations/messages_en/labels.h
   transport-runtime/localizations/messages_en/manager.h
-  transport-runtime/localizations/messages_en/master_scheduler.h
+  transport-runtime/localizations/messages_en/worker_scheduler.h
+  transport-runtime/localizations/messages_en/worker_manager.h
   transport-runtime/localizations/messages_en/model_list.h
   transport-runtime/localizations/messages_en/model_manager.h
   transport-runtime/localizations/messages_en/models.h
@@ -788,7 +789,8 @@ set(TRANSPORT_RUNTIME_MANAGER_FILES
   transport-runtime/manager/argument_cache.h
   transport-runtime/manager/environment.h
   transport-runtime/manager/master_controller.h
-  transport-runtime/manager/master_scheduler.h
+  transport-runtime/manager/worker_scheduler.h
+  transport-runtime/manager/worker_manager.h
   transport-runtime/manager/message_handlers.h
   transport-runtime/manager/model_manager.h
   transport-runtime/manager/mpi_operations.h

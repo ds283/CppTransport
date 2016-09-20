@@ -62,250 +62,191 @@
 
 namespace transport
 	{
-
-    class master_scheduler
-	    {
-
+    
+    class worker_scheduler;
+    
+    class work_assignment
+      {
+      
       public:
-
-		    class work_assignment
-			    {
-
-		      public:
-
-				    //! construct a work assignment record
-				    work_assignment(unsigned int w, const std::list<unsigned int>& i)
-				      : worker(w),
-				        items(i)
-					    {
-					    }
-
-				    ~work_assignment() = default;
-
-				    // EXTRACT INFORMATION
-
-		      public:
-
-				    //! get worker number
-				    unsigned int get_worker() const { return(this->worker); }
-
-				    //! get work items
-				    const std::list<unsigned int>& get_items() const { return(this->items); }
-
-				    // INTERNAL DATA
-
-		      private:
-
-				    //! worker number
-				    unsigned int worker;
-
-				    //! work items
-				    const std::list<unsigned int> items;
-			    };
-
-      protected:
-
-        //! Worker information class
-        class worker_information
-	        {
-
-          public:
-
-            //! construct a worker information record
-            worker_information()
-	            : type(worker_type::cpu),
-	              capacity(0),
-	              priority(0),
-	              initialized(false),
-	              assigned(false),
-	              active(true),
-                items(0),
-                time(0),
-                last_contact(boost::posix_time::second_clock::universal_time())
-	            {
-	            }
-
-            // INTERFACE -- INTERROGATE FOR GENERAL INFORMATION
-
-          public:
-
-            //! get worker type
-            worker_type get_type() const { return(this->type); }
-
-		        //! get worker number
-		        unsigned int get_number() const { return(this->number); }
-
-            //! get worker capacity
-            unsigned int get_capacity() const { return(this->capacity); }
-
-            //! get worker priority
-            unsigned int get_priority() const { return(this->priority); }
-
-            //! get initialization status
-            bool get_initialization_status() const { return(this->initialized); }
-
-            //! set data
-            void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
-
-
-            // INTERFACE -- ASSIGNMENT MANAGEMENT
-
-          public:
-
-		        //! is this worker currently assigned?
-		        bool is_assigned() const { return(this->assigned); }
-
-		        //! set assignment status
-		        void mark_assigned(bool status) { this->assigned = status; }
-
-		        //! is this worker currently active?
-		        bool is_active() const { return(this->active); }
-
-		        //! set active states
-		        void mark_active(bool status) { this->active = status; }
-
-
-            // INTERFACE -- METADATA MANAGEMENT
-
-          public:
-
-		        //! update timing data
-		        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n) { this->time += t; this->items += n; }
-
-		        // get total time for this worker
-		        boost::timer::nanosecond_type get_total_time() const { return(this->time); }
-
-		        //! get running mean time per work item for this workers
-		        boost::timer::nanosecond_type get_mean_time_per_work_item() const { return(this->items == 0 ? this->time : this->time / this->items); }
-
-		        // get total number of items processed
-		        unsigned int get_number_items() const { return(this->items); }
-
-            //! update last contact time
-            void update_contact_time(boost::posix_time::ptime t) { this->last_contact = t; }
-
-            //! get last contact time
-            boost::posix_time::ptime get_last_contact_time() const { return(this->last_contact); }
-
-
-            // INTERNAL DATA
-
-          private:
-
-		        //! worker number
-		        unsigned int number;
-
-            //! capacity type -- are integrations on this worker limited by memory?
-            worker_type type;
-
-            //! worker's memory capacity (for integrations only)
-            unsigned int capacity;
-
-            //! worker's priority
-            unsigned int priority;
-
-            //! received initialization data from this worker?
-            bool initialized;
-
-		        //! is this worker currently assigned?
-		        bool assigned;
-
-		        //! is this worker currently active?
-		        bool active;
-
-		        //! total time used to process items on this worker
-		        boost::timer::nanosecond_type time;
-
-		        //! total number of items processed on this worker
-		        unsigned int items;
-
-            //! time of last contact with this worker
-            boost::posix_time::ptime last_contact;
-
-	        };
-
-
-        // WORKER METADATA RECORD
-
-      public:
-
-        class worker_metadata
+        
+        //! construct a work assignment record
+        work_assignment(unsigned int w, const std::list<unsigned int>& i)
+          : worker(w),
+            items(i)
           {
+          }
+        
+        ~work_assignment() = default;
+        
+        // EXTRACT INFORMATION
+      
+      public:
+        
+        //! get worker number
+        unsigned int get_worker() const { return(this->worker); }
+        
+        //! get work items
+        const std::list<unsigned int>& get_items() const { return(this->items); }
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! worker number
+        unsigned int worker;
+        
+        //! work items
+        const std::list<unsigned int> items;
+      };
 
-            // CONSTRUCTOR, DESTRUCTOR
+    
+    //! Worker information class
+    class worker_information
+      {
+  
+      public:
+        
+        friend class worker_scheduler;
+    
+        //! construct a worker information record
+        worker_information()
+          : type(worker_type::cpu),
+            capacity(0),
+            priority(0),
+            initialized(false),
+            assigned(false),
+            active(true),
+            items(0),
+            time(0)
+          {
+          }
+    
+        //! destructor
+        ~worker_information() = default;
+    
+    
+        // INTERFACE -- INTERROGATE FOR GENERAL INFORMATION
+  
+      public:
+    
+        //! get worker type
+        worker_type get_type() const { return(this->type); }
+    
+        //! get worker number
+        unsigned int get_number() const { return(this->number); }
+    
+        //! get worker capacity
+        unsigned int get_capacity() const { return(this->capacity); }
+    
+        //! get worker priority
+        unsigned int get_priority() const { return(this->priority); }
+    
+        //! get initialization status
+        bool get_initialization_status() const { return(this->initialized); }
+    
+      private:
+        
+        //! set data for this worker
+        //! this is a private method; only friend classes may use it
+        void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p)
+          {
+            this->number = n;
+            this->type = t;
+            this->capacity = c;
+            this->priority = p;
+            this->initialized = true;
+          }
+    
+    
+        // INTERFACE -- ASSIGNMENT MANAGEMENT
+  
+      public:
+    
+        //! is this worker currently assigned?
+        bool is_assigned() const { return(this->assigned); }
+    
+        //! is this worker currently active?
+        bool is_active() const { return(this->active); }
+        
+      private:
+    
+        //! set assignment status
+        void mark_assigned(bool status) { this->assigned = status; }
+    
+        //! set active states
+        void mark_active(bool status) { this->active = status; }
+    
+    
+        // INTERFACE -- TIMING METADATA
+  
+      public:
+    
+        // get total time for this worker
+        boost::timer::nanosecond_type get_total_time() const { return(this->time); }
+    
+        //! get running mean time per work item for this workers
+        boost::timer::nanosecond_type get_mean_time_per_work_item() const { return(this->items == 0 ? this->time : this->time / this->items); }
+        
+      private:
+    
+        //! update timing data
+        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n) { this->time += t; this->items += n; }
+    
+    
+        // INTERFACE -- GENERAL METADATA
+  
+      public:
+    
+        // get total number of items processed
+        unsigned int get_number_items() const { return(this->items); }
+    
+    
+        // INTERNAL DATA
+  
+      private:
+    
+        //! worker number
+        unsigned int number;
+    
+        //! capacity type -- are integrations on this worker limited by memory?
+        worker_type type;
+    
+        //! worker's memory capacity (for integrations only)
+        unsigned int capacity;
+    
+        //! worker's priority
+        unsigned int priority;
+    
+        //! received initialization data from this worker?
+        bool initialized;
+    
+        //! is this worker currently assigned?
+        bool assigned;
+    
+        //! is this worker currently active?
+        bool active;
+    
+        //! total time used to process items on this worker
+        boost::timer::nanosecond_type time;
+    
+        //! total number of items processed on this worker
+        unsigned int items;
+    
+      };
 
-          public:
-
-            //! constructor
-            worker_metadata(unsigned int n, bool as, bool ac, boost::timer::nanosecond_type t, unsigned int i, boost::posix_time::ptime l)
-              : number(n),
-                assigned(as),
-                active(ac),
-                total_time(t),
-                items(i),
-                last_contact(l)
-              {
-              }
-
-            //! destructor is default
-            ~worker_metadata() = default;
-
-
-            // INTERFACE
-
-          public:
-
-            //! get worker number
-            unsigned int get_number() const { return(this->number); }
-
-            //! get assignment status
-            bool get_assigned() const { return(this->assigned); }
-
-            //! get active status
-            bool get_active() const { return(this->active); }
-
-            //! get total elapsed time
-            boost::timer::nanosecond_type get_total_elapsed_time() const { return(this->total_time); }
-
-            //! get total number of work items processed
-            unsigned int get_total_items_processed() const { return(this->items); }
-
-            //! get last contact time
-            boost::posix_time::ptime get_last_contact_time() const { return(this->last_contact); }
-
-
-            // INTERNAL DATA
-
-          private:
-
-            //! worker number
-            unsigned int number;
-
-            //! assigned status
-            bool assigned;
-
-            //! active status
-            bool active;
-
-            //! total elapsed time doing work
-            boost::timer::nanosecond_type total_time;
-
-            //! total number of work items processed
-            unsigned int items;
-
-            //! last contact time
-            boost::posix_time::ptime last_contact;
-
-          };
-
-
+        
+    class worker_scheduler
+	    {
+        
 		    // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
 		    //! construct a scheduler object
-		    master_scheduler()
-		      : waiting_for_setup(0),
+		    worker_scheduler(unsigned int nw)
+		      : number_workers(nw),
+            waiting_for_setup(0),
 		        state_size(0),
 		        unassigned(0),
 		        active(0),
@@ -325,7 +266,7 @@ namespace transport
             urng.seed(rng());
 			    }
 
-		    ~master_scheduler() = default;
+		    ~worker_scheduler() = default;
 
 
 		    // INTERFACE -- GENERAL FUNCTIONS
@@ -334,7 +275,7 @@ namespace transport
 
 		    //! reset scheduler and all scheduling data; prepare for new scheduling
 		    //! task with the given number of workers
-		    void reset(unsigned int worker);
+		    void reset();
 
 		    //! initialization complete and ready to proceed with scheduling?
 		    bool is_ready() const { return(this->waiting_for_setup == 0); }
@@ -420,15 +361,15 @@ namespace transport
         unsigned int get_number_active() const { return(this->active); }
 
 
-        // INTERFACE -- MANAGE METADATA
+        // INTERFACE -- MANAGE WORKER DATA AND METADATA
 
       public:
-
-        //! update time of last contact with a worker
-        void update_contact_time(unsigned int worker, boost::posix_time::ptime time);
-
-        //! get metadata for all workers
-        std::vector< worker_metadata > get_metadata() const;
+        
+        //! query for individual worker data, returned in read-only format
+        const worker_information& operator[](unsigned int worker) const;
+        
+        //! query for size
+        size_t size() const { return this->number_workers; }
 
         //! advise a new aggregation time
         void report_aggregation(boost::timer::nanosecond_type time);
@@ -467,6 +408,9 @@ namespace transport
 
 
 		    // WORKER POOL
+        
+        //! Number of workers in the pool
+        const unsigned int number_workers;
 
         //! Information about workers
         std::vector<worker_information> worker_data;
@@ -541,12 +485,12 @@ namespace transport
 	    };
 
 
-		void master_scheduler::reset(unsigned int workers)
+		void worker_scheduler::reset()
 			{
 				this->worker_data.clear();
-				this->worker_data.resize(workers);
+				this->worker_data.resize(this->number_workers);
 
-				this->waiting_for_setup = workers;
+				this->waiting_for_setup = this->number_workers;
 				this->unassigned = 0;
 				this->active = 0;
 
@@ -554,7 +498,7 @@ namespace transport
 				this->has_gpus = false;
 
 				this->update_stack.clear();
-        finished = false;
+        this->finished = false;
 
 				// reset metadata and statistics
 				this->total_aggregation_time = 0;
@@ -566,7 +510,7 @@ namespace transport
 			}
 
 
-		void master_scheduler::initialize_worker(boost::log::sources::severity_logger< base_writer::log_severity_level >& log, unsigned int worker, MPI::slave_information_payload& payload)
+		void worker_scheduler::initialize_worker(boost::log::sources::severity_logger< base_writer::log_severity_level >& log, unsigned int worker, MPI::slave_information_payload& payload)
 			{
 		    if(!(this->worker_data[worker].get_initialization_status()))
 			    {
@@ -614,35 +558,35 @@ namespace transport
 
 
 		template <typename number>
-		void master_scheduler::prepare_queue(twopf_task<number>& task)
+		void worker_scheduler::prepare_queue(twopf_task<number>& task)
 			{
 				this->build_queue(task.get_twopf_database());
 			}
 
 
 		template <typename number>
-		void master_scheduler::prepare_queue(threepf_task<number>& task)
+		void worker_scheduler::prepare_queue(threepf_task<number>& task)
 			{
 				this->build_queue(task.get_threepf_database());
 			}
 
 
 		template <typename number>
-		void master_scheduler::prepare_queue(zeta_twopf_task<number>& task)
+		void worker_scheduler::prepare_queue(zeta_twopf_task<number>& task)
 			{
 				this->build_queue(task.get_twopf_database());
 			}
 
 
 		template <typename number>
-		void master_scheduler::prepare_queue(zeta_threepf_task<number>& task)
+		void worker_scheduler::prepare_queue(zeta_threepf_task<number>& task)
 			{
 				this->build_queue(task.get_threepf_database());
 			}
 
 
 		template <typename number>
-		void master_scheduler::prepare_queue(output_task<number>& task)
+		void worker_scheduler::prepare_queue(output_task<number>& task)
 			{
         // TODO: move output tasks to a database system?
 				this->build_queue(task.get_elements());
@@ -651,7 +595,7 @@ namespace transport
 
     // TODO: this version of build_queue() is required only for output tasks, which don't use the database variant. Refactor output_task so it can be removed?
 		template <typename WorkItem>
-		void master_scheduler::build_queue(const std::vector<WorkItem>& q)
+		void worker_scheduler::build_queue(const std::vector<WorkItem>& q)
 			{
 				this->queue.clear();
 
@@ -678,7 +622,7 @@ namespace transport
 
 
     template <typename Database>
-    void master_scheduler::build_queue(const Database& db)
+    void worker_scheduler::build_queue(const Database& db)
       {
         this->queue.clear();
 
@@ -704,7 +648,7 @@ namespace transport
       }
 
 
-    void master_scheduler::prepare_queue(const std::set<unsigned int>& list)
+    void worker_scheduler::prepare_queue(const std::set<unsigned int>& list)
       {
         // copy serial numbers from list into temporary vector
         std::vector<unsigned int> temp;
@@ -720,7 +664,7 @@ namespace transport
       }
 
 
-		void master_scheduler::complete_queue_setup()
+		void worker_scheduler::complete_queue_setup()
 			{
 				// set maximum work allocation to force multiple scheduling adjustments during
 				// the lifetime of the task.
@@ -749,14 +693,14 @@ namespace transport
 			}
 
 
-		bool master_scheduler::assignable() const
+		bool worker_scheduler::assignable() const
 			{
 				// are there unassigned workers and work items left for them to process?
 				return(this->queue.size() > 0 && this->unassigned > 0);
 			}
 
 
-		void master_scheduler::mark_assigned(const work_assignment& assignment)
+		void worker_scheduler::mark_assigned(const work_assignment& assignment)
 			{
 				// check that there are unassigned workers
 				if(this->unassigned == 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NO_UNASSIGNED);
@@ -789,8 +733,10 @@ namespace transport
 			}
 
 
-		void master_scheduler::mark_unassigned(unsigned int worker, boost::timer::nanosecond_type time, unsigned int items)
+		void worker_scheduler::mark_unassigned(unsigned int worker, boost::timer::nanosecond_type time, unsigned int items)
 			{
+        if(worker >= this->worker_data.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
+        
 				// if this worker is not already assigned, an error must have occurred
 				if(!this->worker_data[worker].is_assigned()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED);
 
@@ -812,8 +758,10 @@ namespace transport
 			}
 
 
-		void master_scheduler::mark_inactive(unsigned int worker)
+		void worker_scheduler::mark_inactive(unsigned int worker)
 			{
+        if(worker >= this->worker_data.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
+
 				// if this worker is already inactive, an error must have occurred
 				if(!this->worker_data[worker].is_active()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE);
 
@@ -822,28 +770,17 @@ namespace transport
 
 				if(this->active == 0 && this->work_items_in_flight > 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT);
 			}
-
-
-    void master_scheduler::update_contact_time(unsigned int worker, boost::posix_time::ptime time)
+    
+    
+    const worker_information& worker_scheduler::operator[](unsigned int worker) const
       {
-        this->worker_data[worker].update_contact_time(time);
+        if(worker >= this->worker_data.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
+        
+        return this->worker_data[worker];
       }
 
 
-    std::vector< master_scheduler::worker_metadata > master_scheduler::get_metadata() const
-      {
-        std::vector< master_scheduler::worker_metadata > list;
-
-        for(const master_scheduler::worker_information& info : this->worker_data)
-          {
-            list.emplace_back(info.get_number(), info.is_assigned(), info.is_active(), info.get_total_time(), info.get_number_items(), info.get_last_contact_time());
-          }
-
-        return(list);
-      }
-
-
-		void master_scheduler::report_aggregation(boost::timer::nanosecond_type time)
+		void worker_scheduler::report_aggregation(boost::timer::nanosecond_type time)
 			{
 				this->total_aggregation_time += time;
 				this->number_aggregations++;
@@ -869,7 +806,7 @@ namespace transport
 			}
 
 
-    bool master_scheduler::update_available()
+    bool worker_scheduler::update_available()
       {
         bool result = false;
 
@@ -894,7 +831,7 @@ namespace transport
       }
 
 
-    void master_scheduler::populate_update_information(reporting::key_value& updates, reporting::key_value& notifications)
+    void worker_scheduler::populate_update_information(reporting::key_value& updates, reporting::key_value& notifications)
 			{
         updates.reset();
 
@@ -915,14 +852,14 @@ namespace transport
 										complete_msg << 100.0 * (static_cast<double>(this->work_items_completed)
 											/ (static_cast<double>(this->work_items_completed + this->work_items_in_flight + this->queue.size()))) << "%";
 
-                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED, boost::lexical_cast<std::string>(this->work_items_completed));
-                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_INFLIGHT, boost::lexical_cast<std::string>(this->work_items_in_flight));
-                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_REMAIN, boost::lexical_cast<std::string>(this->queue.size()));
-                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_COMPLETE, complete_msg.str());
+                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_WORK_ITEMS_PROCESSED, boost::lexical_cast<std::string>(this->work_items_completed));
+                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_WORK_ITEMS_INFLIGHT, boost::lexical_cast<std::string>(this->work_items_in_flight));
+                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_REMAIN, boost::lexical_cast<std::string>(this->queue.size()));
+                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_COMPLETE, complete_msg.str());
 
 								    boost::timer::nanosecond_type mean_time_per_item = this->total_work_time / this->work_items_completed;
-                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM, format_time(mean_time_per_item));
-                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_TARGET_DURATION, format_time(this->current_granularity));
+                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_MEAN_TIME_PER_ITEM, format_time(mean_time_per_item));
+                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_TARGET_DURATION, format_time(this->current_granularity));
 
 								    boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
 								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->work_items_completed;
@@ -936,9 +873,9 @@ namespace transport
 
                     std::ostringstream estimate_msg;
                     estimate_msg << boost::posix_time::to_simple_string(this->estimated_completion) << " ("
-                      << format_time(estimated_time_remaining) << " " << CPPTRANSPORT_MASTER_SCHEDULER_FROM_NOW << ")";
+                      << format_time(estimated_time_remaining) << " " << CPPTRANSPORT_WORKER_SCHEDULER_FROM_NOW << ")";
 
-                    notifications.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE, estimate_msg.str());
+                    notifications.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_COMPLETION_ESTIMATE, estimate_msg.str());
 									}
 							}
 
@@ -947,13 +884,13 @@ namespace transport
                 this->finished = true;
 
                 boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-                notifications.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE, boost::posix_time::to_simple_string(now));
+                notifications.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_WORK_COMPLETE, boost::posix_time::to_simple_string(now));
               }
 					}
 			}
 
 
-		std::list<master_scheduler::work_assignment> master_scheduler::assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+		std::list<work_assignment> worker_scheduler::assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 			{
 		    // generate a work assignment
 
@@ -975,7 +912,7 @@ namespace transport
 			}
 
 
-		std::list<master_scheduler::work_assignment> master_scheduler::assign_work_cpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+		std::list<work_assignment> worker_scheduler::assign_work_cpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 			{
 				// schedule work for a CPU only pool
 				// the strategy is to avoid cores becoming idle because they have run out of work
@@ -983,9 +920,9 @@ namespace transport
 		    // build a list of workers requiring assignments
 		    // storing a list of iterators is OK here; they would be invalidated by operations on this->worker_data,
 		    // but we won't be amending it within this function
-		    std::list< std::vector<master_scheduler::worker_information>::iterator > workers;
+		    std::list< std::vector<worker_information>::iterator > workers;
 
-		    for(std::vector<master_scheduler::worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+		    for(std::vector<worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
 			    {
 		        if(!t->is_assigned()) workers.push_back(t);
 			    }
@@ -993,7 +930,7 @@ namespace transport
 				// sort into ascending order of mean time per item
 				struct MeanTimeComparator
 					{
-						bool operator()(const std::vector<master_scheduler::worker_information>::iterator& A, const std::vector<master_scheduler::worker_information>::iterator& B)
+						bool operator()(const std::vector<worker_information>::iterator& A, const std::vector<worker_information>::iterator& B)
 							{
 								if(A->get_total_time() == 0) return(true);
 								if(B->get_total_time() == 0) return(false);
@@ -1026,7 +963,7 @@ namespace transport
 #ifdef CPPTRANSPORT_DEBUG_SCHEDULER
 				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", max allocation per worker=" << max_allocation_per_worker << ")";
 #endif
-				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t)
+				for(typename std::list< std::vector<worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t)
 					{
 				    std::list<unsigned int> items;
 
@@ -1075,14 +1012,14 @@ namespace transport
 									}
 							}
 
-						assignment_list.push_back(master_scheduler::work_assignment((*t)->get_number(), items));
+						assignment_list.push_back(work_assignment((*t)->get_number(), items));
 					}
 
 				return(assignment_list);
 			}
 
 
-		std::list<master_scheduler::work_assignment> master_scheduler::assign_work_gpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+		std::list<work_assignment> worker_scheduler::assign_work_gpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 			{
 				// currently we schedule work just by breaking it up between all workers
 				// TODO: in future, this should be replaced by a more intelligent scheduler
@@ -1090,9 +1027,9 @@ namespace transport
 				// build a list of workers requiring assignments
 				// storing a list of iterators is OK here; they would be invalidated by operations on this->worker_data,
 				// but we won't be amending it within this function
-		    std::list< std::vector<master_scheduler::worker_information>::iterator > workers;
+		    std::list< std::vector<worker_information>::iterator > workers;
 
-				for(std::vector<master_scheduler::worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+				for(std::vector<worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
 					{
 						if(!t->is_assigned()) workers.push_back(t);
 					}
@@ -1108,7 +1045,7 @@ namespace transport
 				unsigned int c = 0;
 		    std::list<unsigned int>::iterator next_item = this->queue.begin();
 
-				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t, ++c)
+				for(typename std::list< std::vector<worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t, ++c)
 					{
 				    std::list<unsigned int> items;
 
@@ -1118,14 +1055,14 @@ namespace transport
 								next_item++;
 							}
 
-						assignment_list.push_back(master_scheduler::work_assignment((*t)->get_number(), items));
+						assignment_list.push_back(work_assignment((*t)->get_number(), items));
 					}
 
 				return(assignment_list);
 			}
 
 
-    std::list<master_scheduler::work_assignment> master_scheduler::assign_work_mixed_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+    std::list<work_assignment> worker_scheduler::assign_work_mixed_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 	    {
 				throw runtime_exception(exception_type::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
 	    }
