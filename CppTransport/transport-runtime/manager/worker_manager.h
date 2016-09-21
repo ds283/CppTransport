@@ -29,6 +29,8 @@
 
 namespace transport
   {
+    
+    typedef std::tuple<double, double, double> load_data;
 
     class worker_management_data
       {
@@ -38,8 +40,7 @@ namespace transport
         //! construct a worker information record
         worker_management_data()
           : last_contact(boost::posix_time::second_clock::universal_time()),
-            busy_time(0),
-            idle_time(0)
+            load(0.0)
           {
           }
         
@@ -62,17 +63,11 @@ namespace transport
       
       public:
         
-        //! update busy and idle times
-        void update_busy_idle_time(boost::timer::nanosecond_type b, boost::timer::nanosecond_type i) { this->busy_time = b; this->idle_time = i; }
+        //! update load average
+        void update_load_average(double ld) { this->load = ld; }
         
-        //! get busy time
-        boost::timer::nanosecond_type get_busy_time() const { return this->busy_time; }
-        
-        //! get idle time
-        boost::timer::nanosecond_type get_idle_time() const { return this->idle_time; }
-        
-        //! compute load average
-        double get_load_average() const { return static_cast<double>(this->busy_time) / static_cast<double>(this->busy_time + this->idle_time); }
+        //! get load average
+        double get_load_average() const { return this->load; }
         
         
         // INTERNAL DATA
@@ -82,14 +77,8 @@ namespace transport
         //! time of last contact with this worker
         boost::posix_time::ptime last_contact;
         
-        
-        // LOAD TRACKING
-        
-        //! busy time reported by this worker
-        boost::timer::nanosecond_type busy_time;
-        
-        //! idle time reported by this worker
-        boost::timer::nanosecond_type idle_time;
+        //! current load average for this worker
+        double load;
         
       };
     
@@ -107,9 +96,9 @@ namespace transport
         
         //! constructor
         worker_manager(unsigned int nw)
-          : number_workers(nw)
+          : number_workers(nw),
+            current_data(worker_data.end())
           {
-            this->populate_new_records();
           }
         
         //! destructor is default
@@ -121,12 +110,7 @@ namespace transport
       public:
     
         //! set up records for a new task
-        void new_task();
-        
-      private:
-        
-        //! create a new set of records and populate them
-        void populate_new_records();
+        void new_task(const std::string& name);
         
         
         // INTERFACE -- CONTACT MANAGEMENT
@@ -135,6 +119,17 @@ namespace transport
     
         //! update time of last contact with a worker
         void update_contact_time(unsigned int worker, boost::posix_time::ptime time);
+        
+        
+        // INTERFACE -- WORKER LOAD MANAGEMENT
+        
+      public:
+        
+        //! update current load average for a given worker
+        void update_load_average(unsigned int worker, double load);
+        
+        //! compute current min, max, avg loads
+        load_data compute_load_data();
         
         
         // INTERFACE -- INTERROGATE DATA
@@ -146,7 +141,8 @@ namespace transport
    
         //! query for size
         size_t size() { return this->number_workers; }
-    
+
+        
         // INTERNAL DATA
         
       private:
@@ -154,41 +150,87 @@ namespace transport
         //! total number of workers in the pool
         const unsigned int number_workers;
         
-        //! list of worker records in forwards order, so most
-        //! recent task is at the back
-        std::vector< std::vector< worker_management_data > > worker_data;
+        //! database of worker data, organized by content group name
+        typedef std::map< std::string, std::unique_ptr< std::vector<worker_management_data> > > worker_db;
+        worker_db worker_data;
+        
+        //! pointer to currently active set of data records
+        worker_db::iterator current_data;
         
       };
     
     
-    void worker_manager::new_task()
+    void worker_manager::new_task(const std::string& task)
       {
-        this->populate_new_records();
-      }
+        // create new vector of appropriate size
+        std::unique_ptr< std::vector<worker_management_data> > data_group = std::make_unique< std::vector<worker_management_data> >(this->number_workers);
     
-    
-    void worker_manager::populate_new_records()
-      {
-        // create new vector of appropriate size at front of worker_data
-        this->worker_data.emplace_back(this->number_workers);
+        std::pair< worker_db::iterator, bool > res = this->worker_data.insert(std::make_pair(task, std::move(data_group)));
+        if(!res.second)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_WORKER_MANAGER_NEW_TASK_FAIL << " '" << task << "'";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+        
+        this->current_data = res.first;
       }
     
     
     void worker_manager::update_contact_time(unsigned int worker, boost::posix_time::ptime time)
       {
-        std::vector< worker_management_data >& worker_set = this->worker_data.back();
+        if(this->current_data == this->worker_data.end()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_WORKER_MANAGER_NO_ACTIVE_TASK);
+
+        std::vector< worker_management_data >& worker_set = *this->current_data->second;
         if(worker >= worker_set.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_WORKER_MANAGER_OUT_OF_RANGE);
         
         worker_set[worker].update_contact_time(time);
       }
     
     
+    void worker_manager::update_load_average(unsigned int worker, double load)
+      {
+        if(this->current_data == this->worker_data.end()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_WORKER_MANAGER_NO_ACTIVE_TASK);
+    
+        std::vector< worker_management_data >& worker_set = *this->current_data->second;
+        if(worker >= worker_set.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_WORKER_MANAGER_OUT_OF_RANGE);
+    
+        worker_set[worker].update_load_average(load);
+      }
+    
+    
     const worker_management_data& worker_manager::operator[](unsigned int worker) const
       {
-        const std::vector< worker_management_data >& worker_set = this->worker_data.back();
+        if(this->current_data == this->worker_data.end()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_WORKER_MANAGER_NO_ACTIVE_TASK);
+    
+        std::vector< worker_management_data >& worker_set = *this->current_data->second;
         if(worker >= worker_set.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_WORKER_MANAGER_OUT_OF_RANGE);
         
         return worker_set[worker];
+      }
+    
+    
+    load_data worker_manager::compute_load_data()
+      {
+        if(this->current_data == this->worker_data.end()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_WORKER_MANAGER_NO_ACTIVE_TASK);
+    
+        std::vector< worker_management_data >& worker_set = *this->current_data->second;
+
+        double min = 1.0;
+        double max = 0.0;
+        double total = 0.0;
+        
+        for(const worker_management_data& data : worker_set)
+          {
+            double load = data.get_load_average();
+            total += load;
+            
+            if(load < min) min = load;
+            if(load > max) max = load;
+          }
+        
+        double avg = worker_set.size() > 0 ? total / worker_set.size() : total;
+        return std::make_tuple(min, max, avg);
       }
     
   }

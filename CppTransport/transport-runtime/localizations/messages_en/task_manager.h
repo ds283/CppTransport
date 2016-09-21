@@ -61,8 +61,9 @@
 #define CPPTRANSPORT_PROCESSED_TASKS_A               "Task manager: processed"
 #define CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR      "database task"
 #define CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL        "database tasks"
-#define CPPTRANSPORT_PROCESSED_TASKS_C               "in wallclock time"
-#define CPPTRANSPORT_PROCESSED_TASKS_D               "time now"
+#define CPPTRANSPORT_PROCESSED_TASKS_WALLCLOCK       "in wallclock time"
+#define CPPTRANSPORT_PROCESSED_TASKS_MASTER_LOAD     "master load"
+#define CPPTRANSPORT_PROCESSED_TASKS_WORKER_LOAD     "worker load"
 
 #define CPPTRANSPORT_TASK_MANAGER_LABEL              "Task manager:"
 #define CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL      "Warning:"

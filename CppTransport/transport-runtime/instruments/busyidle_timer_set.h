@@ -266,6 +266,49 @@ namespace transport
       };
     
     
+    class BusyIdle_Context
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+        
+      public:
+        
+        //! constructor creates a new named timer
+        BusyIdle_Context(const std::string& name, busyidle_timer_set& set)
+          : timer_set(set),
+            managed_timer_name(name)
+          {
+            timer_set.add_new_timer(managed_timer_name);
+          }
+        
+        //! destructor ensures that the timer is stopped
+        ~BusyIdle_Context()
+          {
+            try
+              {
+                timer_set.stop_timer(this->managed_timer_name);
+              }
+            catch(runtime_exception& xe)
+              {
+                // suppress exceptions, which might occur if the managed timer has already been stopped
+                // before the context manager exits
+              }
+          }
+        
+        
+        // INTERNAL DATA
+        
+      private:
+        
+        //! name of managed timer
+        const std::string managed_timer_name;
+        
+        //! reference to busy/idle timer set
+        busyidle_timer_set& timer_set;
+        
+      };
+    
+    
     void busyidle_timer_set::add_new_timer(const std::string& name)
       {
         std::unique_ptr<busyidle_timer> timer = std::make_unique<busyidle_timer>();

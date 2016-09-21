@@ -195,7 +195,11 @@ namespace transport
 
         //! Master node: capture properties reported by workers
         //! (via WORKER_IDENTIFICATION messages) in preparation for a new task
-        void capture_worker_properties(boost::log::sources::severity_logger<base_writer::log_severity_level>& log);
+        template <typename WriterObject>
+        void capture_worker_properties(WriterObject& writer);
+        
+        //! Master node: query workers for global load averages
+        load_data compute_worker_loads();
 
         //! Master node: inform workers that there is no more work associated
         //! with the current task
@@ -405,7 +409,7 @@ namespace transport
         worker_scheduler work_scheduler;
         
         //! worker manager
-        worker_manager worker_manager;
+        worker_manager work_manager;
 
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;

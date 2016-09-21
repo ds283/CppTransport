@@ -98,6 +98,10 @@ namespace transport
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
         std::unique_ptr< integration_writer<number> > writer = this->repo->new_integration_task_content(rec, tags, this->get_rank(), 0, this->world.size());
+    
+        // create new timer for this task; the BusyIdle_Context manager
+        // ensures the timer is removed when the context manager is destroyed
+        BusyIdle_Context timing_context(writer->get_name(), this->busyidle_timers);
 
         // initialize the writer
         this->data_mgr->initialize_writer(*writer);
@@ -118,7 +122,7 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW INTEGRATION TASK '" << writer->get_name() << "@" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out the calculation
@@ -198,7 +202,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_integration_payload payload(writer.get_task_name(), tempdir_path, logdir_path, writer.get_workgroup_number());
+          MPI::new_integration_payload payload(writer.get_task_name(), writer.get_name(), tempdir_path, logdir_path, writer.get_workgroup_number());
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {

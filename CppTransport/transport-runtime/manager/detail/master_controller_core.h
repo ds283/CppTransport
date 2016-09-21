@@ -114,7 +114,7 @@ namespace transport
         cmdline_reports(le, ac),
         HTML_reports(le, ac),
         work_scheduler(w.size() > 0 ? static_cast<unsigned int>(w.size()-1) : 0),
-        worker_manager(w.size() > 0 ? static_cast<unsigned int>(w.size()-1) : 0)
+        work_manager(w.size() > 0 ? static_cast<unsigned int>(w.size()-1) : 0)
       {
         // create global busy/idle timer
         busyidle_timers.add_new_timer(CPPTRANSPORT_DEFAULT_TIMER);
@@ -963,17 +963,81 @@ namespace transport
                 msg << CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR;
               }
 
-            // compute total elapsed time
+            // compute total elapsed time and add to message
             boost::timer::nanosecond_type total_time = this->busyidle_timers.get_total_time(CPPTRANSPORT_DEFAULT_TIMER);
 
-            msg << " " << CPPTRANSPORT_PROCESSED_TASKS_C << " " << format_time(total_time);
-            msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_D << " ";
-        
-            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-            msg << boost::posix_time::to_simple_string(now);
-        
+            msg << " " << CPPTRANSPORT_PROCESSED_TASKS_WALLCLOCK << " " << format_time(total_time);
+            
+            // get master global load average and add to message
+            msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_MASTER_LOAD << " " << format_number(this->busyidle_timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER));
+            
+            // get worker global load averages and add to message
+            load_data data = this->compute_worker_loads();
+            msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_WORKER_LOAD << " " << format_number(std::get<0>(data)) << "," << format_number(std::get<1>(data)) << "," << format_number(std::get<2>(data));
+            
             this->msg(msg.str());
           }
+      }
+    
+    
+    template <typename number>
+    load_data master_controller<number>::compute_worker_loads()
+      {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+        
+        // set up instrument to journal the MPI communication if needed
+        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
+        
+        double max = 0.0;
+        double min = 1.0;
+        double total = 0.0;
+        unsigned int respondents = 0;
+        
+        // send QUERY_PERFORMANCE_DATA message to all workers
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+        for(unsigned int i = 0; i < this->world.size()-1; ++i)
+          {
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::QUERY_PERFORMANCE_DATA);
+          }
+        
+        // wait for all messages to be received
+        boost::mpi::wait_all(requests.begin(), requests.end());
+        
+        // collect REPORT_PERFORMANCE_DATA messages
+        while(respondents < this->world.size()-1)
+          {
+            timers.idle();
+            boost::mpi::status stat = this->world.probe();
+            
+            timers.busy();
+            switch(stat.tag())
+              {
+                case MPI::REPORT_PERFORMANCE_DATA:
+                  {
+                    MPI::performance_data_payload payload;
+                    this->world.recv(stat.source(), MPI::REPORT_PERFORMANCE_DATA, payload);
+                    ++respondents;
+                    
+                    double load = payload.get_load_average();
+                    total += load;
+                    
+                    if(load > max) max = load;
+                    if(load < min) min = load;
+                    break;
+                  }
+    
+                default:
+                  {
+                    // ignore unexpected messages
+                    this->world.recv(stat.source(), stat.tag());
+                    break;
+                  }
+              }
+          }
+        
+        double avg = respondents > 0 ? total / respondents : total;
+        return std::make_tuple(min, max, avg);
       }
 
 
@@ -1058,7 +1122,8 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::capture_worker_properties(boost::log::sources::severity_logger<base_writer::log_severity_level>& log)
+    template <typename WriterObject>
+    void master_controller<number>::capture_worker_properties(WriterObject& writer)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
@@ -1066,16 +1131,20 @@ namespace transport
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
+        boost::log::sources::severity_logger< base_writer::log_severity_level >& log = writer.get_log();
+
         // rebuild information about our workers; this information
         // it is updated whenever we start a new task, because the details can vary
         // between model instances (eg. CPU or GPU backends)
         this->work_scheduler.reset();
-        this->worker_manager.new_task();
+        this->work_manager.new_task(writer.get_name());
 
         while(!this->work_scheduler.is_ready())
           {
+            timers.idle();
             boost::mpi::status stat = this->world.probe();
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::WORKER_IDENTIFICATION:
@@ -1162,6 +1231,11 @@ namespace transport
             notifications.write(update_msg, reporting::key_value::print_options::fixed_width);
 
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: " << update_msg.str();
+            
+            double load_task = this->busyidle_timers.get_load_average(writer.get_name());
+            double load_global = this->busyidle_timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER);
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Master node load average for this task = " << format_number(load_task) << ", global average = " << format_number(load_global);
+
             this->log_worker_metadata(writer);
           }
       }
@@ -1178,7 +1252,7 @@ namespace transport
         for(unsigned int i = 0; i < this->work_scheduler.size(); ++i)
           {
             const worker_information& info = this->work_scheduler[i];
-            const worker_management_data& data = this->worker_manager[i];
+            const worker_management_data& data = this->work_manager[i];
             
             reporting::key_value kv(this->local_env, this->arg_cache);
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_NUMBER, boost::lexical_cast<std::string>(info.get_number()));
@@ -1186,11 +1260,12 @@ namespace transport
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_ASSIGNED, info.is_assigned() ? CPPTRANSPORT_WORKER_DATA_YES : CPPTRANSPORT_WORKER_DATA_NO);
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_INTEGRATION_TIME, format_time(info.get_total_time()));
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_MEAN_TIME_PER_ITEM, format_time(info.get_mean_time_per_work_item()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LOAD_AVERAGE, format_number(data.get_load_average()));
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_LAST_CONTACT, boost::posix_time::to_simple_string(data.get_last_contact_time()));
             
             std::ostringstream msg;
             kv.set_tiling(true);
-            kv.write(msg);
+            kv.write(msg, reporting::key_value::print_options::fixed_width);
             
             if(!write_separator)
               {
@@ -1312,7 +1387,7 @@ namespace transport
         std::list< std::unique_ptr<aggregation_record> > aggregation_queue;
 
         // wait for workers to report their characteristics
-        this->capture_worker_properties(log);
+        this->capture_worker_properties(writer);
 
         // CloseDownContext object is responsible for calling this->workers_end_of_task()
         // when needed; should do so even if we exit this function via an exception
@@ -1349,7 +1424,7 @@ namespace transport
                 last_msg_time = boost::posix_time::second_clock::universal_time();
                 emit_agg_queue_msg = true;
 
-                this->worker_manager.update_contact_time(this->worker_number(stat->source()), last_msg_time);
+                this->work_manager.update_contact_time(this->worker_number(stat->source()), last_msg_time);
 
                 switch(stat->tag())
                   {
@@ -1423,6 +1498,7 @@ namespace transport
 
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_integration_time(), payload.get_num_integrations());
+                        this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
                         this->update_integration_metadata(payload, int_metadata);
                         if(payload.get_num_failures() > 0) writer.merge_failure_list(payload.get_failed_serials());
 
@@ -1437,6 +1513,7 @@ namespace transport
                         BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
 
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_integration_time(), payload.get_num_integrations());
+                        this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
                         this->update_integration_metadata(payload, int_metadata);
                         if(payload.get_num_failures() > 0) writer.merge_failure_list(payload.get_failed_serials());
 
@@ -1453,6 +1530,7 @@ namespace transport
 
                         // mark this scheduler as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
+                        this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
                         this->update_output_metadata(payload, out_metadata);
                         this->update_content_group_list(payload, content_groups);
 
@@ -1468,6 +1546,7 @@ namespace transport
 
                         // mark this scheduler as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
+                        this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
                         this->update_output_metadata(payload, out_metadata);
                         this->update_content_group_list(payload, content_groups);
 
@@ -1484,6 +1563,7 @@ namespace transport
 
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
+                        this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
                         this->update_output_metadata(payload, out_metadata);
                         this->update_content_group_list(payload, content_groups);
 
@@ -1499,6 +1579,7 @@ namespace transport
 
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
+                        this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
                         this->update_output_metadata(payload, out_metadata);
                         this->update_content_group_list(payload, content_groups);
 
@@ -1508,8 +1589,10 @@ namespace transport
 
                     case MPI::WORKER_CLOSE_DOWN:
                       {
-                        this->world.recv(stat->source(), MPI::WORKER_CLOSE_DOWN);
+                        MPI::performance_data_payload payload;
+                        this->world.recv(stat->source(), MPI::WORKER_CLOSE_DOWN, payload);
                         this->work_scheduler.mark_inactive(this->worker_number(stat->source()));
+                        this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
 
                         unsigned int num_active = this->work_scheduler.get_number_active();
                         BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising close-down after end-of-work; " << num_active << " worker" << (num_active != 1 ? "s" : "") << " still active";

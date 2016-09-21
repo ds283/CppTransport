@@ -103,8 +103,8 @@ namespace transport
         void dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload);
 
         //! Slave node: process an integration queue
-        template <typename TaskObject, typename BatchObject>
-        void schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, unsigned int state_size);
+        template <typename TaskObject, typename BatchObject, typename PayloadObject>
+        void schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, const PayloadObject& payload, unsigned int state_size);
 
         //! Push a temporary container to the master process
         void push_temp_container(generic_batcher& batcher, unsigned int message, std::string log_message);
