@@ -706,7 +706,7 @@ set(TRANSPORT_RUNTIME_FILES
 
 set(TRANSPORT_RUNTIME_INSTRUMENTS_FILES
   transport-runtime/instruments/timing_instrument.h
-  transport-runtime/instruments/busyidle_timing_instrument.h
+  transport-runtime/instruments/busyidle_timer_set.h
   )
 
 set(TRANSPORT_RUNTIME_LOCALIZATIONS_FILES
@@ -759,6 +759,7 @@ set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/task_manager.h
   transport-runtime/localizations/messages_en/transaction_manager.h
   transport-runtime/localizations/messages_en/work_journal.h
+  transport-runtime/localizations/messages_en/busyidle_timer_set.h
   )
 
 set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES

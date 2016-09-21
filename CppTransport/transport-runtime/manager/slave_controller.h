@@ -53,7 +53,7 @@
 
 #include "transport-runtime/utilities/formatter.h"
 
-#include "transport-runtime/instruments/busyidle_timing_instrument.h"
+#include "transport-runtime/instruments/busyidle_timer_set.h"
 
 #include "transport-runtime/defaults.h"
 #include "transport-runtime/messages.h"

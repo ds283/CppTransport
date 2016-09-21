@@ -81,6 +81,9 @@ namespace transport
     constexpr auto         CPPTRANSPORT_HTML_RESOURCE_DIRECTORY            = "HTML";
 
     constexpr auto         CPPTRANSPORT_DEFAULT_COMPLETION_UNSET           = "unset";
+    
+    // name of global timer used in master and slave controllers
+    constexpr auto         CPPTRANSPORT_DEFAULT_TIMER                      = "global";
 
     // default storage limit on nodes - 500 Mb
     // on a machine with 8 workers, that would give 4000 Mb or 4 Gb

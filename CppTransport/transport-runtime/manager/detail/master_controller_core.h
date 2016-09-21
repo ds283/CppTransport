@@ -32,6 +32,7 @@
 #include "transport-runtime/repository/repository_graphkit.h"
 
 #include "transport-runtime/build_data.h"
+#include "transport-runtime/defaults.h"
 
 #include "boost/timer/timer.hpp"
 
@@ -112,12 +113,11 @@ namespace transport
         msg(message_handler(le, ac)),
         cmdline_reports(le, ac),
         HTML_reports(le, ac),
-        work_scheduler(w.size()-1),
-        worker_manager(w.size()-1)
+        work_scheduler(w.size() > 0 ? static_cast<unsigned int>(w.size()-1) : 0),
+        worker_manager(w.size() > 0 ? static_cast<unsigned int>(w.size()-1) : 0)
       {
-        // stop both busy and idle timers
-        busy_timer.stop();
-        idle_timer.stop();
+        // create global busy/idle timer
+        busyidle_timers.add_new_timer(CPPTRANSPORT_DEFAULT_TIMER);
       }
 
 
@@ -125,7 +125,7 @@ namespace transport
     void master_controller<number>::process_arguments(int argc, char* argv[])
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         unsigned int width = this->local_env.detect_terminal_width();
 
@@ -329,6 +329,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::warn_unrecognized_switches(boost::program_options::parsed_options& options)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         std::vector<std::string> unrecognized_options = boost::program_options::collect_unrecognized(options.options, boost::program_options::exclude_positional);
         if(unrecognized_options.size() > 0)
           {
@@ -345,6 +348,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_generic_switches(boost::program_options::variables_map& option_map, boost::program_options::options_description& description)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         bool emitted_version = false;
 
         if(option_map.count(CPPTRANSPORT_SWITCH_VERSION))
@@ -387,6 +393,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_configuration_switches(boost::program_options::variables_map& option_map)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG)) this->arg_cache.set_verbose(true);
 
         // add search paths if any were specified
@@ -457,6 +466,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_repository_switches(boost::program_options::variables_map& option_map)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER)) this->arg_cache.set_recovery_mode(true);
 
         if(option_map.count(CPPTRANSPORT_SWITCH_STATUS))
@@ -477,6 +489,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_action_switches(boost::program_options::variables_map& option_map)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         repository_toolkit<number> toolkit(*this->repo, this->err, this->warn, this->msg);
 
         try
@@ -539,6 +554,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_journal_switches(boost::program_options::variables_map& option_map)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // process Gantt chart specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_GANTT_CHART))
           {
@@ -558,6 +576,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_job_switches(boost::program_options::variables_map& option_map)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         if(option_map.count(CPPTRANSPORT_SWITCH_CREATE)) this->arg_cache.set_create_mode(true);
 
         // process checkpoint timer specification, if provided
@@ -584,6 +605,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_plot_switches(boost::program_options::variables_map& option_map)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // process plotting environment, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_PLOT_STYLE_LONG))
           {
@@ -612,7 +636,7 @@ namespace transport
     void master_controller<number>::pre_process_tasks()
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // perform recovery if requested
         if(this->arg_cache.get_recovery_mode() && this->repo) this->repo->perform_recovery(*this->data_mgr, this->get_rank());
@@ -630,7 +654,7 @@ namespace transport
     void master_controller<number>::post_process_tasks()
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         if(this->repo)
           {
@@ -655,6 +679,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::autocomplete_task_schedule()
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // check whether any work is required: if there are no jobs there is no need for autocompletion
         if(this->job_queue.empty()) return;
 
@@ -698,6 +725,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::prune_tasks_with_content(std::set<std::string>& required_tasks)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // work through list of tasks needed as dependencies, deciding whether they have content groups
         for(std::set<std::string>::const_iterator t = required_tasks.begin(); t != required_tasks.end(); /* intentionally no update step */)
           {
@@ -715,6 +745,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::prune_paired_tasks(std::set<std::string>& required_tasks)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // build list of all tasks that will be processed, including tasks explicitly specified on the command line
         std::set<std::string>& tasks_to_schedule = required_tasks;
         for(const job_descriptor& job : this->job_queue)
@@ -767,6 +800,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::insert_job_descriptors(const std::set<std::string>& required_tasks, const std::list<std::string>& order)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // set up tags
         std::list<std::string> tags;
         if(this->option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
@@ -794,6 +830,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::validate_tasks()
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         for(std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); /* intentionally no update step */)
           {
             const job_descriptor& job = *t;
@@ -827,7 +866,7 @@ namespace transport
     void master_controller<number>::execute_tasks()
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         if(!(this->get_rank() == 0)) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_EXEC_SLAVE);
 
@@ -836,8 +875,7 @@ namespace transport
         // when it goes out of scope its destructor will send TERMINATE messages
         // this way, even if we break out of this function by an exception,
         // the workers should all get TERMINATE instructions
-        WorkerBundle<number> bundle(this->environment, this->world, this->repo.get(), this->journal, this->arg_cache,
-                                    this->busy_timer, this->idle_timer);
+        WorkerBundle<number> bundle(this->environment, this->world, this->repo.get(), this->journal, this->arg_cache, this->busyidle_timers);
 
         if(!this->repo)
           {
@@ -846,7 +884,7 @@ namespace transport
           }
         
         // validate that requested tasks can be read from the database
-        // any whic can't be read are removed from the job queue and a warning issued
+        // any that can't be read are removed from the job queue and a warning issued
         this->validate_tasks();
     
         // schedule extra tasks if any explicitly-required tasks depend on content from
@@ -924,7 +962,11 @@ namespace transport
               {
                 msg << CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR;
               }
-            msg << " " << CPPTRANSPORT_PROCESSED_TASKS_C << " " << format_time(this->busy_timer.elapsed().wall + this->idle_timer.elapsed().wall);
+
+            // compute total elapsed time
+            boost::timer::nanosecond_type total_time = this->busyidle_timers.get_total_time(CPPTRANSPORT_DEFAULT_TIMER);
+
+            msg << " " << CPPTRANSPORT_PROCESSED_TASKS_C << " " << format_time(total_time);
             msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_D << " ";
         
             boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
@@ -939,7 +981,7 @@ namespace transport
     void master_controller<number>::process_task(const job_descriptor& job)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         std::unique_ptr< task_record<number> > record;
 
@@ -1019,7 +1061,7 @@ namespace transport
     void master_controller<number>::capture_worker_properties(boost::log::sources::severity_logger<base_writer::log_severity_level>& log)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
@@ -1062,7 +1104,7 @@ namespace transport
     void master_controller<number>::workers_end_of_task(boost::log::sources::severity_logger<base_writer::log_severity_level>& log)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Notifying workers of end-of-work";
 
@@ -1082,7 +1124,7 @@ namespace transport
     void master_controller<number>::check_for_progress_update(WriterObject& writer)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // emit update message giving current status if required
         if(this->work_scheduler.update_available())     // an update exists
@@ -1130,7 +1172,7 @@ namespace transport
     void master_controller<number>::log_worker_metadata(WriterObject& writer)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         bool write_separator = false;
         for(unsigned int i = 0; i < this->work_scheduler.size(); ++i)
@@ -1167,7 +1209,7 @@ namespace transport
     void master_controller<number>::set_local_checkpoint_interval(unsigned int m)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
@@ -1191,7 +1233,7 @@ namespace transport
     void master_controller<number>::unset_local_checkpoint_interval()
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
@@ -1215,7 +1257,7 @@ namespace transport
     void master_controller<number>::assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
@@ -1259,7 +1301,7 @@ namespace transport
                                                  WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         bool success = true;
 

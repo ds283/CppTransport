@@ -214,10 +214,7 @@ namespace transport
         // TIMERS
         
         //! track time spent performing work
-        boost::timer::cpu_timer busy_timer;
-        
-        //! track time spent idling
-        boost::timer::cpu_timer idle_timer;
+        busyidle_timer_set busyidle_timers;
 
       };
 

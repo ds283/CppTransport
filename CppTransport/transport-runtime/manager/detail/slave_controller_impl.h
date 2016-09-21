@@ -30,6 +30,8 @@
 #include "transport-runtime/manager/detail/slave_controller_decl.h"
 #include "transport-runtime/manager/detail/slave_message_buffer.h"
 
+#include "transport-runtime/defaults.h"
+
 
 namespace transport
   {
@@ -47,9 +49,8 @@ namespace transport
         warn(warning_handler(le, ac)),
         msg(message_handler(le, ac))
       {
-        // start busy timer and stop idle timer
-        busy_timer.stop();
-        idle_timer.stop();
+        // create global busy/idle timer
+        busyidle_timers.add_new_timer(CPPTRANSPORT_DEFAULT_TIMER);
       }
 
 
@@ -57,7 +58,7 @@ namespace transport
     void slave_controller<number>::wait_for_tasks(void)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         if(this->get_rank() == 0) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_WAIT_MASTER);
 
@@ -139,7 +140,7 @@ namespace transport
     void slave_controller<number>::initialize(const MPI::slave_setup_payload& payload)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         try
           {
@@ -172,9 +173,9 @@ namespace transport
     void slave_controller<number>::send_worker_data(model<number>* m)
       {
         assert(m != nullptr);
-
+    
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // interrogate model instance for capacity and priority
         MPI::slave_information_payload payload(m->get_backend_type(), m->get_backend_memory(), m->get_backend_priority());
@@ -189,7 +190,7 @@ namespace transport
     void slave_controller<number>::send_worker_data(void)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // no model instance, so default to a CPU with 0 capacity and unit priority
         MPI::slave_information_payload payload(worker_type::cpu, 0, 1);
@@ -204,7 +205,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_integration_payload& payload)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
@@ -266,9 +267,9 @@ namespace transport
     void slave_controller<number>::dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload)
       {
         assert(tk != nullptr);
-
+    
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         model<number>* m = tk->get_model();
         assert(m != nullptr);
@@ -328,7 +329,7 @@ namespace transport
         assert(m != nullptr);   // should be guaranteed
     
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // dispatch integration to the underlying model
         bool complete = false;
@@ -438,7 +439,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_derived_content_payload& payload)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
@@ -503,7 +504,7 @@ namespace transport
         assert(tk != nullptr);  // should be guaranteed
     
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
         
         // send scheduling information to the master process; here, report ourselves as a CPU
         // since there is currently no capacity to process output tasks on a GPU
@@ -684,7 +685,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_postintegration_payload& payload)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
@@ -744,9 +745,9 @@ namespace transport
     void slave_controller<number>::dispatch_postintegration_task(postintegration_task<number>* tk, const MPI::new_postintegration_payload& payload)
       {
         assert(tk != nullptr);
-
+    
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // send scheduling information to the master process; here, report ourselves as a CPU
         // since there is currently no capacity to process postintegration tasks on a GPU
@@ -905,9 +906,9 @@ namespace transport
       {
         assert(tk != nullptr);    // should be guaranteed
         assert(ptk != nullptr);   // should be guaranteed
-
+    
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -1041,7 +1042,7 @@ namespace transport
     void slave_controller<number>::push_temp_container(generic_batcher& batcher, unsigned int message, std::string log_message)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Sending " << log_message << " message for container " << batcher.get_container_path();
 
@@ -1058,7 +1059,7 @@ namespace transport
                                                         const std::list<std::string>& used_groups)
       {
         // capture busy/idle timers and switch to busy mode
-        busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+        busyidle_instrument timers(this->busyidle_timers);
 
         assert(pipe != nullptr);
         assert(product != nullptr);

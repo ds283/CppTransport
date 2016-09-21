@@ -58,7 +58,7 @@
 #include "transport-runtime/reporting/command_line.h"
 #include "transport-runtime/reporting/HTML_report.h"
 
-#include "transport-runtime/instruments/busyidle_timing_instrument.h"
+#include "transport-runtime/instruments/busyidle_timer_set.h"
 
 
 #include "boost/mpi.hpp"
@@ -435,10 +435,7 @@ namespace transport
         // TIMERS
     
         //! track time spent performing work
-        boost::timer::cpu_timer busy_timer;
-    
-        //! track time spent idling
-        boost::timer::cpu_timer idle_timer;
+        busyidle_timer_set busyidle_timers;
 
       };
 
@@ -457,7 +454,7 @@ namespace transport
             //! constructor performs setup of workers belonging to the MPI environment
             WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
                          repository<number>* r, work_journal& j, argument_cache& a,
-                         boost::timer::cpu_timer& bt, boost::timer::cpu_timer& it);
+                         busyidle_timer_set& t);
 
             //! destructor handles terminatiaon of workers belonging to the MPI environment
             ~WorkerBundle();
@@ -491,28 +488,25 @@ namespace transport
             //! reference to argument cache
             argument_cache& args;
             
-            //! reference to busy timer
-            boost::timer::cpu_timer& busy_timer;
-
-            //! reference to idle timer
-            boost::timer::cpu_timer& idle_timer;
+            //! busy/idle timing collection
+            busyidle_timer_set& busyidle_timers;
+            
           };
 
 
         template <typename number>
         WorkerBundle<number>::WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
                                            repository<number>* r, work_journal& j, argument_cache& a,
-                                           boost::timer::cpu_timer& bt, boost::timer::cpu_timer& it)
+                                           busyidle_timer_set& t)
           : env(e),
             world(c),
             repo(r),
             journal(j),
             args(a),
-            busy_timer(bt),
-            idle_timer(it)
+            busyidle_timers(t)
           {
             // capture busy/idle timers and switch to busy mode
-            busyidle_timing_instrument timers(busy_timer, idle_timer);
+            busyidle_instrument timers(busyidle_timers);
             
             // set up instrument to journal the MPI communication if needed
             journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
@@ -542,7 +536,7 @@ namespace transport
         WorkerBundle<number>::~WorkerBundle()
           {
             // capture busy/idle timers and switch to busy mode
-            busyidle_timing_instrument timers(this->busy_timer, this->idle_timer);
+            busyidle_instrument timers(this->busyidle_timers);
 
             // set up instrument to journal the MPI communication if needed
             journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);

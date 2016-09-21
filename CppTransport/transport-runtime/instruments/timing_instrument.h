@@ -46,7 +46,7 @@ namespace transport
       
       public:
         
-        //! constructor
+        //! constructor captures timer and records its state
         timing_instrument(boost::timer::cpu_timer& cp, timing_instrument_mode m = timing_instrument_mode::continuous_timing)
           : captured_timer(cp),
             mode(m),
@@ -57,7 +57,7 @@ namespace transport
             if(was_stopped) captured_timer.resume();
           }
         
-        //! destructor
+        //! destructor restores state
         ~timing_instrument()
           {
             // stop timer if it was stopped on capture, provided stop() has not already been called
@@ -77,7 +77,7 @@ namespace transport
       
       public:
         
-        //! stop the timer (if it was stopped on capture)
+        //! stop the timer if our current policies allow it
         void stop()
           {
             // stop timer if it was stopped on capture, and flag that stop() has been called
@@ -116,7 +116,7 @@ namespace transport
         timing_instrument_mode mode;
         
         //! record whether timer was stopped on construction
-        bool was_stopped;
+        const bool was_stopped;
         
         //! record whether stop() has been called on this instrument
         bool stopped;
