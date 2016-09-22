@@ -194,7 +194,8 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW POSTINTEGRATION TASK '" << writer->get_name() << "@" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW POSTINTEGRATION TASK '" << writer->get_name() << "@" << tk->get_name()
+                                                                                  << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out the calculation
@@ -270,7 +271,9 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW PAIRED POSTINTEGRATION TASKS '" << p_writer->get_name() << "@" << tk->get_name()
+                                                                                    << "' & '" << i_writer->get_name() << "@" << ptk->get_name()
+                                                                                    << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << *ptk;
 
         // instruct workers to carry out the calculation
