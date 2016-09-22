@@ -969,11 +969,15 @@ namespace transport
             msg << " " << CPPTRANSPORT_PROCESSED_TASKS_WALLCLOCK << " " << format_time(total_time);
             
             // get master global load average and add to message
-            msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_MASTER_LOAD << " " << format_number(this->busyidle_timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER));
+            msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_MASTER_LOAD
+                << " " << format_number(this->busyidle_timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER), 2);
             
             // get worker global load averages and add to message
             load_data data = this->compute_worker_loads();
-            msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_WORKER_LOAD << " " << format_number(std::get<0>(data)) << "," << format_number(std::get<1>(data)) << "," << format_number(std::get<2>(data));
+            msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_WORKER_LOAD
+                << " " << format_number(std::get<0>(data), 2)
+                << "," << format_number(std::get<1>(data), 2)
+                << "," << format_number(std::get<2>(data), 2);
             
             this->msg(msg.str());
           }
@@ -1260,7 +1264,7 @@ namespace transport
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_ASSIGNED, info.is_assigned() ? CPPTRANSPORT_WORKER_DATA_YES : CPPTRANSPORT_WORKER_DATA_NO);
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_INTEGRATION_TIME, format_time(info.get_total_time()));
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_MEAN_TIME_PER_ITEM, format_time(info.get_mean_time_per_work_item()));
-            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LOAD_AVERAGE, format_number(data.get_load_average()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LOAD_AVERAGE, format_number(data.get_load_average(), 2));
             kv.insert_back(CPPTRANSPORT_WORKER_DATA_LAST_CONTACT, boost::posix_time::to_simple_string(data.get_last_contact_time()));
             
             std::ostringstream msg;
