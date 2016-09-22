@@ -1234,11 +1234,13 @@ namespace transport
             update_data.write(update_msg, reporting::key_value::print_options::fixed_width);
             notifications.write(update_msg, reporting::key_value::print_options::fixed_width);
 
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: " << update_msg.str();
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: "
+                                                                                     << update_msg.str();
             
             double load_task = this->busyidle_timers.get_load_average(writer.get_name());
             double load_global = this->busyidle_timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER);
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Master node load average for this task = " << format_number(load_task) << ", global average = " << format_number(load_global);
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Master node load average for this task = " << format_number(load_task, 2)
+                                                                                     << ", global average = " << format_number(load_global, 2);
 
             this->log_worker_metadata(writer);
           }
