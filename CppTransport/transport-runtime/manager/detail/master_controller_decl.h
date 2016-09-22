@@ -170,7 +170,7 @@ namespace transport
         unsigned int get_rank(void) const { return(static_cast<unsigned int>(this->world.rank())); }
 
         //! Map worker number to communicator rank (note: has to be duplicated in WorkerBundle)
-        // TODO: replace with a better abstraction (which can be shared with WorkerBundle)
+        // TODO: replace with a better abstraction (which can be shared with WorkerPool_Context)
         constexpr unsigned int worker_rank(unsigned int worker_number) const { return(worker_number+1); }
 
         //! Map communicator rank to worker number
@@ -448,7 +448,7 @@ namespace transport
       {
 
         template <typename number>
-        class WorkerBundle
+        class WorkerPool_Context
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -456,12 +456,12 @@ namespace transport
           public:
 
             //! constructor performs setup of workers belonging to the MPI environment
-            WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
+            WorkerPool_Context(boost::mpi::environment& e, boost::mpi::communicator& c,
                          repository<number>* r, work_journal& j, argument_cache& a,
                          busyidle_timer_set& t);
 
             //! destructor handles terminatiaon of workers belonging to the MPI environment
-            ~WorkerBundle();
+            ~WorkerPool_Context();
 
 
             // INTERNAL FUNCTIONS
@@ -499,7 +499,7 @@ namespace transport
 
 
         template <typename number>
-        WorkerBundle<number>::WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
+        WorkerPool_Context<number>::WorkerPool_Context(boost::mpi::environment& e, boost::mpi::communicator& c,
                                            repository<number>* r, work_journal& j, argument_cache& a,
                                            busyidle_timer_set& t)
           : env(e),
@@ -537,7 +537,7 @@ namespace transport
 
 
         template <typename number>
-        WorkerBundle<number>::~WorkerBundle()
+        WorkerPool_Context<number>::~WorkerPool_Context()
           {
             // capture busy/idle timers and switch to busy mode
             busyidle_instrument timers(this->busyidle_timers);

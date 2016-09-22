@@ -871,11 +871,11 @@ namespace transport
         if(!(this->get_rank() == 0)) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_EXEC_SLAVE);
 
         // set up worker scope
-        // WorkerBundle will send WORKER_SETUP messages to all workers if the repository is not null
+        // WorkerPool_Context will send WORKER_SETUP messages to all workers if the repository is not null
         // when it goes out of scope its destructor will send TERMINATE messages
         // this way, even if we break out of this function by an exception,
         // the workers should all get TERMINATE instructions
-        WorkerBundle<number> bundle(this->environment, this->world, this->repo.get(), this->journal, this->arg_cache, this->busyidle_timers);
+        WorkerPool_Context<number> bundle(this->environment, this->world, this->repo.get(), this->journal, this->arg_cache, this->busyidle_timers);
 
         if(!this->repo)
           {
