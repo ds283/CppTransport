@@ -71,8 +71,8 @@ namespace transport
 
     namespace master_controller_impl
       {
-        template <typename number> class CheckpointContext;
-        template <typename number> class CloseDownContext;
+        template <typename number> class Checkpoint_Context;
+        template <typename number> class CloseDown_Context;
       }
 
     // aggregator classes forward-declared in aggregation_forward_declare.h
@@ -228,8 +228,8 @@ namespace transport
         //! Master node: instruct workers to unset any local checkpoint interval
         void unset_local_checkpoint_interval();
 
-        friend class CheckpointContext<number>;
-        friend class CloseDownContext<number>;
+        friend class Checkpoint_Context<number>;
+        friend class CloseDown_Context<number>;
 
 
         // MASTER INTEGRATION TASKS
@@ -559,7 +559,7 @@ namespace transport
 
 
         template <typename number>
-        class CheckpointContext
+        class Checkpoint_Context
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -567,14 +567,14 @@ namespace transport
           public:
 
             //! constructor accepts and stores reference to controller object
-            CheckpointContext(master_controller<number>& c)
+            Checkpoint_Context(master_controller<number>& c)
               : controller(c),
                 unset(false)
               {
               }
 
             //! destructor arranges for MPI message to reset checkpoint interval, if required
-            ~CheckpointContext();
+            ~Checkpoint_Context();
 
 
             // INTERFACE
@@ -599,14 +599,14 @@ namespace transport
 
 
         template <typename number>
-        CheckpointContext<number>::~CheckpointContext()
+        Checkpoint_Context<number>::~Checkpoint_Context()
           {
             if(this->unset) controller.unset_local_checkpoint_interval();
           }
 
 
         template <typename number>
-        class CloseDownContext
+        class CloseDown_Context
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -614,7 +614,7 @@ namespace transport
           public:
 
             //! constructor accepts and stores reference to controller object
-            CloseDownContext(master_controller<number>& c, boost::log::sources::severity_logger< base_writer::log_severity_level >& l)
+            CloseDown_Context(master_controller<number>& c, boost::log::sources::severity_logger< base_writer::log_severity_level >& l)
               : controller(c),
                 log(l),
                 sent_closedown(false)
@@ -622,7 +622,7 @@ namespace transport
               }
 
             //! destructor arranges for MPI closedown message to be sent, if required
-            ~CloseDownContext() { if(!this->sent_closedown) this->send_closedown(); }
+            ~CloseDown_Context() { if(!this->sent_closedown) this->send_closedown(); }
 
 
             // INTERFACE

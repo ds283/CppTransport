@@ -1393,9 +1393,9 @@ namespace transport
         // wait for workers to report their characteristics
         this->capture_worker_properties(writer);
 
-        // CloseDownContext object is responsible for calling this->workers_end_of_task()
+        // CloseDown_Context object is responsible for calling this->workers_end_of_task()
         // when needed; should do so even if we exit this function via an exception
-        CloseDownContext<number> closedown_handler(*this, log);
+        CloseDown_Context<number> closedown_handler(*this, log);
 
         // record time of last-received message, so we can determine for how long we have been idle
         boost::posix_time::ptime last_msg_time = boost::posix_time::second_clock::universal_time();

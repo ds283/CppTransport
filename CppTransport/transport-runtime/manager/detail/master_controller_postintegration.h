@@ -225,7 +225,7 @@ namespace transport
 
         // check whether the parent integration task has a default checkpoint interval
         // if so, instruct workers to change their interval unless we have been overriden by the command line
-        CheckpointContext<number> checkpoint_context(*this);
+        Checkpoint_Context<number> checkpoint_context(*this);
         if(ptk->has_default_checkpoint() && this->arg_cache.get_checkpoint_interval() == 0)
           {
             boost::optional<unsigned int> interval = ptk->get_default_checkpoint();
