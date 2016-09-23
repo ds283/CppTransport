@@ -1257,17 +1257,17 @@ namespace transport
         bool write_separator = false;
         for(unsigned int i = 0; i < this->work_scheduler.size(); ++i)
           {
-            const worker_information& info = this->work_scheduler[i];
-            const worker_management_data& data = this->work_manager[i];
+            const worker_scheduling_data& scheduling_data = this->work_scheduler[i];
+            const worker_management_data& management_data = this->work_manager[i];
             
             reporting::key_value kv(this->local_env, this->arg_cache);
-            kv.insert_back(CPPTRANSPORT_WORKER_DATA_NUMBER, boost::lexical_cast<std::string>(info.get_number()));
-            kv.insert_back(CPPTRANSPORT_WORKER_DATA_PROCESSED_ITEMS, boost::lexical_cast<std::string>(info.get_number_items()));
-            kv.insert_back(CPPTRANSPORT_WORKER_DATA_ASSIGNED, info.is_assigned() ? CPPTRANSPORT_WORKER_DATA_YES : CPPTRANSPORT_WORKER_DATA_NO);
-            kv.insert_back(CPPTRANSPORT_WORKER_DATA_INTEGRATION_TIME, format_time(info.get_total_time()));
-            kv.insert_back(CPPTRANSPORT_WORKER_DATA_MEAN_TIME_PER_ITEM, format_time(info.get_mean_time_per_work_item()));
-            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LOAD_AVERAGE, format_number(data.get_load_average(), 2));
-            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LAST_CONTACT, boost::posix_time::to_simple_string(data.get_last_contact_time()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_NUMBER, boost::lexical_cast<std::string>(scheduling_data.get_number()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_PROCESSED_ITEMS, boost::lexical_cast<std::string>(scheduling_data.get_number_items()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_ASSIGNED, scheduling_data.is_assigned() ? CPPTRANSPORT_WORKER_DATA_YES : CPPTRANSPORT_WORKER_DATA_NO);
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_INTEGRATION_TIME, format_time(scheduling_data.get_total_time()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_MEAN_TIME_PER_ITEM, format_time(scheduling_data.get_mean_time_per_work_item()));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LOAD_AVERAGE, format_number(management_data.get_load_average(), 2));
+            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LAST_CONTACT, boost::posix_time::to_simple_string(management_data.get_last_contact_time()));
             
             std::ostringstream msg;
             kv.set_tiling(true);

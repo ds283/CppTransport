@@ -102,7 +102,7 @@ namespace transport
 
     
     //! Worker information class
-    class worker_information
+    class worker_scheduling_data
       {
   
       public:
@@ -110,7 +110,7 @@ namespace transport
         friend class worker_scheduler;
     
         //! construct a worker information record
-        worker_information()
+        worker_scheduling_data()
           : type(worker_type::cpu),
             capacity(0),
             priority(0),
@@ -123,7 +123,7 @@ namespace transport
           }
     
         //! destructor
-        ~worker_information() = default;
+        ~worker_scheduling_data() = default;
     
     
         // INTERFACE -- INTERROGATE FOR GENERAL INFORMATION
@@ -370,7 +370,7 @@ namespace transport
       public:
         
         //! query for individual worker data, returned in read-only format
-        const worker_information& operator[](unsigned int worker) const;
+        const worker_scheduling_data& operator[](unsigned int worker) const;
         
         //! query for size
         size_t size() const { return this->number_workers; }
@@ -417,7 +417,7 @@ namespace transport
         const unsigned int number_workers;
 
         //! Information about workers
-        std::vector<worker_information> worker_data;
+        std::vector<worker_scheduling_data> worker_data;
 
 		    //! Number of workers still to be initialized
 		    unsigned int waiting_for_setup;
@@ -782,7 +782,7 @@ namespace transport
 			}
     
     
-    const worker_information& worker_scheduler::operator[](unsigned int worker) const
+    const worker_scheduling_data& worker_scheduler::operator[](unsigned int worker) const
       {
         if(worker >= this->worker_data.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
         
@@ -932,9 +932,9 @@ namespace transport
 		    // build a list of workers requiring assignments
 		    // storing a list of iterators is OK here; they would be invalidated by operations on this->worker_data,
 		    // but we won't be amending it within this function
-		    std::list< std::vector<worker_information>::iterator > workers;
+		    std::list< std::vector<worker_scheduling_data>::iterator > workers;
 
-		    for(std::vector<worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+		    for(std::vector<worker_scheduling_data>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
 			    {
 		        if(!t->is_assigned()) workers.push_back(t);
 			    }
@@ -942,7 +942,7 @@ namespace transport
 				// sort into ascending order of mean time per item
 				struct MeanTimeComparator
 					{
-						bool operator()(const std::vector<worker_information>::iterator& A, const std::vector<worker_information>::iterator& B)
+						bool operator()(const std::vector<worker_scheduling_data>::iterator& A, const std::vector<worker_scheduling_data>::iterator& B)
 							{
 								if(A->get_total_time() == 0) return(true);
 								if(B->get_total_time() == 0) return(false);
@@ -975,7 +975,7 @@ namespace transport
 #ifdef CPPTRANSPORT_DEBUG_SCHEDULER
 				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", max allocation per worker=" << max_allocation_per_worker << ")";
 #endif
-				for(typename std::list< std::vector<worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t)
+				for(typename std::list< std::vector<worker_scheduling_data>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t)
 					{
 				    std::list<unsigned int> items;
 
@@ -1039,9 +1039,9 @@ namespace transport
 				// build a list of workers requiring assignments
 				// storing a list of iterators is OK here; they would be invalidated by operations on this->worker_data,
 				// but we won't be amending it within this function
-		    std::list< std::vector<worker_information>::iterator > workers;
+		    std::list< std::vector<worker_scheduling_data>::iterator > workers;
 
-				for(std::vector<worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+				for(std::vector<worker_scheduling_data>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
 					{
 						if(!t->is_assigned()) workers.push_back(t);
 					}
@@ -1057,7 +1057,7 @@ namespace transport
 				unsigned int c = 0;
 		    std::list<unsigned int>::iterator next_item = this->queue.begin();
 
-				for(typename std::list< std::vector<worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t, ++c)
+				for(typename std::list< std::vector<worker_scheduling_data>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t, ++c)
 					{
 				    std::list<unsigned int> items;
 
