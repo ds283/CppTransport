@@ -27,21 +27,105 @@
 #define CPPTRANSPORT_WORKER_MANAGER_H
 
 
+#include <tuple>
+
+#include "boost/date_time/posix_time/posix_time.hpp"
+
+
 namespace transport
   {
     
     typedef std::tuple<double, double, double> load_data;
+    
+    
+    class worker_contact_record
+      {
+        
+      public:
+        
+        //! construct a worker contact record; automatically attaches a timestamp
+        worker_contact_record()
+          : timestamp(boost::posix_time::second_clock::universal_time())
+          {
+          }
+        
+        //! destructor is default
+        ~worker_contact_record() = default;
+        
+        
+        // INTERFACE
+        
+      public:
+        
+        const boost::posix_time::ptime& operator*() const { return this->timestamp; }
+        
+        
+        // INTERNAL DATA
+        
+      private:
+        
+        //! recover timestamp
+        const boost::posix_time::ptime timestamp;
+        
+      };
+    
+    
+    class worker_load_record
+      {
+        
+      public:
+        
+        //! construct a worker load-average record; automatically attaches a timestamp
+        worker_load_record(const double l)
+          : load(l),
+            timestamp(boost::posix_time::second_clock::universal_time())
+          {
+          }
+        
+        
+        // INTERFACE
+        
+      public:
+        
+        //! recover load data
+        double operator*() const { return this->load; }
+        
+        //! recover timestamp
+        const boost::posix_time::ptime& get_timestamp() const { return this->timestamp; }
+        
+        
+        // INTERNAL DATA
+        
+      private:
+        
+        //! timestamp
+        const boost::posix_time::ptime timestamp;
+        
+        //! load data
+        const double load;
+        
+      };
+    
 
     class worker_management_data
       {
+        
+      public:
+        
+        typedef std::list< worker_contact_record > contact_db;
+        
+        typedef std::list< worker_load_record > load_db;
       
       public:
         
         //! construct a worker information record
         worker_management_data()
-          : last_contact(boost::posix_time::second_clock::universal_time()),
-            load(0.0)
           {
+            // tag now as time of first contact
+            contact_history.emplace_front();
+            
+            // generate first load-balance data point at zero
+            load_history.emplace_front(0.0);
           }
         
         //! destructor
@@ -52,11 +136,17 @@ namespace transport
       
       public:
         
-        //! update last contact time
-        void update_contact_time(boost::posix_time::ptime t) { this->last_contact = t; }
+        //! update contact time
+        void update_contact_time(boost::posix_time::ptime t)
+          {
+            this->contact_history.emplace_front();
+          }
         
         //! get last contact time
-        boost::posix_time::ptime get_last_contact_time() const { return this->last_contact; }
+        const boost::posix_time::ptime& get_last_contact_time() const
+          {
+            return *this->contact_history.front();
+          }
         
         
         // INTERFACE -- LOAD TRACKING
@@ -64,21 +154,27 @@ namespace transport
       public:
         
         //! update load average
-        void update_load_average(double ld) { this->load = ld; }
+        void update_load_average(double ld)
+          {
+            this->load_history.emplace_front(ld);
+          }
         
-        //! get load average
-        double get_load_average() const { return this->load; }
+        //! get current load average
+        double get_load_average() const
+          {
+            return *this->load_history.front();
+          }
         
         
         // INTERNAL DATA
       
       private:
         
-        //! time of last contact with this worker
-        boost::posix_time::ptime last_contact;
+        //! ordered list of last-contact times
+        contact_db contact_history;
         
         //! current load average for this worker
-        double load;
+        load_db load_history;
         
       };
     
