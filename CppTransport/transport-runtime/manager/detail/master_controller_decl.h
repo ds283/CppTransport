@@ -140,6 +140,9 @@ namespace transport
 
         //! recognize plotting control switches
         void recognize_plot_switches(boost::program_options::variables_map& option_map);
+        
+        //! recognize task progress reporting switches
+        void recognize_report_switches(boost::program_options::variables_map& option_map);
 
         //! validate tasks supplied on the command line
         void validate_tasks();

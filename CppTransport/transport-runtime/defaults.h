@@ -97,6 +97,11 @@ namespace transport
 
     // default checkpointing interval measured in seconds. 0 indicates that checkpointing is disabled
     constexpr unsigned int CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL        = (0);
+    
+    // default intervals at which to issue progress reports during tasks
+    constexpr unsigned int CPPTRANSPORT_DEFAULT_REPORT_PERCENT_INTERVAL    = (10);
+    constexpr unsigned int CPPTRANSPORT_DEFAULT_REPORT_TIME_INTERVAL       = (0);
+    constexpr unsigned int CPPTRANSPORT_DEFAULT_REPORT_TIME_DELAY          = (60*60*5);
 
     // tolerance when merging axis points; points closer than this are considered equivalent
     constexpr double       CPPTRANSPORT_AXIS_MERGE_TOLERANCE               = (1E-8);

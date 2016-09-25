@@ -148,10 +148,17 @@ namespace transport
           (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< long int >(),                                CPPTRANSPORT_HELP_CACHE_CAPACITY)
           (CPPTRANSPORT_SWITCH_NETWORK_MODE,                                                                                 CPPTRANSPORT_HELP_NETWORK_MODE);
 
-        boost::program_options::options_description plotting("Plot style", width);
+        boost::program_options::options_description plotting("Plot styling", width);
         plotting.add_options()
-          (CPPTRANSPORT_SWITCH_PLOT_STYLE,        boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PLOT_STYLE)
-          (CPPTRANSPORT_SWITCH_MPL_BACKEND,       boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_MPL_BACKEND);
+          (CPPTRANSPORT_SWITCH_PLOT_STYLE,       boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PLOT_STYLE)
+          (CPPTRANSPORT_SWITCH_MPL_BACKEND,      boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_MPL_BACKEND);
+        
+        boost::program_options::options_description task_reporting("In-progress task reporting", width);
+        task_reporting.add_options()
+          (CPPTRANSPORT_SWITCH_REPORT_PERCENT,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_REPORT_PERCENT)
+          (CPPTRANSPORT_SWITCH_REPORT_INTERVAL,  boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPORT_INTERVAL)
+          (CPPTRANSPORT_SWITCH_REPORT_EMAIL,     boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPORT_EMAIL)
+          (CPPTRANSPORT_SWITCH_REPORT_DELAY,     boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPORT_DELAY);
 
         boost::program_options::options_description journaling("Journaling options", width);
         journaling.add_options()
@@ -163,7 +170,7 @@ namespace transport
           (CPPTRANSPORT_SWITCH_CREATE,                                                                                       CPPTRANSPORT_HELP_CREATE)
           (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
           (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TAG)
-          (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
+          (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_CHECKPOINT)
           (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
         boost::program_options::options_description action_options("Repository actions", width);
@@ -193,13 +200,13 @@ namespace transport
           (CPPTRANSPORT_SWITCH_PROF_AGGREGATE,   boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PROF_AGGREGATE);
 
         boost::program_options::options_description cmdline_options;
-        cmdline_options.add(generic).add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
+        cmdline_options.add(generic).add(configuration).add(job_options).add(task_reporting).add(action_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
 
         boost::program_options::options_description config_file_options;
-        config_file_options.add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
+        config_file_options.add(configuration).add(job_options).add(task_reporting).add(action_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
 
         boost::program_options::options_description output_options;
-        output_options.add(generic).add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling);
+        output_options.add(generic).add(configuration).add(job_options).add(task_reporting).add(action_options).add(report_options).add(plotting).add(journaling);
 
         // parse options from the command line; we do this first so that any options
         // supplied on the command line override options specified in a configuration file
@@ -292,6 +299,7 @@ namespace transport
         this->recognize_repository_switches(this->option_map);
         this->recognize_journal_switches(this->option_map);
         this->recognize_job_switches(this->option_map);
+        this->recognize_report_switches(this->option_map);
         this->recognize_plot_switches(this->option_map);
         // action switches not handled at this point, but later when all models have been registered by the client
         // (in case repository access is needed, which can depend on model instances being available)
@@ -406,7 +414,15 @@ namespace transport
         // process global capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))
           {
-            long int capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<long int>() * 1024*1024;            // argument size interpreted in Mb
+            long int capacity = -1;
+            try
+              {
+                capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<long int>() * 1024*1024;            // argument size interpreted in Mb
+              }
+            catch(boost::exception& xe)
+              {
+              }
+
             if(capacity > 0)
               {
                 size_t cp = static_cast<size_t>(capacity);
@@ -426,7 +442,15 @@ namespace transport
         // process datapipe capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CACHE_CAPACITY))
           {
-            long int capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<long int>() * 1024*1024;      // argument size interpreted in Mb
+            long int capacity = -1;
+            try
+              {
+                capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<long int>() * 1024*1024;      // argument size interpreted in Mb
+              }
+            catch(boost::exception& xe)
+              {
+              }
+            
             if(capacity > 0)
               {
                 size_t cp = static_cast<size_t>(capacity);
@@ -445,7 +469,15 @@ namespace transport
         // process batcher capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_BATCHER_CAPACITY))
           {
-            long int capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<long int>() * 1024*1024;    // argument size interpreted in Mb
+            long int capacity = -1;
+            try
+              {
+                capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<long int>() * 1024*1024;    // argument size interpreted in Mb
+              }
+            catch(boost::exception& xe)
+              {
+              }
+            
             if(capacity > 0)
               {
                 size_t cp = static_cast<size_t>(capacity);
@@ -584,19 +616,11 @@ namespace transport
         // process checkpoint timer specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CHECKPOINT))
           {
-            int interval = option_map[CPPTRANSPORT_SWITCH_CHECKPOINT].as<int>() * 60;                 // argument size interpreted in minutes; convert value to seconds
-            if(interval > 0)
-              {
-                unsigned int ck = static_cast<unsigned int>(interval);
-
-                this->arg_cache.set_checkpoint_interval(ck);
-                // no need to inform data_manager of new checkpoint interval; it will be pick up via the argument_cache object
-              }
-            else
+            if(!this->arg_cache.set_checkpoint_interval(option_map[CPPTRANSPORT_SWITCH_CHECKPOINT].as<std::string>()))
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " CPPTRANSPORT_SWITCH_CHECKPOINT;
-                this->err(msg.str());
+                msg << CPPTRANSPORT_UNKNOWN_CHECKPOINT_INTERVAL << " '" << option_map[CPPTRANSPORT_SWITCH_CHECKPOINT].as<std::string>() << "'";
+                this->warn(msg.str());
               }
           }
       }
@@ -629,6 +653,56 @@ namespace transport
                 this->warn(msg.str());
               }
           }
+      }
+    
+    
+    template <typename number>
+    void master_controller<number>::recognize_report_switches(boost::program_options::variables_map& option_map)
+      {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+        
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPORT_PERCENT))
+          {
+            int value = -1;
+            try
+              {
+                value = option_map[CPPTRANSPORT_SWITCH_REPORT_PERCENT].as<int>();
+              }
+            catch(boost::exception& xe)
+              {
+              }
+            
+            if(value < 0 || !this->arg_cache.set_report_percent_interval(static_cast<unsigned int>(value)))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNKNOWN_REPORT_INTERVAL << " '" << option_map[CPPTRANSPORT_SWITCH_REPORT_PERCENT].as<int>() << "%'";
+                this->warn(msg.str());
+              }
+          }
+        
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPORT_INTERVAL))
+          {
+            if(!this->arg_cache.set_report_time_interval(option_map[CPPTRANSPORT_SWITCH_REPORT_INTERVAL].as<std::string>()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNKNOWN_REPORT_INTERVAL << " '" << option_map[CPPTRANSPORT_SWITCH_REPORT_INTERVAL].as<std::string>() << "'";
+                this->warn(msg.str());
+              }
+          }
+        
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPORT_DELAY))
+          {
+            if(!this->arg_cache.set_report_time_delay(option_map[CPPTRANSPORT_SWITCH_REPORT_DELAY].as<std::string>()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNKNOWN_REPORT_DELAY << " '" << option_map[CPPTRANSPORT_SWITCH_REPORT_DELAY].as<std::string>() << "'";
+                this->warn(msg.str());
+              }
+          }
+        
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPORT_EMAIL))
+          this->arg_cache.set_report_email(option_map[CPPTRANSPORT_SWITCH_REPORT_EMAIL].as<std::string>());
       }
 
 

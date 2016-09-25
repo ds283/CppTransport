@@ -71,6 +71,9 @@
 #define CPPTRANSPORT_UNKNOWN_SWITCH                  "Ignored unknown command-line switch"
 #define CPPTRANSPORT_UNKNOWN_PLOT_STYLE              "Ignored unknown plot style"
 #define CPPTRANSPORT_UNKNOWN_MPL_BACKEND             "Ignored unknown Matplotlib backend"
+#define CPPTRANSPORT_UNKNOWN_REPORT_INTERVAL         "Ignored unrecognized report interval"
+#define CPPTRANSPORT_UNKNOWN_REPORT_DELAY            "Ignored unrecognized report time delay"
+#define CPPTRANSPORT_UNKNOWN_CHECKPOINT_INTERVAL     "Ignored unrecognized checkpoint interval"
 
 
 #define CPPTRANSPORT_WORKER_DATA_NUMBER              "Worker number"
