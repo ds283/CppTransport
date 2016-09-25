@@ -772,8 +772,9 @@ set(TRANSPORT_RUNTIME_MANAGER_DETAIL_FILES
   transport-runtime/manager/detail/aggregation.h
   transport-runtime/manager/detail/aggregation_forward_declare.h
   transport-runtime/manager/detail/job_descriptors.h
-  transport-runtime/manager/detail/master_controller_core.h
   transport-runtime/manager/detail/master_controller_decl.h
+  transport-runtime/manager/detail/master_controller_core.h
+  transport-runtime/manager/detail/master_controller_switches.h
   transport-runtime/manager/detail/master_controller_integration.h
   transport-runtime/manager/detail/master_controller_output.h
   transport-runtime/manager/detail/master_controller_postintegration.h
