@@ -246,7 +246,9 @@ namespace transport
       private:
     
         //! parse a time interval string into a number of seconds
-        bool parse_time_interval(std::string interval, unsigned int& result);
+        //! unit is the default unit (in seconds) if no unit is specified
+        //! available units are s, m, h, d for seconds, minutes, hours, days
+        bool parse_time_interval(std::string interval, unsigned int& result, unsigned int unit=60);
 
 
         // INTERNAL DATA
@@ -430,17 +432,19 @@ namespace transport
     
     bool argument_cache::set_report_time_interval(std::string interval)
       {
+        // unit defaults to minutes if no interval is given
         return this->parse_time_interval(std::move(interval), this->report_time_interval);
       }
     
     
     bool argument_cache::set_report_time_delay(std::string interval)
       {
+        // unit defaults to minutes if no interval is given
         return this->parse_time_interval(std::move(interval), this->report_time_delay);
       }
     
     
-    bool argument_cache::parse_time_interval(std::string interval, unsigned int& result)
+    bool argument_cache::parse_time_interval(std::string interval, unsigned int& result, unsigned int unit)
       {
         constexpr unsigned int second = 1;
         constexpr unsigned int minute = 60;
@@ -448,8 +452,6 @@ namespace transport
         constexpr unsigned int day    = 24*60*60;
         
         if(interval.length() == 0) return false;
-        
-        unsigned int unit = second;    // default to seconds
         
         if(tolower(interval.back()) == 's')
           {
@@ -502,6 +504,7 @@ namespace transport
     
     bool argument_cache::set_checkpoint_interval(std::string interval)
       {
+        // unit defaults to minutes if no unit is given
         return this->parse_time_interval(interval, this->checkpoint_interval);
       }
     
