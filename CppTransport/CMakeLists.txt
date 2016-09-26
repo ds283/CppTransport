@@ -740,6 +740,7 @@ set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/manager.h
   transport-runtime/localizations/messages_en/worker_scheduler.h
   transport-runtime/localizations/messages_en/worker_manager.h
+  transport-runtime/localizations/messages_en/report_manager.h
   transport-runtime/localizations/messages_en/model_list.h
   transport-runtime/localizations/messages_en/model_manager.h
   transport-runtime/localizations/messages_en/models.h
@@ -801,6 +802,7 @@ set(TRANSPORT_RUNTIME_MANAGER_FILES
   transport-runtime/manager/task_gallery.h
   transport-runtime/manager/task_manager.h
   transport-runtime/manager/work_journal.h
+  transport-runtime/manager/report_manager.h
   )
 
 set(TRANSPORT_RUNTIME_MODELS_FILES

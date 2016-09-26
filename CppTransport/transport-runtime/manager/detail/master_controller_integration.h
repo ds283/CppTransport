@@ -316,7 +316,7 @@ namespace transport
         if(metadata.global_max_batching_time == 0 || payload.get_max_batching_time() > metadata.global_max_batching_time) metadata.global_max_batching_time = payload.get_max_batching_time();
         if(metadata.global_min_batching_time == 0 || payload.get_min_batching_time() < metadata.global_min_batching_time) metadata.global_min_batching_time = payload.get_min_batching_time();
 
-        metadata.total_configurations += payload.get_num_integrations();
+        metadata.total_configurations += payload.get_items_processed();
         metadata.total_failures += payload.get_num_failures();
         metadata.total_refinements += payload.get_num_refinements();
       }

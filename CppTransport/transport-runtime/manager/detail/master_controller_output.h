@@ -194,7 +194,7 @@ namespace transport
     template <typename PayloadObject>
     void master_controller<number>::update_output_metadata(PayloadObject& payload, output_metadata& metadata)
       {
-        metadata.work_time                 += payload.get_cpu_time();
+        metadata.work_time                 += payload.get_wallclock_time();
         metadata.db_time                   += payload.get_database_time();
         metadata.time_config_hits          += payload.get_time_config_hits();
         metadata.time_config_unloads       += payload.get_time_config_unloads();

@@ -40,17 +40,5 @@
 #define CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE           "Internal error: attempt to deactivate a worker which is already inactive"
 #define CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT             "Internal error: under-release of number of in-flight work items"
 
-#define CPPTRANSPORT_WORKER_SCHEDULER_WORK_ITEMS_PROCESSED "Items processed"
-#define CPPTRANSPORT_WORKER_SCHEDULER_WORK_ITEMS_INFLIGHT  "In flight"
-#define CPPTRANSPORT_WORKER_SCHEDULER_REMAIN               "Remaining"
-#define CPPTRANSPORT_WORKER_SCHEDULER_COMPLETE             "Complete"
-#define CPPTRANSPORT_WORKER_SCHEDULER_MEAN_TIME_PER_ITEM   "Mean CPU/item"
-#define CPPTRANSPORT_WORKER_SCHEDULER_TARGET_DURATION      "Assignment"
-#define CPPTRANSPORT_WORKER_SCHEDULER_COMPLETION_ESTIMATE  "Estimated completion"
-#define CPPTRANSPORT_WORKER_SCHEDULER_FROM_NOW             "from now"
-#define CPPTRANSPORT_WORKER_SCHEDULER_CPU_TIME_ESTIMATE    "Estimated CPU time"
-
-#define CPPTRANSPORT_WORKER_SCHEDULER_WORK_COMPLETE        "All work items processed"
-
 
 #endif //CPPTRANSPORT_WORKER_SCHEDULER_MESSAGES_H

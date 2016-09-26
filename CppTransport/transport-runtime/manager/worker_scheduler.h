@@ -55,8 +55,6 @@
 // 1 minute = 60 seconds
 #define CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
 
-#define CPPTRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME  (boost::timer::nanosecond_type(5)*60*1000*1000*1000)
-
 //#define CPPTRANSPORT_DEBUG_SCHEDULER
 
 
@@ -320,21 +318,39 @@ namespace transport
 		    //! current queue exhausted? ie., finished all current work?
 		    bool is_finished() const { return(this->queue.size() == 0); }
 
-		    //! get remaining queue size
-		    unsigned int get_queue_size() const { return(this->queue.size()); }
-
 		    //! finalize queue setup; should be called before generating work assignments
 		    void complete_queue_setup();
-
-        //! check whether an update is available
-        bool update_available();
-
-		    //! check for an update string
-		    void populate_update_information(reporting::key_value& updates, reporting::key_value& notifications);
-
+        
+        
+        // INTERFACE -- REPORTING
+        
+      public:
+    
+        //! update estimates of completion time
+        void update_estimated_completion();
+    
+        //! query for current completed fraction; eg. used by master controller to decide
+        //! when to issue progress reports
+        double query_completion() const;
+    
+        //! get remaining number of items
+        unsigned int get_items_remaining() const { return this->queue.size(); }
+        
+        //! get number of items processed
+        unsigned int get_items_processsed() const { return this->work_items_completed; }
+        
+        //! get number of items in-flight
+        unsigned int get_items_inflight() const { return this->work_items_in_flight; }
+        
+        //! get mean time per-item
+        boost::timer::nanosecond_type get_mean_time_per_item() const { return this->total_work_time / this->work_items_completed; };
+        
+        //! get target assignment
+        boost::timer::nanosecond_type get_target_assignment() const { return this->current_granularity; }
+    
         //! get current estimated time-of-completion
         const boost::posix_time::ptime& get_estimated_completion() const { return this->estimated_completion; }
-        
+    
         //! get current estimtaed CPU time
         const boost::timer::nanosecond_type& get_estimated_CPU_time() const { return this->estimated_cpu_time; }
 
@@ -469,11 +485,8 @@ namespace transport
 
 		    //! Keep track of total number of work items which are still in-flight
 		    unsigned int work_items_in_flight;
-
-		    //! Points at which to emit updates
-		    std::list< unsigned int > update_stack;
-
-        //! work complete?
+    
+        //! flag indicating whether work is complete; used to add 'all work items processed' message to progress reports
         bool finished;
         
         
@@ -507,7 +520,6 @@ namespace transport
 				this->has_cpus = false;
 				this->has_gpus = false;
 
-				this->update_stack.clear();
         this->finished = false;
 
 				// reset metadata and statistics
@@ -689,17 +701,6 @@ namespace transport
 					{
 						this->max_work_allocation = 1;
 					}
-
-				unsigned int update_interval = static_cast<unsigned int>(this->queue.size() / 10);
-				if(update_interval > 0)
-					{
-				    unsigned int count = update_interval;
-				    while(count < this->queue.size())
-					    {
-				        this->update_stack.push_front(count);
-				        count += update_interval;
-					    }
-					}
 			}
 
 
@@ -764,7 +765,11 @@ namespace transport
 				    throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_OVERRELEASE_INFLIGHT);
 			    }
 
+        // accumulate total time spent integrating
 				this->total_work_time += time;
+        
+        // update estimated time-to-completion
+        this->update_estimated_completion();
 			}
 
 
@@ -814,95 +819,35 @@ namespace transport
 						this->current_granularity = CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY;
 					}
 			}
-
-
-    bool worker_scheduler::update_available()
+    
+    
+    double worker_scheduler::query_completion() const
       {
-        bool result = false;
-
-        if(this->timer.elapsed().wall > CPPTRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME)
-          {
-            if(this->update_stack.size() > 0)     // any updates remaining in the queue?
-              {
-                if(this->update_stack.front() > this->queue.size() +
-                                                this->work_items_in_flight)   // wait until items remaining (including those in flight) is small enough
-                  {
-                    result = true;
-                  }
-              }
-
-            if(this->queue.size() == 0 && !this->finished)
-              {
-                result = true;
-              }
-          }
-
-        return result;
+        size_t total_items = this->queue.size() + this->work_items_in_flight + this->work_items_completed;
+        
+        return static_cast<double>(this->work_items_completed) / static_cast<double>(total_items);
       }
-
-
-    void worker_scheduler::populate_update_information(reporting::key_value& updates, reporting::key_value& notifications)
-			{
-        updates.reset();
-
-				if(this->timer.elapsed().wall > CPPTRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME)
-					{
-						if(this->update_stack.size() > 0)     // any updates remaining in the queue?
-							{
-								if(this->update_stack.front() > this->queue.size() + this->work_items_in_flight)   // wait until items remaining (including those in flight) is small enough
-									{
-                    // pop work items from front of queue, in case we need to skip multiple updates
-										while(this->update_stack.size() > 0 && this->update_stack.front() > this->queue.size() + this->work_items_in_flight)
-											{
-												this->update_stack.pop_front();
-											}
-
-								    std::ostringstream complete_msg;
-										complete_msg << std::setprecision(3);
-										complete_msg << 100.0 * (static_cast<double>(this->work_items_completed)
-											/ (static_cast<double>(this->work_items_completed + this->work_items_in_flight + this->queue.size()))) << "%";
-
-                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_WORK_ITEMS_PROCESSED, boost::lexical_cast<std::string>(this->work_items_completed));
-                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_WORK_ITEMS_INFLIGHT, boost::lexical_cast<std::string>(this->work_items_in_flight));
-                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_REMAIN, boost::lexical_cast<std::string>(this->queue.size()));
-                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_COMPLETE, complete_msg.str());
-
-								    boost::timer::nanosecond_type mean_time_per_item = this->total_work_time / this->work_items_completed;
-                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_MEAN_TIME_PER_ITEM, format_time(mean_time_per_item));
-                    updates.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_TARGET_DURATION, format_time(this->current_granularity));
-
-								    boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
-								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->work_items_completed;
-								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size() + this->work_items_in_flight);
-
-                    boost::posix_time::time_duration duration = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
-
-                    // update cached expected completion time and expected total CPU time
-                    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-								    this->estimated_completion = now + duration;
-                    this->estimated_cpu_time = this->total_work_time + mean_time_per_item * (this->work_items_in_flight + this->queue.size());
-
-                    std::ostringstream estimate_msg;
-                    estimate_msg << boost::posix_time::to_simple_string(this->estimated_completion) << " ("
-                      << format_time(estimated_time_remaining) << " " << CPPTRANSPORT_WORKER_SCHEDULER_FROM_NOW << ")";
-
-                    notifications.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_COMPLETION_ESTIMATE, estimate_msg.str());
-                    notifications.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_CPU_TIME_ESTIMATE, format_time(this->estimated_cpu_time));
-									}
-							}
-
-            if(this->queue.size() == 0 && !this->finished)
-              {
-                this->finished = true;
-
-                boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-                notifications.insert_back(CPPTRANSPORT_WORKER_SCHEDULER_WORK_COMPLETE, boost::posix_time::to_simple_string(now));
-              }
-					}
-			}
-
-
-		std::list<work_assignment> worker_scheduler::assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+    
+    
+    void worker_scheduler::update_estimated_completion()
+      {
+        // estimate remaining duration of the task
+        boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
+        boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->work_items_completed;
+        boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size() + this->work_items_in_flight);
+    
+        boost::posix_time::time_duration duration = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
+    
+        // update cached expected completion time and expected total CPU time
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        this->estimated_completion = now + duration;
+    
+        boost::timer::nanosecond_type mean_time_per_item = this->get_mean_time_per_item();
+        this->estimated_cpu_time = this->total_work_time + mean_time_per_item * (this->work_items_in_flight + this->queue.size());
+      }
+    
+    
+    std::list<work_assignment> worker_scheduler::assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 			{
 		    // generate a work assignment
 
@@ -1078,9 +1023,9 @@ namespace transport
 	    {
 				throw runtime_exception(exception_type::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
 	    }
-
-
-	}   // namespace transport
+    
+    
+  }   // namespace transport
 
 
 #endif //CPPTRANSPORT_MASTER_SCHEDULER_H

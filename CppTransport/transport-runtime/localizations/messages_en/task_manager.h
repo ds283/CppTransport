@@ -52,18 +52,8 @@
 #define CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B "and"
 #define CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C "do not have the same missing k-configurations and cannot be used to seed a paired integration"
 
-#define CPPTRANSPORT_PROCESSING_TASK_A               "Task manager: processing task"
-#define CPPTRANSPORT_PROCESSING_TASK_OF              "of"
-
-#define CPPTRANSPORT_PROCESSING_GANTT_CHART          "Task manager: generating process Gantt chart"
-#define CPPTRANSPORT_PROCESSING_ACTIVITY_JOURNAL     "Task manager: generating activity journal"
-
-#define CPPTRANSPORT_PROCESSED_TASKS_A               "Task manager: processed"
-#define CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR      "database task"
-#define CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL        "database tasks"
-#define CPPTRANSPORT_PROCESSED_TASKS_WALLCLOCK       "in wallclock time"
-#define CPPTRANSPORT_PROCESSED_TASKS_MASTER_LOAD     "master load"
-#define CPPTRANSPORT_PROCESSED_TASKS_WORKER_LOAD     "worker load"
+#define CPPTRANSPORT_PROCESSING_GANTT_CHART          "generating process Gantt chart"
+#define CPPTRANSPORT_PROCESSING_ACTIVITY_JOURNAL     "generating activity journal"
 
 #define CPPTRANSPORT_TASK_MANAGER_LABEL              "Task manager:"
 #define CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL      "Warning:"
@@ -74,18 +64,6 @@
 #define CPPTRANSPORT_UNKNOWN_REPORT_INTERVAL         "Ignored unrecognized report interval"
 #define CPPTRANSPORT_UNKNOWN_REPORT_DELAY            "Ignored unrecognized report time delay"
 #define CPPTRANSPORT_UNKNOWN_CHECKPOINT_INTERVAL     "Ignored unrecognized checkpoint interval"
-
-
-#define CPPTRANSPORT_WORKER_DATA_NUMBER              "Worker number"
-#define CPPTRANSPORT_WORKER_DATA_PROCESSED_ITEMS     "Items processed"
-#define CPPTRANSPORT_WORKER_DATA_ASSIGNED            "Is assigned?"
-#define CPPTRANSPORT_WORKER_DATA_INTEGRATION_TIME    "Reported integration time"
-#define CPPTRANSPORT_WORKER_DATA_MEAN_TIME_PER_ITEM  "Mean time per item"
-#define CPPTRANSPORT_WORKER_DATA_LAST_CONTACT        "Last contact at"
-#define CPPTRANSPORT_WORKER_DATA_LOAD_AVERAGE        "Load average"
-#define CPPTRANSPORT_WORKER_DATA_YES                 "Yes"
-#define CPPTRANSPORT_WORKER_DATA_NO                  "No"
-
 
 #define CPPTRANSPORT_MASTER_REPORTED_BY_WORKER       "reported by worker"
 

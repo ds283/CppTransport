@@ -51,6 +51,7 @@
 #include "transport-runtime/manager/environment.h"
 #include "transport-runtime/manager/message_handlers.h"
 #include "transport-runtime/manager/task_gallery.h"
+#include "transport-runtime/manager/report_manager.h"
 
 #include "transport-runtime/manager/detail/job_descriptors.h"
 #include "transport-runtime/manager/detail/aggregation_forward_declare.h"
@@ -216,6 +217,11 @@ namespace transport
 
         //! Master node: generate new work assignments for workers
         void assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
+        
+        //! Master node: clean up after a work assignment; updates estimate of time-to-completion
+        //! and pushes this value to the repository
+        template <typename WriterObject, typename PayloadObject>
+        void unassign_worker(unsigned int worker, WriterObject& writer, PayloadObject& payload);
 
         //! Master node: print progress update if it is required
         template <typename WriterObject>
@@ -404,15 +410,36 @@ namespace transport
 
         //! HTML reporting tool
         reporting::HTML_report HTML_reports;
+    
+    
+        // PROFILING SUPPORT
+    
+        //! list of aggregation profile records
+        std::list< aggregation_profiler > aggregation_profiles;
+    
+        //! root directory for aggregation profile report, if used
+        boost::optional< boost::filesystem::path > aggregation_profile_root;
+    
+    
+        // TIMERS
+    
+        //! track time spent performing work
+        busyidle_timer_set busyidle_timers;
+        
+        //! when was estimated completion data last pushed to the repository?
+        boost::posix_time::ptime last_push_to_repo;
 
 
-        // DATA AND STATE
+        // AGENTS
 
         //! work scheduler
         worker_scheduler work_scheduler;
         
         //! worker manager
         worker_manager work_manager;
+        
+        //! report manager
+        report_manager reporter;
 
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;
@@ -428,21 +455,6 @@ namespace transport
 
         //! message callback
         message_handler msg;
-
-
-        // PROFILING SUPPORT
-
-        //! list of aggregation profile records
-        std::list< aggregation_profiler > aggregation_profiles;
-
-        //! root directory for aggregation profile report, if used
-        boost::optional< boost::filesystem::path > aggregation_profile_root;
-    
-    
-        // TIMERS
-    
-        //! track time spent performing work
-        busyidle_timer_set busyidle_timers;
 
       };
 

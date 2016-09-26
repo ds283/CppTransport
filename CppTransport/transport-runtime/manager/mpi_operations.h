@@ -433,7 +433,7 @@ namespace transport
                 boost::timer::nanosecond_type   get_wallclock_time()       const { return(this->wallclock_time); }
 
                 //! Get total number of reported integrations
-                unsigned int                    get_num_integrations()     const { return(this->num_integrations); }
+                unsigned int                    get_items_processed()      const { return(this->num_integrations); }
 
                 //! Get total number of integrations which required mesh refinement
                 unsigned int                    get_num_refinements()      const { return(this->num_refinements); }
@@ -691,7 +691,7 @@ namespace transport
 		            boost::timer::nanosecond_type  get_database_time()             const { return(this->database_time); }
 
 				        //! Get total CPU time
-				        boost::timer::nanosecond_type  get_cpu_time()                  const { return(this->cpu_time); }
+				        boost::timer::nanosecond_type  get_wallclock_time()            const { return(this->cpu_time); }
 
 		            //! Get total number of items processed
 		            unsigned int                   get_items_processed()           const { return(this->items_processed); }
@@ -1035,7 +1035,7 @@ namespace transport
 		            unsigned int                   get_items_processed()           const { return(this->items_processed); }
 
 		            //! Get total processing time
-		            boost::timer::nanosecond_type  get_processing_time()           const { return(this->processing_time); }
+		            boost::timer::nanosecond_type  get_wallclock_time()            const { return(this->processing_time); }
 
 		            //! Get max individual processing time
 		            boost::timer::nanosecond_type  get_max_processing_time()       const { return(this->max_processing_time); }
