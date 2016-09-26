@@ -213,6 +213,7 @@ namespace transport
 
 		        class work_assignment_payload
 			        {
+
 		          public:
 				        //! Default constructor (used for receiving messages)
 				        work_assignment_payload() = default;
@@ -245,7 +246,9 @@ namespace transport
 
 		        class work_acknowledgment_payload
 			        {
+
 		          public:
+
 				        //! Default constructor (used for receiving messages)
 				        work_acknowledgment_payload() = default;
 
@@ -253,7 +256,7 @@ namespace transport
 				        boost::posix_time::ptime get_timestamp() const { return(this->timestamp); }
 
 				        //! set timestamp
-				        void set_timestamp() { this->timestamp = boost::posix_time::second_clock::universal_time(); }
+				        void set_timestamp() { this->timestamp = boost::posix_time::second_clock::local_time(); }
 
 		          private:
 
@@ -274,6 +277,7 @@ namespace transport
 
             class new_integration_payload
               {
+
               public:
                 //! Default constructor (used for receiving messages)
                 new_integration_payload() = default;
@@ -341,6 +345,7 @@ namespace transport
 
             class data_ready_payload
               {
+
               public:
 
                 //! Default constructor (used for receiving messages)
@@ -349,7 +354,7 @@ namespace transport
                 //! Value constructor (used for sending messages)
                 data_ready_payload(const boost::filesystem::path& p)
                 : container_path(p.string()),
-                  timestamp(boost::posix_time::second_clock::universal_time())
+                  timestamp(boost::posix_time::second_clock::local_time())
                   {
                   }
 
@@ -382,6 +387,7 @@ namespace transport
 
             class finished_integration_payload
               {
+
               public:
 
                 //! Default constructor (used for receiving messages)
@@ -407,7 +413,7 @@ namespace transport
                     num_failures(nf),
                     failed_serials(fs),
                     load_average(ld),
-                    timestamp(boost::posix_time::second_clock::universal_time())
+                    timestamp(boost::posix_time::second_clock::local_time())
                   {
                   }
 
@@ -598,7 +604,7 @@ namespace transport
                 content_ready_payload(const std::string& dp, const std::list<std::string>& g)
 	                : product(dp),
                     content_groups(g),
-                    timestamp(boost::posix_time::second_clock::universal_time())
+                    timestamp(boost::posix_time::second_clock::local_time())
 	                {
 	                }
 
@@ -680,7 +686,7 @@ namespace transport
                     stats_evictions(s_e),
 			              data_evictions(de),
                     load_average(ld),
-		                timestamp(boost::posix_time::second_clock::universal_time())
+		                timestamp(boost::posix_time::second_clock::local_time())
 			            {
 			            }
 
@@ -1018,7 +1024,7 @@ namespace transport
                     stats_evictions(stats_e),
                     data_evictions(de),
                     load_average(ld),
-                    timestamp(boost::posix_time::second_clock::universal_time())
+                    timestamp(boost::posix_time::second_clock::local_time())
                   {
                   }
 
