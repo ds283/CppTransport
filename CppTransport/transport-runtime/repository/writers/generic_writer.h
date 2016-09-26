@@ -49,6 +49,9 @@
 #include "boost/log/sinks/sync_frontend.hpp"
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
+#include "boost/log/attributes.hpp"
+#include "boost/log/expressions.hpp"
+#include "boost/log/support/date_time.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/shared_ptr.hpp"
 
@@ -64,7 +67,7 @@ namespace transport
     // GENERIC WRITER
 
     //! base_writer is a dummy class at the bottom of the *_writer hierarchy.
-    //! It is only a placeholder to allow complete instantiation of generic_writer<>
+    //! It is only a placeholder to allow complete instantiation of generic_writer
     class base_writer
 	    {
 
@@ -87,6 +90,46 @@ namespace transport
         virtual ~base_writer() = default;
 
 	    };
+    
+    
+    // overload << to push log_severity_level to stream
+    std::ostream& operator<<(std::ostream& stream, base_writer::log_severity_level level)
+      {
+        static const std::map< base_writer::log_severity_level, std::string > stringize_map =
+          {
+            { base_writer::log_severity_level::normal, "normal" },
+            { base_writer::log_severity_level::notification, "notification" },
+            { base_writer::log_severity_level::warning, "warning" },
+            { base_writer::log_severity_level::error, "error" },
+            { base_writer::log_severity_level::critical, "CRITICAL" }
+          };
+        
+        stream << stringize_map.at(level);
+        
+        return stream;
+      }
+    
+    
+    // overload << to push log_severity_level to Boost.Log log
+    struct base_writer_severity_tag;
+    boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& stream,
+                                               const boost::log::to_log_manip<base_writer::log_severity_level, base_writer_severity_tag> manip)
+      {
+        static const std::map< base_writer::log_severity_level, std::string > stringize_map =
+          {
+            { base_writer::log_severity_level::normal, "norm" },
+            { base_writer::log_severity_level::notification, "ntfy" },
+            { base_writer::log_severity_level::warning, "warn" },
+            { base_writer::log_severity_level::error, "err " },
+            { base_writer::log_severity_level::critical, "CRIT" }
+          };
+        
+        base_writer::log_severity_level level = manip.get();
+        stream << stringize_map.at(level);
+
+        return stream;
+      }
+    
 
     //! 'generic_writer' supplies generic services for writers
     class generic_writer: public base_writer
@@ -245,7 +288,8 @@ namespace transport
         //! Logger source
         boost::log::sources::severity_logger<log_severity_level> log_source;
 
-        //! Logger sink
+        //! Logger sink; note we are forced to use boost::shared_ptr<> because this is what the
+        //! Boost.Log API expects
         boost::shared_ptr<sink_t> log_sink;
 
 	    };
@@ -284,6 +328,14 @@ namespace transport
         // Wrap it into the frontend and register in the core.
         // The backend requires synchronization in the frontend.
         this->log_sink = boost::shared_ptr<sink_t>(new sink_t(backend));
+        this->log_sink->set_formatter(
+          boost::log::expressions::stream
+            << boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
+            << " | "
+            << boost::log::expressions::attr< base_writer::log_severity_level, base_writer_severity_tag >("Severity")
+            << " | "
+            << boost::log::expressions::smessage
+        );
 
         core->add_sink(this->log_sink);
 
