@@ -351,6 +351,8 @@ namespace transport
             boost::log::keywords::file_name = report_path.string(),
             boost::log::keywords::open_mode = std::ios::app
           );
+        
+        reporting_backend->auto_flush(true);
 
         // Generate logging sink and register it in the core.
         // The logging sink filters only for the log channel.
