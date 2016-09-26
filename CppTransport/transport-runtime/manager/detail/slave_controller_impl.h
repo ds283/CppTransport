@@ -305,7 +305,7 @@ namespace transport
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) <<  "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
             this->schedule_integration(tka, m, batcher, payload, m->backend_twopf_state_size());
@@ -321,7 +321,7 @@ namespace transport
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
             this->schedule_integration(tkb, m, batcher, payload, m->backend_threepf_state_size());
@@ -383,7 +383,7 @@ namespace transport
                     // keep track of wallclock time
                     boost::timer::cpu_timer timer;
 
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW WORK ASSIGNMENT";
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
 
                     // perform the integration
                     try
@@ -402,8 +402,8 @@ namespace transport
 
                     // notify master process that all work has been finished (temporary containers will be deleted by the master node)
                     boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                    if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
-                    else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << '\n' << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+                    if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
+                    else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
                     MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
                                                                        batcher.get_max_integration_time(), batcher.get_min_integration_time(),
@@ -424,14 +424,14 @@ namespace transport
                   {
                     this->world.recv(stat.source(), MPI::END_OF_WORK);
                     complete = true;
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Notified of end-of-work: preparing to shut down";
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Notified of end-of-work: preparing to shut down";
 
                     // close the batcher, flushing the current container to the master node if needed
                     batcher.close();
 
                     // send close-down acknowledgment to master
                     boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
                     
                     MPI::performance_data_payload close_payload(this->busyidle_timers.get_load_average(payload.get_group_name()));
                     boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN, close_payload);
@@ -543,7 +543,7 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << *tk;
         
         bool complete = false;
@@ -575,7 +575,7 @@ namespace transport
                     scheduler sch(ctx);
                     auto work = sch.make_queue(*tk, filter);
 
-                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW WORK ASSIGNMENT";
+                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
 
                     bool success = true;
 
@@ -651,8 +651,8 @@ namespace transport
 
                     // notify master process that all work has been finished
                     now = boost::posix_time::second_clock::universal_time();
-                    if(success) BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
-                    else        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error)  << '\n' << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+                    if(success) BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
+                    else        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error)  << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
                     MPI::finished_derived_payload finish_payload(content_groups, pipe->get_database_time(), timer.elapsed().wall,
                                                                  list.size(), processing_time,
@@ -676,14 +676,14 @@ namespace transport
                   {
                     this->world.recv(stat.source(), MPI::END_OF_WORK);
                     complete = true;
-                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Notified of end-of-work: preparing to shut down";
+                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Notified of end-of-work: preparing to shut down";
 
                     // close the datapipe
                     pipe->close();
 
                     // send close-down acknowledgment to master
                     now = boost::posix_time::second_clock::universal_time();
-                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
     
                     MPI::performance_data_payload close_payload(this->busyidle_timers.get_load_average(payload.get_group_name()));
                     boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN, close_payload);
@@ -820,7 +820,7 @@ namespace transport
 
                 // write log header
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << *ptk;
 
                 this->schedule_integration(ptk, m, i_batcher, payload, m->backend_twopf_state_size());
@@ -829,7 +829,7 @@ namespace transport
               {
                 // write log header
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
                 this->schedule_postintegration(z2pf, ptk, payload, batcher);
@@ -869,7 +869,7 @@ namespace transport
 
                 // write log header
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << *ptk;
 
                 this->schedule_integration(ptk, m, i_batcher, payload, m->backend_threepf_state_size());
@@ -878,7 +878,7 @@ namespace transport
               {
                 // write log header
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
                 this->schedule_postintegration(z3pf, ptk, payload, batcher);
@@ -940,7 +940,7 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
         // set up content-group finder functions; must survive throughout lifetime of datapipe
@@ -992,7 +992,7 @@ namespace transport
                     // keep track of wallclock time
                     boost::timer::cpu_timer timer;
 
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW WORK ASSIGNMENT";
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
 
                     // perform the task
                     std::string group;
@@ -1016,8 +1016,8 @@ namespace transport
 
                     // notify master process that all work has been finished (temporary containers will be deleted by the master node)
                     now = boost::posix_time::second_clock::universal_time();
-                    if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
-                    else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << '\n' << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+                    if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
+                    else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
                     MPI::finished_postintegration_payload outgoing_payload(group, pipe->get_database_time(), timer.elapsed().wall,
                                                                            batcher.get_items_processed(), batcher.get_processing_time(),
@@ -1041,14 +1041,14 @@ namespace transport
                   {
                     this->world.recv(stat.source(), MPI::END_OF_WORK);
                     complete = true;
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Notified of end-of-work: preparing to shut down";
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Notified of end-of-work: preparing to shut down";
 
                     // close the batcher, flushing the current container to the master node if required
                     batcher.close();
 
                     // send close-down acknowledgment to master
                     now = boost::posix_time::second_clock::universal_time();
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
     
                     MPI::performance_data_payload close_payload(this->busyidle_timers.get_load_average(payload.get_group_name()));
                     boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN, close_payload);
