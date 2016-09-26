@@ -38,6 +38,13 @@
 #define CPPTRANSPORT_WORKER_DATA_YES                 "Yes"
 #define CPPTRANSPORT_WORKER_DATA_NO                  "No"
 
+#define CPPTRANSPORT_REPORT_MASTER_LOAD_TASK         "Master load this task"
+#define CPPTRANSPORT_REPORT_MASTER_LOAD_GLOBAL       "Master load global"
+
+#define CPPTRANSPORT_REPORT_ALERTS                   "Alerts issued in this reporting period"
+#define CPPTRANSPORT_REPORT_ALERT_MULTIPLE_A         "issued"
+#define CPPTRANSPORT_REPORT_ALERT_MULTIPLE_B         "times in this period, last at"
+
 #define CPPTRANSPORT_REPORT_WORK_ITEMS_PROCESSED     "Items processed"
 #define CPPTRANSPORT_REPORT_WORK_ITEMS_INFLIGHT      "In flight"
 #define CPPTRANSPORT_REPORT_REMAIN                   "Remaining"

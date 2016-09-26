@@ -74,6 +74,9 @@ namespace transport
             //! get use count
             unsigned int get_count() const { return this->count; }
             
+            //! get alert message
+            const std::string& get_message() const { return this->msg; }
+            
             //! get creation datestamp
             const boost::posix_time::ptime& get_creation_time() const { return this->created; }
             
@@ -168,7 +171,10 @@ namespace transport
         //! issue announcement other than starting a new task
         void announce(const std::string& msg);
         
-        //! issue summary report
+        //! issue summary report after *all* tasks have completed;
+        //! load_data is provided by client
+        //! and summarizes the load average on the workers
+        //! during the task
         void summary_report(unsigned int tasks_complete, const load_data& data);
         
       private:
@@ -194,18 +200,25 @@ namespace transport
         
       private:
         
-        //! populate statistics table
-        void populate_statistics(reporting::key_value& statistics);
+        //! write statistics report
+        void statistics_report(std::ostream& stream, reporting::key_value::print_options options);
         
-        //! populate notifications table
-        void populate_notifications(reporting::key_value& notifications);
+        //! write resources estimate report
+        void resources_report(std::ostream& stream, reporting::key_value::print_options options);
+        
+        //! write worker status report
+        template <typename WriterObject>
+        void workers_report(WriterObject& writer, std::ostream& stream, reporting::key_value::print_options options);
+        
+        //! write alerts report
+        void alerts_report(std::ostream& stream);
         
         //! generate short reports
-        void issue_short_reports(reporting::key_value& statistics, reporting::key_value& notifications);
+        void issue_short_report();
         
         //! generate long/detailed reports
         template <typename WriterObject>
-        void issue_detailed_reports(WriterObject& writer, reporting::key_value& statistics, reporting::key_value& notifications);
+        void issue_detailed_reports(WriterObject& writer);
         
         
         // INTERNAL DATA
@@ -302,52 +315,54 @@ namespace transport
         // apply policy
         // will update report timestamp and % completed if a report is required
         if(!check_report_policy()) return;
-    
-        reporting::key_value statistics(this->local_env, this->arg_cache);
-        reporting::key_value notifications(this->local_env, this->arg_cache);
-    
-        // populate key-value stores with
-        this->populate_statistics(statistics);
-        this->populate_notifications(notifications);
-    
-        this->issue_short_reports(statistics, notifications);
-        this->issue_detailed_reports(writer, statistics, notifications);
+        
+        this->issue_short_report();
+        this->issue_detailed_reports(writer);
 
         // flush any accumulated alerts
         this->flush_alerts();
       }
     
     
-    void report_manager::populate_statistics(reporting::key_value& statistics)
+    void report_manager::statistics_report(std::ostream& stream, reporting::key_value::print_options options)
       {
         std::ostringstream percent_complete;
         percent_complete << std::setprecision(3);
         percent_complete << 100.0 * this->scheduler.query_completion();
+        
+        reporting::key_value store(this->local_env, this->arg_cache);
     
-        statistics.insert_back(CPPTRANSPORT_REPORT_WORK_ITEMS_PROCESSED, boost::lexical_cast<std::string>(this->scheduler.get_items_processsed()));
-        statistics.insert_back(CPPTRANSPORT_REPORT_WORK_ITEMS_INFLIGHT, boost::lexical_cast<std::string>(this->scheduler.get_items_inflight()));
-        statistics.insert_back(CPPTRANSPORT_REPORT_REMAIN, boost::lexical_cast<std::string>(this->scheduler.get_items_remaining()));
-        statistics.insert_back(CPPTRANSPORT_REPORT_COMPLETE, percent_complete.str());
-        statistics.insert_back(CPPTRANSPORT_REPORT_MEAN_TIME_PER_ITEM, format_time(this->scheduler.get_mean_time_per_item()));
-        statistics.insert_back(CPPTRANSPORT_REPORT_TARGET_DURATION, format_time(this->scheduler.get_target_assignment()));
+        store.insert_back(CPPTRANSPORT_REPORT_WORK_ITEMS_PROCESSED, boost::lexical_cast<std::string>(this->scheduler.get_items_processsed()));
+        store.insert_back(CPPTRANSPORT_REPORT_WORK_ITEMS_INFLIGHT, boost::lexical_cast<std::string>(this->scheduler.get_items_inflight()));
+        store.insert_back(CPPTRANSPORT_REPORT_REMAIN, boost::lexical_cast<std::string>(this->scheduler.get_items_remaining()));
+        store.insert_back(CPPTRANSPORT_REPORT_COMPLETE, percent_complete.str());
+        store.insert_back(CPPTRANSPORT_REPORT_MEAN_TIME_PER_ITEM, format_time(this->scheduler.get_mean_time_per_item()));
+        store.insert_back(CPPTRANSPORT_REPORT_TARGET_DURATION, format_time(this->scheduler.get_target_assignment()));
     
+        store.set_tiling(true);
+        store.write(stream, options);
       }
     
     
-    void report_manager::populate_notifications(reporting::key_value& notifications)
+    void report_manager::resources_report(std::ostream& stream, reporting::key_value::print_options options)
       {
         boost::posix_time::ptime estimated_completion = this->scheduler.get_estimated_completion();
         boost::posix_time::time_duration time_remaining = estimated_completion - this->last_report_time;
         std::ostringstream estimate_msg;
         estimate_msg << boost::posix_time::to_simple_string(estimated_completion)
                      << " (" << format_time(time_remaining.total_nanoseconds()) << " " << CPPTRANSPORT_REPORT_FROM_NOW << ")";
+        
+        reporting::key_value store(this->local_env, this->arg_cache);
     
-        notifications.insert_back(CPPTRANSPORT_REPORT_COMPLETION_ESTIMATE, estimate_msg.str());
-        notifications.insert_back(CPPTRANSPORT_REPORT_CPU_TIME_ESTIMATE, format_time(this->scheduler.get_estimated_CPU_time()));
+        store.insert_back(CPPTRANSPORT_REPORT_COMPLETION_ESTIMATE, estimate_msg.str());
+        store.insert_back(CPPTRANSPORT_REPORT_CPU_TIME_ESTIMATE, format_time(this->scheduler.get_estimated_CPU_time()));
+        
+        store.set_tiling(true);
+        store.write(stream, options);
       }
     
     
-    void report_manager::issue_short_reports(reporting::key_value& statistics, reporting::key_value& notifications)
+    void report_manager::issue_short_report()
       {
         // emit notification to terminal
         if(!this->arg_cache.get_verbose()) return;
@@ -362,64 +377,62 @@ namespace transport
         if(colour) std::cout << ColourCode(ANSI_colour::normal);
         std::cout << '\n';
     
-        statistics.set_tiling(true);
-        notifications.set_tiling(true);
-        statistics.write(std::cout);
-        notifications.write(std::cout);
+        this->statistics_report(std::cout, reporting::key_value::print_options::none);
+        this->resources_report(std::cout, reporting::key_value::print_options::none);
       }
     
     
     template <typename WriterObject>
-    void report_manager::issue_detailed_reports(WriterObject& writer, reporting::key_value& statistics, reporting::key_value& notifications)
+    void report_manager::issue_detailed_reports(WriterObject& writer)
       {
         // emit notification to report
         base_writer::reporter& report = writer.get_report();
-        
+    
         std::ostringstream update_msg;
         update_msg << CPPTRANSPORT_REPORT_HEADING_A << " " << this->task_name << " "
-                   << CPPTRANSPORT_REPORT_HEADING_B << " " << boost::posix_time::to_simple_string(this->last_report_time)
+                   << CPPTRANSPORT_REPORT_HEADING_B << " "
+                   << boost::posix_time::to_simple_string(this->last_report_time)
                    << '\n';
-        
-        notifications.set_tiling(true);
-        statistics.set_tiling(true);
-        statistics.write(update_msg, reporting::key_value::print_options::fixed_width);
-        notifications.write(update_msg, reporting::key_value::print_options::fixed_width);
-        
+    
+        this->statistics_report(update_msg, reporting::key_value::print_options::fixed_width);
+        this->resources_report(update_msg, reporting::key_value::print_options::fixed_width);
+        this->alerts_report(update_msg);
+        this->workers_report(writer, update_msg, reporting::key_value::print_options::fixed_width);
+    
         BOOST_LOG(report) << update_msg.str();
+      }
+    
+    
+    template <typename WriterObject>
+    void report_manager::workers_report(WriterObject& writer, std::ostream& stream, reporting::key_value::print_options options)
+      {
+        double load_task = this->timers.get_load_average(writer.get_name());
+        double load_global = this->timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER);
+        
+        reporting::key_value master(this->local_env, this->arg_cache);
+        
+        master.insert_back(CPPTRANSPORT_REPORT_MASTER_LOAD_TASK, format_number(load_task, 2));
+        master.insert_back(CPPTRANSPORT_REPORT_MASTER_LOAD_GLOBAL, format_number(load_global, 2));
+        master.set_tiling(true);
+        master.write(stream, options);
+        
+        for(unsigned int i = 0; i < this->scheduler.size(); ++i)
+          {
+            const worker_scheduling_data& scheduling_data = this->scheduler[i];
+            const worker_management_data& management_data = this->manager[i];
 
-//        double load_task = this->busyidle_timers.get_load_average(writer.get_name());
-//        double load_global = this->busyidle_timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER);
-//        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Master node load average for this task = " << format_number(load_task, 2)
-//                                                                                 << ", global average = " << format_number(load_global, 2);
-//        bool write_separator = false;
-//        for(unsigned int i = 0; i < this->work_scheduler.size(); ++i)
-//          {
-//            const worker_scheduling_data& scheduling_data = this->work_scheduler[i];
-//            const worker_management_data& management_data = this->work_manager[i];
-//
-//            reporting::key_value kv(this->local_env, this->arg_cache);
-//            kv.insert_back(CPPTRANSPORT_WORKER_DATA_NUMBER, boost::lexical_cast<std::string>(scheduling_data.get_number()));
-//            kv.insert_back(CPPTRANSPORT_WORKER_DATA_PROCESSED_ITEMS, boost::lexical_cast<std::string>(scheduling_data.get_number_items()));
-//            kv.insert_back(CPPTRANSPORT_WORKER_DATA_ASSIGNED, scheduling_data.is_assigned() ? CPPTRANSPORT_WORKER_DATA_YES : CPPTRANSPORT_WORKER_DATA_NO);
-//            kv.insert_back(CPPTRANSPORT_WORKER_DATA_INTEGRATION_TIME, format_time(scheduling_data.get_total_time()));
-//            kv.insert_back(CPPTRANSPORT_WORKER_DATA_MEAN_TIME_PER_ITEM, format_time(scheduling_data.get_mean_time_per_work_item()));
-//            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LOAD_AVERAGE, format_number(management_data.get_load_average(), 2));
-//            kv.insert_back(CPPTRANSPORT_WORKER_DATA_LAST_CONTACT, boost::posix_time::to_simple_string(management_data.get_last_contact_time()));
-//
-//            std::ostringstream msg;
-//            kv.set_tiling(true);
-//            kv.write(msg, reporting::key_value::print_options::fixed_width);
-//
-//            if(!write_separator)
-//              {
-//                BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "####################";
-//                write_separator = true;
-//              }
-//            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << msg.str();
-//          }
-//
-//        // omit closing #s if we didn't write any opening ones
-//        if(write_separator) BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "####################";
+            reporting::key_value store(this->local_env, this->arg_cache);
+            store.insert_back(CPPTRANSPORT_WORKER_DATA_NUMBER, boost::lexical_cast<std::string>(scheduling_data.get_number()));
+            store.insert_back(CPPTRANSPORT_WORKER_DATA_PROCESSED_ITEMS, boost::lexical_cast<std::string>(scheduling_data.get_number_items()));
+            store.insert_back(CPPTRANSPORT_WORKER_DATA_ASSIGNED, scheduling_data.is_assigned() ? CPPTRANSPORT_WORKER_DATA_YES : CPPTRANSPORT_WORKER_DATA_NO);
+            store.insert_back(CPPTRANSPORT_WORKER_DATA_INTEGRATION_TIME, format_time(scheduling_data.get_total_time()));
+            store.insert_back(CPPTRANSPORT_WORKER_DATA_MEAN_TIME_PER_ITEM, format_time(scheduling_data.get_mean_time_per_work_item()));
+            store.insert_back(CPPTRANSPORT_WORKER_DATA_LOAD_AVERAGE, format_number(management_data.get_load_average(), 2));
+            store.insert_back(CPPTRANSPORT_WORKER_DATA_LAST_CONTACT, boost::posix_time::to_simple_string(management_data.get_last_contact_time()));
+
+            store.set_tiling(true);
+            store.write(stream, options);
+          }
       }
     
     
@@ -525,6 +538,32 @@ namespace transport
       {
         this->alert_data.clear();
         this->alerts.clear();
+      }
+    
+    
+    void report_manager::alerts_report(std::ostream& stream)
+      {
+        if(this->alerts.empty()) return;
+        
+        stream << CPPTRANSPORT_REPORT_ALERTS << '\n';
+        
+        for(alert_db::iterator& t : this->alerts)
+          {
+            const alert_db::value_type& rec = *t;
+            const report_alert& report = *rec.second;
+            
+            stream << boost::posix_time::to_simple_string(report.get_creation_time()) << " ";
+            stream << report.get_message();
+            
+            if(report.get_count() > 1)
+              {
+                stream << " (" << CPPTRANSPORT_REPORT_ALERT_MULTIPLE_A << " " << report.get_count() << " "
+                       << CPPTRANSPORT_REPORT_ALERT_MULTIPLE_B << " "
+                       << boost::posix_time::to_simple_string(report.get_update_time()) << ")";
+              }
+            
+            stream << '\n';
+          }
       }
     
   }   // namespace transport
