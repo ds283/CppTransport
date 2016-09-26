@@ -78,7 +78,11 @@ namespace transport
         //! Logging severity level
         enum class log_severity_level { datapipe_pull, normal, warning, error, critical };
 
+        //! logging sink
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
+        
+        //! logging source
+        typedef boost::log::sources::severity_logger<log_severity_level> logger;
 
 
       public:
@@ -160,7 +164,7 @@ namespace transport
       public:
 
         //! Return logger
-        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+        logger& get_log() { return(this->log_source); }
 
 
         // COMMIT AN OUTPUT
@@ -473,7 +477,7 @@ namespace transport
         // LOGGING
 
         //! Logger source
-        boost::log::sources::severity_logger<log_severity_level> log_source;
+        logger log_source;
 
         //! Logger sink
         boost::shared_ptr<sink_t> log_sink;

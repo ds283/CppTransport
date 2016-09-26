@@ -282,7 +282,7 @@ namespace transport
 		    //! initialize a worker
 		    //! reduces count of workers waiting for initialization if successful, and logs the data using the supplied WriterObject
 		    //! otherwise, logs an error.
-		    void initialize_worker(boost::log::sources::severity_logger< base_writer::log_severity_level >& log, unsigned int worker, MPI::slave_information_payload& payload);
+		    void initialize_worker(base_writer::logger& log, unsigned int worker, MPI::slave_information_payload& payload);
 
 		    //! set current state size; used when assigning work to GPUs
 		    void set_state_size(unsigned int size) { this->state_size = size; }
@@ -363,7 +363,7 @@ namespace transport
 		    bool assignable() const;
 
 		    //! generate work assignments
-		    std::list<work_assignment> assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log);
+		    std::list<work_assignment> assign_work(base_writer::logger& log);
 
 		    //! mark a worker as assigned
 		    void mark_assigned(const work_assignment& assignment);
@@ -413,13 +413,13 @@ namespace transport
       protected:
 
 		    //! schedule work for a pool of CPU only workers
-		    std::list<work_assignment> assign_work_cpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log);
+		    std::list<work_assignment> assign_work_cpu_only_strategy(base_writer::logger& log);
 
 		    //! schedule work for a pool of GPU only workers
-		    std::list<work_assignment> assign_work_gpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log);
+		    std::list<work_assignment> assign_work_gpu_only_strategy(base_writer::logger& log);
 
 		    //! schedule work for a mixed pool of CPU and GPU workers
-		    std::list<work_assignment> assign_work_mixed_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log);
+		    std::list<work_assignment> assign_work_mixed_strategy(base_writer::logger& log);
 
 
 		    // INTERNAL DATA
@@ -532,7 +532,7 @@ namespace transport
 			}
 
 
-		void worker_scheduler::initialize_worker(boost::log::sources::severity_logger< base_writer::log_severity_level >& log, unsigned int worker, MPI::slave_information_payload& payload)
+		void worker_scheduler::initialize_worker(base_writer::logger& log, unsigned int worker, MPI::slave_information_payload& payload)
 			{
 		    if(!(this->worker_data[worker].get_initialization_status()))
 			    {
@@ -540,12 +540,16 @@ namespace transport
             switch(type)
               {
                 case worker_type::cpu:
-                  this->has_cpus = true;
-                  break;
+                  {
+                    this->has_cpus = true;
+                    break;
+                  }
 
                 case worker_type::gpu:
-                  this->has_gpus = true;
-                  break;
+                  {
+                    this->has_gpus = true;
+                    break;
+                  }
               }
 
 		        this->worker_data[worker].set_data(worker, type, payload.get_capacity(), payload.get_priority());
@@ -847,7 +851,7 @@ namespace transport
       }
     
     
-    std::list<work_assignment> worker_scheduler::assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+    std::list<work_assignment> worker_scheduler::assign_work(base_writer::logger& log)
 			{
 		    // generate a work assignment
 
@@ -869,7 +873,7 @@ namespace transport
 			}
 
 
-		std::list<work_assignment> worker_scheduler::assign_work_cpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+		std::list<work_assignment> worker_scheduler::assign_work_cpu_only_strategy(base_writer::logger& log)
 			{
 				// schedule work for a CPU only pool
 				// the strategy is to avoid cores becoming idle because they have run out of work
@@ -976,7 +980,7 @@ namespace transport
 			}
 
 
-		std::list<work_assignment> worker_scheduler::assign_work_gpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+		std::list<work_assignment> worker_scheduler::assign_work_gpu_only_strategy(base_writer::logger& log)
 			{
 				// currently we schedule work just by breaking it up between all workers
 				// TODO: in future, this should be replaced by a more intelligent scheduler
@@ -1019,7 +1023,7 @@ namespace transport
 			}
 
 
-    std::list<work_assignment> worker_scheduler::assign_work_mixed_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
+    std::list<work_assignment> worker_scheduler::assign_work_mixed_strategy(base_writer::logger& log)
 	    {
 				throw runtime_exception(exception_type::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
 	    }

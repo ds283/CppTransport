@@ -268,7 +268,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        boost::log::sources::severity_logger<generic_batcher::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+        generic_batcher::logger& get_log() { return(this->batcher.get_log()); }
 
 
         // STOP TIMERS - OVERRIDES A 'timing observer' interface
@@ -414,7 +414,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        boost::log::sources::severity_logger<generic_batcher::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+        generic_batcher::logger& get_log() { return(this->batcher.get_log()); }
 
 
         // STOP TIMERS - OVERRIDES A 'timing observer' interface
@@ -639,7 +639,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        boost::log::sources::severity_logger<generic_batcher::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+        generic_batcher::logger& get_log() { return(this->batcher.get_log()); }
 
         //! Return number of k-configurations in this group
         unsigned int group_size() const { return(this->work_list.size()); }
@@ -767,7 +767,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        boost::log::sources::severity_logger<generic_batcher::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+        generic_batcher::logger& get_log() { return(this->batcher.get_log()); }
 
         //! Return number of k-configurations in this group
         unsigned int group_size() const { return(this->work_list.size()); }

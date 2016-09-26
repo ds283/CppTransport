@@ -52,6 +52,10 @@
 #include "boost/log/sinks/sync_frontend.hpp"
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
+#include "boost/log/attributes.hpp"
+#include "boost/log/expressions.hpp"
+#include "boost/log/support/date_time.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 
 namespace transport
@@ -76,7 +80,11 @@ namespace transport
         //! Logging severity level
         enum class log_severity_level { datapipe_pull, normal, warning, error, critical };
 
+        //! logging sink
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
+        
+        //! logging source
+        typedef boost::log::sources::severity_logger<log_severity_level> logger;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -135,7 +143,7 @@ namespace transport
       public:
 
         //! Return logger
-        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+        logger& get_log() { return(this->log_source); }
 
 
         // FLUSH INTERFACE
@@ -298,10 +306,12 @@ namespace transport
             boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
 //		    core->set_filter(boost::log::trivial::severity >= normal);
-
+    
             boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-	                                                                    boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string(),
-                                                                                                                               boost::log::keywords::open_mode = std::ios::app);
+              boost::make_shared<boost::log::sinks::text_file_backend>(
+                boost::log::keywords::file_name = log_path.string(),
+                boost::log::keywords::open_mode = std::ios::app
+              );
 
             // enable auto-flushing of log entries
             // this degrades performance, but we are not writing many entries and they
@@ -310,7 +320,7 @@ namespace transport
 
             // Wrap it into the frontend and register in the core.
             // The backend requires synchronization in the frontend.
-            this->log_sink = boost::shared_ptr<sink_t>(new sink_t(backend));
+            this->log_sink = boost::make_shared<sink_t>(backend);
             this->log_sink->set_formatter(
               boost::log::expressions::stream
                 << boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")

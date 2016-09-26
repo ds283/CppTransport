@@ -44,6 +44,10 @@
 #include "boost/filesystem.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
+#include "boost/log/expressions.hpp"
+#include "boost/log/attributes.hpp"
+#include "boost/log/sources/channel_logger.hpp"
+#include "boost/log/sources/severity_channel_logger.hpp"
 #include "boost/log/sources/severity_feature.hpp"
 #include "boost/log/sources/severity_logger.hpp"
 #include "boost/log/sinks/sync_frontend.hpp"
@@ -54,11 +58,6 @@
 #include "boost/log/support/date_time.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/shared_ptr.hpp"
-
-
-// log file name
-#define CPPTRANSPORT_LOG_FILENAME_A "worker_"
-#define CPPTRANSPORT_LOG_FILENAME_B "_%3N.log"
 
 
 namespace transport
@@ -76,8 +75,14 @@ namespace transport
         //! Types needed for logging
         enum class log_severity_level { normal, notification, warning, error, critical };
 
+        //! log sink; we use a multifile to split output into logs and reports
         typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend> sink_t;
 
+        //! logging source
+        typedef boost::log::sources::severity_channel_logger<log_severity_level, std::string> logger;
+        
+        //! reporting source
+        typedef boost::log::sources::channel_logger<std::string> reporter;
 
 	      // CONSTRUCTOR, DESTRUCTOR
 
@@ -234,12 +239,15 @@ namespace transport
         boost::filesystem::path get_relative_tempdir_path() const { return(this->paths.temp); }
 
 
-        // LOGGING
+        // LOGGING AND REPORTING
 
       public:
 
         //! Return logger
-        boost::log::sources::severity_logger<log_severity_level>& get_log() { return (this->log_source); }
+        logger& get_log() { return this->log_source; }
+        
+        //! Return reporter
+        reporter& get_report() { return this->report_source; }
 
 
         // INTERNAL DATA
@@ -286,11 +294,18 @@ namespace transport
         // LOGGING
 
         //! Logger source
-        boost::log::sources::severity_logger<log_severity_level> log_source;
+        boost::log::sources::severity_channel_logger<log_severity_level, std::string> log_source;
+        
+        //! Reporting source
+        boost::log::sources::channel_logger<std::string> report_source;
 
         //! Logger sink; note we are forced to use boost::shared_ptr<> because this is what the
         //! Boost.Log API expects
         boost::shared_ptr<sink_t> log_sink;
+        
+        //! Reporting sink; note we are forced to use boost::shared_ptr<> because this is what the
+        //! Boost.Log API expects
+        boost::shared_ptr<sink_t> report_sink;
 
 	    };
 
@@ -306,28 +321,40 @@ namespace transport
 	      worker_number(w),
 	      data_manager_handle(nullptr),
 	      committed(false),
-        fail(false)
+        fail(false),
+        log_source(boost::log::keywords::channel = "log"),
+        report_source(boost::log::keywords::channel = "report")
 	    {
         // set up logging
 
         std::ostringstream log_file;
         log_file << CPPTRANSPORT_LOG_FILENAME_A << worker_number << CPPTRANSPORT_LOG_FILENAME_B;
-        boost::filesystem::path logfile_path = paths.root / paths.log / log_file.str();
+        boost::filesystem::path log_path = paths.root / paths.log / log_file.str();
+        
+        boost::filesystem::path report_path = paths.root / paths.log / std::string(CPPTRANSPORT_REPORT_FILENAME_A);
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
-
-        boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-                                                                  boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = logfile_path.string(),
-                                                                                                                           boost::log::keywords::open_mode = std::ios::app);
+    
+        boost::shared_ptr<boost::log::sinks::text_file_backend> logging_backend =
+          boost::make_shared<boost::log::sinks::text_file_backend>(
+            boost::log::keywords::file_name = log_path.string(),
+            boost::log::keywords::open_mode = std::ios::app
+          );
 
         // enable auto-flushing of log entries
         // this degrades performance, but we are not writing many entries and they
         // will not be lost in the event of a crash
-        backend->auto_flush(true);
+        logging_backend->auto_flush(true);
+        
+        boost::shared_ptr<boost::log::sinks::text_file_backend> reporting_backend =
+          boost::make_shared<boost::log::sinks::text_file_backend>(
+            boost::log::keywords::file_name = report_path.string(),
+            boost::log::keywords::open_mode = std::ios::app
+          );
 
-        // Wrap it into the frontend and register in the core.
-        // The backend requires synchronization in the frontend.
-        this->log_sink = boost::shared_ptr<sink_t>(new sink_t(backend));
+        // Generate logging sink and register it in the core.
+        // The logging sink filters only for the log channel.
+        this->log_sink = boost::make_shared<sink_t>(logging_backend);
         this->log_sink->set_formatter(
           boost::log::expressions::stream
             << boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
@@ -336,8 +363,24 @@ namespace transport
             << " | "
             << boost::log::expressions::smessage
         );
-
+        this->log_sink->set_filter(
+          boost::log::expressions::attr< std::string >("Channel") == "log"
+        );
+        
         core->add_sink(this->log_sink);
+        
+        // Generate reporting sink and register it in the core.
+        // The reporting sink filters only for the report channel.
+        this->report_sink = boost::make_shared<sink_t>(reporting_backend);
+        this->report_sink->set_formatter(
+          // no specific formatting required
+          boost::log::expressions::stream << boost::log::expressions::smessage
+        );
+        this->report_sink->set_filter(
+          boost::log::expressions::attr< std::string >("Channel") == "report"
+        );
+        
+        core->add_sink(this->report_sink);
 
         boost::log::add_common_attributes();
 

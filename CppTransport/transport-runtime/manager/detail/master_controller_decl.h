@@ -207,7 +207,7 @@ namespace transport
 
         //! Master node: inform workers that there is no more work associated
         //! with the current task
-        void workers_end_of_task(boost::log::sources::severity_logger<base_writer::log_severity_level>& log);
+        void workers_end_of_task(base_writer::logger& log);
 
         //! Master node: main loop: poll workers for events
         template <typename WriterObject>
@@ -216,7 +216,7 @@ namespace transport
                           WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: generate new work assignments for workers
-        void assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
+        void assign_work_to_workers(base_writer::logger& log);
         
         //! Master node: clean up after a work assignment; updates estimate of time-to-completion
         //! and pushes this value to the repository
@@ -629,7 +629,7 @@ namespace transport
           public:
 
             //! constructor accepts and stores reference to controller object
-            CloseDown_Context(master_controller<number>& c, boost::log::sources::severity_logger< base_writer::log_severity_level >& l)
+            CloseDown_Context(master_controller<number>& c, base_writer::logger& l)
               : controller(c),
                 log(l),
                 sent_closedown(false)
@@ -666,7 +666,7 @@ namespace transport
             bool sent_closedown;
 
             //! reference to logger
-            boost::log::sources::severity_logger< base_writer::log_severity_level >& log;
+            base_writer::logger& log;
 
           };
 

@@ -116,7 +116,9 @@ namespace transport
     // log file name
     constexpr auto         CPPTRANSPORT_LOG_FILENAME_A                     = "worker_";
     constexpr auto         CPPTRANSPORT_LOG_FILENAME_B                     = "_%3N.log";
-
+    
+    constexpr auto         CPPTRANSPORT_REPORT_FILENAME_A                  = "reports.txt";
+    
     // maximum number of attempts to gain a database lick
     constexpr unsigned int CPPTRANSPORT_DEFAULT_LOCKFILE_ATTEMPTS          = (50);
 

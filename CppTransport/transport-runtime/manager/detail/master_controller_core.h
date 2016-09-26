@@ -537,7 +537,7 @@ namespace transport
         // set up instrument to journal the MPI communication if needed
         journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
-        boost::log::sources::severity_logger< base_writer::log_severity_level >& log = writer.get_log();
+        base_writer::logger& log = writer.get_log();
 
         // rebuild information about our workers; this information
         // it is updated whenever we start a new task, because the details can vary
@@ -576,7 +576,7 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::workers_end_of_task(boost::log::sources::severity_logger<base_writer::log_severity_level>& log)
+    void master_controller<number>::workers_end_of_task(base_writer::logger& log)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
@@ -655,7 +655,7 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
+    void master_controller<number>::assign_work_to_workers(base_writer::logger& log)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
@@ -729,7 +729,7 @@ namespace transport
 
         bool success = true;
 
-        boost::log::sources::severity_logger< base_writer::log_severity_level >& log = writer.get_log();
+        base_writer::logger& log = writer.get_log();
 
         // set up aggregation queues
         unsigned int aggregation_counter = 0;
