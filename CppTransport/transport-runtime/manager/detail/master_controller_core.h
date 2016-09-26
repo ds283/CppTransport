@@ -602,7 +602,7 @@ namespace transport
         busyidle_instrument timers(this->busyidle_timers);
 
         // ask report_manager to apply its policy and determine whether an update is required
-        this->reporter.check_report();
+        this->reporter.check_report(writer);
       }
 
 

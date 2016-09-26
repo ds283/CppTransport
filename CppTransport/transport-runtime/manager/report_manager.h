@@ -156,7 +156,8 @@ namespace transport
       public:
         
         //! determine whether a report is due, and issue one if so
-        void check_report();
+        template <typename WriterObject>
+        void check_report(WriterObject& writer);
         
         //! advise starting a new task
         void new_task(std::string name, unsigned int n, unsigned int n_max);
@@ -187,6 +188,24 @@ namespace transport
         
         //! flush list of alerts
         void flush_alerts();
+        
+        
+        // INTERNAL API -- GENERATE REPORTS
+        
+      private:
+        
+        //! populate statistics table
+        void populate_statistics(reporting::key_value& statistics);
+        
+        //! populate notifications table
+        void populate_notifications(reporting::key_value& notifications);
+        
+        //! generate short reports
+        void issue_short_reports(reporting::key_value& statistics, reporting::key_value& notifications);
+        
+        //! generate long/detailed reports
+        template <typename WriterObject>
+        void issue_detailed_reports(WriterObject& writer, reporting::key_value& statistics, reporting::key_value& notifications);
         
         
         // INTERNAL DATA
@@ -277,53 +296,96 @@ namespace transport
       }
     
     
-    void report_manager::check_report()
+    template <typename WriterObject>
+    void report_manager::check_report(WriterObject& writer)
       {
         // apply policy
         // will update report timestamp and % completed if a report is required
         if(!check_report_policy()) return;
-        
+    
         reporting::key_value statistics(this->local_env, this->arg_cache);
         reporting::key_value notifications(this->local_env, this->arg_cache);
-        
+    
+        // populate key-value stores with
+        this->populate_statistics(statistics);
+        this->populate_notifications(notifications);
+    
+        this->issue_short_reports(statistics, notifications);
+        this->issue_detailed_reports(writer, statistics, notifications);
+
+        // flush any accumulated alerts
+        this->flush_alerts();
+      }
+    
+    
+    void report_manager::populate_statistics(reporting::key_value& statistics)
+      {
         std::ostringstream percent_complete;
         percent_complete << std::setprecision(3);
         percent_complete << 100.0 * this->scheduler.query_completion();
-        
+    
         statistics.insert_back(CPPTRANSPORT_REPORT_WORK_ITEMS_PROCESSED, boost::lexical_cast<std::string>(this->scheduler.get_items_processsed()));
         statistics.insert_back(CPPTRANSPORT_REPORT_WORK_ITEMS_INFLIGHT, boost::lexical_cast<std::string>(this->scheduler.get_items_inflight()));
         statistics.insert_back(CPPTRANSPORT_REPORT_REMAIN, boost::lexical_cast<std::string>(this->scheduler.get_items_remaining()));
         statistics.insert_back(CPPTRANSPORT_REPORT_COMPLETE, percent_complete.str());
         statistics.insert_back(CPPTRANSPORT_REPORT_MEAN_TIME_PER_ITEM, format_time(this->scheduler.get_mean_time_per_item()));
         statistics.insert_back(CPPTRANSPORT_REPORT_TARGET_DURATION, format_time(this->scheduler.get_target_assignment()));
-        
+    
+      }
+    
+    
+    void report_manager::populate_notifications(reporting::key_value& notifications)
+      {
         boost::posix_time::ptime estimated_completion = this->scheduler.get_estimated_completion();
         boost::posix_time::time_duration time_remaining = estimated_completion - this->last_report_time;
         std::ostringstream estimate_msg;
         estimate_msg << boost::posix_time::to_simple_string(estimated_completion)
                      << " (" << format_time(time_remaining.total_nanoseconds()) << " " << CPPTRANSPORT_REPORT_FROM_NOW << ")";
-        
+    
         notifications.insert_back(CPPTRANSPORT_REPORT_COMPLETION_ESTIMATE, estimate_msg.str());
         notifications.insert_back(CPPTRANSPORT_REPORT_CPU_TIME_ESTIMATE, format_time(this->scheduler.get_estimated_CPU_time()));
-        
+      }
+    
+    
+    void report_manager::issue_short_reports(reporting::key_value& statistics, reporting::key_value& notifications)
+      {
         // emit notification to terminal
-        if(this->arg_cache.get_verbose())
-          {
-            std::ostringstream update_msg;
-            update_msg << CPPTRANSPORT_TASK_MANAGER_LABEL << " " << boost::posix_time::to_simple_string(this->last_report_time);
+        if(!this->arg_cache.get_verbose()) return;
 
-            bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
+        std::ostringstream update_msg;
+        update_msg << CPPTRANSPORT_TASK_MANAGER_LABEL << " " << boost::posix_time::to_simple_string(this->last_report_time);
+    
+        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
+    
+        if(colour) std::cout << ColourCode(ANSI_colour::magenta);
+        std::cout << update_msg.str();
+        if(colour) std::cout << ColourCode(ANSI_colour::normal);
+        std::cout << '\n';
+    
+        statistics.set_tiling(true);
+        notifications.set_tiling(true);
+        statistics.write(std::cout);
+        notifications.write(std::cout);
+      }
+    
+    
+    template <typename WriterObject>
+    void report_manager::issue_detailed_reports(WriterObject& writer, reporting::key_value& statistics, reporting::key_value& notifications)
+      {
+        // emit notification to report
+        base_writer::reporter& report = writer.get_report();
         
-            if(colour) std::cout << ColourCode(ANSI_colour::magenta);
-            std::cout << update_msg.str();
-            if(colour) std::cout << ColourCode(ANSI_colour::normal);
-            std::cout << '\n';
+        std::ostringstream update_msg;
+        update_msg << CPPTRANSPORT_REPORT_HEADING_A << " " << this->task_name << " "
+                   << CPPTRANSPORT_REPORT_HEADING_B << " " << boost::posix_time::to_simple_string(this->last_report_time)
+                   << '\n';
         
-            statistics.set_tiling(true);
-            notifications.set_tiling(true);
-            statistics.write(std::cout);
-            notifications.write(std::cout);
-          }
+        notifications.set_tiling(true);
+        statistics.set_tiling(true);
+        statistics.write(update_msg, reporting::key_value::print_options::fixed_width);
+        notifications.write(update_msg, reporting::key_value::print_options::fixed_width);
+        
+        BOOST_LOG(report) << update_msg.str();
 
 //        double load_task = this->busyidle_timers.get_load_average(writer.get_name());
 //        double load_global = this->busyidle_timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER);
@@ -358,8 +420,6 @@ namespace transport
 //
 //        // omit closing #s if we didn't write any opening ones
 //        if(write_separator) BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "####################";
-        
-        this->flush_alerts();
       }
     
     

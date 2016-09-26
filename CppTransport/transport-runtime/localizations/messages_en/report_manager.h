@@ -60,5 +60,8 @@
 #define CPPTRANSPORT_PROCESSED_TASKS_MASTER_LOAD     "master load"
 #define CPPTRANSPORT_PROCESSED_TASKS_WORKER_LOAD     "worker load"
 
+#define CPPTRANSPORT_REPORT_HEADING_A                "Progress report for task"
+#define CPPTRANSPORT_REPORT_HEADING_B                "issued at"
+
 
 #endif //CPPTRANSPORT_REPORT_MANAGER_MESSAGES_H
