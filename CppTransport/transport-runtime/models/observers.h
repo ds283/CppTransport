@@ -370,10 +370,8 @@ namespace transport
         std::ostringstream subh_efolds;
         subh_efolds << std::scientific << std::setprecision(this->precision) << (this->k_config->t_exit - this->t_initial);
 
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::log_severity_level::normal)
-	        << "** " << boost::posix_time::to_simple_string(now) << ": "
-	        << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
+	        << "** " << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
 	        << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time()) << ", "
           << CPPTRANSPORT_INITIAL_TIME << " = " << init_time.str() << ", "
           << CPPTRANSPORT_EXIT_TIME << " = " << exit_time.str() << ", "
@@ -599,10 +597,8 @@ namespace transport
         std::ostringstream subh_efolds;
         subh_efolds << std::scientific << std::setprecision(this->precision) << (this->k_config->t_exit - this->t_initial);
 
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::log_severity_level::normal)
-	        << "** " << boost::posix_time::to_simple_string(now) << ": "
-          << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
+	        << "** " << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
           << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time()) << ", "
           << CPPTRANSPORT_INITIAL_TIME << " = " << init_time.str() << ", "
           << CPPTRANSPORT_EXIT_TIME << " " << CPPTRANSPORT_EXIT_TIME_KT << " = " << exit_time.str() << ", "
