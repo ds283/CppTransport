@@ -531,7 +531,7 @@ namespace transport
     
     bool argument_cache::set_checkpoint_interval(std::string interval)
       {
-        // unit defaults to minutes if no unit is given
+        // unit defaults to minutes if not specified explicitly, as here
         return this->parse_time_interval(interval, this->checkpoint_interval);
       }
     
