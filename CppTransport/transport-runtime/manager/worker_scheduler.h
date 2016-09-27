@@ -326,9 +326,6 @@ namespace transport
         
       public:
     
-        //! update estimates of completion time
-        void update_estimated_completion();
-    
         //! query for current completed fraction; eg. used by master controller to decide
         //! when to issue progress reports
         double query_completion() const;
@@ -353,6 +350,11 @@ namespace transport
     
         //! get current estimtaed CPU time
         const boost::timer::nanosecond_type& get_estimated_CPU_time() const { return this->estimated_cpu_time; }
+        
+      private:
+    
+        //! update estimates of completion time
+        void update_estimated_completion();
 
 
 		    // INTERFACE -- MANAGE WORK ASSIGNMENTS
