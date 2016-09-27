@@ -699,7 +699,7 @@ namespace transport
         
         if(t != this->alert_data.end())
           {
-            // increament use count and return
+            // increment use count and return
             ++(*t->second);
             return;
           }

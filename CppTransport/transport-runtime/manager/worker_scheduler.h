@@ -757,7 +757,7 @@ namespace transport
 
 				this->worker_data[worker].update_timing_data(time, items);
 				this->worker_data[worker].mark_assigned(false);
-				this->unassigned++;
+				++this->unassigned;
 
 				this->work_items_completed += items;
 		    if(this->work_items_in_flight >= items)
