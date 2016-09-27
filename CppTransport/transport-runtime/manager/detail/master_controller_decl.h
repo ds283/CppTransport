@@ -222,11 +222,7 @@ namespace transport
         //! and pushes this value to the repository
         template <typename WriterObject, typename PayloadObject>
         void unassign_worker(unsigned int worker, WriterObject& writer, PayloadObject& payload);
-
-        //! Master node: print progress update if it is required
-        template <typename WriterObject>
-        void check_for_progress_update(WriterObject& writer);
-
+    
         //! Master node: log current worker metadata
         template <typename WriterObject>
         void log_worker_metadata(WriterObject& writer);

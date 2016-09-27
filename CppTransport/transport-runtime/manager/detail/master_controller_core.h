@@ -60,7 +60,7 @@ namespace transport
         last_push_to_repo(boost::posix_time::second_clock::universal_time()),
         work_scheduler(w.size() > 0 ? static_cast<unsigned int>(w.size()-1) : 0),
         work_manager(w.size() > 0 ? static_cast<unsigned int>(w.size()-1) : 0),
-        reporter(work_scheduler, work_manager, busyidle_timers, aggregation_profiles, le, ac)
+        reporter(work_scheduler, work_manager, busyidle_timers, le, ac)
       {
         // create global busy/idle timer
         busyidle_timers.add_new_timer(CPPTRANSPORT_DEFAULT_TIMER);
@@ -592,20 +592,8 @@ namespace transport
         // wait for all messages to be received, then return
         boost::mpi::wait_all(requests.begin(), requests.end());
       }
-
-
-    template <typename number>
-    template <typename WriterObject>
-    void master_controller<number>::check_for_progress_update(WriterObject& writer)
-      {
-        // capture busy/idle timers and switch to busy mode
-        busyidle_instrument timers(this->busyidle_timers);
-
-        // ask report_manager to apply its policy and determine whether an update is required
-        this->reporter.check_report(writer);
-      }
-
-
+    
+    
     template <typename number>
     void master_controller<number>::set_local_checkpoint_interval(unsigned int m)
       {
@@ -757,7 +745,7 @@ namespace transport
             // generate new work assignments if needed, and push them to the workers
             if(this->work_scheduler.assignable())
               {
-                this->check_for_progress_update(writer);
+                this->reporter.periodic_report(writer);
                 this->assign_work_to_workers(log);
               }
 
@@ -997,16 +985,21 @@ namespace transport
           }
 
         timers.busy();
-        this->check_for_progress_update(writer);
+        // issue final progress report if needed
+        this->reporter.periodic_report(writer);
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "++ All work items completed at " << boost::posix_time::to_simple_string(now);
 
         // process any remaining aggregations
-        while(aggregation_queue.size() > 0)
+        if(aggregation_queue.size() > 0)
           {
-            aggregation_queue.front()->aggregate();
-            aggregation_queue.pop_front();
+            while(aggregation_queue.size() > 0)
+              {
+                aggregation_queue.front()->aggregate();
+                aggregation_queue.pop_front();
+              }
+            this->reporter.database_report(writer);
           }
 
         return(success);
