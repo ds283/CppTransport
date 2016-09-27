@@ -155,8 +155,13 @@
 #define CPPTRANSPORT_SWITCH_REPORT_DELAY      "report-delay"
 #define CPPTRANSPORT_HELP_REPORT_DELAY        "set delay before issuing first report (default 5 min)"
 
-#define CPPTRANSPORT_SWITCH_REPORT_EMAIL      "report-email"
+#define CPPTRANSPORT_SWITCH_REPORT_EMAIL      "report-email,M"
+#define CPPTRANSPORT_SWITCH_REPORT_EMAIL_LONG "report-email"
 #define CPPTRANSPORT_HELP_REPORT_EMAIL        "forward progress reports to email address (default none)"
+
+#define CPPTRANSPORT_SWITCH_REPORT_WHEN       "report-when,m"
+#define CPPTRANSPORT_SWITCH_REPORT_WHEN_LONG  "report-when"
+#define CPPTRANSPORT_HELP_REPORT_WHEN         "specify at which times reports should be issued to email (default bpe)"
 
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H

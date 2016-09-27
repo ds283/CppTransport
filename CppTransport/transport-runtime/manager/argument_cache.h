@@ -223,11 +223,22 @@ namespace transport
         unsigned int get_report_time_delay() const { return this->report_time_delay; }
         
         //! Set email address used for progress reports
-        void set_report_email(const std::string& email);
+        void set_report_email(const std::vector<std::string>& email);
         
         //! Get email address used for progress reports (may be null if no email address is set)
-        const std::string get_report_email() const { return this->report_email; }
+        const std::list< std::string >& get_report_email() const { return this->report_email; }
         
+        //! Set flags for email events
+        bool set_email_flags(const std::string& flags);
+        
+        //! Send email at begin task events?
+        bool email_begin() const { return this->mail_begin; }
+        
+        //! Send email at end task events?
+        bool email_end() const { return this->mail_end; }
+        
+        //! Send email at periodic reporting events?
+        bool email_periodic() const { return this->mail_periodic; }
         
         // SEARCH PATHS
 
@@ -314,7 +325,16 @@ namespace transport
         unsigned int report_time_delay;
         
         //! email address used for updates
-        std::string report_email;
+        std::list< std::string > report_email;
+        
+        //! send emails at begin task events?
+        bool mail_begin;
+        
+        //! send emails at end task events?
+        bool mail_end;
+        
+        //! send emails at periodic task events?
+        bool mail_periodic;
 
 
         // enable boost::serialization support, and hence automated packing for transmission over MPI
@@ -343,6 +363,9 @@ namespace transport
             ar & report_time_interval;
             ar & report_time_delay;
             ar & report_email;
+            ar & mail_begin;
+            ar & mail_end;
+            ar & mail_periodic;
           }
 
 	    };
@@ -364,7 +387,10 @@ namespace transport
         mpl_backend(matplotlib_backend::unset),
         report_percent_interval(CPPTRANSPORT_DEFAULT_REPORT_PERCENT_INTERVAL),
         report_time_interval(CPPTRANSPORT_DEFAULT_REPORT_TIME_INTERVAL),
-        report_time_delay(CPPTRANSPORT_DEFAULT_REPORT_TIME_DELAY)
+        report_time_delay(CPPTRANSPORT_DEFAULT_REPORT_TIME_DELAY),
+        mail_begin(true),
+        mail_end(true),
+        mail_periodic(true)
 	    {
 	    }
 
@@ -496,9 +522,10 @@ namespace transport
       }
     
     
-    void argument_cache::set_report_email(const std::string& email)
+    void argument_cache::set_report_email(const std::vector<std::string>& email)
       {
-        this->report_email = email;
+        this->report_email.clear();
+        std::copy(email.begin(), email.end(), std::back_inserter(this->report_email));
       }
     
     
@@ -506,6 +533,53 @@ namespace transport
       {
         // unit defaults to minutes if no unit is given
         return this->parse_time_interval(interval, this->checkpoint_interval);
+      }
+    
+    
+    bool argument_cache::set_email_flags(const std::string& flags)
+      {
+        // cache current values, to be reset in the event of failure
+        bool begin = this->mail_begin;
+        bool end = this->mail_end;
+        bool periodic = this->mail_periodic;
+        
+        this->mail_begin = false;
+        this->mail_end = false;
+        this->mail_periodic = false;
+        
+        for(const char& flag : flags)
+          {
+            switch(tolower(flag))
+              {
+                case 'b':
+                  {
+                    this->mail_begin = true;
+                    break;
+                  }
+                
+                case 'e':
+                  {
+                    this->mail_end = true;
+                    break;
+                  }
+                
+                case 'p':
+                  {
+                    this->mail_periodic = true;
+                    break;
+                  }
+    
+                default:
+                  {
+                    this->mail_begin = begin;
+                    this->mail_end = end;
+                    this->mail_periodic = periodic;
+                    return false;
+                  }
+              }
+          }
+        
+        return true;
       }
     
     

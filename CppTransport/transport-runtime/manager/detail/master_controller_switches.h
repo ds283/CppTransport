@@ -117,52 +117,50 @@ namespace transport
           (CPPTRANSPORT_SWITCH_HELP, CPPTRANSPORT_HELP_HELP)
           (CPPTRANSPORT_SWITCH_VERSION, CPPTRANSPORT_HELP_VERSION)
           (CPPTRANSPORT_SWITCH_LICENSE, CPPTRANSPORT_HELP_LICENSE)
-          (CPPTRANSPORT_SWITCH_INCLUDE, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_INCLUDE)
+          (CPPTRANSPORT_SWITCH_INCLUDE, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_INCLUDE)
           (CPPTRANSPORT_SWITCH_MODELS, CPPTRANSPORT_HELP_MODELS)
-          (CPPTRANSPORT_SWITCH_NO_COLOUR, CPPTRANSPORT_HELP_NO_COLOUR);
+          (CPPTRANSPORT_SWITCH_NO_COLOUR, CPPTRANSPORT_HELP_NO_COLOUR)
+          ;
         
         boost::program_options::options_description configuration("Configuration options", width);
         configuration.add_options()
           (CPPTRANSPORT_SWITCH_VERBOSE, CPPTRANSPORT_HELP_VERBOSE)
           (CPPTRANSPORT_SWITCH_REPO, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_REPO)
           (CPPTRANSPORT_SWITCH_CAPACITY, boost::program_options::value<long int>(), CPPTRANSPORT_HELP_CAPACITY)
-          (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value<long int>(),
-           CPPTRANSPORT_HELP_BATCHER_CAPACITY)
-          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY, boost::program_options::value<long int>(),
-           CPPTRANSPORT_HELP_CACHE_CAPACITY)
-          (CPPTRANSPORT_SWITCH_NETWORK_MODE, CPPTRANSPORT_HELP_NETWORK_MODE);
+          (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value<long int>(), CPPTRANSPORT_HELP_BATCHER_CAPACITY)
+          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY, boost::program_options::value<long int>(), CPPTRANSPORT_HELP_CACHE_CAPACITY)
+          (CPPTRANSPORT_SWITCH_NETWORK_MODE, CPPTRANSPORT_HELP_NETWORK_MODE)
+          ;
         
         boost::program_options::options_description plotting("Plot styling", width);
         plotting.add_options()
           (CPPTRANSPORT_SWITCH_PLOT_STYLE, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_PLOT_STYLE)
-          (CPPTRANSPORT_SWITCH_MPL_BACKEND, boost::program_options::value<std::string>(),
-           CPPTRANSPORT_HELP_MPL_BACKEND);
+          (CPPTRANSPORT_SWITCH_MPL_BACKEND, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_MPL_BACKEND)
+          ;
         
         boost::program_options::options_description task_reporting("In-progress task reporting", width);
         task_reporting.add_options()
           (CPPTRANSPORT_SWITCH_REPORT_PERCENT, boost::program_options::value<int>(), CPPTRANSPORT_HELP_REPORT_PERCENT)
-          (CPPTRANSPORT_SWITCH_REPORT_INTERVAL, boost::program_options::value<std::string>(),
-           CPPTRANSPORT_HELP_REPORT_INTERVAL)
-          (CPPTRANSPORT_SWITCH_REPORT_EMAIL, boost::program_options::value<std::string>(),
-           CPPTRANSPORT_HELP_REPORT_EMAIL)
-          (CPPTRANSPORT_SWITCH_REPORT_DELAY, boost::program_options::value<std::string>(),
-           CPPTRANSPORT_HELP_REPORT_DELAY);
+          (CPPTRANSPORT_SWITCH_REPORT_INTERVAL, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_REPORT_INTERVAL)
+          (CPPTRANSPORT_SWITCH_REPORT_EMAIL, boost::program_options::value< std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_REPORT_EMAIL)
+          (CPPTRANSPORT_SWITCH_REPORT_WHEN, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_REPORT_WHEN)
+          (CPPTRANSPORT_SWITCH_REPORT_DELAY, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_REPORT_DELAY)
+          ;
         
         boost::program_options::options_description journaling("Journaling options", width);
         journaling.add_options()
           (CPPTRANSPORT_SWITCH_GANTT_CHART, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_GANTT_CHART)
-          (CPPTRANSPORT_SWITCH_JOURNAL, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_JOURNAL);
+          (CPPTRANSPORT_SWITCH_JOURNAL, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_JOURNAL)
+          ;
         
         boost::program_options::options_description job_options("Job specification", width);
         job_options.add_options()
           (CPPTRANSPORT_SWITCH_CREATE, CPPTRANSPORT_HELP_CREATE)
-          (CPPTRANSPORT_SWITCH_TASK, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_TASK)
-          (CPPTRANSPORT_SWITCH_TAG, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_TAG)
+          (CPPTRANSPORT_SWITCH_TASK, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_TASK)
+          (CPPTRANSPORT_SWITCH_TAG, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_TAG)
           (CPPTRANSPORT_SWITCH_CHECKPOINT, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_CHECKPOINT)
-          (CPPTRANSPORT_SWITCH_SEED, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_SEED);
+          (CPPTRANSPORT_SWITCH_SEED, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_SEED)
+          ;
         
         boost::program_options::options_description action_options("Repository actions", width);
         action_options.add_options()
@@ -170,53 +168,52 @@ namespace transport
            CPPTRANSPORT_HELP_OBJECT)
           (CPPTRANSPORT_SWITCH_LOCK, CPPTRANSPORT_HELP_LOCK)
           (CPPTRANSPORT_SWITCH_UNLOCK, CPPTRANSPORT_HELP_UNLOCK)
-          (CPPTRANSPORT_SWITCH_ADD_TAG, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_ADD_TAG)
-          (CPPTRANSPORT_SWITCH_DELETE_TAG, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_DELETE_TAG)
-          (CPPTRANSPORT_SWITCH_ADD_NOTE, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_ADD_NOTE)
-          (CPPTRANSPORT_SWITCH_DELETE_NOTE, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_DELETE_NOTE)
-          (CPPTRANSPORT_SWITCH_DELETE, CPPTRANSPORT_HELP_DELETE);
+          (CPPTRANSPORT_SWITCH_ADD_TAG, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_ADD_TAG)
+          (CPPTRANSPORT_SWITCH_DELETE_TAG, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_DELETE_TAG)
+          (CPPTRANSPORT_SWITCH_ADD_NOTE, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_ADD_NOTE)
+          (CPPTRANSPORT_SWITCH_DELETE_NOTE, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_DELETE_NOTE)
+          (CPPTRANSPORT_SWITCH_DELETE, CPPTRANSPORT_HELP_DELETE)
+          ;
         
         boost::program_options::options_description report_options("Repository reporting and status", width);
         report_options.add_options()
           (CPPTRANSPORT_SWITCH_RECOVER, CPPTRANSPORT_HELP_RECOVER)
           (CPPTRANSPORT_SWITCH_STATUS, CPPTRANSPORT_HELP_STATUS)
           (CPPTRANSPORT_SWITCH_INFLIGHT, CPPTRANSPORT_HELP_INFLIGHT)
-          (CPPTRANSPORT_SWITCH_INFO, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_INFO)
-          (CPPTRANSPORT_SWITCH_PROVENANCE, boost::program_options::value<std::vector<std::string> >()->composing(),
-           CPPTRANSPORT_HELP_PROVENANCE)
-          (CPPTRANSPORT_SWITCH_HTML, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_HTML);
+          (CPPTRANSPORT_SWITCH_INFO, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_INFO)
+          (CPPTRANSPORT_SWITCH_PROVENANCE, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_PROVENANCE)
+          (CPPTRANSPORT_SWITCH_HTML, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_HTML)
+          ;
         
         boost::program_options::options_description hidden_options;
         hidden_options.add_options()
           (CPPTRANSPORT_SWITCH_NO_COLOR, CPPTRANSPORT_HELP_NO_COLOR)
           (CPPTRANSPORT_SWITCH_BUILDDATA, CPPTRANSPORT_HELP_BUILDDATA)
-          (CPPTRANSPORT_SWITCH_PROF_AGGREGATE, boost::program_options::value<std::string>(),
-           CPPTRANSPORT_HELP_PROF_AGGREGATE);
+          (CPPTRANSPORT_SWITCH_PROF_AGGREGATE, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_PROF_AGGREGATE)
+          ;
         
         boost::program_options::options_description cmdline_options;
-        cmdline_options.add(generic).add(configuration).add(job_options).add(task_reporting).add(action_options).add(
-          report_options).add(plotting).add(journaling).add(hidden_options);
+        cmdline_options.add(generic).add(configuration).add(job_options)
+          .add(task_reporting).add(action_options).add(report_options).add(plotting)
+          .add(journaling).add(hidden_options);
         
         boost::program_options::options_description config_file_options;
-        config_file_options.add(configuration).add(job_options).add(task_reporting).add(action_options).add(
-          report_options).add(plotting).add(journaling).add(hidden_options);
+        config_file_options.add(configuration).add(job_options)
+          .add(task_reporting).add(action_options).add(report_options).add(plotting)
+          .add(journaling).add(hidden_options);
         
         boost::program_options::options_description output_options;
-        output_options.add(generic).add(configuration).add(job_options).add(task_reporting).add(action_options).add(
-          report_options).add(plotting).add(journaling);
+        output_options.add(generic).add(configuration).add(job_options)
+          .add(task_reporting).add(action_options).add(report_options).add(plotting)
+          .add(journaling);
         
         // parse options from the command line; we do this first so that any options
         // supplied on the command line override options specified in a configuration file
         try
           {
-            boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc,
-                                                                                                                argv).options(
-              cmdline_options).allow_unregistered().run();
+            boost::program_options::parsed_options cmdline_parsed =
+              boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
+
             boost::program_options::store(cmdline_parsed, this->option_map);
             this->warn_unrecognized_switches(cmdline_parsed);
           }
@@ -740,8 +737,19 @@ namespace transport
               }
           }
         
-        if(option_map.count(CPPTRANSPORT_SWITCH_REPORT_EMAIL))
-          this->arg_cache.set_report_email(option_map[CPPTRANSPORT_SWITCH_REPORT_EMAIL].as<std::string>());
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPORT_EMAIL_LONG))
+          this->arg_cache.set_report_email(option_map[CPPTRANSPORT_SWITCH_REPORT_EMAIL_LONG].as<std::vector<std::string>>());
+        
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPORT_WHEN_LONG))
+          {
+            if(!this->arg_cache.set_email_flags(option_map[CPPTRANSPORT_SWITCH_REPORT_WHEN_LONG].as<std::string>()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNKNOWN_REPORT_FLAGS << " '"
+                    << option_map[CPPTRANSPORT_SWITCH_REPORT_WHEN_LONG].as<std::string>() << "'";
+                this->warn(msg.str());
+              }
+          }
       }
     
   }   // namespace transport

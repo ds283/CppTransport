@@ -64,6 +64,7 @@
 #define CPPTRANSPORT_UNKNOWN_REPORT_INTERVAL         "Ignored unrecognized report interval"
 #define CPPTRANSPORT_UNKNOWN_REPORT_DELAY            "Ignored unrecognized report time delay"
 #define CPPTRANSPORT_UNKNOWN_CHECKPOINT_INTERVAL     "Ignored unrecognized checkpoint interval"
+#define CPPTRANSPORT_UNKNOWN_REPORT_FLAGS            "Ignored unrecognized email reporting flags"
 
 #define CPPTRANSPORT_MASTER_REPORTED_BY_WORKER       "reported by worker"
 
