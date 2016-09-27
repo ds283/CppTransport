@@ -382,12 +382,12 @@ namespace transport
         if(this->alerts_report(report_msg, true))                                                             report_msg << '\n';
         if(this->workers_report(writer, report_msg, reporting::key_value::print_options::fixed_width, true))  report_msg << '\n';
     
-        // determine reference time for database report, which should be time of last report, or start of task
-        // if no report was previously issued
+        // determine reference time for database report, which should be time of the previous report
+        // (if one exists), or if this is the first report then the reference time should
+        // be the start of the task
         boost::posix_time::ptime ref_time = boost::posix_time::not_a_date_time;
-        if(this->report_times.size() > 1)       ref_time = *(++this->report_times.begin());
-        else if(this->report_times.size() == 1) ref_time = this->report_times.front();
-        else                                    ref_time = this->task_start_time;
+        if(this->report_times.size() > 1) ref_time = *(++this->report_times.begin());
+        else                              ref_time = this->task_start_time;
 
         this->database_report(writer, report_msg, ref_time, reporting::key_value::print_options::fixed_width, true);
     
@@ -563,7 +563,8 @@ namespace transport
         std::list< aggregation_profiler::const_iterator > items;
         for(aggregation_profiler::const_iterator t = profiler.begin(); t != profiler.end(); ++t)
           {
-            if((*t)->get_creation_time() >= ref_time) items.push_back(t);
+            const std::unique_ptr<aggregation_profile_record>& rec = *t;
+            if(rec->get_creation_time() >= ref_time) items.push_back(t);
           }
         
         // any aggregation events to report?
@@ -574,31 +575,33 @@ namespace transport
         unsigned int count = 0;
         for(aggregation_profiler::const_iterator& t : items)
           {
+            const std::unique_ptr<aggregation_profile_record>& rec = *t;
+            
             reporting::key_value store(this->local_env, this->arg_cache);
             
-            store.insert_back(CPPTRANSPORT_REPORT_DATABASE_EVENT_TIME, boost::posix_time::to_simple_string((*t)->get_creation_time()));
-            store.insert_back(CPPTRANSPORT_REPORT_DATABASE_ROWS, format_number((*t)->get_rows(), 5));
+            store.insert_back(CPPTRANSPORT_REPORT_DATABASE_EVENT_TIME, boost::posix_time::to_simple_string(rec->get_creation_time()));
+            store.insert_back(CPPTRANSPORT_REPORT_DATABASE_ROWS, format_number(rec->get_rows(), 5));
             
-            auto total_time = (*t)->get_total_time();
+            auto total_time = rec->get_total_time();
             if(total_time)
               {
                 constexpr unsigned int second = 1000*1000*1000;
                 store.insert_back(CPPTRANSPORT_REPORT_DATABASE_TIME, format_time(*total_time));
                 
-                double rows = static_cast<double>((*t)->get_rows());
+                double rows = static_cast<double>(rec->get_rows());
                 double seconds = static_cast<double>(*total_time) / static_cast<double>(second);
                 store.insert_back(CPPTRANSPORT_REPORT_DATABASE_ROWS_PER_SEC, format_number(rows/seconds, 5));
               }
             
-            auto container_size = (*t)->get_container_size();
+            auto container_size = rec->get_container_size();
             if(container_size) store.insert_back(CPPTRANSPORT_REPORT_DATABASE_CTR_SIZE, format_memory(*container_size));
             
-            auto temporary_size = (*t)->get_temporary_size();
+            auto temporary_size = rec->get_temporary_size();
             if(temporary_size) store.insert_back(CPPTRANSPORT_REPORT_DATABASE_TEMP_SIZE, format_memory(*temporary_size));
             
             if(count > 0) stream << '\n';
 
-            stream << (*t)->get_container_path().string() << '\n';
+            stream << rec->get_container_path().string() << '\n';
             store.set_tiling(true);
             store.write(stream, options);
             
@@ -612,7 +615,8 @@ namespace transport
     bool report_manager::check_report_policy()
       {
         // if no work items left and we have not issued a final report, then issue one
-        if(!this->issued_final_report && this->scheduler.get_items_remaining() == 0) return true;
+        bool final_report_override = false;
+        if(!this->issued_final_report && this->scheduler.get_items_remaining() == 0) final_report_override = true;
         
         // get time now
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
@@ -623,10 +627,11 @@ namespace transport
     
         // if less time has elapsed than the specified delay, don't issue a report
         unsigned int policy_delay = this->arg_cache.get_report_time_delay();
-        
-        if(policy_delay > 0 && time_since_start_task.total_seconds() < policy_delay) return false;
     
-        bool due = false;
+        if(!final_report_override && policy_delay > 0 && time_since_start_task.total_seconds() < policy_delay)
+          return false;
+    
+        bool due = final_report_override;
         
         // a report is due if we're over the time interval between reports
         unsigned int policy_interval = this->arg_cache.get_report_time_interval();
