@@ -44,6 +44,8 @@ namespace build_data
     const std::string cpp_compiler = "${CMAKE_CXX_COMPILER_ID}";
     const std::string build_type = "${CMAKE_BUILD_TYPE}";
     const std::string system_name = "${CMAKE_SYSTEM}";
+    
+    const std::string email_from = "${EMAIL_FROM}";
 
   }   // namespace build_data
 

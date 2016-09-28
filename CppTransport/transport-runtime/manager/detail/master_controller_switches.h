@@ -368,7 +368,7 @@ namespace transport
         
         if(option_map.count(CPPTRANSPORT_SWITCH_VERSION))
           {
-            std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | "
+            std::cout << CPPTRANSPORT_BUILT_USING << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | "
                       << CPPTRANSPORT_RUNTIME_API << '\n';
             emitted_version = true;
           }
@@ -376,7 +376,7 @@ namespace transport
         if(option_map.count(CPPTRANSPORT_SWITCH_HELP))
           {
             if(!emitted_version)
-              std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | "
+              std::cout << CPPTRANSPORT_BUILT_USING << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | "
                         << CPPTRANSPORT_RUNTIME_API << '\n';
             emitted_version = true;
             std::cout << description << '\n';
@@ -385,7 +385,7 @@ namespace transport
         if(option_map.count(CPPTRANSPORT_SWITCH_LICENSE))
           {
             if(!emitted_version)
-              std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | "
+              std::cout << CPPTRANSPORT_BUILT_USING << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | "
                         << CPPTRANSPORT_RUNTIME_API << '\n';
             emitted_version = true;
             show_license_data();

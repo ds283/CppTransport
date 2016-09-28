@@ -74,6 +74,7 @@ namespace transport
 
     constexpr auto         CPPTRANSPORT_DEFAULT_PYTHON_PATH                = "/usr/bin/python";
     constexpr auto         CPPTRANSPORT_DEFAULT_DOT_PATH                   = "/usr/bin/dot";
+    constexpr auto         CPPTRANSPORT_DEFAULT_SENDMAIL_PATH              = "/usr/bin/CppTransport-sendmail";
 
     constexpr auto         CPPTRANSPORT_HOME_ENV                           = "HOME";
     constexpr auto         CPPTRANSPORT_PATH_ENV                           = "CPPTRANSPORT_PATH";

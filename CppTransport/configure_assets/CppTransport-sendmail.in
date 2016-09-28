@@ -1,0 +1,37 @@
+#!/usr/bin/python
+
+import sys
+import getopt
+import os
+import subprocess
+
+# parse command line arguments
+opts, args = getopt.getopt(sys.argv[1:], "br", ["body=", "rcpt="])
+
+body_file = None
+recipient_list = None
+
+for opt, arg in opts:
+
+    if opt in ('-b', '--body'):
+        body_file = arg
+
+    if opt in ('-r', '--rcpt'):
+        recipient_list = arg
+
+if body_file is None or recipient_list is None:
+    sys.exit(1)
+
+if not os.path.isfile(body_file):
+    sys.exit(1)
+
+# split recipient list
+recipients = recipient_list.split(';')
+
+command = 'curl --silent --max-time 60 --url "${EMAIL_SMTP_SERVER}" --ssl-reqd --mail-from "${EMAIL_FROM}" --upload-file {file} --user "${EMAIL_FROM}:${EMAIL_PASSWORD}" --insecure'.format(file=body_file)
+
+for recipient in recipients:
+    command = command + " --mail-rcpt " + recipient
+
+returncode = subprocess.call(command, shell=True)
+sys.exit(returncode)

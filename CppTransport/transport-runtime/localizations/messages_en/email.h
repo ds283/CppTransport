@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 07/01/2014.
+// Created by David Seery on 28/09/2016.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,23 +23,14 @@
 // --@@
 //
 
-
-#ifndef CPPTRANSPORT_VERSION_H
-#define CPPTRANSPORT_VERSION_H
-
+#ifndef CPPTRANSPORT_EMAIL_MESSAGES_EN_H
+#define CPPTRANSPORT_EMAIL_MESSAGES_EN_H
 
 namespace transport
   {
 
-    constexpr auto         CPPTRANSPORT_BUILT_USING         = "built using CppTransport";
-    constexpr auto         CPPTRANSPORT_NAME                = "CppTransport";
-    constexpr auto         CPPTRANSPORT_VERSION             = "2016.3";
-    constexpr auto         CPPTRANSPORT_COPYRIGHT           = "(c) University of Sussex 2016";
-    
-    constexpr auto         CPPTRANSPORT_RUNTIME_API         = "runtime version 2016.3";
-    constexpr unsigned int CPPTRANSPORT_RUNTIME_API_VERSION = 201603;
-    
-  }   // namespace transport
+    constexpr auto CPPTRANSPORT_EMAIL_ISSUED_BY = "issued by CppTransport process running as";
 
+  }
 
-#endif //CPPTRANSPORT_VERSION_H
+#endif //CPPTRANSPORT_EMAIL_MESSAGES_EN_H

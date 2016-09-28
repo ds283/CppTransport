@@ -73,6 +73,7 @@
 
 #include "transport-runtime/localizations/messages_en/report_cmdline.h"
 #include "transport-runtime/localizations/messages_en/report_HTML.h"
+#include "transport-runtime/localizations/messages_en/email.h"
 
 #include "transport-runtime/localizations/messages_en/busyidle_timer_set.h"
 

@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_REPORT_MANAGER_MESSAGES_H
-#define CPPTRANSPORT_REPORT_MANAGER_MESSAGES_H
+#ifndef CPPTRANSPORT_REPORT_MANAGER_MESSAGES_EN_H
+#define CPPTRANSPORT_REPORT_MANAGER_MESSAGES_EN_H
 
 
 namespace transport
@@ -87,7 +87,13 @@ namespace transport
     
     constexpr auto CPPTRANSPORT_REPORT_HEADING_C = "Final database report for task";
     
+    constexpr auto CPPTRANSPORT_BEGIN_TASK_SUBJECT = "begin execution for task";
+    constexpr auto CPPTRANSPORT_END_TASK_SUBJECT = "end execution for task";
+    constexpr auto CPPTRANSPORT_PERIODIC_REPORT_SUBJECT = "progress update for task";
+    
+    constexpr auto CPPTRANSPORT_END_TASK_BODY = "execution finished successfully for task";
+    
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_REPORT_MANAGER_MESSAGES_H
+#endif //CPPTRANSPORT_REPORT_MANAGER_MESSAGES_EN_H

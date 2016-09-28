@@ -40,6 +40,9 @@
 #include "transport-runtime/manager/argument_cache.h"
 #include "transport-runtime/manager/message_handlers.h"
 
+#include "transport-runtime/reporting/key_value.h"
+#include "transport-runtime/reporting/email.h"
+
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 
@@ -316,17 +319,43 @@ namespace transport
         this->report_percentages.clear();
         this->task_start_time  = boost::posix_time::second_clock::local_time();
     
-        std::ostringstream msg;
-        msg << CPPTRANSPORT_PROCESSING_TASK_A << " '" << this->task_name << "' (" << n << " "
+        std::ostringstream report;
+        report << CPPTRANSPORT_PROCESSING_TASK_A << " '" << this->task_name << "' (" << n << " "
             << CPPTRANSPORT_PROCESSING_TASK_OF << " " << n_max << ")";
     
         // emit terminal notification of next task to process, if we are processing multiple tasks
-        if(n_max > 1) this->announce(msg.str());
+        if(n_max > 1) this->announce(report.str());
+    
+        // issue email version if required
+        if(this->arg_cache.email_begin())
+          {
+            reporting::email msg(this->local_env, this->arg_cache);
+            
+            std::ostringstream subject;
+            subject << CPPTRANSPORT_BEGIN_TASK_SUBJECT << " '" << this->task_name << "'";
+    
+            msg.set_to(this->arg_cache.get_report_email()).set_subject(subject.str()).set_body(report.str());
+            msg.send();
+          }
       }
     
     
     void report_manager::end_task()
       {
+        // issue email version if required
+        if(this->arg_cache.email_end())
+          {
+            reporting::email msg(this->local_env, this->arg_cache);
+    
+            std::ostringstream subject;
+            subject << CPPTRANSPORT_END_TASK_SUBJECT << " '" << this->task_name << "'";
+            
+            std::ostringstream report;
+            subject << CPPTRANSPORT_END_TASK_BODY << " '" << this->task_name << "'";
+    
+            msg.set_to(this->arg_cache.get_report_email()).set_subject(subject.str()).set_body(report.str());
+            msg.send();
+          }
       }
     
     
@@ -391,7 +420,20 @@ namespace transport
 
         this->database_report(writer, report_msg, ref_time, reporting::key_value::print_options::fixed_width, true);
     
+        // write report to log file
         BOOST_LOG(report) << report_msg.str();
+        
+        // issue email version if required
+        if(this->arg_cache.email_periodic())
+          {
+            reporting::email msg(this->local_env, this->arg_cache);
+    
+            std::ostringstream subject;
+            subject << CPPTRANSPORT_PERIODIC_REPORT_SUBJECT << " '" << this->task_name << "'";
+    
+            msg.set_to(this->arg_cache.get_report_email()).set_subject(subject.str()).set_body(report_msg.str());
+            msg.send(writer);
+          }
       }
     
     
