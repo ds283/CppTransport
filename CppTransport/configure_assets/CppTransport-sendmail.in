@@ -15,7 +15,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with CppTransport.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -52,7 +52,7 @@ if not os.path.isfile(body_file):
 recipients = recipient_list.split(';')
 
 # for GMail:
-# EMAIL_SMTP_SERVER = smtps://smtp.gmail.com:495
+# EMAIL_SMTP_SERVER = smtps://smtp.gmail.com:465
 # EMAIL_FROM = user@gmail.com
 # EMAIL_PASSWORD = plaintext password (so use a dedicated account)
 command = 'curl --silent --max-time 60 --url "${EMAIL_SMTP_SERVER}" --ssl-reqd --mail-from "${EMAIL_FROM}" --upload-file {file} --user "${EMAIL_FROM}:${EMAIL_PASSWORD}" --insecure'.format(file=body_file)
