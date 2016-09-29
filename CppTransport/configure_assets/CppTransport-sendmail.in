@@ -1,5 +1,28 @@
 #!/usr/bin/python
 
+# Created by David Seery on 28/09/2016.
+# --@@
+# Copyright (c) 2016 University of Sussex. All rights reserved.
+#
+# This file is part of the CppTransport platform.
+#
+# CppTransport is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# CppTransport is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with CppTransport.  If not, see <http://www.gnu.org/licenses/>.
+#
+# @license: GPL-2
+# @contributor: David Seery <D.Seery@sussex.ac.uk>
+# --@@
+
 import sys
 import getopt
 import os
@@ -28,6 +51,10 @@ if not os.path.isfile(body_file):
 # split recipient list
 recipients = recipient_list.split(';')
 
+# for GMail:
+# EMAIL_SMTP_SERVER = smtps://smtp.gmail.com:495
+# EMAIL_FROM = user@gmail.com
+# EMAIL_PASSWORD = plaintext password (so use a dedicated account)
 command = 'curl --silent --max-time 60 --url "${EMAIL_SMTP_SERVER}" --ssl-reqd --mail-from "${EMAIL_FROM}" --upload-file {file} --user "${EMAIL_FROM}:${EMAIL_PASSWORD}" --insecure'.format(file=body_file)
 
 for recipient in recipients:
