@@ -191,9 +191,19 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   )
 
 
-# install targets for CppTransport translator, templates, and header-only library/runtime API
-INSTALL(TARGETS CppTransport DESTINATION bin)
+# install targets for CppTransport translator, templates, and runtime system
+# note that CppTransport-sendmail has more restrictive permissions since it may contain a password
+INSTALL(TARGETS CppTransport DESTINATION bin PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ)
 INSTALL(DIRECTORY templates DESTINATION share/cpptransport)
+INSTALL(DIRECTORY transport-runtime DESTINATION include/cpptransport)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/build_data.h DESTINATION include/cpptransport/transport-runtime)
+
+IF(EMAIL_SMTP_SERVER AND EMAIL_FROM AND EMAIL_PASSWORD)
+  CONFIGURE_FILE(configure_assets/CppTransport-sendmail.in ${CMAKE_BINARY_DIR}/CppTransport-sendmail)
+  INSTALL(FILES ${CMAKE_BINARY_DIR}/CppTransport-sendmail DESTINATION bin PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ)
+ELSE()
+  MESSAGE(WARNING "CppTransport-sendmail script has not been configured. CppTransport will not issue email notifications unless a suitable script is installed manually. If you wish the script to be automatically configured, please re-run CMake and set the EMAIL_SMTP_SERVER, EMAIL_FROM and EMAIL_PASSWORD variables.")
+ENDIF()
 
 # install HTML, CSS and JavaScript assets
 INSTALL(DIRECTORY thirdparty/bootstrap DESTINATION share/cpptransport/HTML)
@@ -202,10 +212,6 @@ INSTALL(DIRECTORY thirdparty/jQuery DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/prism DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/DataTables DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
-
-# install runtime system
-INSTALL(DIRECTORY transport-runtime DESTINATION include/cpptransport)
-INSTALL(FILES ${CMAKE_BINARY_DIR}/build_data.h DESTINATION include/cpptransport/transport-runtime)
 
 # emplace JsonCpp and SPLINTER assets into runtime system folders
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/json DESTINATION include/cpptransport)
