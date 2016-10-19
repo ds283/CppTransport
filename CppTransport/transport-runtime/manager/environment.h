@@ -594,8 +594,7 @@ namespace transport
                 command << ". " << user_profile.string() << "; ";
               }
           }
-
-
+        
         command << this->python_location.string() << " \"" << script.string() << "\" > /dev/null 2>&1";
         return std::system(command.str().c_str());
       }
