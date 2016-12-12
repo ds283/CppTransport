@@ -497,6 +497,7 @@ namespace transport
         else if(tolower(interval.back()) == 'd')
           {
             unit = day;
+            interval.pop_back();
           }
     
         int offset = 0;
