@@ -2333,7 +2333,7 @@ namespace transport
 
         this->datapipe_attach_container(pipe, ctr_path);
 
-        return(std::move(group));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        return std::move(group);   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
@@ -2355,7 +2355,7 @@ namespace transport
 
         this->datapipe_attach_container(pipe, ctr_path);
 
-        return(std::move(group));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        return std::move(group);   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
@@ -2381,7 +2381,7 @@ namespace transport
         worker_information_db worker_db = sqlite3_operations::read_worker_table(db);
         this->close_container(db);
 
-        return(std::move(worker_db));
+        return std::move(worker_db);
       }
 
 
@@ -2392,7 +2392,7 @@ namespace transport
         timing_db timing_data = sqlite3_operations::read_statistics_table(db);
         this->close_container(db);
 
-        return(std::move(timing_data));
+        return std::move(timing_data);
       }
 
 
@@ -2432,8 +2432,8 @@ namespace transport
 
         //
         this->open_containers.push_back(db);
-
-        return(db);
+        
+        return db;
       }
 
 
