@@ -823,7 +823,6 @@ set(TRANSPORT_RUNTIME_MODELS_FILES
 set(TRANSPORT_RUNTIME_REPORTING_FILES
   transport-runtime/reporting/command_line.h
   transport-runtime/reporting/content_group_data.h
-  transport-runtime/reporting/CSS_writer.h
   transport-runtime/reporting/HTML_report.h
   transport-runtime/reporting/HTML_report_bundle.h
   transport-runtime/reporting/HTML_writer.h
