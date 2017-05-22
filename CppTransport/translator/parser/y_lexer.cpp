@@ -163,8 +163,8 @@ namespace y
                       {
                         rval = keyword_tokens[*kw];
                       }
+                    break;
                   }
-                  break;
 
                 case lexeme::lexeme_type::character:
                   {
@@ -174,8 +174,8 @@ namespace y
                       {
                         rval = symbol_tokens[sym];
                       }
+                    break;
                   }
-                  break;
 
                 case lexeme::lexeme_type::identifier:
                   {
