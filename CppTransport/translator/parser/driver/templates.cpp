@@ -25,6 +25,7 @@
 
 
 #include "templates.h"
+#include "generics.h"
 
 
 namespace y
@@ -41,95 +42,43 @@ namespace y
     
     void templates::set_core(lexeme_type* lex)
       {
-        boost::optional<std::string> str = lex->get_string();
-        
-        if(str)
-          {
-            this->root.set_core(*str, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return this->root.set_core(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void templates::set_implementation(lexeme_type* lex)
       {
-        boost::optional<std::string> str = lex->get_string();
-        
-        if(str)
-          {
-            this->root.set_implementation(*str, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return this->root.set_implementation(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void templates::set_abserr(struct stepper* s, lexeme_type* lex)
       {
-        // extract decimal value from lexeme
-        boost::optional<double> d = lex->get_decimal();
-        
-        if(d)
-          {
-            s->set_abserr(std::abs(*d), *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto err, auto lex) -> auto { return s->set_abserr(std::abs(err), lex); };
+        SetDecimalValue(Setter, lex);
       }
     
     
     void templates::set_relerr(struct stepper* s, lexeme_type* lex)
       {
-        // extract decimal value from lexeme
-        boost::optional<double> d = lex->get_decimal();
-        
-        if(d)
-          {
-            s->set_relerr(std::abs(*d), *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto err, auto lex) -> auto { return s->set_relerr(std::abs(err), lex); };
+        SetDecimalValue(Setter, lex);
       }
     
     
     void templates::set_stepper(struct stepper* s, lexeme_type* lex)
       {
-        // extract string name from lexeme
-        boost::optional<std::string> stepper_name = lex->get_string();
-        
-        if(stepper_name)
-          {
-            s->set_name(*stepper_name, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return s->set_name(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void templates::set_stepsize(struct stepper* s, lexeme_type* lex)
       {
-        // extract decimal value from lexeme
-        boost::optional<double> d = lex->get_decimal();
-        
-        if(d)
-          {
-            s->set_stepsize(*d, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return s->set_stepsize(name, lex); };
+        SetDecimalValue(Setter, lex);
       }
     
     

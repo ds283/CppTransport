@@ -417,6 +417,7 @@ set(TRANSLATOR_PARSER_BISON_FILES
   )
 
 set(TRANSLATER_PARSER_DRIVER_FILES
+  translator/parser/driver/generics.h
   translator/parser/driver/expression_tree.cpp
   translator/parser/driver/expression_tree.h
   translator/parser/driver/lagrangian.cpp

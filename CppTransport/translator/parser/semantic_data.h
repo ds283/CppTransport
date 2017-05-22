@@ -37,6 +37,7 @@
 #include "lexeme.h"
 #include "contexted_value.h"
 #include "y_common.h"
+#include "msg_en.h"
 
 #include "disable_warnings.h"
 #include "ginac/ginac.h"
@@ -49,8 +50,10 @@ class attributes
 
   public:
 
+    //! constructor
     attributes() = default;
 
+    //! destructor
     ~attributes() = default;
 
 
@@ -58,9 +61,12 @@ class attributes
 
   public:
 
+    //! get LaTeX name
     const std::string get_latex() const { if(this->latex) return *this->latex; else return std::string(); }
 
-    void set_latex(const std::string& ltx, const y::lexeme_type& l);
+    //! set LaTeX name; returns true if value was set, otherwise reports an error
+    //! if an existing value would be overwritten
+    bool set_latex(const std::string& ltx, const y::lexeme_type& l);
 
 
 		// INTERNAL DATA
@@ -68,23 +74,16 @@ class attributes
   private:
 
     // storage is via shared_ptr<> because we sometimes copy attribute blocks
-
+    
+    //! contexted value representing LaTeX name
     std::shared_ptr< contexted_value<std::string> > latex;
 
 	};
 
 
-inline void attributes::set_latex(const std::string& ltx, const y::lexeme_type& l)
+inline bool attributes::set_latex(const std::string& ltx, const y::lexeme_type& l)
   {
-    if(this->latex)
-      {
-        l.error(ERROR_LATEX_REDECLARATION);
-        this->latex->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->latex = std::make_unique< contexted_value<std::string> >(ltx, l.get_error_context());
-      }
+    return SetContextedValue(this->latex, ltx, l, ERROR_LATEX_REDECLARATION);
   }
 
 
@@ -95,10 +94,10 @@ class subexpr
 
   public:
 
-		subexpr()
-      {
-      }
+    //! constructor
+		subexpr() = default;
 
+    //! destructor
 		~subexpr() = default;
 
 
@@ -106,13 +105,19 @@ class subexpr
 
   public:
 
+    //! get LaTeX name
 		const std::string get_latex() const { if(this->latex) return *this->latex; else return std::string(); }
+    
+    //! set LaTeX name; returns true if value was set, otherwise reports an error
+    //! if an existing value would be overwritten
+    bool set_latex(const std::string& ltx, const y::lexeme_type& l);
 
-    void set_latex(const std::string& ltx, const y::lexeme_type& l);
-
+    //! get symbolic value
 		GiNaC::ex get_value() const { if(this->value) return *this->value; else return GiNaC::ex(0); }
 
-    void set_value(GiNaC::ex v, const y::lexeme_type& l);
+    //! set symbolic value; returns true if the value was set, otherwise reports an error
+    //! if an existing value would be overwritten
+    bool set_value(GiNaC::ex v, const y::lexeme_type& l);
 
 
 		// INTERNAL DATA
@@ -121,38 +126,24 @@ class subexpr
 
     // storage is via shared_ptr<> because we sometimes copy a subexpr block
 
+    //! contexted value representing LaTeX name
     std::shared_ptr< contexted_value<std::string> > latex;
 
+    //! contexted value representing symbolic value
     std::shared_ptr< contexted_value<GiNaC::ex> > value;
 
 	};
 
 
-inline void subexpr::set_value(GiNaC::ex v, const y::lexeme_type& l)
+inline bool subexpr::set_value(GiNaC::ex v, const y::lexeme_type& l)
   {
-    if(this->value)
-      {
-        l.error(ERROR_VALUE_REDECLARATION);
-        this->value->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->value = std::make_unique< contexted_value<GiNaC::ex> >(v, l.get_error_context());
-      }
+    return SetContextedValue(this->value, v, l, ERROR_VALUE_REDECLARATION);
   }
 
 
-inline void subexpr::set_latex(const std::string& ltx, const y::lexeme_type& l)
+inline bool subexpr::set_latex(const std::string& ltx, const y::lexeme_type& l)
   {
-    if(this->latex)
-      {
-        l.error(ERROR_LATEX_REDECLARATION);
-        this->latex->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->latex = std::make_unique< contexted_value<std::string> >(ltx, l.get_error_context());
-      }
+    return SetContextedValue(this->latex, ltx, l, ERROR_LATEX_REDECLARATION);
   }
 
 
@@ -163,8 +154,10 @@ class author
 
   public:
 
+    //! constructor
     author() = default;
 
+    //! destructor
     ~author() = default;
 
 
@@ -172,17 +165,26 @@ class author
 
   public:
 
+    //! get author name
     const std::string get_name() const { if(this->name) return *this->name; else return std::string(); }
 
-    void set_name(const std::string& n, const y::lexeme_type& l);
+    //! set author name; returns true if the value was set, otherwise reports an error
+    //! if an existing value would be overwritten
+    bool set_name(const std::string& n, const y::lexeme_type& l);
 
+    //! get author email
     const std::string get_email() const { if(this->email) return *this->email; else return std::string(); }
 
-    void set_email(const std::string& e, const y::lexeme_type& l);
+    //! set author email; returns true if the value was set, otherwise reports an error
+    //! if an existing value would be overwritten
+    bool set_email(const std::string& e, const y::lexeme_type& l);
 
+    //! get author institute
     const std::string get_institute() const { if(this->institute) return *this->institute; else return std::string(); }
 
-    void set_institute(const std::string& i, const y::lexeme_type& l);
+    //! set author institute; returns true if the value was set, otherwise reports an error
+    //! if an existing value would be overwritten
+    bool set_institute(const std::string& i, const y::lexeme_type& l);
 
 
     // INTERNAL DATA
@@ -191,54 +193,33 @@ class author
 
     // storage is via shared_ptr<> because we sometimes copy an author block
 
+    //! contexted value representing author name
     std::shared_ptr< contexted_value<std::string> > name;
 
+    //! contexted value representing author email
     std::shared_ptr< contexted_value<std::string> > email;
 
+    //! contexted value representing author institutional affiliation
     std::shared_ptr< contexted_value<std::string> > institute;
 
   };
 
 
-inline void author::set_institute(const std::string& i, const y::lexeme_type& l)
+inline bool author::set_institute(const std::string& i, const y::lexeme_type& l)
   {
-    if(this->institute)
-      {
-        l.error(ERROR_INSTITUTE_REDECLARATION);
-        this->institute->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->institute = std::make_unique< contexted_value<std::string> >(i, l.get_error_context());
-      }
+    return SetContextedValue(this->institute, i, l, ERROR_INSTITUTE_REDECLARATION);
   }
 
 
-inline void author::set_email(const std::string& e, const y::lexeme_type& l)
+inline bool author::set_email(const std::string& e, const y::lexeme_type& l)
   {
-    if(this->email)
-      {
-        l.error(ERROR_EMAIL_REDECLARATION);
-        this->email->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->email = std::make_unique< contexted_value<std::string> >(e, l.get_error_context());
-      }
+    return SetContextedValue(this->email, e, l, ERROR_EMAIL_REDECLARATION);
   }
 
 
-inline void author::set_name(const std::string& n, const y::lexeme_type& l)
+inline bool author::set_name(const std::string& n, const y::lexeme_type& l)
   {
-    if(this->name)
-      {
-        l.error(ERROR_AUTHORNAME_REDECLARATION);
-        this->name->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->name = std::make_unique< contexted_value<std::string> >(n, l.get_error_context());
-      }
+    return SetContextedValue(this->name, n, l, ERROR_AUTHORNAME_REDECLARATION);
   }
 
 
@@ -249,8 +230,10 @@ class string_array
 
   public:
 
+    //! constructor
     string_array() = default;
 
+    //! destructor
     ~string_array() = default;
 
 
@@ -258,8 +241,10 @@ class string_array
 
   public:
 
+    //! get array of contexted values representing string literals
     const std::vector< contexted_value<std::string> >& get_array() const { return(this->array); }
 
+    //! push element to the array
     void push_element(const std::string& s, const y::lexeme_type& l) { this->array.emplace_back(s, l.get_error_context()); }
 
 
@@ -267,6 +252,7 @@ class string_array
 
   private:
 
+    //! array of contexted string literals
     std::vector< contexted_value<std::string> > array;
 
   };

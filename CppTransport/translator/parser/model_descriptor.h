@@ -367,7 +367,7 @@ class model_descriptor
   public:
 
     //! set potential
-    void set_potential(GiNaC::ex V, const y::lexeme_type& l);
+    bool set_potential(GiNaC::ex V, const y::lexeme_type& l);
 
     //! get potential as a contexted value
     boost::optional< contexted_value<GiNaC::ex>& > get_potential() const;
@@ -381,7 +381,7 @@ class model_descriptor
   public:
 
     //! get model name (a textual string)
-    void set_name(const std::string n, const y::lexeme_type& l);
+    bool set_name(const std::string n, const y::lexeme_type& l);
 
     //! get model name as contexted value
     boost::optional< contexted_value<std::string>& > get_name() const;
@@ -395,42 +395,42 @@ class model_descriptor
 
 
     //! set citation guidance
-    void set_citeguide(const std::string t, const y::lexeme_type& l);
+    bool set_citeguide(const std::string t, const y::lexeme_type& l);
 
     //! get citation guidance as contexted value
     boost::optional< contexted_value<std::string>& > get_citeguide() const;
 
 
     //! set model description
-    void set_description(const std::string t, const y::lexeme_type& l);
+    bool set_description(const std::string t, const y::lexeme_type& l);
 
     //! get model description as contexted value
     boost::optional< contexted_value<std::string>& > get_description() const;
 
 
     //! set model revision
-    void set_revision(int r, const y::lexeme_type& l);
+    bool set_revision(int r, const y::lexeme_type& l);
 
     //! get model revision as contexted value
     boost::optional< contexted_value<unsigned int>& > get_revision() const;
 
 
     //! set model license string
-    void set_license(const std::string t, const y::lexeme_type& l);
+    bool set_license(const std::string t, const y::lexeme_type& l);
 
     //! get model license string as contexted value
     boost::optional< contexted_value<std::string>& > get_license() const;
 
 
     //! set model reference list
-    void set_references(const std::vector< contexted_value<std::string> >& refs);
+    bool set_references(const std::vector<contexted_value<std::string> >& refs);
 
     //! get model reference list as contexted value
     boost::optional< std::vector< contexted_value<std::string> >& > get_references() const;
 
 
     //! set model URL list
-    void set_urls(const std::vector< contexted_value<std::string> >& urls);
+    bool set_urls(const std::vector<contexted_value<std::string> >& urls);
 
     //! get model URL list as contexted value
     boost::optional< std::vector< contexted_value<std::string> >& > get_urls() const;
@@ -441,21 +441,21 @@ class model_descriptor
   public:
     
     //! set core template name
-    void set_core(const std::string c, const y::lexeme_type& l);
+    bool set_core(const std::string c, const y::lexeme_type& l);
 
     //! get core template name as contexted value
     boost::optional< contexted_value<std::string>& > get_core() const;
 
 
     //! set implementation template name
-    void set_implementation(const std::string i, const y::lexeme_type& l);
+    bool set_implementation(const std::string i, const y::lexeme_type& l);
 
     //! get implementation template name as contexted value
     boost::optional< contexted_value<std::string>& > get_implementation() const;
 
 
     //! set model tag (an identifier)
-    void set_model(const std::string m, const y::lexeme_type& l);
+    bool set_model(const std::string m, const y::lexeme_type& l);
 
     //! get model tag as a contexted value
     boost::optional< contexted_value<std::string>& > get_model() const;
@@ -466,14 +466,14 @@ class model_descriptor
   public:
 
     //! set background stepper name
-    void set_background_stepper(stepper* s, const y::lexeme_type& l);
+    bool set_background_stepper(stepper* s, const y::lexeme_type& l);
 
     //! get background stepper name as contexted value
     boost::optional< contexted_value<stepper>& > get_background_stepper() const;
 
 
     //! set perturbations stepper name
-    void set_perturbations_stepper(stepper* s, const y::lexeme_type& l);
+    bool set_perturbations_stepper(stepper* s, const y::lexeme_type& l);
 
     //! get perturbations stepper name as contexted value
     boost::optional< contexted_value<stepper>& > get_perturbations_stepper() const;
@@ -482,94 +482,186 @@ class model_descriptor
 		// INTERNAL DATA
 
   private:
-
+    
     //! flag to indicate errors encountered during processing
     bool errors_encountered;
-
+    
     //! 'model' is the C++ name
-    std::unique_ptr< contexted_value<std::string> >                model;
-
+    std::unique_ptr<contexted_value<std::string> > model;
+    
     //! 'name' is a human-readable name
-    std::unique_ptr< contexted_value<std::string> >                name;
-
+    std::unique_ptr<contexted_value<std::string> > name;
+    
     //! citation guidance
-    std::unique_ptr< contexted_value<std::string> >                citeguide;
+    std::unique_ptr<contexted_value<std::string> > citeguide;
     
     //! model description
-    std::unique_ptr< contexted_value<std::string> >                description;
-
+    std::unique_ptr<contexted_value<std::string> > description;
+    
     //! model revision
-    std::unique_ptr< contexted_value<unsigned int> >               revision;
-
+    std::unique_ptr<contexted_value<unsigned int> > revision;
+    
     //! model license string
-    std::unique_ptr< contexted_value<std::string> >                license;
-
+    std::unique_ptr<contexted_value<std::string> > license;
+    
     //! list of references
-    std::unique_ptr< std::vector< contexted_value<std::string> > > references;
-
+    std::unique_ptr<std::vector<contexted_value<std::string> > > references;
+    
     //! list of URLs
-    std::unique_ptr< std::vector< contexted_value<std::string> > > urls;
-
+    std::unique_ptr<std::vector<contexted_value<std::string> > > urls;
+    
     //! name of core template
-    std::unique_ptr< contexted_value<std::string> >                core;
+    std::unique_ptr<contexted_value<std::string> > core;
     
     //! name of implementation template
-    std::unique_ptr< contexted_value<std::string> >                implementation;
-
+    std::unique_ptr<contexted_value<std::string> > implementation;
+    
     //! author table
     author_table authors;
-
+    
     //! index ordering setting (left-most first or right-most first)
     enum index_order order;
-
+    
     //! specification of background stepper
-    std::unique_ptr< contexted_value<stepper> > background_stepper;
+    std::unique_ptr<contexted_value<stepper> > background_stepper;
     
     //! specification of perturbations stepper
-    std::unique_ptr< contexted_value<stepper> > perturbations_stepper;
-
+    std::unique_ptr<contexted_value<stepper> > perturbations_stepper;
+    
     //! typedef for field symbol table
-    typedef std::unordered_map< std::string, std::unique_ptr<field_declaration> >     field_symbol_table;
+    typedef std::unordered_map<std::string, std::unique_ptr<field_declaration> > field_symbol_table;
     
     //! typedef for parameter symbol table
-    typedef std::unordered_map< std::string, std::unique_ptr<parameter_declaration> > parameter_symbol_table;
+    typedef std::unordered_map<std::string, std::unique_ptr<parameter_declaration> > parameter_symbol_table;
     
     //! typedef for subexpression symbol table
-    typedef std::unordered_map< std::string, std::unique_ptr<subexpr_declaration> >   subexpr_symbol_table;
-
+    typedef std::unordered_map<std::string, std::unique_ptr<subexpr_declaration> > subexpr_symbol_table;
+    
     //! symbol table: fields
-    field_symbol_table     fields;
+    field_symbol_table fields;
     
     //! symbol table: parameters
     parameter_symbol_table parameters;
     
     //! symbol table: reserved words
-		parameter_symbol_table reserved;
+    parameter_symbol_table reserved;
     
     //! symbol table: subexpressions
-    subexpr_symbol_table   subexprs;
-
+    subexpr_symbol_table subexprs;
+    
     //! place-holder filestack for initializing reserved words
     std::unique_ptr<y::lexeme_type> fake_MPlanck_lexeme;
-
+    
     //! store details of potentials
-    std::unique_ptr< contexted_value<GiNaC::ex> > potential;
-
+    std::unique_ptr<contexted_value<GiNaC::ex> > potential;
+    
     
     // SYMBOL SERVICES
-
+    
     //! symbol factor
     symbol_factory sym_factory;
-
+    
     //! symbol list: names of field derivatives
     symbol_list deriv_symbols;
-
-		// reserved symbols
-
+    
+    // reserved symbols
+    
     //! symbol representing Planck mass
     GiNaC::symbol M_Planck;
 
 	};
+
+
+// sort a symbol table by unique ID and return a list of some specified value,
+// determined by the ValueGetter functor
+template <typename TableType, typename ValueGetter>
+auto UnzipSortedZipList(TableType& table, ValueGetter get) -> std::vector< typename std::result_of<ValueGetter(typename TableType::mapped_type::element_type&)>::type >
+  {
+    typedef typename std::result_of<ValueGetter(typename TableType::mapped_type::element_type&)>::type value_type;
+    typedef std::vector< std::pair<unsigned int, value_type> > zip_list;
+
+    zip_list zip;
+    std::vector<value_type> unzip;
+    
+    // zip up a list of unique IDs and values
+    for(const auto& t : table)
+      {
+        zip.push_back(std::make_pair(t.second->get_unique_id(), get(*t.second)));
+      }
+    
+    // sort on unique ID
+    struct Sorter
+      {
+        // sort on unique ID
+        bool operator()(const typename zip_list::value_type& a, const typename zip_list::value_type& b)
+          {
+            return a.first < b.first;
+          }
+      };
+
+    std::sort(zip.begin(), zip.end(), Sorter());
+    
+    // unzip values from the sorted list
+    for(const auto& t : zip)
+      {
+        unzip.push_back(t.second);
+      }
+    
+    return unzip;
+  };
+
+
+template <typename SymbolChecker, typename SymbolInserter, typename AttributeBlock>
+bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
+                         const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, AttributeBlock* a,
+                         std::string err_msg, std::string dupl_msg)
+  {
+    // search for an existing entry in the symbol table
+    auto record = check(n);
+    
+    if(record)    // symbol already exists
+      {
+        std::ostringstream msg;
+        msg << err_msg << " '" << n << "'";
+        l.error(msg.str());
+    
+        std::ostringstream orig_decl;
+        orig_decl << dupl_msg << " '" << n << "'";
+        record.get().get_declaration_point().warn(orig_decl.str());
+        
+        return false;
+      }
+    
+    insert(n, s, l, a);
+    return true;
+  };
+
+
+// version without GiNaC symbol
+template <typename SymbolChecker, typename SymbolInserter, typename AttributeBlock>
+bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
+                         const std::string& n, const y::lexeme_type& l, AttributeBlock* a,
+                         std::string err_msg, std::string dupl_msg)
+  {
+    // search for an existing entry in the symbol table
+    auto record = check(n);
+    
+    if(record)    // symbol already exists
+      {
+        std::ostringstream msg;
+        msg << err_msg << " '" << n << "'";
+        l.error(msg.str());
+        
+        std::ostringstream orig_decl;
+        orig_decl << dupl_msg << " '" << n << "'";
+        record.get().get_declaration_point().warn(orig_decl.str());
+        
+        return false;
+      }
+    
+    insert(n, l, a);
+    return true;
+  };
 
 
 #endif //CPPTRANSPORT_SCRIPT_H

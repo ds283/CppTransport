@@ -40,8 +40,10 @@ class stepper
 
   public:
 
+    //! constructor
     stepper() = default;
 
+    //! destructor
     ~stepper() = default;
 
 
@@ -49,20 +51,28 @@ class stepper
 
   public:
 
-    void set_abserr(double d, y::lexeme_type& l);
+    //! set absolute error used by stepper
+    bool set_abserr(double d, y::lexeme_type& l);
 
+    //! get absolute error used by stepper; returns default if no value has been set
     double get_abserr() const { if(this->abserr) return *this->abserr; else return(DEFAULT_ABS_ERR); }
 
-    void set_relerr(double d, y::lexeme_type& l);
+    //! set relative error used by stepper
+    bool set_relerr(double d, y::lexeme_type& l);
 
+    //! get relative error used by stepper; returns default if no value has been set
     double get_relerr() const { if(this->relerr) return *this->relerr; else return(DEFAULT_REL_ERR); }
 
-    void set_stepsize(double d, y::lexeme_type& l);
+    //! set stepsize to be used by stepper
+    bool set_stepsize(double d, y::lexeme_type& l);
 
+    //! get stepsize to be used by stepper; returns default if no value has been set
     double get_stepsize() const { if(this->stepsize) return *this->stepsize; else return(DEFAULT_STEP_SIZE); }
 
-    void set_name(const std::string& s, y::lexeme_type& l);
+    //! set name of stepper
+    bool set_name(const std::string& s, y::lexeme_type& l);
 
+    //! get name of stepper; returns default if no value has been set
     const std::string get_name() const { if(this->name) return *this->name; else return(DEFAULT_STEPPER); }
 
 
@@ -72,70 +82,42 @@ class stepper
 
     // storage is via shared pointers because we sometimes copy the stepper structure
 
+    //! contexted value representing absolute error
     std::shared_ptr< contexted_value<double> > abserr;
 
+    //! contexted value representing relative error
     std::shared_ptr< contexted_value<double> > relerr;
 
+    //! contexted value representing stepsize
     std::shared_ptr< contexted_value<double> > stepsize;
 
+    //! contexted value representing stepper name
     std::shared_ptr< contexted_value<std::string> > name;
 
   };
 
 
-inline void stepper::set_name(const std::string& s, y::lexeme_type& l)
+inline bool stepper::set_name(const std::string& s, y::lexeme_type& l)
   {
-    if(this->name)
-      {
-        l.error(ERROR_STEPPER_REDECLARATION);
-        this->name->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->name = std::make_unique<contexted_value<std::string> >(s, l.get_error_context());
-      }
+    return SetContextedValue(this->name, s, l, ERROR_STEPPER_REDECLARATION);
   }
 
 
-inline void stepper::set_stepsize(double d, y::lexeme_type& l)
+inline bool stepper::set_stepsize(double d, y::lexeme_type& l)
   {
-    if(this->stepsize)
-      {
-        l.error(ERROR_STEPSIZE_REDECLARATION);
-        this->stepsize->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->stepsize = std::make_unique<contexted_value<double> >(d, l.get_error_context());
-      }
+    return SetContextedValue(this->stepsize, d, l, ERROR_STEPSIZE_REDECLARATION);
   }
 
 
-inline void stepper::set_relerr(double d, y::lexeme_type& l)
+inline bool stepper::set_relerr(double d, y::lexeme_type& l)
   {
-    if(this->relerr)
-      {
-        l.error(ERROR_RELERR_REDECLARATION);
-        this->relerr->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->relerr = std::make_unique<contexted_value<double> >(d, l.get_error_context());
-      }
+    return SetContextedValue(this->relerr, d, l, ERROR_RELERR_REDECLARATION);
   }
 
 
-inline void stepper::set_abserr(double d, y::lexeme_type& l)
+inline bool stepper::set_abserr(double d, y::lexeme_type& l)
   {
-    if(this->abserr)
-      {
-        l.error(ERROR_ABSERR_REDECLARATION);
-        this->abserr->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-      }
-    else
-      {
-        this->abserr = std::make_unique<contexted_value<double> >(d, l.get_error_context());
-      }
+    return SetContextedValue(this->abserr, d, l, ERROR_ABSERR_REDECLARATION);
   }
 
 

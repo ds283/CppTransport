@@ -25,6 +25,7 @@
 
 
 #include "utilities.h"
+#include "generics.h"
 
 
 namespace y
@@ -41,33 +42,15 @@ namespace y
     
     void utilities::add_latex_attribute(attributes* a, lexeme_type* lex)
       {
-        // extract string name from lexeme
-        boost::optional<std::string> latex_name = lex->get_string();
-        
-        if(latex_name)
-          {
-            a->set_latex(*latex_name, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return a->set_latex(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void utilities::add_string(string_array* a, lexeme_type* lex)
       {
-        // extract string from lexeme
-        boost::optional<std::string> value = lex->get_string();
-        
-        if(value)
-          {
-            a->push_element(*value, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { a->push_element(name, lex); return true; };
+        SetStringValue(Setter, lex);
       }
     
     

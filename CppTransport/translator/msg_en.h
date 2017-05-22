@@ -89,7 +89,7 @@ constexpr auto ERROR_DECIMAL_LOOKUP                  = "Lookup of decimal litera
 constexpr auto ERROR_UNKNOWN_IDENTIFIER              = "Undeclared identifier";
 
 constexpr auto ERROR_AUTHOR_EXISTS                   = "Redeclaration of existing author";
-constexpr auto NOTIFY_DEUPLICATE_AUTHOR_WAS          = "Location of original declaration for author";
+constexpr auto NOTIFY_DUPLICATE_AUTHOR_WAS           = "Location of original declaration for author";
 
 constexpr auto NOTIFY_DUPLICATION_BLOCK_WAS          = "Location of original block";
 constexpr auto NOTIFY_DUPLICATION_DECLARATION_WAS    = "Location of original declaration was";

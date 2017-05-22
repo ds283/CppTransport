@@ -28,6 +28,7 @@
 
 
 #include "error_context.h"
+#include "msg_en.h"
 
 
 template <typename ValueType>
@@ -73,6 +74,45 @@ class contexted_value
     //! copies of ourselves
     std::shared_ptr<error_context> declaration_point;
 
+  };
+
+
+// set a contexted value for a single data element, but prevent overwriting
+template <typename DataType, typename ValueType, typename LexemeType>
+bool SetContextedValue(DataType& data, const ValueType& value, const LexemeType& l, std::string err_msg)
+  {
+    if(data)   // has a value already been set? if so, report an error
+      {
+        l.error(err_msg);
+        data->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+        return false;
+      }
+    
+    data = std::make_unique< contexted_value<ValueType> >(value, l.get_error_context());
+    return true;
+  };
+
+
+// set a contexted value for a list, but prevent overwriting
+// assumes the lists to be managed by smart pointers
+template <typename DataType, typename ValueType>
+bool SetContextedValue(DataType& data, const ValueType& value, std::string err_msg)
+  {
+    if(value.empty()) return false;   // nothing to do if no values to set
+    
+    if(data && !data->empty())   // has a value already been set? if so, report an error
+      {
+        value.front().get_declaration_point().error(err_msg);
+        
+        const auto& v = *data;
+        v.front().get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+        
+        return false;
+      }
+    
+    data.release();
+    data = std::make_unique< ValueType >(value);
+    return true;
   };
 
 

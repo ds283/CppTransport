@@ -25,6 +25,7 @@
 
 
 #include "metadata.h"
+#include "generics.h"
 
 
 namespace y
@@ -41,139 +42,64 @@ namespace y
     
     void metadata::set_model(lexeme_type* lex)
       {
-        boost::optional<std::string> str = lex->get_string();
-        
-        if(str)
-          {
-            this->root.set_model(*str, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return this->root.set_model(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void metadata::add_email(author* a, lexeme_type* lex)
       {
-        // extract string from lexeme
-        boost::optional<std::string> value = lex->get_string();
-        
-        if(value)
-          {
-            a->set_email(*value, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return a->set_email(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void metadata::add_institute(author* a, lexeme_type* lex)
       {
-        // extract string from lexeme
-        boost::optional<std::string> value = lex->get_string();
-        
-        if(value)
-          {
-            a->set_institute(*value, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return a->set_institute(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void metadata::set_name(lexeme_type* lex)
       {
-        boost::optional<std::string> str = lex->get_string();
-        
-        if(str)
-          {
-            this->root.set_name(*str, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return this->root.set_name(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void metadata::add_author(lexeme_type* lex, author* a)
       {
-        boost::optional<std::string> str = lex->get_string();
-        
-        if(str)
-          {
-            a->set_name(*str, *lex);
-            this->root.add_author(*str, *lex, a);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { a->set_name(name, lex); return this->root.add_author(name, lex, a); };
+        SetStringValue(Setter, lex);
       }
     
     
     void metadata::set_citeguide(lexeme_type* lex)
       {
-        boost::optional<std::string> str = lex->get_string();
-        
-        if(str)
-          {
-            this->root.set_citeguide(*str, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return this->root.set_citeguide(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void metadata::set_description(lexeme_type* lex)
       {
-        boost::optional<std::string> str = lex->get_string();
-        
-        if(str)
-          {
-            this->root.set_description(*str, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return this->root.set_description(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
     void metadata::set_revision(lexeme_type* lex)
       {
-        boost::optional<int> d = lex->get_integer();
-        
-        if(d)
-          {
-            this->root.set_revision(*d, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_INTEGER_LOOKUP);
-          }
+        auto Setter = [&](auto val, auto lex) -> auto { return this->root.set_revision(val, lex); };
+        SetIntegerValue(Setter, lex);
       }
     
     
     void metadata::set_license(lexeme_type* lex)
       {
-        boost::optional<std::string> str = lex->get_string();
-        
-        if(str)
-          {
-            this->root.set_license(*str, *lex);
-          }
-        else
-          {
-            lex->error(ERROR_STRING_LOOKUP);
-          }
+        auto Setter = [&](auto name, auto lex) -> auto { return this->root.set_license(name, lex); };
+        SetStringValue(Setter, lex);
       }
     
     
