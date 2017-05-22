@@ -259,9 +259,11 @@ class script
     // delete copying constructor, to avoid multiple aliasing of the
     // symbol_table<> and deque<declaration*> objects contained within
 
-    script(const script& other) = delete;              // non copy-constructible
+    //! not copy-constructible, so delete the copy constructor
+    script(const script& other) = delete;
 
-    script& operator=(const script& rhs) = delete;     // non copyable
+    //! not copyable, so delete the assignment operator
+    script& operator=(const script& rhs) = delete;
 
 
     // INTERFACE

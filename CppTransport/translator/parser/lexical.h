@@ -32,6 +32,8 @@
 
 enum class keyword_type
   {
+    metadata, requires_version, lagrangian,
+    canonical, noncanonical,
     name, author, citeguide,
     description, license, revision,
     references, urls, email, institute,

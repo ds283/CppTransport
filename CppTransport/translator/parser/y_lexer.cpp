@@ -25,6 +25,7 @@
 
 
 #include <iostream>
+#include <stdexcept>
 
 #include <unordered_map>
 
@@ -34,6 +35,11 @@
 
 std::unordered_map<enum keyword_type, enum y::y_parser::token::yytokentype> keyword_tokens =
   {
+    { keyword_type::metadata,         y::y_parser::token::metadata },
+    { keyword_type::requires_version, y::y_parser::token::requires_version },
+    { keyword_type::lagrangian,       y::y_parser::token::lagrangian },
+    { keyword_type::canonical,        y::y_parser::token::canonical },
+    { keyword_type::noncanonical,     y::y_parser::token::noncanonical },
     { keyword_type::name,             y::y_parser::token::name },
     { keyword_type::author,           y::y_parser::token::author },
     { keyword_type::citeguide,        y::y_parser::token::citeguide },
@@ -152,11 +158,10 @@ namespace y
               {
                 case lexeme::lexeme_type::keyword:
                   {
-                    enum keyword_type kw;
-
-                    if(lval->lex->get_keyword(kw))
+                    auto kw = lval->lex->get_keyword();
+                    if(kw)
                       {
-                        rval = keyword_tokens[kw];
+                        rval = keyword_tokens[*kw];
                       }
                   }
                   break;
@@ -165,7 +170,7 @@ namespace y
                   {
                     enum character_type sym;
 
-                    if(lval->lex->get_symbol(sym))
+                    if(lval->lex->get_symbol())
                       {
                         rval = symbol_tokens[sym];
                       }
@@ -173,28 +178,39 @@ namespace y
                   break;
 
                 case lexeme::lexeme_type::identifier:
-                  rval = y::y_parser::token::identifier;
-                  break;
+                  {
+                    rval = y::y_parser::token::identifier;
+                    break;
+                  }
 
                 case lexeme::lexeme_type::integer:
-                  rval = y::y_parser::token::integer;
-                  break;
+                  {
+                    rval = y::y_parser::token::integer;
+                    break;
+                  }
 
                 case lexeme::lexeme_type::decimal:
-                  rval = y::y_parser::token::decimal;
-                  break;
+                  {
+                    rval = y::y_parser::token::decimal;
+                    break;
+                  }
 
                 case lexeme::lexeme_type::string:
-                  rval = y::y_parser::token::string;
-                  break;
+                  {
+                    rval = y::y_parser::token::string;
+                    break;
+                  }
 
-                default:
-                  assert(false);
+                case lexeme::lexeme_type::unknown:
+                  {
+                    lval->lex->error(ERROR_UNKNOWN_LEXEME);
+                    break;
+                  }
               }
           }
         else
           {
-            /* return eof? */
+            throw std::runtime_error(ERROR_UNEXPECTED_END_OF_LEXEMES);
           }
 
         // std::cerr << "Returning token number " << rval << '\n';

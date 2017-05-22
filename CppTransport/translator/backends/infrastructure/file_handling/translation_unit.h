@@ -29,7 +29,7 @@
 #include "lexstream.h"
 #include "y_common.h"
 #include "y_lexer.h"
-#include "y_driver.h"
+#include "parser/driver/y_driver.h"
 #include "y_parser.hpp"
 
 #include "stepper.h"

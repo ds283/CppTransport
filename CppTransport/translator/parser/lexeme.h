@@ -44,6 +44,8 @@
 #include "error_context.h"
 #include "filestack.h"
 
+#include "boost/optional.hpp"
+
 
 constexpr auto UNARY_TAG                  = "@unary";
 constexpr unsigned int LENGTH_UNARY_TAG   = 6;
@@ -59,11 +61,13 @@ namespace lexeme    // package in a unique namespace
         string, number, character, string_literal
 	    };
 
+    //! tag the type of a lexeme
     enum class lexeme_type
 	    {
         keyword, character, identifier, integer, decimal, string, unknown
 	    };
 
+    //! tag the 'context' of a minus sign -- should it be interpreted as a unary minus, or a binary minus?
     enum class minus_context
 	    {
         unary, binary
@@ -81,8 +85,8 @@ namespace lexeme    // package in a unique namespace
         //! construct a lexeme
         //! accepts an error_context object which is used in generating context for
         //! later error messages
-        lexeme(const std::string& buffer, const enum buffer_type t,
-               enum minus_context& context, unsigned int u, error_context err_ctx,
+        lexeme(const std::string& buffer, const buffer_type t,
+               minus_context& context, unsigned int u, error_context err_ctx,
                const std::vector<std::string>& kt, const std::vector<Keywords>& km,
                const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx);
 
@@ -94,6 +98,7 @@ namespace lexeme    // package in a unique namespace
 
       public:
 
+        //! dump lexeme list to specified stream
         void dump(std::ostream& stream);
 
 
@@ -101,22 +106,35 @@ namespace lexeme    // package in a unique namespace
 
       public:
 
-        enum lexeme_type get_type() const { return(this->type); }
+        //! get lexeme type
+        lexeme_type get_type() const { return(this->type); }
 
-        bool get_keyword(Keywords& keyword);
+        //! if this lexeme is a keyword, returns the keyword tag
+        //! otherwise, returns boost::none
+        boost::optional<Keywords> get_keyword();
 
-        bool get_symbol(Characters& symbol);
+        //! if this lexeme is a symbol, returns the symbol tag
+        //! otherwise, returns boost::none
+        boost::optional<Characters> get_symbol();
 
-        bool get_identifier(std::string& id);
+        //! if this this lexeme is an identifier, returns its string representation
+        //! otherwise, returns boost::none
+        boost::optional<std::string> get_identifier();
 
-        bool get_integer(int& z);
+        //! if this lexeme is an integer, returns its value
+        //! otherwise, returns boost::none
+        boost::optional<int> get_integer();
 
-        bool get_decimal(double& d);
+        //! if this lexeme is a decimal, returns its value
+        //! otherwise, returns boost::none
+        boost::optional<double> get_decimal();
 
-        bool get_string(std::string& str);
+        //! if this lexeme is a string literal, returns its value
+        //! otherwise returns boost::none
+        boost::optional<std::string> get_string();
 
 
-        // INTERFACE -- RAISE ERROR CONTEXTUALIZED TO THIS LEXEME
+        // INTERFACE -- RAISE ERROR, CONTEXTUALIZED TO THIS LEXEME
 
       public:
 
@@ -145,21 +163,21 @@ namespace lexeme    // package in a unique namespace
         //! unique identifier
         const unsigned int unique;
 
-        // lexeme value - not all of these are used by any single lexeme
+        //! lexeme values - typically only one of these will be used by any single lexeme
         Keywords    k;
         Characters  s;
         int         z;
         double      d;
         std::string str;
 
-        // error context
+        //! error context
         error_context err_context;
 
-        // cache keyword and character tables;
-        // these are technically needed only during construction, but we keep a copy
-        // in order that we can use them if we write out the value of the lexeme.
-        // We take references, so the object referenced should not be invalidated
-        // during the lifetime of the lexeme
+        //! cache keyword and character tables;
+        //! these are technically needed only during construction, but we keep a copy
+        //! in order that we can use them if we write out the value of the lexeme.
+        //! We take references, so the object referenced should not be invalidated
+        //! during the lifetime of the lexeme
         const std::vector<std::string>& ktable;
         const std::vector<Keywords>&    kmap;
 
@@ -392,131 +410,78 @@ namespace lexeme    // package in a unique namespace
 
 
     template <typename Keywords, typename Characters>
-    bool lexeme<Keywords, Characters>::get_keyword(Keywords& kw)
+    boost::optional<Keywords> lexeme<Keywords, Characters>::get_keyword()
 	    {
-        bool rval = false;
+        if(this->type == lexeme_type::keyword) return this->k;
 
-        if(this->type == lexeme_type::keyword)
-	        {
-            kw   = this->k;
-            rval = true;
-	        }
-        else
-	        {
-            std::ostringstream msg;
-            msg << WARNING_LEXEME_KEYWORD << " (id " << this->unique << ")";
-            this->err_context.warn(msg.str());
-	        }
-
-        return (rval);
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_KEYWORD << " (id " << this->unique << ")";
+        this->err_context.warn(msg.str());
+        return boost::none;
 	    }
 
 
     template <typename Keywords, typename Characters>
-    bool lexeme<Keywords, Characters>::get_symbol(Characters& sym)
+    boost::optional<Characters> lexeme<Keywords, Characters>::get_symbol()
 	    {
-        bool rval = false;
+        if(this->type == lexeme_type::character) return this->s;
 
-        if(this->type == lexeme_type::character)
-	        {
-            sym  = this->s;
-            rval = true;
-	        }
-        else
-	        {
-            std::ostringstream msg;
-            msg << WARNING_LEXEME_SYMBOL << " (id " << this->unique << ")";
-            this->err_context.warn(msg.str());
-	        }
-
-        return (rval);
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_SYMBOL << " (id " << this->unique << ")";
+        this->err_context.warn(msg.str());
+        return boost::none;
 	    }
 
 
     template <typename Keywords, typename Characters>
-    bool lexeme<Keywords, Characters>::get_identifier(std::string& id)
+    boost::optional<std::string> lexeme<Keywords, Characters>::get_identifier()
 	    {
-        bool rval = false;
+        if(this->type == lexeme_type::identifier) return this->str;
 
-        if(this->type == lexeme_type::identifier)
-	        {
-            id   = this->str;
-            rval = true;
-	        }
-        else
-	        {
-            std::ostringstream msg;
-            msg << WARNING_LEXEME_IDENTIFIER << " (id " << this->unique << ")";
-            this->err_context.warn(msg.str());
-	        }
-
-        return (rval);
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_IDENTIFIER << " (id " << this->unique << ")";
+        this->err_context.warn(msg.str());
+        return boost::none;
 	    }
 
 
     template <typename Keywords, typename Characters>
-    bool lexeme<Keywords, Characters>::get_integer(int& z)
+    boost::optional<int> lexeme<Keywords, Characters>::get_integer()
 	    {
-        bool rval = false;
+        if(this->type == lexeme_type::integer) return this->z;
 
-        if(this->type == lexeme_type::integer)
-	        {
-            z    = this->z;
-            rval = true;
-	        }
-        else
-	        {
-            std::ostringstream msg;
-            msg << WARNING_LEXEME_INTEGER << " (id " << this->unique << ")";
-            this->err_context.warn(msg.str());
-	        }
-
-        return (rval);
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_INTEGER << " (id " << this->unique << ")";
+        this->err_context.warn(msg.str());
+        return boost::none;
 	    }
 
 
     template <typename Keywords, typename Characters>
-    bool lexeme<Keywords, Characters>::get_decimal(double& d)
+    boost::optional<double> lexeme<Keywords, Characters>::get_decimal()
 	    {
-        bool rval = false;
+        if(this->type == lexeme_type::decimal) return this->d;
 
-        if(this->type == lexeme_type::decimal)
-	        {
-            d    = this->d;
-            rval = true;
-	        }
-        else
-	        {
-            std::ostringstream msg;
-            msg << WARNING_LEXEME_DECIMAL << " (id " << this->unique << ")";
-            this->err_context.warn(msg.str());
-	        }
-
-        return (rval);
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_DECIMAL << " (id " << this->unique << ")";
+        this->err_context.warn(msg.str());
+        return boost::none;
 	    }
 
 
     template <typename Keywords, typename Characters>
-    bool lexeme<Keywords, Characters>::get_string(std::string& str)
+    boost::optional<std::string> lexeme<Keywords, Characters>::get_string()
 	    {
-        bool rval = false;
+        if(this->type == lexeme_type::string) return this->str;
 
-        if(this->type == lexeme_type::string)
-	        {
-            str  = this->str;
-            rval = true;
-	        }
-        else
-	        {
-            std::ostringstream msg;
-            msg << WARNING_LEXEME_STRING << " (id " << this->unique << ")";
-            this->err_context.warn(msg.str());
-	        }
-
-        return (rval);
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_STRING << " (id " << this->unique << ")";
+        this->err_context.warn(msg.str());
+        return boost::none;
 	    }
 
 
-	}
+	}   // namespace lexeme
+
 
 #endif //CPPTRANSPORT_LEXEME_H

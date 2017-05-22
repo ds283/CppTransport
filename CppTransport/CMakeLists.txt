@@ -28,18 +28,24 @@ IF(CLANG)
   # suppress missing override warnings which are automatically enabled in recent
   # versions of Clang. These produce a slew of warnings from GiNaC >= 1.7
   # also suppress unknown attribute warnings which produce errors for GiNaC_deprecated
-  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -Wno-inconsistent-missing-override -Wno-unknown-attributes")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast -Wno-inconsistent-missing-override -Wno-unknown-attributes")
+  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
+  SET(CMAKE_C_FLAGS_RELEASE "-Ofast -DNDEBUG -Wno-unknown-attributes")
+  SET(CMAKE_CXX_FLAGS_DEBUG "-Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
+  SET(CMAKE_C_FLAGS_DEBUG "-Wno-unknown-attributes")
 
 ELSEIF(GCC)
 
   SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-O3")
+  SET(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+  SET(CMAKE_CXX_FLAGS_DEBUG "")
+  SET(CMAKE_C_FLAGS_DEBUG "")
 
 ELSEIF(INTEL)
 
   SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast")
+  SET(CMAKE_C_FLAGS_RELEASE "-Ofast -DNDEBUG")
+  SET(CMAKE_CXX_FLAGS_DEBUG "")
+  SET(CMAKE_C_FLAGS_DEBUG "")
 
 ENDIF()
 
@@ -127,7 +133,12 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
   translator/parser/script.cpp
-  translator/parser/y_driver.cpp
+  translator/parser/driver/expression_tree.cpp
+  translator/parser/driver/lagrangian.cpp
+  translator/parser/driver/metadata.cpp
+  translator/parser/driver/templates.cpp
+  translator/parser/driver/utilities.cpp
+  translator/parser/driver/y_driver.cpp
   translator/parser/y_lexer.cpp
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/Hubble.cpp
@@ -189,6 +200,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/concepts
   translator/instruments
   translator/parser
+  translator/parser/driver
   translator/transport-objects
   translator/transport-objects/indices
   translator/transport-objects/utilities
@@ -404,6 +416,21 @@ set(TRANSLATOR_PARSER_BISON_FILES
   translator/parser/bison/y_parser.yy
   )
 
+set(TRANSLATER_PARSER_DRIVER_FILES
+  translator/parser/driver/expression_tree.cpp
+  translator/parser/driver/expression_tree.h
+  translator/parser/driver/lagrangian.cpp
+  translator/parser/driver/lagrangian.h
+  translator/parser/driver/metadata.cpp
+  translator/parser/driver/metadata.h
+  translator/parser/driver/templates.cpp
+  translator/parser/driver/templates.h
+  translator/parser/driver/utilities.cpp
+  translator/parser/driver/utilities.h
+  translator/parser/driver/y_driver.cpp
+  translator/parser/driver/y_driver.h
+  )
+
 set(TRANSLATOR_PARSER_FILES
   translator/parser/input_stack.cpp
   translator/parser/input_stack.h
@@ -416,8 +443,6 @@ set(TRANSLATOR_PARSER_FILES
   translator/parser/script.h
   translator/parser/semantic_data.h
   translator/parser/y_common.h
-  translator/parser/y_driver.cpp
-  translator/parser/y_driver.h
   translator/parser/y_lexer.cpp
   translator/parser/y_lexer.h
   )
@@ -1018,6 +1043,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_FILES}
   ${TRANSLATOR_INSTRUMENTS_FILES}
   ${TRANSLATOR_PARSER_BISON_FILES}
+  ${TRANSLATOR_PARSER_DRIVER_FILES}
   ${TRANSLATOR_PARSER_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
