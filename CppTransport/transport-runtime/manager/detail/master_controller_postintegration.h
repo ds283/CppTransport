@@ -170,6 +170,10 @@ namespace transport
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
         std::unique_ptr< postintegration_writer<number> > writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
+    
+        // create new timer for this task; the BusyIdle_Context manager
+        // ensures the timer is removed when the context manager is destroyed
+        BusyIdle_Context timing_context(writer->get_name(), this->busyidle_timers);
 
         // initialize the writer
         this->data_mgr->initialize_writer(*writer);
@@ -190,7 +194,8 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW POSTINTEGRATION TASK '" << writer->get_name() << "@" << tk->get_name()
+                                                                                  << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out the calculation
@@ -220,7 +225,7 @@ namespace transport
 
         // check whether the parent integration task has a default checkpoint interval
         // if so, instruct workers to change their interval unless we have been overriden by the command line
-        CheckpointContext<number> checkpoint_context(*this);
+        Checkpoint_Context<number> checkpoint_context(*this);
         if(ptk->has_default_checkpoint() && this->arg_cache.get_checkpoint_interval() == 0)
           {
             boost::optional<unsigned int> interval = ptk->get_default_checkpoint();
@@ -240,6 +245,13 @@ namespace transport
         std::unique_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(*prec, tags, this->get_rank(), 0, this->world.size(), "paired");
         this->data_mgr->initialize_writer(*i_writer);
         this->data_mgr->create_tables(*i_writer, ptk);
+    
+        // create new timer for this task; the BusyIdle_Context manager
+        // ensures the timer is removed when the context manager is destroyed
+        // note that the timer gets the name of the integration content group, not the postintegration content group
+        // this is because it's the integration writer that is passed to poll_workers(), and which will be used to interrogate
+        // for load data during execution of the task
+        BusyIdle_Context timing_context(i_writer->get_name(), this->busyidle_timers);
 
         // pair
         p_writer->set_pair(true);
@@ -259,7 +271,9 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW PAIRED POSTINTEGRATION TASKS '" << p_writer->get_name() << "@" << tk->get_name()
+                                                                                    << "' & '" << i_writer->get_name() << "@" << ptk->get_name()
+                                                                                    << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << *ptk;
 
         // instruct workers to carry out the calculation
@@ -404,7 +418,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_postintegration_payload payload(writer.get_task_name(), tempdir_path, logdir_path, tags);
+          MPI::new_postintegration_payload payload(writer.get_task_name(), writer.get_name(), tempdir_path, logdir_path, tags);
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {
@@ -460,7 +474,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_postintegration_payload payload(p_writer.get_task_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path, i_writer.get_workgroup_number());
+          MPI::new_postintegration_payload payload(p_writer.get_task_name(), p_writer.get_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path, i_writer.get_workgroup_number());
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {
@@ -474,7 +488,7 @@ namespace transport
 
         bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, i_writer, begin_label, end_label);
 
-        if(content_groups.size() > 1) throw runtime_exception(exception_type::RUNTIME_ERROR,  CPPTRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
+        if(content_groups.size() > 1) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
 
         // set wallclock time in integration metadata to our measured time
         wallclock_timer.stop();

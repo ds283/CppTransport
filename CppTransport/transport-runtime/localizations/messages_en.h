@@ -54,7 +54,9 @@
 #include "transport-runtime/localizations/messages_en/task_manager.h"
 #include "transport-runtime/localizations/messages_en/model_manager.h"
 #include "transport-runtime/localizations/messages_en/work_journal.h"
-#include "transport-runtime/localizations/messages_en/master_scheduler.h"
+#include "transport-runtime/localizations/messages_en/worker_scheduler.h"
+#include "transport-runtime/localizations/messages_en/worker_manager.h"
+#include "transport-runtime/localizations/messages_en/report_manager.h"
 
 #include "transport-runtime/localizations/messages_en/repository.h"
 #include "transport-runtime/localizations/messages_en/json_repository_interface.h"
@@ -71,6 +73,9 @@
 
 #include "transport-runtime/localizations/messages_en/report_cmdline.h"
 #include "transport-runtime/localizations/messages_en/report_HTML.h"
+#include "transport-runtime/localizations/messages_en/email.h"
+
+#include "transport-runtime/localizations/messages_en/busyidle_timer_set.h"
 
 
 // derived products

@@ -32,6 +32,7 @@
 #include <list>
 
 #include <algorithm>
+#include <cmath>
 
 #include "transport-runtime/defaults.h"
 
@@ -130,7 +131,7 @@ namespace transport
         bool get_recovery_mode() const                            { return(this->recovery); }
 
         //! Set checkpoint interval
-        void set_checkpoint_interval(unsigned int i)              { this->checkpoint_interval = i; }
+        bool set_checkpoint_interval(std::string interval);
 
         //! Get checkpoint interval
         unsigned int get_checkpoint_interval() const              { return(this->checkpoint_interval); }
@@ -197,7 +198,48 @@ namespace transport
 
         /// Get Matplotlib backend
         matplotlib_backend get_matplotlib_backend() const { return this->mpl_backend; }
-
+        
+        
+        // TASK PROGRESS REPORTING
+        
+      public:
+        
+        //! Set percent interval between progress reports
+        bool set_report_percent_interval(unsigned int interval);
+        
+        //! Set time interval between progress reports; returns true if interval was recognized, or false if not
+        bool set_report_time_interval(std::string interval);
+    
+        //! Set time delay before first report is issued
+        bool set_report_time_delay(std::string interval);
+        
+        //! Get percent interval between progress reports
+        unsigned int get_report_percent_interval() const { return this->report_percent_interval; }
+        
+        //! Get time interval between progress reports; returned in seconds
+        unsigned int get_report_time_interval() const { return this->report_time_interval; }
+        
+        //! Get time interval before first report is issued; returned in seconds
+        unsigned int get_report_time_delay() const { return this->report_time_delay; }
+        
+        //! Set email address used for progress reports
+        void set_report_email(const std::vector<std::string>& email);
+        
+        //! Get email address used for progress reports (may be null if no email address is set)
+        const std::list< std::string >& get_report_email() const { return this->report_email; }
+        
+        //! Set flags for email events
+        bool set_email_flags(const std::string& flags);
+        
+        //! Send email at begin task events?
+        bool email_begin() const { return this->mail_begin; }
+        
+        //! Send email at end task events?
+        bool email_end() const { return this->mail_end; }
+        
+        //! Send email at periodic reporting events?
+        bool email_periodic() const { return this->mail_periodic; }
+        
         // SEARCH PATHS
 
       public:
@@ -208,6 +250,16 @@ namespace transport
 
         //! get search paths
         const std::list< boost::filesystem::path > get_search_paths();
+        
+        
+        // UTILITY FUNCTIONS
+  
+      private:
+    
+        //! parse a time interval string into a number of seconds
+        //! unit is the default unit (in seconds) if no unit is specified
+        //! available units are s, m, h, d for seconds, minutes, hours, days
+        bool parse_time_interval(std::string interval, unsigned int& result, unsigned int unit=60);
 
 
         // INTERNAL DATA
@@ -262,6 +314,27 @@ namespace transport
         //! search paths for assets, eg. jQuery, bootstrap ...
         //! have to use std::string internally since boost::filesystem::path won't serialize
         std::list< std::string > search_paths;
+        
+        //! percentage interval between updates
+        unsigned int report_percent_interval;
+        
+        //! time interval between updates (value quoted in seconds)
+        unsigned int report_time_interval;
+        
+        //! time interval before first report is issued (value quoted in seconds)
+        unsigned int report_time_delay;
+        
+        //! email address used for updates
+        std::list< std::string > report_email;
+        
+        //! send emails at begin task events?
+        bool mail_begin;
+        
+        //! send emails at end task events?
+        bool mail_end;
+        
+        //! send emails at periodic task events?
+        bool mail_periodic;
 
 
         // enable boost::serialization support, and hence automated packing for transmission over MPI
@@ -286,6 +359,13 @@ namespace transport
             ar & plot_env;
             ar & mpl_backend;
             ar & search_paths;
+            ar & report_percent_interval;
+            ar & report_time_interval;
+            ar & report_time_delay;
+            ar & report_email;
+            ar & mail_begin;
+            ar & mail_end;
+            ar & mail_periodic;
           }
 
 	    };
@@ -304,7 +384,13 @@ namespace transport
         pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),
         checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL),
         plot_env(plot_style::raw_matplotlib),
-        mpl_backend(matplotlib_backend::unset)
+        mpl_backend(matplotlib_backend::unset),
+        report_percent_interval(CPPTRANSPORT_DEFAULT_REPORT_PERCENT_INTERVAL),
+        report_time_interval(CPPTRANSPORT_DEFAULT_REPORT_TIME_INTERVAL),
+        report_time_delay(CPPTRANSPORT_DEFAULT_REPORT_TIME_DELAY),
+        mail_begin(true),
+        mail_end(true),
+        mail_periodic(true)
 	    {
 	    }
 
@@ -359,8 +445,145 @@ namespace transport
         std::copy(this->search_paths.cbegin(), this->search_paths.cend(), std::back_inserter(list));
         return list;
       }
+    
+    
+    bool argument_cache::set_report_percent_interval(unsigned int interval)
+      {
+        if(interval >= 100) return false;
+        
+        this->report_percent_interval = interval;
+        return true;
+      }
+    
+    
+    bool argument_cache::set_report_time_interval(std::string interval)
+      {
+        // unit defaults to minutes if no interval is given
+        return this->parse_time_interval(std::move(interval), this->report_time_interval);
+      }
+    
+    
+    bool argument_cache::set_report_time_delay(std::string interval)
+      {
+        // unit defaults to minutes if no interval is given
+        return this->parse_time_interval(std::move(interval), this->report_time_delay);
+      }
+    
+    
+    bool argument_cache::parse_time_interval(std::string interval, unsigned int& result, unsigned int unit)
+      {
+        constexpr unsigned int second = 1;
+        constexpr unsigned int minute = 60;
+        constexpr unsigned int hour   = 60*60;
+        constexpr unsigned int day    = 24*60*60;
+        
+        if(interval.length() == 0) return false;
+        
+        if(tolower(interval.back()) == 's')
+          {
+            unit = second;
+            interval.pop_back();
+          }
+        else if(tolower(interval.back()) == 'm')
+          {
+            unit = minute;
+            interval.pop_back();
+          }
+        else if(tolower(interval.back()) == 'h')
+          {
+            unit = hour;
+            interval.pop_back();
+          }
+        else if(tolower(interval.back()) == 'd')
+          {
+            unit = day;
+            interval.pop_back();
+          }
+    
+        int offset = 0;
+        double value = 0;
 
-
+        if((sscanf(interval.c_str(), "%lf%n", &value, &offset) == 1) && offset == interval.length() && value > 0)
+          {
+            result = static_cast<unsigned int>(std::round(std::abs(value) * unit));
+            return true;
+          }
+        else if((sscanf(interval.c_str(), "%lg%n", &value, &offset) == 1) && offset == interval.length() && value > 0)
+          {
+            result = static_cast<unsigned int>(std::round(std::abs(value) * unit));
+            return true;
+          }
+        else if((sscanf(interval.c_str(), "%lG%n", &value, &offset) == 1) && offset == interval.length() && value > 0)
+          {
+            result = static_cast<unsigned int>(std::round(std::abs(value) * unit));
+            return true;
+          }
+        
+        return false;
+      }
+    
+    
+    void argument_cache::set_report_email(const std::vector<std::string>& email)
+      {
+        this->report_email.clear();
+        std::copy(email.begin(), email.end(), std::back_inserter(this->report_email));
+      }
+    
+    
+    bool argument_cache::set_checkpoint_interval(std::string interval)
+      {
+        // unit defaults to minutes if not specified explicitly, as here
+        return this->parse_time_interval(interval, this->checkpoint_interval);
+      }
+    
+    
+    bool argument_cache::set_email_flags(const std::string& flags)
+      {
+        // cache current values, to be reset in the event of failure
+        bool begin = this->mail_begin;
+        bool end = this->mail_end;
+        bool periodic = this->mail_periodic;
+        
+        this->mail_begin = false;
+        this->mail_end = false;
+        this->mail_periodic = false;
+        
+        for(const char& flag : flags)
+          {
+            switch(tolower(flag))
+              {
+                case 'b':
+                  {
+                    this->mail_begin = true;
+                    break;
+                  }
+                
+                case 'e':
+                  {
+                    this->mail_end = true;
+                    break;
+                  }
+                
+                case 'p':
+                  {
+                    this->mail_periodic = true;
+                    break;
+                  }
+    
+                default:
+                  {
+                    this->mail_begin = begin;
+                    this->mail_end = end;
+                    this->mail_periodic = periodic;
+                    return false;
+                  }
+              }
+          }
+        
+        return true;
+      }
+    
+    
   }   // namespace transport
 
 

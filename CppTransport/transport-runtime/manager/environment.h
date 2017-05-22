@@ -36,6 +36,7 @@
 #include <pwd.h>
 
 #include "transport-runtime/defaults.h"
+#include "transport-runtime/utilities/to_printable.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/optional.hpp"
@@ -77,7 +78,7 @@ namespace transport
       public:
 
         //! determine whether dot is available
-        bool has_dot() { return(this->dot_available); }
+        bool has_dot() const { return this->dot_available; }
 
         //! execute a dot script
         //! returns exit code provided by system()
@@ -144,6 +145,22 @@ namespace transport
 
         //! detect seaborn installation
         void detect_seaborn();
+        
+        
+        // EMAIL SEND SCRIPT SUPPORT
+        
+      public:
+        
+        //! determine whether send email script is available
+        bool has_sendmail() const { return sendmail_available; }
+        
+        //! execute sendmail script
+        int execute_sendmail(const std::string& body, const std::string& to);
+        
+      protected:
+        
+        //! detect send email script
+        void detect_sendmail();
 
 
         // TERMINAL PROPERTIES
@@ -151,7 +168,7 @@ namespace transport
       public:
 
         //! determine whether the terminal we are running in has support for ANSI colourized output
-        bool has_colour_terminal_support() const { return(this->colour_output); }
+        bool has_colour_terminal_support() const { return this->colour_output; }
 
         //! determine current terminal width
         unsigned int detect_terminal_width() const;
@@ -237,6 +254,15 @@ namespace transport
 
         //! is Seaborn available?
         bool seaborn_available;
+        
+        
+        // SEND EMAIL SUPPORT
+        
+        //! is the sendmail script available?
+        bool sendmail_available;
+        
+        //! location of sendmail script
+        boost::filesystem::path sendmail_location;
 
 
         // TERMINAL PROPERTIES
@@ -256,7 +282,8 @@ namespace transport
         matplotlib_tick_label(false),
         seaborn_cached(false),
         seaborn_available(false),
-        dot_available(false)
+        dot_available(false),
+        sendmail_available(false)
       {
         // detect user id
         this->detect_userid();
@@ -269,6 +296,9 @@ namespace transport
 
         // detect Graphviz installation
         this->detect_graphviz();
+        
+        // deteect sendmail
+        this->detect_sendmail();
 
         // detection of Python support (Python interpreter, Matplotlib, style sheets, Seaborn, etc.) is
         // deferred until needed, since it slows down program initialization
@@ -350,7 +380,7 @@ namespace transport
 
     void local_environment::detect_graphviz()
       {
-        // TODP: platform introspection
+        // TODO: platform introspection
         FILE* f = popen("which dot", "r");
 
         if(!f)
@@ -375,6 +405,38 @@ namespace transport
               {
                 this->dot_available = false;
                 this->dot_location = CPPTRANSPORT_DEFAULT_DOT_PATH;
+              }
+          }
+      }
+    
+    
+    void local_environment::detect_sendmail()
+      {
+        // TODO: platform introspection
+        FILE* f = popen("which CppTransport-sendmail", "r");
+        
+        if(!f)
+          {
+            this->sendmail_available = false;
+            this->sendmail_location = CPPTRANSPORT_DEFAULT_SENDMAIL_PATH;
+          }
+        else
+          {
+            char buffer[1024];
+            char* line = fgets(buffer, sizeof(buffer), f);
+            pclose(f);
+    
+            if(line != nullptr)
+              {
+                this->sendmail_available = true;
+                std::string temp = std::string(line);
+                boost::algorithm::trim_right(temp);
+                this->sendmail_location = temp;
+              }
+            else
+              {
+                this->sendmail_available = false;
+                this->sendmail_location = CPPTRANSPORT_DEFAULT_SENDMAIL_PATH;
               }
           }
       }
@@ -514,6 +576,10 @@ namespace transport
 
     int local_environment::execute_python(const boost::filesystem::path& script)
       {
+        if(!this->python_cached) this->detect_python();
+        
+        if(!this->python_available) return EXIT_FAILURE;
+        
         std::ostringstream command;
 
         // source user's .profile script if it exists
@@ -528,23 +594,16 @@ namespace transport
                 command << ". " << user_profile.string() << "; ";
               }
           }
-
-        if(!this->python_cached) this->detect_python();
-
-        if(this->python_available)
-          {
-            command << this->python_location.string() << " \"" << script.string() << "\" > /dev/null 2>&1";
-            return std::system(command.str().c_str());
-          }
-        else
-          {
-            return EXIT_FAILURE;
-          }
+        
+        command << this->python_location.string() << " \"" << script.string() << "\" > /dev/null 2>&1";
+        return std::system(command.str().c_str());
       }
 
 
     int local_environment::execute_dot(const boost::filesystem::path& script, const boost::filesystem::path& output, const std::string& format)
       {
+        if(!this->dot_available) return EXIT_FAILURE;
+
         std::ostringstream command;
 
         // source user's .profile script if it exists
@@ -560,15 +619,38 @@ namespace transport
               }
           }
 
-        if(this->dot_available)
+        command << this->dot_location.string() << " -T" << format << " \"" << script.string() << "\" -o \"" << output.string() << "\" > /dev/null 2>&1";
+        return std::system(command.str().c_str());
+      }
+    
+    
+    int local_environment::execute_sendmail(const std::string& body, const std::string& to)
+      {
+        if(!this->sendmail_available) return EXIT_FAILURE;
+
+        std::ostringstream command;
+    
+        // write message body to a temporary file
+        boost::filesystem::path body_file = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        std::ofstream outf(body_file.string(), std::ios_base::out | std::ios_base::trunc);
+        outf << body;
+        outf.close();
+        
+        // source user's .profile script if it exists
+        // TODO: Platform introspection
+        const char* user_home = getenv("HOME");
+        if(user_home != nullptr)
           {
-            command << this->dot_location.string() << " -T" << format << " \"" << script.string() << "\" -o \"" << output.string() << "\" > /dev/null 2>&1";
-            return std::system(command.str().c_str());
+            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            if(boost::filesystem::exists(user_profile))
+              {
+                // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
+                command << ". " << user_profile.string() << "; ";
+              }
           }
-        else
-          {
-            return EXIT_FAILURE;
-          }
+
+        command << this->sendmail_location << " --body " << body_file.string() << " --rcpt " << to_printable(to) << " > /dev/null 2>&1";
+        return std::system(command.str().c_str());
       }
 
 
@@ -597,8 +679,8 @@ namespace transport
 
         return(w.ws_col > 0 ? w.ws_col : CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH);
       }
-
-
+    
+    
   }   // namespace transport
 
 #endif //CPPTRANSPORT_ENVIRONMENT_H

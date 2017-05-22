@@ -38,6 +38,7 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/optional.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 
 namespace transport
@@ -201,8 +202,20 @@ namespace transport
       public:
         virtual aggregation_profile_record_type get_type() const = 0;
         virtual size_t get_rows() const = 0;
+
+        const boost::posix_time::ptime& get_creation_time() const { return this->timestamp; }
+        const boost::optional< boost::timer::nanosecond_type >& get_total_time() const { return this->total_time; }
+
+        const boost::optional< boost::uintmax_t >& get_container_size() const { return this->container_size; }
+        const boost::optional< boost::uintmax_t >& get_temporary_size() const { return this->temporary_size; }
+
+        const boost::filesystem::path& get_container_path() const { return this->container_path; }
+        const boost::filesystem::path& get_temporary_path() const { return this->temporary_path; }
+
         virtual void write_row(std::ofstream& out) const;
+
         void stop();
+        
 
       public:
         boost::optional< boost::uintmax_t > container_size;
@@ -212,11 +225,17 @@ namespace transport
         boost::optional< boost::timer::nanosecond_type > total_time;
 
       private:
+        boost::filesystem::path container_path;
+        boost::filesystem::path temporary_path;
+        boost::posix_time::ptime timestamp;
         boost::timer::cpu_timer timer;
       };
 
 
     aggregation_profile_record::aggregation_profile_record(const boost::filesystem::path& c, const boost::filesystem::path& t)
+      : timestamp(boost::posix_time::second_clock::local_time()),   // timestamp using local time for compatibility with report_manager
+        container_path(c),
+        temporary_path(t)
       {
         if(boost::filesystem::exists(c) && boost::filesystem::is_regular_file(c))
           {
@@ -486,6 +505,19 @@ namespace transport
 
     class aggregation_profiler
       {
+        
+        // TYPEDEFS
+        
+      public:
+        
+        //! database type
+        typedef std::list< std::unique_ptr< aggregation_profile_record > > profile_db;
+        
+        //! iterator
+        typedef profile_db::iterator iterator;
+        typedef profile_db::const_iterator const_iterator;
+        typedef profile_db::reverse_iterator reverse_iterator;
+        typedef profile_db::const_reverse_iterator const_reverse_iterator;
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -496,21 +528,59 @@ namespace transport
           : group_name(std::move(n))
           {
           }
-
-
-        // WRITE DETAILS TO THE PROFILER
+        
+        
+        // ITERATORS
+        
+      public:
+        
+        iterator               begin()         { return this->events.begin(); }
+        iterator               end()           { return this->events.end(); }
+        const_iterator         begin()   const { return this->events.cbegin(); }
+        const_iterator         end()     const { return this->events.cend(); }
+        const_iterator         cbegin()  const { return this->events.cbegin(); }
+        const_iterator         cend()    const { return this->events.cend(); }
+    
+        reverse_iterator       rbegin()        { return this->events.rbegin(); }
+        reverse_iterator       rend()          { return this->events.rend(); }
+        const_reverse_iterator rbegin()  const { return this->events.crbegin(); }
+        const_reverse_iterator rend()    const { return this->events.crend(); }
+        const_reverse_iterator crbegin() const { return this->events.crbegin(); }
+        const_reverse_iterator crend()   const { return this->events.crend(); }
+        
+        
+        // METADATA
+        
+      public:
+        
+        //! query number of reports
+        size_t size() const { return this->events.size(); }
+        
+        //! query whether we are empty
+        bool empty() const { return this->events.empty(); }
+        
+        //! get group name
+        const std::string& get_group_name() const { return this->group_name; }
+    
+    
+        // MANAGE PROFILE RECORDS
 
       public:
 
         //! add a record
         aggregation_profiler& add_record(std::unique_ptr< aggregation_profile_record > r);
+        
+        
+        // REPORTING
+        
+      public:
 
         //! write records to a named root folder
         void write_to_csv(const boost::filesystem::path& root) const;
 
       private:
 
-        //! write records of a specific type to
+        //! write records of a specific type to a named root folder
         template <aggregation_profile_record_type type>
         void write_csv(const boost::filesystem::path& folder) const;
 
@@ -522,17 +592,17 @@ namespace transport
         //! name of task we are profiling
         std::string group_name;
 
-        // LIST OF TIMES
+        // LIST OF PROFILE RECORDS
 
         //! records: profiles of individual aggregation events
-        std::list< std::unique_ptr< aggregation_profile_record > > events_db;
+        profile_db events;
 
       };
 
 
     aggregation_profiler& aggregation_profiler::add_record(std::unique_ptr< aggregation_profile_record > r)
       {
-        this->events_db.push_back(std::move(r));
+        this->events.push_back(std::move(r));
         return *this;
       }
 
@@ -547,7 +617,7 @@ namespace transport
         unsigned int zeta_twopf = 0;
         unsigned int zeta_threepf = 0;
         unsigned int fNL = 0;
-        for(const std::unique_ptr< aggregation_profile_record >& rec : this->events_db)
+        for(const std::unique_ptr< aggregation_profile_record >& rec : this->events)
           {
             switch(rec->get_type())
               {
@@ -599,7 +669,7 @@ namespace transport
 
         aggregation_profiler_impl::write_headings<type>(out);
 
-        for(const std::unique_ptr< aggregation_profile_record >& rec : this->events_db)
+        for(const std::unique_ptr< aggregation_profile_record >& rec : this->events)
           {
             if(rec->get_type() == type)
               {

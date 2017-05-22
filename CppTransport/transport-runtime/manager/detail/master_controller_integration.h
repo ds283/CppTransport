@@ -83,7 +83,7 @@ namespace transport
       {
         // check whether this task has a default checkpoint interval
         // if so, instruct workers to change their interval unless we have been overriden by the command line
-        CheckpointContext<number> checkpoint_context(*this);
+        Checkpoint_Context<number> checkpoint_context(*this);
         if(tk->has_default_checkpoint() && this->arg_cache.get_checkpoint_interval() == 0)
           {
             boost::optional<unsigned int> interval = tk->get_default_checkpoint();
@@ -98,6 +98,10 @@ namespace transport
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
         std::unique_ptr< integration_writer<number> > writer = this->repo->new_integration_task_content(rec, tags, this->get_rank(), 0, this->world.size());
+    
+        // create new timer for this task; the BusyIdle_Context manager
+        // ensures the timer is removed when the context manager is destroyed
+        BusyIdle_Context timing_context(writer->get_name(), this->busyidle_timers);
 
         // initialize the writer
         this->data_mgr->initialize_writer(*writer);
@@ -118,7 +122,8 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW INTEGRATION TASK '" << writer->get_name() << "@" << tk->get_name()
+                                                                                  << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out the calculation
@@ -198,7 +203,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_integration_payload payload(writer.get_task_name(), tempdir_path, logdir_path, writer.get_workgroup_number());
+          MPI::new_integration_payload payload(writer.get_task_name(), writer.get_name(), tempdir_path, logdir_path, writer.get_workgroup_number());
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {
@@ -311,7 +316,7 @@ namespace transport
         if(metadata.global_max_batching_time == 0 || payload.get_max_batching_time() > metadata.global_max_batching_time) metadata.global_max_batching_time = payload.get_max_batching_time();
         if(metadata.global_min_batching_time == 0 || payload.get_min_batching_time() < metadata.global_min_batching_time) metadata.global_min_batching_time = payload.get_min_batching_time();
 
-        metadata.total_configurations += payload.get_num_integrations();
+        metadata.total_configurations += payload.get_items_processed();
         metadata.total_failures += payload.get_num_failures();
         metadata.total_refinements += payload.get_num_refinements();
       }

@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 31/03/2016.
+// Created by David Seery on 09/04/15.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,24 +23,14 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_CSS_WRITER_H
-#define CPPTRANSPORT_CSS_WRITER_H
+
+#ifndef CPPTRANSPORT_WORKER_MANAGER_MESSAGES_H
+#define CPPTRANSPORT_WORKER_MANAGER_MESSAGES_H
 
 
-namespace transport
-  {
-
-    namespace reporting
-      {
-
-        class CSS_writer
-          {
-
-          };
-
-      }   // namespace reporting
-
-  }   // namespace transport
+#define CPPTRANSPORT_WORKER_MANAGER_OUT_OF_RANGE   "Internal error: worker index out of range in worker manager"
+#define CPPTRANSPORT_WORKER_MANAGER_NEW_TASK_FAIL  "Internal error: failed to create new worker management group for task"
+#define CPPTRANSPORT_WORKER_MANAGER_NO_ACTIVE_TASK "Internal error: no active task in worker manager"
 
 
-#endif //CPPTRANSPORT_CSS_WRITER_H
+#endif //CPPTRANSPORT_WORKER_MANAGER_MESSAGES_H

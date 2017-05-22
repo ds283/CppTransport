@@ -52,6 +52,10 @@
 #include "boost/log/sinks/sync_frontend.hpp"
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
+#include "boost/log/attributes.hpp"
+#include "boost/log/expressions.hpp"
+#include "boost/log/support/date_time.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 
 namespace transport
@@ -76,7 +80,11 @@ namespace transport
         //! Logging severity level
         enum class log_severity_level { datapipe_pull, normal, warning, error, critical };
 
+        //! logging sink
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
+        
+        //! logging source
+        typedef boost::log::sources::severity_logger<log_severity_level> logger;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -135,7 +143,7 @@ namespace transport
       public:
 
         //! Return logger
-        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+        logger& get_log() { return(this->log_source); }
 
 
         // FLUSH INTERFACE
@@ -166,64 +174,104 @@ namespace transport
         // INTERNAL DATA
 
       protected:
-
+    
         //! Host information
-        host_information                                         host_info;
-
-		    //! Worker group associated with this batcher;
-		    //! usually zero unless we are doing parallel batching.
-		    //! Later, groups identify different integrations which have been chained together
-		    unsigned int                                             worker_group;
-
+        host_information host_info;
+    
+        //! Worker group associated with this batcher;
+        //! usually zero unless we are doing parallel batching.
+        //! Later, groups identify different integrations which have been chained together
+        unsigned int worker_group;
+    
         //! Worker number associated with this batcher
-        unsigned int                                             worker_number;
-
-
+        unsigned int worker_number;
+    
+    
         // OTHER INTERNAL DATA
-
+    
         //! Capacity available
-        unsigned int                                             capacity;
-
+        unsigned int capacity;
+    
         //! Container path
-        boost::filesystem::path                                  container_path;
-
+        boost::filesystem::path container_path;
+    
         //! Log directory path
-        boost::filesystem::path                                  logdir_path;
-
+        boost::filesystem::path logdir_path;
+    
         //! Data manager handle
-        void*                                                    manager_handle;
-
+        void* manager_handle;
+    
         //! Callback for dispatching a container
-        std::unique_ptr<container_dispatch_function>             dispatcher;
-
+        std::unique_ptr<container_dispatch_function> dispatcher;
+    
         //! Callback for obtaining a replacement container
-        std::unique_ptr<container_replace_function>              replacer;
-
-
+        std::unique_ptr<container_replace_function> replacer;
+    
+    
         // FLUSH HANDLING
-
+    
         //! Needs flushing at next opportunity?
-        bool                                                     flush_due;
-
+        bool flush_due;
+    
         //! Flushing mode
-        flush_mode                                               mode;
-
+        flush_mode mode;
+    
         //! checkpoint interval in nanoseconds; 0 indicates that checkpointing is disabled
-        boost::timer::nanosecond_type                            checkpoint_interval;
-
+        boost::timer::nanosecond_type checkpoint_interval;
+    
         //! checkpoint timer
-        boost::timer::cpu_timer                                  checkpoint_timer;
-
-
+        boost::timer::cpu_timer checkpoint_timer;
+    
+    
         // LOGGING
-
+    
         //! Logger source
         boost::log::sources::severity_logger<log_severity_level> log_source;
-
-        //! Logger sink
-        boost::shared_ptr< sink_t >                              log_sink;
+    
+        //! Logger sink; note we are forced to use boost::shared_ptr<> because this
+        //! is what the Boost.Log API expects
+        boost::shared_ptr<sink_t> log_sink;
 
 	    };
+    
+    
+    // overload << to push log_severity_level to stream
+    std::ostream& operator<<(std::ostream& stream, generic_batcher::log_severity_level level)
+      {
+        static const std::map< generic_batcher::log_severity_level, std::string > stringize_map =
+          {
+            { generic_batcher::log_severity_level::datapipe_pull, "datapipe" },
+            { generic_batcher::log_severity_level::normal, "normal" },
+            { generic_batcher::log_severity_level::warning, "warning" },
+            { generic_batcher::log_severity_level::error, "error" },
+            { generic_batcher::log_severity_level::critical, "CRITICAL" }
+          };
+        
+        stream << stringize_map.at(level);
+        
+        return stream;
+      }
+    
+    
+    // overload << to push log_severity_level to Boost.Log log
+    struct generic_batcher_severity_tag;
+    boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& stream,
+                                               const boost::log::to_log_manip<generic_batcher::log_severity_level, generic_batcher_severity_tag> manip)
+      {
+        static const std::map< generic_batcher::log_severity_level, std::string > stringize_map =
+          {
+            { generic_batcher::log_severity_level::datapipe_pull, "data" },
+            { generic_batcher::log_severity_level::normal, "norm" },
+            { generic_batcher::log_severity_level::warning, "warn" },
+            { generic_batcher::log_severity_level::error, "err " },
+            { generic_batcher::log_severity_level::critical, "CRIT" }
+          };
+        
+        generic_batcher::log_severity_level level = manip.get();
+        stream << stringize_map.at(level);
+        
+        return stream;
+      }
 
 
     // GENERIC BATCHER METHODS
@@ -258,10 +306,12 @@ namespace transport
             boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
 //		    core->set_filter(boost::log::trivial::severity >= normal);
-
+    
             boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-	                                                                    boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string(),
-                                                                                                                               boost::log::keywords::open_mode = std::ios::app);
+              boost::make_shared<boost::log::sinks::text_file_backend>(
+                boost::log::keywords::file_name = log_path.string(),
+                boost::log::keywords::open_mode = std::ios::app
+              );
 
             // enable auto-flushing of log entries
             // this degrades performance, but we are not writing many entries and they
@@ -270,7 +320,15 @@ namespace transport
 
             // Wrap it into the frontend and register in the core.
             // The backend requires synchronization in the frontend.
-            this->log_sink = boost::shared_ptr<sink_t>(new sink_t(backend));
+            this->log_sink = boost::make_shared<sink_t>(backend);
+            this->log_sink->set_formatter(
+              boost::log::expressions::stream
+                << boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
+                << " | "
+                << boost::log::expressions::attr< generic_batcher::log_severity_level, generic_batcher_severity_tag >("Severity")
+                << " | "
+                << boost::log::expressions::smessage
+            );
 
             core->add_sink(this->log_sink);
 

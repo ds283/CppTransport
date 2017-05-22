@@ -203,9 +203,19 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
 # pull in test target
 ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
 
-# install targets for CppTransport translator, templates, and header-only library/runtime API
-INSTALL(TARGETS CppTransport DESTINATION bin)
+# install targets for CppTransport translator, templates, and runtime system
+# note that CppTransport-sendmail has more restrictive permissions since it may contain a password
+INSTALL(TARGETS CppTransport DESTINATION bin PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ)
 INSTALL(DIRECTORY templates DESTINATION share/cpptransport)
+INSTALL(DIRECTORY transport-runtime DESTINATION include/cpptransport)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/build_data.h DESTINATION include/cpptransport/transport-runtime)
+
+IF(EMAIL_SMTP_SERVER AND EMAIL_FROM AND EMAIL_PASSWORD)
+  CONFIGURE_FILE(configure_assets/CppTransport-sendmail.in ${CMAKE_BINARY_DIR}/CppTransport-sendmail)
+  INSTALL(FILES ${CMAKE_BINARY_DIR}/CppTransport-sendmail DESTINATION bin PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ)
+ELSE()
+  MESSAGE(WARNING "CppTransport-sendmail script has not been configured. CppTransport will not issue email notifications unless a suitable script is installed manually. If you wish the script to be automatically configured, please re-run CMake and set the EMAIL_SMTP_SERVER, EMAIL_FROM and EMAIL_PASSWORD variables.")
+ENDIF()
 
 # install HTML, CSS and JavaScript assets
 INSTALL(DIRECTORY thirdparty/bootstrap DESTINATION share/cpptransport/HTML)
@@ -214,10 +224,6 @@ INSTALL(DIRECTORY thirdparty/jQuery DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/prism DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/DataTables DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
-
-# install runtime system
-INSTALL(DIRECTORY transport-runtime DESTINATION include/cpptransport)
-INSTALL(FILES ${CMAKE_BINARY_DIR}/build_data.h DESTINATION include/cpptransport/transport-runtime)
 
 # emplace JsonCpp and SPLINTER assets into runtime system folders
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/json DESTINATION include/cpptransport)
@@ -706,6 +712,7 @@ set(TRANSPORT_RUNTIME_FILES
 
 set(TRANSPORT_RUNTIME_INSTRUMENTS_FILES
   transport-runtime/instruments/timing_instrument.h
+  transport-runtime/instruments/busyidle_timer_set.h
   )
 
 set(TRANSPORT_RUNTIME_LOCALIZATIONS_FILES
@@ -737,7 +744,9 @@ set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/json_repository_interface.h
   transport-runtime/localizations/messages_en/labels.h
   transport-runtime/localizations/messages_en/manager.h
-  transport-runtime/localizations/messages_en/master_scheduler.h
+  transport-runtime/localizations/messages_en/worker_scheduler.h
+  transport-runtime/localizations/messages_en/worker_manager.h
+  transport-runtime/localizations/messages_en/report_manager.h
   transport-runtime/localizations/messages_en/model_list.h
   transport-runtime/localizations/messages_en/model_manager.h
   transport-runtime/localizations/messages_en/models.h
@@ -746,6 +755,7 @@ set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/range.h
   transport-runtime/localizations/messages_en/report_cmdline.h
   transport-runtime/localizations/messages_en/report_HTML.h
+  transport-runtime/localizations/messages_en/email.h
   transport-runtime/localizations/messages_en/repository.h
   transport-runtime/localizations/messages_en/repository_records.h
   transport-runtime/localizations/messages_en/repository_sqlite3.h
@@ -757,6 +767,7 @@ set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/task_manager.h
   transport-runtime/localizations/messages_en/transaction_manager.h
   transport-runtime/localizations/messages_en/work_journal.h
+  transport-runtime/localizations/messages_en/busyidle_timer_set.h
   )
 
 set(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
@@ -769,8 +780,9 @@ set(TRANSPORT_RUNTIME_MANAGER_DETAIL_FILES
   transport-runtime/manager/detail/aggregation.h
   transport-runtime/manager/detail/aggregation_forward_declare.h
   transport-runtime/manager/detail/job_descriptors.h
-  transport-runtime/manager/detail/master_controller_core.h
   transport-runtime/manager/detail/master_controller_decl.h
+  transport-runtime/manager/detail/master_controller_core.h
+  transport-runtime/manager/detail/master_controller_switches.h
   transport-runtime/manager/detail/master_controller_integration.h
   transport-runtime/manager/detail/master_controller_output.h
   transport-runtime/manager/detail/master_controller_postintegration.h
@@ -787,7 +799,8 @@ set(TRANSPORT_RUNTIME_MANAGER_FILES
   transport-runtime/manager/argument_cache.h
   transport-runtime/manager/environment.h
   transport-runtime/manager/master_controller.h
-  transport-runtime/manager/master_scheduler.h
+  transport-runtime/manager/worker_scheduler.h
+  transport-runtime/manager/worker_manager.h
   transport-runtime/manager/message_handlers.h
   transport-runtime/manager/model_manager.h
   transport-runtime/manager/mpi_operations.h
@@ -796,6 +809,7 @@ set(TRANSPORT_RUNTIME_MANAGER_FILES
   transport-runtime/manager/task_gallery.h
   transport-runtime/manager/task_manager.h
   transport-runtime/manager/work_journal.h
+  transport-runtime/manager/report_manager.h
   )
 
 set(TRANSPORT_RUNTIME_MODELS_FILES
@@ -809,7 +823,6 @@ set(TRANSPORT_RUNTIME_MODELS_FILES
 set(TRANSPORT_RUNTIME_REPORTING_FILES
   transport-runtime/reporting/command_line.h
   transport-runtime/reporting/content_group_data.h
-  transport-runtime/reporting/CSS_writer.h
   transport-runtime/reporting/HTML_report.h
   transport-runtime/reporting/HTML_report_bundle.h
   transport-runtime/reporting/HTML_writer.h
@@ -817,6 +830,7 @@ set(TRANSPORT_RUNTIME_REPORTING_FILES
   transport-runtime/reporting/repository_cache.h
   transport-runtime/reporting/key_value.h
   transport-runtime/reporting/unique_tags.h
+  transport-runtime/reporting/email.h
   )
 
 set(TRANSPORT_RUNTIME_REPOSITORY_DETAIL_FILES
@@ -981,6 +995,7 @@ set(TRANSPORT_RUNTIME_UTILITIES_FILES
   transport-runtime/utilities/plot_environment.h
   transport-runtime/utilities/random_string.h
   transport-runtime/utilities/spline1d.h
+  transport-runtime/utilities/to_printable.h
   )
 
 set(SOURCE_FILES

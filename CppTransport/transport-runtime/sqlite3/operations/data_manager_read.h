@@ -46,7 +46,7 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, read_stmt.str().c_str(), read_stmt.str().length()+1, &stmt, nullptr));
 
-            worker_information_db worker_db;
+            worker_information_db data;
 
             int status;
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
@@ -69,13 +69,14 @@ namespace transport
                     std::string os_release   = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 12)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 12)));
                     std::string architecture = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 13)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 13)));
                     std::string cpu_vendor   = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 14)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 14)));
-
-                    worker_db.insert(std::make_pair(std::make_pair(workgroup, worker),
-                                                    std::make_unique<worker_record>(workgroup, worker, backend, pert_stepper,
-                                                                                         back_stepper, back_abs_tol, back_rel_tol,
-                                                                                         pert_abs_tol, pert_rel_tol,
-                                                                                         hostname, os_name, os_version, os_release,
-                                                                                         architecture, cpu_vendor)));
+    
+                    data.insert(std::make_pair(std::make_pair(workgroup, worker),
+                                               std::make_unique<worker_record>(workgroup, worker, backend, pert_stepper,
+                                                                               back_stepper, back_abs_tol, back_rel_tol,
+                                                                               pert_abs_tol, pert_rel_tol,
+                                                                               hostname, os_name, os_version,
+                                                                               os_release,
+                                                                               architecture, cpu_vendor)));
                   }
                 else
                   {
@@ -88,7 +89,7 @@ namespace transport
 
             check_stmt(db, sqlite3_finalize(stmt));
 
-            return(worker_db);
+            return std::move(data);
           }
 
 
@@ -134,7 +135,7 @@ namespace transport
 
             check_stmt(db, sqlite3_finalize(stmt));
 
-            return(data);
+            return std::move(data);
           }
 
 

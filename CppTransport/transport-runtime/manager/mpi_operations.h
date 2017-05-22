@@ -65,16 +65,20 @@ namespace transport
             const unsigned int POSTINTEGRATION_DATA_READY = 22;
             const unsigned int POSTINTEGRATION_FAIL       = 29;
 
-            const unsigned int INFORMATION_REQUEST        = 90;
-		        const unsigned int INFORMATION_RESPONSE       = 91;
-		        const unsigned int NEW_WORK_ASSIGNMENT        = 92;
-		        const unsigned int NEW_WORK_ACKNOWLEDGMENT    = 93;
-            const unsigned int REPORT_ERROR               = 94;
-            const unsigned int SET_LOCAL_CHECKPOINT       = 95;
-            const unsigned int UNSET_LOCAL_CHECKPOINT     = 96;
-		        const unsigned int END_OF_WORK                = 97;
-		        const unsigned int WORKER_CLOSE_DOWN          = 98;
-            const unsigned int TERMINATE                  = 99;
+            const unsigned int WORKER_SETUP               = 100;
+		        const unsigned int WORKER_IDENTIFICATION      = 101;
+		        const unsigned int NEW_WORK_ASSIGNMENT        = 102;
+		        const unsigned int NEW_WORK_ACKNOWLEDGMENT    = 103;
+            const unsigned int REPORT_ERROR               = 104;
+            const unsigned int SET_LOCAL_CHECKPOINT       = 105;
+            const unsigned int UNSET_LOCAL_CHECKPOINT     = 106;
+            const unsigned int QUERY_PERFORMANCE_DATA     = 107;
+            const unsigned int REPORT_PERFORMANCE_DATA    = 108;
+
+		        const unsigned int END_OF_WORK                = 900;
+            const unsigned int WORKER_CLOSE_DOWN          = 901;
+
+            const unsigned int TERMINATE                  = 999;
 
             // MPI ranks
             const unsigned int RANK_MASTER = 0;
@@ -209,6 +213,7 @@ namespace transport
 
 		        class work_assignment_payload
 			        {
+
 		          public:
 				        //! Default constructor (used for receiving messages)
 				        work_assignment_payload() = default;
@@ -241,7 +246,9 @@ namespace transport
 
 		        class work_acknowledgment_payload
 			        {
+
 		          public:
+
 				        //! Default constructor (used for receiving messages)
 				        work_acknowledgment_payload() = default;
 
@@ -249,7 +256,7 @@ namespace transport
 				        boost::posix_time::ptime get_timestamp() const { return(this->timestamp); }
 
 				        //! set timestamp
-				        void set_timestamp() { this->timestamp = boost::posix_time::second_clock::universal_time(); }
+				        void set_timestamp() { this->timestamp = boost::posix_time::second_clock::local_time(); }
 
 		          private:
 
@@ -270,16 +277,18 @@ namespace transport
 
             class new_integration_payload
               {
+
               public:
                 //! Default constructor (used for receiving messages)
                 new_integration_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
-                new_integration_payload(const std::string& tk,
+                new_integration_payload(const std::string& tk, const std::string& nm,
                                         const boost::filesystem::path& tmp_d,
                                         const boost::filesystem::path& log_d,
                                         unsigned int wg)
                 : task(tk),
+                  group_name(nm),
                   tempdir(tmp_d.string()),
                   logdir(log_d.string()),
                   workgroup_number(wg)
@@ -288,6 +297,9 @@ namespace transport
 
 		            //! Get task name
                 const std::string&      get_task_name()        const { return(this->task); }
+                
+                //! Get output group name
+                const std::string&      get_group_name()       const { return(this->group_name); }
 
 		            //! Get path to temporary directory
                 boost::filesystem::path get_tempdir_path()     const { return(boost::filesystem::path(this->tempdir)); }
@@ -302,6 +314,9 @@ namespace transport
 
                 //! Name of task, to be looked up in repository database
                 std::string task;
+                
+                //! Name of output group
+                std::string group_name;
 
                 //! Pathname to directory for temporary files
                 std::string tempdir;
@@ -319,6 +334,7 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
                   {
                     ar & task;
+                    ar & group_name;
                     ar & tempdir;
                     ar & logdir;
                     ar & workgroup_number;
@@ -329,6 +345,7 @@ namespace transport
 
             class data_ready_payload
               {
+
               public:
 
                 //! Default constructor (used for receiving messages)
@@ -337,7 +354,7 @@ namespace transport
                 //! Value constructor (used for sending messages)
                 data_ready_payload(const boost::filesystem::path& p)
                 : container_path(p.string()),
-                  timestamp(boost::posix_time::second_clock::universal_time())
+                  timestamp(boost::posix_time::second_clock::local_time())
                   {
                   }
 
@@ -370,6 +387,7 @@ namespace transport
 
             class finished_integration_payload
               {
+
               public:
 
                 //! Default constructor (used for receiving messages)
@@ -382,7 +400,7 @@ namespace transport
                                              const boost::timer::nanosecond_type& max_b, const boost::timer::nanosecond_type& min_b,
                                              const boost::timer::nanosecond_type& w,
                                              const unsigned int& n, const unsigned int& nr, const unsigned int& nf,
-                                             const std::set<unsigned int>& fs)
+                                             const std::set<unsigned int>& fs, const double ld)
                   : integration_time(i),
                     max_integration_time(max_i),
                     min_integration_time(min_i),
@@ -394,7 +412,8 @@ namespace transport
                     num_refinements(nr),
                     num_failures(nf),
                     failed_serials(fs),
-                    timestamp(boost::posix_time::second_clock::universal_time())
+                    load_average(ld),
+                    timestamp(boost::posix_time::second_clock::local_time())
                   {
                   }
 
@@ -420,7 +439,7 @@ namespace transport
                 boost::timer::nanosecond_type   get_wallclock_time()       const { return(this->wallclock_time); }
 
                 //! Get total number of reported integrations
-                unsigned int                    get_num_integrations()     const { return(this->num_integrations); }
+                unsigned int                    get_items_processed()      const { return(this->num_integrations); }
 
                 //! Get total number of integrations which required mesh refinement
                 unsigned int                    get_num_refinements()      const { return(this->num_refinements); }
@@ -431,6 +450,9 @@ namespace transport
                 //! Get list of failed serial numbers (if supported by the backend)
                 const std::set<unsigned int>&   get_failed_serials()       const { return(this->failed_serials); }
 
+                //! Get current load average
+                double                          get_load_average()         const { return(this->load_average); }
+                
 		            //! Get timestamp
 		            boost::posix_time::ptime        get_timestamp()            const { return(this->timestamp); }
 
@@ -465,6 +487,9 @@ namespace transport
 
                 //! Total elapsed wallclock time
                 boost::timer::nanosecond_type wallclock_time;
+                
+                //! Current load average
+                double load_average;
 
                 //! List of failed serial numbers (not all backends may support collection of this data)
                 std::set<unsigned int> failed_serials;
@@ -489,6 +514,7 @@ namespace transport
                     ar & num_failures;
                     ar & num_refinements;
                     ar & failed_serials;
+                    ar & load_average;
 		                ar & timestamp;
                   }
 
@@ -504,16 +530,23 @@ namespace transport
                 new_derived_content_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
-                new_derived_content_payload(const std::string& tk,
+                new_derived_content_payload(const std::string& tk, const std::string& nm,
                                             const boost::filesystem::path& tmp_d,
                                             const boost::filesystem::path& log_d,
                                             const std::list<std::string>& tg)
-	                : task(tk), tempdir(tmp_d.string()), logdir(log_d.string()), tags(tg)
+	                : task(tk),
+                    group_name(nm),
+                    tempdir(tmp_d.string()),
+                    logdir(log_d.string()),
+                    tags(tg)
 	                {
 	                }
 
 		            //! Get task name
                 const std::string&            get_task_name()     const { return(this->task); }
+    
+                //! Get output group name
+                const std::string&            get_group_name()    const { return(this->group_name); }
 
 		            //! Get path to the temporary directory
                 boost::filesystem::path       get_tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
@@ -528,6 +561,9 @@ namespace transport
 
                 //! Name of task, to be looked up in repository database
                 std::string task;
+    
+                //! Name of output group
+                std::string group_name;
 
                 //! Pathname to directory for temporary files
                 std::string tempdir;
@@ -545,6 +581,7 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
 	                {
                     ar & task;
+                    ar & group_name;
                     ar & tempdir;
                     ar & logdir;
 		                ar & tags;
@@ -567,7 +604,7 @@ namespace transport
                 content_ready_payload(const std::string& dp, const std::list<std::string>& g)
 	                : product(dp),
                     content_groups(g),
-                    timestamp(boost::posix_time::second_clock::universal_time())
+                    timestamp(boost::posix_time::second_clock::local_time())
 	                {
 	                }
 
@@ -625,7 +662,7 @@ namespace transport
 		                                     const unsigned int td, const unsigned int td_u,
 		                                     const boost::timer::nanosecond_type tce, const boost::timer::nanosecond_type twopf_e,
 		                                     const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type s_e,
-                                         const boost::timer::nanosecond_type de)
+                                         const boost::timer::nanosecond_type de, const double ld)
 			            : content_groups(cg),
                     database_time(db),
 			              cpu_time(cpu),
@@ -648,7 +685,8 @@ namespace transport
 		                threepf_kconfig_evictions(threepf_e),
                     stats_evictions(s_e),
 			              data_evictions(de),
-		                timestamp(boost::posix_time::second_clock::universal_time())
+                    load_average(ld),
+		                timestamp(boost::posix_time::second_clock::local_time())
 			            {
 			            }
 
@@ -659,7 +697,7 @@ namespace transport
 		            boost::timer::nanosecond_type  get_database_time()             const { return(this->database_time); }
 
 				        //! Get total CPU time
-				        boost::timer::nanosecond_type  get_cpu_time()                  const { return(this->cpu_time); }
+				        boost::timer::nanosecond_type  get_wallclock_time()            const { return(this->cpu_time); }
 
 		            //! Get total number of items processed
 		            unsigned int                   get_items_processed()           const { return(this->items_processed); }
@@ -718,6 +756,9 @@ namespace transport
 				        //! Get data cache evictions
 				        boost::timer::nanosecond_type  get_data_evictions()            const { return(this->data_evictions); }
 
+                //! Get current load average
+                double                         get_load_average()              const { return(this->load_average); }
+                
 				        //! Get timestamp
 				        boost::posix_time::ptime       get_timestamp()                 const { return(this->timestamp); }
 
@@ -790,6 +831,9 @@ namespace transport
 				        //! Time spent doing data cache evictions
 				        boost::timer::nanosecond_type data_evictions;
 
+                //! Current load average
+                double load_average;
+                
 		            //! Timestamp
 		            boost::posix_time::ptime timestamp;
 
@@ -821,6 +865,7 @@ namespace transport
 				            ar & threepf_kconfig_evictions;
                     ar & stats_evictions;
 				            ar & data_evictions;
+                    ar & load_average;
 				            ar & timestamp;
 			            }
 
@@ -836,11 +881,12 @@ namespace transport
                 new_postintegration_payload() = default;
 
                 //! Value constructor for standard postintegrations (used for constructing messages to send)
-                new_postintegration_payload(const std::string& tk,
+                new_postintegration_payload(const std::string& tk, const std::string& nm,
                                             const boost::filesystem::path& tmp_d,
                                             const boost::filesystem::path& log_d,
                                             const std::list<std::string>& tg)
                   : task(tk),
+                    group_name(nm),
                     tempdir(tmp_d.string()),
                     logdir(log_d.string()),
                     tags(tg),
@@ -849,7 +895,7 @@ namespace transport
                   }
 
                 //! Value constructor for paired integrations (used for constructing messages to send)
-                new_postintegration_payload(const std::string& tk,
+                new_postintegration_payload(const std::string& tk, const std::string& nm,
                                             const boost::filesystem::path& p_tmp_d,
                                             const boost::filesystem::path& p_log_d,
                                             const std::list<std::string>& tg,
@@ -857,6 +903,7 @@ namespace transport
                                             const boost::filesystem::path& i_log_d,
                                             unsigned int wg)
                   : task(tk),
+                    group_name(nm),
                     tempdir(p_tmp_d.string()),
                     logdir(p_log_d.string()),
                     tags(tg),
@@ -868,6 +915,9 @@ namespace transport
 
                 //! Get task name
                 const std::string&            get_task_name()               const { return(this->task); }
+    
+                //! Get output group name
+                const std::string&            get_group_name()              const { return(this->group_name); }
 
                 //! Get path to the temporary directory
                 boost::filesystem::path       get_tempdir_path()            const { return(boost::filesystem::path(this->tempdir)); }
@@ -891,6 +941,9 @@ namespace transport
 
                 //! Name of task, to be looked up in repository database
                 std::string task;
+    
+                //! Name of output group
+                std::string group_name;
 
                 //! Pathname to directory for temporary files
                 std::string tempdir;
@@ -917,6 +970,7 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
                   {
                     ar & task;
+                    ar & group_name;
                     ar & tempdir;
                     ar & logdir;
                     ar & tags;
@@ -947,7 +1001,7 @@ namespace transport
                                                  const unsigned int td, const unsigned int td_u,
                                                  const boost::timer::nanosecond_type tce, const boost::timer::nanosecond_type twopf_e,
                                                  const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type stats_e,
-                                                 const boost::timer::nanosecond_type de)
+                                                 const boost::timer::nanosecond_type de, double ld)
                   : content_groups(std::list<std::string>{g}),
                     database_time(db),
                     cpu_time(cpu),
@@ -969,7 +1023,8 @@ namespace transport
                     threepf_kconfig_evictions(threepf_e),
                     stats_evictions(stats_e),
                     data_evictions(de),
-                    timestamp(boost::posix_time::second_clock::universal_time())
+                    load_average(ld),
+                    timestamp(boost::posix_time::second_clock::local_time())
                   {
                   }
 
@@ -986,7 +1041,7 @@ namespace transport
 		            unsigned int                   get_items_processed()           const { return(this->items_processed); }
 
 		            //! Get total processing time
-		            boost::timer::nanosecond_type  get_processing_time()           const { return(this->processing_time); }
+		            boost::timer::nanosecond_type  get_wallclock_time()            const { return(this->processing_time); }
 
 		            //! Get max individual processing time
 		            boost::timer::nanosecond_type  get_max_processing_time()       const { return(this->max_processing_time); }
@@ -1038,6 +1093,9 @@ namespace transport
 
                 //! Get data cache evictions
                 boost::timer::nanosecond_type  get_data_evictions()            const { return(this->data_evictions); }
+                
+                //! Get current load average
+                double                         get_load_average()              const { return(this->load_average); }
 
 		            //! Get timestamp
 		            boost::posix_time::ptime       get_timestamp()                 const { return(this->timestamp); }
@@ -1110,6 +1168,9 @@ namespace transport
 
                 //! Time spent doing data cache evictions
                 boost::timer::nanosecond_type data_evictions;
+                
+                //! Current load average
+                double load_average;
 
 		            //! Timestamp
 		            boost::posix_time::ptime timestamp;
@@ -1142,9 +1203,46 @@ namespace transport
                     ar & threepf_kconfig_evictions;
                     ar & stats_evictions;
                     ar & data_evictions;
+                    ar & load_average;
 		                ar & timestamp;
                   }
 
+              };
+            
+            
+            class performance_data_payload
+              {
+                
+              public:
+                
+                //! Default constructor (used for receiving messages)
+                performance_data_payload() = default;
+                
+                //! Value constructor (used for sending messages)
+                performance_data_payload(const double ld)
+                  : load_average(ld)
+                  {
+                  }
+                
+                
+                //! Get load average
+                double get_load_average() const { return this->load_average; }
+                
+                
+              private:
+                
+                //! Final value of load average
+                double load_average;
+    
+                // enable boost::serialization support, and hence automated packing for transmission over MPI
+                friend class boost::serialization::access;
+    
+                template <typename Archive>
+                void serialize(Archive& ar, unsigned int version)
+                  {
+                    ar & load_average;
+                  }
+                
               };
 
 

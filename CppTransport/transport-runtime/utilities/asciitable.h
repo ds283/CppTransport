@@ -85,7 +85,7 @@ namespace transport
 
         //! apply formatting for column
         template <typename Stream>
-        void apply_format(Stream& out, size_t w, bool term, local_environment& env, argument_cache& cache)
+        void apply_format(Stream& out, size_t w, bool term, bool last_col, argument_cache& cache, local_environment& env)
           {
             // remember previous status of formatting flags, so we can restore later
             this->prev_flags = out.flags();
@@ -97,29 +97,31 @@ namespace transport
                 case column_justify::left:
                   {
                     out << std::left;
+                    // don't set field width if we are the last column, to avoid padding with spaces
+                    if(!last_col) out << std::setw(w);
                     break;
                   }
 
                 case column_justify::right:
                   {
                     out << std::right;
+                    out << std::setw(w);
                     break;
                   }
               }
-
-            out << std::setw(w);
           }
 
         //! apply formatting for column titles
         template <typename Stream>
-        void apply_format_title(Stream& out, size_t w, bool term, local_environment& env, argument_cache& cache)
+        void
+        apply_format_title(Stream& out, size_t w, bool term, bool last_col, argument_cache& cache, local_environment& env)
           {
             if(term && this->bold && env.has_colour_terminal_support() && cache.get_colour_output())
               {
                 out << ColourCode(ANSI_colour::bold);
               }
-
-            this->apply_format(out, w, term, env, cache);
+    
+            this->apply_format(out, w, term, last_col, cache, env);
           }
 
         //! deapply formatting rules
@@ -366,8 +368,8 @@ namespace transport
             // write out column headings
             for(size_t i = 0; i < batch_size; ++i)
               {
-                columns[columns_output+i].apply_format_title(this->stream, widths[columns_output+i], this->terminal_output,
-                                                             this->env, this->arg_cache);
+                columns[columns_output + i].apply_format_title(this->stream, widths[columns_output + i],
+                                                               this->terminal_output, i == batch_size-1, this->arg_cache, this->env);
                 this->stream << columns[columns_output+i].get_name();
                 columns[columns_output+i].deapply_format(this->stream, this->terminal_output, this->env, this->arg_cache);
               }
@@ -379,8 +381,8 @@ namespace transport
                 for(size_t j = 0; j < batch_size; ++j)
                   {
                     std::string entry = i < table[columns_output+j].size() ? (table[columns_output+j])[i] : "";
-                    columns[columns_output+j].apply_format(this->stream, widths[columns_output+j], this->terminal_output,
-                                                           this->env, this->arg_cache);
+                    columns[columns_output + j].apply_format(this->stream, widths[columns_output + j],
+                                                             this->terminal_output, j == batch_size-1, this->arg_cache, this->env);
                     this->stream << entry;
                     columns[columns_output+j].deapply_format(this->stream, this->terminal_output, this->env, this->arg_cache);
                   }

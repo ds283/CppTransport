@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 07/01/2014.
+// Created by David Seery on 09/04/15.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -24,22 +24,14 @@
 //
 
 
-#ifndef CPPTRANSPORT_VERSION_H
-#define CPPTRANSPORT_VERSION_H
+#ifndef CPPTRANSPORT_BUSYIDLE_TIMER_SET_MESSAGES_H
+#define CPPTRANSPORT_BUSYIDLE_TIMER_SET_MESSAGES_H
 
 
-namespace transport
-  {
+#define CPPTRANSPORT_BUSYIDLE_TIMER_NOT_FOUND             "Internal error: could not find existing busy/idle timer"
 
-    constexpr auto         CPPTRANSPORT_BUILT_USING         = "built using CppTransport";
-    constexpr auto         CPPTRANSPORT_NAME                = "CppTransport";
-    constexpr auto         CPPTRANSPORT_VERSION             = "2016.3";
-    constexpr auto         CPPTRANSPORT_COPYRIGHT           = "(c) University of Sussex 2016";
-    
-    constexpr auto         CPPTRANSPORT_RUNTIME_API         = "runtime version 2016.3";
-    constexpr unsigned int CPPTRANSPORT_RUNTIME_API_VERSION = 201603;
-    
-  }   // namespace transport
+#define CPPTRANSPORT_BUSYIDLE_INSERT_EXISTING_TIMER       "Internal error: attempt to add existing busy/idle timer"
+#define CPPTRANSPORT_BUSYIDLE_ACTIVE_INSERT_FAILED        "Internal error: insert to active busy/idle group failed for timer"
 
 
-#endif //CPPTRANSPORT_VERSION_H
+#endif //CPPTRANSPORT_BUSYIDLE_TIMER_SET_MESSAGES_H

@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 09/04/15.
+// Created by David Seery on 28/09/2016.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,21 +23,14 @@
 // --@@
 //
 
+#ifndef CPPTRANSPORT_EMAIL_MESSAGES_EN_H
+#define CPPTRANSPORT_EMAIL_MESSAGES_EN_H
 
-#ifndef CPPTRANSPORT_MASTER_SCHEDULER_MESSAGES_H
-#define CPPTRANSPORT_MASTER_SCHEDULER_MESSAGES_H
+namespace transport
+  {
 
+    constexpr auto CPPTRANSPORT_EMAIL_ISSUED_BY = "issued by CppTransport process running as";
 
-#define CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED "Items processed"
-#define CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_INFLIGHT  "In flight"
-#define CPPTRANSPORT_MASTER_SCHEDULER_REMAIN               "Remaining"
-#define CPPTRANSPORT_MASTER_SCHEDULER_COMPLETE             "Complete"
-#define CPPTRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM   "Mean CPU/item"
-#define CPPTRANSPORT_MASTER_SCHEDULER_TARGET_DURATION      "Assignment"
-#define CPPTRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE  "Estimated completion"
-#define CPPTRANSPORT_MASTER_SCHEDULER_FROM_NOW             "from now"
+  }
 
-#define CPPTRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE        "All work items processed"
-
-
-#endif //CPPTRANSPORT_MASTER_SCHEDULER_MESSAGES_H
+#endif //CPPTRANSPORT_EMAIL_MESSAGES_EN_H

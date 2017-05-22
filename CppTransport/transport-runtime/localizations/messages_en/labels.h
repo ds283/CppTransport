@@ -34,6 +34,8 @@
 
 #define CPPTRANSPORT_EFOLDS                             "e-folds"
 
+#define CPPTRANSPORT_WEEK                               "w"
+#define CPPTRANSPORT_DAY                                "d"
 #define CPPTRANSPORT_HOUR                               "h"
 #define CPPTRANSPORT_MINUTE                             "m"
 #define CPPTRANSPORT_SECOND                             "s"
