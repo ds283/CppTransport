@@ -53,7 +53,7 @@ namespace y
 	    }
 
 
-    const script& y_driver::get_script()
+    const model_descriptor& y_driver::get_descriptor()
 	    {
         return(this->root);
 	    }

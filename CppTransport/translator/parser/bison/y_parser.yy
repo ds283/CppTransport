@@ -9,7 +9,7 @@
 
 %code requires {
     #include "lexeme.h"
-    #include "script.h"
+    #include "model_descriptor.h"
     #include "lexical.h"
 
     #include "disable_warnings.h"

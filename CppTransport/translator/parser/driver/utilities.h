@@ -28,7 +28,7 @@
 
 
 #include "semantic_data.h"
-#include "script.h"
+#include "model_descriptor.h"
 #include "symbol_factory.h"
 #include "argument_cache.h"
 #include "local_environment.h"
@@ -45,7 +45,7 @@ namespace y
       public:
         
         //! constructor
-        utilities(script& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
+        utilities(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
         
         //! destructor is default
         ~utilities() = default;
@@ -69,7 +69,7 @@ namespace y
       protected:
         
         //! model description container
-        script& root;
+        model_descriptor& root;
         
         //! delegated symbol factory
         symbol_factory& sym_factory;

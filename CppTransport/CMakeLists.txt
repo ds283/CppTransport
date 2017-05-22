@@ -132,7 +132,7 @@ ADD_EXECUTABLE(CppTransport
   ${BISON_parser_OUTPUTS}
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
-  translator/parser/script.cpp
+  translator/parser/model_descriptor.cpp
   translator/parser/driver/expression_tree.cpp
   translator/parser/driver/lagrangian.cpp
   translator/parser/driver/metadata.cpp
@@ -439,8 +439,8 @@ set(TRANSLATOR_PARSER_FILES
   translator/parser/lexfile.h
   translator/parser/lexical.h
   translator/parser/lexstream.h
-  translator/parser/script.cpp
-  translator/parser/script.h
+  translator/parser/model_descriptor.cpp
+  translator/parser/model_descriptor.h
   translator/parser/semantic_data.h
   translator/parser/y_common.h
   translator/parser/y_lexer.cpp

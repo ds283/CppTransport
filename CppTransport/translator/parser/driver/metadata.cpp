@@ -30,7 +30,7 @@
 namespace y
   {
     
-    metadata::metadata(script& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
+    metadata::metadata(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
       : root(sc),
         sym_factory(sf),
         cache(ac),

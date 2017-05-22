@@ -30,7 +30,7 @@
 namespace y
   {
     
-    lagrangian::lagrangian(script& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
+    lagrangian::lagrangian(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
       : root(sc),
         sym_factory(sf),
         cache(ac),

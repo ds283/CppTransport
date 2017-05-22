@@ -33,7 +33,7 @@
 #include <string>
 
 #include "semantic_data.h"
-#include "script.h"
+#include "model_descriptor.h"
 
 #include "symbol_factory.h"
 #include "argument_cache.h"
@@ -83,7 +83,7 @@ namespace y
         
       public:
 
-        const script& get_script();
+        const model_descriptor& get_descriptor();
         
 
 		    // INTERNAL DATA
@@ -93,7 +93,7 @@ namespace y
         // MODEL DESCRIPTOR
         
         //! container for model descriptor information
-        script root;
+        model_descriptor root;
 
 
         // REFERENCES TO DELEGATE OBJECTS

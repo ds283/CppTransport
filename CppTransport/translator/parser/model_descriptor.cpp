@@ -28,7 +28,7 @@
 #include <algorithm>
 
 #include "lexical.h"
-#include "script.h"
+#include "model_descriptor.h"
 
 const auto DERIV_PREFIX = "__d";
 
@@ -179,7 +179,7 @@ std::vector<character_type>  fake_character_map;
 std::vector<bool>            fake_context_table;
 
 
-script::script(symbol_factory& s, error_context err_ctx)
+model_descriptor::model_descriptor(symbol_factory& s, error_context err_ctx)
   : errors_encountered(false),
     order(index_order::right),
 		sym_factory(s)
@@ -204,7 +204,7 @@ script::script(symbol_factory& s, error_context err_ctx)
   }
 
 
-boost::optional<declaration&> script::check_symbol_exists(const std::string& nm) const
+boost::optional<declaration&> model_descriptor::check_symbol_exists(const std::string& nm) const
 	{
 		// check user-defined symbols
 
@@ -225,7 +225,7 @@ boost::optional<declaration&> script::check_symbol_exists(const std::string& nm)
 	}
 
 
-void script::set_name(const std::string n, const y::lexeme_type& l)
+void model_descriptor::set_name(const std::string n, const y::lexeme_type& l)
   {
     if(this->name)
       {
@@ -239,13 +239,13 @@ void script::set_name(const std::string n, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_name() const
+boost::optional< contexted_value<std::string>& > model_descriptor::get_name() const
   {
     if(this->name) return(*this->name); else return(boost::none);
   }
 
 
-void script::set_citeguide(const std::string t, const y::lexeme_type& l)
+void model_descriptor::set_citeguide(const std::string t, const y::lexeme_type& l)
   {
     if(this->citeguide)
       {
@@ -259,13 +259,13 @@ void script::set_citeguide(const std::string t, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_citeguide() const
+boost::optional< contexted_value<std::string>& > model_descriptor::get_citeguide() const
   {
     if(this->citeguide) return(*this->citeguide); else return(boost::none);
   }
 
 
-void script::set_description(const std::string d, const y::lexeme_type& l)
+void model_descriptor::set_description(const std::string d, const y::lexeme_type& l)
   {
     if(this->description)
       {
@@ -279,13 +279,13 @@ void script::set_description(const std::string d, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_description() const
+boost::optional< contexted_value<std::string>& > model_descriptor::get_description() const
   {
     if(this->description) return *this->description; else return boost::none;
   }
 
 
-void script::set_revision(int r, const y::lexeme_type& l)
+void model_descriptor::set_revision(int r, const y::lexeme_type& l)
   {
     if(this->revision)
       {
@@ -299,13 +299,13 @@ void script::set_revision(int r, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<unsigned int>& > script::get_revision() const
+boost::optional< contexted_value<unsigned int>& > model_descriptor::get_revision() const
   {
     if(this->revision) return *this->revision; else return boost::none;
   }
 
 
-void script::set_license(const std::string lic, const y::lexeme_type& l)
+void model_descriptor::set_license(const std::string lic, const y::lexeme_type& l)
   {
     if(this->license)
       {
@@ -319,13 +319,13 @@ void script::set_license(const std::string lic, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_license() const
+boost::optional< contexted_value<std::string>& > model_descriptor::get_license() const
   {
     if(this->license) return *this->license; else return boost::none;
   }
 
 
-void script::set_references(const std::vector< contexted_value<std::string> >& refs)
+void model_descriptor::set_references(const std::vector< contexted_value<std::string> >& refs)
   {
     if(!refs.empty())
       {
@@ -345,13 +345,13 @@ void script::set_references(const std::vector< contexted_value<std::string> >& r
   }
 
 
-boost::optional< std::vector< contexted_value<std::string> >& > script::get_references() const
+boost::optional< std::vector< contexted_value<std::string> >& > model_descriptor::get_references() const
   {
     if(this->references) return *this->references; else return boost::none;
   }
 
 
-void script::set_urls(const std::vector< contexted_value<std::string> >& urls)
+void model_descriptor::set_urls(const std::vector< contexted_value<std::string> >& urls)
   {
     if(!urls.empty())
       {
@@ -371,13 +371,13 @@ void script::set_urls(const std::vector< contexted_value<std::string> >& urls)
   }
 
 
-boost::optional< std::vector< contexted_value<std::string> >& > script::get_urls() const
+boost::optional< std::vector< contexted_value<std::string> >& > model_descriptor::get_urls() const
   {
     if(this->urls) return *this->urls; else return boost::none;
   }
 
 
-void script::set_core(const std::string c, const y::lexeme_type& l)
+void model_descriptor::set_core(const std::string c, const y::lexeme_type& l)
   {
     // check whether a core template has already been declared
     if(this->core)
@@ -392,13 +392,13 @@ void script::set_core(const std::string c, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_core() const
+boost::optional< contexted_value<std::string>& > model_descriptor::get_core() const
   {
     if(this->core) return(*this->core); else return(boost::none);
   }
 
 
-void script::set_implementation(const std::string i, const y::lexeme_type& l)
+void model_descriptor::set_implementation(const std::string i, const y::lexeme_type& l)
   {
     // check whether an implementation template has already been declared
     if(this->implementation)
@@ -413,13 +413,13 @@ void script::set_implementation(const std::string i, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_implementation() const
+boost::optional< contexted_value<std::string>& > model_descriptor::get_implementation() const
   {
     if(this->implementation) return(*this->implementation); else return(boost::none);
   }
 
 
-void script::set_model(const std::string m, const y::lexeme_type& l)
+void model_descriptor::set_model(const std::string m, const y::lexeme_type& l)
   {
     // check whether a model block has already been declared
     if(this->model)
@@ -434,25 +434,25 @@ void script::set_model(const std::string m, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<std::string>& > script::get_model() const
+boost::optional< contexted_value<std::string>& > model_descriptor::get_model() const
   {
     if(this->model) return(*this->model); else return(boost::none);
   }
 
 
-void script::set_indexorder(enum index_order o)
+void model_descriptor::set_indexorder(enum index_order o)
   {
     this->order = o;
   }
 
 
-enum index_order script::get_indexorder() const
+enum index_order model_descriptor::get_indexorder() const
   {
     return(this->order);
   }
 
 
-void script::print(std::ostream& stream) const
+void model_descriptor::print(std::ostream& stream) const
   {
     stream << "Script summary:" << '\n';
     stream << "===============" << '\n';
@@ -532,7 +532,7 @@ void script::print(std::ostream& stream) const
   }
 
 
-bool script::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+bool model_descriptor::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
   {
     // search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -563,7 +563,7 @@ bool script::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_t
   }
 
 
-bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+bool model_descriptor::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
   {
     // search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -590,7 +590,7 @@ bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexe
   }
 
 
-bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e)
+bool model_descriptor::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e)
 	{
 		// search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -617,7 +617,7 @@ bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme
 	}
 
 
-bool script::add_author(const std::string& n, const y::lexeme_type& l, author* a)
+bool model_descriptor::add_author(const std::string& n, const y::lexeme_type& l, author* a)
   {
     author_table::const_iterator t = this->authors.find(n);
 
@@ -643,13 +643,13 @@ bool script::add_author(const std::string& n, const y::lexeme_type& l, author* a
   }
 
 
-const author_table& script::get_author() const
+const author_table& model_descriptor::get_author() const
   {
     return this->authors;
   }
 
 
-void script::set_background_stepper(stepper* s, const y::lexeme_type& l)
+void model_descriptor::set_background_stepper(stepper* s, const y::lexeme_type& l)
   {
     if(this->background_stepper)
       {
@@ -663,7 +663,7 @@ void script::set_background_stepper(stepper* s, const y::lexeme_type& l)
   }
 
 
-void script::set_perturbations_stepper(stepper *s, const y::lexeme_type& l)
+void model_descriptor::set_perturbations_stepper(stepper *s, const y::lexeme_type& l)
   {
     if(this->perturbations_stepper)
       {
@@ -677,25 +677,25 @@ void script::set_perturbations_stepper(stepper *s, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<stepper>& > script::get_background_stepper() const
+boost::optional< contexted_value<stepper>& > model_descriptor::get_background_stepper() const
   {
     if(this->background_stepper) return *this->background_stepper; else return boost::none;
   }
 
 
-boost::optional< contexted_value<stepper>& > script::get_perturbations_stepper() const
+boost::optional< contexted_value<stepper>& > model_descriptor::get_perturbations_stepper() const
   {
     if(this->perturbations_stepper) return *this->perturbations_stepper; else return boost::none;
   }
 
 
-unsigned int script::get_number_fields() const
+unsigned int model_descriptor::get_number_fields() const
   {
     return(static_cast<unsigned int>(this->fields.size()));
   }
 
 
-unsigned int script::get_number_params() const
+unsigned int model_descriptor::get_number_params() const
   {
     return(static_cast<unsigned int>(this->parameters.size()));
   }
@@ -725,7 +725,7 @@ namespace script_impl
 	}
 
 
-std::vector<std::string> script::get_field_list() const
+std::vector<std::string> model_descriptor::get_field_name_list() const
   {
     script_impl::zipped_string_list zipped_list;
     std::vector<std::string> rval;
@@ -746,7 +746,7 @@ std::vector<std::string> script::get_field_list() const
   }
 
 
-std::vector<std::string> script::get_latex_list() const
+std::vector<std::string> model_descriptor::get_field_latex_list() const
   {
     script_impl::zipped_string_list zipped_list;
     std::vector<std::string> rval;
@@ -767,7 +767,7 @@ std::vector<std::string> script::get_latex_list() const
   }
 
 
-std::vector<std::string> script::get_param_list() const
+std::vector<std::string> model_descriptor::get_param_name_list() const
   {
     script_impl::zipped_string_list zipped_list;
     std::vector<std::string> rval;
@@ -788,7 +788,7 @@ std::vector<std::string> script::get_param_list() const
   }
 
 
-std::vector<std::string> script::get_platx_list() const
+std::vector<std::string> model_descriptor::get_param_latex_list() const
   {
     script_impl::zipped_string_list zipped_list;
     std::vector<std::string> rval;
@@ -809,7 +809,7 @@ std::vector<std::string> script::get_platx_list() const
   }
 
 
-symbol_list script::get_field_symbols() const
+symbol_list model_descriptor::get_field_symbols() const
   {
     script_impl::zipped_symbol_list zipped_list;
     symbol_list rval;
@@ -830,13 +830,13 @@ symbol_list script::get_field_symbols() const
   }
 
 
-symbol_list script::get_deriv_symbols() const
+symbol_list model_descriptor::get_deriv_symbols() const
   {
     return(this->deriv_symbols);
   }
 
 
-symbol_list script::get_param_symbols() const
+symbol_list model_descriptor::get_param_symbols() const
   {
     script_impl::zipped_symbol_list zipped_list;
     symbol_list rval;
@@ -857,13 +857,13 @@ symbol_list script::get_param_symbols() const
   }
 
 
-const GiNaC::symbol& script::get_Mp_symbol() const
+const GiNaC::symbol& model_descriptor::get_Mp_symbol() const
   {
     return(this->M_Planck);
   }
 
 
-void script::set_potential(GiNaC::ex V, const y::lexeme_type& l)
+void model_descriptor::set_potential(GiNaC::ex V, const y::lexeme_type& l)
   {
     if(this->potential)
       {
@@ -877,13 +877,13 @@ void script::set_potential(GiNaC::ex V, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<GiNaC::ex>& > script::get_potential() const
+boost::optional< contexted_value<GiNaC::ex>& > model_descriptor::get_potential() const
   {
     if(this->potential) return *this->potential; else return boost::none;
   }
 
 
-void script::unset_potential()
+void model_descriptor::unset_potential()
   {
     this->potential.release();
   }

@@ -30,7 +30,7 @@
 namespace y
   {
     
-    expression_tree::expression_tree(script& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
+    expression_tree::expression_tree(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
       : root(sc),
         sym_factory(sf),
         cache(ac),

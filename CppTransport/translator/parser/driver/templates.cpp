@@ -30,7 +30,7 @@
 namespace y
   {
     
-    templates::templates(script& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
+    templates::templates(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
       : root(sc),
         sym_factory(sf),
         cache(ac),

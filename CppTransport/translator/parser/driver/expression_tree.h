@@ -28,7 +28,7 @@
 
 
 #include "semantic_data.h"
-#include "script.h"
+#include "model_descriptor.h"
 #include "symbol_factory.h"
 #include "argument_cache.h"
 #include "local_environment.h"
@@ -45,7 +45,7 @@ namespace y
       public:
         
         //! constructor
-        expression_tree(script& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
+        expression_tree(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
         
         //! destructor is default
         ~expression_tree() = default;
@@ -152,7 +152,7 @@ namespace y
       protected:
         
         //! model description container
-        script& root;
+        model_descriptor& root;
         
         //! delegated symbol factory
         symbol_factory& sym_factory;

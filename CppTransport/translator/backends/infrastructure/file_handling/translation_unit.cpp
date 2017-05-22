@@ -26,7 +26,7 @@
 
 #include "core.h"
 #include "translation_unit.h"
-#include "script.h"
+#include "model_descriptor.h"
 #include "output_stack.h"
 
 #include "boost/algorithm/string.hpp"
@@ -171,7 +171,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
 	    }
 
     // dump results of syntactic analysis -- for debugging
-    // in.driver.get_script()->print(std::cerr);
+    // in.driver.get_descriptor()->print(std::cerr);
 
     // cache details about this translation unit
 
@@ -186,7 +186,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
       }
     else
       {
-        boost::optional< contexted_value<std::string>& > core = driver.get_script().get_core();
+        boost::optional< contexted_value<std::string>& > core = driver.get_descriptor().get_core();
         if(core)
           {
             core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
@@ -201,7 +201,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
       }
     else
       {
-        boost::optional< contexted_value<std::string>& > impl = driver.get_script().get_implementation();
+        boost::optional< contexted_value<std::string>& > impl = driver.get_descriptor().get_implementation();
         if(impl)
           {
             implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
@@ -224,7 +224,7 @@ unsigned int translation_unit::apply()
     // don't attempt translation if parsing failed
 		if(this->parse_failed) return rval;
 
-    const script& s = this->driver.get_script();
+    const model_descriptor& s = this->driver.get_descriptor();
 
     boost::optional< contexted_value<std::string>& > model = s.get_model();
     if(!model) this->error(ERROR_NO_MODEL_BLOCK);
