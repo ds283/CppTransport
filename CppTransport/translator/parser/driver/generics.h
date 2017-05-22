@@ -63,7 +63,7 @@ namespace y
         // extract string name from lexeme
         boost::optional<std::string> str = lex->get_string();
         
-        if(str)
+        if(!str)
           {
             lex->error(ERROR_STRING_LOOKUP);
             return false;
