@@ -147,8 +147,8 @@ namespace y
 
         lval->lex = this->current_lex = this->stream.get();
         this->stream.eat();
-
-        int     rval = 0;
+    
+        int rval = 0;
 
         if(lval->lex != nullptr)
           {
@@ -168,11 +168,10 @@ namespace y
 
                 case lexeme::lexeme_type::character:
                   {
-                    enum character_type sym;
-
-                    if(lval->lex->get_symbol())
+                    auto sym = lval->lex->get_symbol();
+                    if(sym)
                       {
-                        rval = symbol_tokens[sym];
+                        rval = symbol_tokens[*sym];
                       }
                     break;
                   }
@@ -213,7 +212,8 @@ namespace y
             throw std::runtime_error(ERROR_UNEXPECTED_END_OF_LEXEMES);
           }
 
-        // std::cerr << "Returning token number " << rval << '\n';
+        // lval->lex->dump(std::cerr);
+        // std::cerr << "returning token number " << rval << '\n';
 
         return(rval);
       }

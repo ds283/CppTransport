@@ -45,7 +45,8 @@
 const std::vector<std::string> keyword_table =
   {
     "metadata", "requires_version", "lagrangian",
-    "canonical", "noncanonical", "name", "author", "citeguide",
+    "canonical", "noncanonical",
+    "name", "author", "citeguide",
     "description", "license", "revision",
     "references", "urls", "email", "institute",
     "field", "potential", "subexpr", "value",
