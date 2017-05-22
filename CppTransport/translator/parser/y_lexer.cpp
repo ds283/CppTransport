@@ -209,7 +209,11 @@ namespace y
           }
         else
           {
-            throw std::runtime_error(ERROR_UNEXPECTED_END_OF_LEXEMES);
+//            throw std::runtime_error(ERROR_UNEXPECTED_END_OF_LEXEMES);
+
+            // inform Bison that we have reached end-of-input; currently a hack that should be improved,
+            // since yyeof_ is a private object
+            rval = 0; // = y::y_parser::yyeof_;
           }
 
         // lval->lex->dump(std::cerr);
