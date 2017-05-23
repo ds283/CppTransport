@@ -70,7 +70,7 @@ class lexstream_data
   public:
 
     //! get filename of model descriptor
-    const boost::filesystem::path& get_model_input() const { return(this->filename); }
+    const boost::filesystem::path& get_input_file() const { return(this->filename); }
 
 
     // INTERNAL DATA

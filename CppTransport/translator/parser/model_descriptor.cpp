@@ -188,10 +188,9 @@ model_descriptor::model_descriptor(symbol_factory& s, error_context err_ctx)
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
 
     // manufacture fake lexeme representing 'location' of Planck mass decalaration
-    std::string MPlanck_buffer(MPLANCK_TEXT_NAME);
+    lexeme::lexeme_buffer MPlanck_buffer(MPLANCK_TEXT_NAME, lexeme::lexeme_buffer::type::string_literal);
     lexeme::minus_context mctx = lexeme::minus_context::unary;
-    fake_MPlanck_lexeme = std::make_unique<y::lexeme_type>(MPlanck_buffer, lexeme::buffer_type::string_literal, mctx,
-                                                           0, err_ctx,
+    fake_MPlanck_lexeme = std::make_unique<y::lexeme_type>(MPlanck_buffer, mctx, 0, err_ctx,
                                                            fake_keyword_table, fake_keyword_map, fake_character_table,
                                                            fake_character_map, fake_context_table);
 

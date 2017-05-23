@@ -45,7 +45,9 @@ constexpr auto ERROR_TOKEN                           = "error: ";
 
 constexpr auto ERROR_OPEN_TOPLEVEL                   = "Could not open top-level file";
 constexpr auto ERROR_INCLUDE_FILE                    = "Could not open included file";
-constexpr auto ERROR_INCLUDE_DIRECTIVE               = "Expected filename following #include directive";
+constexpr auto ERROR_INCLUDE_DIRECTIVE               = "Expected filename following #include directive; received";
+
+constexpr auto ERROR_UNKNOWN_DIRECTIVE               = "Unknown directive";
 
 constexpr auto ERROR_CPP_BUFFER_WRITE                = "Error opening output file";
 
@@ -74,6 +76,8 @@ constexpr auto WARNING_VEXCL_STEPPER_IGNORED_B       = "; VexCL backend ignores 
 
 constexpr auto ERROR_UNKNOWN_LEXEME                  = "Unknown lexeme type";
 constexpr auto ERROR_UNEXPECTED_END_OF_LEXEMES       = "fatal: Unexpected end of lexeme list";
+
+constexpr auto ERROR_BUFFER_ACCESS_OUT_OF_RANGE      = "Out-of-range subscript in lexeme buffer";
 
 constexpr auto ERROR_UNRECOGNIZED_NUMBER             = "Unrecognized numeric literal";
 constexpr auto ERROR_UNRECOGNIZED_SYMBOL             = "Unrecognized character";

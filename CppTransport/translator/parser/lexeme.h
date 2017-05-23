@@ -56,11 +56,6 @@ constexpr unsigned int LENGTH_BINARY_TAG  = 7;
 namespace lexeme    // package in a unique namespace
 	{
 
-    enum class buffer_type
-	    {
-        string, number, character, string_literal
-	    };
-
     //! tag the type of a lexeme
     enum class lexeme_type
 	    {
@@ -74,6 +69,122 @@ namespace lexeme    // package in a unique namespace
 	    };
 
 
+    //! lexeme buffer holds a string representation of a lexeme,
+    //! together with a flag identifying what sort of content the string contains
+    class lexeme_buffer
+      {
+
+        // TYPES
+
+      public:
+
+        enum class type
+          {
+            string, number, character, string_literal
+          };
+
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! default constructor
+        lexeme_buffer() = default;
+
+        //! value constructor
+        lexeme_buffer(std::string b, type t)
+          : buffer(std::move(b)),
+            buffer_type(t)
+          {
+          }
+
+        //! destructor
+        ~lexeme_buffer() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! get type
+        type get_type() const { return this->buffer_type; }
+
+        //! set type
+        lexeme_buffer& set_type(type t) { this->buffer_type = t; return *this; }
+
+        //! get buffer contents
+        const std::string& get() const { return this->buffer; }
+
+        //! get buffer size / length
+        size_t size() const { return this->buffer.size(); }
+        size_t length() const { return this->buffer.length(); }
+
+        //! is buffer empty?
+        bool empty() const { return this->buffer.empty(); }
+
+
+        // BUFFER OPERATIONS
+
+      public:
+
+        //! assign a string
+        lexeme_buffer& operator=(const std::string& str) { this->buffer = str; return *this; }
+
+        //! assign a character
+        lexeme_buffer& operator=(char c) { this->buffer = c; return *this; }
+
+        //! append a string
+        lexeme_buffer& operator+=(const std::string& str) { this->buffer += str; return *this; }
+
+        //! append a character
+        lexeme_buffer& operator+=(char c) { this->buffer += c; return *this; }
+
+        //! subscript
+        char operator[](unsigned p) const
+          {
+            if(p < this->buffer.size()) return this->buffer[p];
+
+            std::ostringstream msg;
+            msg << ERROR_BUFFER_ACCESS_OUT_OF_RANGE << " (" << this->buffer << " | " << p << ", " << this->buffer.size() << ")";
+            throw std::out_of_range(msg.str());
+          }
+
+        //! find
+        size_t find(const std::string str, size_t pos=0) const { return this->buffer.find(str,pos); }
+
+        //! convert to C string
+        const char* c_str() const { return this->buffer.c_str(); }
+
+
+        // BUFFER COMPARISONS
+
+      public:
+
+        //! equality comparison
+        bool operator==(const std::string& str) const { return this->buffer == str; }
+
+
+        // DEREFERENCE
+
+      public:
+
+        //! dereference to get buffer
+        const std::string& operator*() const { return this->buffer; }
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! buffer
+        std::string buffer;
+
+        //! buffer type
+        type buffer_type;
+
+      };
+
+
     template <typename Keywords, typename Characters>
     class lexeme
 	    {
@@ -85,10 +196,9 @@ namespace lexeme    // package in a unique namespace
         //! construct a lexeme
         //! accepts an error_context object which is used in generating context for
         //! later error messages
-        lexeme(const std::string& buffer, const buffer_type t,
-               minus_context& context, unsigned int u, error_context err_ctx,
-               const std::vector<std::string>& kt, const std::vector<Keywords>& km,
-               const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx);
+        lexeme(const lexeme_buffer& buffer, minus_context& context, unsigned int u, error_context err_ctx,
+               const std::vector<std::string>& kt, const std::vector<Keywords>& km, const std::vector<std::string>& ct,
+               const std::vector<Characters>& cm, const std::vector<bool>& ctx);
 
         //! destructor is default
         ~lexeme() = default;
@@ -158,7 +268,7 @@ namespace lexeme    // package in a unique namespace
       protected:
 
         //! lexeme type
-        enum lexeme_type   type;
+        enum lexeme_type type;
 
         //! unique identifier
         const unsigned int unique;
@@ -190,10 +300,11 @@ namespace lexeme    // package in a unique namespace
 //  IMPLEMENTATION
 
     template <typename Keywords, typename Characters>
-    lexeme<Keywords, Characters>::lexeme(const std::string& buffer, const enum buffer_type t,
-                                         enum minus_context& context, unsigned int u, error_context err_ctx,
+    lexeme<Keywords, Characters>::lexeme(const lexeme_buffer& buffer, minus_context& context, unsigned int u,
+                                         error_context err_ctx,
                                          const std::vector<std::string>& kt, const std::vector<Keywords>& km,
-                                         const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx)
+                                         const std::vector<std::string>& ct,
+                                         const std::vector<Characters>& cm, const std::vector<bool>& ctx)
 	    : unique(u),
 	      ktable(kt),
 	      kmap(km),
@@ -204,12 +315,12 @@ namespace lexeme    // package in a unique namespace
 	    {
         int offset = 0;
 
-        switch(t)
+        switch(buffer.get_type())
 	        {
-            case buffer_type::string:
+            case lexeme_buffer::type::string:
               {
                 type = lexeme_type::identifier;
-                str    = buffer;
+                str = *buffer;
 
                 context = minus_context::binary; // unary minus can't follow an identifier
 
@@ -228,7 +339,7 @@ namespace lexeme    // package in a unique namespace
                 break;
               }
 
-            case buffer_type::number:
+            case lexeme_buffer::type::number:
               {
                 type = lexeme_type::unknown;
 
@@ -241,7 +352,7 @@ namespace lexeme    // package in a unique namespace
                     else
                       {
                         std::ostringstream msg;
-                        msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
+                        msg << WARNING_HEX_CONVERSION_A << " '" << *buffer << "' " << WARNING_HEX_CONVERSION_B;
                         err_context.warn(msg.str());
                       }
                   }
@@ -256,7 +367,7 @@ namespace lexeme    // package in a unique namespace
                     else
                       {
                         std::ostringstream msg;
-                        msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
+                        msg << WARNING_OCTAL_CONVERSION_A << " '" << *buffer << "' " << WARNING_OCTAL_CONVERSION_B;
                         err_context.warn(msg.str());
                       }
                   }
@@ -281,7 +392,7 @@ namespace lexeme    // package in a unique namespace
                 if(type == lexeme_type::unknown)
                   {
                     std::ostringstream msg;
-                    msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
+                    msg << ERROR_UNRECOGNIZED_NUMBER << " '" << *buffer << "'";
                     err_context.error(msg.str());
                   }
 
@@ -289,7 +400,7 @@ namespace lexeme    // package in a unique namespace
                 break;
               }
 
-            case buffer_type::character:
+            case lexeme_buffer::type::character:
               {
                 bool found_match = false;
 
@@ -297,10 +408,10 @@ namespace lexeme    // package in a unique namespace
 
                 for(unsigned int i = 0; i < this->ctable.size(); ++i)
                   {
-                    bool        unary  = false;
-                    bool        binary = false;
-                    std::string match  = ctable[i];
-                    size_t      pos;
+                    bool unary = false;
+                    bool binary = false;
+                    std::string match = ctable[i];
+                    size_t pos;
 
                     // check for @binary or @unary distinguishing tags in the character
                     if((pos = match.find(UNARY_TAG)) != std::string::npos)
@@ -318,9 +429,9 @@ namespace lexeme    // package in a unique namespace
                        && (!unary || (unary && context == minus_context::unary))
                        && (!binary || (binary && context == minus_context::binary)))
                       {
-                        type        = lexeme_type::character;
-                        s           = cmap[i];
-                        context     = ccontext[i] ? minus_context::unary : minus_context::binary;
+                        type = lexeme_type::character;
+                        s = cmap[i];
+                        context = ccontext[i] ? minus_context::unary : minus_context::binary;
                         found_match = true;
                         break;
                       }
@@ -329,17 +440,17 @@ namespace lexeme    // package in a unique namespace
                 if(!found_match)
                   {
                     std::ostringstream msg;
-                    msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
+                    msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << *buffer << "'";
                     err_context.error(msg.str());
                     context = minus_context::unary; // reset the context
                   }
                 break;
               }
 
-            case buffer_type::string_literal:
+            case lexeme_buffer::type::string_literal:
               {
-                type    = lexeme_type::string;
-                str     = buffer;
+                type = lexeme_type::string;
+                str = *buffer;
                 context = minus_context::unary; // binary minus can't follow a string
                 break;
               }
