@@ -50,10 +50,12 @@ class lexstream
 
   public:
 
+    //! constructor
     lexstream(lexstream_data& p,
               const std::vector<std::string>& kt, const std::vector<Keywords>& km,
               const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx);
 
+    //! destructor
     ~lexstream() = default;
 
 
@@ -61,14 +63,20 @@ class lexstream
 
   public:
 
+    //! reset stream to beginning
     void reset();
 
+    //! get next lexeme from the stream
     lexeme::lexeme<Keywords, Characters>* get();
 
+    //! consume current lexeme, ie. moves to next lexeme
     bool eat();
 
+    //! interrogate current state: true if get() will return a valid lexeme,
+    //! false otherwise
     bool state();
 
+    //! dump contents to specified stream
     void print(std::ostream& stream);
 
 
@@ -83,31 +91,43 @@ class lexstream
     //! called by parse()
     void lexicalize(lexfile& input);
 
+    //! parse a lexeme from a specified lexfile descriptor
     std::string get_lexeme(lexfile& input, enum lexeme::buffer_type& type);
 
 
     // INTERNAL DATA
 
   private:
-
-    // data object passed to us by the translation unit
+    
+    //! data object passed to us by the translation unit
     lexstream_data& data_payload;
-
-    input_stack stack;       // stack of included files
-
+    
+    //! input filestack, used for generating contexted messages
+    input_stack stack;
+    
+    //! list of lexemes parsed from the input file
     std::deque< lexeme::lexeme<Keywords, Characters> > lexeme_list; // list of lexemes obtained from the file
-
-    typename std::deque< lexeme::lexeme<Keywords, Characters> >::iterator ptr;         // pointer to current lexeme position (when reading)
-    bool                                                                  ptr_valid;   // sentry - validity of ptr?
-
+    
+    //! current position of the stream within this list
+    typename std::deque< lexeme::lexeme<Keywords, Characters> >::iterator ptr;
+    
+    //! counter to assign unique numbers to lexemes
     unsigned int unique;
-
-    const std::vector<std::string>& ktable;      // table of Keywords
-    const std::vector<Keywords>&    kmap;        // table of keyword token types
-
-    const std::vector<std::string>& ctable;      // table of 'characters'
-    const std::vector<Characters>&  cmap;        // table of character token types
-    const std::vector<bool>&        ccontext;    // keeps track of 'unary' context; true if can precede a unary minus
+    
+    //! table of keywords
+    const std::vector<std::string>& keyword_table;
+    
+    // table of keyword tokens
+    const std::vector<Keywords>& keyword_tokens;
+    
+    //! table of characters
+    const std::vector<std::string>& chars_table;
+    
+    //! table of character tokens
+    const std::vector<Characters>& chars_tokens;
+    
+    //! table of unary minus sign 'contexts' that apply *after* each character
+    const std::vector<bool>& unary_context;
 
 	};
 
@@ -124,12 +144,11 @@ template <class Keywords, class Characters>
 lexstream<Keywords, Characters>::lexstream(lexstream_data& p,
                                            const std::vector<std::string>& kt, const std::vector<Keywords>& km,
                                            const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx)
-  : ptr_valid(false),
-    ktable(kt),
-    kmap(km),
-    ctable(ct),
-    cmap(cm),
-    ccontext(ctx),
+  : keyword_table(kt),
+    keyword_tokens(km),
+    chars_table(ct),
+    chars_tokens(cm),
+    unary_context(ctx),
     data_payload(p),
     unique(1)
   {
@@ -164,15 +183,7 @@ void lexstream<Keywords, Characters>::print(std::ostream& stream)
 template <class Keywords, class Characters>
 void lexstream<Keywords, Characters>::reset()
   {
-    if(this->lexeme_list.size() > 0)
-      {
-        this->ptr       = this->lexeme_list.begin();
-        this->ptr_valid = true;
-      }
-    else
-      {
-        this->ptr_valid = false;
-      }
+    this->ptr = this->lexeme_list.begin();
   }
 
 template <class Keywords, class Characters>
@@ -180,7 +191,7 @@ lexeme::lexeme<Keywords, Characters>* lexstream<Keywords, Characters>::get()
   {
     lexeme::lexeme<Keywords, Characters>* rval = nullptr;
 
-    if(this->ptr_valid)
+    if(this->state())
       {
         rval = &(*(this->ptr));
       }
@@ -191,26 +202,15 @@ lexeme::lexeme<Keywords, Characters>* lexstream<Keywords, Characters>::get()
 template <class Keywords, class Characters>
 bool lexstream<Keywords, Characters>::eat()
   {
-    if(this->ptr_valid)
-      {
-        this->ptr++;
-        if(this->ptr == this->lexeme_list.end())
-          {
-            this->ptr_valid = false;
-          }
-      }
-    else
-      {
-        this->ptr_valid = false;
-      }
-
-    return(this->ptr_valid);
+    if(this->state()) ++this->ptr;
+    
+    return this->state();
   }
 
 template <class Keywords, class Characters>
 bool lexstream<Keywords, Characters>::state()
   {
-    return(this->ptr_valid);
+    return(this->ptr != this->lexeme_list.end());
   }
 
 
@@ -303,7 +303,7 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                         // note: this updates context, depending what the lexeme is recognized as
                         error_context err_ctx(this->stack, context_line, context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                         this->lexeme_list.emplace_back(word, type, context, this->unique++, err_ctx,
-                                                       this->ktable, this->kmap, this->ctable, this->cmap, this->ccontext);
+                                                       this->keyword_table, this->keyword_tokens, this->chars_table, this->chars_tokens, this->unary_context);
                       }
                     break;
                   }
@@ -315,7 +315,7 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                     // note: this updates context, depending what the lexeme is recognized as
                     error_context err_ctx(this->stack, context_line, context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                     this->lexeme_list.emplace_back(word, type, context, this->unique++, err_ctx,
-                                                   this->ktable, this->kmap, this->ctable, this->cmap, this->ccontext);
+                                                   this->keyword_table, this->keyword_tokens, this->chars_table, this->chars_tokens, this->unary_context);
                     break;
                   }
               }
