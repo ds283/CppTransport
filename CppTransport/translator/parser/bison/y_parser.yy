@@ -198,8 +198,8 @@ template_def: template_def core equals string semicolon                         
 
 settings_block: open_brace settings_def close_brace
 
-settings_def: settings_def indexorder equals left semicolon                             { driver.utils.set_indexorder_left(); }
-        | settings_def indexorder equals right semicolon                                { driver.utils.set_indexorder_right(); }
+settings_def: settings_def indexorder equals left semicolon                             { driver.misc.set_indexorder_left(); }
+        | settings_def indexorder equals right semicolon                                { driver.misc.set_indexorder_right(); }
         |
         ;
 
@@ -207,15 +207,15 @@ attribute_block: open_brace attributes close_brace                              
         |                                                                               { $$ = std::make_shared<attributes>(); }
         ;
 
-attributes: attributes latex equals string semicolon                                    { driver.utils.add_latex_attribute(*$1, *$4); $$ = $1; }
+attributes: attributes latex equals string semicolon                                    { driver.misc.add_latex_attribute(*$1, *$4); $$ = $1; }
         |                                                                               { $$ = std::make_shared<attributes>(); }
         ;
 
 string_array: open_square string_group close_square                                     { $$ = $2; }
         | open_square close_square                                                      { $$ = std::make_shared<string_array>(); }
 
-string_group: string_group comma string                                                 { driver.utils.add_string(*$1, *$3); $$ = $1; }
-        | string                                                                        { $$ = std::make_shared<string_array>(); driver.utils.add_string(*$$, *$1); }
+string_group: string_group comma string                                                 { driver.misc.add_string(*$1, *$3); $$ = $1; }
+        | string                                                                        { $$ = std::make_shared<string_array>(); driver.misc.add_string(*$$, *$1); }
         ;
 
 model_block: open_brace model_attributes close_brace

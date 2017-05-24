@@ -130,12 +130,16 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/shared/temporary_pool.cpp
   translator/backends/shared/utensors.cpp
   ${BISON_parser_OUTPUTS}
+  translator/parser/descriptor/lagrangian_block.cpp
+  translator/parser/descriptor/metadata_block.cpp
   translator/parser/descriptor/model_descriptor.cpp
+  translator/parser/descriptor/templates_block.cpp
+  translator/parser/descriptor/misc_block.cpp
   translator/parser/driver/expression_tree_driver.cpp
   translator/parser/driver/lagrangian_driver.cpp
   translator/parser/driver/metadata_driver.cpp
   translator/parser/driver/templates_driver.cpp
-  translator/parser/driver/utilities_driver.cpp
+  translator/parser/driver/misc_driver.cpp
   translator/parser/driver/y_driver.cpp
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
@@ -420,10 +424,19 @@ set(TRANSLATOR_PARSER_BISON_FILES
 set(TRANSLATOR_PARSER_DESCRIPTOR_FILES
   translator/parser/descriptor/model_descriptor.cpp
   translator/parser/descriptor/model_descriptor.h
+  translator/parser/descriptor/generics_descriptor.h
+  translator/parser/descriptor/metadata_block.cpp
+  translator/parser/descriptor/metadata_block.h
+  translator/parser/descriptor/lagrangian_block.cpp
+  translator/parser/descriptor/lagrangian_block.h
+  translator/parser/descriptor/misc_block.cpp
+  translator/parser/descriptor/misc_block.h
+  translator/parser/descriptor/templates_block.cpp
+  translator/parser/descriptor/templates_block.h
   )
 
 set(TRANSLATER_PARSER_DRIVER_FILES
-  translator/parser/driver/generics.h
+  translator/parser/driver/generics_driver.h
   translator/parser/driver/expression_tree_driver.cpp
   translator/parser/driver/expression_tree_driver.h
   translator/parser/driver/lagrangian_driver.cpp
@@ -432,8 +445,8 @@ set(TRANSLATER_PARSER_DRIVER_FILES
   translator/parser/driver/metadata_driver.h
   translator/parser/driver/templates_driver.cpp
   translator/parser/driver/templates_driver.h
-  translator/parser/driver/utilities_driver.cpp
-  translator/parser/driver/utilities_driver.h
+  translator/parser/driver/misc_driver.cpp
+  translator/parser/driver/misc_driver.h
   translator/parser/driver/y_driver.cpp
   translator/parser/driver/y_driver.h
   )

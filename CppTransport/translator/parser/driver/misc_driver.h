@@ -37,7 +37,7 @@
 namespace y
   {
     
-    class utilities_driver
+    class misc_driver
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -45,10 +45,10 @@ namespace y
       public:
         
         //! constructor
-        utilities_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
+        misc_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
         
         //! destructor is default
-        ~utilities_driver() = default;
+        ~misc_driver() = default;
     
         
         // INTERFACE -- UTILITY METHODS TO EMPLACE ATTRIBUTE DATA

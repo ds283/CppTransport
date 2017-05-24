@@ -161,7 +161,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     // dump lexeme stream to output -- for debugging
     // instream.print(std::cerr);
 
-    // construction of lexer, driver and parser performs syntactic analysis
+    // combination of lexer, driver and parser performs syntactic analysis
 
     if(parser.parse() == FAIL || driver.failed())
 	    {

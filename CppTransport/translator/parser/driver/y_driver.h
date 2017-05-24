@@ -40,11 +40,12 @@
 #include "local_environment.h"
 
 #include "y_common.h"
+
 #include "expression_tree_driver.h"
 #include "lagrangian_driver.h"
 #include "metadata_driver.h"
 #include "templates_driver.h"
-#include "utilities_driver.h"
+#include "misc_driver.h"
 
 
 namespace y
@@ -124,8 +125,8 @@ namespace y
         //! template data
         templates_driver templ;
     
-        //! utility methods
-        utilities_driver utils;
+        //! miscellaneous settings and methods
+        misc_driver misc;
 
 	    };
 

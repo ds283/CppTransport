@@ -24,14 +24,14 @@
 //
 
 
-#include "utilities_driver.h"
-#include "generics.h"
+#include "misc_driver.h"
+#include "generics_driver.h"
 
 
 namespace y
   {
     
-    utilities_driver::utilities_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
+    misc_driver::misc_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
       : root(sc),
         sym_factory(sf),
         cache(ac),
@@ -40,27 +40,27 @@ namespace y
       }
     
     
-    void utilities_driver::add_latex_attribute(attributes& a, lexeme_type& lex)
+    void misc_driver::add_latex_attribute(attributes& a, lexeme_type& lex)
       {
         auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_latex(name, lex); };
         SetStringValue(Setter, lex);
       }
     
     
-    void utilities_driver::add_string(string_array& a, lexeme_type& lex)
+    void misc_driver::add_string(string_array& a, lexeme_type& lex)
       {
         auto Setter = [&](auto& name, auto& lex) -> auto { a.push_element(name, lex); return true; };
         SetStringValue(Setter, lex);
       }
     
     
-    void utilities_driver::set_indexorder_left()
+    void misc_driver::set_indexorder_left()
       {
         this->root.set_indexorder(index_order::left);
       }
     
     
-    void utilities_driver::set_indexorder_right()
+    void misc_driver::set_indexorder_right()
       {
         this->root.set_indexorder(index_order::right);
       }

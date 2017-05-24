@@ -1,0 +1,378 @@
+//
+// Created by David Seery on 24/05/2017.
+// --@@
+// Copyright (c) 2017 University of Sussex. All rights reserved.
+//
+// This file is part of the CppTransport platform.
+//
+// CppTransport is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License, or
+// (at your option) any later version.
+//
+// CppTransport is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CppTransport.  If not, see <http://www.gnu.org/licenses/>.
+//
+// @license: GPL-2
+// @contributor: David Seery <D.Seery@sussex.ac.uk>
+// --@@
+//
+
+#ifndef CPPTRANSPORT_LAGRANGIAN_BLOCK_H
+#define CPPTRANSPORT_LAGRANGIAN_BLOCK_H
+
+
+#include "contexted_value.h"
+#include "model_settings.h"
+#include "y_common.h"
+
+#include "symbol_factory.h"
+#include "symbol_list.h"
+#include "disable_warnings.h"
+
+#include "ginac/ginac.h"
+
+// abstract 'declaration' concept
+class declaration    // is an abstract class
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l);
+
+    //! destructor is default
+    virtual ~declaration() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    //! get text name of declaration/symbol
+    const std::string& get_name() const { return(this->name); }
+
+    //! get GiNaC symbol association with declaration/symbol
+    const GiNaC::symbol& get_ginac_symbol() const { return(this->symbol); }
+
+    //! return GiNaC expression to be substituted when this declaration is used;
+    //! often this will just be the GiNaC symbol, but may be more complex
+    //! eg. for a subexpression declaration
+    virtual GiNaC::ex get_expression() const = 0;
+
+    //! return unique identifier representing order of declarations
+    unsigned int get_unique_id() const { return(this->my_id); }
+
+    //! return lexeme representing declaration point
+    const y::lexeme_type& get_declaration_point() const { return(this->declaration_point); }
+
+
+    // PRINT TO STANDARD STREAM
+
+  public:
+
+    //! write self-details to standard output
+    virtual void print(std::ostream& stream) const = 0;
+
+
+    // INTERNAL DATA
+
+  protected:
+
+    //! text name of declaration
+    std::string name;
+
+    //! GiNaC symbol for declaration
+    GiNaC::symbol symbol;
+
+    //! reference to declaration lexeme
+    const y::lexeme_type& declaration_point;
+
+    //! class id; used to record the order in which declarations have been made
+    unsigned int my_id;
+
+    //! global id counter; initialized in script.cpp
+    static unsigned int current_id;
+
+  };
+
+
+class field_declaration : public declaration
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a);
+
+    //! destructor is default
+    virtual ~field_declaration() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    //! get LaTeX name of field
+    std::string get_latex_name() const;
+
+    //! get GiNaC expression for field
+    virtual GiNaC::ex get_expression() const override { return GiNaC::ex(this->symbol); }
+
+
+    // PRINT TO STANDARD STREAM
+
+  public:
+
+    //! print details to specified stream
+    void print(std::ostream& stream) const override;
+
+
+    // INTERNAL DATA
+
+  protected:
+
+    //! attributes block
+    std::unique_ptr<attributes> attrs;
+
+  };
+
+
+class parameter_declaration : public declaration
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a);
+
+    //! destructor is default
+    ~parameter_declaration() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    //! get LaTeX name of parameter
+    std::string get_latex_name() const;
+
+    //! get GiNaC expression for parameter
+    virtual GiNaC::ex get_expression() const override { return GiNaC::ex(this->symbol); }
+
+
+    // PRINT TO STANDARD STREAM
+
+  public:
+
+    //! print details to specified stream
+    void print(std::ostream& stream) const override;
+
+
+    // INTERNAL DATA
+
+  protected:
+
+    //! attributes block
+    std::unique_ptr<attributes> attrs;
+
+  };
+
+
+class subexpr_declaration : public declaration
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e);
+
+    //! destructor is default
+    ~subexpr_declaration() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    //! get LaTeX name of subexpression
+    std::string get_latex_name() const;
+
+    //! get GiNaC expression for subexpression
+    GiNaC::ex get_value() const;
+
+    //! redirect inherited virtual function 'get_expression()' to 'get_value()'
+    virtual GiNaC::ex get_expression() const override { return this->get_value(); }
+
+
+    // PRINT TO STANDARD STREAM
+
+  public:
+
+    //! print details to specified stream
+    void print(std::ostream& stream) const override;
+
+
+    // INTERNAL DATA
+
+  protected:
+
+    //! attribute block
+    std::unique_ptr<subexpr> sexpr;
+
+  };
+
+
+class lagrangian_block
+  {
+
+    // TYPES
+
+  protected:
+
+    //! typedef for field symbol table
+    typedef std::unordered_map<std::string, std::unique_ptr<field_declaration> > field_symbol_table;
+
+    //! typedef for parameter symbol table
+    typedef std::unordered_map<std::string, std::unique_ptr<parameter_declaration> > parameter_symbol_table;
+
+    //! typedef for subexpression symbol table
+    typedef std::unordered_map<std::string, std::unique_ptr<subexpr_declaration> > subexpr_symbol_table;
+
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    lagrangian_block(unsigned int& ec, symbol_factory& s, error_context err_ctx);
+
+    //! destructor is default
+    ~lagrangian_block() = default;
+
+
+    // SYMBOL SERVICES
+
+  public:
+
+    //! add symbol representing a field
+    bool add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes& a);
+
+    //! add symbol representing a parameter
+    bool add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes& a);
+
+    //! add symbol representing a subexpression
+    bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, subexpr& e);
+
+    //! check whether a given symbol name has been declared
+    //! if the symbol exists, returns a boost::optional<> containing a reference
+    //! to its declaration
+    boost::optional<declaration&> check_symbol_exists(const std::string& nm) const;
+
+
+    // LAGRANGIAN MANAGEMENT
+
+  public:
+
+    //! set potential
+    bool set_potential(GiNaC::ex& V, const y::lexeme_type& l);
+
+    //! get potential as a contexted value
+    boost::optional< contexted_value<GiNaC::ex>& > get_potential() const;
+
+    //! unset potential
+    void unset_potential();
+
+
+    // FIELDS AND PARAMETERS
+
+  public:
+
+    //! get number of fields in the model
+    unsigned int get_number_fields() const;
+
+    //! get number of parameters in the model
+    unsigned int get_number_params() const;
+
+    //! get std::vector<> of field names
+    std::vector<std::string> get_field_name_list() const;
+
+    //! get_std::vector<> of LaTeX field names
+    std::vector<std::string> get_field_latex_list() const;
+
+    //! get std::vector<> of parameter names
+    std::vector<std::string> get_param_name_list() const;
+
+    //! get std::vector<> of LaTeX parameter names
+    std::vector<std::string> get_param_latex_list() const;
+
+    //! get list of symbols for fields
+    symbol_list get_field_symbols() const;
+
+    //! get list of symbols for field derivatives
+    symbol_list get_deriv_symbols() const;
+
+    //! get list of symbols for parameters
+    symbol_list get_param_symbols() const;
+
+    //! get symbol for Planck mass M_P
+    const GiNaC::symbol& get_Mp_symbol() const;
+
+
+    // INTERNAL DATA
+
+  private:
+
+    //! error count
+    unsigned int& err_count;
+
+
+    // LAGRANGIAN DATA
+
+    //! symbol table: fields
+    field_symbol_table fields;
+
+    //! symbol table: parameters
+    parameter_symbol_table parameters;
+
+    //! symbol table: reserved symbols (such as the Planck mass)
+    parameter_symbol_table reserved;
+
+    //! symbol table: subexpressions
+    subexpr_symbol_table subexprs;
+
+    //! store details of potentials
+    std::unique_ptr<contexted_value<GiNaC::ex> > potential;
+
+
+    // SYMBOL SERVICES
+
+    //! symbol factory
+    symbol_factory& sym_factory;
+
+    //! symbol list: names of field derivatives
+    symbol_list deriv_symbols;
+
+
+    // SPECIAL RESERVED SYMBOLS
+
+    //! symbol representing Planck mass
+    GiNaC::symbol M_Planck;
+
+  };
+
+
+#endif //CPPTRANSPORT_LAGRANGIAN_BLOCK_H

@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 18/06/2013.
+// Created by David Seery on 24/05/2017.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2017 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -23,22 +23,21 @@
 // --@@
 //
 
-#include <sstream>
-#include <assert.h>
-#include <algorithm>
 
-#include "lexical.h"
-#include "model_descriptor.h"
+#include "misc_block.h"
+#include "generics_descriptor.h"
 
 
-// ******************************************************************
+// MISCELLANEOUS SETTINGS
 
 
-model_descriptor::model_descriptor(symbol_factory& s, error_context err_ctx)
-  : err_count(0),
-    lag(err_count, s, std::move(err_ctx)),
-    meta(err_count),
-    templ(err_count),
-    misc(err_count)
+void misc_block::set_indexorder(index_order o)
   {
+    this->order = o;
+  }
+
+
+index_order misc_block::get_indexorder() const
+  {
+    return(this->order);
   }
