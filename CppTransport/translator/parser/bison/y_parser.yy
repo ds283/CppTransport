@@ -176,7 +176,8 @@
 program: script
         ;
 
-script: script potential equals expression semicolon                                    { driver.set_potential(*$4, *$3); }
+script: script metadata metadata_block semicolon
+        | script potential equals expression semicolon                                  { driver.set_potential(*$4, *$3); }
         | script model string model_block semicolon                                     { driver.set_model(*$3); }
         | script author string author_block semicolon                                   { driver.add_author(*$3, *$4); }
         | script templates template_block semicolon
@@ -187,6 +188,17 @@ script: script potential equals expression semicolon                            
         | script perturbations stepper_block semicolon                                  { driver.set_perturbations_stepper(*$3, *$2); }
 				| script subexpr identifier subexpr_block semicolon                             { driver.add_subexpr(*$3, *$4); }
         |
+        ;
+
+metadata_block: open_brace metadata_def close_brace
+
+metadata_def: metadata_def requires_version equals integer semicolon                    { driver.set_required_version(*$4); }
+        | metadata_def lagrangian equals lagrangian_specifier semicolon
+        |
+        ;
+
+lagrangian_specifier: canonical                                                         { driver.set_lagrangian_canonical(); }
+        | nontrivial_metric                                                             { driver.set_lagrangian_nontrivial_metric(); }
         ;
 
 template_block: open_brace template_def close_brace
