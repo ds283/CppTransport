@@ -463,13 +463,13 @@ boost::optional< contexted_value<stepper>& > model_descriptor::get_perturbations
 // MISCELLANEOUS SETTINGS
 
 
-void model_descriptor::set_indexorder(enum index_order o)
+void model_descriptor::set_indexorder(index_order o)
   {
     this->order = o;
   }
 
 
-enum index_order model_descriptor::get_indexorder() const
+index_order model_descriptor::get_indexorder() const
   {
     return(this->order);
   }

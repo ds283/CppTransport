@@ -33,7 +33,7 @@
 #include "y_lexer.h"
 
 
-std::unordered_map<enum keyword_type, enum y::y_parser::token::yytokentype> keyword_tokens =
+std::unordered_map<keyword_type, y::y_parser::token::yytokentype> keyword_tokens =
   {
     { keyword_type::metadata,         y::y_parser::token::metadata },
     { keyword_type::requires_version, y::y_parser::token::requires_version },
@@ -104,7 +104,7 @@ std::unordered_map<enum keyword_type, enum y::y_parser::token::yytokentype> keyw
     { keyword_type::binomial,         y::y_parser::token::binomial }
   };
 
-std::unordered_map<enum character_type, enum y::y_parser::token::yytokentype> symbol_tokens =
+std::unordered_map<character_type, y::y_parser::token::yytokentype> symbol_tokens =
   {
     { character_type::open_brace,     y::y_parser::token::open_brace },
     { character_type::close_brace,    y::y_parser::token::close_brace },

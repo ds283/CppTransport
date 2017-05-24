@@ -123,7 +123,7 @@ namespace macro_packages
 
         //! constructor for a 'traditional' index macro with a fixed number of arguments and indices,
         //! and enforcing a specific class for the index type
-        replacement_rule_index(std::string nm, unsigned int a, unsigned int i, enum index_class c)
+        replacement_rule_index(std::string nm, unsigned int a, unsigned int i, index_class c)
           : name(std::move(nm)),
             num_args(a),
             num_indices(i),
@@ -189,13 +189,13 @@ namespace macro_packages
         //! get index class associated with this macro;
         //! returned as a boost::optional which will be empty if the macro can accept variable
         //! index types
-        boost::optional<enum index_class> get_index_class() const { return(this->idx_class); }
+        boost::optional<index_class> get_index_class() const { return(this->idx_class); }
 
         //! get name associated with this macro
         const std::string& get_name() const { return(this->name); }
 
         //! get unroll status for this macro -- must be handled by implementation
-        virtual enum unroll_behaviour get_unroll() const = 0;
+        virtual unroll_behaviour get_unroll() const = 0;
 
         //! determine whether this rule is a directive
         bool is_directive() const { return(this->rule_class == replacement_rule_class::directive); }
@@ -239,7 +239,7 @@ namespace macro_packages
         boost::optional<unsigned int> num_indices;
 
         //! class of index expected
-        boost::optional<enum index_class> idx_class;
+        boost::optional<index_class> idx_class;
 
       };
 

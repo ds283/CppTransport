@@ -119,7 +119,7 @@ namespace macro_packages
     std::string replace_guard::evaluate(const macro_argument_list& args)
       {
         std::string guard;
-        enum process_type type = this->data_payload.get_stack().top_process_type();
+        process_type type = this->data_payload.get_stack().top_process_type();
 
         if(type == process_type::process_core)
           {

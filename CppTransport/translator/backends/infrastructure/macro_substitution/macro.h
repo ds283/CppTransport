@@ -97,7 +97,7 @@ namespace macro_impl
         bool semicolon;
 
         //! split type
-        enum split_type type;
+        split_type type;
 
       };
 
@@ -228,7 +228,7 @@ class macro_agent
     unsigned int parameters;
 
     //! cache index ordering convention
-    enum index_order order;
+    index_order order;
 
     //! current recursion depth
     unsigned int recursion_depth;

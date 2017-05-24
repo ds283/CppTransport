@@ -134,7 +134,7 @@ unsigned int translator_data::get_number_parameters() const
   }
 
 
-enum index_order translator_data::get_index_order() const
+index_order translator_data::get_index_order() const
   {
     return(this->driver.get_descriptor().get_indexorder());
   }

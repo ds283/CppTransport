@@ -33,7 +33,7 @@ enum class index_class
   };
 
 
-enum index_class identify_index (char label);
+index_class identify_index (char label);
 
 
 

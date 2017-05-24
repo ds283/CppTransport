@@ -122,7 +122,7 @@ namespace canonical
       }
 
 
-    enum unroll_behaviour canonical_C::get_unroll()
+    unroll_behaviour canonical_C::get_unroll()
       {
         if(this->shared.roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't unroll

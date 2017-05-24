@@ -107,7 +107,7 @@ namespace canonical
       }
 
 
-    enum unroll_behaviour canonical_dN2::get_unroll()
+    unroll_behaviour canonical_dN2::get_unroll()
       {
         return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
       }

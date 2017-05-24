@@ -63,7 +63,7 @@ const std::vector<std::string> keyword_table =
     "factorial", "binomial"
   };
 
-const std::vector<enum keyword_type> keyword_map =
+const std::vector<keyword_type> keyword_map =
   {
     keyword_type::metadata, keyword_type::requires_version, keyword_type::lagrangian,
     keyword_type::canonical, keyword_type::noncanonical,
@@ -95,7 +95,7 @@ const std::vector<std::string> character_table =
     "&", "^", "@", "...", "->"
   };
 
-const std::vector<enum character_type> character_map =
+const std::vector<character_type> character_map =
   {
     character_type::open_brace, character_type::close_brace,
     character_type::open_bracket, character_type::close_bracket,

@@ -95,7 +95,7 @@ class lexfile
     lexfile& operator++();
 
     //! get current state of the file
-    enum status get_state() const;
+    status get_state() const;
 
     //! get shared_ptr to current line; used to allow lexemes generated from
     //! this line to co-own it

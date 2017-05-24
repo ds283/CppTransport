@@ -598,7 +598,7 @@ std::string token_list::to_string()
 	}
 
 
-enum unroll_behaviour token_list::unroll_status() const
+unroll_behaviour token_list::unroll_status() const
   {
     if(this->force_unroll.size() > 0 && this->prevent_unroll.size() == 0) return unroll_behaviour::force;
     if(this->force_unroll.size() == 0 && this->prevent_unroll.size() > 0) return unroll_behaviour::prevent;

@@ -28,7 +28,7 @@
 #include <ctype.h>
 
 
-enum index_class identify_index(char label)
+index_class identify_index(char label)
   {
     if(islower(label))        // lower-case indices label fields
       {

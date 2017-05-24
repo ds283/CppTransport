@@ -60,7 +60,7 @@ void translator::print_advisory(const std::string& msg)
 	}
 
 
-unsigned int translator::translate(const std::string& in, const error_context& ctx, const std::string& out, enum process_type type, filter_function* filter)
+unsigned int translator::translate(const std::string& in, const error_context& ctx, const std::string& out, process_type type, filter_function* filter)
   {
 		buffer buf(out);
 
@@ -70,7 +70,7 @@ unsigned int translator::translate(const std::string& in, const error_context& c
   }
 
 
-unsigned int translator::translate(const std::string& in, const error_context& ctx, buffer& buf, enum process_type type, filter_function* filter)
+unsigned int translator::translate(const std::string& in, const error_context& ctx, buffer& buf, process_type type, filter_function* filter)
   {
     unsigned int            rval = 0;
     boost::filesystem::path template_in;
@@ -94,7 +94,7 @@ unsigned int translator::translate(const std::string& in, const error_context& c
   }
 
 
-unsigned int translator::process(const boost::filesystem::path& in, buffer& buf, enum process_type type, filter_function* filter)
+unsigned int translator::process(const boost::filesystem::path& in, buffer& buf, process_type type, filter_function* filter)
   {
     unsigned int replacements = 0;
     std::ifstream inf;

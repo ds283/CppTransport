@@ -356,10 +356,10 @@ class model_descriptor
   public:
     
     //! set index order flag (left-most first or right-most first)
-    void set_indexorder(enum index_order o);
+    void set_indexorder(index_order o);
 
     //! get index order flag
-    enum index_order get_indexorder() const;
+    index_order get_indexorder() const;
 
     
     // LAGRANGIAN MANAGEMENT
@@ -520,7 +520,7 @@ class model_descriptor
     author_table authors;
     
     //! index ordering setting (left-most first or right-most first)
-    enum index_order order;
+    index_order order;
     
     //! specification of background stepper
     std::unique_ptr<contexted_value<stepper> > background_stepper;

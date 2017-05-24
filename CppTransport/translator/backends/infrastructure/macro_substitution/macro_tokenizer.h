@@ -209,7 +209,7 @@ namespace token_list_impl
         const macro_argument_list args;
         macro_packages::replacement_rule_simple& rule;
 
-        enum simple_macro_type type;
+        simple_macro_type type;
 
         //! have argument-related errors been reported yet? if so, silence further errors
         bool argument_error;
@@ -342,7 +342,7 @@ class token_list
   public:
 
     //! does this token set prevent, force or allow unrolling?
-    enum unroll_behaviour unroll_status() const;
+    unroll_behaviour unroll_status() const;
 
 
 		// INTERNAL API

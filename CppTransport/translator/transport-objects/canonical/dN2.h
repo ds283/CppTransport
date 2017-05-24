@@ -91,7 +91,7 @@ namespace canonical
       public:
 
         //! determine whether this tensor can be unrolled with the current resources
-        virtual enum unroll_behaviour get_unroll() override;
+        virtual unroll_behaviour get_unroll() override;
 
 
         // INTERNAL API

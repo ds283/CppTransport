@@ -42,7 +42,7 @@ class abstract_index
     abstract_index(char l, unsigned int f, unsigned int p);
 
     //! constructor -- with assigned classification
-    abstract_index(char l, enum index_class c, unsigned int f, unsigned int p);
+    abstract_index(char l, index_class c, unsigned int f, unsigned int p);
 
     //! destructor is default
     ~abstract_index() = default;
@@ -56,7 +56,7 @@ class abstract_index
     char get_label() const { return(this->label); }
 
     //! return classification
-    enum index_class get_class() const { return(this->classification); }
+    index_class get_class() const { return(this->classification); }
 
 
     // INTERFACE -- TURN SELF INTO A FOR-LOOP VARIABLE
@@ -91,7 +91,7 @@ class abstract_index
     char label;
 
     //! index classification
-    enum index_class classification;
+    index_class classification;
 
     //! cache total number of fields
     unsigned int fields;

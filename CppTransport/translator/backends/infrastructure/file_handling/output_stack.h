@@ -57,7 +57,7 @@ class output_stack : public filestack_derivation_helper<output_stack>
 
       public:
 
-        inclusion(boost::filesystem::path i, unsigned int l, buffer& b, macro_agent& a, enum process_type t)
+        inclusion(boost::filesystem::path i, unsigned int l, buffer& b, macro_agent& a, process_type t)
           : in(std::move(i)),
             line(l),
             buf(b),
@@ -73,7 +73,7 @@ class output_stack : public filestack_derivation_helper<output_stack>
         unsigned int line;
         buffer& buf;
         macro_agent& agent;
-        const enum process_type type;
+        const process_type type;
 
       };
 
@@ -94,7 +94,7 @@ class output_stack : public filestack_derivation_helper<output_stack>
   public:
 
     // push object to the top of the stack
-    void push(const boost::filesystem::path in, buffer& buf, macro_agent& agent, enum process_type type);
+    void push(const boost::filesystem::path in, buffer& buf, macro_agent& agent, process_type type);
 
     //! pop object from top of tstack
     void pop() override;
@@ -139,7 +139,7 @@ class output_stack : public filestack_derivation_helper<output_stack>
     macro_agent& top_macro_package();
 
     //! return current top-of-stack process type (core, implementation)
-    enum process_type top_process_type() const;
+    process_type top_process_type() const;
 
 
     // INTERNAL DATA

@@ -34,7 +34,7 @@
 #include "package_group.h"
 
 
-void output_stack::push(boost::filesystem::path in, buffer& buf, macro_agent& agent, enum process_type type)
+void output_stack::push(boost::filesystem::path in, buffer& buf, macro_agent& agent, process_type type)
   {
     // starts at line 2, because first line of template is a header that defines output language, minimum version, etc.
     this->inclusions.emplace_front(in, 2, buf, agent, type);
@@ -128,7 +128,7 @@ macro_agent& output_stack::top_macro_package()
   }
 
 
-enum process_type output_stack::top_process_type() const
+process_type output_stack::top_process_type() const
   {
     if(inclusions.size() > 0)
       {

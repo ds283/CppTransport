@@ -141,7 +141,7 @@ class translator_data
 
     unsigned int get_number_parameters() const;
 
-    enum index_order get_index_order() const;
+    index_order get_index_order() const;
 
     const GiNaC::symbol& get_Mp_symbol() const;
 

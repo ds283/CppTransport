@@ -69,7 +69,7 @@ class backend_data
     const std::string& get_backend_name() const { return(*this->name); }
 
     //! get model type
-    enum model_type get_model_type() const { return(this->type); }
+    model_type get_model_type() const { return(this->type); }
 
 
     // INTERNAL DATA
@@ -86,7 +86,7 @@ class backend_data
     boost::optional<std::string> name;
 
     //! type of u-factory
-    enum model_type type;
+    model_type type;
 
   };
 

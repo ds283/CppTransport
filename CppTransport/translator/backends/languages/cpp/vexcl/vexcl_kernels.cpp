@@ -61,7 +61,7 @@ namespace vexcl
         translator t(this->data_payload);
 
         buffer& buf = os.top_buffer();
-        enum process_type type = os.top_process_type();
+        process_type type = os.top_process_type();
 
         // set up a new in-memory buffer to hold the translated kernel
         buffer kernel_buffer;

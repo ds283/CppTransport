@@ -156,7 +156,7 @@ namespace canonical
       }
 
 
-    enum unroll_behaviour canonical_A::get_unroll()
+    unroll_behaviour canonical_A::get_unroll()
       {
         if(this->shared.roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV() && this->res.roll_dddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up

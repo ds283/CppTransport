@@ -63,7 +63,7 @@ class assignment_set
   public:
 
     //! construct an assignment set from a given list of abstract indices
-    assignment_set(const abstract_index_list& s, enum index_order o = index_order::right);
+    assignment_set(const abstract_index_list& s, index_order o = index_order::right);
 
     //! destructor is default
     ~assignment_set() = default;
@@ -114,7 +114,7 @@ class assignment_set
     unsigned int assignments_size;
 
     //! cache desired index order
-    enum index_order order;
+    index_order order;
 
   };
 
@@ -147,7 +147,7 @@ class assignment_record
     char get_label() const { return(this->abstract.get_label()); }
 
     //! return classification
-    enum index_class get_class() const { return(this->abstract.get_class()); }
+    index_class get_class() const { return(this->abstract.get_class()); }
 
 
     // INTERFACE -- SPECIFIC TO ASSIGNMENT_RECORD

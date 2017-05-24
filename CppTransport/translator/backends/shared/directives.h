@@ -78,7 +78,7 @@ namespace macro_packages
           public:
 
             //! determined unroll status, which is inherited from the unroll status of the token list we contain
-            enum unroll_behaviour get_unroll() const override { return this->tokens->unroll_status(); }
+            unroll_behaviour get_unroll() const override { return this->tokens->unroll_status(); }
 
             //! get declaration point
             const error_context& get_declaration_point() const { return(this->declaration_point); }
@@ -203,7 +203,7 @@ namespace macro_packages
 
         //! determine unroll status; meaningless for a directive, so we always return 'prevent'
         //! in order to guarantee being provided with an abstract index list
-        enum unroll_behaviour get_unroll() const override { return unroll_behaviour::prevent; }
+        unroll_behaviour get_unroll() const override { return unroll_behaviour::prevent; }
 
 
         // INTERNAL API -- implements a 'replacement_rule_index' interface

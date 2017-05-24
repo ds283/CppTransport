@@ -79,7 +79,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return this->u1_tensor->get_unroll(); }
+        unroll_behaviour get_unroll() const override { return this->u1_tensor->get_unroll(); }
 
 
         // INTERNAL API
@@ -146,7 +146,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return this->u2_tensor->get_unroll(); }
+        unroll_behaviour get_unroll() const override { return this->u2_tensor->get_unroll(); }
 
 
         // INTERNAL API
@@ -213,7 +213,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return this->u3_tensor->get_unroll(); }
+        unroll_behaviour get_unroll() const override { return this->u3_tensor->get_unroll(); }
 
 
         // INTERNAL API
