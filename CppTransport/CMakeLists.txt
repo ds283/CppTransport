@@ -130,15 +130,15 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/shared/temporary_pool.cpp
   translator/backends/shared/utensors.cpp
   ${BISON_parser_OUTPUTS}
-  translator/parser/input_stack.cpp
-  translator/parser/lexfile.cpp
-  translator/parser/model_descriptor.cpp
+  translator/parser/descriptor/model_descriptor.cpp
   translator/parser/driver/expression_tree.cpp
   translator/parser/driver/lagrangian.cpp
   translator/parser/driver/metadata.cpp
   translator/parser/driver/templates.cpp
   translator/parser/driver/utilities.cpp
   translator/parser/driver/y_driver.cpp
+  translator/parser/input_stack.cpp
+  translator/parser/lexfile.cpp
   translator/parser/y_lexer.cpp
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/Hubble.cpp
@@ -200,6 +200,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/concepts
   translator/instruments
   translator/parser
+  translator/parser/descriptor
   translator/parser/driver
   translator/transport-objects
   translator/transport-objects/indices
@@ -416,6 +417,11 @@ set(TRANSLATOR_PARSER_BISON_FILES
   translator/parser/bison/y_parser.yy
   )
 
+set(TRANSLATOR_PARSER_DESCRIPTOR_FILES
+  translator/parser/descriptor/model_descriptor.cpp
+  translator/parser/descriptor/model_descriptor.h
+  )
+
 set(TRANSLATER_PARSER_DRIVER_FILES
   translator/parser/driver/generics.h
   translator/parser/driver/expression_tree.cpp
@@ -440,8 +446,6 @@ set(TRANSLATOR_PARSER_FILES
   translator/parser/lexfile.h
   translator/parser/lexical.h
   translator/parser/lexstream.h
-  translator/parser/model_descriptor.cpp
-  translator/parser/model_descriptor.h
   translator/parser/semantic_data.h
   translator/parser/y_common.h
   translator/parser/y_lexer.cpp
@@ -1044,6 +1048,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_FILES}
   ${TRANSLATOR_INSTRUMENTS_FILES}
   ${TRANSLATOR_PARSER_BISON_FILES}
+  ${TRANSLATOR_PARSER_DESCRIPTOR_FILES}
   ${TRANSLATOR_PARSER_DRIVER_FILES}
   ${TRANSLATOR_PARSER_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
