@@ -64,7 +64,7 @@
 %token                                   requires_version
 %token                                   lagrangian
 %token                                   canonical
-%token                                   noncanonical
+%token                                   nontrivial_metric
 %token                                   name
 %token                                   author
 %token                                   citeguide
