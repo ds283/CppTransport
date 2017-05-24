@@ -201,9 +201,9 @@ lexstream<Keywords, Characters>::lexstream(lexstream_data& p,
 template <typename Keywords, typename Characters>
 void lexstream<Keywords, Characters>::print(std::ostream& stream)
   {
-    for(int i = 0; i < this->lexeme_list.size(); ++i)
+    for(const auto& lex : this->lexeme_list)
       {
-        this->lexeme_list[i]->dump(stream);
+        lex->dump(stream);
       }
   }
 
