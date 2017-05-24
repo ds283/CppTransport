@@ -55,21 +55,21 @@ namespace y
   
       public:
     
-        void set_core(lexeme_type* lex);
+        void set_core(lexeme_type& lex);
     
-        void set_implementation(lexeme_type* lex);
+        void set_implementation(lexeme_type& lex);
     
-        void set_abserr(struct stepper* s, lexeme_type* lex);
+        void set_abserr(struct stepper& s, lexeme_type& lex);
     
-        void set_relerr(struct stepper* s, lexeme_type* lex);
+        void set_relerr(struct stepper& s, lexeme_type& lex);
     
-        void set_stepper(struct stepper* s, lexeme_type* lex);
+        void set_stepper(struct stepper& s, lexeme_type& lex);
     
-        void set_stepsize(struct stepper* s, lexeme_type* lex);
+        void set_stepsize(struct stepper& s, lexeme_type& lex);
     
-        void set_background_stepper(struct stepper* s, lexeme_type* lex);
+        void set_background_stepper(struct stepper& s, lexeme_type& lex);
     
-        void set_perturbations_stepper(struct stepper* s, lexeme_type* lex);
+        void set_perturbations_stepper(struct stepper& s, lexeme_type& lex);
     
     
     

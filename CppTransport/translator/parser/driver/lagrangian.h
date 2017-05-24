@@ -55,17 +55,17 @@ namespace y
   
       public:
     
-        void add_field(lexeme_type* lex, attributes* a);
+        void add_field(lexeme_type& lex, attributes& a);
     
-        void add_parameter(lexeme_type* lex, attributes* a);
+        void add_parameter(lexeme_type& lex, attributes& a);
     
-        void add_subexpr(lexeme_type* lex, subexpr* e);
+        void add_subexpr(lexeme_type& lex, subexpr& e);
     
-        void set_potential(GiNaC::ex* V, lexeme_type* lex);
+        void set_potential(GiNaC::ex& V, lexeme_type& lex);
     
-        void add_latex_attribute(subexpr* e, lexeme_type* lex);
+        void add_latex_attribute(subexpr& e, lexeme_type& lex);
     
-        void add_value_attribute(subexpr* e, GiNaC::ex* v, lexeme_type* lex);
+        void add_value_attribute(subexpr& e, GiNaC::ex& v, lexeme_type& lex);
     
     
         // INTERNAL DATA

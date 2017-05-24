@@ -138,88 +138,89 @@ namespace y
       : stream(s)
       {
         stream.reset();
-		    current_lex = nullptr;
+        current.reset();
       }
 
     int y_lexer::yylex(y::y_parser::semantic_type* lval)
       {
         assert(lval != nullptr);
 
-        lval->lex = this->current_lex = this->stream.get();
-        this->stream.eat();
-    
+        // get next lexeme from the stream, and advance
+        std::shared_ptr< lexeme_type > lex = *this->stream;
+        ++this->stream;
+
+        // assign this lexeme as the semantic value returned to Bison;
+        // we are using Bison's variant interface here
+        lval->as< std::shared_ptr<lexeme_type> >() = lex;
+
+        // cache lexeme for return to Bison error handler if neexed
+        if(lex) this->current = *lex; else this->current.reset();
+
+        // if no lexeme was returned, then inform Bison that we have reached end-of-input;
+        // currently a hack that should be improved, since yyeof_ is a private object
+        // and we can't guarantee that 0 is the Bison end-of-input code
+        if(!lex) return 0; // = y::y_parser::yyeof_;
+
         int rval = 0;
 
-        if(lval->lex != nullptr)
+        // translate our internal token identifier into a Bison token identifier
+        switch(lex->get_type())
           {
-            enum lexeme::lexeme_type type = lval->lex->get_type();
-
-            switch(type)
+            case lexeme_type::type::keyword:
               {
-                case lexeme::lexeme_type::keyword:
+                auto kw = lex->get_keyword();
+                if(kw)
                   {
-                    auto kw = lval->lex->get_keyword();
-                    if(kw)
-                      {
-                        rval = keyword_tokens[*kw];
-                      }
-                    break;
+                    rval = keyword_tokens[*kw];
                   }
-
-                case lexeme::lexeme_type::character:
-                  {
-                    auto sym = lval->lex->get_symbol();
-                    if(sym)
-                      {
-                        rval = symbol_tokens[*sym];
-                      }
-                    break;
-                  }
-
-                case lexeme::lexeme_type::identifier:
-                  {
-                    rval = y::y_parser::token::identifier;
-                    break;
-                  }
-
-                case lexeme::lexeme_type::integer:
-                  {
-                    rval = y::y_parser::token::integer;
-                    break;
-                  }
-
-                case lexeme::lexeme_type::decimal:
-                  {
-                    rval = y::y_parser::token::decimal;
-                    break;
-                  }
-
-                case lexeme::lexeme_type::string:
-                  {
-                    rval = y::y_parser::token::string;
-                    break;
-                  }
-
-                case lexeme::lexeme_type::unknown:
-                  {
-                    lval->lex->error(ERROR_UNKNOWN_LEXEME);
-                    break;
-                  }
+                break;
               }
-          }
-        else
-          {
-//            throw std::runtime_error(ERROR_UNEXPECTED_END_OF_LEXEMES);
 
-            // inform Bison that we have reached end-of-input; currently a hack that should be improved,
-            // since yyeof_ is a private object
-            rval = 0; // = y::y_parser::yyeof_;
+            case lexeme_type::type::character:
+              {
+                auto sym = lex->get_symbol();
+                if(sym)
+                  {
+                    rval = symbol_tokens[*sym];
+                  }
+                break;
+              }
+
+            case lexeme_type::type::identifier:
+              {
+                rval = y::y_parser::token::identifier;
+                break;
+              }
+
+            case lexeme_type::type::integer:
+              {
+                rval = y::y_parser::token::integer;
+                break;
+              }
+
+            case lexeme_type::type::decimal:
+              {
+                rval = y::y_parser::token::decimal;
+                break;
+              }
+
+            case lexeme_type::type::string:
+              {
+                rval = y::y_parser::token::string;
+                break;
+              }
+
+            case lexeme_type::type::unknown:
+              {
+                lex->error(ERROR_UNKNOWN_LEXEME);
+                break;
+              }
           }
 
         // lval->lex->dump(std::cerr);
         // std::cerr << "returning token number " << rval << '\n';
 
-        return(rval);
+        return rval;
       }
 
   }

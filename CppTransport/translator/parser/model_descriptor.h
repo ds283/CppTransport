@@ -131,7 +131,7 @@ class field_declaration : public declaration
   public:
 
     //! constructor
-    field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a);
+    field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a);
 
     //! destructor is default
     virtual ~field_declaration() = default;
@@ -174,7 +174,7 @@ class parameter_declaration : public declaration
   public:
 
     //! constructor
-    parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a);
+    parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a);
 
     //! destructor is default
     ~parameter_declaration() = default;
@@ -217,7 +217,7 @@ class subexpr_declaration : public declaration
   public:
 
     //! constructor
-    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e);
+    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e);
 
     //! destructor is default
     ~subexpr_declaration() = default;
@@ -297,13 +297,13 @@ class model_descriptor
   public:
 
     //! add symbol representing a field
-    bool add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes* a);
+    bool add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes& a);
 
     //! add symbol representing a parameter
-    bool add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes* a);
+    bool add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes& a);
 
     //! add symbol representing a subexpression
-		bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, subexpr* e);
+		bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, subexpr& e);
     
     //! check whether a given symbol name has been declared
     //! if the symbol exists, returns a boost::optional<> containing a reference
@@ -367,7 +367,7 @@ class model_descriptor
   public:
 
     //! set potential
-    bool set_potential(GiNaC::ex V, const y::lexeme_type& l);
+    bool set_potential(GiNaC::ex& V, const y::lexeme_type& l);
 
     //! get potential as a contexted value
     boost::optional< contexted_value<GiNaC::ex>& > get_potential() const;
@@ -381,28 +381,28 @@ class model_descriptor
   public:
 
     //! get model name (a textual string)
-    bool set_name(const std::string n, const y::lexeme_type& l);
+    bool set_name(const std::string& n, const y::lexeme_type& l);
 
     //! get model name as contexted value
     boost::optional< contexted_value<std::string>& > get_name() const;
 
 
     //! add an author
-    bool add_author(const std::string& n, const y::lexeme_type& l, author* a);
+    bool add_author(const std::string& n, const y::lexeme_type& l, author& a);
 
     //! get author table
     const author_table& get_author() const;
 
 
     //! set citation guidance
-    bool set_citeguide(const std::string t, const y::lexeme_type& l);
+    bool set_citeguide(const std::string& t, const y::lexeme_type& l);
 
     //! get citation guidance as contexted value
     boost::optional< contexted_value<std::string>& > get_citeguide() const;
 
 
     //! set model description
-    bool set_description(const std::string t, const y::lexeme_type& l);
+    bool set_description(const std::string& t, const y::lexeme_type& l);
 
     //! get model description as contexted value
     boost::optional< contexted_value<std::string>& > get_description() const;
@@ -416,7 +416,7 @@ class model_descriptor
 
 
     //! set model license string
-    bool set_license(const std::string t, const y::lexeme_type& l);
+    bool set_license(const std::string& t, const y::lexeme_type& l);
 
     //! get model license string as contexted value
     boost::optional< contexted_value<std::string>& > get_license() const;
@@ -441,21 +441,21 @@ class model_descriptor
   public:
     
     //! set core template name
-    bool set_core(const std::string c, const y::lexeme_type& l);
+    bool set_core(const std::string& c, const y::lexeme_type& l);
 
     //! get core template name as contexted value
     boost::optional< contexted_value<std::string>& > get_core() const;
 
 
     //! set implementation template name
-    bool set_implementation(const std::string i, const y::lexeme_type& l);
+    bool set_implementation(const std::string& i, const y::lexeme_type& l);
 
     //! get implementation template name as contexted value
     boost::optional< contexted_value<std::string>& > get_implementation() const;
 
 
     //! set model tag (an identifier)
-    bool set_model(const std::string m, const y::lexeme_type& l);
+    bool set_model(const std::string& m, const y::lexeme_type& l);
 
     //! get model tag as a contexted value
     boost::optional< contexted_value<std::string>& > get_model() const;
@@ -466,14 +466,14 @@ class model_descriptor
   public:
 
     //! set background stepper name
-    bool set_background_stepper(stepper* s, const y::lexeme_type& l);
+    bool set_background_stepper(stepper& s, const y::lexeme_type& l);
 
     //! get background stepper name as contexted value
     boost::optional< contexted_value<stepper>& > get_background_stepper() const;
 
 
     //! set perturbations stepper name
-    bool set_perturbations_stepper(stepper* s, const y::lexeme_type& l);
+    bool set_perturbations_stepper(stepper& s, const y::lexeme_type& l);
 
     //! get perturbations stepper name as contexted value
     boost::optional< contexted_value<stepper>& > get_perturbations_stepper() const;
@@ -613,7 +613,7 @@ auto UnzipSortedZipList(TableType& table, ValueGetter get) -> std::vector< typen
 
 template <typename SymbolChecker, typename SymbolInserter, typename AttributeBlock>
 bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
-                         const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, AttributeBlock* a,
+                         const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, AttributeBlock& a,
                          std::string err_msg, std::string dupl_msg)
   {
     // search for an existing entry in the symbol table
@@ -640,7 +640,7 @@ bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
 // version without GiNaC symbol
 template <typename SymbolChecker, typename SymbolInserter, typename AttributeBlock>
 bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
-                         const std::string& n, const y::lexeme_type& l, AttributeBlock* a,
+                         const std::string& n, const y::lexeme_type& l, AttributeBlock& a,
                          std::string err_msg, std::string dupl_msg)
   {
     // search for an existing entry in the symbol table

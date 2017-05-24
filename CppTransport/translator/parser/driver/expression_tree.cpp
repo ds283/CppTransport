@@ -39,487 +39,298 @@ namespace y
       }
     
     
-    GiNaC::ex* expression_tree::get_integer(lexeme_type* lex)
+    std::shared_ptr<GiNaC::ex> expression_tree::get_integer(lexeme_type& lex)
       {
-        boost::optional<int> i = lex->get_integer();
-        
-        GiNaC::ex* rval = new GiNaC::ex(i ? *i : 1);
+        boost::optional<int> i = lex.get_integer();
         
         if(!i)
           {
-            lex->error(ERROR_INTEGER_LOOKUP);
+            lex.error(ERROR_INTEGER_LOOKUP);
           }
         
-        return (rval);
+        return std::make_shared<GiNaC::ex>(i ? *i : 1);
       }
     
     
-    GiNaC::ex* expression_tree::get_decimal(lexeme_type* lex)
+    std::shared_ptr<GiNaC::ex> expression_tree::get_decimal(lexeme_type& lex)
       {
-        boost::optional<double> d  = lex->get_decimal();
-        
-        GiNaC::ex* rval = new GiNaC::ex(d ? *d : 1.0);
+        boost::optional<double> d = lex.get_decimal();
         
         if(!d)
           {
-            lex->error(ERROR_DECIMAL_LOOKUP);
+            lex.error(ERROR_DECIMAL_LOOKUP);
           }
-        
-        return (rval);
+
+        return std::make_shared<GiNaC::ex>(d ? *d : 1.0);
       }
     
     
-    GiNaC::ex* expression_tree::get_identifier(lexeme_type* lex)
+    std::shared_ptr<GiNaC::ex> expression_tree::get_identifier(lexeme_type& lex)
       {
-        boost::optional<std::string> id = lex->get_identifier();
-        
-        GiNaC::ex* rval = nullptr;
-        
+        boost::optional<std::string> id = lex.get_identifier();
+
         if(id)
           {
             boost::optional<declaration&> record = this->root.check_symbol_exists(*id);
             
             if(record)
               {
-                rval = new GiNaC::ex(record->get_expression());
+                return std::make_shared<GiNaC::ex>(record->get_expression());
               }
             else
               {
                 std::ostringstream msg;
                 
                 msg << ERROR_UNKNOWN_IDENTIFIER << " '" << *id << "'";
-                lex->error(msg.str());
+                lex.error(msg.str());
               }
           }
         else
           {
-            lex->error(ERROR_IDENTIFIER_LOOKUP);
+            lex.error(ERROR_IDENTIFIER_LOOKUP);
           }
         
-        if(rval == nullptr)
-          {
-            rval = new GiNaC::ex(1);
-          }
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(1);
       }
 
     
-    GiNaC::ex* expression_tree::add(GiNaC::ex* l, GiNaC::ex* r)
+    std::shared_ptr<GiNaC::ex> expression_tree::add(GiNaC::ex& l, GiNaC::ex& r)
       {
-        GiNaC::ex* rval = new GiNaC::ex((*l) + (*r));
-        
-        delete l;
-        delete r;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(l + r);
       }
     
     
-    GiNaC::ex* expression_tree::sub(GiNaC::ex* l, GiNaC::ex* r)
+    std::shared_ptr<GiNaC::ex> expression_tree::sub(GiNaC::ex& l, GiNaC::ex& r)
       {
-        GiNaC::ex* rval = new GiNaC::ex((*l) - (*r));
-        
-        delete l;
-        delete r;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(l - r);
       }
     
     
-    GiNaC::ex* expression_tree::mul(GiNaC::ex* l, GiNaC::ex* r)
+    std::shared_ptr<GiNaC::ex> expression_tree::mul(GiNaC::ex& l, GiNaC::ex& r)
       {
-        GiNaC::ex* rval = new GiNaC::ex((*l) * (*r));
-        
-        delete l;
-        delete r;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(l * r);
       }
     
     
-    GiNaC::ex* expression_tree::div(GiNaC::ex* l, GiNaC::ex* r)
+    std::shared_ptr<GiNaC::ex> expression_tree::div(GiNaC::ex& l, GiNaC::ex& r)
       {
-        GiNaC::ex* rval = new GiNaC::ex((*l) / (*r));
-        
-        delete l;
-        delete r;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(l / r);
       }
     
     
-    GiNaC::ex* expression_tree::pow(GiNaC::ex* l, GiNaC::ex* r)
+    std::shared_ptr<GiNaC::ex> expression_tree::pow(GiNaC::ex& l, GiNaC::ex& r)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::pow((*l), (*r)));
-        
-        delete l;
-        delete r;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::pow(l, r));
       }
     
     
-    GiNaC::ex* expression_tree::unary_minus(GiNaC::ex* l)
+    std::shared_ptr<GiNaC::ex> expression_tree::unary_minus(GiNaC::ex& l)
       {
-        GiNaC::ex* rval = new GiNaC::ex(-(*l));
-        
-        delete l;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(-l);
       }
     
     
-    GiNaC::ex* expression_tree::abs(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::abs(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::abs(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::abs(arg));
       }
     
     
-    GiNaC::ex* expression_tree::step(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::step(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::step(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::step(arg));
       }
     
     
-    GiNaC::ex* expression_tree::sqrt(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::sqrt(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::sqrt(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::sqrt(arg));
       }
     
     
-    GiNaC::ex* expression_tree::sin(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::sin(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::sin(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::sin(arg));
       }
     
     
-    GiNaC::ex* expression_tree::cos(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::cos(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::cos(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::cos(arg));
       }
     
     
-    GiNaC::ex* expression_tree::tan(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::tan(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::tan(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::tan(arg));
       }
     
     
-    GiNaC::ex* expression_tree::asin(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::asin(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::asin(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::asin(arg));
       }
     
     
-    GiNaC::ex* expression_tree::acos(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::acos(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::acos(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::acos(arg));
       }
     
     
-    GiNaC::ex* expression_tree::atan(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::atan(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::atan(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::atan(arg));
       }
     
     
-    GiNaC::ex* expression_tree::atan2(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::atan2(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::atan2(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::atan2(a1, a2));
       }
     
     
-    GiNaC::ex* expression_tree::sinh(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::sinh(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::sinh(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::sinh(arg));
       }
     
     
-    GiNaC::ex* expression_tree::cosh(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::cosh(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::cosh(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::cosh(arg));
       }
     
     
-    GiNaC::ex* expression_tree::tanh(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::tanh(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::tanh(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::tanh(arg));
       }
     
     
-    GiNaC::ex* expression_tree::asinh(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::asinh(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::asinh(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::asinh(arg));
       }
     
     
-    GiNaC::ex* expression_tree::acosh(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::acosh(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::acosh(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::acosh(arg));
       }
     
     
-    GiNaC::ex* expression_tree::atanh(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::atanh(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::atanh(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::atanh(arg));
       }
     
     
-    GiNaC::ex* expression_tree::exp(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::exp(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::exp(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::exp(arg));
       }
     
     
-    GiNaC::ex* expression_tree::log(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::log(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::log(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::log(arg));
       }
     
     
-    GiNaC::ex* expression_tree::Li2(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::Li2(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::Li2(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::Li2(arg));
       }
     
     
-    GiNaC::ex* expression_tree::Li(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::Li(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::Li(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::Li(a1, a2));
       }
     
     
-    GiNaC::ex* expression_tree::G(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::G(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::G(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::G(a1, a2));
       }
     
     
-    GiNaC::ex* expression_tree::G(GiNaC::ex* a1, GiNaC::ex* a2, GiNaC::ex* a3)
+    std::shared_ptr<GiNaC::ex> expression_tree::G(GiNaC::ex& a1, GiNaC::ex& a2, GiNaC::ex& a3)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::G(*a1, *a2, *a3));
-        
-        delete a1;
-        delete a2;
-        delete a3;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::G(a1, a2, a3));
       }
     
     
-    GiNaC::ex* expression_tree::S(GiNaC::ex* a1, GiNaC::ex* a2, GiNaC::ex* a3)
+    std::shared_ptr<GiNaC::ex> expression_tree::S(GiNaC::ex& a1, GiNaC::ex& a2, GiNaC::ex& a3)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::S(*a1, *a2, *a3));
-        
-        delete a1;
-        delete a2;
-        delete a3;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::S(a1, a2, a3));
       }
     
     
-    GiNaC::ex* expression_tree::H(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::H(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::H(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::H(a1, a2));
       }
     
     
-    GiNaC::ex* expression_tree::zeta(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::zeta(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::zeta(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::zeta(arg));
       }
     
     
-    GiNaC::ex* expression_tree::zeta(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::zeta(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::zeta(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::zeta(a1, a2));
       }
     
     
-    GiNaC::ex* expression_tree::zetaderiv(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::zetaderiv(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::zetaderiv(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::zetaderiv(a1, a2));
       }
     
     
-    GiNaC::ex* expression_tree::tgamma(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::tgamma(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::tgamma(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::tgamma(arg));
       }
     
     
-    GiNaC::ex* expression_tree::lgamma(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::lgamma(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::lgamma(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::lgamma(arg));
       }
     
     
-    GiNaC::ex* expression_tree::beta(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::beta(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::beta(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::beta(a1, a2));
       }
     
     
-    GiNaC::ex* expression_tree::psi(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::psi(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::psi(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::psi(arg));
       }
     
     
-    GiNaC::ex* expression_tree::psi(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::psi(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::psi(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::psi(a1, a2));
       }
     
     
-    GiNaC::ex* expression_tree::factorial(GiNaC::ex* arg)
+    std::shared_ptr<GiNaC::ex> expression_tree::factorial(GiNaC::ex& arg)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::factorial(*arg));
-        
-        delete arg;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::factorial(arg));
       }
     
     
-    GiNaC::ex* expression_tree::binomial(GiNaC::ex* a1, GiNaC::ex* a2)
+    std::shared_ptr<GiNaC::ex> expression_tree::binomial(GiNaC::ex& a1, GiNaC::ex& a2)
       {
-        GiNaC::ex* rval = new GiNaC::ex(GiNaC::binomial(*a1, *a2));
-        
-        delete a1;
-        delete a2;
-        
-        return (rval);
+        return std::make_shared<GiNaC::ex>(GiNaC::binomial(a1, a2));
       }
     
   }   // namespace y

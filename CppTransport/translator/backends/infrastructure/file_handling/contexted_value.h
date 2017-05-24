@@ -40,7 +40,7 @@ class contexted_value
   public:
 
     //! constructor
-    contexted_value(ValueType v, const error_context l)
+    contexted_value(ValueType v, const error_context& l)
       : value(std::move(v)),
         declaration_point(std::make_shared<error_context>(l))
       {
@@ -70,8 +70,8 @@ class contexted_value
 
     //! link to declaration point; we take a copy of the
     //! error context provided to us, so that it does not itself
-    //! have to be long-lived. We share ownership with any
-    //! copies of ourselves
+    //! have to be long-lived. We used std::shared_ptr<> since
+    //! we share ownership with any copies of ourselves
     std::shared_ptr<error_context> declaration_point;
 
   };

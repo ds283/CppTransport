@@ -51,10 +51,10 @@ unsigned int declaration::current_id = 0;
 // ******************************************************************
 
 
-field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
   : declaration(n, s, l)
   {
-		attrs = std::make_unique<attributes>(*a);
+		attrs = std::make_unique<attributes>(a);
   }
 
 
@@ -78,10 +78,10 @@ void field_declaration::print(std::ostream& stream) const
 // ******************************************************************
 
 
-parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
   : declaration(n, s, l)
   {
-		attrs = std::make_unique<attributes>(*a);
+		attrs = std::make_unique<attributes>(a);
   }
 
 
@@ -105,10 +105,10 @@ void parameter_declaration::print(std::ostream& stream) const
 // ******************************************************************
 
 
-subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e)
+subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e)
 	: declaration(n, s, l)
 	{
-		sexpr = std::make_unique<subexpr>(*e);
+		sexpr = std::make_unique<subexpr>(e);
 	}
 
 
@@ -138,10 +138,10 @@ void subexpr_declaration::print(std::ostream& stream) const
 // ******************************************************************
 
 
-author_declaration::author_declaration(const std::string& n, const y::lexeme_type& l, author* a)
+author_declaration::author_declaration(const std::string& n, const y::lexeme_type& l, author& a)
   : declaration_point(l)
   {
-    auth = std::make_unique<author>(*a);
+    auth = std::make_unique<author>(a);
   }
 
 
@@ -189,27 +189,28 @@ model_descriptor::model_descriptor(symbol_factory& s, error_context err_ctx)
 
     // manufacture fake lexeme representing 'location' of Planck mass decalaration
     lexeme::lexeme_buffer MPlanck_buffer(MPLANCK_TEXT_NAME, lexeme::lexeme_buffer::type::string_literal);
-    lexeme::minus_context mctx = lexeme::minus_context::unary;
-    fake_MPlanck_lexeme = std::make_unique<y::lexeme_type>(MPlanck_buffer, mctx, 0, err_ctx,
-                                                           fake_keyword_table, fake_keyword_map, fake_character_table,
-                                                           fake_character_map, fake_context_table);
+    y::lexeme_type::minus_context mctx = y::lexeme_type::minus_context::unary;
+
+    y::lexeme_type fake_MPlanck_lexeme(MPlanck_buffer, mctx, 0, err_ctx,
+                                       fake_keyword_table, fake_keyword_map, fake_character_table,
+                                       fake_character_map, fake_context_table);
 
     // set up attributes for Planck mass symbol
     attributes Mp_attrs;
-    Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL, *fake_MPlanck_lexeme);
+    Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL, fake_MPlanck_lexeme);
 
     // emplace faked symbol table entry
-		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, *fake_MPlanck_lexeme, &Mp_attrs)));
+		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, fake_MPlanck_lexeme, Mp_attrs)));
   }
 
 
 // SYMBOL SERVICES
 
 
-bool model_descriptor::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+bool model_descriptor::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
   {
-    auto check = [&](auto name) -> auto { return this->check_symbol_exists(name); };
-    auto insert = [&](auto name, auto symbol, auto lexeme, auto attr) -> auto
+    auto check = [&](auto& name) -> auto { return this->check_symbol_exists(name); };
+    auto insert = [&](auto& name, auto& symbol, auto& lexeme, auto& attr) -> auto
       {
         // add declaration to list
         this->fields.emplace(std::make_pair(name, std::make_unique<field_declaration>(name, symbol, lexeme, attr)));
@@ -226,10 +227,10 @@ bool model_descriptor::add_field(const std::string& n, GiNaC::symbol& s, const y
   }
 
 
-bool model_descriptor::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+bool model_descriptor::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
   {
-    auto check = [&](auto name) -> auto { return this->check_symbol_exists(name); };
-    auto insert = [&](auto name, auto symbol, auto lexeme, auto attr) -> auto
+    auto check = [&](auto& name) -> auto { return this->check_symbol_exists(name); };
+    auto insert = [&](auto& name, auto& symbol, auto& lexeme, auto& attr) -> auto
       {
         // add declaration to list
         this->parameters.emplace(std::make_pair(name, std::make_unique<parameter_declaration>(name, symbol, lexeme, attr)));
@@ -242,10 +243,10 @@ bool model_descriptor::add_parameter(const std::string& n, GiNaC::symbol& s, con
   }
 
 
-bool model_descriptor::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e)
+bool model_descriptor::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e)
   {
-    auto check = [&](auto name) -> auto { return this->check_symbol_exists(name); };
-    auto insert = [&](auto name, auto symbol, auto lexeme, auto expr) -> auto
+    auto check = [&](auto& name) -> auto { return this->check_symbol_exists(name); };
+    auto insert = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto
       {
         // add declaration to list
         this->subexprs.emplace(std::make_pair(name, std::make_unique<subexpr_declaration>(name, symbol, lexeme, expr)));
@@ -282,7 +283,7 @@ boost::optional<declaration&> model_descriptor::check_symbol_exists(const std::s
 // BASIC METADATA
 
 
-bool model_descriptor::set_name(const std::string n, const y::lexeme_type& l)
+bool model_descriptor::set_name(const std::string& n, const y::lexeme_type& l)
   {
     return SetContextedValue(this->name, n, l, ERROR_NAME_REDECLARATION);
   }
@@ -294,7 +295,7 @@ boost::optional< contexted_value<std::string>& > model_descriptor::get_name() co
   }
 
 
-bool model_descriptor::set_citeguide(const std::string t, const y::lexeme_type& l)
+bool model_descriptor::set_citeguide(const std::string& t, const y::lexeme_type& l)
   {
     return SetContextedValue(this->citeguide, t, l, ERROR_CITEGUIDE_REDECLARATION);
   }
@@ -306,7 +307,7 @@ boost::optional< contexted_value<std::string>& > model_descriptor::get_citeguide
   }
 
 
-bool model_descriptor::set_description(const std::string d, const y::lexeme_type& l)
+bool model_descriptor::set_description(const std::string& d, const y::lexeme_type& l)
   {
     return SetContextedValue(this->description, d, l, ERROR_DESCRIPTION_REDECLARATION);
   }
@@ -330,7 +331,7 @@ boost::optional< contexted_value<unsigned int>& > model_descriptor::get_revision
   }
 
 
-bool model_descriptor::set_license(const std::string lic, const y::lexeme_type& l)
+bool model_descriptor::set_license(const std::string& lic, const y::lexeme_type& l)
   {
     return SetContextedValue(this->license, lic, l, ERROR_LICENSE_REDECLARATION);
   }
@@ -366,7 +367,7 @@ boost::optional< std::vector< contexted_value<std::string> >& > model_descriptor
   }
 
 
-bool model_descriptor::add_author(const std::string& n, const y::lexeme_type& l, author* a)
+bool model_descriptor::add_author(const std::string& n, const y::lexeme_type& l, author& a)
   {
     auto check = [&](auto name) -> auto
       {
@@ -399,7 +400,7 @@ const author_table& model_descriptor::get_author() const
 // TEMPLATE SPECIFICATION
 
 
-bool model_descriptor::set_core(const std::string c, const y::lexeme_type& l)
+bool model_descriptor::set_core(const std::string& c, const y::lexeme_type& l)
   {
     return SetContextedValue(this->core, c, l, ERROR_CORE_REDECLARATION);
   }
@@ -411,7 +412,7 @@ boost::optional< contexted_value<std::string>& > model_descriptor::get_core() co
   }
 
 
-bool model_descriptor::set_implementation(const std::string i, const y::lexeme_type& l)
+bool model_descriptor::set_implementation(const std::string& i, const y::lexeme_type& l)
   {
     return SetContextedValue(this->implementation, i, l, ERROR_IMPLEMENTATION_REDECLARATION);
   }
@@ -423,7 +424,7 @@ boost::optional< contexted_value<std::string>& > model_descriptor::get_implement
   }
 
 
-bool model_descriptor::set_model(const std::string m, const y::lexeme_type& l)
+bool model_descriptor::set_model(const std::string& m, const y::lexeme_type& l)
   {
     return SetContextedValue(this->model, m, l, ERROR_MODEL_REDECLARATION);
   }
@@ -435,15 +436,15 @@ boost::optional< contexted_value<std::string>& > model_descriptor::get_model() c
   }
 
 
-bool model_descriptor::set_background_stepper(stepper* s, const y::lexeme_type& l)
+bool model_descriptor::set_background_stepper(stepper& s, const y::lexeme_type& l)
   {
-    return SetContextedValue(this->background_stepper, *s, l, ERROR_BACKGROUND_REDECLARATION);
+    return SetContextedValue(this->background_stepper, s, l, ERROR_BACKGROUND_REDECLARATION);
   }
 
 
-bool model_descriptor::set_perturbations_stepper(stepper *s, const y::lexeme_type& l)
+bool model_descriptor::set_perturbations_stepper(stepper& s, const y::lexeme_type& l)
   {
-    return SetContextedValue(this->perturbations_stepper, *s, l, ERROR_PERTURBATIONS_REDECLARATION);
+    return SetContextedValue(this->perturbations_stepper, s, l, ERROR_PERTURBATIONS_REDECLARATION);
   }
 
 
@@ -477,7 +478,7 @@ enum index_order model_descriptor::get_indexorder() const
 // LAGRANGIAN MANAGEMENT
 
 
-bool model_descriptor::set_potential(GiNaC::ex V, const y::lexeme_type& l)
+bool model_descriptor::set_potential(GiNaC::ex& V, const y::lexeme_type& l)
   {
     return SetContextedValue(this->potential, V, l, ERROR_POTENTIAL_REDECLARATION);
   }

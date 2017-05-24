@@ -62,6 +62,7 @@ class attributes
   public:
 
     //! get LaTeX name
+    // TODO: move to boost::optional<>
     const std::string get_latex() const { if(this->latex) return *this->latex; else return std::string(); }
 
     //! set LaTeX name; returns true if value was set, otherwise reports an error
@@ -106,6 +107,7 @@ class subexpr
   public:
 
     //! get LaTeX name
+    // TODO: move to boost::optional<>
 		const std::string get_latex() const { if(this->latex) return *this->latex; else return std::string(); }
     
     //! set LaTeX name; returns true if value was set, otherwise reports an error
@@ -113,6 +115,7 @@ class subexpr
     bool set_latex(const std::string& ltx, const y::lexeme_type& l);
 
     //! get symbolic value
+    // TODO: move to boost::optional<>
 		GiNaC::ex get_value() const { if(this->value) return *this->value; else return GiNaC::ex(0); }
 
     //! set symbolic value; returns true if the value was set, otherwise reports an error

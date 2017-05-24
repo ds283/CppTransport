@@ -38,70 +38,68 @@ namespace y
   {
     
     template <typename SymbolFactory, typename InsertSymbol, typename AttributeBlock>
-    void GenericInsertSymbol(SymbolFactory& sym_factory, InsertSymbol& insert, lexeme_type* lex, AttributeBlock* a)
+    void GenericInsertSymbol(SymbolFactory& sym_factory, InsertSymbol& insert, lexeme_type& lex, AttributeBlock& a)
       {
         // extract identifier name from lexeme
-        boost::optional<std::string> id = lex->get_identifier();
+        boost::optional<std::string> id = lex.get_identifier();
         
         if(id) // lex points to a valid identifier
           {
-            GiNaC::symbol sym = sym_factory(*id, a->get_latex());
-            insert(*id, sym, *lex, a);
+            GiNaC::symbol sym = sym_factory(*id, a.get_latex());
+            insert(*id, sym, lex, a);
           }
         else
           {
-            lex->error(ERROR_IDENTIFIER_LOOKUP);
+            lex.error(ERROR_IDENTIFIER_LOOKUP);
           }
-        
-        delete a; // release semantic value inherited from Bison, otherwise this would never get done
       };
     
     
     template <typename ValueSetter>
-    bool SetStringValue(ValueSetter& set, lexeme_type* lex)
+    bool SetStringValue(ValueSetter& set, lexeme_type& lex)
       {
         // extract string name from lexeme
-        boost::optional<std::string> str = lex->get_string();
+        boost::optional<std::string> str = lex.get_string();
         
         if(!str)
           {
-            lex->error(ERROR_STRING_LOOKUP);
+            lex.error(ERROR_STRING_LOOKUP);
             return false;
           }
 
-        return set(*str, *lex);
+        return set(*str, lex);
       };
     
     
     template <typename ValueSetter>
-    bool SetIntegerValue(ValueSetter& set, lexeme_type* lex)
+    bool SetIntegerValue(ValueSetter& set, lexeme_type& lex)
       {
         // extract string name from lexeme
-        boost::optional<int> i = lex->get_integer();
+        boost::optional<int> i = lex.get_integer();
         
         if(!i)
           {
-            lex->error(ERROR_INTEGER_LOOKUP);
+            lex.error(ERROR_INTEGER_LOOKUP);
             return false;
           }
         
-        return set(*i, *lex);
+        return set(*i, lex);
       };
     
     
     template <typename ValueSetter>
-    bool SetDecimalValue(ValueSetter& set, lexeme_type* lex)
+    bool SetDecimalValue(ValueSetter& set, lexeme_type& lex)
       {
         // extract string name from lexeme
-        boost::optional<double> d = lex->get_decimal();
+        boost::optional<double> d = lex.get_decimal();
         
         if(!d)
           {
-            lex->error(ERROR_DECIMAL_LOOKUP);
+            lex.error(ERROR_DECIMAL_LOOKUP);
             return false;
           }
 
-        return set(*d, *lex);
+        return set(*d, lex);
       };
 
   }   // namespace y

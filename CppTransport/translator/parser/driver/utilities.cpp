@@ -40,16 +40,16 @@ namespace y
       }
     
     
-    void utilities::add_latex_attribute(attributes* a, lexeme_type* lex)
+    void utilities::add_latex_attribute(attributes& a, lexeme_type& lex)
       {
-        auto Setter = [&](auto name, auto lex) -> auto { return a->set_latex(name, lex); };
+        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_latex(name, lex); };
         SetStringValue(Setter, lex);
       }
     
     
-    void utilities::add_string(string_array* a, lexeme_type* lex)
+    void utilities::add_string(string_array& a, lexeme_type& lex)
       {
-        auto Setter = [&](auto name, auto lex) -> auto { a->push_element(name, lex); return true; };
+        auto Setter = [&](auto& name, auto& lex) -> auto { a.push_element(name, lex); return true; };
         SetStringValue(Setter, lex);
       }
     

@@ -43,8 +43,10 @@ class author_declaration
 
   public:
 
-    author_declaration(const std::string& n, const y::lexeme_type& l, author* a);
+    //! constructor
+    author_declaration(const std::string& n, const y::lexeme_type& l, author& a);
 
+    //! destructor
     ~author_declaration() = default;
 
 
