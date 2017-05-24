@@ -51,7 +51,7 @@ namespace y
         ~expression_tree_driver() = default;
         
         
-        // INTERFACE -- GET EXPRESSION TERMINALS
+        // GET EXPRESSION TERMINALS
   
       public:
     
@@ -62,7 +62,7 @@ namespace y
         std::shared_ptr<GiNaC::ex> get_identifier(lexeme_type& lex);
     
         
-        // INTERFACE -- BUILD EXPRESSION TREES
+        // BUILD EXPRESSION TREES
         
       public:
     

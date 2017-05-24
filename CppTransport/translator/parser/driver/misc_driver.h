@@ -51,7 +51,7 @@ namespace y
         ~misc_driver() = default;
     
         
-        // INTERFACE -- UTILITY METHODS TO EMPLACE ATTRIBUTE DATA
+        // MISCELLANEOUS SETTINGS
   
       public:
     

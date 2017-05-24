@@ -51,7 +51,7 @@ namespace y
         ~metadata_driver() = default;
     
     
-        // INTERFACE -- EMPLACE META DATA IN THE MODEL DESCRIPTOR
+        // SET BASIC METADATA
   
       public:
     

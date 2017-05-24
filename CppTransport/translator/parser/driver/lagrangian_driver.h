@@ -51,7 +51,7 @@ namespace y
         ~lagrangian_driver() = default;
 
 
-        // INTERFACE -- EMPLACE LAGRANGIAN DATA IN THE MODEL DESCRIPTOR
+        // LAGRANGIAN MANAGEMENT
   
       public:
     

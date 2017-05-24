@@ -51,7 +51,7 @@ namespace y
         ~templates_driver() = default;
     
         
-        // INTERFACE -- EMPLACE TEMPLATE DATA IN THE MODEL DESCRIPTOR
+        // TEMPLATE DATA
   
       public:
     

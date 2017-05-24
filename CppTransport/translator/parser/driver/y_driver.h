@@ -85,9 +85,183 @@ namespace y
       public:
 
         const model_descriptor& get_descriptor();
+    
+    
+        // LAGRANGIAN MANAGEMENT
+  
+      public:
+    
+        void add_field(lexeme_type& lex, attributes& a) { this->lag.add_field(lex, a); }
+    
+        void add_parameter(lexeme_type& lex, attributes& a) { this->lag.add_parameter(lex, a); }
+    
+        void add_subexpr(lexeme_type& lex, subexpr& e) { this->lag.add_subexpr(lex, e); }
+    
+        void set_potential(GiNaC::ex& V, lexeme_type& lex) { this->lag.set_potential(V, lex); }
+    
+        void add_latex_attribute(subexpr& e, lexeme_type& lex) { this->lag.add_latex_attribute(e, lex); }
+    
+        void add_value_attribute(subexpr& e, GiNaC::ex& v, lexeme_type& lex) { this->lag.add_value_attribute(e, v, lex); }
+    
+    
+        // SET BASIC METADATA
+  
+      public:
+    
+        void set_model(lexeme_type& lex) { this->meta.set_model(lex); }
+    
+        void set_name(lexeme_type& lex) { this->meta.set_name(lex); }
+    
+        void add_author(lexeme_type& lex, author& a) { this->meta.add_author(lex, a); }
+    
+        void set_citeguide(lexeme_type& lex) { this->meta.set_citeguide(lex); }
+    
+        void set_description(lexeme_type& lex) { this->meta.set_description(lex); }
+    
+        void set_revision(lexeme_type& lex) { this->meta.set_revision(lex); }
+    
+        void set_license(lexeme_type& lex) { this->meta.set_license(lex); }
+    
+        void set_references(string_array& a) { this->meta.set_references(a); }
+    
+        void set_urls(string_array& a) { this->meta.set_urls(a); }
+    
+        void add_email(author& a, lexeme_type& lex) { this->meta.add_email(a, lex); }
+    
+        void add_institute(author& a, lexeme_type& institute) { this->meta.add_institute(a, institute); }
+    
+    
+        // MISCELLANEOUS SETTINGS
+  
+      public:
+    
+        void set_indexorder_left() { this->misc.set_indexorder_left(); }
+    
+        void set_indexorder_right() { this->misc.set_indexorder_right(); }
+    
+        void add_latex_attribute(attributes& a, lexeme_type& lex) { this->misc.add_latex_attribute(a, lex); }
+    
+        void add_string(string_array& a, lexeme_type& lex) { this->misc.add_string(a, lex); }
+    
+    
+        // TEMPLATE DATA
+  
+      public:
+    
+        void set_core(lexeme_type& lex) { this->templ.set_core(lex); }
+    
+        void set_implementation(lexeme_type& lex) { this->templ.set_implementation(lex); }
+    
+        void set_abserr(struct stepper& s, lexeme_type& lex) { this->templ.set_abserr(s, lex); }
+    
+        void set_relerr(struct stepper& s, lexeme_type& lex) { this->templ.set_relerr(s, lex); }
+    
+        void set_stepper(struct stepper& s, lexeme_type& lex) { this->templ.set_stepper(s, lex); }
+    
+        void set_stepsize(struct stepper& s, lexeme_type& lex) { this->templ.set_stepsize(s, lex); }
+    
+        void set_background_stepper(struct stepper& s, lexeme_type& lex) { this->templ.set_background_stepper(s, lex); }
+    
+        void set_perturbations_stepper(struct stepper& s, lexeme_type& lex) { this->templ.set_perturbations_stepper(s, lex); }
+    
+    
+        // GET EXPRESSION TERMINALS
+  
+      public:
+    
+        std::shared_ptr<GiNaC::ex> get_integer(lexeme_type& lex) { return this->etree.get_integer(lex); }
+    
+        std::shared_ptr<GiNaC::ex> get_decimal(lexeme_type& lex) { return this->etree.get_decimal(lex); }
+    
+        std::shared_ptr<GiNaC::ex> get_identifier(lexeme_type& lex) { return this->etree.get_identifier(lex); }
+    
+    
+        // BUILD EXPRESSION TREES
+  
+      public:
+    
+        std::shared_ptr<GiNaC::ex> add(GiNaC::ex& l, GiNaC::ex& r) { return this->etree.add(l,r); }
+    
+        std::shared_ptr<GiNaC::ex> sub(GiNaC::ex& l, GiNaC::ex& r) { return this->etree.sub(l,r); }
         
-
-		    // INTERNAL DATA
+        std::shared_ptr<GiNaC::ex> mul(GiNaC::ex& l, GiNaC::ex& r) { return this->etree.mul(l,r); }
+    
+        std::shared_ptr<GiNaC::ex> div(GiNaC::ex& l, GiNaC::ex& r) { return this->etree.div(l,r); }
+    
+        std::shared_ptr<GiNaC::ex> pow(GiNaC::ex& l, GiNaC::ex& r) { return this->etree.pow(l,r); }
+    
+        std::shared_ptr<GiNaC::ex> unary_minus(GiNaC::ex& l) { return this->etree.unary_minus(l); }
+    
+        std::shared_ptr<GiNaC::ex> abs(GiNaC::ex& arg) { return this->etree.abs(arg); }
+    
+        std::shared_ptr<GiNaC::ex> step(GiNaC::ex& arg) { return this->etree.step(arg); }
+    
+        std::shared_ptr<GiNaC::ex> sqrt(GiNaC::ex& arg) { return this->etree.sqrt(arg); }
+    
+        std::shared_ptr<GiNaC::ex> sin(GiNaC::ex& arg) { return this->etree.sin(arg); }
+    
+        std::shared_ptr<GiNaC::ex> cos(GiNaC::ex& arg) { return this->etree.cos(arg); }
+    
+        std::shared_ptr<GiNaC::ex> tan(GiNaC::ex& arg) { return this->etree.tan(arg); }
+    
+        std::shared_ptr<GiNaC::ex> asin(GiNaC::ex& arg) { return this->etree.asin(arg); }
+    
+        std::shared_ptr<GiNaC::ex> acos(GiNaC::ex& arg) { return this->etree.acos(arg); }
+    
+        std::shared_ptr<GiNaC::ex> atan(GiNaC::ex& arg) { return this->etree.atan(arg); }
+    
+        std::shared_ptr<GiNaC::ex> atan2(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.atan2(a1, a2); }
+    
+        std::shared_ptr<GiNaC::ex> sinh(GiNaC::ex& arg) { return this->etree.sinh(arg); }
+    
+        std::shared_ptr<GiNaC::ex> cosh(GiNaC::ex& arg) { return this->etree.cosh(arg); }
+    
+        std::shared_ptr<GiNaC::ex> tanh(GiNaC::ex& arg) { return this->etree.tanh(arg); }
+    
+        std::shared_ptr<GiNaC::ex> asinh(GiNaC::ex& arg) { return this->etree.asinh(arg); }
+    
+        std::shared_ptr<GiNaC::ex> acosh(GiNaC::ex& arg) { return this->etree.acosh(arg); }
+    
+        std::shared_ptr<GiNaC::ex> atanh(GiNaC::ex& arg) { return this->etree.atanh(arg); }
+    
+        std::shared_ptr<GiNaC::ex> exp(GiNaC::ex& arg) { return this->etree.exp(arg); }
+    
+        std::shared_ptr<GiNaC::ex> log(GiNaC::ex& arg) { return this->etree.log(arg); }
+    
+        std::shared_ptr<GiNaC::ex> Li2(GiNaC::ex& arg) { return this->etree.Li2(arg); }
+    
+        std::shared_ptr<GiNaC::ex> Li(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.Li(a1, a2); }
+    
+        std::shared_ptr<GiNaC::ex> G(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.G(a1, a2); }
+    
+        std::shared_ptr<GiNaC::ex> G(GiNaC::ex& a1, GiNaC::ex& a2, GiNaC::ex& a3) { return this->etree.G(a1, a2, a3); }
+    
+        std::shared_ptr<GiNaC::ex> S(GiNaC::ex& a1, GiNaC::ex& a2, GiNaC::ex& a3) { return this->etree.S(a1, a2, a3); }
+    
+        std::shared_ptr<GiNaC::ex> H(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.H(a1, a2); }
+    
+        std::shared_ptr<GiNaC::ex> zeta(GiNaC::ex& arg) { return this->etree.zeta(arg); }
+    
+        std::shared_ptr<GiNaC::ex> zeta(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.zeta(a1, a2); }
+    
+        std::shared_ptr<GiNaC::ex> zetaderiv(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.zetaderiv(a1, a2); }
+    
+        std::shared_ptr<GiNaC::ex> tgamma(GiNaC::ex& arg) { return this->etree.tgamma(arg); }
+    
+        std::shared_ptr<GiNaC::ex> lgamma(GiNaC::ex& arg) { return this->etree.lgamma(arg); }
+    
+        std::shared_ptr<GiNaC::ex> beta(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.beta(a1, a2); }
+    
+        std::shared_ptr<GiNaC::ex> psi(GiNaC::ex& arg) { return this->etree.psi(arg); }
+    
+        std::shared_ptr<GiNaC::ex> psi(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.psi(a1, a2); }
+    
+        std::shared_ptr<GiNaC::ex> factorial(GiNaC::ex& arg) { return this->etree.factorial(arg); }
+    
+        std::shared_ptr<GiNaC::ex> binomial(GiNaC::ex& a1, GiNaC::ex& a2) { return this->etree.binomial(a1, a2); }
+    
+    
+        // INTERNAL DATA
 
       private:
 
@@ -110,8 +284,6 @@ namespace y
     
     
         // COMPONENT FUNCTIONALITY OBJECTS
-  
-      public:
     
         //! expression trees
         expression_tree_driver etree;
