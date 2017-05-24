@@ -131,11 +131,11 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/shared/utensors.cpp
   ${BISON_parser_OUTPUTS}
   translator/parser/descriptor/model_descriptor.cpp
-  translator/parser/driver/expression_tree.cpp
-  translator/parser/driver/lagrangian.cpp
-  translator/parser/driver/metadata.cpp
-  translator/parser/driver/templates.cpp
-  translator/parser/driver/utilities.cpp
+  translator/parser/driver/expression_tree_driver.cpp
+  translator/parser/driver/lagrangian_driver.cpp
+  translator/parser/driver/metadata_driver.cpp
+  translator/parser/driver/templates_driver.cpp
+  translator/parser/driver/utilities_driver.cpp
   translator/parser/driver/y_driver.cpp
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
@@ -424,16 +424,16 @@ set(TRANSLATOR_PARSER_DESCRIPTOR_FILES
 
 set(TRANSLATER_PARSER_DRIVER_FILES
   translator/parser/driver/generics.h
-  translator/parser/driver/expression_tree.cpp
-  translator/parser/driver/expression_tree.h
-  translator/parser/driver/lagrangian.cpp
-  translator/parser/driver/lagrangian.h
-  translator/parser/driver/metadata.cpp
-  translator/parser/driver/metadata.h
-  translator/parser/driver/templates.cpp
-  translator/parser/driver/templates.h
-  translator/parser/driver/utilities.cpp
-  translator/parser/driver/utilities.h
+  translator/parser/driver/expression_tree_driver.cpp
+  translator/parser/driver/expression_tree_driver.h
+  translator/parser/driver/lagrangian_driver.cpp
+  translator/parser/driver/lagrangian_driver.h
+  translator/parser/driver/metadata_driver.cpp
+  translator/parser/driver/metadata_driver.h
+  translator/parser/driver/templates_driver.cpp
+  translator/parser/driver/templates_driver.h
+  translator/parser/driver/utilities_driver.cpp
+  translator/parser/driver/utilities_driver.h
   translator/parser/driver/y_driver.cpp
   translator/parser/driver/y_driver.h
   )

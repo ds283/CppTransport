@@ -40,11 +40,11 @@
 #include "local_environment.h"
 
 #include "y_common.h"
-#include "expression_tree.h"
-#include "lagrangian.h"
-#include "metadata.h"
-#include "templates.h"
-#include "utilities.h"
+#include "expression_tree_driver.h"
+#include "lagrangian_driver.h"
+#include "metadata_driver.h"
+#include "templates_driver.h"
+#include "utilities_driver.h"
 
 
 namespace y
@@ -113,19 +113,19 @@ namespace y
       public:
     
         //! expression trees
-        expression_tree etree;
+        expression_tree_driver etree;
     
         //! lagrangian data
-        lagrangian lag;
+        lagrangian_driver lag;
     
         //! metadata
-        metadata meta;
+        metadata_driver meta;
     
         //! template data
-        templates templ;
+        templates_driver templ;
     
         //! utility methods
-        utilities utils;
+        utilities_driver utils;
 
 	    };
 

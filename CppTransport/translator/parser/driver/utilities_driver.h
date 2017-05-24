@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_UTILITIES_H
-#define CPPTRANSPORT_UTILITIES_H
+#ifndef CPPTRANSPORT_UTILITIES_DRIVER_H
+#define CPPTRANSPORT_UTILITIES_DRIVER_H
 
 
 #include "semantic_data.h"
@@ -37,7 +37,7 @@
 namespace y
   {
     
-    class utilities
+    class utilities_driver
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -45,10 +45,10 @@ namespace y
       public:
         
         //! constructor
-        utilities(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
+        utilities_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
         
         //! destructor is default
-        ~utilities() = default;
+        ~utilities_driver() = default;
     
         
         // INTERFACE -- UTILITY METHODS TO EMPLACE ATTRIBUTE DATA
@@ -85,4 +85,4 @@ namespace y
   }
 
 
-#endif //CPPTRANSPORT_UTILITIES_H
+#endif //CPPTRANSPORT_UTILITIES_DRIVER_H

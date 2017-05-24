@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_TEMPLATES_H
-#define CPPTRANSPORT_TEMPLATES_H
+#ifndef CPPTRANSPORT_METADATA_DRIVER_H
+#define CPPTRANSPORT_METADATA_DRIVER_H
 
 
 #include "semantic_data.h"
@@ -37,7 +37,7 @@
 namespace y
   {
     
-    class templates
+    class metadata_driver
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -45,32 +45,37 @@ namespace y
       public:
         
         //! constructor
-        templates(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
+        metadata_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
         
         //! destructor is default
-        ~templates() = default;
+        ~metadata_driver() = default;
     
-        
-        // INTERFACE -- EMPLACE TEMPLATE DATA IN THE MODEL DESCRIPTOR
+    
+        // INTERFACE -- EMPLACE META DATA IN THE MODEL DESCRIPTOR
   
       public:
     
-        void set_core(lexeme_type& lex);
+        void set_model(lexeme_type& lex);
     
-        void set_implementation(lexeme_type& lex);
+        void set_name(lexeme_type& lex);
     
-        void set_abserr(struct stepper& s, lexeme_type& lex);
+        void add_author(lexeme_type& lex, author& a);
     
-        void set_relerr(struct stepper& s, lexeme_type& lex);
+        void set_citeguide(lexeme_type& lex);
     
-        void set_stepper(struct stepper& s, lexeme_type& lex);
+        void set_description(lexeme_type& lex);
     
-        void set_stepsize(struct stepper& s, lexeme_type& lex);
+        void set_revision(lexeme_type& lex);
     
-        void set_background_stepper(struct stepper& s, lexeme_type& lex);
+        void set_license(lexeme_type& lex);
     
-        void set_perturbations_stepper(struct stepper& s, lexeme_type& lex);
+        void set_references(string_array& a);
     
+        void set_urls(string_array& a);
+    
+        void add_email(author& a, lexeme_type& lex);
+    
+        void add_institute(author& a, lexeme_type& institute);
     
     
         // INTERNAL DATA
@@ -94,4 +99,4 @@ namespace y
   }
 
 
-#endif //CPPTRANSPORT_TEMPLATES_H
+#endif //CPPTRANSPORT_METADATA_DRIVER_H

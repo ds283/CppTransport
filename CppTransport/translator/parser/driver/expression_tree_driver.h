@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_EXPRESSION_TREE_H
-#define CPPTRANSPORT_EXPRESSION_TREE_H
+#ifndef CPPTRANSPORT_EXPRESSION_TREE_DRIVER_H
+#define CPPTRANSPORT_EXPRESSION_TREE_DRIVER_H
 
 
 #include "semantic_data.h"
@@ -37,7 +37,7 @@
 namespace y
   {
 
-    class expression_tree
+    class expression_tree_driver
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -45,10 +45,10 @@ namespace y
       public:
         
         //! constructor
-        expression_tree(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
+        expression_tree_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
         
         //! destructor is default
-        ~expression_tree() = default;
+        ~expression_tree_driver() = default;
         
         
         // INTERFACE -- GET EXPRESSION TERMINALS
@@ -168,4 +168,4 @@ namespace y
   }
 
 
-#endif //CPPTRANSPORT_EXPRESSION_TREE_H
+#endif //CPPTRANSPORT_EXPRESSION_TREE_DRIVER_H

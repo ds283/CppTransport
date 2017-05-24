@@ -24,14 +24,14 @@
 //
 
 
-#include "lagrangian.h"
+#include "lagrangian_driver.h"
 #include "generics.h"
 
 
 namespace y
   {
     
-    lagrangian::lagrangian(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
+    lagrangian_driver::lagrangian_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le)
       : root(sc),
         sym_factory(sf),
         cache(ac),
@@ -40,7 +40,7 @@ namespace y
       }
     
     
-    void lagrangian::add_field(lexeme_type& lex, attributes& a)
+    void lagrangian_driver::add_field(lexeme_type& lex, attributes& a)
       {
         auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
         auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.add_field(name, symbol, lexeme, attrs); };
@@ -49,7 +49,7 @@ namespace y
       }
     
     
-    void lagrangian::add_parameter(lexeme_type& lex, attributes& a)
+    void lagrangian_driver::add_parameter(lexeme_type& lex, attributes& a)
       {
         auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
         auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.add_parameter(name, symbol, lexeme, attrs); };
@@ -58,7 +58,7 @@ namespace y
       }
     
     
-    void lagrangian::add_subexpr(lexeme_type& lex, subexpr& e)
+    void lagrangian_driver::add_subexpr(lexeme_type& lex, subexpr& e)
       {
         auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
         auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto { return this->root.add_subexpr(name, symbol, lexeme, expr); };
@@ -67,20 +67,20 @@ namespace y
       }
     
     
-    void lagrangian::add_latex_attribute(subexpr& e, lexeme_type& lex)
+    void lagrangian_driver::add_latex_attribute(subexpr& e, lexeme_type& lex)
       {
         auto Setter = [&](auto& name, auto& lex) -> auto { return e.set_latex(name, lex); };
         SetStringValue(Setter, lex);
       }
     
     
-    void lagrangian::add_value_attribute(subexpr& e, GiNaC::ex& v, lexeme_type& lex)
+    void lagrangian_driver::add_value_attribute(subexpr& e, GiNaC::ex& v, lexeme_type& lex)
       {
         e.set_value(v,lex);
       }
     
     
-    void lagrangian::set_potential(GiNaC::ex& V, lexeme_type& lex)
+    void lagrangian_driver::set_potential(GiNaC::ex& V, lexeme_type& lex)
       {
         this->root.set_potential(V, lex);
       }

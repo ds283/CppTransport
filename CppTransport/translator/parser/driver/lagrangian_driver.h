@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_LAGRANGIAN_H
-#define CPPTRANSPORT_LAGRANGIAN_H
+#ifndef CPPTRANSPORT_LAGRANGIAN_DRIVER_H
+#define CPPTRANSPORT_LAGRANGIAN_DRIVER_H
 
 
 #include "semantic_data.h"
@@ -37,7 +37,7 @@
 namespace y
   {
     
-    class lagrangian
+    class lagrangian_driver
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -45,10 +45,10 @@ namespace y
       public:
         
         //! constructor
-        lagrangian(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
+        lagrangian_driver(model_descriptor& sc, symbol_factory& sf, argument_cache& ac, local_environment& le);
         
         //! destructor is default
-        ~lagrangian() = default;
+        ~lagrangian_driver() = default;
 
 
         // INTERFACE -- EMPLACE LAGRANGIAN DATA IN THE MODEL DESCRIPTOR
@@ -89,4 +89,4 @@ namespace y
   }
 
 
-#endif //CPPTRANSPORT_LAGRANGIAN_H
+#endif //CPPTRANSPORT_LAGRANGIAN_DRIVER_H
