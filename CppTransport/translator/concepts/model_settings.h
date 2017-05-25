@@ -101,5 +101,8 @@ enum class model_type
 
 typedef std::map< std::string, std::unique_ptr<author_declaration> > author_table;
 
+typedef std::pair< bool, std::string > validation_message;
+typedef std::list< std::unique_ptr<validation_message> > validation_exceptions;
+
 
 #endif //CPPTRANSPORT_MODEL_SETTINGS_H

@@ -174,17 +174,26 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
       }
     
     // dump results of syntactic analysis -- for debugging
-    // in.driver.get_descriptor()->print(std::cerr);
+    // this->model.print(std::cerr);
+    
+    this->populate_output_filenames();
     
     // ask model descriptor to validate itself
     auto validation_errors = this->model.validate();
     if(validation_errors.empty()) return;
     
-    this->parse_failed = true;
     this->warn(WARNING_VALIDATION_ERRORS);
     for(const auto& t : validation_errors)
       {
-        this->error(*t);
+        if(t->first)
+          {
+            this->error(std::string(FATAL_TOKEN) + t->second);
+            this->parse_failed = true;
+          }
+        else
+          {
+            this->warn(t->second);
+          }
       }
   }
   

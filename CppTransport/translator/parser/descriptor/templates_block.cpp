@@ -91,15 +91,15 @@ boost::optional< contexted_value<stepper>& > templates_block::get_perturbations_
   }
 
 
-std::list<std::unique_ptr<std::string>> templates_block::validate() const
+validation_exceptions templates_block::validate() const
   {
-    std::list< std::unique_ptr<std::string> > list;
+    validation_exceptions list;
     
-    if(!this->model) list.push_back(std::make_unique<std::string>(ERROR_NO_MODEL_BLOCK));
+    if(!this->model) list.push_back(std::make_unique<validation_message>(true, ERROR_NO_MODEL_BLOCK));
 
-    if(!this->background_stepper) list.push_back(std::make_unique<std::string>(ERROR_NO_BACKGROUND_STEPPER_BLOCK));
+    if(!this->background_stepper) list.push_back(std::make_unique<validation_message>(true, ERROR_NO_BACKGROUND_STEPPER_BLOCK));
     
-    if(!this->perturbations_stepper) list.push_back(std::make_unique<std::string>(ERROR_NO_PERTURBATIONS_STEPPER_BLOCK));
+    if(!this->perturbations_stepper) list.push_back(std::make_unique<validation_message>(true, ERROR_NO_PERTURBATIONS_STEPPER_BLOCK));
     
     return list;
   }

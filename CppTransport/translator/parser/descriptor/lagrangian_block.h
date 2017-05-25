@@ -73,7 +73,7 @@ class lagrangian_block
   public:
     
     //! perform validation
-    std::list<std::unique_ptr<std::string>> validate() const;
+    validation_exceptions validate() const;
 
 
     // SYMBOL SERVICES

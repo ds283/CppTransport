@@ -59,7 +59,7 @@ class model_descriptor
     bool failed() const { return this->err_count > 0; }
     
     //! perform validation
-    std::list<std::unique_ptr<std::string>> validate() const;
+    validation_exceptions validate() const;
     
     
     // FUNCTIONALITY BLOCKS

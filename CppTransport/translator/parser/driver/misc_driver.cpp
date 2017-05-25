@@ -65,4 +65,11 @@ namespace y
         this->root.misc.set_indexorder(index_order::right);
       }
     
+    
+    void misc_driver::set_required_version(lexeme_type& lex)
+      {
+        auto Setter = [&](auto& ver, auto& lex) -> auto { return this->root.misc.set_required_version(ver, lex); };
+        SetIntegerValue(Setter, lex);
+      }
+    
   }   // namespace y

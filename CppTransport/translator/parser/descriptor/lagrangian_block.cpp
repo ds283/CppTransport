@@ -333,11 +333,11 @@ const GiNaC::symbol& lagrangian_block::get_Mp_symbol() const
   }
 
 
-std::list<std::unique_ptr<std::string>> lagrangian_block::validate() const
+validation_exceptions lagrangian_block::validate() const
   {
-    std::list< std::unique_ptr<std::string> > list;
+    validation_exceptions list;
     
-    if(!this->potential) list.push_back(std::make_unique<std::string>(ERROR_NO_POTENTIAL));
+    if(!this->potential) list.push_back(std::make_unique<validation_message>(true, ERROR_NO_POTENTIAL));
     
     return list;
   }

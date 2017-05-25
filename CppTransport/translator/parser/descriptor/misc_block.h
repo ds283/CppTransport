@@ -55,7 +55,15 @@ class misc_block
   public:
     
     //! perform validation
-    std::list<std::unique_ptr<std::string>> validate() const;
+    validation_exceptions validate() const;
+    
+    
+    // PLATFORM SETTINGS
+    
+  public:
+    
+    //! set minimum version required by script
+    bool set_required_version(unsigned v,  const y::lexeme_type& l);
 
 
     // MISCELLANEOUS SETTINGS
@@ -75,6 +83,10 @@ class misc_block
 
     //! error count
     unsigned int& err_count;
+    
+    
+    // PLATFORM SETTINGS
+    std::unique_ptr< contexted_value<unsigned int> > min_version;
 
 
     // MISCELLANEOUS SETTINGS

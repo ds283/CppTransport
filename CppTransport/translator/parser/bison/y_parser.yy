@@ -192,7 +192,7 @@ script: script metadata metadata_block semicolon
 
 metadata_block: open_brace metadata_def close_brace
 
-metadata_def: metadata_def require_version equals integer semicolon                    { /*driver.set_required_version(*$4);*/ }
+metadata_def: metadata_def require_version equals integer semicolon                     { driver.misc.set_required_version(*$4); }
         | metadata_def lagrangian equals lagrangian_specifier semicolon
         |
         ;

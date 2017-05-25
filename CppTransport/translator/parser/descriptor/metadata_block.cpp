@@ -180,9 +180,9 @@ const author_table& metadata_block::get_author() const
   }
 
 
-std::list<std::unique_ptr<std::string>> metadata_block::validate() const
+validation_exceptions metadata_block::validate() const
   {
-    std::list< std::unique_ptr<std::string> > list;
+    validation_exceptions list;
     
     return list;
   }

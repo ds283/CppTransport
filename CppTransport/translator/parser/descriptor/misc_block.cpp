@@ -43,9 +43,30 @@ index_order misc_block::get_indexorder() const
   }
 
 
-std::list<std::unique_ptr<std::string>> misc_block::validate() const
+bool misc_block::set_required_version(unsigned v, const y::lexeme_type& l)
   {
-    std::list< std::unique_ptr<std::string> > list;
+    return SetContextedValue(this->min_version, v, l, ERROR_REQUIRED_VERSION_REDECLARATION);
+  }
+
+
+validation_exceptions misc_block::validate() const
+  {
+    validation_exceptions list;
+    
+    if(!this->min_version) list.push_back(std::make_unique<validation_message>(false, WARNING_NO_REQUIRED_VERSION));
+    if(this->min_version)
+      {
+        if(*this->min_version > CPPTRANSPORT_NUMERIC_VERSION)
+          {
+            std::ostringstream msg;
+            msg << ERROR_REQUIRED_VERSION_TOO_HIGH_A
+                << " " << (*this->min_version / 100) << "." << (*this->min_version) % 100
+                << ERROR_REQUIRED_VERSION_TOO_HIGH_B
+                << " " << CPPTRANSPORT_VERSION
+                << ERROR_REQUIRED_VERSION_TOO_HIGH_C;
+            list.push_back(std::make_unique<validation_message>(true, msg.str()));
+          }
+      }
     
     return list;
   }

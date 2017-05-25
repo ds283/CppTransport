@@ -49,18 +49,35 @@ namespace y
         
         //! destructor is default
         ~misc_driver() = default;
+        
+        
+        // PLATFORM SETTINGS
+        
+      public:
+        
+        //! set minimum required CppTransport version
+        void set_required_version(lexeme_type& lex);
     
         
         // MISCELLANEOUS SETTINGS
   
       public:
     
+        //! set indexorder as left-most first
         void set_indexorder_left();
     
+        //! set index order as right-most first
         void set_indexorder_right();
+        
+        
+        // UTILITY FUNCTIONS
+        
+      public:
     
+        //! add a LaTeX name to an attribute block
         void set_attribute_latex(attributes& a, lexeme_type& lex);
     
+        //! add a string to a string array
         void add_string(string_array& a, lexeme_type& lex);
     
     

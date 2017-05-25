@@ -42,6 +42,15 @@ constexpr auto OUTPUT_STACK_OF_FILE                  = "of file";
 
 constexpr auto WARNING_TOKEN                         = "warning: ";
 constexpr auto ERROR_TOKEN                           = "error: ";
+constexpr auto FATAL_TOKEN                           = "fatal: ";
+
+constexpr auto WARNING_PARSING_FAILED                = "Failed to parse file";
+constexpr auto WARNING_VALIDATION_ERRORS             = "The following validation errors occurred:";
+
+constexpr auto WARNING_NO_REQUIRED_VERSION           = "No minimum version of CppTransport was specified, so some new features may be disabled";
+constexpr auto ERROR_REQUIRED_VERSION_TOO_HIGH_A     = "Requires more recent version of CppTransport (requires";
+constexpr auto ERROR_REQUIRED_VERSION_TOO_HIGH_B     = ", current version";
+constexpr auto ERROR_REQUIRED_VERSION_TOO_HIGH_C     = ")";
 
 constexpr auto ERROR_OPEN_TOPLEVEL                   = "Could not open top-level file";
 constexpr auto ERROR_INCLUDE_FILE                    = "Could not open included file";
@@ -53,12 +62,12 @@ constexpr auto ERROR_CPP_BUFFER_WRITE                = "Error opening output fil
 
 constexpr auto ERROR_CSE_POWER_ARGUMENTS             = "Unexpected number of arguments to pow() during common subexpression elimination";
 
-constexpr auto ERROR_NO_CORE_TEMPLATE                = "fatal: No core template specified";
-constexpr auto ERROR_NO_IMPLEMENTATION_TEMPLATE      = "fatal: No implementation template specified";
-constexpr auto ERROR_NO_BACKGROUND_STEPPER_BLOCK     = "fatal: No background stepper block specified";
-constexpr auto ERROR_NO_PERTURBATIONS_STEPPER_BLOCK  = "fatal: No perturbations stepper block specified";
-constexpr auto ERROR_NO_MODEL_BLOCK                  = "fatal: No model block specified";
-constexpr auto ERROR_NO_POTENTIAL                    = "fatal: No Lagrangian specified";
+constexpr auto ERROR_NO_CORE_TEMPLATE                = "No core template specified";
+constexpr auto ERROR_NO_IMPLEMENTATION_TEMPLATE      = "No implementation template specified";
+constexpr auto ERROR_NO_BACKGROUND_STEPPER_BLOCK     = "No background stepper block specified";
+constexpr auto ERROR_NO_PERTURBATIONS_STEPPER_BLOCK  = "No perturbations stepper block specified";
+constexpr auto ERROR_NO_MODEL_BLOCK                  = "No model block specified";
+constexpr auto ERROR_NO_POTENTIAL                    = "No Lagrangian specified";
 constexpr auto ERROR_MISSING_TEMPLATE                = "Could not find specified template";
 constexpr auto ERROR_READING_TEMPLATE                = "Error reading from template file";
 constexpr auto ERROR_IMPROPER_TEMPLATE_HEADER        = "Improperly formed header line in template";
@@ -97,6 +106,7 @@ constexpr auto NOTIFY_DUPLICATE_AUTHOR_WAS           = "Location of original dec
 
 constexpr auto NOTIFY_DUPLICATION_BLOCK_WAS          = "Location of original block";
 constexpr auto NOTIFY_DUPLICATION_DECLARATION_WAS    = "Location of original declaration was";
+
 constexpr auto ERROR_MODEL_REDECLARATION             = "Redeclaration of model block";
 constexpr auto ERROR_NAME_REDECLARATION              = "Redeclaration of name metadata";
 constexpr auto ERROR_LICENSE_REDECLARATION           = "Redeclaration of license metadata";
@@ -105,11 +115,12 @@ constexpr auto ERROR_CITEGUIDE_REDECLARATION         = "Redeclaration of citatio
 constexpr auto ERROR_URLS_REDECLARATION              = "Redeclaration of URL-list metadata";
 constexpr auto ERROR_REFERENCES_REDECLARATION        = "Redeclaration of reference metadata";
 constexpr auto ERROR_DESCRIPTION_REDECLARATION       = "Redeclaration of description metadata";
+
 constexpr auto ERROR_IMPLEMENTATION_REDECLARATION    = "Redeclaration of implementation template";
 constexpr auto ERROR_CORE_REDECLARATION              = "Redeclaration of core template";
 constexpr auto ERROR_AUTHORNAME_REDECLARATION        = "Redeclaration of author name";
 constexpr auto ERROR_EMAIL_REDECLARATION             = "Redeclaration of email address (only one address per author is allowed)";
-constexpr auto ERROR_INSTITUTE_REDECLARATION         = "Redeclaration of instiutional affiliation (only one affiliation per author is allowed)";
+constexpr auto ERROR_INSTITUTE_REDECLARATION         = "Redeclaration of institutional affiliation (only one affiliation per author is allowed)";
 constexpr auto ERROR_LATEX_REDECLARATION             = "Redeclaration of 'latex' attribute";
 constexpr auto ERROR_VALUE_REDECLARATION             = "Redeclaration of 'value' attribute";
 constexpr auto ERROR_STEPPER_REDECLARATION           = "Redeclaration of stepper 'name' attribute";
@@ -118,7 +129,10 @@ constexpr auto ERROR_RELERR_REDECLARATION            = "Redeclaration of stepper
 constexpr auto ERROR_STEPSIZE_REDECLARATION          = "Redeclaration of stepper 'stepsize' attribute";
 constexpr auto ERROR_BACKGROUND_REDECLARATION        = "Redeclaration of background stepper block";
 constexpr auto ERROR_PERTURBATIONS_REDECLARATION     = "Redeclaration of perturbations stepper block";
+
 constexpr auto ERROR_POTENTIAL_REDECLARATION         = "Redeclaration of potential";
+
+constexpr auto ERROR_REQUIRED_VERSION_REDECLARATION  = "Redeclaration of minimum required version";
 
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   = "Internal error: increment or decrement of unattached assignment set iterator";
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_DECREMENT   = "Internal error: attempt to decrement assignment iterator before first element";
@@ -226,9 +240,6 @@ constexpr auto ERROR_UNPAIRED_ENDIF                  = "Unexpected $ENDIF withou
 constexpr auto ERROR_DUPLICATE_ELSE                  = "Duplicate $ELSE clause";
 
 constexpr auto WARNING_UNKNOWN_SWITCH                = "Ignored unknown command-line switch";
-
-constexpr auto WARNING_PARSING_FAILED                = "Failed to parse file";
-constexpr auto WARNING_VALIDATION_ERRORS             = "The following validation errors occurred";
 
 constexpr auto MESSAGE_EXPRESSION_CACHE_HITS         = "expression cache hits";
 constexpr auto MESSAGE_EXPRESSION_CACHE_MISSES       = "misses";

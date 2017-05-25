@@ -44,14 +44,14 @@ model_descriptor::model_descriptor(symbol_factory& s, error_context err_ctx)
   }
 
 
-std::list<std::unique_ptr<std::string>> model_descriptor::validate() const
+validation_exceptions model_descriptor::validate() const
   {
     auto model_list = this->model.validate();
     auto meta_list = this->meta.validate();
     auto templates_list = this->templates.validate();
     auto misc_list = this->misc.validate();
     
-    std::list< std::unique_ptr<std::string> > list;
+    validation_exceptions list;
     list.merge(model_list);
     list.merge(meta_list);
     list.merge(templates_list);
