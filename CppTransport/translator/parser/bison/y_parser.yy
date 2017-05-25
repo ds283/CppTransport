@@ -177,41 +177,41 @@ program: script
         ;
 
 script: script metadata metadata_block semicolon
-        | script potential equals expression semicolon                                  { driver.set_potential(*$4, *$3); }
-        | script model string model_block semicolon                                     { driver.set_model(*$3); }
-        | script author string author_block semicolon                                   { driver.add_author(*$3, *$4); }
+        | script field identifier attribute_block semicolon                             { driver.model.add_field(*$3, *$4); }
+        | script parameter identifier attribute_block semicolon                         { driver.model.add_parameter(*$3, *$4); }
+        | script subexpr identifier subexpr_block semicolon                             { driver.model.add_subexpr(*$3, *$4); }
+        | script potential equals expression semicolon                                  { driver.model.set_potential(*$4, *$3); }
+        | script model string model_block semicolon                                     { driver.templates.set_model(*$3); }
+        | script background stepper_block semicolon                                     { driver.templates.set_background_stepper(*$3, *$2); }
+        | script perturbations stepper_block semicolon                                  { driver.templates.set_perturbations_stepper(*$3, *$2); }
+        | script author string author_block semicolon                                   { driver.meta.add_author(*$3, *$4); }
         | script templates template_block semicolon
         | script settings settings_block semicolon
-        | script field identifier attribute_block semicolon                             { driver.add_field(*$3, *$4); }
-        | script parameter identifier attribute_block semicolon                         { driver.add_parameter(*$3, *$4); }
-        | script background stepper_block semicolon                                     { driver.set_background_stepper(*$3, *$2); }
-        | script perturbations stepper_block semicolon                                  { driver.set_perturbations_stepper(*$3, *$2); }
-				| script subexpr identifier subexpr_block semicolon                             { driver.add_subexpr(*$3, *$4); }
         |
         ;
 
 metadata_block: open_brace metadata_def close_brace
 
-metadata_def: metadata_def requires_version equals integer semicolon                    { driver.set_required_version(*$4); }
+metadata_def: metadata_def require_version equals integer semicolon                    { /*driver.set_required_version(*$4);*/ }
         | metadata_def lagrangian equals lagrangian_specifier semicolon
         |
         ;
 
-lagrangian_specifier: canonical                                                         { driver.set_lagrangian_canonical(); }
-        | nontrivial_metric                                                             { driver.set_lagrangian_nontrivial_metric(); }
+lagrangian_specifier: canonical                                                         { /*driver.set_lagrangian_canonical();*/ }
+        | nontrivial_metric                                                             { /*driver.set_lagrangian_nontrivial_metric();*/ }
         ;
 
 template_block: open_brace template_def close_brace
 
-template_def: template_def core equals string semicolon                                 { driver.set_core(*$4); }
-        | template_def implementation equals string semicolon                           { driver.set_implementation(*$4); }
+template_def: template_def core equals string semicolon                                 { driver.templates.set_core(*$4); }
+        | template_def implementation equals string semicolon                           { driver.templates.set_implementation(*$4); }
         |
         ;
 
 settings_block: open_brace settings_def close_brace
 
-settings_def: settings_def indexorder equals left semicolon                             { driver.set_indexorder_left(); }
-        | settings_def indexorder equals right semicolon                                { driver.set_indexorder_right(); }
+settings_def: settings_def indexorder equals left semicolon                             { driver.misc.set_indexorder_left(); }
+        | settings_def indexorder equals right semicolon                                { driver.misc.set_indexorder_right(); }
         |
         ;
 
@@ -219,26 +219,26 @@ attribute_block: open_brace attributes close_brace                              
         |                                                                               { $$ = std::make_shared<attributes>(); }
         ;
 
-attributes: attributes latex equals string semicolon                                    { driver.add_latex_attribute(*$1, *$4); $$ = $1; }
+attributes: attributes latex equals string semicolon                                    { driver.misc.set_attribute_latex(*$1, *$4); $$ = $1; }
         |                                                                               { $$ = std::make_shared<attributes>(); }
         ;
 
 string_array: open_square string_group close_square                                     { $$ = $2; }
         | open_square close_square                                                      { $$ = std::make_shared<string_array>(); }
 
-string_group: string_group comma string                                                 { driver.add_string(*$1, *$3); $$ = $1; }
-        | string                                                                        { $$ = std::make_shared<string_array>(); driver.add_string(*$$, *$1); }
+string_group: string_group comma string                                                 { driver.misc.add_string(*$1, *$3); $$ = $1; }
+        | string                                                                        { $$ = std::make_shared<string_array>(); driver.misc.add_string(*$$, *$1); }
         ;
 
 model_block: open_brace model_attributes close_brace
 
-model_attributes: model_attributes name equals string semicolon                         { driver.set_name(*$4); }
-        | model_attributes citeguide equals string semicolon                            { driver.set_citeguide(*$4); }
-        | model_attributes description equals string semicolon                          { driver.set_description(*$4); }
-        | model_attributes license equals string semicolon                              { driver.set_license(*$4); }
-        | model_attributes revision equals integer semicolon                            { driver.set_revision(*$4); }
-        | model_attributes references equals string_array semicolon                     { driver.set_references(*$4); }
-        | model_attributes urls equals string_array semicolon                           { driver.set_urls(*$4); }
+model_attributes: model_attributes name equals string semicolon                         { driver.meta.set_name(*$4); }
+        | model_attributes citeguide equals string semicolon                            { driver.meta.set_citeguide(*$4); }
+        | model_attributes description equals string semicolon                          { driver.meta.set_description(*$4); }
+        | model_attributes license equals string semicolon                              { driver.meta.set_license(*$4); }
+        | model_attributes revision equals integer semicolon                            { driver.meta.set_revision(*$4); }
+        | model_attributes references equals string_array semicolon                     { driver.meta.set_references(*$4); }
+        | model_attributes urls equals string_array semicolon                           { driver.meta.set_urls(*$4); }
         |
         ;
 
@@ -246,17 +246,17 @@ author_block: open_brace author_attributes close_brace                          
         |                                                                               { $$ = std::make_shared<author>(); }
         ;
 
-author_attributes: author_attributes email equals string semicolon                      { driver.add_email(*$1, *$4); $$ = $1; }
-        | author_attributes institute equals string semicolon                           { driver.add_institute(*$1, *$4); $$ = $1; }
+author_attributes: author_attributes email equals string semicolon                      { driver.meta.set_author_email(*$1, *$4); $$ = $1; }
+        | author_attributes institute equals string semicolon                           { driver.meta.set_author_institute(*$1, *$4); $$ = $1; }
         |                                                                               { $$ = std::make_shared<author>(); }
         ;
 
 stepper_block: open_brace stepper_attributes close_brace                                { $$ = $2; }
 
-stepper_attributes: stepper_attributes abserr equals decimal semicolon                  { driver.set_abserr(*$1, *$4); $$ = $1; }
-        | stepper_attributes relerr equals decimal semicolon                            { driver.set_relerr(*$1, *$4); $$ = $1; }
-        | stepper_attributes stepper equals string semicolon                            { driver.set_stepper(*$1, *$4); $$ = $1; }
-        | stepper_attributes stepsize equals decimal semicolon                          { driver.set_stepsize(*$1, *$4); $$ = $1; }
+stepper_attributes: stepper_attributes abserr equals decimal semicolon                  { driver.templates.set_abserr(*$1, *$4); $$ = $1; }
+        | stepper_attributes relerr equals decimal semicolon                            { driver.templates.set_relerr(*$1, *$4); $$ = $1; }
+        | stepper_attributes stepper equals string semicolon                            { driver.templates.set_stepper(*$1, *$4); $$ = $1; }
+        | stepper_attributes stepsize equals decimal semicolon                          { driver.templates.set_stepsize(*$1, *$4); $$ = $1; }
         |                                                                               { $$ = std::make_shared<stepper>(); }
         ;
 
@@ -264,68 +264,68 @@ subexpr_block: open_brace subexpr_def close_brace                               
         |                                                                               { $$ = std::make_shared<subexpr>(); }
 				;
 
-subexpr_def: subexpr_def latex equals string semicolon                                  { driver.add_latex_attribute(*$1, *$4); $$ = $1; }
-        | subexpr_def value equals expression semicolon                                 { driver.add_value_attribute(*$1, *$4, *$3); $$ = $1; }
+subexpr_def: subexpr_def latex equals string semicolon                                  { driver.model.set_subexpr_latex(*$1, *$4); $$ = $1; }
+        | subexpr_def value equals expression semicolon                                 { driver.model.set_subexpr_value(*$1, *$4, *$3); $$ = $1; }
         |                                                                               { $$ = std::make_shared<subexpr>(); }
         ;
 
 expression: term                                                                        { $$ = $1; }
-        | expression plus term                                                          { $$ = driver.add(*$1, *$3); }
-        | expression binary_minus term                                                  { $$ = driver.sub(*$1, *$3); }
+        | expression plus term                                                          { $$ = driver.expr.add(*$1, *$3); }
+        | expression binary_minus term                                                  { $$ = driver.expr.sub(*$1, *$3); }
         ;
 
 term: factor                                                                            { $$ = $1; }
-        | term star factor                                                              { $$ = driver.mul(*$1, *$3); }
-        | term backslash factor                                                         { $$ = driver.div(*$1, *$3); }
+        | term star factor                                                              { $$ = driver.expr.mul(*$1, *$3); }
+        | term backslash factor                                                         { $$ = driver.expr.div(*$1, *$3); }
         ;
 
 factor: leaf                                                                            { $$ = $1; }
-        | leaf circumflex leaf                                                          { $$ = driver.pow(*$1, *$3); }
+        | leaf circumflex leaf                                                          { $$ = driver.expr.pow(*$1, *$3); }
         ;
 
-leaf: integer                                                                           { $$ = driver.get_integer(*$1); }
-        | decimal                                                                       { $$ = driver.get_decimal(*$1); }
-        | identifier                                                                    { $$ = driver.get_identifier(*$1); }
+leaf: integer                                                                           { $$ = driver.expr.get_integer(*$1); }
+        | decimal                                                                       { $$ = driver.expr.get_decimal(*$1); }
+        | identifier                                                                    { $$ = driver.expr.get_identifier(*$1); }
         | built_in_function                                                             { $$ = $1; }
         | open_bracket expression close_bracket                                         { $$ = $2; }
-        | unary_minus expression                                                        { $$ = driver.unary_minus(*$2); }
+        | unary_minus expression                                                        { $$ = driver.expr.unary_minus(*$2); }
         ;
 
-built_in_function: abs open_bracket expression close_bracket                            { $$ = driver.abs(*$3); }
-        | step open_bracket expression close_bracket                                    { $$ = driver.step(*$3); }
-        | sqrt open_bracket expression close_bracket                                    { $$ = driver.sqrt(*$3); }
-        | sin open_bracket expression close_bracket                                     { $$ = driver.sin(*$3); }
-        | cos open_bracket expression close_bracket                                     { $$ = driver.cos(*$3); }
-        | tan open_bracket expression close_bracket                                     { $$ = driver.tan(*$3); }
-        | asin open_bracket expression close_bracket                                    { $$ = driver.asin(*$3); }
-        | acos open_bracket expression close_bracket                                    { $$ = driver.acos(*$3); }
-        | atan open_bracket expression close_bracket                                    { $$ = driver.atan(*$3); }
-        | atan2 open_bracket expression comma expression close_bracket                  { $$ = driver.atan2(*$3, *$5); }
-        | sinh open_bracket expression close_bracket                                    { $$ = driver.sinh(*$3); }
-        | cosh open_bracket expression close_bracket                                    { $$ = driver.cosh(*$3); }
-        | tanh open_bracket expression close_bracket                                    { $$ = driver.tanh(*$3); }
-        | asinh open_bracket expression close_bracket                                   { $$ = driver.asinh(*$3); }
-        | acosh open_bracket expression close_bracket                                   { $$ = driver.acosh(*$3); }
-        | atanh open_bracket expression close_bracket                                   { $$ = driver.atanh(*$3); }
-        | exp open_bracket expression close_bracket                                     { $$ = driver.exp(*$3); }
-        | log open_bracket expression close_bracket                                     { $$ = driver.log(*$3); }
-				| pow open_bracket expression comma expression close_bracket                    { $$ = driver.pow(*$3, *$5); }
-        | Li2 open_bracket expression close_bracket                                     { $$ = driver.Li2(*$3); }
-        | Li open_bracket expression comma expression close_bracket                     { $$ = driver.Li(*$3, *$5); }
-        | G open_bracket expression comma expression close_bracket                      { $$ = driver.G(*$3, *$5); }
-        | G open_bracket expression comma expression comma expression close_bracket     { $$ = driver.G(*$3, *$5, *$7); }
-        | S open_bracket expression comma expression comma expression close_bracket     { $$ = driver.S(*$3, *$5, *$7); }
-        | H open_bracket expression comma expression close_bracket                      { $$ = driver.H(*$3, *$5); }
-        | zeta open_bracket expression close_bracket                                    { $$ = driver.zeta(*$3); }
-        | zeta open_bracket expression comma expression close_bracket                   { $$ = driver.zeta(*$3, *$5); }
-        | zetaderiv open_bracket expression comma expression close_bracket              { $$ = driver.zetaderiv(*$3, *$5); }
-        | tgamma open_bracket expression close_bracket                                  { $$ = driver.tgamma(*$3); }
-        | lgamma open_bracket expression close_bracket                                  { $$ = driver.lgamma(*$3); }
-        | beta open_bracket expression comma expression close_bracket                   { $$ = driver.beta(*$3, *$5); }
-        | psi open_bracket expression close_bracket                                     { $$ = driver.psi(*$3); }
-        | psi open_bracket expression comma expression close_bracket                    { $$ = driver.psi(*$3, *$5); }
-        | factorial open_bracket expression close_bracket                               { $$ = driver.factorial(*$3); }
-        | binomial open_bracket expression comma expression close_bracket               { $$ = driver.binomial(*$3, *$5); }
+built_in_function: abs open_bracket expression close_bracket                            { $$ = driver.expr.abs(*$3); }
+        | step open_bracket expression close_bracket                                    { $$ = driver.expr.step(*$3); }
+        | sqrt open_bracket expression close_bracket                                    { $$ = driver.expr.sqrt(*$3); }
+        | sin open_bracket expression close_bracket                                     { $$ = driver.expr.sin(*$3); }
+        | cos open_bracket expression close_bracket                                     { $$ = driver.expr.cos(*$3); }
+        | tan open_bracket expression close_bracket                                     { $$ = driver.expr.tan(*$3); }
+        | asin open_bracket expression close_bracket                                    { $$ = driver.expr.asin(*$3); }
+        | acos open_bracket expression close_bracket                                    { $$ = driver.expr.acos(*$3); }
+        | atan open_bracket expression close_bracket                                    { $$ = driver.expr.atan(*$3); }
+        | atan2 open_bracket expression comma expression close_bracket                  { $$ = driver.expr.atan2(*$3, *$5); }
+        | sinh open_bracket expression close_bracket                                    { $$ = driver.expr.sinh(*$3); }
+        | cosh open_bracket expression close_bracket                                    { $$ = driver.expr.cosh(*$3); }
+        | tanh open_bracket expression close_bracket                                    { $$ = driver.expr.tanh(*$3); }
+        | asinh open_bracket expression close_bracket                                   { $$ = driver.expr.asinh(*$3); }
+        | acosh open_bracket expression close_bracket                                   { $$ = driver.expr.acosh(*$3); }
+        | atanh open_bracket expression close_bracket                                   { $$ = driver.expr.atanh(*$3); }
+        | exp open_bracket expression close_bracket                                     { $$ = driver.expr.exp(*$3); }
+        | log open_bracket expression close_bracket                                     { $$ = driver.expr.log(*$3); }
+				| pow open_bracket expression comma expression close_bracket                    { $$ = driver.expr.pow(*$3, *$5); }
+        | Li2 open_bracket expression close_bracket                                     { $$ = driver.expr.Li2(*$3); }
+        | Li open_bracket expression comma expression close_bracket                     { $$ = driver.expr.Li(*$3, *$5); }
+        | G open_bracket expression comma expression close_bracket                      { $$ = driver.expr.G(*$3, *$5); }
+        | G open_bracket expression comma expression comma expression close_bracket     { $$ = driver.expr.G(*$3, *$5, *$7); }
+        | S open_bracket expression comma expression comma expression close_bracket     { $$ = driver.expr.S(*$3, *$5, *$7); }
+        | H open_bracket expression comma expression close_bracket                      { $$ = driver.expr.H(*$3, *$5); }
+        | zeta open_bracket expression close_bracket                                    { $$ = driver.expr.zeta(*$3); }
+        | zeta open_bracket expression comma expression close_bracket                   { $$ = driver.expr.zeta(*$3, *$5); }
+        | zetaderiv open_bracket expression comma expression close_bracket              { $$ = driver.expr.zetaderiv(*$3, *$5); }
+        | tgamma open_bracket expression close_bracket                                  { $$ = driver.expr.tgamma(*$3); }
+        | lgamma open_bracket expression close_bracket                                  { $$ = driver.expr.lgamma(*$3); }
+        | beta open_bracket expression comma expression close_bracket                   { $$ = driver.expr.beta(*$3, *$5); }
+        | psi open_bracket expression close_bracket                                     { $$ = driver.expr.psi(*$3); }
+        | psi open_bracket expression comma expression close_bracket                    { $$ = driver.expr.psi(*$3, *$5); }
+        | factorial open_bracket expression close_bracket                               { $$ = driver.expr.factorial(*$3); }
+        | binomial open_bracket expression comma expression close_bracket               { $$ = driver.expr.binomial(*$3, *$5); }
 
 %%
 
