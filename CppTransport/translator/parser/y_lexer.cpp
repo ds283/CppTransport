@@ -151,7 +151,7 @@ namespace y
 
         // assign this lexeme as the semantic value returned to Bison;
         // we are using Bison's variant interface here
-        lval->as< std::shared_ptr<lexeme_type> >() = lex;
+        lval->build< std::shared_ptr<lexeme_type> >(lex);
 
         // cache lexeme for return to Bison error handler if neexed
         if(lex) this->current = *lex; else this->current.reset();
