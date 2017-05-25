@@ -33,11 +33,11 @@
 namespace y
 	{
 
-    y_driver::y_driver(symbol_factory& s, argument_cache& c, local_environment& e, error_context err_ctx)
-	    : sym_factory(s),
+    y_driver::y_driver(model_descriptor& r, symbol_factory& s, argument_cache& c, local_environment& e)
+	    : root(r),
+        sym_factory(s),
         cache(c),
         env(e),
-        root(s, std::move(err_ctx)),
         expr(root, s, c, e),
         model(root, s, c, e),
         meta(root, s, c, e),

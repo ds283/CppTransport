@@ -43,7 +43,7 @@
 #include "symbol_factory.h"
 
 
-// data structure for tracking input scripts as they progress through the pipeline
+//! encapsulates the entire pipeline for translating an input script
 class translation_unit
   {
 
@@ -72,19 +72,19 @@ class translation_unit
 
   protected:
 
-		// print an advisory message, if the current verbosity level is set sufficiently high
+		//! print an advisory message, if the current verbosity level is set sufficiently high
     void print_advisory(const std::string& msg);
 
-		// print a warning message - no context data
+		//! print a warning message - no context data
 		void warn(const std::string& msg);
 
-		// print an error message - no context data
+		//! print an error message - no context data
 		void error(const std::string& msg);
 
-    // print a warning message - with context data
+    //! print a warning message - with context data
     void context_warn(const std::string& msg, const error_context& ctx);
 
-    // print an error message - with context data
+    //! print an error message - with context data
     void context_error(const std::string& msg, const error_context& ctx);
 
     //! construct output name (input not const or taken by reference because modified internally)
@@ -98,28 +98,74 @@ class translation_unit
 
   private:
 
-    // GiNaC symbol factory
-    symbol_factory          sym_factory;
+    // POLICY OBJECTS
 
-    boost::filesystem::path name;                    // name of input script
-    bool                    parse_failed;
+    //! reference to finder
+    finder& path;
+    
+    //! reference to argument cache
+    argument_cache& cache;
+    
+    //! reference to local environment
+    local_environment& env;
+    
+    // TRANSLATION UNIT RESOURCES
+    
+    //! GiNaC symbol factory; needed because we must have only *one* instance of each
+    //! symbol, due to the way GiNaC works (lexically equivalent symbols are not mathematically
+    //! equivalent if they are not copied from the same base object).
+    //! There is one symbol factory for each translation unit.
+    symbol_factory sym_factory;
 
-    unsigned int            errors;
-    unsigned int            warnings;
+    //! filestack recording where we are in the template inclusion tree
+    output_stack stack;
 
-    finder&                 path;
-    argument_cache&         cache;
-    local_environment&      env;
-    output_stack            stack;
+    //! cache name of input script
+    boost::filesystem::path name;
 
-    lexstream_data          lexstream_payload;       // must be constructed *after* path, cache
-    y::lexstream_type       instream;
-    y::y_lexer              lexer;
-    y::y_driver             driver;
-    y::y_parser             parser;
+    
+    // ERROR HANDLING
+    
+    //! flag to capture state of parse
+    bool parse_failed;
 
-    translator_data         translator_payload;
-    translator              outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
+    //! number of reported errors
+    unsigned int errors;
+
+    //! number of reported warnings
+    unsigned int warnings;
+    
+    
+    // TRANSLATION
+    
+    //! data bundle passed to translator
+    translator_data translator_payload;
+    
+    //! translator object: performs actual translation of template files
+    //! must be constructed *after* translator_payload, path, stack, sym_factory
+    translator outstream;
+    
+    //! model descriptor -- encapsulates all details about the model;
+    //! is populated during parsing by y_driver
+    model_descriptor model;
+    
+    // PARSING
+    
+    //! data bundle passed to lexstream object
+    //! must be constructed *after* path, cache
+    lexstream_data lexstream_payload;
+    
+    //! lexeme stream representing input
+    y::lexstream_type instream;
+    
+    //! lexer object interfacing between lexstream and Bison
+    y::y_lexer lexer;
+    
+    //! Bison parser driver
+    y::y_driver driver;
+    
+    //! Bison parser
+    y::y_parser parser;
 
   };
 

@@ -63,7 +63,7 @@ namespace y
         //! error_context is passed down from parent translation_unit.
         //! It is only used to pass to our script object 'root' and is used to construct
         //! fake error contexts for default reserved symbols such as M_Planck
-        y_driver(symbol_factory& s, argument_cache& c, local_environment& e, error_context err_ctx);
+        y_driver(model_descriptor& r, symbol_factory& s, argument_cache& c, local_environment& e);
 
         //! destructor is default
         ~y_driver() = default;
@@ -85,10 +85,35 @@ namespace y
       public:
 
         const model_descriptor& get_descriptor();
+    
+    
+        // INTERNAL DATA
+
+      private:
+
+        // MODEL DESCRIPTOR
         
-        
+        //! reference to model descriptor supplied by parent translation_unit;
+        //! this encapsulates all data about the model and is populated
+        //! as parsing progresses
+        model_descriptor& root;
+
+
+        // REFERENCES TO DELEGATE OBJECTS
+
+        //! reference to symbol factory
+		    symbol_factory& sym_factory;
+
+        //! reference to argument cache
+        argument_cache& cache;
+
+        //! reference to local environment
+        local_environment& env;
+    
+    
         // FUNCTIONALITY BLOCKS
-        
+        // (must come after construction of root field)
+  
       public:
     
         //! expression trees
@@ -105,28 +130,6 @@ namespace y
     
         //! miscellaneous settings and methods
         misc_driver misc;
-    
-    
-        // INTERNAL DATA
-
-      private:
-
-        // MODEL DESCRIPTOR
-        
-        //! container for model descriptor information
-        model_descriptor root;
-
-
-        // REFERENCES TO DELEGATE OBJECTS
-
-        //! reference to symbol factory
-		    symbol_factory& sym_factory;
-
-        //! reference to argument cache
-        argument_cache& cache;
-
-        //! reference to local environment
-        local_environment& env;
 
 	    };
 

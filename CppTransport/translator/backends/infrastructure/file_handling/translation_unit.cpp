@@ -143,9 +143,10 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     instream(lexstream_payload,
              keyword_table, keyword_map, character_table, character_map, character_unary_context),
     lexer(instream),
-    driver(sym_factory, c, e, error_context(stack,
-                                            std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
-                                            std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2))),
+    model(sym_factory, error_context(stack,
+                                     std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
+                                     std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2))),
+    driver(model, sym_factory, c, e),
     parser(lexer, driver),
     translator_payload(file,
                        std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
@@ -154,7 +155,8 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
                        path, stack, sym_factory, driver, cache),
     outstream(translator_payload)
   {
-    // construction of 'instream' lexicalizes the input file
+    // 'instream' constructor lexicalizes the input file
+    
     // the instream object owns the list of lexemes, which persist as long as it exists
     // therefore the lexeme list should be persistent while all transactions involving this unit are active
 
@@ -187,7 +189,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
       }
     else
       {
-        boost::optional< contexted_value<std::string>& > core = driver.get_descriptor().templates.get_core();
+        boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core();
         if(core)
           {
             core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
@@ -202,7 +204,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
       }
     else
       {
-        boost::optional< contexted_value<std::string>& > impl = driver.get_descriptor().templates.get_implementation();
+        boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation();
         if(impl)
           {
             implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
@@ -225,23 +227,21 @@ unsigned int translation_unit::apply()
     // don't attempt translation if parsing failed
 		if(this->parse_failed) return rval;
 
-    const model_descriptor& s = this->driver.get_descriptor();
-
-    boost::optional< contexted_value<std::string>& > model = s.templates.get_model();
+    boost::optional< contexted_value<std::string>& > model = this->model.templates.get_model();
     if(!model) this->error(ERROR_NO_MODEL_BLOCK);
 
-    boost::optional< contexted_value<stepper>& > back = s.templates.get_background_stepper();
+    boost::optional< contexted_value<stepper>& > back = this->model.templates.get_background_stepper();
     if(!back) this->error(ERROR_NO_BACKGROUND_STEPPER_BLOCK);
 
-    boost::optional< contexted_value<stepper>& > pert = s.templates.get_perturbations_stepper();
+    boost::optional< contexted_value<stepper>& > pert = this->model.templates.get_perturbations_stepper();
     if(!pert) this->error(ERROR_NO_PERTURBATIONS_STEPPER_BLOCK);
 
-    boost::optional< contexted_value<GiNaC::ex>& > V = s.model.get_potential();
+    boost::optional< contexted_value<GiNaC::ex>& > V = this->model.model.get_potential();
     if(!V) this->error(ERROR_NO_POTENTIAL);
 
     if(this->errors == 0)
       {
-        boost::optional< contexted_value<std::string>& > core = s.templates.get_core();
+        boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core();
         if(core)
           {
             rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_type::process_core);
@@ -251,7 +251,7 @@ unsigned int translation_unit::apply()
             this->error(ERROR_NO_CORE_TEMPLATE);
           }
 
-        boost::optional< contexted_value<std::string>& > impl = s.templates.get_implementation();
+        boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation();
         if(impl)
           {
             rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_type::process_implementation);
