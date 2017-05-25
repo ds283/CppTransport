@@ -55,6 +55,8 @@ namespace y
   
       public:
     
+        void set_model(lexeme_type& lex);
+    
         void set_core(lexeme_type& lex);
     
         void set_implementation(lexeme_type& lex);

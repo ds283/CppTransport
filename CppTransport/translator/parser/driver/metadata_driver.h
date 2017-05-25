@@ -55,8 +55,6 @@ namespace y
   
       public:
     
-        void set_model(lexeme_type& lex);
-    
         void set_name(lexeme_type& lex);
     
         void add_author(lexeme_type& lex, author& a);
@@ -73,9 +71,9 @@ namespace y
     
         void set_urls(string_array& a);
     
-        void add_email(author& a, lexeme_type& lex);
+        void set_author_email(author& a, lexeme_type& lex);
     
-        void add_institute(author& a, lexeme_type& institute);
+        void set_author_institute(author& a, lexeme_type& institute);
     
     
         // INTERNAL DATA

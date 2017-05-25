@@ -40,6 +40,13 @@ namespace y
       }
     
     
+    void templates_driver::set_model(lexeme_type& lex)
+      {
+        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.set_model(name, lex); };
+        SetStringValue(Setter, lex);
+      }
+    
+    
     void templates_driver::set_core(lexeme_type& lex)
       {
         auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.set_core(name, lex); };

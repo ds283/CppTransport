@@ -63,9 +63,9 @@ namespace y
     
         void set_potential(GiNaC::ex& V, lexeme_type& lex);
     
-        void add_latex_attribute(subexpr& e, lexeme_type& lex);
+        void set_subexpr_latex(subexpr& e, lexeme_type& lex);
     
-        void add_value_attribute(subexpr& e, GiNaC::ex& v, lexeme_type& lex);
+        void set_subexpr_value(subexpr& e, GiNaC::ex& v, lexeme_type& lex);
     
     
         // INTERNAL DATA

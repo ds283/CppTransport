@@ -40,21 +40,14 @@ namespace y
       }
     
     
-    void metadata_driver::set_model(lexeme_type& lex)
-      {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.set_model(name, lex); };
-        SetStringValue(Setter, lex);
-      }
-    
-    
-    void metadata_driver::add_email(author& a, lexeme_type& lex)
+    void metadata_driver::set_author_email(author& a, lexeme_type& lex)
       {
         auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_email(name, lex); };
         SetStringValue(Setter, lex);
       }
     
     
-    void metadata_driver::add_institute(author& a, lexeme_type& lex)
+    void metadata_driver::set_author_institute(author& a, lexeme_type& lex)
       {
         auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_institute(name, lex); };
         SetStringValue(Setter, lex);

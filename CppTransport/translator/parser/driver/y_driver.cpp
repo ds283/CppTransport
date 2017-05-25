@@ -38,10 +38,10 @@ namespace y
         cache(c),
         env(e),
         root(s, std::move(err_ctx)),
-        etree(root, s, c, e),
-        lag(root, s, c, e),
+        expr(root, s, c, e),
+        model(root, s, c, e),
         meta(root, s, c, e),
-        templ(root, s, c, e),
+        templates(root, s, c, e),
         misc(root, s, c, e)
 	    {
 	    }

@@ -67,14 +67,14 @@ namespace y
       }
     
     
-    void lagrangian_driver::add_latex_attribute(subexpr& e, lexeme_type& lex)
+    void lagrangian_driver::set_subexpr_latex(subexpr& e, lexeme_type& lex)
       {
         auto Setter = [&](auto& name, auto& lex) -> auto { return e.set_latex(name, lex); };
         SetStringValue(Setter, lex);
       }
     
     
-    void lagrangian_driver::add_value_attribute(subexpr& e, GiNaC::ex& v, lexeme_type& lex)
+    void lagrangian_driver::set_subexpr_value(subexpr& e, GiNaC::ex& v, lexeme_type& lex)
       {
         e.set_value(v,lex);
       }

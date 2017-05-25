@@ -59,7 +59,7 @@ namespace y
     
         void set_indexorder_right();
     
-        void add_latex_attribute(attributes& a, lexeme_type& lex);
+        void set_attribute_latex(attributes& a, lexeme_type& lex);
     
         void add_string(string_array& a, lexeme_type& lex);
     

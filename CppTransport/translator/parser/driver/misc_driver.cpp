@@ -40,7 +40,7 @@ namespace y
       }
     
     
-    void misc_driver::add_latex_attribute(attributes& a, lexeme_type& lex)
+    void misc_driver::set_attribute_latex(attributes& a, lexeme_type& lex)
       {
         auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_latex(name, lex); };
         SetStringValue(Setter, lex);
