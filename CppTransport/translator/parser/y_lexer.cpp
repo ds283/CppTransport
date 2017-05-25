@@ -36,7 +36,7 @@
 std::unordered_map<keyword_type, y::y_parser::token::yytokentype> keyword_tokens =
   {
     { keyword_type::metadata,          y::y_parser::token::metadata },
-    { keyword_type::requires_version,  y::y_parser::token::requires_version },
+    { keyword_type::require_version,   y::y_parser::token::require_version },
     { keyword_type::lagrangian,        y::y_parser::token::lagrangian },
     { keyword_type::canonical,         y::y_parser::token::canonical },
     { keyword_type::nontrivial_metric, y::y_parser::token::nontrivial_metric },

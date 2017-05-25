@@ -44,7 +44,7 @@
 
 const std::vector<std::string> keyword_table =
   {
-    "metadata", "requires_version", "lagrangian",
+    "metadata", "require_version", "lagrangian",
     "canonical", "nontrivial_metric",
     "name", "author", "citeguide",
     "description", "license", "revision",
@@ -65,7 +65,7 @@ const std::vector<std::string> keyword_table =
 
 const std::vector<keyword_type> keyword_map =
   {
-    keyword_type::metadata, keyword_type::requires_version, keyword_type::lagrangian,
+    keyword_type::metadata, keyword_type::require_version, keyword_type::lagrangian,
     keyword_type::canonical, keyword_type::nontrivial_metric,
     keyword_type::name, keyword_type::author, keyword_type::citeguide,
     keyword_type::description, keyword_type::license, keyword_type::revision,

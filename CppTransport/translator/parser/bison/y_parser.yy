@@ -61,7 +61,7 @@
 }*/
 
 %token                                   metadata
-%token                                   requires_version
+%token                                   require_version
 %token                                   lagrangian
 %token                                   canonical
 %token                                   nontrivial_metric
