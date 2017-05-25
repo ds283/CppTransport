@@ -28,24 +28,14 @@ IF(CLANG)
   # suppress missing override warnings which are automatically enabled in recent
   # versions of Clang. These produce a slew of warnings from GiNaC >= 1.7
   # also suppress unknown attribute warnings which produce errors for GiNaC_deprecated
-  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast -DNDEBUG -Wno-unknown-attributes")
-  SET(CMAKE_CXX_FLAGS_DEBUG "-Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
-  SET(CMAKE_C_FLAGS_DEBUG "-Wno-unknown-attributes")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
+  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-unknown-attributes")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
+  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wno-unknown-attributes")
 
 ELSEIF(GCC)
 
-  SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
-  SET(CMAKE_CXX_FLAGS_DEBUG "")
-  SET(CMAKE_C_FLAGS_DEBUG "")
-
 ELSEIF(INTEL)
-
-  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast -DNDEBUG")
-  SET(CMAKE_CXX_FLAGS_DEBUG "")
-  SET(CMAKE_C_FLAGS_DEBUG "")
 
 ENDIF()
 
