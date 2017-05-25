@@ -41,3 +41,11 @@ index_order misc_block::get_indexorder() const
   {
     return(this->order);
   }
+
+
+std::list<std::unique_ptr<std::string>> misc_block::validate() const
+  {
+    std::list< std::unique_ptr<std::string> > list;
+    
+    return list;
+  }

@@ -48,6 +48,14 @@ class misc_block
 
     //! destructor
     ~misc_block() = default;
+    
+    
+    // SERVICES
+  
+  public:
+    
+    //! perform validation
+    std::list<std::unique_ptr<std::string>> validate() const;
 
 
     // MISCELLANEOUS SETTINGS

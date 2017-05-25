@@ -37,7 +37,7 @@ bool templates_block::set_core(const std::string& c, const y::lexeme_type& l)
   }
 
 
-boost::optional< contexted_value<std::string>& > templates_block::get_core() const
+boost::optional< contexted_value<std::string>& > templates_block::get_core_template() const
   {
     if(this->core) return(*this->core); else return(boost::none);
   }
@@ -49,7 +49,7 @@ bool templates_block::set_implementation(const std::string& i, const y::lexeme_t
   }
 
 
-boost::optional< contexted_value<std::string>& > templates_block::get_implementation() const
+boost::optional< contexted_value<std::string>& > templates_block::get_implementation_template() const
   {
     if(this->implementation) return(*this->implementation); else return(boost::none);
   }
@@ -88,4 +88,18 @@ boost::optional< contexted_value<stepper>& > templates_block::get_background_ste
 boost::optional< contexted_value<stepper>& > templates_block::get_perturbations_stepper() const
   {
     if(this->perturbations_stepper) return *this->perturbations_stepper; else return boost::none;
+  }
+
+
+std::list<std::unique_ptr<std::string>> templates_block::validate() const
+  {
+    std::list< std::unique_ptr<std::string> > list;
+    
+    if(!this->model) list.push_back(std::make_unique<std::string>(ERROR_NO_MODEL_BLOCK));
+
+    if(!this->background_stepper) list.push_back(std::make_unique<std::string>(ERROR_NO_BACKGROUND_STEPPER_BLOCK));
+    
+    if(!this->perturbations_stepper) list.push_back(std::make_unique<std::string>(ERROR_NO_PERTURBATIONS_STEPPER_BLOCK));
+    
+    return list;
   }

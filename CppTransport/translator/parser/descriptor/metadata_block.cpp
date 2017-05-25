@@ -178,3 +178,11 @@ const author_table& metadata_block::get_author() const
   {
     return this->authors;
   }
+
+
+std::list<std::unique_ptr<std::string>> metadata_block::validate() const
+  {
+    std::list< std::unique_ptr<std::string> > list;
+    
+    return list;
+  }

@@ -48,6 +48,14 @@ class templates_block
 
     //! destructor
     ~templates_block() = default;
+    
+    
+    // SERVICES
+  
+  public:
+    
+    //! perform validation
+    std::list<std::unique_ptr<std::string>> validate() const;
 
 
     // TEMPLATE SPECIFICATION
@@ -58,14 +66,14 @@ class templates_block
     bool set_core(const std::string& c, const y::lexeme_type& l);
 
     //! get core template name as contexted value
-    boost::optional< contexted_value<std::string>& > get_core() const;
+    boost::optional< contexted_value<std::string>& > get_core_template() const;
 
 
     //! set implementation template name
     bool set_implementation(const std::string& i, const y::lexeme_type& l);
 
     //! get implementation template name as contexted value
-    boost::optional< contexted_value<std::string>& > get_implementation() const;
+    boost::optional< contexted_value<std::string>& > get_implementation_template() const;
 
 
     //! set model tag (an identifier)

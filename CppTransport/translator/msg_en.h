@@ -228,6 +228,7 @@ constexpr auto ERROR_DUPLICATE_ELSE                  = "Duplicate $ELSE clause";
 constexpr auto WARNING_UNKNOWN_SWITCH                = "Ignored unknown command-line switch";
 
 constexpr auto WARNING_PARSING_FAILED                = "Failed to parse file";
+constexpr auto WARNING_VALIDATION_ERRORS             = "The following validation errors occurred";
 
 constexpr auto MESSAGE_EXPRESSION_CACHE_HITS         = "expression cache hits";
 constexpr auto MESSAGE_EXPRESSION_CACHE_MISSES       = "misses";

@@ -48,6 +48,14 @@ class metadata_block
 
     //! destructor is default
     ~metadata_block() = default;
+    
+    
+    // SERVICES
+  
+  public:
+    
+    //! perform validation
+    std::list<std::unique_ptr<std::string>> validate() const;
 
 
     // GET AND SET BASIC METADATA

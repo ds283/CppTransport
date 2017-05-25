@@ -66,6 +66,14 @@ class lagrangian_block
 
     //! destructor is default
     ~lagrangian_block() = default;
+    
+    
+    // GENERAL SERVICES
+    
+  public:
+    
+    //! perform validation
+    std::list<std::unique_ptr<std::string>> validate() const;
 
 
     // SYMBOL SERVICES

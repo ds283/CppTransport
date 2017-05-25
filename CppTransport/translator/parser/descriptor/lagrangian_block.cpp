@@ -331,3 +331,13 @@ const GiNaC::symbol& lagrangian_block::get_Mp_symbol() const
   {
     return(this->M_Planck);
   }
+
+
+std::list<std::unique_ptr<std::string>> lagrangian_block::validate() const
+  {
+    std::list< std::unique_ptr<std::string> > list;
+    
+    if(!this->potential) list.push_back(std::make_unique<std::string>(ERROR_NO_POTENTIAL));
+    
+    return list;
+  }

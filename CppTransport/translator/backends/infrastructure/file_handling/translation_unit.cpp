@@ -159,43 +159,56 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     
     // the instream object owns the list of lexemes, which persist as long as it exists
     // therefore the lexeme list should be persistent while all transactions involving this unit are active
-
+    
     // dump lexeme stream to output -- for debugging
     // instream.print(std::cerr);
-
+    
     // combination of lexer, driver and parser performs syntactic analysis
-
+    
     if(parser.parse() == FAIL || driver.failed())
-	    {
+      {
         std::ostringstream msg;
         msg << WARNING_PARSING_FAILED << " " << name;
         this->warn(msg.str());
-		    parse_failed = true;
-	    }
-
+        parse_failed = true;
+      }
+    
     // dump results of syntactic analysis -- for debugging
     // in.driver.get_descriptor()->print(std::cerr);
+    
+    // ask model descriptor to validate itself
+    auto validation_errors = this->model.validate();
+    if(validation_errors.empty()) return;
+    
+    this->parse_failed = true;
+    this->warn(WARNING_VALIDATION_ERRORS);
+    for(const auto& t : validation_errors)
+      {
+        this->error(*t);
+      }
+  }
+  
 
-    // compute header guard strings and filenames for core and implementation files
-
+void translation_unit::populate_output_filenames()
+  {
     boost::filesystem::path core_output;
     std::string             core_guard;
     boost::filesystem::path implementation_output;
     std::string             implementation_guard;
 
-    if(cache.core_out().length() > 0 ) core_output = cache.core_out();
+    if(this->cache.core_out().length() > 0 ) core_output = this->cache.core_out();
     else
       {
-        boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core();
+        boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core_template();
         if(core) core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
       }
     core_guard = boost::to_upper_copy(leafname(core_output.string()));
     core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), core_guard.end());
 
-    if(cache.implementation_out().length() > 0) implementation_output = cache.implementation_out();
+    if(this->cache.implementation_out().length() > 0) implementation_output = this->cache.implementation_out();
     else
       {
-        boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation();
+        boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation_template();
         if(impl) implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
       }
     implementation_guard = boost::to_upper_copy(leafname(implementation_output.string()));
@@ -214,43 +227,28 @@ unsigned int translation_unit::apply()
     unsigned int rval = 0;
 
     // don't attempt translation if parsing failed
-		if(this->parse_failed) return rval;
-
-    boost::optional< contexted_value<std::string>& > model = this->model.templates.get_model();
-    if(!model) this->error(ERROR_NO_MODEL_BLOCK);
-
-    boost::optional< contexted_value<stepper>& > back = this->model.templates.get_background_stepper();
-    if(!back) this->error(ERROR_NO_BACKGROUND_STEPPER_BLOCK);
-
-    boost::optional< contexted_value<stepper>& > pert = this->model.templates.get_perturbations_stepper();
-    if(!pert) this->error(ERROR_NO_PERTURBATIONS_STEPPER_BLOCK);
-
-    boost::optional< contexted_value<GiNaC::ex>& > V = this->model.model.get_potential();
-    if(!V) this->error(ERROR_NO_POTENTIAL);
-
-    if(this->errors == 0)
+		if(this->parse_failed || this->errors > 0) return rval;
+    
+    boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core_template();
+    if(core)
       {
-        boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core();
-        if(core)
-          {
-            rval += this->outstream.translate(*core, (*core).get_declaration_point(),
-                                              this->translator_payload.get_core_filename().string(), process_type::process_core);
-          }
-        else
-          {
-            this->error(ERROR_NO_CORE_TEMPLATE);
-          }
+        rval += this->outstream.translate(*core, (*core).get_declaration_point(),
+                                          this->translator_payload.get_core_filename().string(), process_type::process_core);
+      }
+    else
+      {
+        this->error(ERROR_NO_CORE_TEMPLATE);
+      }
 
-        boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation();
-        if(impl)
-          {
-            rval += this->outstream.translate(*impl, (*core).get_declaration_point(),
-                                              this->translator_payload.get_implementation_filename().string(), process_type::process_implementation);
-          }
-        else
-          {
-            this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
-          }
+    boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation_template();
+    if(impl)
+      {
+        rval += this->outstream.translate(*impl, (*core).get_declaration_point(),
+                                          this->translator_payload.get_implementation_filename().string(), process_type::process_implementation);
+      }
+    else
+      {
+        this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
       }
 
     if(this->errors > 0) this->parse_failed = true;

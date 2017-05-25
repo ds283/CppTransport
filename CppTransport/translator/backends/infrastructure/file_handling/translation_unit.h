@@ -71,6 +71,9 @@ class translation_unit
 		// INTERNAL API
 
   protected:
+    
+    //! push names of output files and header guards to translator data payload
+    void populate_output_filenames();
 
 		//! print an advisory message, if the current verbosity level is set sufficiently high
     void print_advisory(const std::string& msg);
