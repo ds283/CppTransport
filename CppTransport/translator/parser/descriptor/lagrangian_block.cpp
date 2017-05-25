@@ -341,3 +341,9 @@ validation_exceptions lagrangian_block::validate() const
     
     return list;
   }
+
+
+void lagrangian_block::set_lagrangian_type(model_type t, const y::lexeme_type& l)
+  {
+    SetContextedValue(this->type, t, l, ERROR_LAGRANGIAN_TYPE_REDECLARATION);
+  }

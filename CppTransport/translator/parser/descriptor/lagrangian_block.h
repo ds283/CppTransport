@@ -99,6 +99,9 @@ class lagrangian_block
 
   public:
 
+    //! set the type of the Lagrangian
+    void set_lagrangian_type(model_type t, const y::lexeme_type& l);
+    
     //! set potential
     bool set_potential(GiNaC::ex& V, const y::lexeme_type& l);
 
@@ -153,6 +156,8 @@ class lagrangian_block
 
 
     // LAGRANGIAN DATA
+    
+    // TABLES
 
     //! symbol table: fields
     field_symbol_table fields;
@@ -165,9 +170,14 @@ class lagrangian_block
 
     //! symbol table: subexpressions
     subexpr_symbol_table subexprs;
+    
+    // SETTINGS
+    
+    //! type of model
+    std::unique_ptr< contexted_value<model_type> > type;
 
     //! store details of potentials
-    std::unique_ptr<contexted_value<GiNaC::ex> > potential;
+    std::unique_ptr< contexted_value<GiNaC::ex> > potential;
 
 
     // SYMBOL SERVICES

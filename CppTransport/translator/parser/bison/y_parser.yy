@@ -63,8 +63,8 @@
 %token                                   metadata
 %token                                   require_version
 %token                                   lagrangian
-%token                                   canonical
-%token                                   nontrivial_metric
+%token <std::shared_ptr<lexeme_type>>    canonical
+%token <std::shared_ptr<lexeme_type>>    nontrivial_metric
 %token                                   name
 %token                                   author
 %token                                   citeguide
@@ -197,8 +197,8 @@ metadata_def: metadata_def require_version equals integer semicolon             
         |
         ;
 
-lagrangian_specifier: canonical                                                         { /*driver.set_lagrangian_canonical();*/ }
-        | nontrivial_metric                                                             { /*driver.set_lagrangian_nontrivial_metric();*/ }
+lagrangian_specifier: canonical                                                         { driver.model.set_lagrangian_type(model_type::canonical, *$1); }
+        | nontrivial_metric                                                             { driver.model.set_lagrangian_type(model_type::nontrivial_metric, *$1); }
         ;
 
 template_block: open_brace template_def close_brace

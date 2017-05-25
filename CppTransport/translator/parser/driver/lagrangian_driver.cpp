@@ -85,4 +85,10 @@ namespace y
         this->root.model.set_potential(V, lex);
       }
     
+    
+    void lagrangian_driver::set_lagrangian_type(model_type t, lexeme_type& lex)
+      {
+        this->root.model.set_lagrangian_type(t, lex);
+      }
+    
   }   // namespace y

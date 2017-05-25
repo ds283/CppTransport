@@ -130,6 +130,7 @@ constexpr auto ERROR_STEPSIZE_REDECLARATION          = "Redeclaration of stepper
 constexpr auto ERROR_BACKGROUND_REDECLARATION        = "Redeclaration of background stepper block";
 constexpr auto ERROR_PERTURBATIONS_REDECLARATION     = "Redeclaration of perturbations stepper block";
 
+constexpr auto ERROR_LAGRANGIAN_TYPE_REDECLARATION   = "Redeclaration of Lagrangian type";
 constexpr auto ERROR_POTENTIAL_REDECLARATION         = "Redeclaration of potential";
 
 constexpr auto ERROR_REQUIRED_VERSION_REDECLARATION  = "Redeclaration of minimum required version";
@@ -189,7 +190,7 @@ constexpr auto ERROR_CURRENT_LINE_EMPTY              = "Internal error: current 
 
 constexpr auto ERROR_OUT_OF_BOUNDS_CSE_MAP           = "Internal error: out of bounds subscript in CSE map";
 
-constexpr auto WARNING_TEMPORARY_NO_TAG_SET          = "Temporary pool being written, but no location set: defaults to end-of-buffer";
+constexpr auto WARNING_TEMPORARY_NO_TAG_SET          = "Temporary pool being written, but no location set (defaults to end-of-buffer, most likely a template bug)";
 
 constexpr auto WARNING_HEX_CONVERSION_A              = "Leading '0x' in ";
 constexpr auto WARNING_HEX_CONVERSION_B              = "indicates hex, but did not convert";

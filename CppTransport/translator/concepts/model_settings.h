@@ -95,7 +95,7 @@ enum class index_order
 
 enum class model_type
   {
-    canonical, nontrivial_field_space
+    canonical, nontrivial_metric
   };
 
 
