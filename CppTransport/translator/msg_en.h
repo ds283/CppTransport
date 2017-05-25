@@ -104,7 +104,6 @@ constexpr auto ERROR_UNKNOWN_IDENTIFIER              = "Undeclared identifier";
 constexpr auto ERROR_AUTHOR_EXISTS                   = "Redeclaration of existing author";
 constexpr auto NOTIFY_DUPLICATE_AUTHOR_WAS           = "Location of original declaration for author";
 
-constexpr auto NOTIFY_DUPLICATION_BLOCK_WAS          = "Location of original block";
 constexpr auto NOTIFY_DUPLICATION_DECLARATION_WAS    = "Location of original declaration was";
 
 constexpr auto ERROR_MODEL_REDECLARATION             = "Redeclaration of model block";
