@@ -73,8 +73,8 @@ class tensor_factory
       : payload(p),
         cache(c),
         shared(p, mgr, c),
-        fl(p.get_number_parameters(), p.get_number_fields()),
-        traits(p.get_number_fields())
+        fl(p.model.get_number_params(), p.model.get_number_fields()),
+        traits(p.model.get_number_fields())
       {
       }
 

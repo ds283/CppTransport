@@ -152,7 +152,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
                        std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                        std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
                        std::bind(&translation_unit::print_advisory, this, std::placeholders::_1),
-                       path, stack, sym_factory, driver, cache),
+                       path, stack, sym_factory, model, cache),
     outstream(translator_payload)
   {
     // 'instream' constructor lexicalizes the input file
@@ -176,43 +176,32 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     // dump results of syntactic analysis -- for debugging
     // in.driver.get_descriptor()->print(std::cerr);
 
-    // cache details about this translation unit
+    // compute header guard strings and filenames for core and implementation files
 
     boost::filesystem::path core_output;
     std::string             core_guard;
     boost::filesystem::path implementation_output;
     std::string             implementation_guard;
 
-    if(cache.core_out().length() > 0 )
-      {
-        core_output = cache.core_out();
-      }
+    if(cache.core_out().length() > 0 ) core_output = cache.core_out();
     else
       {
         boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core();
-        if(core)
-          {
-            core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
-          }
+        if(core) core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
       }
     core_guard = boost::to_upper_copy(leafname(core_output.string()));
     core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), core_guard.end());
 
-    if(cache.implementation_out().length() > 0)
-      {
-        implementation_output = cache.implementation_out();
-      }
+    if(cache.implementation_out().length() > 0) implementation_output = cache.implementation_out();
     else
       {
         boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation();
-        if(impl)
-          {
-            implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
-          }
+        if(impl) implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
       }
     implementation_guard = boost::to_upper_copy(leafname(implementation_output.string()));
     implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
 
+    // assign these values to the translator data payload
     this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
   }
 
@@ -244,7 +233,8 @@ unsigned int translation_unit::apply()
         boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core();
         if(core)
           {
-            rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_type::process_core);
+            rval += this->outstream.translate(*core, (*core).get_declaration_point(),
+                                              this->translator_payload.get_core_filename().string(), process_type::process_core);
           }
         else
           {
@@ -254,7 +244,8 @@ unsigned int translation_unit::apply()
         boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation();
         if(impl)
           {
-            rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_type::process_implementation);
+            rval += this->outstream.translate(*impl, (*core).get_declaration_point(),
+                                              this->translator_payload.get_implementation_filename().string(), process_type::process_implementation);
           }
         else
           {

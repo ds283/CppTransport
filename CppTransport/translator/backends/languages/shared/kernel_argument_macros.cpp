@@ -60,7 +60,7 @@ namespace shared
 
     std::string args_params::evaluate(const macro_argument_list& args)
       {
-        std::vector<std::string> list = this->data_payload.get_param_list();
+        std::vector<std::string> list = this->data_payload.model.get_param_name_list();
 
         std::ostringstream out;
 
@@ -83,9 +83,11 @@ namespace shared
         // the assignments will range over all possible values which A can assume
         // we use these to construct a list of arguments, one for each possible value
         abstract_index_list indices;
-        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('A',
+                             std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
 
-        assignment_set assignments(indices, this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
         for(std::unique_ptr<assignment_list> assign : assignments)
@@ -111,10 +113,14 @@ namespace shared
         std::ostringstream out;
 
         abstract_index_list indices;
-        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
-        indices.emplace_back('B', std::make_unique<abstract_index>('B', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('A',
+                             std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
+        indices.emplace_back('B',
+                             std::make_unique<abstract_index>('B', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
 
-        assignment_set assignments(indices, this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
         for(std::unique_ptr<assignment_list> assign : assignments)
@@ -140,11 +146,17 @@ namespace shared
         std::ostringstream out;
 
         abstract_index_list indices;
-        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
-        indices.emplace_back('B', std::make_unique<abstract_index>('B', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
-        indices.emplace_back('C', std::make_unique<abstract_index>('C', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('A',
+                             std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
+        indices.emplace_back('B',
+                             std::make_unique<abstract_index>('B', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
+        indices.emplace_back('C',
+                             std::make_unique<abstract_index>('C', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
 
-        assignment_set assignments(indices, this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
         for(std::unique_ptr<assignment_list> assign : assignments)

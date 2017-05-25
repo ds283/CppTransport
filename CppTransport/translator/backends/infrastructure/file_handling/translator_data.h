@@ -52,7 +52,7 @@ class translator_data
     //! constructor
     translator_data(const boost::filesystem::path& file,
                     error_context::error_handler e, error_context::warning_handler w,
-                    message_handler m, finder& f, output_stack& os, symbol_factory& s, y::y_driver& drv,
+                    message_handler m, finder& f, output_stack& os, symbol_factory& s, model_descriptor& desc,
                     argument_cache& c);
 
     //! destructor is default
@@ -83,13 +83,13 @@ class translator_data
   public:
 
     //! get filename of model descriptor
-    const boost::filesystem::path& get_model_input() const { return(this->filename); }
+    const boost::filesystem::path& get_source_filename() const { return(this->filename); }
 
     //! get filename of translated core
-    const boost::filesystem::path& get_core_output() const { return(this->core_output); }
+    const boost::filesystem::path& get_core_filename() const { return(this->core_output); }
 
     //! get filename of translated implementation
-    const boost::filesystem::path& get_implementation_output() const { return(this->implementation_output); }
+    const boost::filesystem::path& get_implementation_filename() const { return(this->implementation_output); }
 
     //! get header guard for translated core
     const std::string& get_core_guard() const { return(this->core_guard); }
@@ -114,56 +114,25 @@ class translator_data
     //! get fast option
     bool fast() const;
 
-
-    // GET MODEL DATA
-
+    
+    // PASS-THROUGH TO UNDERLYING MODEL DESCRIPTOR
+    
   public:
-
-    boost::optional< contexted_value<std::string>& > get_name() const;
-
-    const author_table& get_author() const;
-
-    boost::optional< contexted_value<std::string>& > get_model() const;
-
-    boost::optional< contexted_value<std::string>& > get_citeguide() const;
-
-    boost::optional< contexted_value<std::string>& > get_description() const;
-
-    boost::optional< contexted_value<std::string>& > get_license() const;
-
-    boost::optional< contexted_value<unsigned int>& > get_revision() const;
-
-    boost::optional< std::vector< contexted_value<std::string> >& > get_references() const;
-
-    boost::optional< std::vector< contexted_value<std::string> >& > get_urls() const;
-
-    unsigned int get_number_fields() const;
-
-    unsigned int get_number_parameters() const;
-
-    index_order get_index_order() const;
-
-    const GiNaC::symbol& get_Mp_symbol() const;
-
-    boost::optional< contexted_value<GiNaC::ex>& > get_potential() const;
-
-    const symbol_list get_field_symbols() const;
-
-    const symbol_list get_deriv_symbols() const;
-
-    const symbol_list get_parameter_symbols() const;
-
-    const std::vector<std::string> get_field_list() const;
-
-    const std::vector<std::string> get_latex_list() const;
-
-    const std::vector<std::string> get_param_list() const;
-
-    const std::vector<std::string> get_platx_list() const;
-
-    boost::optional< contexted_value<stepper>& > get_background_stepper() const;
-
-    boost::optional< contexted_value<stepper>& > get_perturbations_stepper() const;
+    
+    //! access to model descriptor
+    model_descriptor& root;
+    
+    //! direct access to Lagrangian block
+    lagrangian_block& model;
+    
+    //! direct access to metadata block
+    metadata_block& meta;
+    
+    //! direct access to templates block
+    templates_block& templates;
+    
+    //! direct access to misc block
+    misc_block& misc;
 
 
     // MESSAGING INTERFACE
@@ -182,7 +151,7 @@ class translator_data
     finder& get_finder() { return(this->search_paths); }
 
     //! get output stack
-    output_stack& get_stack() { return(this->o_stack); }
+    output_stack& get_stack() { return(this->outstack); }
 
     //! get symbol factory
     symbol_factory& get_symbol_factory() { return(this->sym_factory); }
@@ -214,13 +183,10 @@ class translator_data
     finder& search_paths;
 
     //! output_stack
-    output_stack& o_stack;
+    output_stack& outstack;
 
     //! symbol factory
     symbol_factory& sym_factory;
-
-    //! semantic driver
-    y::y_driver& driver;
 
     //! argument cache
     argument_cache& cache;

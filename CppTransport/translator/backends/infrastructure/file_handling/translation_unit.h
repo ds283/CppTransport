@@ -138,16 +138,16 @@ class translation_unit
     
     // TRANSLATION
     
+    //! model descriptor -- encapsulates all details about the model;
+    //! is populated during parsing by y_driver
+    model_descriptor model;
+    
     //! data bundle passed to translator
     translator_data translator_payload;
     
     //! translator object: performs actual translation of template files
     //! must be constructed *after* translator_payload, path, stack, sym_factory
     translator outstream;
-    
-    //! model descriptor -- encapsulates all details about the model;
-    //! is populated during parsing by y_driver
-    model_descriptor model;
     
     // PARSING
     

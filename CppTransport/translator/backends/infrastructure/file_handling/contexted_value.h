@@ -55,7 +55,10 @@ class contexted_value
   public:
 
     //! allow implicit conversion to value
-    operator ValueType() const { return(this->value); }
+    operator ValueType() const { return this->value; }
+    
+    //! allow dereferencing
+    const ValueType& operator*() const { return this->value; }
 
     //! get declaration point
     const error_context& get_declaration_point() const { return(*this->declaration_point); }

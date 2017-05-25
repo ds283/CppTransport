@@ -33,15 +33,15 @@ shared_resources::shared_resources(translator_data& p, resource_manager& m, expr
   : mgr(m),
     cache(c),
     payload(p),
-    M_Planck(p.get_Mp_symbol()),
+    M_Planck(p.model.get_Mp_symbol()),
     sym_factory(p.get_symbol_factory()),
-    field_list(p.get_field_symbols()),
-    deriv_list(p.get_deriv_symbols()),
-    param_list(p.get_parameter_symbols()),
-    num_params(p.get_number_parameters()),
-    num_fields(p.get_number_fields()),
-    num_phase(2*p.get_number_fields()),
-    fl(p.get_number_parameters(), p.get_number_fields())
+    field_list(p.model.get_field_symbols()),
+    deriv_list(p.model.get_deriv_symbols()),
+    param_list(p.model.get_param_symbols()),
+    num_params(p.model.get_number_params()),
+    num_fields(p.model.get_number_fields()),
+    num_phase(2*p.model.get_number_fields()),
+    fl(p.model.get_number_params(), p.model.get_number_fields())
   {
   }
 

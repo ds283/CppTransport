@@ -37,14 +37,14 @@ namespace canonical
         share(s),
         compute_timer(t),
         sym_factory(p.get_symbol_factory()),
-        field_list(p.get_field_symbols()),
-        deriv_list(p.get_deriv_symbols()),
-        param_list(p.get_parameter_symbols()),
-        num_params(p.get_number_parameters()),
-        num_fields(p.get_number_fields()),
-        fl(p.get_number_parameters(), p.get_number_fields())
+        field_list(p.model.get_field_symbols()),
+        deriv_list(p.model.get_deriv_symbols()),
+        param_list(p.model.get_param_symbols()),
+        num_params(p.model.get_number_params()),
+        num_fields(p.model.get_number_fields()),
+        fl(p.model.get_number_params(), p.model.get_number_fields())
       {
-        boost::optional< contexted_value<GiNaC::ex>& > pot = p.get_potential();
+        boost::optional< contexted_value<GiNaC::ex>& > pot = p.model.get_potential();
         if(pot) V = *pot; else V = GiNaC::ex(0);
         compute_timer.stop();
       }

@@ -125,7 +125,7 @@ namespace cpp
 
     std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.templates.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
         return(replace_stepper(s, state_name));
@@ -134,7 +134,7 @@ namespace cpp
 
     std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
+        boost::optional< contexted_value<stepper>& > s = this->data_payload.templates.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
         return(replace_stepper(s, state_name));

@@ -37,7 +37,7 @@ namespace macro_packages
         fctry(f),
         cse_worker(cw),
         lambda_mgr(lm),
-        fl(p.get_number_parameters(), p.get_number_fields()),
+        fl(p.model.get_number_params(), p.model.get_number_fields()),
         sym_factory(p.get_symbol_factory())
       {
       }

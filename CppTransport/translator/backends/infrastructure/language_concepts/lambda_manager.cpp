@@ -47,7 +47,7 @@ std::string lambda_manager::cache(std::unique_ptr<atomic_lambda> lambda)
 
     if(t == this->atomic_cache.end())
       {
-        this->atomic_cache.emplace_front(std::make_unique<atomic_lambda_record>(this->make_name(), std::move(lambda), this->data_payload.get_number_fields()));
+        this->atomic_cache.emplace_front(std::make_unique<atomic_lambda_record>(this->make_name(), std::move(lambda), this->data_payload.model.get_number_fields()));
         t = this->atomic_cache.begin();
       }
 
@@ -63,7 +63,7 @@ std::string lambda_manager::cache(std::unique_ptr<map_lambda> lambda)
 
     if(t == this->map_cache.end())
       {
-        this->map_cache.emplace_front(std::make_unique<map_lambda_record>(this->make_name(), std::move(lambda), this->data_payload.get_number_fields()));
+        this->map_cache.emplace_front(std::make_unique<map_lambda_record>(this->make_name(), std::move(lambda), this->data_payload.model.get_number_fields()));
         t = this->map_cache.begin();
       }
 

@@ -56,10 +56,10 @@ macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf,
 		tokenization_timer.stop();
 
     if(recursion_max == 0) recursion_max = 1;
-
-    fields     = data_payload.get_number_fields();
-    parameters = data_payload.get_number_parameters();
-    order      = data_payload.get_index_order();
+    
+    fields = data_payload.model.get_number_fields();
+    parameters = data_payload.model.get_number_params();
+    order = data_payload.misc.get_indexorder();
   }
 
 
