@@ -49,7 +49,7 @@ class error_context
   public:
 
     //! constructor -- with full context
-    error_context(filestack& p, std::shared_ptr<std::string> ln, unsigned int cpos,
+    error_context(filestack& p, std::shared_ptr<std::string> ln, unsigned int sp, unsigned int ep,
                   error_handler ce, warning_handler cw);
 
     //! constructor -- just filestack context
@@ -72,8 +72,11 @@ class error_context
     //! get line
     const std::string& get_line() const;
 
-    //! get character position
-    unsigned int get_position() const;
+    //! get start position of context area
+    size_t get_context_start_position() const;
+    
+    //! get end position of context area
+    size_t get_context_end_position() const;
 
 
     // INTERFACE -- RAISE ERRORS
@@ -98,8 +101,11 @@ class error_context
     //! (typically this object is initially generated in a lexfile object)
     std::shared_ptr<std::string> line;
 
-    //! character position
-    unsigned int character_position;
+    //! start position of context area on source line
+    unsigned int start_position;
+    
+    //! end position of context area on source line
+    unsigned int end_position;
 
     //! type of error context available -- full (including line data and character position) or partial (just a filestack)?
     bool full_context;

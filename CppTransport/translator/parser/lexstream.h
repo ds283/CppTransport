@@ -301,7 +301,8 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                   }
                 else
                   {
-                    error_context err_ctx(this->stack, word.get_current_line(), word.get_current_line_position(),
+                    error_context err_ctx(this->stack, word.get_context_line(),
+                                          word.get_context_start_position(), word.get_context_end_position(),
                                           this->data_payload.get_error_handler(),
                                           this->data_payload.get_warning_handler());
 
@@ -317,7 +318,8 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
             case lexeme::lexeme_buffer::type::number:
             case lexeme::lexeme_buffer::type::string_literal:
               {
-                error_context err_ctx(this->stack, word.get_current_line(), word.get_current_line_position(),
+                error_context err_ctx(this->stack, word.get_context_line(),
+                                      word.get_context_start_position(), word.get_context_end_position(),
                                       this->data_payload.get_error_handler(),
                                       this->data_payload.get_warning_handler());
 
@@ -344,7 +346,8 @@ void lexstream<Keywords, Characters>::handle_directive(lexfile& input)
 
         if(file.get_type() != lexeme::lexeme_buffer::type::string_literal)
           {
-            error_context err_ctx(this->stack, word.get_current_line(), word.get_current_line_position(),
+            error_context err_ctx(this->stack, word.get_context_line(),
+                                  word.get_context_start_position(), word.get_context_end_position(),
                                   this->data_payload.get_error_handler(),
                                   this->data_payload.get_warning_handler());
 
@@ -356,19 +359,21 @@ void lexstream<Keywords, Characters>::handle_directive(lexfile& input)
           {
             if(!this->parse(*file))
               {
-                error_context err_ctx(this->stack, file.get_current_line(), file.get_current_line_position(),
+                error_context err_ctx(this->stack, file.get_context_line(),
+                                      file.get_context_start_position(), file.get_context_end_position(),
                                       this->data_payload.get_error_handler(),
                                       this->data_payload.get_warning_handler());
 
                 std::ostringstream msg;
-                msg << ERROR_INCLUDE_FILE << " '" << *word << "'";
+                msg << ERROR_INCLUDE_FILE << " '" << *file << "'";
                 err_ctx.error(msg.str());
               }
           }
       }
     else
       {
-        error_context err_ctx(this->stack, word.get_current_line(), word.get_current_line_position(),
+        error_context err_ctx(this->stack, word.get_context_line(),
+                              word.get_context_start_position(), word.get_context_end_position(),
                               this->data_payload.get_error_handler(),
                               this->data_payload.get_warning_handler());
 
@@ -416,8 +421,8 @@ lexeme::lexeme_buffer lexstream<Keywords, Characters>::get_lexeme(lexfile& input
     if(state != lexfile::status::ok) return word;
     
     // cache current input position
-    word.set_current_line(input.get_current_line());
-    word.set_current_line_pos(input.get_current_char_pos());
+    word.set_context_line(input.get_current_line());
+    word.set_context_end_position(input.get_current_char_pos());
     
     if(isalpha(c) || c == '_' || c == '$')            // looks like identifier or reserved work
       {
@@ -502,7 +507,8 @@ lexeme::lexeme_buffer lexstream<Keywords, Characters>::get_lexeme(lexfile& input
               }
             else
               {
-                error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(),
+                error_context err_ctx(this->stack, word.get_context_line(),
+                                      word.get_context_start_position(), input.get_current_char_pos(),
                                       this->data_payload.get_error_handler(),
                                       this->data_payload.get_warning_handler());
                 err_ctx.error(ERROR_EXPECTED_ELLIPSIS);
@@ -530,7 +536,8 @@ lexeme::lexeme_buffer lexstream<Keywords, Characters>::get_lexeme(lexfile& input
           }
         else
           {
-            error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(),
+            error_context err_ctx(this->stack, word.get_context_line(),
+                                  word.get_context_start_position(), input.get_current_char_pos(),
                                   this->data_payload.get_error_handler(),
                                   this->data_payload.get_warning_handler());
             err_ctx.error(ERROR_EXPECTED_CLOSE_QUOTE);
@@ -545,6 +552,8 @@ lexeme::lexeme_buffer lexstream<Keywords, Characters>::get_lexeme(lexfile& input
 
         word.set_type(lexeme::lexeme_buffer::type::character);
       }
+    
+    word.set_current_end_position(input.get_current_char_pos());
     
     return word;
   }

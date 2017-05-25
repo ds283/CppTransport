@@ -78,65 +78,78 @@ void error(const std::string& msg, const argument_cache& cache, const local_envi
   }
 
 
-void warn(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level)
+std::string print_contexted_message(const std::string& msg, const argument_cache& cache, const local_environment& env,
+                                    const error_context& context, unsigned int level)
   {
     std::ostringstream out;
+    
+    unsigned int line_no = 0;
 
     try
       {
         const filestack& stack = context.get_filestack();
+        line_no = stack.get_line();
         if(stack.size() > 0) out << ERROR_MESSAGE_AT_LINE << " " << stack.write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
       }
     catch(std::runtime_error& xe)
       {
       }
-
+    
     bool colour_output = cache.colourize() && env.has_colour_terminal_support();
     out << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "");
-
+    
     if(context.has_full_context())
       {
-        out << '\n' << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
-
+        // line header gives line number, and start/end points of context data
+        std::string header;
+        if(line_no > 0)
+          {
+            std::ostringstream hbuf;
+            hbuf << line_no << ":" << context.get_context_start_position() << "," << context.get_context_end_position()-1;
+            header = hbuf.str() + " ";
+          }
+        
+        // print context line with header
+        out << '\n' << ERROR_MESSAGE_WRAP_PAD << header << context.get_line() << '\n';
+        
+        // now print context markers underneath
+        
         out << ERROR_MESSAGE_WRAP_PAD;
-        for(unsigned int i = 0; i < context.get_position(); ++i)
+
+        // pad for length of line header
+        for(unsigned int i = 0; i < header.length(); ++i)
           {
             out << " ";
           }
-        out << (colour_output ? ANSI_BOLD_GREEN : "") << "^" << (colour_output ? ANSI_NORMAL : "");
+        
+        // mark context position
+        for(unsigned int i = 0; i < context.get_context_start_position(); ++i)
+          {
+            out << " ";
+          }
+        out << (colour_output ? ANSI_BOLD_GREEN : "");
+        for(unsigned int i = context.get_context_start_position(); i < context.get_context_end_position(); ++i)
+          {
+            out << "^";
+          }
+        out << (colour_output ? ANSI_NORMAL : "");
       }
+    
+    return out.str();
+  }
 
-    warn(out.str(), cache, env);
+
+void warn(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level)
+  {
+    std::string cmsg = print_contexted_message(msg, cache, env, context, level);
+    
+    warn(cmsg, cache, env);
   }
 
 
 void error(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level)
   {
-    std::ostringstream out;
-
-    try
-      {
-        const filestack& stack = context.get_filestack();
-        if(stack.size() > 0) out << ERROR_MESSAGE_AT_LINE << " " << stack.write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
-      }
-    catch(std::runtime_error& xe)
-      {
-      }
-
-    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
-    out << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "");
-
-    if(context.has_full_context())
-      {
-        out << '\n' << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
-
-        out << ERROR_MESSAGE_WRAP_PAD;
-        for(unsigned int i = 0; i < context.get_position(); ++i)
-          {
-            out << " ";
-          }
-        out << (colour_output ? ANSI_BOLD_GREEN : "") << "^" << (colour_output ? ANSI_NORMAL : "");
-      }
-
-    error(out.str(), cache, env);
+    std::string cmsg = print_contexted_message(msg, cache, env, context, level);
+    
+    error(cmsg, cache, env);
   }

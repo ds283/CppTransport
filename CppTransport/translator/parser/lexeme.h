@@ -83,7 +83,7 @@ namespace lexeme    // package in a unique namespace
           : buffer(std::move(b)),
             buffer_type(t),
             cline(cl),
-            cpos(cp)
+            start_pos(cp)
           {
           }
 
@@ -113,17 +113,24 @@ namespace lexeme    // package in a unique namespace
         
         
         //! set current line context
-        lexeme_buffer& set_current_line(const std::shared_ptr<std::string>& l) { this->cline = l; return *this; }
+        lexeme_buffer& set_context_line(const std::shared_ptr<std::string>& l) { this->cline = l; return *this; }
         
         //! get current line context
-        std::shared_ptr<std::string> get_current_line() const { return this->cline; }
+        std::shared_ptr<std::string> get_context_line() const { return this->cline; }
 
         
-        //! set current line position
-        lexeme_buffer& set_current_line_pos(unsigned int p) { this->cpos = p; return *this; }
+        //! set start position of token on current line
+        lexeme_buffer& set_context_end_position(unsigned int p) { this->start_pos = p; return *this; }
         
-        //! get current line position
-        unsigned int get_current_line_position() const { return this->cpos; }
+        //! get start position of token on current line
+        unsigned int get_context_start_position() const { return this->start_pos; }
+    
+    
+        //! set end position of token on current line
+        lexeme_buffer& set_current_end_position(unsigned int p) { this->end_pos = p; return *this; }
+    
+        //! get end position of token on current line
+        unsigned int get_context_end_position() const { return this->end_pos; }
 
         
         // BUFFER OPERATIONS
@@ -188,8 +195,11 @@ namespace lexeme    // package in a unique namespace
         //! context: current line
         std::shared_ptr<std::string> cline;
         
-        //! context: current line position
-        unsigned int cpos;
+        //! context: starting position of token on current line
+        unsigned int start_pos;
+        
+        //! context: end position of token on current line
+        unsigned int end_pos;
 
       };
 
