@@ -433,9 +433,10 @@ set(TRANSLATOR_PARSER_DESCRIPTOR_FILES
   translator/parser/descriptor/misc_block.h
   translator/parser/descriptor/templates_block.cpp
   translator/parser/descriptor/templates_block.h
+  translator/parser/descriptor/declarations.h
   )
 
-set(TRANSLATER_PARSER_DRIVER_FILES
+set(TRANSLATOR_PARSER_DRIVER_FILES
   translator/parser/driver/generics_driver.h
   translator/parser/driver/expression_tree_driver.cpp
   translator/parser/driver/expression_tree_driver.h
