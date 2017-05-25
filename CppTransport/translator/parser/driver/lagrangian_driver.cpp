@@ -43,7 +43,7 @@ namespace y
     void lagrangian_driver::add_field(lexeme_type& lex, attributes& a)
       {
         auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
-        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.add_field(name, symbol, lexeme, attrs); };
+        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.model.add_field(name, symbol, lexeme, attrs); };
         
         GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, a);
       }
@@ -52,7 +52,7 @@ namespace y
     void lagrangian_driver::add_parameter(lexeme_type& lex, attributes& a)
       {
         auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
-        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.add_parameter(name, symbol, lexeme, attrs); };
+        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.model.add_parameter(name, symbol, lexeme, attrs); };
     
         GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, a);
       }
@@ -61,7 +61,7 @@ namespace y
     void lagrangian_driver::add_subexpr(lexeme_type& lex, subexpr& e)
       {
         auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
-        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto { return this->root.add_subexpr(name, symbol, lexeme, expr); };
+        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto { return this->root.model.add_subexpr(name, symbol, lexeme, expr); };
     
         GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, e);
       }
@@ -82,7 +82,7 @@ namespace y
     
     void lagrangian_driver::set_potential(GiNaC::ex& V, lexeme_type& lex)
       {
-        this->root.set_potential(V, lex);
+        this->root.model.set_potential(V, lex);
       }
     
   }   // namespace y

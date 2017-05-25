@@ -42,21 +42,21 @@ namespace y
     
     void templates_driver::set_model(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.set_model(name, lex); };
+        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_model(name, lex); };
         SetStringValue(Setter, lex);
       }
     
     
     void templates_driver::set_core(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.set_core(name, lex); };
+        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_core(name, lex); };
         SetStringValue(Setter, lex);
       }
     
     
     void templates_driver::set_implementation(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.set_implementation(name, lex); };
+        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_implementation(name, lex); };
         SetStringValue(Setter, lex);
       }
     
@@ -91,13 +91,13 @@ namespace y
     
     void templates_driver::set_background_stepper(stepper& s, lexeme_type& lex)
       {
-        this->root.set_background_stepper(s, lex);
+        this->root.templates.set_background_stepper(s, lex);
       }
     
     
     void templates_driver::set_perturbations_stepper(stepper& s, lexeme_type& lex)
       {
-        this->root.set_perturbations_stepper(s, lex);
+        this->root.templates.set_perturbations_stepper(s, lex);
       }
     
   }   // namespace y

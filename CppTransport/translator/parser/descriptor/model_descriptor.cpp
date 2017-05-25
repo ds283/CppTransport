@@ -36,9 +36,9 @@
 
 model_descriptor::model_descriptor(symbol_factory& s, error_context err_ctx)
   : err_count(0),
-    lag(err_count, s, std::move(err_ctx)),
+    model(err_count, s, std::move(err_ctx)),
     meta(err_count),
-    templ(err_count),
+    templates(err_count),
     misc(err_count)
   {
   }

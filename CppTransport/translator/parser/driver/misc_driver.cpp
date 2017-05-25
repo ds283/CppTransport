@@ -56,13 +56,13 @@ namespace y
     
     void misc_driver::set_indexorder_left()
       {
-        this->root.set_indexorder(index_order::left);
+        this->root.misc.set_indexorder(index_order::left);
       }
     
     
     void misc_driver::set_indexorder_right()
       {
-        this->root.set_indexorder(index_order::right);
+        this->root.misc.set_indexorder(index_order::right);
       }
     
   }   // namespace y

@@ -71,7 +71,7 @@ namespace y
 
         if(id)
           {
-            boost::optional<declaration&> record = this->root.check_symbol_exists(*id);
+            boost::optional<declaration&> record = this->root.model.check_symbol_exists(*id);
             
             if(record)
               {
