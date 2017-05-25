@@ -32,7 +32,7 @@
 
 constexpr auto CPPTRANSPORT_NAME                     = "CppTransport";
 constexpr auto CPPTRANSPORT_VERSION                  = "2017.1";
-constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 2017.01;
+constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 201701;
 constexpr auto CPPTRANSPORT_COPYRIGHT                = "(c) University of Sussex 2016, 2017";
 
 constexpr auto TEMPLATE_TAG_SUFFIX                   = "_";
