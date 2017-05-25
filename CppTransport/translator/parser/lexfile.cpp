@@ -43,7 +43,7 @@ lexfile::lexfile(const boost::filesystem::path& fnam, filestack& s)
   {
     stream.open(fnam.string());    // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
 
-    // build up array of lines
+    // read in lines from the file and store them in the line array
     std::string line;
     while(std::getline(stream, line))
       {
@@ -99,12 +99,6 @@ void lexfile::make_ready()
         else                                  // can assume this character is valid
           {
             this->state = internal_state::ready;
-
-            if(this->c == '\n')
-              {
-                this->stack.increment_line();
-                this->char_pos = 0;
-              }
           }
       }
   }
@@ -148,9 +142,18 @@ lexfile::value_type lexfile::get()
 lexfile& lexfile::operator++()
   {
     assert(this->stream.is_open());
+    
+    if(this->state == internal_state::ready && this->c == '\n')
+      {
+        this->stack.increment_line();
+        this->char_pos = 0;
+      }
+    else
+      {
+        ++this->char_pos;
+      }
 
     this->state = internal_state::unready;
-    ++this->char_pos;
 
     return *this;
   }

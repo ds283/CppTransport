@@ -151,7 +151,7 @@ lagrangian_block::lagrangian_block(unsigned int& ec, symbol_factory& s, error_co
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
 
     // manufacture fake lexeme representing 'location' of Planck mass decalaration
-    lexeme::lexeme_buffer MPlanck_buffer(MPLANCK_TEXT_NAME, lexeme::lexeme_buffer::type::string_literal);
+    lexeme::lexeme_buffer MPlanck_buffer(MPLANCK_TEXT_NAME, lexeme::lexeme_buffer::type::string_literal, nullptr, 0);
     y::lexeme_type::minus_context mctx = y::lexeme_type::minus_context::unary;
 
     y::lexeme_type fake_MPlanck_lexeme(MPlanck_buffer, mctx, 0, err_ctx,

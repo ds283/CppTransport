@@ -61,6 +61,9 @@ class lexstream
 
     //! lexeme table iterator
     typedef typename lexeme_table_type::iterator lexeme_table_ptr;
+    
+    //! lexeme data bundle
+    typedef std::tuple< lexeme::lexeme_buffer, std::shared_ptr<std::string>, unsigned int > lexeme_bundle;
 
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -110,8 +113,7 @@ class lexstream
     void lexicalize(lexfile& input);
 
     //! identify and handle directives
-    void handle_directive(lexfile& input, std::shared_ptr<std::string> context_line,
-                          unsigned int context_pos);
+    void handle_directive(lexfile& input);
 
     //! parse a lexeme from a specified lexfile descriptor
     lexeme::lexeme_buffer get_lexeme(lexfile& input);
@@ -278,16 +280,15 @@ bool lexstream<Keywords, Characters>::parse(const boost::filesystem::path& file)
 template <typename Keywords, typename Characters>
 void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
   {
-    typename lexeme_type::minus_context context = lexeme_type::minus_context::unary;      // keep track of whether we expect unary or binary minus sign
+    // keep track of whether we expect unary or binary minus sign
+    typename lexeme_type::minus_context context = lexeme_type::minus_context::unary;
 
     while(input.get_state() == lexfile::status::ok)
       {
-        // cache current input line and character position, so error messages are contexted at the *start* of each lexeme rather than the end
-        std::shared_ptr<std::string> context_line = input.get_current_line();
-        unsigned int context_pos = input.get_current_char_pos();
-
+        // get next lexeme from input stream
         auto word = this->get_lexeme(input);
 
+        // if no token read, skip
         if(word.empty()) continue;
 
         switch(word.get_type())
@@ -296,11 +297,11 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
               {
                 if(word == "#") // treat as a preprocessor directive
                   {
-                    this->handle_directive(input, context_line, context_pos);
+                    this->handle_directive(input);
                   }
                 else
                   {
-                    error_context err_ctx(this->stack, context_line, context_pos,
+                    error_context err_ctx(this->stack, word.get_current_line(), word.get_current_line_position(),
                                           this->data_payload.get_error_handler(),
                                           this->data_payload.get_warning_handler());
 
@@ -316,7 +317,7 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
             case lexeme::lexeme_buffer::type::number:
             case lexeme::lexeme_buffer::type::string_literal:
               {
-                error_context err_ctx(this->stack, context_line, context_pos,
+                error_context err_ctx(this->stack, word.get_current_line(), word.get_current_line_position(),
                                       this->data_payload.get_error_handler(),
                                       this->data_payload.get_warning_handler());
 
@@ -332,23 +333,18 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
 
 
 template <typename Keywords, typename Characters>
-void lexstream<Keywords, Characters>::handle_directive(lexfile& input, std::shared_ptr<std::string> context_line,
-                                                       unsigned int context_pos)
+void lexstream<Keywords, Characters>::handle_directive(lexfile& input)
   {
     // get next lexeme
     auto word = this->get_lexeme(input);
 
     if(word == "include") // inclusion directive
       {
-        // cache context data
-        std::shared_ptr<std::string> include_context_line = input.get_current_line();
-        unsigned int include_context_pos = input.get_current_char_pos();
+        auto file = this->get_lexeme(input);
 
-        word = this->get_lexeme(input);
-
-        if(word.get_type() != lexeme::lexeme_buffer::type::string_literal)
+        if(file.get_type() != lexeme::lexeme_buffer::type::string_literal)
           {
-            error_context err_ctx(this->stack, include_context_line, include_context_pos,
+            error_context err_ctx(this->stack, word.get_current_line(), word.get_current_line_position(),
                                   this->data_payload.get_error_handler(),
                                   this->data_payload.get_warning_handler());
 
@@ -358,9 +354,9 @@ void lexstream<Keywords, Characters>::handle_directive(lexfile& input, std::shar
           }
         else
           {
-            if(!this->parse(*word))
+            if(!this->parse(*file))
               {
-                error_context err_ctx(this->stack, context_line, context_pos,
+                error_context err_ctx(this->stack, file.get_current_line(), file.get_current_line_position(),
                                       this->data_payload.get_error_handler(),
                                       this->data_payload.get_warning_handler());
 
@@ -372,7 +368,7 @@ void lexstream<Keywords, Characters>::handle_directive(lexfile& input, std::shar
       }
     else
       {
-        error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(),
+        error_context err_ctx(this->stack, word.get_current_line(), word.get_current_line_position(),
                               this->data_payload.get_error_handler(),
                               this->data_payload.get_warning_handler());
 
@@ -391,158 +387,165 @@ lexeme::lexeme_buffer lexstream<Keywords, Characters>::get_lexeme(lexfile& input
 
     lexeme::lexeme_buffer word;
 
-    while(word.empty() && state == lexfile::status::ok)
+    // skip over white space characters and comments
+    while(state == lexfile::status::ok)
       {
         std::tie(c, state) = *input;
 
-        if(state == lexfile::status::ok)
+        if(c == '%')
           {
-            if(isalpha(c) || c == '_' || c == '$')            // looks like identifier or reserved work
+            ++input;
+    
+            std::tie(c, state) = *input;
+            while(c != '\n' && state == lexfile::status::ok)
               {
-                word = c;
                 ++input;
-
                 std::tie(c, state) = *input;
-                while((isalnum(c) || c == '_' || c == '$') && state == lexfile::status::ok)
-                  {
-                    word += c;
-                    ++input;
-                    std::tie(c, state) = *input;
-                  }
-
-                word.set_type(lexeme::lexeme_buffer::type::string);
               }
-            else if(isdigit(c))                               // looks like a number
+    
+            ++input;  // skip past final '\n';
+          }
+        else if(c == ' ' || c == '\t' || c == '\n')
+          {
+            ++input;
+          }
+        else break;
+      }
+
+    // extract lexeme from next characters on the input stream
+    if(state != lexfile::status::ok) return word;
+    
+    // cache current input position
+    word.set_current_line(input.get_current_line());
+    word.set_current_line_pos(input.get_current_char_pos());
+    
+    if(isalpha(c) || c == '_' || c == '$')            // looks like identifier or reserved work
+      {
+        word = c;
+        ++input;
+
+        std::tie(c, state) = *input;
+        while((isalnum(c) || c == '_' || c == '$') && state == lexfile::status::ok)
+          {
+            word += c;
+            ++input;
+            std::tie(c, state) = *input;
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::string);
+      }
+    else if(isdigit(c))                               // looks like a number
+      {
+        bool dot = false;                             // does the number have a decimal point?
+        bool hex = false;                             // is this number in hexadecimal?
+        bool eng = false;                             // expecting an exponent?
+
+        word = c;
+        ++input;
+
+        std::tie(c, state) = *input;
+        while((isdigit(c)
+               || (dot == false && c == '.')
+               || (hex == false && dot == false && c == 'x')
+               || (hex == true && (c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'e' || c == 'f'
+                                   || c == 'A' || c == 'B' || c == 'D' || c == 'E' || c == 'F'))
+               || (hex == false && (c == 'e' || c == 'E'))
+               || (eng == true && (c == '+' || c == '-')))
+              && state == lexfile::status::ok)
+          {
+            word += c;
+
+            if(c == '.') dot = true;
+            if(c == 'x') hex = true;
+
+            // not expecting an exponent (so '+' and '-' should not be considered part of this lexeme, unless
+            // they immediately follow an 'e' or an 'E'
+            eng = false;
+            if((c == 'e' || c == 'E') && hex == false) eng = true;
+
+            ++input;
+            std::tie(c, state) = *input;
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::number);
+      }
+    else if(c == '-')                                 // could be a '-' sign, or could be the first char of '->'
+      {
+        word = c;
+        ++input;
+
+        std::tie(c, state) = *input;
+        if(c == '>' && state == lexfile::status::ok)
+          {
+            word += c;
+            ++input;
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::character);
+      }
+    else if(c == '.')                                 // could be a '.', or could be the first char of '...'
+      {
+        word = c;
+        ++input;
+
+        std::tie(c, state) = *input;
+        if(c == '.' && state == lexfile::status::ok)
+          {
+            word += c;
+            ++input;
+
+            std::tie(c, state) = *input;
+            if(c == '.' && state == lexfile::status::ok)
               {
-                bool dot = false;                             // does the number have a decimal point?
-                bool hex = false;                             // is this number in hexadecimal?
-                bool eng = false;                             // expecting an exponent?
-
-                word = c;
+                word += c;
                 ++input;
-
-                std::tie(c, state) = *input;
-                while((isdigit(c)
-                       || (dot == false && c == '.')
-                       || (hex == false && dot == false && c == 'x')
-                       || (hex == true && (c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'e' || c == 'f'
-                                           || c == 'A' || c == 'B' || c == 'D' || c == 'E' || c == 'F'))
-                       || (hex == false && (c == 'e' || c == 'E'))
-                       || (eng == true && (c == '+' || c == '-')))
-                      && state == lexfile::status::ok)
-                  {
-                    word += c;
-
-                    if(c == '.') dot = true;
-                    if(c == 'x') hex = true;
-
-                    // not expecting an exponent (so '+' and '-' should not be considered part of this lexeme, unless
-                    // they immediately follow an 'e' or an 'E'
-                    eng = false;
-                    if((c == 'e' || c == 'E') && hex == false) eng = true;
-
-                    ++input;
-                    std::tie(c, state) = *input;
-                  }
-
-                word.set_type(lexeme::lexeme_buffer::type::number);
-              }
-            else if(c == '%')                                 // single-line comment
-              {
-                ++input;
-
-                std::tie(c, state) = *input;
-                while(c != '\n' && state == lexfile::status::ok)
-                  {
-                    ++input;
-                    std::tie(c, state) = *input;
-                  }
-
-                ++input;
-              }
-            else if(c == ' ' || c == '\t' || c == '\n')       // skip over white-space characters
-              {
-                ++input;
-              }
-            else if(c == '-')                                 // could be a '-' sign, or could be the first char of '->'
-              {
-                word = c;
-                ++input;
-
-                std::tie(c, state) = *input;
-                if(c == '>' && state == lexfile::status::ok)
-                  {
-                    word += c;
-                    ++input;
-                  }
-
-                word.set_type(lexeme::lexeme_buffer::type::character);
-              }
-            else if(c == '.')                                 // could be a '.', or could be the first char of '...'
-              {
-                word = c;
-                ++input;
-
-                std::tie(c, state) = *input;
-                if(c == '.' && state == lexfile::status::ok)
-                  {
-                    word += c;
-                    ++input;
-
-                    std::tie(c, state) = *input;
-                    if(c == '.' && state == lexfile::status::ok)
-                      {
-                        word += c;
-                        ++input;
-                      }
-                    else
-                      {
-                        error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(),
-                                              this->data_payload.get_error_handler(),
-                                              this->data_payload.get_warning_handler());
-                        err_ctx.error(ERROR_EXPECTED_ELLIPSIS);
-                        word += '.';                          // make up to a proper ellipsis anyway
-                      }
-                  }
-
-                word.set_type(lexeme::lexeme_buffer::type::character);
-              }
-            else if(c == '"')                                 // looks like a string literal
-              {
-                ++input;
-
-                std::tie(c, state) = *input;
-                while(c != '"' && state == lexfile::status::ok)
-                  {
-                    word += c;
-                    ++input;
-                    std::tie(c, state) = *input;
-                  }
-
-                if(c == '"')
-                  {
-                    ++input;
-                  }
-                else
-                  {
-                    error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(),
-                                          this->data_payload.get_error_handler(),
-                                          this->data_payload.get_warning_handler());
-                    err_ctx.error(ERROR_EXPECTED_CLOSE_QUOTE);
-                  }
-
-                word.set_type(lexeme::lexeme_buffer::type::string_literal);
               }
             else
               {
-                word = c;
-                ++input;
-
-                word.set_type(lexeme::lexeme_buffer::type::character);
+                error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(),
+                                      this->data_payload.get_error_handler(),
+                                      this->data_payload.get_warning_handler());
+                err_ctx.error(ERROR_EXPECTED_ELLIPSIS);
+                word += '.';                          // make up to a proper ellipsis anyway
               }
           }
-      }
 
+        word.set_type(lexeme::lexeme_buffer::type::character);
+      }
+    else if(c == '"')                                 // looks like a string literal
+      {
+        ++input;
+
+        std::tie(c, state) = *input;
+        while(c != '"' && state == lexfile::status::ok)
+          {
+            word += c;
+            ++input;
+            std::tie(c, state) = *input;
+          }
+
+        if(c == '"')
+          {
+            ++input;
+          }
+        else
+          {
+            error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(),
+                                  this->data_payload.get_error_handler(),
+                                  this->data_payload.get_warning_handler());
+            err_ctx.error(ERROR_EXPECTED_CLOSE_QUOTE);
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::string_literal);
+      }
+    else
+      {
+        word = c;
+        ++input;
+
+        word.set_type(lexeme::lexeme_buffer::type::character);
+      }
+    
     return word;
   }
 

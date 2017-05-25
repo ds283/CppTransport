@@ -79,9 +79,11 @@ namespace lexeme    // package in a unique namespace
         lexeme_buffer() = default;
 
         //! value constructor
-        lexeme_buffer(std::string b, type t)
+        lexeme_buffer(std::string b, type t, std::shared_ptr<std::string> cl, unsigned int cp)
           : buffer(std::move(b)),
-            buffer_type(t)
+            buffer_type(t),
+            cline(cl),
+            cpos(cp)
           {
           }
 
@@ -108,8 +110,22 @@ namespace lexeme    // package in a unique namespace
 
         //! is buffer empty?
         bool empty() const { return this->buffer.empty(); }
+        
+        
+        //! set current line context
+        lexeme_buffer& set_current_line(const std::shared_ptr<std::string>& l) { this->cline = l; return *this; }
+        
+        //! get current line context
+        std::shared_ptr<std::string> get_current_line() const { return this->cline; }
 
+        
+        //! set current line position
+        lexeme_buffer& set_current_line_pos(unsigned int p) { this->cpos = p; return *this; }
+        
+        //! get current line position
+        unsigned int get_current_line_position() const { return this->cpos; }
 
+        
         // BUFFER OPERATIONS
 
       public:
@@ -168,6 +184,12 @@ namespace lexeme    // package in a unique namespace
 
         //! buffer type
         type buffer_type;
+        
+        //! context: current line
+        std::shared_ptr<std::string> cline;
+        
+        //! context: current line position
+        unsigned int cpos;
 
       };
 
