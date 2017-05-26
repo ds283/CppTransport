@@ -82,8 +82,8 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply(const std::string& 
       {
         std::ostringstream msg;
         msg << WARNING_RECURSION_DEPTH << "=" << this->recursion_max << ")";
-
-        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+    
+        error_context err_context = this->data_payload.make_error_context();
         err_context.warn(msg.str());
       }
 
@@ -128,8 +128,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
 
     // generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
     abstract_index_list RHS_indices;
-    error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(),
-                      this->data_payload.get_warning_handler());
+    error_context ctx = this->data_payload.make_error_context();
 
     try
       {

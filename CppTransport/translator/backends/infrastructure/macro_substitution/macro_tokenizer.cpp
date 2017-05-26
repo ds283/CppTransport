@@ -58,9 +58,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 								string_literal += input[position++];
 							}
 
-            error_context ctx(this->data_payload.get_stack(), input_string, start, position,
-                              this->data_payload.get_error_handler(),
-                              this->data_payload.get_warning_handler());
+            error_context ctx = this->data_payload.make_error_context(input_string, start, position);
             std::unique_ptr<token_list_impl::text_token> tok = std::make_unique<token_list_impl::text_token>(string_literal, ctx);
 						this->tokens.push_back(std::move(tok));     // transfers ownership
 					}
@@ -86,9 +84,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 									{
                     abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
-                    error_context ctx(this->data_payload.get_stack(), input_string, position, position+1,
-                                      this->data_payload.get_error_handler(),
-                                      this->data_payload.get_warning_handler());
+                    error_context ctx = this->data_payload.make_error_context(input_string, position, position+1);
                     std::unique_ptr<token_list_impl::free_index_token> tok = std::make_unique<token_list_impl::free_index_token>(idx, ctx);
                     this->free_index_tokens.push_back(tok.get());
 										this->tokens.push_back(std::move(tok));     // transfers ownership
@@ -134,10 +130,9 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            macro_argument_list arg_list;
 												        if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position);
 
-                                error_context ctx(this->data_payload.get_stack(), input_string, start, position,
-                                                  this->data_payload.get_error_handler(),
-                                                  this->data_payload.get_warning_handler());
-                                std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre, ctx);
+                                error_context ctx = this->data_payload.make_error_context(input_string, start, position);
+                                std::unique_ptr<token_list_impl::simple_macro_token> tok =
+                                  std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre, ctx);
 
                                 this->simple_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
@@ -156,10 +151,9 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            macro_argument_list arg_list;
 										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position);
 
-                                error_context ctx(this->data_payload.get_stack(), input_string, start, position,
-                                                  this->data_payload.get_error_handler(),
-                                                  this->data_payload.get_warning_handler());
-                                std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post, ctx);
+                                error_context ctx =this->data_payload.make_error_context(input_string, start, position);
+                                std::unique_ptr<token_list_impl::simple_macro_token> tok =
+                                  std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post, ctx);
 
                                 this->simple_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
@@ -199,9 +193,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
                                     this->prevent_unroll.push_back(candidate);
                                   }
 
-                                error_context ctx(this->data_payload.get_stack(), input_string, start, position,
-                                                  this->data_payload.get_error_handler(),
-                                                  this->data_payload.get_warning_handler());
+                                error_context ctx = this->data_payload.make_error_context(input_string, start, position);
 
                                 if(this->force_unroll.size() > 0 && this->prevent_unroll.size() > 0)
                                   {
@@ -210,7 +202,8 @@ token_list::token_list(const std::string& input, const std::string& prefix,
                                     ctx.error(msg.str());
                                   }
 
-                                std::unique_ptr<token_list_impl::index_macro_token> tok = std::make_unique<token_list_impl::index_macro_token>(candidate, idx_list, arg_list, rule, ctx);
+                                std::unique_ptr<token_list_impl::index_macro_token> tok =
+                                  std::make_unique<token_list_impl::index_macro_token>(candidate, idx_list, arg_list, rule, ctx);
 
                                 this->index_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
@@ -221,10 +214,9 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 												        // assume it was a free index after all
                                 abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
-                                error_context ctx(this->data_payload.get_stack(), input_string, position, position+1,
-                                                  this->data_payload.get_error_handler(),
-                                                  this->data_payload.get_warning_handler());
-                                std::unique_ptr<token_list_impl::free_index_token> tok = std::make_unique<token_list_impl::free_index_token>(idx, ctx);
+                                error_context ctx = this->data_payload.make_error_context(input_string, position, position+1);
+                                std::unique_ptr<token_list_impl::free_index_token> tok =
+                                  std::make_unique<token_list_impl::free_index_token>(idx, ctx);
 
                                 this->free_index_tokens.push_back(tok.get());
 										            this->tokens.push_back(std::move(tok));     // transfers ownership
@@ -238,10 +230,9 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										        // assume it was a free index after all
                             abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
-                            error_context ctx(this->data_payload.get_stack(), input_string, position, position+1,
-                                              this->data_payload.get_error_handler(),
-                                              this->data_payload.get_warning_handler());
-                            std::unique_ptr<token_list_impl::free_index_token> tok = std::make_unique<token_list_impl::free_index_token>(idx, ctx);
+                            error_context ctx = this->data_payload.make_error_context(input_string, position, position+1);
+                            std::unique_ptr<token_list_impl::free_index_token> tok =
+                              std::make_unique<token_list_impl::free_index_token>(idx, ctx);
 
                             this->free_index_tokens.push_back(tok.get());
 								            this->tokens.push_back(std::move(tok));     // transfers ownership
@@ -253,10 +244,9 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 											{
                         abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
-                        error_context ctx(this->data_payload.get_stack(), input_string, position, position+1,
-                                          this->data_payload.get_error_handler(),
-                                          this->data_payload.get_warning_handler());
-                        std::unique_ptr<token_list_impl::free_index_token> tok = std::make_unique<token_list_impl::free_index_token>(idx, ctx);
+                        error_context ctx = this->data_payload.make_error_context(input_string, position, position+1);
+                        std::unique_ptr<token_list_impl::free_index_token> tok =
+                          std::make_unique<token_list_impl::free_index_token>(idx, ctx);
 
                         this->free_index_tokens.push_back(tok.get());
 												this->tokens.push_back(std::move(tok));     // transfers ownership
@@ -275,10 +265,9 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 						        string_literal += input[position++];
 							    }
 
-                error_context ctx(this->data_payload.get_stack(), input_string, start, position,
-                                  this->data_payload.get_error_handler(),
-                                  this->data_payload.get_warning_handler());
-                std::unique_ptr<token_list_impl::text_token> tok = std::make_unique<token_list_impl::text_token>(string_literal, ctx);
+                error_context ctx = this->data_payload.make_error_context(input_string, start, position);
+                std::unique_ptr<token_list_impl::text_token> tok =
+                  std::make_unique<token_list_impl::text_token>(string_literal, ctx);
 
 						    this->tokens.push_back(std::move(tok));     // transfers ownership
 							}
@@ -354,9 +343,7 @@ void token_list::check_no_index_list(const std::string& input, const std::string
 	    {
         std::ostringstream msg;
         msg << ERROR_TOKENIZE_UNEXPECTED_LIST << " '" << candidate << "'; " << ERROR_TOKENIZE_SKIPPING;
-        error_context ctx(this->data_payload.get_stack(), this->input_string, position, position+1,
-                          this->data_payload.get_error_handler(),
-                          this->data_payload.get_warning_handler());
+        error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
         ctx.error(msg.str());
 
         position++;
@@ -382,9 +369,7 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
 			    {
 				    if(input[position] == ',')
 					    {
-                error_context ctx(this->data_payload.get_stack(), this->input_string, position-arg.length(), position,
-                                  this->data_payload.get_error_handler(),
-                                  this->data_payload.get_warning_handler());
+                error_context ctx = this->data_payload.make_error_context(this->input_string, position-arg.length(), position);
 						    arg_list.emplace_back(arg, ctx);
 						    arg.clear();
 					    }
@@ -419,9 +404,7 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
 					{
             std::ostringstream msg;
             msg << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'";
-            error_context ctx(this->data_payload.get_stack(), this->input_string, position, position+1,
-                              this->data_payload.get_error_handler(),
-                              this->data_payload.get_warning_handler());
+            error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
             ctx.error(msg.str());
 					}
 				else
@@ -431,9 +414,7 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
 
 				if(arg.length() > 0)
 					{
-            error_context ctx(this->data_payload.get_stack(), this->input_string, position-arg.length(), position,
-                              this->data_payload.get_error_handler(),
-                              this->data_payload.get_warning_handler());
+            error_context ctx =this->data_payload.make_error_context(this->input_string, position-arg.length(), position);
 						arg_list.emplace_back(arg, ctx);
 					}
 			}
@@ -441,9 +422,7 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
 			{
         std::ostringstream msg;
 		    msg << ERROR_EXPECTED_OPEN_ARGUMENT_LIST << " '" << candidate << "'";
-        error_context ctx(this->data_payload.get_stack(), this->input_string, position, position+1,
-                          this->data_payload.get_error_handler(),
-                          this->data_payload.get_warning_handler());
+        error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
         ctx.error(msg.str());
 			}
 
@@ -462,9 +441,7 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
         // while not at end of index list, scan for indices
 				while(position < input.length() && input[position] != ']')
 					{
-            error_context ctx(this->data_payload.get_stack(), this->input_string, position, position+1,
-                              this->data_payload.get_error_handler(),
-                              this->data_payload.get_warning_handler());
+            error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
 
 						if(isalnum(input[position]))
 							{
@@ -482,9 +459,7 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
 							{
                 std::ostringstream msg;
 						    msg << ERROR_EXPECTED_INDEX_LABEL_A << " '" << candidate << "', " << ERROR_EXPECTED_INDEX_LABEL_B << " '" << input[position] << "'";
-                error_context ctx(this->data_payload.get_stack(), this->input_string, position, position+1,
-                                  this->data_payload.get_error_handler(),
-                                  this->data_payload.get_warning_handler());
+                error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
                 ctx.error(msg.str());
 							}
 
@@ -495,9 +470,7 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
 					{
             std::ostringstream msg;
 				    msg << ERROR_EXPECTED_CLOSE_INDEX_LIST << " '" << candidate << "'";
-            error_context ctx(this->data_payload.get_stack(), this->input_string, position, position+1,
-                              this->data_payload.get_error_handler(),
-                              this->data_payload.get_warning_handler());
+            error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
             ctx.error(msg.str());
 					}
 				else
@@ -509,9 +482,7 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
 			{
         std::ostringstream msg;
 		    msg << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'";
-        error_context ctx(this->data_payload.get_stack(), this->input_string, position, position+1,
-                          this->data_payload.get_error_handler(),
-                          this->data_payload.get_warning_handler());
+        error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
         ctx.error(msg.str());
 			}
 

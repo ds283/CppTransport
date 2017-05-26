@@ -68,8 +68,8 @@ namespace macro_packages
       {
         if(!this->tag_set)
           {
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.warn(WARNING_TEMPORARY_NO_TAG_SET);
+            error_context err_ctx = this->data_payload.make_error_context();
+            err_ctx.warn(WARNING_TEMPORARY_NO_TAG_SET);
           }
         else
           {
@@ -102,8 +102,8 @@ namespace macro_packages
               {
                 std::ostringstream msg;
                 msg << ERROR_MISSING_LHS << " '" << this->templ << "'";
-
-                error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+    
+                error_context err_ctx = this->data_payload.make_error_context();
                 err_ctx.error(msg.str());
                 ok = false;
               }
@@ -111,8 +111,8 @@ namespace macro_packages
               {
                 std::ostringstream msg;
                 msg << ERROR_MISSING_RHS << " '" << this->templ << "'";
-
-                error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+    
+                error_context err_ctx = this->data_payload.make_error_context();
                 err_ctx.error(msg.str());
                 ok = false;
               }

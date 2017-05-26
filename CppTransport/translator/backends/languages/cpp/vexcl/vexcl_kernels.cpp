@@ -81,7 +81,7 @@ namespace vexcl
         std::function<std::string(const std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
 
         // translate into our new in-memory buffer, preserving the type of translation (ie. core or implementation)
-        error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        error_context ctx = this->data_payload.make_error_context();
         unsigned int replacements = t.translate(kernel_file, ctx, kernel_buffer, type, &filter);
 
         // merge new buffer into old one

@@ -63,13 +63,14 @@ class translator_data
 
   public:
 
-    //! get error handler
-    error_context::error_handler& get_error_handler() { return(this->err); }
-
-    //! get warning handler
-    error_context::warning_handler& get_warning_handler() { return(this->wrn); }
-
-
+    //! make an error_context object
+    error_context make_error_context() const { return error_context(this->outstack, this->err, this->wrn); }
+    
+    //! make an error_context object with full context data
+    error_context make_error_context(std::shared_ptr<std::string>& l, unsigned int s, unsigned int e) const
+      { return error_context(this->outstack, l, s, e, this->err, this->wrn); }
+    
+    
     // SET CORE, IMPLEMENTATION DATA
 
   public:

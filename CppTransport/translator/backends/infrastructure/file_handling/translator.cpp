@@ -100,110 +100,111 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
     std::ifstream inf;
 
     inf.open(in.string().c_str());
-    if(inf.is_open() && !inf.fail())
-      {
-		    // emit advisory that translation is underway
-        std::ostringstream translation_msg;
-        translation_msg << MESSAGE_TRANSLATING << " '" << in.string() << "'";
-		    if(!buf.is_memory())
-			    {
-		        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
-			    }
-        this->data_payload.message(translation_msg.str());
-
-		    // decide which backend and API version are required
-        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        backend_data backend(inf, in, err_context);
-
-        if(backend)
-          {
-            if(backend.get_min_version() <= CPPTRANSPORT_NUMERIC_VERSION)
-              {
-                // Generate an appropriate backend
-
-                // A backend consists of a set of macro replacement rules which collectively comprise a 'package group'.
-                // The result is returned as a managed pointer, using std::unique_ptr<>
-                std::unique_ptr<tensor_factory> factory = make_tensor_factory(backend, this->data_payload, *this->cache);
-                std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, *factory);
-
-                // generate a macro replacement agent based on this package group
-                macro_agent agent(this->data_payload, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT_EQUAL, BACKEND_LINE_SPLIT_SUM_EQUAL);
-
-                // push this input file to the top of the filestack
-                output_stack& os = this->data_payload.get_stack();
-                os.push(in, buf, agent, type);  // current line number is automatically set to 2 (accounting for the header line)
-
-                bool annotate = this->data_payload.annotate();
-
-                while(!inf.eof() && !inf.fail())
-                  {
-                    std::string line;
-                    // read in a line from the template
-                    std::getline(inf, line);
-
-                    // apply macro replacement to this line, keeping track of how many replacements are performed
-                    // result is supplied as a std::shared_ptr<> because we don't want to have to take copies
-                    // of a large array of strings
-                    unsigned int new_replacements = 0;
-                    std::unique_ptr< std::list<std::string> > line_list = agent.apply(line, new_replacements);
-                    replacements += new_replacements;
-
-                    if(line_list)
-                      {
-                        std::ostringstream continuation_tag;
-                        language_printer& printer = package->get_language_printer();
-
-                        continuation_tag << ANNOTATE_EXPANSION_OF_LINE << " " << os.get_line();
-
-                        unsigned int c = 0;
-                        for(const std::string& l : *line_list)
-                          {
-                            std::string out_line = l + (annotate && c > 0 ? " " + printer.comment(continuation_tag.str()) : "");
-
-                            if(filter != nullptr) buf.write_to_end((*filter)(out_line));
-                            else                  buf.write_to_end(out_line);
-
-                            ++c;
-                          }
-                      }
-
-                    os.increment_line();
-                  }
-
-                // report end of input to the backend;
-                // this enables it to do any tidying-up which may be required,
-                // such as depositing temporaries to a temporary pool
-                package->report_end_of_input();
-                os.pop();
-
-                // emit advisory that translation is complete
-                std::ostringstream finished_msg;
-                finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
-                this->data_payload.message(finished_msg.str());
-
-                // report time spent doing macro replacement
-                package->report_macro_metadata(agent.get_total_work_time(), agent.get_tokenization_time());
-
-                // package will report on time and memory use when it goes out of scope and is destroyed
-              }
-          }
-        else  // we can't handle this template -- the API version required is too new
-          {
-            std::ostringstream msg;
-            msg << ERROR_TEMPLATE_TOO_RECENT_A << " " << in << " " << ERROR_TEMPLATE_TOO_RECENT_B << backend.get_min_version() << ")";
-
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.error(msg.str());
-          }
-      }
-    else  // failed to open the input file
+    if(!inf.is_open() || inf.fail())
       {
         std::ostringstream msg;
         msg << ERROR_READING_TEMPLATE << " " << in;
-
-        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+    
+        error_context err_context = this->data_payload.make_error_context();
         err_context.error(msg.str());
+    
+        inf.close();
+        return 0;
       }
+    
+    // emit advisory that translation is underway
+    std::ostringstream translation_msg;
+    translation_msg << MESSAGE_TRANSLATING << " '" << in.string() << "'";
+    if(!buf.is_memory())
+      {
+        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
+      }
+    this->data_payload.message(translation_msg.str());
+
+    // decide which backend and API version are required
+    error_context err_context = this->data_payload.make_error_context();
+    backend_data backend(inf, in, err_context);
+
+    if(!backend) return 0;
+    if(backend.get_min_version() > CPPTRANSPORT_NUMERIC_VERSION)
+      {
+        // we can't handle this template -- the platform version required is too new
+        std::ostringstream msg;
+        msg << ERROR_TEMPLATE_TOO_RECENT_A << " " << in << " " << ERROR_TEMPLATE_TOO_RECENT_B << backend.get_min_version() << ")";
+    
+        error_context err_context = this->data_payload.make_error_context();
+        err_context.error(msg.str());
+        
+        inf.close();
+        return 0;
+      }
+    
+    // Generate an appropriate backend
+
+    // A backend consists of a set of macro replacement rules which collectively comprise a 'package group'.
+    // The result is returned as a managed pointer, using std::unique_ptr<>
+    std::unique_ptr<tensor_factory> factory = make_tensor_factory(backend, this->data_payload, *this->cache);
+    std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, *factory);
+
+    // generate a macro replacement agent based on this package group
+    macro_agent agent(this->data_payload, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT_EQUAL, BACKEND_LINE_SPLIT_SUM_EQUAL);
+
+    // push this input file to the top of the filestack
+    output_stack& os = this->data_payload.get_stack();
+    os.push(in, buf, agent, type);  // current line number is automatically set to 2 (accounting for the header line)
+
+    bool annotate = this->data_payload.annotate();
+
+    while(!inf.eof() && !inf.fail())
+      {
+        std::string line;
+        // read in a line from the template
+        std::getline(inf, line);
+
+        // apply macro replacement to this line, keeping track of how many replacements are performed
+        // result is supplied as a std::unique_ptr<> because we don't want to have to take copies
+        // of a large array of strings
+        unsigned int new_replacements = 0;
+        std::unique_ptr< std::list<std::string> > line_list = agent.apply(line, new_replacements);
+        replacements += new_replacements;
+
+        if(line_list)
+          {
+            std::ostringstream continuation_tag;
+            language_printer& printer = package->get_language_printer();
+
+            continuation_tag << ANNOTATE_EXPANSION_OF_LINE << " " << os.get_line();
+
+            unsigned int c = 0;
+            for(const std::string& l : *line_list)
+              {
+                std::string out_line = l + (annotate && c > 0 ? " " + printer.comment(continuation_tag.str()) : "");
+
+                if(filter != nullptr) buf.write_to_end((*filter)(out_line));
+                else                  buf.write_to_end(out_line);
+
+                ++c;
+              }
+          }
+
+        os.increment_line();
+      }
+
+    // report end of input to the backend;
+    // this enables it to do any tidying-up which may be required,
+    // such as depositing temporaries to a temporary pool
+    package->report_end_of_input();
+    os.pop();
+
+    // emit advisory that translation is complete
+    std::ostringstream finished_msg;
+    finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
+    this->data_payload.message(finished_msg.str());
+
+    // report time spent doing macro replacement
+    package->report_macro_metadata(agent.get_total_work_time(), agent.get_tokenization_time());
+
+    // package will report on time and memory use when it goes out of scope and is destroyed
 
     inf.close();
 
