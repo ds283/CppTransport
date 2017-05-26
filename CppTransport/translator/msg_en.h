@@ -134,6 +134,9 @@ constexpr auto ERROR_POTENTIAL_REDECLARATION         = "Redeclaration of potenti
 
 constexpr auto ERROR_REQUIRED_VERSION_REDECLARATION  = "Redeclaration of minimum required version";
 
+constexpr auto ERROR_MODEL_SPECIFICATION_STARTED     = "Model properties must be declared before the model is specified";
+constexpr auto WARNING_SPECIFICATION_START_WAS       = "Model specification began here:";
+
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   = "Internal error: increment or decrement of unattached assignment set iterator";
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_DECREMENT   = "Internal error: attempt to decrement assignment iterator before first element";
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_INCREMENT   = "Internal error: attempt to increment assignment iterator after last element";

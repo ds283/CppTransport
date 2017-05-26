@@ -125,6 +125,7 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/descriptor/model_descriptor.cpp
   translator/parser/descriptor/templates_block.cpp
   translator/parser/descriptor/misc_block.cpp
+  translator/parser/descriptor/declarations.cpp
   translator/parser/driver/expression_tree_driver.cpp
   translator/parser/driver/lagrangian_driver.cpp
   translator/parser/driver/metadata_driver.cpp
@@ -424,6 +425,7 @@ set(TRANSLATOR_PARSER_DESCRIPTOR_FILES
   translator/parser/descriptor/templates_block.cpp
   translator/parser/descriptor/templates_block.h
   translator/parser/descriptor/declarations.h
+  translator/parser/descriptor/declarations.cpp
   )
 
 set(TRANSLATOR_PARSER_DRIVER_FILES

@@ -31,108 +31,6 @@
 const auto DERIV_PREFIX = "__d";
 
 
-// ******************************************************************
-
-
-declaration::declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l)
-  : name(n),
-    symbol(s),
-    declaration_point(l),
-    my_id(current_id++)
-  {
-  }
-
-// initialize static member
-unsigned int declaration::current_id = 0;
-
-
-// ******************************************************************
-
-
-field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
-  : declaration(n, s, l)
-  {
-    attrs = std::make_unique<attributes>(a);
-  }
-
-
-std::string field_declaration::get_latex_name() const
-  {
-    std::string latex_name = this->attrs->get_latex();
-
-    if(latex_name.length() == 0) latex_name = this->name;
-
-    return(latex_name);
-  }
-
-
-void field_declaration::print(std::ostream& stream) const
-  {
-    stream << "Field declaration for symbol '" << this->get_name()
-           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-  }
-
-
-// ******************************************************************
-
-
-parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
-  : declaration(n, s, l)
-  {
-    attrs = std::make_unique<attributes>(a);
-  }
-
-
-std::string parameter_declaration::get_latex_name() const
-  {
-    std::string latex_name = this->attrs->get_latex();
-
-    if(latex_name.length() == 0) latex_name = this->name;
-
-    return(latex_name);
-  }
-
-
-void parameter_declaration::print(std::ostream& stream) const
-  {
-    stream << "Parameter declaration for symbol '" << this->get_name()
-           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-  }
-
-
-// ******************************************************************
-
-
-subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e)
-  : declaration(n, s, l)
-  {
-    sexpr = std::make_unique<subexpr>(e);
-  }
-
-
-std::string subexpr_declaration::get_latex_name() const
-  {
-    std::string latex_name = this->sexpr->get_latex();
-
-    if(latex_name.length() == 0) latex_name = this->name;
-
-    return(latex_name);
-  }
-
-
-GiNaC::ex subexpr_declaration::get_value() const
-  {
-    return this->sexpr->get_value();
-  }
-
-
-void subexpr_declaration::print(std::ostream& stream) const
-  {
-    stream << "Subexpression declaration for symbol '" << this->get_name()
-           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-  }
-
-
 // CONSTRUCTOR
 
 
@@ -171,6 +69,8 @@ lagrangian_block::lagrangian_block(symbol_factory& s, error_context err_ctx)
 
 bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
   {
+    if(this->symbols_frozen) return this->report_frozen(l);
+    
     auto check = [&](auto& name) -> auto { return this->check_symbol_exists(name); };
     auto insert = [&](auto& name, auto& symbol, auto& lexeme, auto& attr) -> auto
       {
@@ -188,6 +88,8 @@ bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y
 
 bool lagrangian_block::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
   {
+    if(this->symbols_frozen) return this->report_frozen(l);
+
     auto check = [&](auto& name) -> auto { return this->check_symbol_exists(name); };
     auto insert = [&](auto& name, auto& symbol, auto& lexeme, auto& attr) -> auto
       {
@@ -201,6 +103,8 @@ bool lagrangian_block::add_parameter(const std::string& n, GiNaC::symbol& s, con
 
 bool lagrangian_block::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e)
   {
+    if(this->symbols_frozen) return this->report_frozen(l);
+
     auto check = [&](auto& name) -> auto { return this->check_symbol_exists(name); };
     auto insert = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto
       {
@@ -238,6 +142,9 @@ boost::optional<declaration&> lagrangian_block::check_symbol_exists(const std::s
 
 bool lagrangian_block::set_potential(GiNaC::ex& V, const y::lexeme_type& l)
   {
+    // symbol tables should be frozen whenever we start to specify the model
+    this->freeze_tables(l);
+
     return SetContextedValue(this->potential, V, l, ERROR_POTENTIAL_REDECLARATION);
   }
 
@@ -245,12 +152,6 @@ bool lagrangian_block::set_potential(GiNaC::ex& V, const y::lexeme_type& l)
 boost::optional< contexted_value<GiNaC::ex>& > lagrangian_block::get_potential() const
   {
     if(this->potential) return *this->potential; else return boost::none;
-  }
-
-
-void lagrangian_block::unset_potential()
-  {
-    this->potential.release();
   }
 
 
@@ -336,4 +237,27 @@ validation_exceptions lagrangian_block::validate() const
 void lagrangian_block::set_lagrangian_type(model_type t, const y::lexeme_type& l)
   {
     SetContextedValue(this->type, t, l, ERROR_LAGRANGIAN_TYPE_REDECLARATION);
+  }
+
+
+void lagrangian_block::freeze_tables(const y::lexeme_type& l)
+  {
+    // nothing to do if already frozen
+    if(this->symbols_frozen) return;
+    
+    // set token contexted value to remember where freezing-point occurred
+    SetContextedValue(this->symbols_frozen, 1u, l, "");
+  }
+
+
+bool lagrangian_block::report_frozen(const y::lexeme_type& l)
+  {
+    l.get_error_context().error(ERROR_MODEL_SPECIFICATION_STARTED);
+    if(this->symbols_frozen)
+      {
+        auto& v = *this->symbols_frozen;
+        v.get_declaration_point().warn(WARNING_SPECIFICATION_START_WAS);
+      }
+
+    throw parse_error(ERROR_MODEL_SPECIFICATION_STARTED);
   }

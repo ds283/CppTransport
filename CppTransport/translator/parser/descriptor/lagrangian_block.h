@@ -93,6 +93,14 @@ class lagrangian_block
     //! if the symbol exists, returns a boost::optional<> containing a reference
     //! to its declaration
     boost::optional<declaration&> check_symbol_exists(const std::string& nm) const;
+    
+    //! freeze all tables
+    void freeze_tables(const y::lexeme_type& l);
+    
+  protected:
+    
+    //! report that tables are frozen
+    bool report_frozen(const y::lexeme_type& l);
 
 
     // LAGRANGIAN MANAGEMENT
@@ -107,11 +115,8 @@ class lagrangian_block
 
     //! get potential as a contexted value
     boost::optional< contexted_value<GiNaC::ex>& > get_potential() const;
-
-    //! unset potential
-    void unset_potential();
-
-
+    
+    
     // FIELDS AND PARAMETERS
 
   public:
