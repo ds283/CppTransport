@@ -1,0 +1,119 @@
+model "gelaton"
+ { name        = "Gelaton/QSFI-like semicircle trajectory";
+   lagrangian  = nontrivial_metric;
+
+   description = "Gelaton/QSFI-like model in polar field-space coordinates";
+   citeguide   = "CppTransport user guide arXiv:16xx.yyyy";
+   license     = "CC BY";
+   revision    = 1;
+
+   references  = [ "arXiv:0910.1853", "arXiv:0911.3380", "arXiv:1010.3693", "arXiv:1205.0160", "arXiv:16xx.yyyyy" ];
+   urls        = [ "http://transportmethod.com" ];
+ };
+
+metadata
+ { require_version = 201701;
+ };
+
+author "David Seery"
+ { email     = "D.Seery@sussex.ac.uk";
+   institute = "University of Sussex";
+ };
+
+author "David Mulryne"
+ { email     = "D.Mulryne@qmul.ac.uk";
+   institute = "Queen Mary, University of London";
+ };
+
+author "Mafalda Dias"
+ { email     = "M.Dias@desy.de";
+   institute = "DESY, Hamburg";
+ };
+
+author "Jonathan Frazer"
+ { email     = "J.Frazer@desy.de";
+   institute = "DESY, Hamburg";
+ };
+
+% specify which class template should be used with this model
+templates
+ { core           = "nontrivial_metric_core";
+   implementation = "nontrivial_metric_mpi";
+ };
+
+% fix properties of the steppers
+background
+ { abserr   = 1E-12;
+   relerr   = 1E-12;
+   stepsize = 1E-10;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+perturbations
+ { abserr   = 1E-14;
+   relerr   = 1E-14;
+   stepsize = 1E-15;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+% set up the fields
+field R
+ { latex = "R";
+ };
+
+field theta
+ { latex = "\theta";
+ };
+
+% set up the parameters
+
+parameter R_0
+ { latex = "R_0";
+ };
+
+parameter V_0
+ { latex = "V_0";
+ };
+
+parameter eta_R
+ { latex = "\eta_R";
+ };
+
+parameter g_R
+ { latex = "g_R";
+ };
+
+parameter lambda_R
+ { latex = "\lambda_R";
+ };
+
+parameter omega
+ { latex = "\omega";
+ };
+
+subexpr uplift
+ { latex = "V_{\Lambda}";
+   value = 1;
+ };
+
+subexpr angular_tilt
+ { latex = "V_{\theta}";
+   value = omega * (R_0^2 / M_P^2) * theta;
+ };
+
+subexpr radial_mass
+ { latex = "V_{R^2}";
+   value = (1/2) * eta_R * (R - R_0)^2 / M_P^2;
+ };
+
+subexpr radial_cubic
+ { latex = "V_{R^3}";
+   value = (1/6) * g_R * (R - R_0)^3 / M_P^3;
+ };
+
+subexpr radial_quartic
+ { latex = "V_{R^3}";
+   value = (1/24) * lambda_R * (R - R_0)^4 / M_P^4;
+ };
+
+potential = V_0 * (uplift + angular_tilt + radial_mass + radial_cubic + radial_quartic);

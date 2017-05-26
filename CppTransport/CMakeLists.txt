@@ -208,8 +208,9 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   )
 
 
-# pull in test target
+# pull in test targets
 ADD_SUBDIRECTORY(test-canonical EXCLUDE_FROM_ALL)
+ADD_SUBDIRECTORY(test-nontrivial-metric EXCLUDE_FROM_ALL)
 
 # install targets for CppTransport translator, templates, and runtime system
 # note that CppTransport-sendmail has more restrictive permissions since it may contain a password
