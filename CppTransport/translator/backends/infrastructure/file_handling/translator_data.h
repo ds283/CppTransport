@@ -37,6 +37,7 @@
 #include "error_context.h"
 #include "contexted_value.h"
 #include "argument_cache.h"
+#include "version_policy.h"
 
 
 typedef std::function<void(const std::string&)> message_handler;
@@ -50,10 +51,9 @@ class translator_data
   public:
 
     //! constructor
-    translator_data(const boost::filesystem::path& file,
-                    error_context::error_handler e, error_context::warning_handler w,
-                    message_handler m, finder& f, output_stack& os, symbol_factory& s, model_descriptor& desc,
-                    argument_cache& c);
+    translator_data(const boost::filesystem::path& file, error_context::error_handler e,
+                    error_context::warning_handler w, message_handler m, finder& f, output_stack& os, symbol_factory& s,
+                    model_descriptor& desc, argument_cache& c, version_policy& vp);
 
     //! destructor is default
     ~translator_data() = default;
@@ -143,18 +143,21 @@ class translator_data
     void message(const std::string& m) { this->msg(m); }
 
 
-    // GET UTILITY OBJECTS ASSOCIATED WITH TRANSLATION UNIT
+    // GET POLICY OBJECTS ASSOCIATED WITH TRANSLATION UNIT
 
   public:
 
     //! get finder
-    finder& get_finder() { return(this->search_paths); }
+    finder& get_finder() { return this->search_paths; }
 
     //! get output stack
-    output_stack& get_stack() { return(this->outstack); }
+    output_stack& get_stack() { return this->outstack; }
 
     //! get symbol factory
-    symbol_factory& get_symbol_factory() { return(this->sym_factory); }
+    symbol_factory& get_symbol_factory() { return this->sym_factory; }
+    
+    //! get version policy repository
+    version_policy& get_version_policy() { return this->policy; }
 
 
     // INTERNAL DATA
@@ -177,7 +180,7 @@ class translator_data
     error_context::warning_handler wrn;
 
 
-    // UTILITY OBJECTS
+    // POLICY OBJECTS
 
     //! finder
     finder& search_paths;
@@ -190,6 +193,9 @@ class translator_data
 
     //! argument cache
     argument_cache& cache;
+    
+    //! version policy registry
+    version_policy& policy;
 
 
     // CORE, IMPLEMENTATION

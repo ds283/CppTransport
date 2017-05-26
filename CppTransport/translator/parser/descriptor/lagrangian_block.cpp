@@ -41,8 +41,9 @@ std::vector<character_type>  fake_character_map;
 std::vector<bool>            fake_context_table;
 
 
-lagrangian_block::lagrangian_block(symbol_factory& s, error_context err_ctx)
-  : sym_factory(s)
+lagrangian_block::lagrangian_block(symbol_factory& s, version_policy& vp, error_context err_ctx)
+  : sym_factory(s),
+    policy(vp)
   {
     // set up reserved symbol for Planck mass
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);

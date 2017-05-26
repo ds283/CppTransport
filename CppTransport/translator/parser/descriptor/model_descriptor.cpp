@@ -34,12 +34,13 @@
 // ******************************************************************
 
 
-model_descriptor::model_descriptor(symbol_factory& s, error_context err_ctx)
+model_descriptor::model_descriptor(symbol_factory& s, version_policy& vp, error_context err_ctx)
   : err_count(0),
-    model(s, std::move(err_ctx)),
-    meta(),
-    templates(),
-    misc()
+    policy(vp),
+    model(s, vp, std::move(err_ctx)),
+    meta(vp),
+    templates(vp),
+    misc(vp)
   {
   }
 

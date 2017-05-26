@@ -171,7 +171,15 @@ namespace macro_packages
         std::ostringstream id_str;
         for(unsigned int i = 0; i < MD5_DIGEST_LENGTH; ++i)
           {
-            id_str << std::setw(2) << static_cast<int>(result[i]);
+            // POLICY: POLICY_HEX_UUID corrects omission of std::hex in versions prior to 201701
+            if(this->policy_hex_uuid)
+              {
+                id_str << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(result[i]);
+              }
+            else
+              {
+                id_str << std::setw(2) << static_cast<int>(result[i]);
+              }
           }
 
         // convert hash to UUID-like format for convenience

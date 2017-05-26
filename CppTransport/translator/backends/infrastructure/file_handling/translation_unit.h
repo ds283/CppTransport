@@ -39,6 +39,7 @@
 #include "translator_data.h"
 #include "local_environment.h"
 #include "argument_cache.h"
+#include "version_policy.h"
 
 #include "symbol_factory.h"
 
@@ -52,7 +53,8 @@ class translation_unit
   public:
 
     //! constructor
-    translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e);
+    translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e,
+                     version_policy& vp);
 
     //! destructor is default
     ~translation_unit() = default;
@@ -111,6 +113,9 @@ class translation_unit
     
     //! reference to local environment
     local_environment& env;
+    
+    //! version policy registry
+    version_policy& policy;
     
     // TRANSLATION UNIT RESOURCES
     

@@ -28,6 +28,10 @@
 #define CPPTRANSPORT_MODEL_DESCRIPTOR_H
 
 
+#include "symbol_factory.h"
+#include "version_policy.h"
+#include "error_context.h"
+
 #include "lagrangian_block.h"
 #include "metadata_block.h"
 #include "templates_block.h"
@@ -45,7 +49,7 @@ class model_descriptor
     //! symbol_factory is inherited from parent translation_unit
     //! error_context is passed down from parent translation_unit and is used to construct
     //! fake error contexts for default reserved symbols such as M_Planck
-    model_descriptor(symbol_factory& s, error_context err_ctx);
+    model_descriptor(symbol_factory& s, version_policy& vp, error_context err_ctx);
 
     //! destructor is default
     ~model_descriptor() = default;
@@ -88,6 +92,9 @@ class model_descriptor
     
     //! count of errors encountered
     unsigned err_count;
+    
+    //! reference to version policy registry
+    version_policy& policy;
 
 	};
 

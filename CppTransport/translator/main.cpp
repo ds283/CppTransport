@@ -12,6 +12,7 @@
 #include "local_environment.h"
 #include "argument_cache.h"
 #include "translation_unit.h"
+#include "version_policy.h"
 
 #include "ginac_print_indexed.h"
 
@@ -39,16 +40,20 @@ int main(int argc, const char *argv[])
     finder path;
     if(args.search_environment()) path.add(env.search_paths());
     path.add(args.search_paths());
+    
+    // set up version policy registry
+    version_policy policy;
 
+    // process specified files
     unsigned int files_processed = 0;
     unsigned int replacements    = 0;
 
     bool errors = false;
 
-    const std::list<boost::filesystem::path> input_files = args.input_files();
+    const std::list<boost::filesystem::path>& input_files = args.input_files();
     for(const boost::filesystem::path& f : input_files)
       {
-        translation_unit unit(f, path, args, env);
+        translation_unit unit(f, path, args, env, policy);
         replacements += unit.apply();
         ++files_processed;
 
@@ -57,6 +62,7 @@ int main(int argc, const char *argv[])
 
     timer.stop();
 
+    // issue summary statistics
 		if(args.verbose())
 			{
 		    std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A

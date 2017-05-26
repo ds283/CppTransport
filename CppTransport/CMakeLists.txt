@@ -169,6 +169,7 @@ ADD_EXECUTABLE(CppTransport
   translator/utilities/to_printable.cpp
   translator/utilities/local_environment.cpp
   translator/utilities/argument_cache.cpp
+  translator/version-policy/version_policy.cpp
   )
 
 ADD_DEPENDENCIES(CppTransport DEPS)
@@ -201,6 +202,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/transport-objects/indices
   translator/transport-objects/utilities
   translator/utilities
+  translator/version-policy
   ${Boost_INCLUDE_DIRS}
   ${GINAC_INCLUDE_DIRS}
   ${OPENSSL_INCLUDE_DIR}
@@ -554,6 +556,11 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES
   translator/transport-objects/utilities/symbol_factory.cpp
   translator/transport-objects/utilities/symbol_factory.h
   )
+
+set(TRANSLATOR_VERSION_POLICY_FILES
+  translator/version-policy/version_policy.cpp
+  translator/version-policy/version_policy.h
+  translator/version-policy/policies.h)
 
 set(TRANSLATOR_UTILITIES_FILES
   translator/utilities/argument_cache.cpp
@@ -1066,6 +1073,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
   ${TRANSLATOR_UTILITIES_FILES}
+  ${TRANSLATOR_VERSION_POLICY_FILES}
   ${TRANSPORT_RUNTIME_CONCEPTS_FILES}
   ${TRANSPORT_RUNTIME_CONCEPTS_RANGE_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_DATA_BATCHERS_FILES}

@@ -29,6 +29,7 @@
 
 #include "contexted_value.h"
 #include "model_settings.h"
+#include "version_policy.h"
 #include "y_common.h"
 
 
@@ -40,8 +41,9 @@ class misc_block
   public:
 
     //! constructor
-    misc_block()
-      : order(index_order::right)
+    misc_block(version_policy& vp)
+      : policy(vp),
+        order(index_order::right)
       {
       }
 
@@ -79,6 +81,12 @@ class misc_block
     // INTERNAL DATA
 
   private:
+    
+    // POLICY OBJECTS
+    
+    //! version policy registry
+    version_policy& policy;
+    
     
     // PLATFORM SETTINGS
     std::unique_ptr< contexted_value<unsigned int> > min_version;

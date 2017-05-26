@@ -30,6 +30,7 @@
 
 #include "contexted_value.h"
 #include "model_settings.h"
+#include "version_policy.h"
 #include "y_common.h"
 
 
@@ -41,7 +42,8 @@ class metadata_block
   public:
 
     //! constructor
-    metadata_block()
+    metadata_block(version_policy& vp)
+      : policy(vp)
       {
       }
 
@@ -120,6 +122,12 @@ class metadata_block
     // INTERNAL DATA
 
   private:
+    
+    // POLICY OBJECTS
+    
+    //! version policy registry
+    version_policy& policy;
+    
 
     // METADATA
 

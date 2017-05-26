@@ -27,11 +27,9 @@
 #include "translator_data.h"
 
 
-translator_data::translator_data(const boost::filesystem::path& file,
-                                 error_context::error_handler e, error_context::warning_handler w,
-                                 message_handler m, finder& f, output_stack& os, symbol_factory& s,
-                                 model_descriptor& desc,
-                                 argument_cache& c)
+translator_data::translator_data(const boost::filesystem::path& file, error_context::error_handler e,
+                                 error_context::warning_handler w, message_handler m, finder& f, output_stack& os, symbol_factory& s,
+                                 model_descriptor& desc, argument_cache& c, version_policy& vp)
   : filename(file),
     err(e),
     wrn(w),
@@ -44,7 +42,8 @@ translator_data::translator_data(const boost::filesystem::path& file,
     meta(desc.meta),
     templates(desc.templates),
     misc(desc.misc),
-    cache(c)
+    cache(c),
+    policy(vp)
   {
   }
 

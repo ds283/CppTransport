@@ -45,6 +45,7 @@ index_order misc_block::get_indexorder() const
 
 bool misc_block::set_required_version(unsigned v, const y::lexeme_type& l)
   {
+    this->policy.advise_minimum_version(v);
     return SetContextedValue(this->min_version, v, l, ERROR_REQUIRED_VERSION_REDECLARATION);
   }
 

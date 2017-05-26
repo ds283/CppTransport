@@ -35,6 +35,7 @@
 
 #include "symbol_factory.h"
 #include "symbol_list.h"
+#include "version_policy.h"
 #include "disable_warnings.h"
 
 #include "ginac/ginac.h"
@@ -62,7 +63,7 @@ class lagrangian_block
   public:
 
     //! constructor
-    lagrangian_block(symbol_factory& s, error_context err_ctx);
+    lagrangian_block(symbol_factory& s, version_policy& vp, error_context err_ctx);
 
     //! destructor is default
     ~lagrangian_block() = default;
@@ -155,6 +156,12 @@ class lagrangian_block
     // INTERNAL DATA
 
   private:
+    
+    // POLICY OBJECTS
+    
+    //! version policy registry
+    version_policy& policy;
+    
 
     // LAGRANGIAN DATA
     

@@ -128,11 +128,13 @@ static std::string strip_dot_h(const std::string& pathname);
 static std::string leafname   (const std::string& pathname);
 
 
-translation_unit::translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e)
+translation_unit::translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e,
+                                   version_policy& vp)
   : name(file),
     path(p),
     cache(c),
     env(e),
+    policy(vp),
     parse_failed(false),
     errors(0),
     warnings(0),
@@ -143,16 +145,17 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     instream(lexstream_payload,
              keyword_table, keyword_map, character_table, character_map, character_unary_context),
     lexer(instream),
-    model(sym_factory, error_context(stack,
-                                     std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
-                                     std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2))),
+    model(sym_factory, vp,
+          error_context(stack,
+                        std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
+                        std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2))),
     driver(model, sym_factory, c, e),
     parser(lexer, driver),
     translator_payload(file,
                        std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                        std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
                        std::bind(&translation_unit::print_advisory, this, std::placeholders::_1),
-                       path, stack, sym_factory, model, cache),
+                       path, stack, sym_factory, model, cache, vp),
     outstream(translator_payload)
   {
     // 'instream' constructor lexicalizes the input file

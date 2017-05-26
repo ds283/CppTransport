@@ -31,6 +31,7 @@
 #include "model_settings.h"
 #include "y_common.h"
 #include "stepper.h"
+#include "version_policy.h"
 
 
 class templates_block
@@ -41,7 +42,8 @@ class templates_block
   public:
 
     //! constructor
-    templates_block()
+    templates_block(version_policy& vp)
+      : policy(vp)
       {
       }
 
@@ -103,6 +105,12 @@ class templates_block
     // INTERNAL DATA
 
   private:
+    
+    // POLICY OBJECTS
+    
+    //! version policy registry
+    version_policy& policy;
+    
 
     // TEMPLATE DATA
 
