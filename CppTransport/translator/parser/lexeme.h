@@ -38,6 +38,7 @@
 #include <sstream>
 #include <cstdio>
 #include <memory>
+#include <unordered_map>
 
 #include "core.h"
 #include "error.h"
@@ -64,7 +65,8 @@ namespace lexeme    // package in a unique namespace
         // TYPES
 
       public:
-
+    
+        //! buffer type
         enum class type
           {
             string, number, character, string_literal
@@ -223,6 +225,12 @@ namespace lexeme    // package in a unique namespace
           {
             unary, binary
           };
+        
+        //! keyword-to-lexeme mapping table
+        typedef std::unordered_map< std::string, Keywords > keyword_map;
+        
+        //! symbol-to-lexeme mapping table
+        typedef std::unordered_map< std::string, std::pair< Characters, bool > > character_map;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -233,8 +241,7 @@ namespace lexeme    // package in a unique namespace
         //! accepts an error_context object which is used in generating context for
         //! later error messages
         lexeme(const lexeme_buffer& buffer, minus_context& context, unsigned int u, error_context err_ctx,
-               const std::vector<std::string>& kt, const std::vector<Keywords>& km, const std::vector<std::string>& ct,
-               const std::vector<Characters>& cm, const std::vector<bool>& ctx);
+               const keyword_map& km, const character_map& cm);
 
         //! destructor is default
         ~lexeme() = default;
@@ -347,20 +354,11 @@ namespace lexeme    // package in a unique namespace
         //! We take references, so the object referenced should not be invalidated
         //! during the lifetime of the lexeme
 
-        //! table of keywords
-        const std::vector<std::string>& keyword_table;
-
-        //! table of keyword tokens
-        const std::vector<Keywords>& keyword_tokens;
-
-        //! table of characters
-        const std::vector<std::string>& chars_table;
-
-        //! table of character tokens
-        const std::vector<Characters>& chars_tokens;
-
-        //! table of unary minus sign 'contexts' that apply *after* each character
-        const std::vector<bool>& unary_context;
+        //! keyword-to-lexeme map
+        const keyword_map& keywords;
+        
+        //! character-to-lexeme map
+        const character_map& symbols;
 
 	    };
 
@@ -369,16 +367,10 @@ namespace lexeme    // package in a unique namespace
 
     template <typename Keywords, typename Characters>
     lexeme<Keywords, Characters>::lexeme(const lexeme_buffer& buffer, minus_context& context, unsigned int u,
-                                         error_context err_ctx,
-                                         const std::vector<std::string>& kt, const std::vector<Keywords>& km,
-                                         const std::vector<std::string>& ct,
-                                         const std::vector<Characters>& cm, const std::vector<bool>& ctx)
+                                         error_context err_ctx, const keyword_map& km, const character_map& cm)
 	    : unique(u),
-	      keyword_table(kt),
-	      keyword_tokens(km),
-	      chars_table(ct),
-	      chars_tokens(cm),
-	      unary_context(ctx),
+        keywords(km),
+        symbols(cm),
         err_context(std::move(err_ctx))
 	    {
         int offset = 0;
@@ -393,13 +385,13 @@ namespace lexeme    // package in a unique namespace
                 context = minus_context::binary; // unary minus can't follow an identifier
 
                 // check whether this literal matches a keyword
-                for(unsigned int i = 0; i < this->keyword_table.size(); ++i)
+                for(const auto& t : keywords)
                   {
-                    if(buffer == keyword_table[i])
+                    if(buffer == t.first)
                       {
                         // mark as a keyword
                         tp = type::keyword;
-                        k = km[i];
+                        k = t.second;
 
                         // release unused identifier value
                         id.reset();
@@ -488,11 +480,11 @@ namespace lexeme    // package in a unique namespace
 
                 tp = type::unknown;
 
-                for(unsigned int i = 0; i < this->chars_table.size(); ++i)
+                for(const auto& t : symbols)
                   {
                     bool unary = false;
                     bool binary = false;
-                    std::string match = chars_table[i];
+                    std::string match = t.first;
                     size_t pos;
 
                     // check for @binary or @unary distinguishing tags in the character
@@ -512,8 +504,8 @@ namespace lexeme    // package in a unique namespace
                        && (!binary || (binary && context == minus_context::binary)))
                       {
                         tp = type::character;
-                        s = chars_tokens[i];
-                        context = unary_context[i] ? minus_context::unary : minus_context::binary;
+                        s = t.second.first;
+                        context = t.second.second ? minus_context::unary : minus_context::binary;
 
                         found_match = true;
 
@@ -556,7 +548,14 @@ namespace lexeme    // package in a unique namespace
               {
                 stream << "keyword ";
 
-                stream << "'" << this->keyword_table[static_cast<int>(*this->k)] << "'" << '\n';
+                for(const auto& t : this->keywords)
+                  {
+                    if(t.second == *this->k)
+                      {
+                        stream << "'" << t.first << "'" << '\n';
+                        break;
+                      }
+                  }
                 break;
               }
 
@@ -564,7 +563,14 @@ namespace lexeme    // package in a unique namespace
               {
                 stream << "symbol ";
 
-                stream << "'" << this->chars_table[static_cast<int>(*this->s)] << "'" << '\n';
+                for(const auto& t : this->symbols)
+                  {
+                    if(t.second.first == *this->s)
+                      {
+                        stream << "'" << t.first << "'" << '\n';
+                        break;
+                      }
+                  }
                 break;
               }
 

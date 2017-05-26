@@ -34,11 +34,8 @@ const auto DERIV_PREFIX = "__d";
 // CONSTRUCTOR
 
 
-std::vector<std::string>     fake_keyword_table;
-std::vector<keyword_type>    fake_keyword_map;
-std::vector<std::string>     fake_character_table;
-std::vector<character_type>  fake_character_map;
-std::vector<bool>            fake_context_table;
+y::lexeme_type::keyword_map keywords;
+y::lexeme_type::character_map symbols;
 
 
 lagrangian_block::lagrangian_block(symbol_factory& s, version_policy& vp, error_context err_ctx)
@@ -48,13 +45,11 @@ lagrangian_block::lagrangian_block(symbol_factory& s, version_policy& vp, error_
     // set up reserved symbol for Planck mass
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
 
-    // manufacture fake lexeme representing 'location' of Planck mass decalaration
+    // manufacture fake lexeme representing 'location' of Planck mass declaration
     lexeme::lexeme_buffer MPlanck_buffer(MPLANCK_TEXT_NAME, lexeme::lexeme_buffer::type::string_literal, nullptr, 0);
     y::lexeme_type::minus_context mctx = y::lexeme_type::minus_context::unary;
 
-    y::lexeme_type fake_MPlanck_lexeme(MPlanck_buffer, mctx, 0, err_ctx,
-                                       fake_keyword_table, fake_keyword_map, fake_character_table,
-                                       fake_character_map, fake_context_table);
+    y::lexeme_type fake_MPlanck_lexeme(MPlanck_buffer, mctx, 0, err_ctx, keywords, symbols);
 
     // set up attributes for Planck mass symbol
     attributes Mp_attrs;

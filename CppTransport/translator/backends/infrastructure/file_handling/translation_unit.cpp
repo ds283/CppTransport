@@ -42,88 +42,110 @@
 // lexical analyser data
 
 
-const std::vector<std::string> keyword_table =
+const y::lexeme_type::keyword_map keywords =
   {
-    "metadata", "require_version", "lagrangian",
-    "canonical", "nontrivial_metric",
-    "name", "author", "citeguide",
-    "description", "license", "revision",
-    "references", "urls", "email", "institute",
-    "field", "potential", "metric",
-    "subexpr", "value",
-    "parameter", "latex", "templates", "settings",
-    "core", "implementation", "model",
-    "abserr", "relerr", "stepper", "stepsize",
-    "background", "perturbations",
-    "indexorder", "left", "right",
-    "abs", "step", "sqrt", "sin", "cos", "tan",
-    "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
-    "asinh", "acosh", "atanh", "exp", "log", "pow", "Li2", "Li", "G_func", "S_func",
-    "H_func",
-    "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func",
-    "factorial", "binomial"
+    { "metadata", keyword_type::metadata },
+    { "require_version", keyword_type::require_version },
+    { "lagrangian", keyword_type::lagrangian },
+    { "canonical", keyword_type::canonical },
+    { "nontrivial_metric", keyword_type::nontrivial_metric },
+    { "name", keyword_type::name },
+    { "author", keyword_type::author },
+    { "citeguide", keyword_type::citeguide },
+    { "description", keyword_type::description },
+    { "license", keyword_type::license },
+    { "revision", keyword_type::revision },
+    { "references", keyword_type::references },
+    { "urls", keyword_type::urls },
+    { "email", keyword_type::email },
+    { "institute", keyword_type::institute },
+    { "field", keyword_type::field },
+    { "potential", keyword_type::potential },
+    { "metric", keyword_type::metric },
+    { "subexpr", keyword_type::subexpr },
+    { "value", keyword_type::value },
+    { "parameter", keyword_type::parameter },
+    { "latex", keyword_type::latex },
+    { "templates", keyword_type::templates },
+    { "settings", keyword_type::settings },
+    { "core", keyword_type::core },
+    { "implementation", keyword_type::impl },
+    { "model", keyword_type::model },
+    { "abserr", keyword_type::abserr },
+    { "relerr", keyword_type::relerr },
+    { "stepper", keyword_type::stepper },
+    { "stepsize", keyword_type::stepsize },
+    { "background", keyword_type::background },
+    { "perturbations", keyword_type::perturbations },
+    { "indexorder", keyword_type::indexorder },
+    { "left", keyword_type::left },
+    { "right", keyword_type::right },
+    { "abs", keyword_type::abs },
+    { "step", keyword_type::step },
+    { "sqrt", keyword_type::sqrt },
+    { "sin", keyword_type::sin },
+    { "cos", keyword_type::cos },
+    { "tan", keyword_type::tan },
+    { "asin", keyword_type::asin },
+    { "acos", keyword_type::acos },
+    { "atan", keyword_type::atan },
+    { "atan2", keyword_type::atan2 },
+    { "sinh", keyword_type::sinh },
+    { "cosh", keyword_type::cosh },
+    { "tanh", keyword_type::tanh },
+    { "asinh", keyword_type::asinh },
+    { "acosh", keyword_type::acosh },
+    { "atanh", keyword_type::atanh },
+    { "exp", keyword_type::exp },
+    { "log", keyword_type::log },
+    { "pow", keyword_type::pow },
+    { "Li2", keyword_type::Li2 },
+    { "Li", keyword_type::Li },
+    { "G_func", keyword_type::G },
+    { "S_func", keyword_type::S },
+    { "H_func", keyword_type::H },
+    { "zeta_func", keyword_type::zeta },
+    { "zetaderiv", keyword_type::zetaderiv },
+    { "tgamma_func", keyword_type::tgamma },
+    { "lgamma_func", keyword_type::lgamma },
+    { "beta_func", keyword_type::beta },
+    { "psi_func", keyword_type::psi },
+    { "factorial", keyword_type::factorial },
+    { "binomial", keyword_type::binomial }
   };
 
-const std::vector<keyword_type> keyword_map =
-  {
-    keyword_type::metadata, keyword_type::require_version, keyword_type::lagrangian,
-    keyword_type::canonical, keyword_type::nontrivial_metric,
-    keyword_type::name, keyword_type::author, keyword_type::citeguide,
-    keyword_type::description, keyword_type::license, keyword_type::revision,
-    keyword_type::references, keyword_type::urls, keyword_type::email, keyword_type::institute,
-    keyword_type::field, keyword_type::potential, keyword_type::metric,
-    keyword_type::subexpr, keyword_type::value,
-    keyword_type::parameter, keyword_type::latex, keyword_type::templates, keyword_type::settings,
-    keyword_type::core, keyword_type::impl, keyword_type::model,
-    keyword_type::abserr, keyword_type::relerr, keyword_type::stepper, keyword_type::stepsize,
-    keyword_type::background, keyword_type::perturbations,
-    keyword_type::indexorder, keyword_type::left, keyword_type::right,
-    keyword_type::abs, keyword_type::step, keyword_type::sqrt,
-    keyword_type::sin, keyword_type::cos, keyword_type::tan,
-    keyword_type::asin, keyword_type::acos, keyword_type::atan, keyword_type::atan2,
-    keyword_type::sinh, keyword_type::cosh, keyword_type::tanh,
-    keyword_type::asinh, keyword_type::acosh, keyword_type::atanh,
-    keyword_type::exp, keyword_type::log, keyword_type::pow, keyword_type::Li2,
-    keyword_type::Li, keyword_type::G, keyword_type::S, keyword_type::H,
-    keyword_type::zeta, keyword_type::zetaderiv, keyword_type::tgamma, keyword_type::lgamma,
-    keyword_type::beta, keyword_type::psi, keyword_type::factorial, keyword_type::binomial
-  };
-
-const std::vector<std::string> character_table =
-  {
-    "{", "}", "(", ")",
-    "[", "]", ",", ".", ":", ";",
-    "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
-    "&", "^", "@", "...", "->"
-  };
-
-const std::vector<character_type> character_map =
-  {
-    character_type::open_brace, character_type::close_brace,
-    character_type::open_bracket, character_type::close_bracket,
-    character_type::open_square, character_type::close_square,
-    character_type::comma,
-    character_type::period, character_type::colon, character_type::semicolon,
-    character_type::equals, character_type::plus,
-    character_type::binary_minus, character_type::unary_minus,
-    character_type::star, character_type::backslash, character_type::foreslash,
-    character_type::tilde, character_type::ampersand, character_type::circumflex,
-    character_type::ampersat, character_type::ellipsis,
-    character_type::rightarrow
-  };
-
-// keep track of which characters can precede a unary minus
-// this is most characters except the close bracket ')',
+// final column is *true* if the corresponding symbol can *precede*
+// a unary minus
+// This is most characters except the close bracket ')',
 // which signals the end of a subexpression and must be followed by a binary minus
 // otherwise, arithmetic operators such as +, -, *, /, ^ can all be followed by a unary minus
 // A unary minus can itself be followed by a unary minus, too
-const std::vector<bool> character_unary_context =
+const y::lexeme_type::character_map symbols =
   {
-    true, true, true, false,
-    true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true,
-    true, true, true, true, true
-  };
+    { "{", { character_type::open_brace, true } },
+    { "}", { character_type::close_brace, true } },
+    { "(", { character_type::open_bracket, true } },
+    { ")", { character_type::close_bracket, false } },
+    { "[", { character_type::open_square, true } },
+    { "]", { character_type::close_square, true } },
+    { ",", { character_type::comma, true } },
+    { ".", { character_type::period, true } },
+    { ":", { character_type::colon, true } },
+    { ";", { character_type::semicolon, true } },
+    { "=", { character_type::equals, true } },
+    { "+", { character_type::plus, true } },
+    { "-@binary", { character_type::binary_minus, true } },
+    { "-@unary", { character_type::unary_minus, true } },
+    { "*", { character_type::star, true } },
+    { "/", { character_type::backslash, true } },
+    { "\\", { character_type::foreslash, true } },
+    { "~", { character_type::tilde, true } },
+    { "&", { character_type::ampersand, true } },
+    { "^", { character_type::circumflex, true } },
+    { "@", { character_type::ampersat, true } },
+    { "...", { character_type::ellipsis, true } },
+    { "->", { character_type::rightarrow, true } }
+    };
 
 
 static std::string strip_dot_h(const std::string& pathname);
@@ -144,8 +166,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
                       std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                       std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
                       path, cache),
-    instream(lexstream_payload,
-             keyword_table, keyword_map, character_table, character_map, character_unary_context),
+    instream(lexstream_payload, keywords, symbols),
     lexer(instream),
     model(sym_factory, vp,
           error_context(stack,

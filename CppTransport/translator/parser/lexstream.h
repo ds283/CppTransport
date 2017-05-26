@@ -54,6 +54,7 @@ class lexstream
     //! shorthand for basic lexeme
     typedef lexeme::lexeme<Keywords, Characters> lexeme_type;
 
+    
   protected:
 
     //! lexeme table
@@ -71,9 +72,7 @@ class lexstream
   public:
 
     //! constructor
-    lexstream(lexstream_data& p,
-              const std::vector<std::string>& kt, const std::vector<Keywords>& km,
-              const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx);
+    lexstream(lexstream_data& p, const typename lexeme_type::keyword_map& km, const typename lexeme_type::character_map& cm);
 
     //! destructor
     ~lexstream() = default;
@@ -146,20 +145,11 @@ class lexstream
 
     // PARSING TABLES
 
-    //! table of keywords
-    const std::vector<std::string>& keyword_table;
-
-    //! table of keyword tokens
-    const std::vector<Keywords>& keyword_tokens;
-
-    //! table of characters
-    const std::vector<std::string>& chars_table;
-
-    //! table of character tokens
-    const std::vector<Characters>& chars_tokens;
-
-    //! table of unary minus sign 'contexts' that apply *after* each character
-    const std::vector<bool>& unary_context;
+    //! keyword-to-lexeme table
+    const typename lexeme_type::keyword_map& keywords;
+    
+    //! character-to-lexeme table
+    const typename lexeme_type::character_map& symbols;
 
   };
 
@@ -173,15 +163,10 @@ class lexstream
 // convert the contents of 'filename' to a string of lexemes, descending into
 // included files as necessary
 template <typename Keywords, typename Characters>
-lexstream<Keywords, Characters>::lexstream(lexstream_data& p,
-                                           const std::vector<std::string>& kt, const std::vector<Keywords>& km,
-                                           const std::vector<std::string>& ct, const std::vector<Characters>& cm,
-                                           const std::vector<bool>& ctx)
-  : keyword_table(kt),
-    keyword_tokens(km),
-    chars_table(ct),
-    chars_tokens(cm),
-    unary_context(ctx),
+lexstream<Keywords, Characters>::lexstream(lexstream_data& p, const typename lexeme_type::keyword_map& km,
+                                           const typename lexeme_type::character_map& cm)
+  : keywords(km),
+    symbols(cm),
     data_payload(p),
     unique(1)
   {
@@ -307,9 +292,7 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                                           this->data_payload.get_warning_handler());
 
                     this->lexeme_list.emplace_back(
-                      std::make_shared<lexeme_type>(word, context, this->unique++, err_ctx,
-                                                    this->keyword_table, this->keyword_tokens,
-                                                    this->chars_table, this->chars_tokens, this->unary_context));
+                      std::make_shared<lexeme_type>(word, context, this->unique++, err_ctx, this->keywords, this->symbols));
                   }
                 break;
               }
@@ -324,9 +307,7 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                                       this->data_payload.get_warning_handler());
 
                 this->lexeme_list.emplace_back(
-                  std::make_shared<lexeme_type>(word, context, this->unique++, err_ctx,
-                                                this->keyword_table, this->keyword_tokens,
-                                                this->chars_table, this->chars_tokens, this->unary_context));
+                  std::make_shared<lexeme_type>(word, context, this->unique++, err_ctx, this->keywords, this->symbols));
                 break;
               }
           }
