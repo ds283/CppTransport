@@ -445,6 +445,10 @@ set(TRANSLATOR_PARSER_DRIVER_FILES
 
 set(TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES
   translator/parser/semantic-values/stepper.h
+  translator/parser/semantic-values/attributes.h
+  translator/parser/semantic-values/subexpr.h
+  translator/parser/semantic-values/author.h
+  translator/parser/semantic-values/string_array.h
   )
 
 set(TRANSLATOR_PARSER_FILES
@@ -455,7 +459,7 @@ set(TRANSLATOR_PARSER_FILES
   translator/parser/lexfile.h
   translator/parser/lexical.h
   translator/parser/lexstream.h
-  translator/parser/semantic_data.h
+  translator/parser/semantic-values/semantic_data.h
   translator/parser/symbol_list.h
   translator/parser/y_common.h
   translator/parser/y_lexer.cpp
