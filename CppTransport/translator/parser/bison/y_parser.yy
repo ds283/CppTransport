@@ -77,6 +77,7 @@
 %token                                   institute
 %token                                   field
 %token                                   potential
+%token                                   metric
 %token                                   subexpr
 %token                                   value
 %token                                   parameter
@@ -181,6 +182,7 @@ script: script metadata metadata_block semicolon
         | script parameter identifier attribute_block semicolon                         { driver.model.add_parameter(*$3, *$4); }
         | script subexpr identifier subexpr_block semicolon                             { driver.model.add_subexpr(*$3, *$4); }
         | script potential equals expression semicolon                                  { driver.model.set_potential(*$4, *$3); }
+        | script metric equals metric_block semicolon
         | script model string model_block semicolon                                     { driver.templates.set_model(*$3); }
         | script background stepper_block semicolon                                     { driver.templates.set_background_stepper(*$3, *$2); }
         | script perturbations stepper_block semicolon                                  { driver.templates.set_perturbations_stepper(*$3, *$2); }
@@ -188,6 +190,9 @@ script: script metadata metadata_block semicolon
         | script templates template_block semicolon
         | script settings settings_block semicolon
         |
+        ;
+
+metric_block:
         ;
 
 metadata_block: open_brace metadata_def close_brace

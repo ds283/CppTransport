@@ -52,6 +52,7 @@ std::unordered_map<keyword_type, y::y_parser::token::yytokentype> keyword_tokens
     { keyword_type::institute,         y::y_parser::token::institute },
     { keyword_type::field,             y::y_parser::token::field },
     { keyword_type::potential,         y::y_parser::token::potential },
+    { keyword_type::metric,            y::y_parser::token::metric },
     { keyword_type::subexpr,           y::y_parser::token::subexpr },
     { keyword_type::value,             y::y_parser::token::value },
     { keyword_type::parameter,         y::y_parser::token::parameter },
