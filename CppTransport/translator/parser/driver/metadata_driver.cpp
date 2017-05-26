@@ -26,6 +26,7 @@
 
 #include "metadata_driver.h"
 #include "generics_driver.h"
+#include "parse_error.h"
 
 
 namespace y
@@ -42,69 +43,139 @@ namespace y
     
     void metadata_driver::set_author_email(author& a, lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_email(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_email(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::set_author_institute(author& a, lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_institute(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_institute(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::set_name(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.meta.set_name(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.meta.set_name(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::add_author(lexeme_type& lex, author& a)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { a.set_name(name, lex); return this->root.meta.add_author(name, lex, a); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { a.set_name(name, lex); return this->root.meta.add_author(name, lex, a); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::set_citeguide(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.meta.set_citeguide(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.meta.set_citeguide(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::set_description(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.meta.set_description(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.meta.set_description(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::set_revision(lexeme_type& lex)
       {
-        auto Setter = [&](auto& val, auto& lex) -> auto { return this->root.meta.set_revision(val, lex); };
-        SetIntegerValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& val, auto& lex) -> auto { return this->root.meta.set_revision(val, lex); };
+            SetIntegerValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::set_license(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.meta.set_license(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.meta.set_license(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::set_references(string_array& a)
       {
-        this->root.meta.set_references(a.get_array());
+        try
+          {
+            this->root.meta.set_references(a.get_array());
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void metadata_driver::set_urls(string_array& a)
       {
-        this->root.meta.set_urls(a.get_array());
+        try
+          {
+            this->root.meta.set_urls(a.get_array());
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
   }   // namespace y

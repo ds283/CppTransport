@@ -25,6 +25,7 @@
 
 
 #include "expression_tree_driver.h"
+#include "parse_error.h"
 
 
 namespace y

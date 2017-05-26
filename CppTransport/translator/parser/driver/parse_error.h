@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 17/06/2013.
+// Created by David Seery on 26/05/2017.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2017 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -23,34 +23,39 @@
 // --@@
 //
 
-
-#include <string>
-#include <sstream>
-
-#include "y_driver.h"
+#ifndef CPPTRANSPORT_PARSE_ERROR_H
+#define CPPTRANSPORT_PARSE_ERROR_H
 
 
-namespace y
-	{
-
-    y_driver::y_driver(model_descriptor& r, symbol_factory& s, argument_cache& c, local_environment& e)
-	    : root(r),
-        sym_factory(s),
-        cache(c),
-        env(e),
-        expr(root, s, c, e),
-        model(root, s, c, e),
-        meta(root, s, c, e),
-        templates(root, s, c, e),
-        misc(root, s, c, e)
-	    {
-	    }
+#include <stdexcept>
 
 
-    void y_driver::error(std::string msg)
-	    {
-        ::error(msg, this->cache, this->env);
-	    }
+class parse_error : public std::runtime_error
+  {
+  
+    // CONSTRUCTOR, DESTRUCTOR
+    
+  public:
+    
+    //! constructor
+    parse_error(std::string m)
+      : std::runtime_error(m),
+        msg(std::move(m))
+      {
+      }
+    
+    //! destructor is default
+    ~parse_error() = default;
     
     
-  }
+    // INTERNAL DATA
+    
+  protected:
+    
+    //! store message
+    std::string msg;
+  
+  };
+
+
+#endif //CPPTRANSPORT_PARSE_ERROR_H

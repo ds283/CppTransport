@@ -62,7 +62,7 @@ class lagrangian_block
   public:
 
     //! constructor
-    lagrangian_block(unsigned int& ec, symbol_factory& s, error_context err_ctx);
+    lagrangian_block(symbol_factory& s, error_context err_ctx);
 
     //! destructor is default
     ~lagrangian_block() = default;
@@ -151,10 +151,6 @@ class lagrangian_block
 
   private:
 
-    //! error count
-    unsigned int& err_count;
-
-
     // LAGRANGIAN DATA
     
     // TABLES
@@ -170,6 +166,10 @@ class lagrangian_block
 
     //! symbol table: subexpressions
     subexpr_symbol_table subexprs;
+    
+    //! flag to indicate whether symbol tables have been frozen -- can't define new fields or
+    //! parameters after the potential or field-space metric have been specified
+    std::unique_ptr< contexted_value<unsigned int> > symbols_frozen;
     
     // SETTINGS
     

@@ -440,6 +440,7 @@ set(TRANSLATOR_PARSER_DRIVER_FILES
   translator/parser/driver/misc_driver.h
   translator/parser/driver/y_driver.cpp
   translator/parser/driver/y_driver.h
+  translator/parser/driver/parse_error.h
   )
 
 set(TRANSLATOR_PARSER_FILES

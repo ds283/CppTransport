@@ -26,6 +26,7 @@
 
 #include "lagrangian_driver.h"
 #include "generics_driver.h"
+#include "parse_error.h"
 
 
 namespace y
@@ -42,53 +43,102 @@ namespace y
     
     void lagrangian_driver::add_field(lexeme_type& lex, attributes& a)
       {
-        auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
-        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.model.add_field(name, symbol, lexeme, attrs); };
-        
-        GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, a);
+        try
+          {
+            auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
+            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.model.add_field(name, symbol, lexeme, attrs); };
+    
+            GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, a);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void lagrangian_driver::add_parameter(lexeme_type& lex, attributes& a)
       {
-        auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
-        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.model.add_parameter(name, symbol, lexeme, attrs); };
+        try
+          {
+            auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
+            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.model.add_parameter(name, symbol, lexeme, attrs); };
     
-        GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, a);
+            GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, a);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void lagrangian_driver::add_subexpr(lexeme_type& lex, subexpr& e)
       {
-        auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
-        auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto { return this->root.model.add_subexpr(name, symbol, lexeme, expr); };
+        try
+          {
+            auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_symbol(name, latex); };
+            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto { return this->root.model.add_subexpr(name, symbol, lexeme, expr); };
     
-        GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, e);
+            GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, e);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void lagrangian_driver::set_subexpr_latex(subexpr& e, lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return e.set_latex(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return e.set_latex(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void lagrangian_driver::set_subexpr_value(subexpr& e, GiNaC::ex& v, lexeme_type& lex)
       {
-        e.set_value(v,lex);
+        try
+          {
+            e.set_value(v,lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void lagrangian_driver::set_potential(GiNaC::ex& V, lexeme_type& lex)
       {
-        this->root.model.set_potential(V, lex);
+        try
+          {
+            this->root.model.set_potential(V, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void lagrangian_driver::set_lagrangian_type(model_type t, lexeme_type& lex)
       {
-        this->root.model.set_lagrangian_type(t, lex);
+        try
+          {
+            this->root.model.set_lagrangian_type(t, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
   }   // namespace y

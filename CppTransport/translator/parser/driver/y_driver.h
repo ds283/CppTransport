@@ -72,19 +72,9 @@ namespace y
 		    // INTERFACE -- FAILURE AND ERROR CONDITIONS
 
       public:
-
-        //! detect error conditions reported during processing
-        bool failed() const { return(this->root.failed()); }
-
+    
         //! raise error, bypassing normal context-reporting system (eg. if no context can be found)
         void error(std::string msg);
-        
-        
-        // INTERFACE -- GET MODEL DESCRIPTION CONTAINER
-        
-      public:
-
-        const model_descriptor& get_descriptor();
     
     
         // INTERNAL DATA

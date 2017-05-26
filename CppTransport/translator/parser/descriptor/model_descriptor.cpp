@@ -36,10 +36,10 @@
 
 model_descriptor::model_descriptor(symbol_factory& s, error_context err_ctx)
   : err_count(0),
-    model(err_count, s, std::move(err_ctx)),
-    meta(err_count),
-    templates(err_count),
-    misc(err_count)
+    model(s, std::move(err_ctx)),
+    meta(),
+    templates(),
+    misc()
   {
   }
 

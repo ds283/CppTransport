@@ -40,9 +40,8 @@ class misc_block
   public:
 
     //! constructor
-    misc_block(unsigned int& ec)
-      : err_count(ec),
-        order(index_order::right)
+    misc_block()
+      : order(index_order::right)
       {
       }
 
@@ -80,10 +79,6 @@ class misc_block
     // INTERNAL DATA
 
   private:
-
-    //! error count
-    unsigned int& err_count;
-    
     
     // PLATFORM SETTINGS
     std::unique_ptr< contexted_value<unsigned int> > min_version;

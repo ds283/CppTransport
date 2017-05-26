@@ -58,6 +58,9 @@ class model_descriptor
     //! detect error condition
     bool failed() const { return this->err_count > 0; }
     
+    //! report error condition
+    void report_error() { ++this->err_count; }
+    
     //! perform validation
     validation_exceptions validate() const;
     

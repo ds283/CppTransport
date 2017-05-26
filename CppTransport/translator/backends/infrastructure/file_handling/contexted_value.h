@@ -28,6 +28,7 @@
 
 
 #include "error_context.h"
+#include "parse_error.h"
 #include "msg_en.h"
 
 
@@ -88,7 +89,7 @@ bool SetContextedValue(DataType& data, const ValueType& value, const LexemeType&
       {
         l.error(err_msg);
         data->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-        return false;
+        throw parse_error(err_msg);
       }
     
     data = std::make_unique< contexted_value<ValueType> >(value, l.get_error_context());
@@ -110,7 +111,7 @@ bool SetContextedValue(DataType& data, const ValueType& value, std::string err_m
         const auto& v = *data;
         v.front().get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
         
-        return false;
+        throw parse_error(err_msg);
       }
     
     data.release();

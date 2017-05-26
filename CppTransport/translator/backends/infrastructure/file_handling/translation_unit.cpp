@@ -165,7 +165,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     
     // combination of lexer, driver and parser performs syntactic analysis
     
-    if(parser.parse() == FAIL || driver.failed())
+    if(parser.parse() == FAIL || model.failed())
       {
         std::ostringstream msg;
         msg << WARNING_PARSING_FAILED << " " << name;
@@ -176,10 +176,8 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     // dump results of syntactic analysis -- for debugging
     // this->model.print(std::cerr);
     
-    this->populate_output_filenames();
-    
     // ask model descriptor to validate itself
-    auto validation_errors = this->model.validate();
+    auto validation_errors = model.validate();
     if(validation_errors.empty()) return;
     
     this->warn(WARNING_VALIDATION_ERRORS);
@@ -237,6 +235,8 @@ unsigned int translation_unit::apply()
 
     // don't attempt translation if parsing failed
 		if(this->parse_failed || this->errors > 0) return rval;
+    
+    this->populate_output_filenames();
     
     boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core_template();
     if(core)

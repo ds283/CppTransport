@@ -166,11 +166,7 @@ bool metadata_block::add_author(const std::string& n, const y::lexeme_type& l, a
         this->authors.emplace(std::make_pair(name, std::make_unique<author_declaration>(name, lexeme, attr)));
       };
 
-    if(GenericInsertSymbol(check, insert, n, l, a, ERROR_AUTHOR_EXISTS, NOTIFY_DUPLICATE_AUTHOR_WAS)) return true;
-
-    ++this->err_count;
-
-    return false;
+    return GenericInsertSymbol(check, insert, n, l, a, ERROR_AUTHOR_EXISTS, NOTIFY_DUPLICATE_AUTHOR_WAS);
   }
 
 

@@ -143,9 +143,8 @@ std::vector<character_type>  fake_character_map;
 std::vector<bool>            fake_context_table;
 
 
-lagrangian_block::lagrangian_block(unsigned int& ec, symbol_factory& s, error_context err_ctx)
-  : err_count(ec),
-    sym_factory(s)
+lagrangian_block::lagrangian_block(symbol_factory& s, error_context err_ctx)
+  : sym_factory(s)
   {
     // set up reserved symbol for Planck mass
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
@@ -183,10 +182,7 @@ bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y
         this->deriv_symbols.push_back(deriv_symbol);
       };
 
-    if(GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS)) return true;
-
-    ++this->err_count;
-    return false;
+    return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS);
   }
 
 
@@ -199,10 +195,7 @@ bool lagrangian_block::add_parameter(const std::string& n, GiNaC::symbol& s, con
         this->parameters.emplace(std::make_pair(name, std::make_unique<parameter_declaration>(name, symbol, lexeme, attr)));
       };
 
-    if(GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS)) return true;
-
-    ++this->err_count;
-    return false;
+    return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS);
   }
 
 
@@ -215,10 +208,7 @@ bool lagrangian_block::add_subexpr(const std::string& n, GiNaC::symbol& s, const
         this->subexprs.emplace(std::make_pair(name, std::make_unique<subexpr_declaration>(name, symbol, lexeme, expr)));
       };
 
-    if(GenericInsertSymbol(check, insert, n, s, l, e, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS)) return true;
-
-    ++this->err_count;
-    return false;
+    return GenericInsertSymbol(check, insert, n, s, l, e, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS);
   }
 
 

@@ -31,6 +31,8 @@
 #include <string>
 #include <sstream>
 
+#include "parse_error.h"
+
 #include "ginac/ginac.h"
 
 
@@ -52,7 +54,7 @@ bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
         orig_decl << dupl_msg << " '" << n << "'";
         record.get().get_declaration_point().warn(orig_decl.str());
 
-        return false;
+        throw parse_error(msg.str());
       }
 
     insert(n, s, l, a);
@@ -79,7 +81,7 @@ bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
         orig_decl << dupl_msg << " '" << n << "'";
         record.get().get_declaration_point().warn(orig_decl.str());
 
-        return false;
+        throw parse_error(msg.str());
       }
 
     insert(n, l, a);

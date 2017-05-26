@@ -26,6 +26,7 @@
 
 #include "templates_driver.h"
 #include "generics_driver.h"
+#include "parse_error.h"
 
 
 namespace y
@@ -42,62 +43,125 @@ namespace y
     
     void templates_driver::set_model(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_model(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_model(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void templates_driver::set_core(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_core(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_core(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void templates_driver::set_implementation(lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_implementation(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return this->root.templates.set_implementation(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void templates_driver::set_abserr(struct stepper& s, lexeme_type& lex)
       {
-        auto Setter = [&](auto err, auto& lex) -> auto { return s.set_abserr(std::abs(err), lex); };
-        SetDecimalValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto err, auto& lex) -> auto { return s.set_abserr(std::abs(err), lex); };
+            SetDecimalValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void templates_driver::set_relerr(struct stepper& s, lexeme_type& lex)
       {
-        auto Setter = [&](auto err, auto& lex) -> auto { return s.set_relerr(std::abs(err), lex); };
-        SetDecimalValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto err, auto& lex) -> auto { return s.set_relerr(std::abs(err), lex); };
+            SetDecimalValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void templates_driver::set_stepper(struct stepper& s, lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return s.set_name(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return s.set_name(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void templates_driver::set_stepsize(struct stepper& s, lexeme_type&lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return s.set_stepsize(name, lex); };
-        SetDecimalValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return s.set_stepsize(name, lex); };
+            SetDecimalValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void templates_driver::set_background_stepper(stepper& s, lexeme_type& lex)
       {
-        this->root.templates.set_background_stepper(s, lex);
+        try
+          {
+            this->root.templates.set_background_stepper(s, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void templates_driver::set_perturbations_stepper(stepper& s, lexeme_type& lex)
       {
-        this->root.templates.set_perturbations_stepper(s, lex);
+        try
+          {
+            this->root.templates.set_perturbations_stepper(s, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
   }   // namespace y

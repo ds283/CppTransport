@@ -26,6 +26,7 @@
 
 #include "misc_driver.h"
 #include "generics_driver.h"
+#include "parse_error.h"
 
 
 namespace y
@@ -42,27 +43,55 @@ namespace y
     
     void misc_driver::set_attribute_latex(attributes& a, lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_latex(name, lex); };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_latex(name, lex); };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void misc_driver::add_string(string_array& a, lexeme_type& lex)
       {
-        auto Setter = [&](auto& name, auto& lex) -> auto { a.push_element(name, lex); return true; };
-        SetStringValue(Setter, lex);
+        try
+          {
+            auto Setter = [&](auto& name, auto& lex) -> auto { a.push_element(name, lex); return true; };
+            SetStringValue(Setter, lex);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void misc_driver::set_indexorder_left()
       {
-        this->root.misc.set_indexorder(index_order::left);
+        try
+          {
+            this->root.misc.set_indexorder(index_order::left);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     
     void misc_driver::set_indexorder_right()
       {
-        this->root.misc.set_indexorder(index_order::right);
+        try
+          {
+            this->root.misc.set_indexorder(index_order::right);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
       }
     
     

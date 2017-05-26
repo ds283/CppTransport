@@ -41,8 +41,7 @@ class templates_block
   public:
 
     //! constructor
-    templates_block(unsigned int& ec)
-      : err_count(ec)
+    templates_block()
       {
       }
 
@@ -104,10 +103,6 @@ class templates_block
     // INTERNAL DATA
 
   private:
-
-    //! error count
-    unsigned int& err_count;
-
 
     // TEMPLATE DATA
 

@@ -41,8 +41,7 @@ class metadata_block
   public:
 
     //! constructor
-    metadata_block(unsigned int& ec)
-      : err_count(ec)
+    metadata_block()
       {
       }
 
@@ -121,10 +120,6 @@ class metadata_block
     // INTERNAL DATA
 
   private:
-
-    //! error count
-    unsigned int& err_count;
-
 
     // METADATA
 
