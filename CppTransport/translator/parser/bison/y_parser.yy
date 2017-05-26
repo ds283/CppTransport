@@ -198,12 +198,7 @@ metric_block:
 metadata_block: open_brace metadata_def close_brace
 
 metadata_def: metadata_def require_version equals integer semicolon                     { driver.misc.set_required_version(*$4); }
-        | metadata_def lagrangian equals lagrangian_specifier semicolon
         |
-        ;
-
-lagrangian_specifier: canonical                                                         { driver.model.set_lagrangian_type(model_type::canonical, *$1); }
-        | nontrivial_metric                                                             { driver.model.set_lagrangian_type(model_type::nontrivial_metric, *$1); }
         ;
 
 template_block: open_brace template_def close_brace
@@ -238,6 +233,7 @@ string_group: string_group comma string                                         
 model_block: open_brace model_attributes close_brace
 
 model_attributes: model_attributes name equals string semicolon                         { driver.meta.set_name(*$4); }
+        | model_attributes lagrangian equals lagrangian_specifier semicolon
         | model_attributes citeguide equals string semicolon                            { driver.meta.set_citeguide(*$4); }
         | model_attributes description equals string semicolon                          { driver.meta.set_description(*$4); }
         | model_attributes license equals string semicolon                              { driver.meta.set_license(*$4); }
@@ -245,6 +241,10 @@ model_attributes: model_attributes name equals string semicolon                 
         | model_attributes references equals string_array semicolon                     { driver.meta.set_references(*$4); }
         | model_attributes urls equals string_array semicolon                           { driver.meta.set_urls(*$4); }
         |
+        ;
+
+lagrangian_specifier: canonical                                                         { driver.model.set_lagrangian_type(model_type::canonical, *$1); }
+        | nontrivial_metric                                                             { driver.model.set_lagrangian_type(model_type::nontrivial_metric, *$1); }
         ;
 
 author_block: open_brace author_attributes close_brace                                  { $$ = $2; }

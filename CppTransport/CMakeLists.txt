@@ -459,7 +459,7 @@ set(TRANSLATOR_PARSER_FILES
   translator/parser/lexfile.h
   translator/parser/lexical.h
   translator/parser/lexstream.h
-  translator/parser/semantic-values/semantic_data.h
+  translator/parser/semantic-values/semantic_values.h
   translator/parser/symbol_list.h
   translator/parser/y_common.h
   translator/parser/y_lexer.cpp

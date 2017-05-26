@@ -1,6 +1,5 @@
 metadata
  { require_version = 201701;
-   lagrangian      = canonical;
  };
 
 % specify which class template should be used with this model

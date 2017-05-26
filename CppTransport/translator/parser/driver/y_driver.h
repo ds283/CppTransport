@@ -32,7 +32,7 @@
 #include <iostream>
 #include <string>
 
-#include "semantic_data.h"
+#include "semantic_values.h"
 #include "model_descriptor.h"
 
 #include "symbol_factory.h"
