@@ -193,11 +193,11 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/backends/languages/opencl
   translator/backends/languages/shared
   translator/backends/shared
-  translator/concepts
   translator/instruments
   translator/parser
   translator/parser/descriptor
   translator/parser/driver
+  translator/parser/semantic-values
   translator/transport-objects
   translator/transport-objects/indices
   translator/transport-objects/utilities
@@ -392,12 +392,6 @@ set(TRANSLATOR_BACKENDS_SHARED_FILES
   translator/backends/shared/utensors.h
   )
 
-set(TRANSLATOR_CONCEPTS_FILES
-  translator/concepts/model_settings.h
-  translator/concepts/stepper.h
-  translator/concepts/symbol_list.h
-  )
-
 set(TRANSLATOR_FILES
     translator/core.h
     translator/defaults.h
@@ -416,6 +410,7 @@ set(TRANSLATOR_PARSER_BISON_FILES
   )
 
 set(TRANSLATOR_PARSER_DESCRIPTOR_FILES
+  translator/parser/descriptor/model_settings.h
   translator/parser/descriptor/model_descriptor.cpp
   translator/parser/descriptor/model_descriptor.h
   translator/parser/descriptor/generics_descriptor.h
@@ -448,6 +443,10 @@ set(TRANSLATOR_PARSER_DRIVER_FILES
   translator/parser/driver/parse_error.h
   )
 
+set(TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES
+  translator/parser/semantic-values/stepper.h
+  )
+
 set(TRANSLATOR_PARSER_FILES
   translator/parser/input_stack.cpp
   translator/parser/input_stack.h
@@ -457,6 +456,7 @@ set(TRANSLATOR_PARSER_FILES
   translator/parser/lexical.h
   translator/parser/lexstream.h
   translator/parser/semantic_data.h
+  translator/parser/symbol_list.h
   translator/parser/y_common.h
   translator/parser/y_lexer.cpp
   translator/parser/y_lexer.h
@@ -1059,12 +1059,12 @@ set(SOURCE_FILES
   ${TRANSLATOR_BACKENDS_LANGUAGES_OPENCL_FILES}
   ${TRANSLATOR_BACKENDS_LANGUAGES_SHARED_FILES}
   ${TRANSLATOR_BACKENDS_SHARED_FILES}
-  ${TRANSLATOR_CONCEPTS_FILES}
   ${TRANSLATOR_FILES}
   ${TRANSLATOR_INSTRUMENTS_FILES}
   ${TRANSLATOR_PARSER_BISON_FILES}
   ${TRANSLATOR_PARSER_DESCRIPTOR_FILES}
   ${TRANSLATOR_PARSER_DRIVER_FILES}
+  ${TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES}
   ${TRANSLATOR_PARSER_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
