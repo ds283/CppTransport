@@ -67,7 +67,7 @@ BUILD_SPLINTER(${CMAKE_BINARY_DIR}/thirdparty/SPLINTER ${EXTERNAL_INSTALL_PREFIX
 # configure build_data.h
 STRING(TIMESTAMP CONFIG_TIMESTAMP)
 CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/build_data.h)
-# provision a second version of build_data.h for use in test-target
+# provision a second version of build_data.h for use in test-canonical
 CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/transport-runtime/build_data.h)
 
 # build parser
@@ -209,7 +209,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
 
 
 # pull in test target
-ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
+ADD_SUBDIRECTORY(test-canonical EXCLUDE_FROM_ALL)
 
 # install targets for CppTransport translator, templates, and runtime system
 # note that CppTransport-sendmail has more restrictive permissions since it may contain a password

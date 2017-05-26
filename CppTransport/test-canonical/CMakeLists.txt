@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 
-PROJECT(test-target)
+PROJECT(test-canonical)
 
 
 # don't use FindCppTransport package; want to pull in headers from the source tree,
@@ -55,15 +55,15 @@ SET(
 ADD_CUSTOM_TARGET(AxionGenerator DEPENDS ${AXION_HEADERS})
 
 
-ADD_EXECUTABLE(test-target test_target.cpp)
-ADD_DEPENDENCIES(test-target AxionGenerator)
+ADD_EXECUTABLE(test-canonical test-canonical.cpp)
+ADD_DEPENDENCIES(test-canonical AxionGenerator)
 
-TARGET_LINK_LIBRARIES(test-target sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
-TARGET_COMPILE_OPTIONS(test-target PRIVATE -std=c++14 -ftemplate-backtrace-limit=0)
+TARGET_LINK_LIBRARIES(test-canonical sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
+TARGET_COMPILE_OPTIONS(test-canonical PRIVATE -std=c++14 -ftemplate-backtrace-limit=0)
 
 
 TARGET_INCLUDE_DIRECTORIES(
-  test-target PRIVATE
+  test-canonical PRIVATE
   ${CPPTRANSPORT_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${Boost_INCLUDE_DIRS}
