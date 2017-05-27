@@ -167,10 +167,14 @@
 %type  <std::shared_ptr<subexpr>>        subexpr_block
 %type  <std::shared_ptr<subexpr>>        subexpr_def
 %type  <std::shared_ptr<GiNaC::ex>>      expression
-%type  <std::shared_ptr<GiNaC::ex>>      term
-%type  <std::shared_ptr<GiNaC::ex>>      factor
 %type  <std::shared_ptr<GiNaC::ex>>      leaf
 %type  <std::shared_ptr<GiNaC::ex>>      built_in_function
+
+%left plus binary_minus
+%left star foreslash
+%right circumflex
+
+%precedence unary_minus
 
 %%
 
@@ -274,26 +278,20 @@ subexpr_def: subexpr_def latex equals string semicolon                          
         |                                                                               { $$ = std::make_shared<subexpr>(); }
         ;
 
-expression: term                                                                        { $$ = $1; }
-        | expression plus term                                                          { $$ = driver.expr.add(*$1, *$3); }
-        | expression binary_minus term                                                  { $$ = driver.expr.sub(*$1, *$3); }
-        ;
-
-term: factor                                                                            { $$ = $1; }
-        | term star factor                                                              { $$ = driver.expr.mul(*$1, *$3); }
-        | term foreslash factor                                                         { $$ = driver.expr.div(*$1, *$3); }
-        ;
-
-factor: leaf                                                                            { $$ = $1; }
-        | leaf circumflex leaf                                                          { $$ = driver.expr.pow(*$1, *$3); }
+expression: leaf                                                                        { $$ = $1; }
+        | expression plus expression                                                    { $$ = driver.expr.add(*$1, *$3); }
+        | expression binary_minus expression                                            { $$ = driver.expr.sub(*$1, *$3); }
+        | expression star expression                                                    { $$ = driver.expr.mul(*$1, *$3); }
+        | expression foreslash expression                                               { $$ = driver.expr.div(*$1, *$3); }
+        | expression circumflex expression                                              { $$ = driver.expr.pow(*$1, *$3); }
+        | open_bracket expression close_bracket                                         { $$ = $2; }
+        | unary_minus expression                                                        { $$ = driver.expr.unary_minus(*$2); }
         ;
 
 leaf: integer                                                                           { $$ = driver.expr.get_integer(*$1); }
         | decimal                                                                       { $$ = driver.expr.get_decimal(*$1); }
         | identifier                                                                    { $$ = driver.expr.get_identifier(*$1); }
         | built_in_function                                                             { $$ = $1; }
-        | open_bracket expression close_bracket                                         { $$ = $2; }
-        | unary_minus expression                                                        { $$ = driver.expr.unary_minus(*$2); }
         ;
 
 built_in_function: abs open_bracket expression close_bracket                            { $$ = driver.expr.abs(*$3); }
