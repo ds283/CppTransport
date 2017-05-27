@@ -32,10 +32,12 @@
 #include <memory>
 #include <vector>
 #include <tuple>
+#include <boost/optional.hpp>
 
 #include "filestack.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/optional.hpp"
 
 //! read in characters from a file - the base step in the lexical analysis stack
 class lexfile
@@ -76,7 +78,7 @@ class lexfile
   public:
 
     //! constructor
-    lexfile(const boost::filesystem::path& fnam, filestack& s);
+    lexfile(const boost::filesystem::path& fnam, filestack& s, boost::optional<unsigned int> ml = boost::none);
 
     //! destructor
     ~lexfile();
@@ -122,6 +124,9 @@ class lexfile
 
     //! stream representing the input
     std::ifstream stream;
+    
+    //! maximum number of lines to read, if supplied
+    boost::optional<unsigned int> max_lines;
 
     //! filestack representing our current position in processing the input file hierarchy
     filestack& stack;

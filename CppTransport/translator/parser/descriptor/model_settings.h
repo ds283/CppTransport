@@ -99,6 +99,16 @@ enum class model_type
   };
 
 
+inline std::string format(model_type T)
+  {
+    switch(T)
+      {
+        case model_type::canonical: return "canonical"; break;
+        case model_type::nontrivial_metric: return "nontrivial_metric"; break;
+      }
+  }
+
+
 typedef std::map< std::string, std::unique_ptr<author_declaration> > author_table;
 
 typedef std::pair< bool, std::string > validation_message;

@@ -111,6 +111,9 @@ class lagrangian_block
     //! set the type of the Lagrangian
     void set_lagrangian_type(model_type t, const y::lexeme_type& l);
     
+    //! get the type of the Lagrangian
+    model_type get_lagrangian_type() const;
+    
     //! set potential
     bool set_potential(GiNaC::ex& V, const y::lexeme_type& l);
 

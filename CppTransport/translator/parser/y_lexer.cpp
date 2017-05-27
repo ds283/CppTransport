@@ -154,7 +154,7 @@ namespace y
         // we are using Bison's variant interface here
         lval->build< std::shared_ptr<lexeme_type> >(lex);
 
-        // cache lexeme for return to Bison error handler if neexed
+        // cache lexeme for return to Bison error handler if needed
         if(lex) this->current = *lex; else this->current.reset();
 
         // if no lexeme was returned, then inform Bison that we have reached end-of-input;

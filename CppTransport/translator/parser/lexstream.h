@@ -41,6 +41,8 @@
 #include "input_stack.h"
 #include "lexstream_data.h"
 
+#include "boost/optional.hpp"
+
 
 //! lexstream parses a specified input file into a traversable list of lexemes
 template <typename Keywords, typename Characters>
@@ -62,9 +64,6 @@ class lexstream
 
     //! lexeme table iterator
     typedef typename lexeme_table_type::iterator lexeme_table_ptr;
-    
-    //! lexeme data bundle
-    typedef std::tuple< lexeme::lexeme_buffer, std::shared_ptr<std::string>, unsigned int > lexeme_bundle;
 
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -72,7 +71,8 @@ class lexstream
   public:
 
     //! constructor
-    lexstream(lexstream_data& p, const typename lexeme_type::keyword_map& km, const typename lexeme_type::character_map& cm);
+    lexstream(lexstream_data& p, const typename lexeme_type::keyword_map& km,
+              const typename lexeme_type::character_map& cm);
 
     //! destructor
     ~lexstream() = default;
@@ -226,7 +226,7 @@ lexstream<Keywords, Characters>& lexstream<Keywords, Characters>::operator++()
 template <typename Keywords, typename Characters>
 bool lexstream<Keywords, Characters>::state()
   {
-    return (this->ptr != this->lexeme_list.end());
+    return this->ptr != this->lexeme_list.end();
   }
 
 
@@ -252,7 +252,7 @@ bool lexstream<Keywords, Characters>::parse(const boost::filesystem::path& file)
     // the lexemes which are generated during lexicalization
     // then inherit ownership of these lines, so even though the
     // lexfile object itself is destroyed we are not left with dangling pointers
-    lexfile input(path, this->stack);
+    lexfile input(path, this->stack, this->data_payload.get_max_lines());
 
     this->stack.push(path);
     this->lexicalize(input);
@@ -398,13 +398,14 @@ lexeme::lexeme_buffer lexstream<Keywords, Characters>::get_lexeme(lexfile& input
         else break;
       }
 
-    // extract lexeme from next characters on the input stream
     if(state != lexfile::status::ok) return word;
     
     // cache current input position
     word.set_context_line(input.get_current_line());
     word.set_context_end_position(input.get_current_char_pos());
     
+    // extract lexeme from next characters on the input stream
+
     if(isalpha(c) || c == '_' || c == '$')            // looks like identifier or reserved work
       {
         word = c;

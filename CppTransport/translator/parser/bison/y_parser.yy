@@ -281,7 +281,7 @@ expression: term                                                                
 
 term: factor                                                                            { $$ = $1; }
         | term star factor                                                              { $$ = driver.expr.mul(*$1, *$3); }
-        | term backslash factor                                                         { $$ = driver.expr.div(*$1, *$3); }
+        | term foreslash factor                                                         { $$ = driver.expr.div(*$1, *$3); }
         ;
 
 factor: leaf                                                                            { $$ = $1; }

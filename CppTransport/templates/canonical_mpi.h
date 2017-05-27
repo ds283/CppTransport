@@ -1,4 +1,4 @@
-// backend=cpp minver=201601
+// backend = cpp, minver = 201701, lagrangian = canonical
 //
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.

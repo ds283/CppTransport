@@ -47,6 +47,25 @@ constexpr auto FATAL_TOKEN                           = "fatal: ";
 constexpr auto WARNING_PARSING_FAILED                = "Failed to parse file";
 constexpr auto WARNING_VALIDATION_ERRORS             = "The following validation errors occurred:";
 
+constexpr auto ERROR_MISSING_TEMPLATE                = "Could not find specified template";
+constexpr auto ERROR_READING_TEMPLATE                = "Error reading from template file";
+constexpr auto ERROR_EXPECTED_EQUALS                 = "Expected '=' symbol";
+constexpr auto ERROR_EXPECTED_BACKEND_IDENTIFIER     = "Expected backend identifier";
+constexpr auto ERROR_EXPECTED_CPPTRANSPORT_VERSION   = "Expected CppTransport version number in format 201701";
+constexpr auto ERROR_EXPECTED_TEMPLATE_TYPE          = "Expected template type specifier";
+constexpr auto ERROR_IMPROPER_TEMPLATE_HEADER        = "Improperly formed header line in template";
+constexpr auto ERROR_TEMPLATE_TOO_RECENT_A           = "Template requires more recent version of CppTransport (>=";
+constexpr auto ERROR_TEMPLATE_TOO_RECENT_B           = "current version";
+constexpr auto ERROR_TEMPLATE_BACKEND_A              = "Template";
+constexpr auto ERROR_TEMPLATE_BACKEND_B              = "requires unknown backend";
+constexpr auto ERROR_TEMPLATE_LAGRANGIAN_A           = "Template is suitable for Lagrangian type";
+constexpr auto ERROR_TEMPLATE_LAGRANGIAN_B           = "but model implements Lagrangian type";
+constexpr auto WARNING_DUPLICATE_TEMPLATE_BACKEND    = "Duplicate backend identifier";
+constexpr auto WARNING_DUPLICATE_TEMPLATE_MINVER     = "Duplicate minimum CppTransport version number";
+constexpr auto WARNING_DUPLICATE_TEMPLATE_TYPE       = "Duplicate template type specifier";
+
+constexpr auto ERROR_UNSET_BACKEND_DATA              = "Internal error: attempt to read from unset backend_data field";
+
 constexpr auto WARNING_NO_REQUIRED_VERSION           = "No minimum version of CppTransport was specified, so some new features may be disabled";
 constexpr auto ERROR_REQUIRED_VERSION_TOO_HIGH_A     = "Requires more recent version of CppTransport (requires";
 constexpr auto ERROR_REQUIRED_VERSION_TOO_HIGH_B     = ", current version";
@@ -68,17 +87,6 @@ constexpr auto ERROR_NO_BACKGROUND_STEPPER_BLOCK     = "No background stepper bl
 constexpr auto ERROR_NO_PERTURBATIONS_STEPPER_BLOCK  = "No perturbations stepper block specified";
 constexpr auto ERROR_NO_MODEL_BLOCK                  = "No model block specified";
 constexpr auto ERROR_NO_POTENTIAL                    = "No Lagrangian specified";
-constexpr auto ERROR_MISSING_TEMPLATE                = "Could not find specified template";
-constexpr auto ERROR_READING_TEMPLATE                = "Error reading from template file";
-constexpr auto ERROR_IMPROPER_TEMPLATE_HEADER        = "Improperly formed header line in template";
-constexpr auto ERROR_EXPECTED_TEMPLATE_BACKEND       = "Expected backend specifier following 'backend' keyword in template";
-constexpr auto ERROR_EXPECTED_TEMPLATE_MINVER        = "Expected minver specifier following 'minver' keyword in template";
-constexpr auto ERROR_TEMPLATE_TOO_RECENT_A           = "Template";
-constexpr auto ERROR_TEMPLATE_TOO_RECENT_B           = "requires more recent version of CppTransport (>";
-constexpr auto ERROR_TEMPLATE_BACKEND_A              = "Template";
-constexpr auto ERROR_TEMPLATE_BACKEND_B              = "requires unknown backend";
-constexpr auto WARNING_DUPLICATE_TEMPLATE_BACKEND    = "Header line contains duplicate backend specifiers in template";
-constexpr auto WARNING_DUPLICATE_TEMPLATE_MINVER     = "Header line contains duplicate minver specifiers in template";
 
 constexpr auto WARNING_VEXCL_STEPPER_IGNORED_A       = "Using stepper type";
 constexpr auto WARNING_VEXCL_STEPPER_IGNORED_B       = "; VexCL backend ignores stepper specification";

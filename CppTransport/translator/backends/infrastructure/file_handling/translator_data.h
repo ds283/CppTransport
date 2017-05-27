@@ -70,6 +70,12 @@ class translator_data
     error_context make_error_context(std::shared_ptr<std::string>& l, unsigned int s, unsigned int e) const
       { return error_context(this->outstack, l, s, e, this->err, this->wrn); }
     
+    //! get error handler
+    error_context::error_handler get_error_handler() const { return this->err; }
+    
+    //! get warning handler
+    error_context::warning_handler get_warning_handler() const { return this->wrn; }
+    
     
     // SET CORE, IMPLEMENTATION DATA
 
@@ -159,6 +165,9 @@ class translator_data
     
     //! get version policy repository
     version_policy& get_version_policy() { return this->policy; }
+    
+    //! get argument cache
+    argument_cache& get_argument_cache() { return this->cache; }
 
 
     // INTERNAL DATA

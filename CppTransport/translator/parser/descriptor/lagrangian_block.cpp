@@ -236,6 +236,13 @@ void lagrangian_block::set_lagrangian_type(model_type t, const y::lexeme_type& l
   }
 
 
+model_type lagrangian_block::get_lagrangian_type() const
+  {
+    if(this->type) return *this->type;
+    return model_type::canonical;
+  }
+
+
 void lagrangian_block::freeze_tables(const y::lexeme_type& l)
   {
     // nothing to do if already frozen

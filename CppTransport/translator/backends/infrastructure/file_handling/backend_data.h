@@ -29,12 +29,16 @@
 
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 
 #include "error_context.h"
 #include "model_settings.h"
 
+#include "contexted_value.h"
+
 #include "boost/optional.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "translator_data.h"
 
 
 class backend_data
@@ -45,48 +49,55 @@ class backend_data
   public:
 
     //! constructor
-    backend_data(std::ifstream& inf, const boost::filesystem::path& path, error_context& err_context);
+    backend_data(const boost::filesystem::path& path, filestack& s, error_context::error_handler e,
+                 error_context::warning_handler w, finder& f, argument_cache& a);
 
     //! destructor
     ~backend_data() = default;
 
 
-    // QUERY WHETHER ALL BACKEND DATA OK
+    // INTERFACE
 
   public:
 
+    //! returns true if all backend data is present and the template can be
+    //! read, otherwise returns false
     operator bool() const { return(this->name && this->minver); }
 
+    //! perform validation
+    bool validate(translator_data& payload) const;
+    
 
     // QUERY DATA
 
   public:
 
     //! get minimum version
-    unsigned int get_min_version() const { return(*this->minver); }
+    unsigned int get_min_version() const { if(this->minver) return *this->minver; else throw std::runtime_error(ERROR_UNSET_BACKEND_DATA);  }
 
     //! get backend name
-    const std::string& get_backend_name() const { return(*this->name); }
+    const std::string get_backend_name() const { if(this->name) return *this->name; else throw std::runtime_error(ERROR_UNSET_BACKEND_DATA); }
 
-    //! get model type
-    model_type get_model_type() const { return(this->type); }
+    //! get model type; default to canonical if unset
+    //! (this field wasn't available prior to 2017.01, so templates for CppTransport versions before this won't set it)
+    model_type get_model_type() const { if(this->type) return *this->type; else return model_type::canonical; }
 
 
     // INTERNAL DATA
 
   private:
-
-    //! cache header line
-    std::string line;
+    
+    //! cache template name
+    const boost::filesystem::path input;
 
     //! minimum version
-    boost::optional<unsigned int> minver;
+    std::unique_ptr< contexted_value<unsigned int> > minver;
 
     //! name of backend
-    boost::optional<std::string> name;
+    std::unique_ptr< contexted_value<std::string> > name;
 
     //! type of u-factory
-    model_type type;
+    std::unique_ptr< contexted_value<model_type> > type;
 
   };
 

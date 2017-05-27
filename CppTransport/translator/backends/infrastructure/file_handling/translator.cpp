@@ -98,7 +98,20 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
   {
     unsigned int replacements = 0;
     std::ifstream inf;
-
+    
+    // decide which backend and API version are required
+    // backend_data will issue an error if the file doesn't exist, can't be opened,
+    // or the header cannot be read correctly
+    backend_data backend(in, this->data_payload.get_stack(), this->data_payload.get_error_handler(),
+                         this->data_payload.get_warning_handler(),
+                         this->data_payload.get_finder(), this->data_payload.get_argument_cache());
+    
+    if(!backend) return 0;  // bail out on failure. Error messages have already been issued
+    
+    if(!backend.validate(this->data_payload)) return 0;   // ask backend to validate itself
+    
+    // from here on, can assume that template exists and can be read and handled by this version of CppTransport
+    
     inf.open(in.string().c_str());
     if(!inf.is_open() || inf.fail())
       {
@@ -112,6 +125,10 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
         return 0;
       }
     
+    // skip over header line
+    std::string line;
+    std::getline(inf, line);
+    
     // emit advisory that translation is underway
     std::ostringstream translation_msg;
     translation_msg << MESSAGE_TRANSLATING << " '" << in.string() << "'";
@@ -120,33 +137,28 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
         translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
       }
     this->data_payload.message(translation_msg.str());
-
-    // decide which backend and API version are required
-    error_context err_context = this->data_payload.make_error_context();
-    backend_data backend(inf, in, err_context);
-
-    if(!backend) return 0;
-    if(backend.get_min_version() > CPPTRANSPORT_NUMERIC_VERSION)
-      {
-        // we can't handle this template -- the platform version required is too new
-        std::ostringstream msg;
-        msg << ERROR_TEMPLATE_TOO_RECENT_A << " " << in << " " << ERROR_TEMPLATE_TOO_RECENT_B << backend.get_min_version() << ")";
-    
-        error_context err_context = this->data_payload.make_error_context();
-        err_context.error(msg.str());
-        
-        inf.close();
-        return 0;
-      }
     
     // Generate an appropriate backend
 
-    // A backend consists of a set of macro replacement rules which collectively comprise a 'package group'.
+    // A backend consists of a set of macro replacement rules that collectively comprise a 'package group'.
     // The result is returned as a managed pointer, using std::unique_ptr<>
     std::unique_ptr<tensor_factory> factory = make_tensor_factory(backend, this->data_payload, *this->cache);
-    std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, *factory);
+    
+    // try to synthesize an appropriate backend
+    std::unique_ptr<package_group> package;
+    try
+      {
+        package = package_group_factory(in, backend, this->data_payload, *factory);
+      }
+    catch(std::runtime_error& xe)
+      {
+        error_context err_context = this->data_payload.make_error_context();
+        err_context.error(xe.what());
+        return 0;
+      }
 
-    // generate a macro replacement agent based on this package group
+    // generate a macro replacement agent based on this package group; can assume that
+    // package is not an empty pointer
     macro_agent agent(this->data_payload, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT_EQUAL, BACKEND_LINE_SPLIT_SUM_EQUAL);
 
     // push this input file to the top of the filestack
@@ -157,8 +169,8 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
 
     while(!inf.eof() && !inf.fail())
       {
-        std::string line;
         // read in a line from the template
+        line.clear();
         std::getline(inf, line);
 
         // apply macro replacement to this line, keeping track of how many replacements are performed

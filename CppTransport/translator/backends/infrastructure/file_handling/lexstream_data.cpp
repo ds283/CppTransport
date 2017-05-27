@@ -26,8 +26,11 @@
 #include "lexstream_data.h"
 
 
-lexstream_data::lexstream_data(const boost::filesystem::path& name, error_context::error_handler e, error_context::warning_handler w, finder& s, argument_cache& c)
+lexstream_data::lexstream_data(const boost::filesystem::path& name, error_context::error_handler e,
+                               error_context::warning_handler w, finder& s, argument_cache& c,
+                               boost::optional<unsigned int> ml)
   : filename(name),
+    max_lines(ml),
     err(e),
     wrn(w),
     cache(c),
