@@ -84,13 +84,14 @@ class declaration    // is an abstract class
   
   protected:
     
-    //! text name of declaration
+    //! text name of object (parameter, field, etc.)
     std::string name;
     
-    //! GiNaC symbol for declaration
+    //! GiNaC symbol for object
     GiNaC::symbol symbol;
     
-    //! reference to declaration lexeme
+    //! reference to lexeme specifying declaration point, used for
+    //! reporting context-aware errors
     const y::lexeme_type& declaration_point;
     
     //! class id; used to record the order in which declarations have been made

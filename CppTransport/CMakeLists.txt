@@ -120,12 +120,12 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/shared/temporary_pool.cpp
   translator/backends/shared/utensors.cpp
   ${BISON_parser_OUTPUTS}
-  translator/parser/descriptor/lagrangian_block.cpp
-  translator/parser/descriptor/metadata_block.cpp
+  translator/parser/descriptor/blocks/lagrangian_block.cpp
+  translator/parser/descriptor/blocks/metadata_block.cpp
+  translator/parser/descriptor/blocks/templates_block.cpp
+  translator/parser/descriptor/blocks/misc_block.cpp
+  translator/parser/descriptor/symbols/declarations.cpp
   translator/parser/descriptor/model_descriptor.cpp
-  translator/parser/descriptor/templates_block.cpp
-  translator/parser/descriptor/misc_block.cpp
-  translator/parser/descriptor/declarations.cpp
   translator/parser/driver/expression_tree_driver.cpp
   translator/parser/driver/lagrangian_driver.cpp
   translator/parser/driver/metadata_driver.cpp
@@ -195,6 +195,8 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/backends/shared
   translator/instruments
   translator/parser
+  translator/parser/descriptor/blocks
+  translator/parser/descriptor/symbols
   translator/parser/descriptor
   translator/parser/driver
   translator/parser/semantic-values
@@ -409,21 +411,27 @@ set(TRANSLATOR_PARSER_BISON_FILES
   translator/parser/bison/y_parser.yy
   )
 
+set(TRANSLATOR_PARSER_DESCRIPTOR_BLOCKS_FILES
+  translator/parser/descriptor/blocks/metadata_block.cpp
+  translator/parser/descriptor/blocks/metadata_block.h
+  translator/parser/descriptor/blocks/lagrangian_block.cpp
+  translator/parser/descriptor/blocks/lagrangian_block.h
+  translator/parser/descriptor/blocks/misc_block.cpp
+  translator/parser/descriptor/blocks/misc_block.h
+  translator/parser/descriptor/blocks/templates_block.cpp
+  translator/parser/descriptor/blocks/templates_block.h
+  )
+
+set(TRANSLATOR_PARSER_DESCRIPTOR_SYMBOLS_FILES
+  translator/parser/descriptor/symbols/declarations.h
+  translator/parser/descriptor/symbols/declarations.cpp
+  )
+
 set(TRANSLATOR_PARSER_DESCRIPTOR_FILES
   translator/parser/descriptor/model_settings.h
   translator/parser/descriptor/model_descriptor.cpp
   translator/parser/descriptor/model_descriptor.h
   translator/parser/descriptor/generics_descriptor.h
-  translator/parser/descriptor/metadata_block.cpp
-  translator/parser/descriptor/metadata_block.h
-  translator/parser/descriptor/lagrangian_block.cpp
-  translator/parser/descriptor/lagrangian_block.h
-  translator/parser/descriptor/misc_block.cpp
-  translator/parser/descriptor/misc_block.h
-  translator/parser/descriptor/templates_block.cpp
-  translator/parser/descriptor/templates_block.h
-  translator/parser/descriptor/declarations.h
-  translator/parser/descriptor/declarations.cpp
   )
 
 set(TRANSLATOR_PARSER_DRIVER_FILES
@@ -449,7 +457,7 @@ set(TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES
   translator/parser/semantic-values/subexpr.h
   translator/parser/semantic-values/author.h
   translator/parser/semantic-values/string_array.h
-  )
+  translator/parser/semantic-values/metric.h)
 
 set(TRANSLATOR_PARSER_FILES
   translator/parser/input_stack.cpp
@@ -1066,6 +1074,8 @@ set(SOURCE_FILES
   ${TRANSLATOR_FILES}
   ${TRANSLATOR_INSTRUMENTS_FILES}
   ${TRANSLATOR_PARSER_BISON_FILES}
+  ${TRANSLATOR_PARSER_DESCRIPTOR_BLOCKS_FILES}
+  ${TRANSLATOR_PARSER_DESCRIPTOR_SYMBOLS_FILES}
   ${TRANSLATOR_PARSER_DESCRIPTOR_FILES}
   ${TRANSLATOR_PARSER_DRIVER_FILES}
   ${TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES}

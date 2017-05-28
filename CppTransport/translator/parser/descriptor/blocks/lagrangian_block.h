@@ -49,13 +49,13 @@ class lagrangian_block
   protected:
 
     //! typedef for field symbol table
-    typedef std::unordered_map<std::string, std::unique_ptr<field_declaration> > field_symbol_table;
+    typedef std::unordered_map< std::string, std::unique_ptr<field_declaration> > field_symbol_table;
 
     //! typedef for parameter symbol table
-    typedef std::unordered_map<std::string, std::unique_ptr<parameter_declaration> > parameter_symbol_table;
+    typedef std::unordered_map< std::string, std::unique_ptr<parameter_declaration> > parameter_symbol_table;
 
     //! typedef for subexpression symbol table
-    typedef std::unordered_map<std::string, std::unique_ptr<subexpr_declaration> > subexpr_symbol_table;
+    typedef std::unordered_map< std::string, std::unique_ptr<subexpr_declaration> > subexpr_symbol_table;
 
 
     // CONSTRUCTOR, DESTRUCTOR
