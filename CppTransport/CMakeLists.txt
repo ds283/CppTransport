@@ -425,6 +425,7 @@ set(TRANSLATOR_PARSER_DESCRIPTOR_BLOCKS_FILES
 set(TRANSLATOR_PARSER_DESCRIPTOR_SYMBOLS_FILES
   translator/parser/descriptor/symbols/declarations.h
   translator/parser/descriptor/symbols/declarations.cpp
+  translator/parser/descriptor/symbols/symbol_database.h
   )
 
 set(TRANSLATOR_PARSER_DESCRIPTOR_FILES

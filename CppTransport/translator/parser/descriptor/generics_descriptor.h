@@ -92,9 +92,9 @@ bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
 // sort a symbol table by unique ID and return a list of some specified value,
 // determined by the ValueGetter functor
 template <typename TableType, typename ValueGetter>
-auto UnzipSortedZipList(TableType& table, ValueGetter get) -> std::vector< typename std::result_of<ValueGetter(typename TableType::mapped_type::element_type&)>::type >
+auto UnzipSortedZipList(TableType& table, ValueGetter get) -> std::vector< typename std::result_of<ValueGetter(typename TableType::record_type&)>::type >
   {
-    typedef typename std::result_of<ValueGetter(typename TableType::mapped_type::element_type&)>::type value_type;
+    typedef typename std::result_of<ValueGetter(typename TableType::record_type&)>::type value_type;
     typedef std::vector< std::pair<unsigned int, value_type> > zip_list;
 
     zip_list zip;
@@ -103,7 +103,7 @@ auto UnzipSortedZipList(TableType& table, ValueGetter get) -> std::vector< typen
     // zip up a list of unique IDs and values
     for(const auto& t : table)
       {
-        zip.push_back(std::make_pair(t.second->get_unique_id(), get(*t.second)));
+        zip.push_back(std::make_pair(t.get_unique_id(), get(t)));
       }
 
     // sort on unique ID

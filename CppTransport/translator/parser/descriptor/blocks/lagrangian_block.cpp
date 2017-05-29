@@ -112,21 +112,21 @@ bool lagrangian_block::add_subexpr(const std::string& n, GiNaC::symbol& s, const
   }
 
 
-boost::optional<declaration&> lagrangian_block::check_symbol_exists(const std::string& nm) const
+boost::optional<const declaration&> lagrangian_block::check_symbol_exists(const std::string& nm) const
   {
     // check user-defined symbols
 
     auto f_it = this->fields.find(nm);
-    if(f_it != this->fields.end()) return *f_it->second;
+    if(f_it != this->fields.end()) return *f_it;
 
     auto p_it = this->parameters.find(nm);
-    if(p_it != this->parameters.end()) return *p_it->second;
+    if(p_it != this->parameters.end()) return *p_it;
 
     p_it = this->reserved.find(nm);
-    if(p_it != this->reserved.end()) return *p_it->second;
+    if(p_it != this->reserved.end()) return *p_it;
 
     auto s_it = this->subexprs.find(nm);
-    if(s_it != this->subexprs.end()) return *s_it->second;
+    if(s_it != this->subexprs.end()) return *s_it;
 
     // didn't find anything -- assume symbol does not exist
     return(boost::none);
@@ -168,35 +168,35 @@ unsigned int lagrangian_block::get_number_params() const
 
 std::vector<std::string> lagrangian_block::get_field_name_list() const
   {
-    auto Get = [&](const field_symbol_table::mapped_type::element_type& v) -> auto { return v.get_name(); };
+    auto Get = [&](const field_symbol_table::record_type& v) -> auto { return v.get_name(); };
     return UnzipSortedZipList(this->fields, Get);
   }
 
 
 std::vector<std::string> lagrangian_block::get_field_latex_list() const
   {
-    auto Get = [&](const field_symbol_table::mapped_type::element_type& v) -> auto { return v.get_latex_name(); };
+    auto Get = [&](const field_symbol_table::record_type& v) -> auto { return v.get_latex_name(); };
     return UnzipSortedZipList(this->fields, Get);
   }
 
 
 std::vector<std::string> lagrangian_block::get_param_name_list() const
   {
-    auto Get = [&](const parameter_symbol_table::mapped_type::element_type& v) -> auto { return v.get_name(); };
+    auto Get = [&](const parameter_symbol_table::record_type& v) -> auto { return v.get_name(); };
     return UnzipSortedZipList(this->parameters, Get);
   }
 
 
 std::vector<std::string> lagrangian_block::get_param_latex_list() const
   {
-    auto Get = [&](const parameter_symbol_table::mapped_type::element_type& v) -> auto { return v.get_latex_name(); };
+    auto Get = [&](const parameter_symbol_table::record_type& v) -> auto { return v.get_latex_name(); };
     return UnzipSortedZipList(this->parameters, Get);
   }
 
 
 symbol_list lagrangian_block::get_field_symbols() const
   {
-    auto Get = [&](const field_symbol_table::mapped_type::element_type& v) -> auto { return v.get_ginac_symbol(); };
+    auto Get = [&](const field_symbol_table::record_type& v) -> auto { return v.get_ginac_symbol(); };
     return UnzipSortedZipList(this->fields, Get);
   }
 
@@ -209,7 +209,7 @@ symbol_list lagrangian_block::get_deriv_symbols() const
 
 symbol_list lagrangian_block::get_param_symbols() const
   {
-    auto Get = [&](const parameter_symbol_table::mapped_type::element_type& v) -> auto { return v.get_ginac_symbol(); };
+    auto Get = [&](const parameter_symbol_table::record_type& v) -> auto { return v.get_ginac_symbol(); };
     return UnzipSortedZipList(this->parameters, Get);
   }
 

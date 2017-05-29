@@ -276,6 +276,8 @@ constexpr auto MESSAGE_MACRO_REPLACEMENTS            = "macro replacements";
 constexpr auto ERROR_UNKNOWN_STEPPER                 = "Unknown or unimplemented odeint-v2 stepper";
 constexpr auto ERROR_UNDEFINED_STEPPER               = "Stepper block not declared";
 
+constexpr auto ERROR_SYMBOL_DATABASE_EMPLACE_FAIL    = "Internal error: emplace to symbol database failed";
+
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";
 constexpr auto MESSAGE_SECOND_LABEL                  = "s";

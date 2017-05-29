@@ -32,6 +32,7 @@
 #include "y_common.h"
 
 #include "declarations.h"
+#include "symbol_database.h"
 
 #include "symbol_factory.h"
 #include "symbol_list.h"
@@ -49,13 +50,13 @@ class lagrangian_block
   protected:
 
     //! typedef for field symbol table
-    typedef std::unordered_map< std::string, std::unique_ptr<field_declaration> > field_symbol_table;
+    typedef symbol_database<field_declaration> field_symbol_table;
 
     //! typedef for parameter symbol table
-    typedef std::unordered_map< std::string, std::unique_ptr<parameter_declaration> > parameter_symbol_table;
+    typedef symbol_database<parameter_declaration> parameter_symbol_table;
 
     //! typedef for subexpression symbol table
-    typedef std::unordered_map< std::string, std::unique_ptr<subexpr_declaration> > subexpr_symbol_table;
+    typedef symbol_database<subexpr_declaration> subexpr_symbol_table;
 
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -93,7 +94,7 @@ class lagrangian_block
     //! check whether a given symbol name has been declared
     //! if the symbol exists, returns a boost::optional<> containing a reference
     //! to its declaration
-    boost::optional<declaration&> check_symbol_exists(const std::string& nm) const;
+    boost::optional<const declaration&> check_symbol_exists(const std::string& nm) const;
     
     //! freeze all tables
     void freeze_tables(const y::lexeme_type& l);
