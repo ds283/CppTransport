@@ -186,7 +186,7 @@ script: script metadata metadata_block semicolon
         | script parameter identifier attribute_block semicolon                         { driver.model.add_parameter(*$3, *$4); }
         | script subexpr identifier subexpr_block semicolon                             { driver.model.add_subexpr(*$3, *$4); }
         | script potential equals expression semicolon                                  { driver.model.set_potential(*$4, *$3); }
-        | script metric equals metric_block semicolon
+        | script metric equals metric_def semicolon
         | script model string model_block semicolon                                     { driver.templates.set_model(*$3); }
         | script background stepper_block semicolon                                     { driver.templates.set_background_stepper(*$3, *$2); }
         | script perturbations stepper_block semicolon                                  { driver.templates.set_perturbations_stepper(*$3, *$2); }
@@ -196,7 +196,21 @@ script: script metadata metadata_block semicolon
         |
         ;
 
-metric_block:
+metric_def: metric_literal
+        | metric_def plus metric_def
+        | metric_def binary_minus metric_def
+        | expression star metric_def
+        | metric_def star expression
+        | metric_def foreslash expression
+        | unary_minus metric_def
+        | open_bracket metric_def close_bracket
+        ;
+
+metric_literal: open_square metric_element_list close_square
+        ;
+
+metric_element_list: metric_element_list identifier comma identifier equals expression semicolon
+        |
         ;
 
 metadata_block: open_brace metadata_def close_brace

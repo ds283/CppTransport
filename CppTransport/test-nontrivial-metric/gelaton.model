@@ -116,4 +116,12 @@ subexpr radial_quartic
    value = (1/24) * lambda_R * (R - R_0)^4 / M_P^4;
  };
 
+% specify the potential
 potential = V_0 * (uplift + angular_tilt + radial_mass + radial_cubic + radial_quartic);
+
+% specify the field-space metric
+metric =
+    [
+        R, R = 1;
+        theta, theta = R^2;
+    ];
