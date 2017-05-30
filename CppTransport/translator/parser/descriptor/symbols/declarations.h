@@ -29,7 +29,7 @@
 
 
 #include "contexted_value.h"
-#include "model_settings.h"
+#include "semantic_values.h"
 #include "y_common.h"
 
 #include "ginac/ginac.h"

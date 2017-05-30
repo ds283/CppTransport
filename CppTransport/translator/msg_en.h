@@ -286,6 +286,7 @@ constexpr auto ERROR_SYMBOL_DATABASE_EMPLACE_FAIL    = "Internal error: emplace 
 
 constexpr auto ERROR_COMPONENT_DATABASE_INCONSISTENT = "Internal error: metric component database is inconsistent";
 constexpr auto ERROR_COMPONENT_REDEFINITION          = "Redefinition of metric component";
+constexpr auto ERROR_BAD_INDEX_LABEL                 = "Unknown field-space metric index label";
 
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";

@@ -30,7 +30,7 @@
 #include <unordered_map>
 #include <parser/y_common.h>
 
-#include "symbol_database.h"
+#include "symbol_tables.h"
 #include "contexted_value.h"
 
 #include "msg_en.h"
@@ -52,7 +52,7 @@ class field_metric
     
     //! index type
     typedef tensor_index index_type;
-    
+
     
     // CONSTRUCTOR, DESTRUCTOR
     
@@ -100,8 +100,12 @@ class field_metric_base : public field_metric
   {
     
     // TYPES
-    
-    
+
+  public:
+
+    //! context data type
+    typedef std::pair< std::reference_wrapper<y::lexeme_type>, std::reference_wrapper<y::lexeme_type> > context_type;
+
   protected:
     
     //! type used to store component data
@@ -116,7 +120,7 @@ class field_metric_base : public field_metric
   public:
     
     //! constructor
-    field_metric_base();
+    field_metric_base(const field_symbol_table& idx);
     
     //! destructor is default
     virtual ~field_metric_base() = default;
@@ -135,13 +139,22 @@ class field_metric_base : public field_metric
   public:
     
     //! set component idx to value expr, with context supplied by the lexeme l
-    field_metric_base& set_component(field_metric::index_type idx, const GiNaC::ex& expr, const y::lexeme_type& l);
+    field_metric_base&
+    set_component(field_metric::index_type idx, context_type ctx, const GiNaC::ex& expr, const y::lexeme_type& l);
+
+  protected:
+
+    template <typename ErrorHandlerA, typename ErrorHandlerB>
+    void check_indices(field_metric::index_type idx, ErrorHandlerA errA, ErrorHandlerB errB) const;
     
     
     // INTERNAL DATA
     
   private:
-    
+
+    //! symbol database representing possible indices
+    const field_symbol_table& indices;
+
     //! store elements of the metric
     component_database components;
     

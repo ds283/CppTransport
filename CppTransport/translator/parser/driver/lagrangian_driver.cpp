@@ -129,8 +129,8 @@ namespace y
             auto Set_j = [&](auto& name, auto& lex) -> auto { j_val = name; return true; };
             SetIdentifierValue(Set_i, i);
             SetIdentifierValue(Set_j, j);
-            
-            metric.set_component(std::make_pair(i_val, j_val), e, context);
+
+            metric.set_component(std::make_pair(i_val, j_val), std::make_pair(std::ref(i), std::ref(j)), e, context);
           }
         catch(parse_error& xe)
           {
@@ -176,5 +176,11 @@ namespace y
             this->root.report_error();
           }
       }
-    
+
+
+    std::shared_ptr<field_metric_base> lagrangian_driver::make_field_metric_base() const
+      {
+        return this->root.model.make_field_metric_base();
+      }
+
   }   // namespace y

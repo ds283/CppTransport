@@ -302,3 +302,9 @@ bool lagrangian_block::report_frozen(const y::lexeme_type& l)
 
     throw parse_error(ERROR_MODEL_SPECIFICATION_STARTED);
   }
+
+
+std::shared_ptr<field_metric_base> lagrangian_block::make_field_metric_base() const
+  {
+    return std::make_shared<field_metric_base>(this->fields);
+  }

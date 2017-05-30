@@ -214,7 +214,7 @@ metric_literal: open_square metric_element_list close_square                    
 
 metric_element_list: metric_element_list identifier comma identifier equals expression semicolon
                                                                                         { driver.model.add_metric_component(*$1, *$2, *$4, *$6, *$5); $$ = $1; }
-        |                                                                               { $$ = std::make_shared<field_metric_base>(); }
+        |                                                                               { $$ = driver.model.make_field_metric_base(); }
         ;
 
 metadata_block: open_brace metadata_def close_brace

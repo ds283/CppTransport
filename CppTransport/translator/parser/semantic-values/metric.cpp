@@ -26,6 +26,9 @@
 
 #include "metric.h"
 
+#include "msg_en.h"
+#include "parse_error.h"
+
 
 field_metric::field_metric()
   : prefactor(boost::none)
@@ -49,14 +52,20 @@ field_metric& field_metric::set_prefactor(const GiNaC::ex& expr)
   }
 
 
-field_metric_base::field_metric_base()
-  : field_metric()
+field_metric_base::field_metric_base(const field_symbol_table& idx)
+  : field_metric(),
+    indices(idx)
   {
   }
 
 
 GiNaC::ex field_metric_base::operator()(field_metric::index_type idx) const
   {
+    // ensure indices are valid, throwing an exception if not
+    auto err = [&](const auto& msg) -> auto { throw std::runtime_error(msg); };
+    this->check_indices(idx, err, err);
+
+    // place indices in canonical order
     auto canonical_idx = canonicalize(idx);
     
     // search for an entry corresponding to this index combination
@@ -71,15 +80,22 @@ GiNaC::ex field_metric_base::operator()(field_metric::index_type idx) const
   }
 
 
-field_metric_base& field_metric_base::set_component(field_metric::index_type idx, const GiNaC::ex& expr,
-                                                    const y::lexeme_type& l)
+field_metric_base&
+field_metric_base::set_component(field_metric::index_type idx, context_type ctx, const GiNaC::ex& expr,
+                                 const y::lexeme_type& l)
   {
-    using emplace_result = std::pair< component_database::iterator, bool >;
-    
+    auto errA = [&](const auto& msg) -> auto { ctx.first.get().error(msg); throw parse_error(msg); };
+    auto errB = [&](const auto& msg) -> auto { ctx.second.get().error(msg); throw parse_error(msg); };
+
+    // ensure indices are valid
+    this->check_indices(idx, errA, errB);
+
+    // place indices in canonical order
     auto canonical_idx = canonicalize(idx);
     
     // attempt to emplace value
     // will fail if a value has already been assigned
+    using emplace_result = std::pair< component_database::iterator, bool >;
     emplace_result res = this->components.emplace(std::piecewise_construct,
                                                   std::forward_as_tuple(canonical_idx),
                                                   std::forward_as_tuple(expr, l.get_error_context()));
@@ -100,6 +116,27 @@ field_metric_base& field_metric_base::set_component(field_metric::index_type idx
     
     t->second.get_declaration_point().warn(NOTIFY_DUPLICATION_DEFINITION_WAS);
     throw parse_error(msg.str());
+  }
+
+
+template <typename ErrorHandlerA, typename ErrorHandlerB>
+void field_metric_base::check_indices(field_metric::index_type idx, ErrorHandlerA errA, ErrorHandlerB errB) const
+  {
+    auto it = this->indices.find(idx.first);
+    if(it == this->indices.cend())
+      {
+        std::ostringstream msg;
+        msg << ERROR_BAD_INDEX_LABEL << " '" << idx.first << "'";
+        errA(msg.str());
+      }
+
+    auto jt = this->indices.find(idx.second);
+    if(jt == this->indices.cend())
+      {
+        std::ostringstream msg;
+        msg << ERROR_BAD_INDEX_LABEL << " '" << idx.second << "'";
+        errB(msg.str());
+      }
   }
 
 

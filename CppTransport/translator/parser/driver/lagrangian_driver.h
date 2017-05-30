@@ -82,8 +82,16 @@ namespace y
         
         //! set the field-space metric specification
         void set_metric(lexeme_type& lex, std::shared_ptr<field_metric> f);
-    
-    
+
+
+        // SERVICES
+
+      public:
+
+        //! factory function to make a field_metric_base
+        std::shared_ptr<field_metric_base> make_field_metric_base() const;
+
+
         // INTERNAL DATA
       
       protected:

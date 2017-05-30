@@ -31,8 +31,8 @@
 #include "model_settings.h"
 #include "y_common.h"
 
+#include "symbol_tables.h"
 #include "declarations.h"
-#include "symbol_database.h"
 
 #include "symbol_factory.h"
 #include "symbol_list.h"
@@ -44,20 +44,6 @@
 
 class lagrangian_block
   {
-
-    // TYPES
-
-  protected:
-
-    //! typedef for field symbol table
-    typedef symbol_database<field_declaration> field_symbol_table;
-
-    //! typedef for parameter symbol table
-    typedef symbol_database<parameter_declaration> parameter_symbol_table;
-
-    //! typedef for subexpression symbol table
-    typedef symbol_database<subexpr_declaration> subexpr_symbol_table;
-
 
     // CONSTRUCTOR, DESTRUCTOR
 
@@ -76,6 +62,9 @@ class lagrangian_block
     
     //! perform validation
     validation_exceptions validate() const;
+
+    //! factory function to make field_metric_base
+    std::shared_ptr<field_metric_base> make_field_metric_base() const;
 
 
     // SYMBOL SERVICES
