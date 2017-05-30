@@ -167,4 +167,53 @@ typename symbol_database<RecordType>::const_iterator symbol_database<RecordType>
   }
 
 
+
+//! pair of symbols to be used as i, j coordinates for an element of a 2-tensor
+typedef std::pair< std::string, std::string > tensor_index;
+
+
+namespace std
+  {
+    
+    template <>
+    class hash<tensor_index>
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+        
+      public:
+        
+        //! constructor is default
+        hash() = default;
+        
+        //! destructor is default
+        ~hash() = default;
+        
+        
+        // IMPLEMENTATION
+        
+      public:
+        
+        //! hash operation
+        size_t operator()(const tensor_index& idx) const
+          {
+            std::hash<std::string> hash;
+            size_t hash_A = hash(idx.first);
+            size_t hash_B = hash(idx.second);
+            
+            return hash_A ^ (hash_B + 0x9e3779b9 + (hash_A << 6) + (hash_A >> 2));
+          }
+        
+      };
+    
+  }
+
+
+inline tensor_index canonicalize(tensor_index T)
+  {
+    if(T.first <= T.second) return std::make_pair(T.first, T.second);
+    return std::make_pair(T.second, T.first);
+  }
+
+
 #endif //CPPTRANSPORT_SYMBOL_DATABASE_H

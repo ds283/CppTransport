@@ -99,22 +99,4 @@ class author
   };
 
 
-inline bool author::set_institute(const std::string& i, const y::lexeme_type& l)
-  {
-    return SetContextedValue(this->institute, i, l, ERROR_INSTITUTE_REDECLARATION);
-  }
-
-
-inline bool author::set_email(const std::string& e, const y::lexeme_type& l)
-  {
-    return SetContextedValue(this->email, e, l, ERROR_EMAIL_REDECLARATION);
-  }
-
-
-inline bool author::set_name(const std::string& n, const y::lexeme_type& l)
-  {
-    return SetContextedValue(this->name, n, l, ERROR_AUTHORNAME_REDECLARATION);
-  }
-
-
 #endif //CPPTRANSPORT_AUTHOR_H

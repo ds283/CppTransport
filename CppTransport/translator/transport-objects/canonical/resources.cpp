@@ -44,8 +44,8 @@ namespace canonical
         num_fields(p.model.get_number_fields()),
         fl(p.model.get_number_params(), p.model.get_number_fields())
       {
-        boost::optional< contexted_value<GiNaC::ex>& > pot = p.model.get_potential();
-        if(pot) V = *pot; else V = GiNaC::ex(0);
+        boost::optional< contexted_value< std::shared_ptr<GiNaC::ex> > > pot = p.model.get_potential();
+        if(pot) V = **(pot.get()); else V = GiNaC::ex(0);
         compute_timer.stop();
       }
 

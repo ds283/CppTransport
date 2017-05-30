@@ -111,7 +111,7 @@ class field_declaration : public declaration
   public:
     
     //! constructor
-    field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a);
+    field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, std::shared_ptr<attributes> a);
     
     //! destructor is default
     virtual ~field_declaration() = default;
@@ -141,7 +141,7 @@ class field_declaration : public declaration
   protected:
     
     //! attributes block
-    std::unique_ptr<attributes> attrs;
+    std::shared_ptr<attributes> attrs;
     
   };
 
@@ -154,7 +154,7 @@ class parameter_declaration : public declaration
   public:
     
     //! constructor
-    parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a);
+    parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, std::shared_ptr<attributes> a);
     
     //! destructor is default
     ~parameter_declaration() = default;
@@ -184,7 +184,7 @@ class parameter_declaration : public declaration
   protected:
     
     //! attributes block
-    std::unique_ptr<attributes> attrs;
+    std::shared_ptr<attributes> attrs;
     
   };
 
@@ -197,7 +197,7 @@ class subexpr_declaration : public declaration
   public:
     
     //! constructor
-    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e);
+    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, std::shared_ptr<subexpr> e);
     
     //! destructor is default
     ~subexpr_declaration() = default;
@@ -230,7 +230,7 @@ class subexpr_declaration : public declaration
   protected:
     
     //! attribute block
-    std::unique_ptr<subexpr> sexpr;
+    std::shared_ptr<subexpr> sexpr;
     
   };
 

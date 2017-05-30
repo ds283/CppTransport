@@ -91,16 +91,4 @@ class subexpr
 	};
 
 
-inline bool subexpr::set_value(GiNaC::ex v, const y::lexeme_type& l)
-  {
-    return SetContextedValue(this->value, v, l, ERROR_VALUE_REDECLARATION);
-  }
-
-
-inline bool subexpr::set_latex(const std::string& ltx, const y::lexeme_type& l)
-  {
-    return SetContextedValue(this->latex, ltx, l, ERROR_LATEX_REDECLARATION);
-  }
-
-
 #endif //CPPTRANSPORT_SUBEXPR_H

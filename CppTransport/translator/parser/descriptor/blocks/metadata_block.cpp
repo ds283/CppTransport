@@ -31,10 +31,10 @@
 // AUTHOR RECORD METHODS
 
 
-author_declaration::author_declaration(const std::string& n, const y::lexeme_type& l, author& a)
-  : declaration_point(l)
+author_declaration::author_declaration(const std::string& n, const y::lexeme_type& l, std::shared_ptr<author> a)
+  : declaration_point(l),
+    auth(a)
   {
-    auth = std::make_unique<author>(a);
   }
 
 
@@ -125,31 +125,31 @@ boost::optional< contexted_value<std::string>& > metadata_block::get_license() c
   }
 
 
-bool metadata_block::set_references(const std::vector< contexted_value<std::string> >& refs)
+bool metadata_block::set_references(const y::lexeme_type& lex, std::shared_ptr<string_array> refs)
   {
-    return SetContextedValue(this->references, refs, ERROR_REFERENCES_REDECLARATION);
+    return SetContextedValue(this->references, refs, lex, ERROR_REFERENCES_REDECLARATION);
   }
 
 
-boost::optional< std::vector< contexted_value<std::string> >& > metadata_block::get_references() const
+boost::optional< std::vector< contexted_value<std::string> > > metadata_block::get_references() const
   {
-    if(this->references) return *this->references; else return boost::none;
+    if(this->references) return this->references.get()->get().get()->get_array() ; else return boost::none;
   }
 
 
-bool metadata_block::set_urls(const std::vector<contexted_value<std::string> >& urls)
+bool metadata_block::set_urls(const y::lexeme_type& lex, std::shared_ptr<string_array> urls)
   {
-    return SetContextedValue(this->urls, urls, ERROR_URLS_REDECLARATION);
+    return SetContextedValue(this->urls, urls, lex, ERROR_URLS_REDECLARATION);
   }
 
 
-boost::optional< std::vector< contexted_value<std::string> >& > metadata_block::get_urls() const
+boost::optional< std::vector< contexted_value<std::string> > > metadata_block::get_urls() const
   {
-    if(this->urls) return *this->urls; else return boost::none;
+    if(this->urls) return this->urls.get()->get().get()->get_array(); else return boost::none;
   }
 
 
-bool metadata_block::add_author(const std::string& n, const y::lexeme_type& l, author& a)
+bool metadata_block::add_author(const std::string& n, const y::lexeme_type& l, std::shared_ptr<author> a)
   {
     auto check = [&](auto& name) -> auto
       {

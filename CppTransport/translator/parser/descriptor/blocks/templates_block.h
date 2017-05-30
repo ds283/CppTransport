@@ -89,17 +89,17 @@ class templates_block
   public:
 
     //! set background stepper name
-    bool set_background_stepper(stepper& s, const y::lexeme_type& l);
+    bool set_background_stepper(const y::lexeme_type& l, std::shared_ptr<stepper> s);
 
     //! get background stepper name as contexted value
-    boost::optional< contexted_value<stepper>& > get_background_stepper() const;
+    boost::optional< contexted_value< std::shared_ptr<stepper> > > get_background_stepper() const;
 
 
     //! set perturbations stepper name
-    bool set_perturbations_stepper(stepper& s, const y::lexeme_type& l);
+    bool set_perturbations_stepper(const y::lexeme_type& l, std::shared_ptr<stepper> s);
 
     //! get perturbations stepper name as contexted value
-    boost::optional< contexted_value<stepper>& > get_perturbations_stepper() const;
+    boost::optional< contexted_value< std::shared_ptr<stepper> > > get_perturbations_stepper() const;
 
 
     // INTERNAL DATA
@@ -124,10 +124,10 @@ class templates_block
     std::unique_ptr<contexted_value<std::string> > implementation;
 
     //! specification of background stepper
-    std::unique_ptr<contexted_value<stepper> > background_stepper;
+    std::unique_ptr< contexted_value< std::shared_ptr<stepper> > > background_stepper;
 
     //! specification of perturbations stepper
-    std::unique_ptr<contexted_value<stepper> > perturbations_stepper;
+    std::unique_ptr< contexted_value< std::shared_ptr<stepper> > > perturbations_stepper;
 
   };
 

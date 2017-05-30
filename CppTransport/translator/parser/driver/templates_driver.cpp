@@ -139,11 +139,11 @@ namespace y
       }
     
     
-    void templates_driver::set_background_stepper(stepper& s, lexeme_type& lex)
+    void templates_driver::set_background_stepper(lexeme_type& lex, std::shared_ptr<stepper> s)
       {
         try
           {
-            this->root.templates.set_background_stepper(s, lex);
+            this->root.templates.set_background_stepper(lex, s);
           }
         catch(parse_error& xe)
           {
@@ -152,11 +152,11 @@ namespace y
       }
     
     
-    void templates_driver::set_perturbations_stepper(stepper& s, lexeme_type& lex)
+    void templates_driver::set_perturbations_stepper(lexeme_type& lex, std::shared_ptr<stepper> s)
       {
         try
           {
-            this->root.templates.set_perturbations_stepper(s, lex);
+            this->root.templates.set_perturbations_stepper(lex, s);
           }
         catch(parse_error& xe)
           {

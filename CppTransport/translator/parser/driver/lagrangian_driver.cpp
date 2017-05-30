@@ -41,7 +41,7 @@ namespace y
       }
     
     
-    void lagrangian_driver::add_field(lexeme_type& lex, attributes& a)
+    void lagrangian_driver::add_field(lexeme_type& lex, std::shared_ptr<attributes> a)
       {
         try
           {
@@ -57,7 +57,7 @@ namespace y
       }
     
     
-    void lagrangian_driver::add_parameter(lexeme_type& lex, attributes& a)
+    void lagrangian_driver::add_parameter(lexeme_type& lex, std::shared_ptr<attributes> a)
       {
         try
           {
@@ -73,7 +73,7 @@ namespace y
       }
     
     
-    void lagrangian_driver::add_subexpr(lexeme_type& lex, subexpr& e)
+    void lagrangian_driver::add_subexpr(lexeme_type& lex, std::shared_ptr<subexpr> e)
       {
         try
           {
@@ -116,11 +116,47 @@ namespace y
       }
     
     
-    void lagrangian_driver::set_potential(GiNaC::ex& V, lexeme_type& lex)
+    void
+    lagrangian_driver::add_metric_component(field_metric_base& metric, lexeme_type& i, lexeme_type& j, GiNaC::ex& e,
+                                            lexeme_type& context)
       {
         try
           {
-            this->root.model.set_potential(V, lex);
+            // capture i, j coordinates
+            std::string i_val;
+            std::string j_val;
+            auto Set_i = [&](auto& name, auto& lex) -> auto { i_val = name; return true; };
+            auto Set_j = [&](auto& name, auto& lex) -> auto { j_val = name; return true; };
+            SetIdentifierValue(Set_i, i);
+            SetIdentifierValue(Set_j, j);
+            
+            metric.set_component(std::make_pair(i_val, j_val), e, context);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
+      }
+    
+    
+    void lagrangian_driver::set_potential(lexeme_type& lex, std::shared_ptr<GiNaC::ex> V)
+      {
+        try
+          {
+            this->root.model.set_potential(lex, V);
+          }
+        catch(parse_error& xe)
+          {
+            this->root.report_error();
+          }
+      }
+    
+    
+    void lagrangian_driver::set_metric(lexeme_type& lex, std::shared_ptr<field_metric> f)
+      {
+        try
+          {
+            this->root.model.set_metric(lex, f);
           }
         catch(parse_error& xe)
           {

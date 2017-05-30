@@ -67,25 +67,25 @@ boost::optional< contexted_value<std::string>& > templates_block::get_model() co
   }
 
 
-bool templates_block::set_background_stepper(stepper& s, const y::lexeme_type& l)
+bool templates_block::set_background_stepper(const y::lexeme_type& l, std::shared_ptr<stepper> s)
 {
 return SetContextedValue(this->background_stepper, s, l, ERROR_BACKGROUND_REDECLARATION);
 }
 
 
-bool templates_block::set_perturbations_stepper(stepper& s, const y::lexeme_type& l)
+bool templates_block::set_perturbations_stepper(const y::lexeme_type& l, std::shared_ptr<stepper> s)
 {
 return SetContextedValue(this->perturbations_stepper, s, l, ERROR_PERTURBATIONS_REDECLARATION);
 }
 
 
-boost::optional< contexted_value<stepper>& > templates_block::get_background_stepper() const
+boost::optional< contexted_value< std::shared_ptr<stepper> > > templates_block::get_background_stepper() const
   {
     if(this->background_stepper) return *this->background_stepper; else return boost::none;
   }
 
 
-boost::optional< contexted_value<stepper>& > templates_block::get_perturbations_stepper() const
+boost::optional< contexted_value< std::shared_ptr<stepper> > > templates_block::get_perturbations_stepper() const
   {
     if(this->perturbations_stepper) return *this->perturbations_stepper; else return boost::none;
   }

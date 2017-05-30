@@ -45,7 +45,7 @@ namespace y
         
         if(id) // lex points to a valid identifier
           {
-            GiNaC::symbol sym = sym_factory(*id, a.get_latex());
+            GiNaC::symbol sym = sym_factory(*id, a->get_latex());
             insert(*id, sym, lex, a);
           }
         else
@@ -68,6 +68,22 @@ namespace y
           }
 
         return set(*str, lex);
+      };
+    
+    
+    template <typename ValueSetter>
+    bool SetIdentifierValue(ValueSetter& set, lexeme_type& lex)
+      {
+        // extract identifier name from lexeme
+        boost::optional<std::string> id = lex.get_identifier();
+        
+        if(!id)
+          {
+            lex.error(ERROR_IDENTIFIER_LOOKUP);
+            return false;
+          }
+        
+        return set(*id, lex);
       };
     
     

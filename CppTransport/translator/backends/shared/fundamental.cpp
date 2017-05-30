@@ -440,7 +440,7 @@ namespace macro_packages
 
         if(s)
           {
-            auto& step = **s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_abserr());
           }
         else
@@ -456,7 +456,7 @@ namespace macro_packages
 
         if(s)
           {
-            auto& step = **s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_relerr());
           }
         else
@@ -472,7 +472,7 @@ namespace macro_packages
 
         if(s)
           {
-            auto& step = **s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_stepsize());
           }
         else
@@ -488,7 +488,7 @@ namespace macro_packages
 
         if(s)
           {
-            auto& step = **s;
+            auto& step = ***s;
             return step.get_name();
           }
         else
@@ -504,7 +504,7 @@ namespace macro_packages
 
         if(s)
           {
-            auto& step = **s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_abserr());
           }
         else
@@ -520,7 +520,7 @@ namespace macro_packages
 
         if(s)
           {
-            auto& step = **s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_relerr());
           }
         else
@@ -536,7 +536,7 @@ namespace macro_packages
 
         if(s)
           {
-            auto& step = **s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_stepsize());
           }
         else
@@ -552,7 +552,7 @@ namespace macro_packages
 
         if(s)
           {
-            auto& step = **s;
+            auto& step = ***s;
             return step.get_name();
           }
         else

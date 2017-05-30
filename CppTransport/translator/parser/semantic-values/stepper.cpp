@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 21/06/2013.
+// Created by David Seery on 30/05/2017.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2017 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -24,17 +24,28 @@
 //
 
 
-
-#ifndef CPPTRANSPORT_SEMANTIC_DATA_H
-#define CPPTRANSPORT_SEMANTIC_DATA_H
-
-
-#include "attributes.h"
-#include "author.h"
 #include "stepper.h"
-#include "string_array.h"
-#include "subexpr.h"
-#include "metric.h"
 
 
-#endif //CPPTRANSPORT_SEMANTIC_DATA_H
+bool stepper::set_name(const std::string& s, y::lexeme_type& l)
+  {
+    return SetContextedValue(this->name, s, l, ERROR_STEPPER_REDECLARATION);
+  }
+
+
+bool stepper::set_stepsize(double d, y::lexeme_type& l)
+  {
+    return SetContextedValue(this->stepsize, d, l, ERROR_STEPSIZE_REDECLARATION);
+  }
+
+
+bool stepper::set_relerr(double d, y::lexeme_type& l)
+  {
+    return SetContextedValue(this->relerr, d, l, ERROR_RELERR_REDECLARATION);
+  }
+
+
+bool stepper::set_abserr(double d, y::lexeme_type& l)
+  {
+    return SetContextedValue(this->abserr, d, l, ERROR_ABSERR_REDECLARATION);
+  }

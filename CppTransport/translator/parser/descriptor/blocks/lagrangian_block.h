@@ -83,13 +83,13 @@ class lagrangian_block
   public:
 
     //! add symbol representing a field
-    bool add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes& a);
+    bool add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, std::shared_ptr<attributes> a);
 
     //! add symbol representing a parameter
-    bool add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes& a);
+    bool add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, std::shared_ptr<attributes> a);
 
     //! add symbol representing a subexpression
-    bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, subexpr& e);
+    bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, std::shared_ptr<subexpr> e);
 
     //! check whether a given symbol name has been declared
     //! if the symbol exists, returns a boost::optional<> containing a reference
@@ -116,10 +116,16 @@ class lagrangian_block
     model_type get_lagrangian_type() const;
     
     //! set potential
-    bool set_potential(GiNaC::ex& V, const y::lexeme_type& l);
+    bool set_potential(const y::lexeme_type& l, std::shared_ptr<GiNaC::ex> V);
 
     //! get potential as a contexted value
-    boost::optional< contexted_value<GiNaC::ex>& > get_potential() const;
+    boost::optional< contexted_value< std::shared_ptr<GiNaC::ex> > > get_potential() const;
+    
+    //! set field-space metric
+    bool set_metric(const y::lexeme_type& l, std::shared_ptr<field_metric> f);
+    
+    //! get field-space metric as contexted value
+    boost::optional< contexted_value< std::shared_ptr<field_metric> > > get_metric() const;
     
     
     // FIELDS AND PARAMETERS
@@ -193,7 +199,10 @@ class lagrangian_block
     std::unique_ptr< contexted_value<model_type> > type;
 
     //! store details of potentials
-    std::unique_ptr< contexted_value<GiNaC::ex> > potential;
+    std::unique_ptr< contexted_value< std::shared_ptr<GiNaC::ex> > > potential;
+    
+    //! store deatils of field-space metric
+    std::unique_ptr< contexted_value< std::shared_ptr<field_metric> > > metric;
 
 
     // SYMBOL SERVICES

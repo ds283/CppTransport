@@ -80,10 +80,4 @@ class attributes
 	};
 
 
-inline bool attributes::set_latex(const std::string& ltx, const y::lexeme_type& l)
-  {
-    return SetContextedValue(this->latex, ltx, l, ERROR_LATEX_REDECLARATION);
-  }
-
-
 #endif //CPPTRANSPORT_ATTRIBUTES_H

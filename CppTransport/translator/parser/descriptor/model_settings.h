@@ -44,7 +44,7 @@ class author_declaration
   public:
 
     //! constructor
-    author_declaration(const std::string& n, const y::lexeme_type& l, author& a);
+    author_declaration(const std::string& n, const y::lexeme_type& l, std::shared_ptr<author> a);
 
     //! destructor
     ~author_declaration() = default;
@@ -79,7 +79,7 @@ class author_declaration
   protected:
 
     //! link to author record
-    std::unique_ptr<author> auth;
+    std::shared_ptr<author> auth;
 
     //! reference to declaration lexeme
     const y::lexeme_type& declaration_point;

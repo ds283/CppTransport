@@ -102,7 +102,7 @@ constexpr auto ERROR_EXPECTED_CLOSE_QUOTE            = "Unterminated string lite
 constexpr auto ERROR_EXPECTED_ELLIPSIS               = "Expected '...', not '..'";
 
 constexpr auto ERROR_SYMBOL_EXISTS                   = "Redefinition of existing symbol";
-constexpr auto NOTIFY_DUPLICATION_DEFINITION_WAS     = "Location of original definition for symbol";
+constexpr auto NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS      = "Location of original definition for symbol";
 constexpr auto ERROR_IDENTIFIER_LOOKUP               = "Lookup of identifier name failed";
 constexpr auto ERROR_STRING_LOOKUP                   = "Lookup of string literal value failed";
 constexpr auto ERROR_INTEGER_LOOKUP                  = "Lookup of integer literal value failed";
@@ -113,6 +113,7 @@ constexpr auto ERROR_AUTHOR_EXISTS                   = "Redeclaration of existin
 constexpr auto NOTIFY_DUPLICATE_AUTHOR_WAS           = "Location of original declaration for author";
 
 constexpr auto NOTIFY_DUPLICATION_DECLARATION_WAS    = "Location of original declaration was";
+constexpr auto NOTIFY_DUPLICATION_DEFINITION_WAS     = "Location of original definition was";
 
 constexpr auto ERROR_MODEL_REDECLARATION             = "Redeclaration of model block";
 constexpr auto ERROR_NAME_REDECLARATION              = "Redeclaration of name metadata";
@@ -138,7 +139,8 @@ constexpr auto ERROR_BACKGROUND_REDECLARATION        = "Redeclaration of backgro
 constexpr auto ERROR_PERTURBATIONS_REDECLARATION     = "Redeclaration of perturbations stepper block";
 
 constexpr auto ERROR_LAGRANGIAN_TYPE_REDECLARATION   = "Redeclaration of Lagrangian type";
-constexpr auto ERROR_POTENTIAL_REDECLARATION         = "Redeclaration of potential";
+constexpr auto ERROR_POTENTIAL_REDEFINITION          = "Redefinition of potential";
+constexpr auto ERROR_METRIC_REDEFINITION             = "Redefinition of field-space metric";
 
 constexpr auto ERROR_REQUIRED_VERSION_REDECLARATION  = "Redeclaration of minimum required version";
 
@@ -277,6 +279,9 @@ constexpr auto ERROR_UNKNOWN_STEPPER                 = "Unknown or unimplemented
 constexpr auto ERROR_UNDEFINED_STEPPER               = "Stepper block not declared";
 
 constexpr auto ERROR_SYMBOL_DATABASE_EMPLACE_FAIL    = "Internal error: emplace to symbol database failed";
+
+constexpr auto ERROR_COMPONENT_DATABASE_INCONSISTENT = "Internal error: metric component database is inconsistent";
+constexpr auto ERROR_COMPONENT_REDEFINITION          = "Redefinition of metric component";
 
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";

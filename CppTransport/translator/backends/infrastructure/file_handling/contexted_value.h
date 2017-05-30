@@ -60,6 +60,7 @@ class contexted_value
     
     //! allow dereferencing
     const ValueType& operator*() const { return this->value; }
+    const ValueType& get() const { return this->value; }
 
     //! get declaration point
     const error_context& get_declaration_point() const { return(*this->declaration_point); }
@@ -93,29 +94,6 @@ bool SetContextedValue(DataType& data, const ValueType& value, const LexemeType&
       }
     
     data = std::make_unique< contexted_value<ValueType> >(value, l.get_error_context());
-    return true;
-  };
-
-
-// set a contexted value for a list, but prevent overwriting
-// assumes the lists to be managed by smart pointers
-template <typename DataType, typename ValueType>
-bool SetContextedValue(DataType& data, const ValueType& value, std::string err_msg)
-  {
-    if(value.empty()) return false;   // nothing to do if no values to set
-    
-    if(data && !data->empty())   // has a value already been set? if so, report an error
-      {
-        value.front().get_declaration_point().error(err_msg);
-        
-        const auto& v = *data;
-        v.front().get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
-        
-        throw parse_error(err_msg);
-      }
-    
-    data.release();
-    data = std::make_unique< ValueType >(value);
     return true;
   };
 

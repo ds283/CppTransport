@@ -52,8 +52,8 @@ lagrangian_block::lagrangian_block(symbol_factory& s, version_policy& vp, error_
     y::lexeme_type fake_MPlanck_lexeme(MPlanck_buffer, mctx, 0, err_ctx, keywords, symbols);
 
     // set up attributes for Planck mass symbol
-    attributes Mp_attrs;
-    Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL, fake_MPlanck_lexeme);
+    std::shared_ptr<attributes> Mp_attrs = std::make_shared<attributes>();
+    Mp_attrs->set_latex(MPLANCK_LATEX_SYMBOL, fake_MPlanck_lexeme);
 
     // emplace faked symbol table entry
     reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, fake_MPlanck_lexeme, Mp_attrs)));
@@ -63,7 +63,8 @@ lagrangian_block::lagrangian_block(symbol_factory& s, version_policy& vp, error_
 // SYMBOL SERVICES
 
 
-bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
+bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+                                 std::shared_ptr<attributes> a)
   {
     if(this->symbols_frozen) return this->report_frozen(l);
     
@@ -78,11 +79,12 @@ bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y
         this->deriv_symbols.push_back(deriv_symbol);
       };
 
-    return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS);
+    return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS);
   }
 
 
-bool lagrangian_block::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
+bool lagrangian_block::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+                                     std::shared_ptr<attributes> a)
   {
     if(this->symbols_frozen) return this->report_frozen(l);
 
@@ -93,11 +95,12 @@ bool lagrangian_block::add_parameter(const std::string& n, GiNaC::symbol& s, con
         this->parameters.emplace(std::make_pair(name, std::make_unique<parameter_declaration>(name, symbol, lexeme, attr)));
       };
 
-    return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS);
+    return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS);
   }
 
 
-bool lagrangian_block::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e)
+bool lagrangian_block::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+                                   std::shared_ptr<subexpr> e)
   {
     if(this->symbols_frozen) return this->report_frozen(l);
 
@@ -108,7 +111,7 @@ bool lagrangian_block::add_subexpr(const std::string& n, GiNaC::symbol& s, const
         this->subexprs.emplace(std::make_pair(name, std::make_unique<subexpr_declaration>(name, symbol, lexeme, expr)));
       };
 
-    return GenericInsertSymbol(check, insert, n, s, l, e, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATION_DEFINITION_WAS);
+    return GenericInsertSymbol(check, insert, n, s, l, e, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS);
   }
 
 
@@ -136,18 +139,33 @@ boost::optional<const declaration&> lagrangian_block::check_symbol_exists(const 
 // LAGRANGIAN MANAGEMENT
 
 
-bool lagrangian_block::set_potential(GiNaC::ex& V, const y::lexeme_type& l)
+bool lagrangian_block::set_potential(const y::lexeme_type& l, std::shared_ptr<GiNaC::ex> V)
   {
     // symbol tables should be frozen whenever we start to specify the model
     this->freeze_tables(l);
 
-    return SetContextedValue(this->potential, V, l, ERROR_POTENTIAL_REDECLARATION);
+    return SetContextedValue(this->potential, V, l, ERROR_POTENTIAL_REDEFINITION);
   }
 
 
-boost::optional< contexted_value<GiNaC::ex>& > lagrangian_block::get_potential() const
+boost::optional< contexted_value< std::shared_ptr<GiNaC::ex> > > lagrangian_block::get_potential() const
   {
     if(this->potential) return *this->potential; else return boost::none;
+  }
+
+
+bool lagrangian_block::set_metric(const y::lexeme_type& l, std::shared_ptr<field_metric> f)
+  {
+    // symbol tables should be frozen whenever we start to specify the model
+    this->freeze_tables(l);
+    
+    return SetContextedValue(this->metric, f, l, ERROR_METRIC_REDEFINITION);
+  }
+
+
+boost::optional< contexted_value< std::shared_ptr<field_metric> > > lagrangian_block::get_metric() const
+  {
+    if(this->metric) return *this->metric; else return boost::none;
   }
 
 

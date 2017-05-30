@@ -97,28 +97,4 @@ class stepper
   };
 
 
-inline bool stepper::set_name(const std::string& s, y::lexeme_type& l)
-  {
-    return SetContextedValue(this->name, s, l, ERROR_STEPPER_REDECLARATION);
-  }
-
-
-inline bool stepper::set_stepsize(double d, y::lexeme_type& l)
-  {
-    return SetContextedValue(this->stepsize, d, l, ERROR_STEPSIZE_REDECLARATION);
-  }
-
-
-inline bool stepper::set_relerr(double d, y::lexeme_type& l)
-  {
-    return SetContextedValue(this->relerr, d, l, ERROR_RELERR_REDECLARATION);
-  }
-
-
-inline bool stepper::set_abserr(double d, y::lexeme_type& l)
-  {
-    return SetContextedValue(this->abserr, d, l, ERROR_ABSERR_REDECLARATION);
-  }
-
-
 #endif //CPPTRANSPORT_STEPPER_H

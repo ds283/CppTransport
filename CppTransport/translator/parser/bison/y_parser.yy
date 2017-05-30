@@ -60,115 +60,118 @@
     GiNaC::ex*                                              x;
 }*/
 
-%token                                   metadata
-%token                                   require_version
-%token                                   lagrangian
-%token <std::shared_ptr<lexeme_type>>    canonical
-%token <std::shared_ptr<lexeme_type>>    nontrivial_metric
-%token                                   name
-%token                                   author
-%token                                   citeguide
-%token                                   description
-%token                                   license
-%token                                   revision
-%token                                   references
-%token                                   urls
-%token                                   email
-%token                                   institute
-%token                                   field
-%token                                   potential
-%token                                   metric
-%token                                   subexpr
-%token                                   value
-%token                                   parameter
-%token                                   latex
-%token                                   templates
-%token                                   settings
-%token                                   core
-%token                                   implementation
-%token                                   abserr
-%token                                   relerr
-%token                                   stepper
-%token                                   stepsize
-%token <std::shared_ptr<lexeme_type>>    background
-%token <std::shared_ptr<lexeme_type>>    perturbations
-%token                                   indexorder
-%token                                   left
-%token                                   right
-%token                                   model
-%token                                   abs
-%token                                   step
-%token                                   sqrt
-%token                                   sin
-%token                                   cos
-%token                                   tan
-%token                                   asin
-%token                                   acos
-%token                                   atan
-%token                                   atan2
-%token                                   sinh
-%token                                   cosh
-%token                                   tanh
-%token                                   asinh
-%token                                   acosh
-%token                                   atanh
-%token                                   exp
-%token                                   log
-%token                                   pow
-%token                                   Li2
-%token                                   Li
-%token                                   G
-%token                                   S
-%token                                   H
-%token                                   zeta
-%token                                   zetaderiv
-%token                                   tgamma
-%token                                   lgamma
-%token                                   beta
-%token                                   psi
-%token                                   factorial
-%token                                   binomial
-%token                                   open_brace
-%token                                   close_brace
-%token                                   open_bracket
-%token                                   close_bracket
-%token                                   open_square
-%token                                   close_square
-%token                                   comma
-%token                                   period
-%token                                   colon
-%token                                   semicolon
-%token <std::shared_ptr<lexeme_type>>    equals
-%token                                   plus
-%token                                   binary_minus
-%token                                   unary_minus
-%token                                   star
-%token                                   backslash
-%token                                   foreslash
-%token                                   tilde
-%token                                   ampersand
-%token                                   circumflex
-%token                                   ampersat
-%token                                   ellipsis
-%token                                   rightarrow
-%token <std::shared_ptr<lexeme_type>>    identifier
-%token <std::shared_ptr<lexeme_type>>    integer
-%token <std::shared_ptr<lexeme_type>>    decimal
-%token <std::shared_ptr<lexeme_type>>    string
+%token                                      metadata
+%token                                      require_version
+%token                                      lagrangian
+%token <std::shared_ptr<lexeme_type>>       canonical
+%token <std::shared_ptr<lexeme_type>>       nontrivial_metric
+%token                                      name
+%token                                      author
+%token                                      citeguide
+%token                                      description
+%token                                      license
+%token                                      revision
+%token                                      references
+%token                                      urls
+%token                                      email
+%token                                      institute
+%token                                      field
+%token                                      potential
+%token                                      metric
+%token                                      subexpr
+%token                                      value
+%token                                      parameter
+%token                                      latex
+%token                                      templates
+%token                                      settings
+%token                                      core
+%token                                      implementation
+%token                                      abserr
+%token                                      relerr
+%token                                      stepper
+%token                                      stepsize
+%token <std::shared_ptr<lexeme_type>>       background
+%token <std::shared_ptr<lexeme_type>>       perturbations
+%token                                      indexorder
+%token                                      left
+%token                                      right
+%token                                      model
+%token                                      abs
+%token                                      step
+%token                                      sqrt
+%token                                      sin
+%token                                      cos
+%token                                      tan
+%token                                      asin
+%token                                      acos
+%token                                      atan
+%token                                      atan2
+%token                                      sinh
+%token                                      cosh
+%token                                      tanh
+%token                                      asinh
+%token                                      acosh
+%token                                      atanh
+%token                                      exp
+%token                                      log
+%token                                      pow
+%token                                      Li2
+%token                                      Li
+%token                                      G
+%token                                      S
+%token                                      H
+%token                                      zeta
+%token                                      zetaderiv
+%token                                      tgamma
+%token                                      lgamma
+%token                                      beta
+%token                                      psi
+%token                                      factorial
+%token                                      binomial
+%token                                      open_brace
+%token                                      close_brace
+%token                                      open_bracket
+%token                                      close_bracket
+%token                                      open_square
+%token                                      close_square
+%token                                      comma
+%token                                      period
+%token                                      colon
+%token                                      semicolon
+%token <std::shared_ptr<lexeme_type>>       equals
+%token                                      plus
+%token                                      binary_minus
+%token                                      unary_minus
+%token                                      star
+%token                                      backslash
+%token                                      foreslash
+%token                                      tilde
+%token                                      ampersand
+%token                                      circumflex
+%token                                      ampersat
+%token                                      ellipsis
+%token                                      rightarrow
+%token <std::shared_ptr<lexeme_type>>       identifier
+%token <std::shared_ptr<lexeme_type>>       integer
+%token <std::shared_ptr<lexeme_type>>       decimal
+%token <std::shared_ptr<lexeme_type>>       string
 
-%type  <std::shared_ptr<attributes>>     attribute_block
-%type  <std::shared_ptr<attributes>>     attributes
-%type  <std::shared_ptr<author>>         author_block
-%type  <std::shared_ptr<author>>         author_attributes
-%type  <std::shared_ptr<string_array>>   string_array
-%type  <std::shared_ptr<string_array>>   string_group
-%type  <std::shared_ptr<stepper>>        stepper_block
-%type  <std::shared_ptr<stepper>>        stepper_attributes
-%type  <std::shared_ptr<subexpr>>        subexpr_block
-%type  <std::shared_ptr<subexpr>>        subexpr_def
-%type  <std::shared_ptr<GiNaC::ex>>      expression
-%type  <std::shared_ptr<GiNaC::ex>>      leaf
-%type  <std::shared_ptr<GiNaC::ex>>      built_in_function
+%type  <std::shared_ptr<attributes>>        attribute_block
+%type  <std::shared_ptr<attributes>>        attributes
+%type  <std::shared_ptr<author>>            author_block
+%type  <std::shared_ptr<author>>            author_attributes
+%type  <std::shared_ptr<string_array>>      string_array
+%type  <std::shared_ptr<string_array>>      string_group
+%type  <std::shared_ptr<stepper>>           stepper_block
+%type  <std::shared_ptr<stepper>>           stepper_attributes
+%type  <std::shared_ptr<subexpr>>           subexpr_block
+%type  <std::shared_ptr<subexpr>>           subexpr_def
+%type  <std::shared_ptr<field_metric>>      metric_def
+%type  <std::shared_ptr<field_metric>>      metric_literal
+%type  <std::shared_ptr<field_metric_base>> metric_element_list
+%type  <std::shared_ptr<GiNaC::ex>>         expression
+%type  <std::shared_ptr<GiNaC::ex>>         leaf
+%type  <std::shared_ptr<GiNaC::ex>>         built_in_function
 
 %left plus binary_minus
 %left star foreslash
@@ -182,35 +185,36 @@ program: script
         ;
 
 script: script metadata metadata_block semicolon
-        | script field identifier attribute_block semicolon                             { driver.model.add_field(*$3, *$4); }
-        | script parameter identifier attribute_block semicolon                         { driver.model.add_parameter(*$3, *$4); }
-        | script subexpr identifier subexpr_block semicolon                             { driver.model.add_subexpr(*$3, *$4); }
-        | script potential equals expression semicolon                                  { driver.model.set_potential(*$4, *$3); }
-        | script metric equals metric_def semicolon
+        | script field identifier attribute_block semicolon                             { driver.model.add_field(*$3, $4); }
+        | script parameter identifier attribute_block semicolon                         { driver.model.add_parameter(*$3, $4); }
+        | script subexpr identifier subexpr_block semicolon                             { driver.model.add_subexpr(*$3, $4); }
+        | script potential equals expression semicolon                                  { driver.model.set_potential(*$3, $4); }
+        | script metric equals metric_def semicolon                                     { driver.model.set_metric(*$3, $4); }
         | script model string model_block semicolon                                     { driver.templates.set_model(*$3); }
-        | script background stepper_block semicolon                                     { driver.templates.set_background_stepper(*$3, *$2); }
-        | script perturbations stepper_block semicolon                                  { driver.templates.set_perturbations_stepper(*$3, *$2); }
-        | script author string author_block semicolon                                   { driver.meta.add_author(*$3, *$4); }
+        | script background stepper_block semicolon                                     { driver.templates.set_background_stepper(*$2, $3); }
+        | script perturbations stepper_block semicolon                                  { driver.templates.set_perturbations_stepper(*$2, $3); }
+        | script author string author_block semicolon                                   { driver.meta.add_author(*$3, $4); }
         | script templates template_block semicolon
         | script settings settings_block semicolon
         |
         ;
 
-metric_def: metric_literal
-        | metric_def plus metric_def
-        | metric_def binary_minus metric_def
-        | expression star metric_def
-        | metric_def star expression
-        | metric_def foreslash expression
-        | unary_minus metric_def
-        | open_bracket metric_def close_bracket
+metric_def: metric_literal                                                              { $$ = $1; }
+        | metric_def plus metric_def                                                    { $$ = std::make_shared<field_metric_binop>(field_metric_binop::op::add, $1, $3); }
+        | metric_def binary_minus metric_def                                            { $$ = std::make_shared<field_metric_binop>(field_metric_binop::op::sub, $1, $3); }
+        | expression star metric_def                                                    { $3->multiply(*$1); $$ = $3; }
+        | metric_def star expression                                                    { $1->multiply(*$3); $$ = $1; }
+        | metric_def foreslash expression                                               { $1->multiply(GiNaC::ex(1) / *$3); $$ = $1; }
+        | unary_minus metric_def                                                        { $2->multiply(GiNaC::ex(-1)); $$ = $2; }
+        | open_bracket metric_def close_bracket                                         { $$ = $2; }
         ;
 
-metric_literal: open_square metric_element_list close_square
+metric_literal: open_square metric_element_list close_square                            { $$ = $2; }
         ;
 
 metric_element_list: metric_element_list identifier comma identifier equals expression semicolon
-        |
+                                                                                        { driver.model.add_metric_component(*$1, *$2, *$4, *$6, *$5); $$ = $1; }
+        |                                                                               { $$ = std::make_shared<field_metric_base>(); }
         ;
 
 metadata_block: open_brace metadata_def close_brace
@@ -256,8 +260,8 @@ model_attributes: model_attributes name equals string semicolon                 
         | model_attributes description equals string semicolon                          { driver.meta.set_description(*$4); }
         | model_attributes license equals string semicolon                              { driver.meta.set_license(*$4); }
         | model_attributes revision equals integer semicolon                            { driver.meta.set_revision(*$4); }
-        | model_attributes references equals string_array semicolon                     { driver.meta.set_references(*$4); }
-        | model_attributes urls equals string_array semicolon                           { driver.meta.set_urls(*$4); }
+        | model_attributes references equals string_array semicolon                     { driver.meta.set_references(*$3, $4); }
+        | model_attributes urls equals string_array semicolon                           { driver.meta.set_urls(*$3, $4); }
         |
         ;
 

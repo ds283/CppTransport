@@ -71,7 +71,7 @@ class metadata_block
 
 
     //! add an author
-    bool add_author(const std::string& n, const y::lexeme_type& l, author& a);
+    bool add_author(const std::string& n, const y::lexeme_type& l, std::shared_ptr<author> a);
 
     //! get author table
     const author_table& get_author() const;
@@ -106,17 +106,17 @@ class metadata_block
 
 
     //! set model reference list
-    bool set_references(const std::vector<contexted_value<std::string> >& refs);
+    bool set_references(const y::lexeme_type& lex, std::shared_ptr<string_array> refs);
 
     //! get model reference list as contexted value
-    boost::optional< std::vector< contexted_value<std::string> >& > get_references() const;
+    boost::optional< std::vector< contexted_value<std::string> > > get_references() const;
 
 
     //! set model URL list
-    bool set_urls(const std::vector<contexted_value<std::string> >& urls);
+    bool set_urls(const y::lexeme_type& lex, std::shared_ptr<string_array> urls);
 
     //! get model URL list as contexted value
-    boost::optional< std::vector< contexted_value<std::string> >& > get_urls() const;
+    boost::optional< std::vector< contexted_value<std::string> > > get_urls() const;
 
 
     // INTERNAL DATA
@@ -147,10 +147,10 @@ class metadata_block
     std::unique_ptr<contexted_value<std::string> > license;
 
     //! list of references
-    std::unique_ptr<std::vector<contexted_value<std::string> > > references;
+    std::unique_ptr< contexted_value< std::shared_ptr<string_array> > > references;
 
     //! list of URLs
-    std::unique_ptr<std::vector<contexted_value<std::string> > > urls;
+    std::unique_ptr< contexted_value< std::shared_ptr<string_array> > > urls;
 
     //! author table
     author_table authors;

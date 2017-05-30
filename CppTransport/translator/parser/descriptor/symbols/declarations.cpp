@@ -45,10 +45,11 @@ unsigned int declaration::current_id = 0;
 // ******************************************************************
 
 
-field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
-  : declaration(n, s, l)
+field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+                                     std::shared_ptr<attributes> a)
+  : declaration(n, s, l),
+    attrs(a)
   {
-    attrs = std::make_unique<attributes>(a);
   }
 
 
@@ -72,10 +73,11 @@ void field_declaration::print(std::ostream& stream) const
 // ******************************************************************
 
 
-parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes& a)
-  : declaration(n, s, l)
+parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+                                             std::shared_ptr<attributes> a)
+  : declaration(n, s, l),
+    attrs(a)
   {
-    attrs = std::make_unique<attributes>(a);
   }
 
 
@@ -99,10 +101,11 @@ void parameter_declaration::print(std::ostream& stream) const
 // ******************************************************************
 
 
-subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr& e)
-  : declaration(n, s, l)
+subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+                                         std::shared_ptr<subexpr> e)
+  : declaration(n, s, l),
+    sexpr(e)
   {
-    sexpr = std::make_unique<subexpr>(e);
   }
 
 

@@ -83,11 +83,11 @@ namespace y
       }
     
     
-    void metadata_driver::add_author(lexeme_type& lex, author& a)
+    void metadata_driver::add_author(lexeme_type& lex, std::shared_ptr<author> a)
       {
         try
           {
-            auto Setter = [&](auto& name, auto& lex) -> auto { a.set_name(name, lex); return this->root.meta.add_author(name, lex, a); };
+            auto Setter = [&](auto& name, auto& lex) -> auto { a->set_name(name, lex); return this->root.meta.add_author(name, lex, a); };
             SetStringValue(Setter, lex);
           }
         catch(parse_error& xe)
@@ -153,11 +153,11 @@ namespace y
       }
     
     
-    void metadata_driver::set_references(string_array& a)
+    void metadata_driver::set_references(lexeme_type& lex, std::shared_ptr<string_array> a)
       {
         try
           {
-            this->root.meta.set_references(a.get_array());
+            this->root.meta.set_references(lex, a);
           }
         catch(parse_error& xe)
           {
@@ -166,11 +166,11 @@ namespace y
       }
     
     
-    void metadata_driver::set_urls(string_array& a)
+    void metadata_driver::set_urls(lexeme_type& lex, std::shared_ptr<string_array> a)
       {
         try
           {
-            this->root.meta.set_urls(a.get_array());
+            this->root.meta.set_urls(lex, a);
           }
         catch(parse_error& xe)
           {

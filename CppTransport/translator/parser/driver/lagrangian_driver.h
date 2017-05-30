@@ -59,22 +59,29 @@ namespace y
         void set_lagrangian_type(model_type t, lexeme_type& lex);
     
         //! add a field block
-        void add_field(lexeme_type& lex, attributes& a);
+        void add_field(lexeme_type& lex, std::shared_ptr<attributes> a);
     
         //! add a parameter block
-        void add_parameter(lexeme_type& lex, attributes& a);
+        void add_parameter(lexeme_type& lex, std::shared_ptr<attributes> a);
     
         //! add a subexpression block
-        void add_subexpr(lexeme_type& lex, subexpr& e);
+        void add_subexpr(lexeme_type& lex, std::shared_ptr<subexpr> e);
     
-        //! add a potential specification
-        void set_potential(GiNaC::ex& V, lexeme_type& lex);
+        //! set the potential specification
+        void set_potential(lexeme_type& lex, std::shared_ptr<GiNaC::ex> V);
     
         //! set the LaTeX field of a subexpr block
         void set_subexpr_latex(subexpr& e, lexeme_type& lex);
     
         //! set the value field of a subexpr block
         void set_subexpr_value(subexpr& e, GiNaC::ex& v, lexeme_type& lex);
+        
+        //! add a component to the field-space metric
+        void add_metric_component(field_metric_base& metric, lexeme_type& i, lexeme_type& j,
+                                  GiNaC::ex& e, lexeme_type& context);
+        
+        //! set the field-space metric specification
+        void set_metric(lexeme_type& lex, std::shared_ptr<field_metric> f);
     
     
         // INTERNAL DATA

@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 21/06/2013.
+// Created by David Seery on 30/05/2017.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2017 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -24,17 +24,16 @@
 //
 
 
-
-#ifndef CPPTRANSPORT_SEMANTIC_DATA_H
-#define CPPTRANSPORT_SEMANTIC_DATA_H
-
-
-#include "attributes.h"
-#include "author.h"
-#include "stepper.h"
-#include "string_array.h"
 #include "subexpr.h"
-#include "metric.h"
 
 
-#endif //CPPTRANSPORT_SEMANTIC_DATA_H
+bool subexpr::set_value(GiNaC::ex v, const y::lexeme_type& l)
+  {
+    return SetContextedValue(this->value, v, l, ERROR_VALUE_REDECLARATION);
+  }
+
+
+bool subexpr::set_latex(const std::string& ltx, const y::lexeme_type& l)
+  {
+    return SetContextedValue(this->latex, ltx, l, ERROR_LATEX_REDECLARATION);
+  }

@@ -132,6 +132,12 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/driver/templates_driver.cpp
   translator/parser/driver/misc_driver.cpp
   translator/parser/driver/y_driver.cpp
+  translator/parser/semantic-values/attributes.cpp
+  translator/parser/semantic-values/author.cpp
+  translator/parser/semantic-values/metric.cpp
+  translator/parser/semantic-values/stepper.cpp
+  translator/parser/semantic-values/string_array.cpp
+  translator/parser/semantic-values/subexpr.cpp
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
   translator/parser/y_lexer.cpp
@@ -253,6 +259,8 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/FindCppTransport.cmake DESTINATION share/cmake
 set(TEMPLATES_FILES
   templates/canonical_core.h
   templates/canonical_mpi.h
+  templates/nontrivial_metric_core.h
+  templates/nontrivial_metric_mpi.h
   )
 
 set(TEMPLATES_VEXCL_CUDA_FILES
@@ -425,6 +433,7 @@ set(TRANSLATOR_PARSER_DESCRIPTOR_BLOCKS_FILES
 set(TRANSLATOR_PARSER_DESCRIPTOR_SYMBOLS_FILES
   translator/parser/descriptor/symbols/declarations.h
   translator/parser/descriptor/symbols/declarations.cpp
+  translator/parser/descriptor/symbols/generic_iterator.h
   translator/parser/descriptor/symbols/symbol_database.h
   )
 
@@ -454,11 +463,18 @@ set(TRANSLATOR_PARSER_DRIVER_FILES
 
 set(TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES
   translator/parser/semantic-values/stepper.h
+  translator/parser/semantic-values/stepper.cpp
   translator/parser/semantic-values/attributes.h
+  translator/parser/semantic-values/attributes.cpp
   translator/parser/semantic-values/subexpr.h
+  translator/parser/semantic-values/subexpr.cpp
   translator/parser/semantic-values/author.h
+  translator/parser/semantic-values/author.cpp
   translator/parser/semantic-values/string_array.h
-  translator/parser/semantic-values/metric.h)
+  translator/parser/semantic-values/string_array.cpp
+  translator/parser/semantic-values/metric.h
+  translator/parser/semantic-values/metric.cpp
+  )
 
 set(TRANSLATOR_PARSER_FILES
   translator/parser/input_stack.cpp

@@ -57,7 +57,7 @@ namespace y
     
         void set_name(lexeme_type& lex);
     
-        void add_author(lexeme_type& lex, author& a);
+        void add_author(lexeme_type& lex, std::shared_ptr<author> a);
     
         void set_citeguide(lexeme_type& lex);
     
@@ -67,9 +67,9 @@ namespace y
     
         void set_license(lexeme_type& lex);
     
-        void set_references(string_array& a);
+        void set_references(lexeme_type& lex, std::shared_ptr<string_array> a);
     
-        void set_urls(string_array& a);
+        void set_urls(lexeme_type& lex, std::shared_ptr<string_array> a);
     
         void set_author_email(author& a, lexeme_type& lex);
     

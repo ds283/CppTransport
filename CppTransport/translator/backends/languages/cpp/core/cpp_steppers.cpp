@@ -53,7 +53,7 @@ namespace cpp
     // *******************************************************************
 
 
-    static std::string replace_stepper(boost::optional< contexted_value<stepper>& > s, std::string state_name)
+    static std::string replace_stepper(boost::optional< contexted_value< std::shared_ptr<stepper> > > s, std::string state_name)
       {
         std::ostringstream out;
 
@@ -80,7 +80,7 @@ namespace cpp
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             name = step.get_name();
 
             if(name == "runge_kutta_dopri5")
@@ -125,7 +125,7 @@ namespace cpp
 
     std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.templates.get_background_stepper();
+        auto s = this->data_payload.templates.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
         return(replace_stepper(s, state_name));
@@ -134,7 +134,7 @@ namespace cpp
 
     std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.templates.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
         return(replace_stepper(s, state_name));

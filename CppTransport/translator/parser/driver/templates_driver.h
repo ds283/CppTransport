@@ -69,9 +69,9 @@ namespace y
     
         void set_stepsize(struct stepper& s, lexeme_type& lex);
     
-        void set_background_stepper(struct stepper& s, lexeme_type& lex);
+        void set_background_stepper(lexeme_type& lex, std::shared_ptr<stepper> s);
     
-        void set_perturbations_stepper(struct stepper& s, lexeme_type& lex);
+        void set_perturbations_stepper(lexeme_type& lex, std::shared_ptr<stepper> s);
     
     
     

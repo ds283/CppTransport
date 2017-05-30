@@ -58,7 +58,7 @@ namespace vexcl
 
     std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.templates.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
         if(!s)
@@ -66,7 +66,7 @@ namespace vexcl
             throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
           }
 
-        stepper step = *s;
+        auto& step = ***s;
 
         if(step.get_name() != VEXCL_STEPPER)
           {
@@ -86,7 +86,7 @@ namespace vexcl
 
     std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.templates.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
         if(!s)
@@ -94,7 +94,7 @@ namespace vexcl
             throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
           }
 
-        stepper step = *s;
+        auto& step = ***s;
 
         if(step.get_name() != VEXCL_STEPPER)
           {
