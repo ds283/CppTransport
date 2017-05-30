@@ -297,7 +297,6 @@ unsigned int translation_unit::apply()
 
 boost::filesystem::path translation_unit::mangle_output_name(const boost::filesystem::path& input, const std::string& tag)
   {
-    size_t      pos = 0;
     std::string output;
 
     boost::filesystem::path h_extension(".h");
@@ -313,9 +312,9 @@ std::string translation_unit::get_template_suffix(std::string input)
   {
     size_t      pos = 0;
     std::string output;
-
-    if((pos = input.find(TEMPLATE_TAG_SUFFIX)) != std::string::npos) output = input.erase(0, pos+1);
-    else                                                             output = input;
+    
+    if((pos = input.find_last_of(TEMPLATE_TAG_SUFFIX)) != std::string::npos) output = input.erase(0, pos + 1);
+    else output = input;
 
     return(output);
   }
