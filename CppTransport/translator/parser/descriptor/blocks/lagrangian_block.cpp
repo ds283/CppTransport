@@ -144,7 +144,7 @@ bool lagrangian_block::set_potential(const y::lexeme_type& l, std::shared_ptr<Gi
     // symbol tables should be frozen whenever we start to specify the model
     this->freeze_tables(l);
 
-    return SetContextedValue(this->potential, V, l, ERROR_POTENTIAL_REDEFINITION);
+    return SetContextedValue(this->potential, V, l, ERROR_POTENTIAL_REDECLARATION);
   }
 
 
@@ -156,10 +156,22 @@ boost::optional< contexted_value< std::shared_ptr<GiNaC::ex> > > lagrangian_bloc
 
 bool lagrangian_block::set_metric(const y::lexeme_type& l, std::shared_ptr<field_metric> f)
   {
+    if(!this->type || this->type->get() != model_type::nontrivial_metric)
+      {
+        l.error(ERROR_METRIC_REQUIRES_NONTRIVIAL);
+        
+        if(this->type)
+          {
+            this->type->get_declaration_point().error(ERROR_METRIC_SETTING_WAS);
+          }
+
+        throw parse_error(ERROR_METRIC_REQUIRES_NONTRIVIAL);
+      }
+    
     // symbol tables should be frozen whenever we start to specify the model
     this->freeze_tables(l);
     
-    return SetContextedValue(this->metric, f, l, ERROR_METRIC_REDEFINITION);
+    return SetContextedValue(this->metric, f, l, ERROR_METRIC_REDECLARATION);
   }
 
 
@@ -242,7 +254,15 @@ validation_exceptions lagrangian_block::validate() const
   {
     validation_exceptions list;
     
-    if(!this->potential) list.push_back(std::make_unique<validation_message>(true, ERROR_NO_POTENTIAL));
+    if(!this->type || this->type->get() == model_type::canonical)
+      {
+        if(!this->potential) list.push_back(std::make_unique<validation_message>(true, ERROR_NO_POTENTIAL));
+      }
+    else if(this->type->get() == model_type::nontrivial_metric)
+      {
+        if(!this->potential) list.push_back(std::make_unique<validation_message>(true, ERROR_NO_POTENTIAL));
+        if(!this->metric) list.push_back(std::make_unique<validation_message>(true, ERROR_NO_METRIC));
+      }
     
     return list;
   }

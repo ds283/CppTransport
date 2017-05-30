@@ -84,12 +84,13 @@ class contexted_value
 
 // set a contexted value for a single data element, but prevent overwriting
 template <typename DataType, typename ValueType, typename LexemeType>
-bool SetContextedValue(DataType& data, const ValueType& value, const LexemeType& l, std::string err_msg)
+bool SetContextedValue(DataType& data, const ValueType& value, const LexemeType& l,
+                       std::string err_msg, std::string duplicate_msg = NOTIFY_DUPLICATION_DECLARATION_WAS)
   {
     if(data)   // has a value already been set? if so, report an error
       {
         l.error(err_msg);
-        data->get_declaration_point().warn(NOTIFY_DUPLICATION_DECLARATION_WAS);
+        data->get_declaration_point().warn(duplicate_msg);
         throw parse_error(err_msg);
       }
     

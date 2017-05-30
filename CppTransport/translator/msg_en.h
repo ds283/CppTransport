@@ -86,7 +86,8 @@ constexpr auto ERROR_NO_IMPLEMENTATION_TEMPLATE      = "No implementation templa
 constexpr auto ERROR_NO_BACKGROUND_STEPPER_BLOCK     = "No background stepper block specified";
 constexpr auto ERROR_NO_PERTURBATIONS_STEPPER_BLOCK  = "No perturbations stepper block specified";
 constexpr auto ERROR_NO_MODEL_BLOCK                  = "No model block specified";
-constexpr auto ERROR_NO_POTENTIAL                    = "No Lagrangian specified";
+constexpr auto ERROR_NO_POTENTIAL                    = "Model specification requires a potential";
+constexpr auto ERROR_NO_METRIC                       = "Model specification requires a field-space metric";
 
 constexpr auto WARNING_VEXCL_STEPPER_IGNORED_A       = "Using stepper type";
 constexpr auto WARNING_VEXCL_STEPPER_IGNORED_B       = "; VexCL backend ignores stepper specification";
@@ -138,9 +139,12 @@ constexpr auto ERROR_STEPSIZE_REDECLARATION          = "Redeclaration of stepper
 constexpr auto ERROR_BACKGROUND_REDECLARATION        = "Redeclaration of background stepper block";
 constexpr auto ERROR_PERTURBATIONS_REDECLARATION     = "Redeclaration of perturbations stepper block";
 
+constexpr auto ERROR_METRIC_REQUIRES_NONTRIVIAL      = "To assign a field-space metric, the Lagrangian type must be 'nontrivial_metric'";
+constexpr auto ERROR_METRIC_SETTING_WAS              = "Lagrangian type was set here:";
+
 constexpr auto ERROR_LAGRANGIAN_TYPE_REDECLARATION   = "Redeclaration of Lagrangian type";
-constexpr auto ERROR_POTENTIAL_REDEFINITION          = "Redefinition of potential";
-constexpr auto ERROR_METRIC_REDEFINITION             = "Redefinition of field-space metric";
+constexpr auto ERROR_POTENTIAL_REDECLARATION         = "Redeclaration of potential";
+constexpr auto ERROR_METRIC_REDECLARATION            = "Redeclaration of field-space metric";
 
 constexpr auto ERROR_REQUIRED_VERSION_REDECLARATION  = "Redeclaration of minimum required version";
 

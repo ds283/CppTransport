@@ -41,13 +41,20 @@ constexpr auto ANSI_NORMAL       = "\033[0m";
 // ******************************************************************
 
 
+void plain_warn(const std::string& msg)
+  {
+  
+  }
+
+
 void warn(const std::string& msg, const argument_cache& cache, const local_environment& env)
   {
     std::ostringstream out;
 
     bool colour_output = cache.colourize() && env.has_colour_terminal_support();
 
-    out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << WARNING_TOKEN << (colour_output ? ANSI_NORMAL : "") << msg;
+    out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << WARNING_TOKEN
+        << (colour_output ? ANSI_NORMAL : "") << msg;
     std::cout << out.str() << '\n';
   }
 
@@ -58,7 +65,8 @@ void error(const std::string& msg, const argument_cache& cache, const local_envi
 
     bool colour_output = cache.colourize() && env.has_colour_terminal_support();
 
-    out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << ERROR_TOKEN << (colour_output ? ANSI_NORMAL : "") << msg;
+    out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << ERROR_TOKEN
+        << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "");
     std::cout << out.str() << '\n';
   }
 
@@ -143,7 +151,12 @@ void warn(const std::string& msg, const argument_cache& cache, const local_envir
   {
     std::string cmsg = print_contexted_message(msg, cache, env, context, level);
     
-    warn(cmsg, cache, env);
+    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
+    
+    std::ostringstream out;
+    out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << WARNING_TOKEN
+        << (colour_output ? ANSI_NORMAL : "") << cmsg;
+    std::cout << out.str() << '\n';
   }
 
 
@@ -151,5 +164,10 @@ void error(const std::string& msg, const argument_cache& cache, const local_envi
   {
     std::string cmsg = print_contexted_message(msg, cache, env, context, level);
     
-    error(cmsg, cache, env);
+    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
+    
+    std::ostringstream out;
+    out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << ERROR_TOKEN
+        << (colour_output ? ANSI_NORMAL : "") << cmsg;
+    std::cout << out.str() << '\n';
   }

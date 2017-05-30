@@ -133,7 +133,7 @@ bool metadata_block::set_references(const y::lexeme_type& lex, std::shared_ptr<s
 
 boost::optional< std::vector< contexted_value<std::string> > > metadata_block::get_references() const
   {
-    if(this->references) return this->references.get()->get().get()->get_array() ; else return boost::none;
+    if(this->references) return this->references->get().get()->get_array() ; else return boost::none;
   }
 
 
@@ -145,7 +145,7 @@ bool metadata_block::set_urls(const y::lexeme_type& lex, std::shared_ptr<string_
 
 boost::optional< std::vector< contexted_value<std::string> > > metadata_block::get_urls() const
   {
-    if(this->urls) return this->urls.get()->get().get()->get_array(); else return boost::none;
+    if(this->urls) return this->urls->get().get()->get_array(); else return boost::none;
   }
 
 
