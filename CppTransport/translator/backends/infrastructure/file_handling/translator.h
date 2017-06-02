@@ -35,6 +35,8 @@
 #include "translator_data.h"
 #include "expression_cache.h"
 #include "backend_data.h"
+#include "package_group_factory.h"
+#include "make_tensor_factory.h"
 
 #include "ginac_cache.h"
 #include "formatter.h"
@@ -59,11 +61,11 @@ class translator
 
   public:
 
-    // translate from template 'in', depositing output in the file 'out'
-		// implemented internally by constructed a buffer and calling the next variant
+    //! translate from template 'in', depositing output in the file 'out'
+		//! implemented internally by constructed a buffer and calling the next variant
     unsigned int translate(const std::string& in, const error_context& ctx, const std::string& out, process_type type, filter_function* filter=nullptr);
 
-		// translate from template 'in', depositing output in the supplied buffer 'buf'
+		//! translate from template 'in', depositing output in the supplied buffer 'buf'
     unsigned int translate(const std::string& in, const error_context& ctx, buffer& buf, process_type type, filter_function* filter=nullptr);
 
 
@@ -81,8 +83,19 @@ class translator
 
   protected:
 
-    // internal API to process a file
+    //! internal API to process a file
     unsigned int process(const boost::filesystem::path& in, buffer& buf, process_type type, filter_function* filter);
+
+		//! build the key agents needed for processing a file
+		std::tuple< std::unique_ptr<backend_data>, std::unique_ptr<tensor_factory>, std::unique_ptr<package_group> >
+    build_agents(const boost::filesystem::path& in);
+
+    //! open a template file
+    std::unique_ptr<std::ifstream> open_template(const boost::filesystem::path& in, buffer& buf);
+
+    //! process a single line from a template
+    unsigned int process_line(std::ifstream& inf, package_group& package, macro_agent& agent, buffer& buf, output_stack& os,
+                                  filter_function* filter, bool annotate);
 
 
 		// INTERNAL DATA

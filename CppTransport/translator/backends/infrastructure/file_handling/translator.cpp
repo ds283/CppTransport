@@ -30,8 +30,6 @@
 
 #include "translator.h"
 #include "buffer.h"
-#include "package_group_factory.h"
-#include "make_tensor_factory.h"
 
 #include "formatter.h"
 
@@ -96,69 +94,23 @@ unsigned int translator::translate(const std::string& in, const error_context& c
 
 unsigned int translator::process(const boost::filesystem::path& in, buffer& buf, process_type type, filter_function* filter)
   {
-    unsigned int replacements = 0;
-    std::ifstream inf;
-    
-    // decide which backend and API version are required
-    // backend_data will issue an error if the file doesn't exist, can't be opened,
-    // or the header cannot be read correctly
-    backend_data backend(in, this->data_payload.get_stack(), this->data_payload.get_error_handler(),
-                         this->data_payload.get_warning_handler(),
-                         this->data_payload.get_finder(), this->data_payload.get_argument_cache());
-    
-    // bail out on failure; error messages will already have been issued
-    if(!backend) return 0;
-    
-    // ask backend to validate itself: minimum version is OK, model type matches translator
-    if(!backend.validate(this->data_payload)) return 0;
-    
-    // from here on, can assume that template exists and can be read and handled by this version of CppTransport
-    
-    // open template
-    inf.open(in.string().c_str());
-    if(!inf.is_open() || inf.fail())
-      {
-        std::ostringstream msg;
-        msg << ERROR_READING_TEMPLATE << " " << in;
-    
-        error_context err_context = this->data_payload.make_error_context();
-        err_context.error(msg.str());
-    
-        inf.close();
-        return 0;
-      }
-    
-    // skip over header line
-    std::string line;
-    std::getline(inf, line);
-    
-    // emit advisory that translation is underway
-    std::ostringstream translation_msg;
-    translation_msg << MESSAGE_TRANSLATING << " '" << in.string() << "'";
-    if(!buf.is_memory())
-      {
-        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
-      }
-    this->data_payload.message(translation_msg.str());
-    
-    // Generate an appropriate tensor_factory instance
-
-    // A backend consists of a set of macro replacement rules that collectively comprise a 'package group'.
-    // The result is returned as a managed pointer, using std::unique_ptr<>
-    std::unique_ptr<tensor_factory> factory = make_tensor_factory(this->data_payload, *this->cache);
-    
-    // try to synthesize an appropriate backend
+    std::unique_ptr<backend_data> backend;
+    std::unique_ptr<tensor_factory> factory;
     std::unique_ptr<package_group> package;
+
     try
       {
-        package = package_group_factory(in, backend, this->data_payload, *factory);
+        std::tie(backend, factory, package) = this->build_agents(in);
       }
     catch(std::runtime_error& xe)
       {
-        error_context err_context = this->data_payload.make_error_context();
-        err_context.error(xe.what());
+        // errors will already have been reported, so simply return
         return 0;
       }
+
+    // open template, and return if there is an error
+    auto inf = this->open_template(in, buf);
+    if(!inf) return 0;
 
     // generate a macro replacement agent based on this package group; can assume that
     // package is not an empty pointer
@@ -168,40 +120,14 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
     output_stack& os = this->data_payload.get_stack();
     os.push(in, buf, agent, type);  // current line number is automatically set to 2 (accounting for the header line)
 
+    // are we annotating the translated template?
     bool annotate = this->data_payload.annotate();
 
-    while(!inf.eof() && !inf.fail())
+    unsigned int replacements = 0;
+
+    while(!inf->eof() && !inf->fail())
       {
-        // read in a line from the template
-        line.clear();
-        std::getline(inf, line);
-
-        // apply macro replacement to this line, keeping track of how many replacements are performed
-        // result is supplied as a std::unique_ptr<> because we don't want to have to take copies
-        // of a large array of strings
-        unsigned int new_replacements = 0;
-        std::unique_ptr< std::list<std::string> > line_list = agent.apply(line, new_replacements);
-        replacements += new_replacements;
-
-        if(line_list)
-          {
-            std::ostringstream continuation_tag;
-            language_printer& printer = package->get_language_printer();
-
-            continuation_tag << ANNOTATE_EXPANSION_OF_LINE << " " << os.get_line();
-
-            unsigned int c = 0;
-            for(const std::string& l : *line_list)
-              {
-                std::string out_line = l + (annotate && c > 0 ? " " + printer.comment(continuation_tag.str()) : "");
-
-                if(filter != nullptr) buf.write_to_end((*filter)(out_line));
-                else                  buf.write_to_end(out_line);
-
-                ++c;
-              }
-          }
-
+        replacements += this->process_line(*inf, *package, agent, buf, os, filter, annotate);
         os.increment_line();
       }
 
@@ -221,7 +147,123 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
 
     // package will report on time and memory use when it goes out of scope and is destroyed
 
-    inf.close();
+    inf->close();
 
     return(replacements);
+  }
+
+
+std::tuple< std::unique_ptr<backend_data>, std::unique_ptr<tensor_factory>, std::unique_ptr<package_group> >
+translator::build_agents(const boost::filesystem::path& in)
+  {
+    // decide which backend and API version are required
+    // backend_data will issue an error if the file doesn't exist, can't be opened,
+    // or the header cannot be read correctly
+    auto backend
+      = std::make_unique<backend_data>(in, this->data_payload.get_stack(), this->data_payload.get_error_handler(),
+                                       this->data_payload.get_warning_handler(),
+                                       this->data_payload.get_finder(), this->data_payload.get_argument_cache());
+
+    // bail out on failure; error messages will already have been issued
+    if(!backend) throw std::runtime_error("");
+
+    // ask backend to validate itself: minimum version is OK, model type matches translator;
+    // error messages are issued, so no need to do anything here
+    if(!backend->validate(this->data_payload)) throw std::runtime_error("");
+
+    // from here on, can assume that template exists and can be read and handled by this version of CppTransport
+
+    // Generate an appropriate tensor_factory instance
+
+    // A backend consists of a set of macro replacement rules that collectively comprise a 'package group'.
+    // The result is returned as a managed pointer, using std::unique_ptr<>
+    auto factory = make_tensor_factory(this->data_payload, *this->cache);
+
+    // try to synthesize an appropriate macro package group
+    // for this backend, which depends on the language type declared int he
+    // template header; will throw an exception if the language type is not understood
+    std::unique_ptr<package_group> package;
+    try
+      {
+        package = package_group_factory(in, *backend, this->data_payload, *factory);
+      }
+    catch(std::runtime_error& xe)
+      {
+        error_context err_context = this->data_payload.make_error_context();
+        err_context.error(xe.what());
+        throw;
+      }
+
+    return std::make_tuple(std::move(backend), std::move(factory), std::move(package));
+  }
+
+
+std::unique_ptr<std::ifstream> translator::open_template(const boost::filesystem::path& in, buffer& buf)
+  {
+    auto inf = std::make_unique<std::ifstream>();
+
+    inf->open(in.string().c_str());
+    if(!inf->is_open() || inf->fail())
+      {
+        std::ostringstream msg;
+        msg << ERROR_READING_TEMPLATE << " " << in;
+
+        error_context err_context = this->data_payload.make_error_context();
+        err_context.error(msg.str());
+
+        inf->close();
+        return nullptr;
+      }
+
+    // skip over header line
+    std::string line;
+    std::getline(*inf, line);
+
+    // emit advisory that translation is underway
+    std::ostringstream translation_msg;
+    translation_msg << MESSAGE_TRANSLATING << " '" << in.string() << "'";
+    if(!buf.is_memory())
+      {
+        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
+      }
+    this->data_payload.message(translation_msg.str());
+
+    return std::move(inf);
+  }
+
+
+unsigned int
+translator::process_line(std::ifstream& inf, package_group& package, macro_agent& agent, buffer& buf, output_stack& os,
+                         filter_function* filter, bool annotate)
+  {
+    // read in a line from the template
+    std::string line;
+    std::getline(inf, line);
+
+    // apply macro replacement to this line, keeping track of how many replacements are performed;
+    // result is supplied as a std::unique_ptr<> because we don't want to have to take copies
+    // of a large array of strings
+    unsigned int replacements = 0;
+    std::unique_ptr< std::list<std::string> > line_list = agent.apply(line, replacements);
+
+    if(line_list)
+      {
+        std::ostringstream continuation_tag;
+        language_printer& printer = package.get_language_printer();
+
+        continuation_tag << ANNOTATE_EXPANSION_OF_LINE << " " << os.get_line();
+
+        unsigned int c = 0;
+        for(const std::string& l : *line_list)
+          {
+            std::string out_line = l + (annotate && c > 0 ? " " + printer.comment(continuation_tag.str()) : "");
+
+            if(filter != nullptr) buf.write_to_end((*filter)(out_line));
+            else                  buf.write_to_end(out_line);
+
+            ++c;
+          }
+      }
+
+    return replacements;
   }
