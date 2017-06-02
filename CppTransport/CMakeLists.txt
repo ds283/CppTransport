@@ -495,6 +495,8 @@ set(TRANSLATOR_PARSER_FILES
 set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
   translator/transport-objects/canonical/A.cpp
   translator/transport-objects/canonical/A.h
+  translator/transport-objects/canonical/Atilde.cpp
+  translator/transport-objects/canonical/Atilde.h
   translator/transport-objects/canonical/B.cpp
   translator/transport-objects/canonical/B.h
   translator/transport-objects/canonical/C.cpp
@@ -552,15 +554,6 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/u3.h
   translator/transport-objects/concepts/zeta1.h
   translator/transport-objects/concepts/zeta2.h
-  )
-
-set(TRANSLATOR_TRANSPORT_OBJECTS_DEPRECATED_FILES
-  translator/transport-objects/deprecated/canonical_u_tensor_factory.cpp
-  translator/transport-objects/deprecated/canonical_u_tensor_factory.h
-  translator/transport-objects/deprecated/flatten.h
-  translator/transport-objects/deprecated/make_u_tensor_factory.h
-  translator/transport-objects/deprecated/u_tensor_factory.cpp
-  translator/transport-objects/deprecated/u_tensor_factory.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_FILES
@@ -1100,7 +1093,6 @@ set(SOURCE_FILES
   ${TRANSLATOR_PARSER_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_DEPRECATED_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
