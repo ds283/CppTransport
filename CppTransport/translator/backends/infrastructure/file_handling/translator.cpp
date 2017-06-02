@@ -106,12 +106,15 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
                          this->data_payload.get_warning_handler(),
                          this->data_payload.get_finder(), this->data_payload.get_argument_cache());
     
-    if(!backend) return 0;  // bail out on failure. Error messages have already been issued
+    // bail out on failure; error messages will already have been issued
+    if(!backend) return 0;
     
-    if(!backend.validate(this->data_payload)) return 0;   // ask backend to validate itself
+    // ask backend to validate itself: minimum version is OK, model type matches translator
+    if(!backend.validate(this->data_payload)) return 0;
     
     // from here on, can assume that template exists and can be read and handled by this version of CppTransport
     
+    // open template
     inf.open(in.string().c_str());
     if(!inf.is_open() || inf.fail())
       {
@@ -138,11 +141,11 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
       }
     this->data_payload.message(translation_msg.str());
     
-    // Generate an appropriate backend
+    // Generate an appropriate tensor_factory instance
 
     // A backend consists of a set of macro replacement rules that collectively comprise a 'package group'.
     // The result is returned as a managed pointer, using std::unique_ptr<>
-    std::unique_ptr<tensor_factory> factory = make_tensor_factory(backend, this->data_payload, *this->cache);
+    std::unique_ptr<tensor_factory> factory = make_tensor_factory(this->data_payload, *this->cache);
     
     // try to synthesize an appropriate backend
     std::unique_ptr<package_group> package;
