@@ -81,6 +81,7 @@ class translator_data
 
   public:
 
+    //! set core and implementation paths
     void set_core_implementation(const boost::filesystem::path& co, const std::string& cg,
                                  const boost::filesystem::path& io, const std::string& ig);
 
