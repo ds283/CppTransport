@@ -104,11 +104,11 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     std::unique_ptr< std::list<std::string> > r_list = std::make_unique<std::list<std::string> >();
 
     // break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
-    macro_impl::split_string split_result = this->split(line);
+    macro_impl::split_string split_result(line, this->split_equal, this->split_sum_equal);
 
     timing_instrument tok_timer(this->tokenization_timer);
-    std::unique_ptr<token_list> left_tokens = this->tokenize(split_result.left);
-    std::unique_ptr<token_list> right_tokens = this->tokenize(split_result.right);
+    std::unique_ptr<token_list> left_tokens = this->tokenize(split_result.get_left());
+    std::unique_ptr<token_list> right_tokens = this->tokenize(split_result.get_right());
     tok_timer.stop();
 
     // running total of number of macro replacements
@@ -214,8 +214,8 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
 						    if(left_tokens.size() > 0)
 							    {
                     std::string lhs = left_tokens.to_string();
-                    if(split_result.type == macro_impl::split_type::sum)       lhs += " = ";
-                    if(split_result.type == macro_impl::split_type::sum_equal) lhs += " += ";
+                    if(split_result.get_split_type() == macro_impl::split_type::sum)       lhs += " = ";
+                    if(split_result.get_split_type() == macro_impl::split_type::sum_equal) lhs += " += ";
 						        r_list.push_back(lhs);
 							    }
 
@@ -238,7 +238,9 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
 						        counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
 								    // set up replacement right hand side; add trailing ; and , only if the LHS is empty
-						        std::string this_line = right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
+                    std::string this_line = right_tokens.to_string() +
+                                            (left_tokens.size() == 0 && split_result.has_trailing_semicolon() ? ";" : "") +
+                                            (left_tokens.size() == 0 && split_result.has_trailing_comma() ? "," : "");
 
                     if(left_tokens.size() == 0)   // no need to format for indentation if no LHS; RHS will already include indentation
                       {
@@ -253,11 +255,11 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
 								// add a trailing ; and , if the LHS is nonempty
 						    if(left_tokens.size() > 0 && r_list.size() > 0)
 							    {
-						        if(split_result.semicolon)
+						        if(split_result.has_trailing_semicolon())
 							        {
 						            r_list.back() += ";";
 							        }
-						        if(split_result.comma)
+						        if(split_result.has_trailing_comma())
 							        {
 						            r_list.back() += ",";
 							        }
@@ -285,10 +287,12 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
 								// set up line with macro replacements, and add trailing ; and , if necessary;
                 // since the line includes the full LHS it needs no special formatting to account for indentation
 						    std::string full_line = left_tokens.to_string();
-                if(split_result.type == macro_impl::split_type::sum)       full_line += " =";
-                if(split_result.type == macro_impl::split_type::sum_equal) full_line += " +=";
-
-                full_line += (left_tokens.size() > 0 ? " " : "") + right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
+                if(split_result.get_split_type() == macro_impl::split_type::sum)       full_line += " =";
+                if(split_result.get_split_type() == macro_impl::split_type::sum_equal) full_line += " +=";
+                
+                full_line += (left_tokens.size() > 0 ? " " : "") + right_tokens.to_string() +
+                             (split_result.has_trailing_semicolon() ? ";" : "") +
+                             (split_result.has_trailing_comma() ? "," : "");
 								r_list.push_back(full_line);
 							}
 			    }
@@ -321,62 +325,15 @@ void macro_agent::forloop_index_assignment(token_list& left_tokens, token_list& 
   }
 
 
-macro_impl::split_string macro_agent::split(const std::string& line)
-  {
-    macro_impl::split_string rval;
-
-    // check for sum split point
-    if((rval.split_point = line.find(this->split_equal)) != std::string::npos)
-      {
-        rval.left  = line.substr(0, rval.split_point);
-        rval.right = line.substr(rval.split_point + this->split_equal.length());
-        rval.type  = macro_impl::split_type::sum;
-      }
-    else    // not sum, but possibly sum-equals?
-      {
-        if((rval.split_point = line.find(this->split_sum_equal)) != std::string::npos)
-          {
-            rval.left  = line.substr(0, rval.split_point);
-            rval.right = line.substr(rval.split_point + this->split_sum_equal.length());
-            rval.type  = macro_impl::split_type::sum_equal;
-          }
-        else    // no split-point; everything counts as the right-hand side
-          {
-            rval.right = line;
-            rval.type  = macro_impl::split_type::none;
-          }
-      }
-
-    // trim trailing white space on the right-hand side,
-    // and leading white space if there is a nontrivial left-hand side
-    boost::algorithm::trim_right(rval.right);
-    if(rval.left.length() > 0) boost::algorithm::trim_left(rval.right);
-
-    // check if the last component is a semicolon
-    // note std:string::back() and std::string::pop_back() require C++11
-    if(rval.right.size() > 0 && rval.right.back() == ';')
-      {
-        rval.semicolon = true;
-        rval.right.pop_back();
-      }
-
-    // check if the last component is a comma
-    if(rval.right.size() > 0 && rval.right.back() == ',')
-      {
-        rval.comma = true;
-        rval.right.pop_back();
-      }
-
-    return(rval);
-  }
-
-
 std::string macro_agent::compute_prefix(macro_impl::split_string& split_string)
   {
     std::string prefix;
     size_t pos = 0;
+    
+    auto& left = split_string.get_left();
+    auto& right = split_string.get_right();
 
-    std::string raw = (split_string.left.length() > 0) ? split_string.left : split_string.right;
+    std::string raw = (left.length() > 0) ? left : right;
 
     while(pos < raw.length() && std::isspace(raw[pos]))
       {
@@ -404,7 +361,7 @@ void macro_agent::plant_LHS_forloop(index_database<abstract_index>::const_iterat
         // if this is an assignment statement then plant code to zero the accumulator variable,
         // unless there are no RHS assignments.
         // In that case we can simply coalesce the assignment with the RHS.
-        if(left_tokens.size() > 0 && RHS_assignments.size() > 1 && split_result.type == macro_impl::split_type::sum)
+        if(left_tokens.size() > 0 && RHS_assignments.size() > 1 && split_result.get_split_type() == macro_impl::split_type::sum)
           {
             std::string zero_stmt = left_tokens.to_string() + " = 0;";
             boost::algorithm::trim_left(zero_stmt);
@@ -447,16 +404,16 @@ void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterat
         counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
         std::string left_line = left_tokens.to_string();
-        std::string right_line = right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
+        std::string right_line = right_tokens.to_string() + (split_result.has_trailing_semicolon() ? ";" : "") + (split_result.has_trailing_comma() ? "," : "");
 
         boost::algorithm::trim_left(left_line);
         std::string total_line = left_line;
 
-        if(split_result.type == macro_impl::split_type::sum_equal)
+        if(split_result.get_split_type() == macro_impl::split_type::sum_equal)
           {
             total_line += " += ";
           }
-        else if(split_result.type == macro_impl::split_type::sum)
+        else if(split_result.get_split_type() == macro_impl::split_type::sum)
           {
             if(coalesce) total_line += " = ";
             else         total_line += " += ";
@@ -502,4 +459,55 @@ std::string macro_agent::dress(std::string out_str, const std::string& raw_inden
 void macro_agent::inject_macro(macro_packages::replacement_rule_index* rule)
   {
     this->index_rule_cache.push_back(rule);
+  }
+
+
+macro_impl::split_string::split_string(const std::string& line, const std::string& split_equal,
+                                       const std::string& split_sum_equal)
+  : split_point(0),
+    comma(false),
+    semicolon(false),
+    type(split_type::none)
+  {
+    // check for sum split point
+    if((split_point = line.find(split_equal)) != std::string::npos)
+      {
+        left  = line.substr(0, split_point);
+        right = line.substr(split_point + split_equal.length());
+        type  = split_type::sum;
+      }
+    else    // not sum, but possibly sum-equals?
+      {
+        if((split_point = line.find(split_sum_equal)) != std::string::npos)
+          {
+            left  = line.substr(0, split_point);
+            right = line.substr(split_point + split_sum_equal.length());
+            type  = split_type::sum_equal;
+          }
+        else    // no split-point; everything counts as the right-hand side
+          {
+            right = line;
+            type  = split_type::none;
+          }
+      }
+    
+    // trim trailing white space on the right-hand side,
+    // and leading white space if there is a nontrivial left-hand side
+    boost::algorithm::trim_right(right);
+    if(left.length() > 0) boost::algorithm::trim_left(right);
+    
+    // check if the last component is a semicolon
+    // note std:string::back() and std::string::pop_back() require C++11
+    if(right.size() > 0 && right.back() == ';')
+      {
+        semicolon = true;
+        right.pop_back();
+      }
+    
+    // check if the last component is a comma
+    if(right.size() > 0 && right.back() == ',')
+      {
+        comma = true;
+        right.pop_back();
+      }
   }

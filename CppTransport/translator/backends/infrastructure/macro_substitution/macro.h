@@ -66,20 +66,45 @@ namespace macro_impl
     //! hold the result of breaking an input line at a split-point marker, if one is present
     class split_string
       {
+        
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
-
-        //! constructor applies sensible defaults
-        split_string()
-          : split_point(0),
-            comma(false),
-            semicolon(false),
-            type(split_type::none)
-          {
-          }
+    
+        //! constructor splits std::string into its components
+        split_string(const std::string& line, const std::string& split_equal,
+                     const std::string& split_sum_equal);
 
         //! destructor is default
         ~split_string() = default;
+        
+        
+        // INTERFACE
+        
+      public:
+        
+        //! get left-hand string
+        const std::string& get_left() const { return this->left; }
+        
+        //! get right-hand string
+        const std::string& get_right() const { return this->right; }
+        
+        //! get position of split point, if one exists
+        size_t get_split_point() const { return this->split_point; }
+        
+        //! get type of split point
+        split_type get_split_type() const { return this->type; }
+        
+        //! has a trailing comma on LHS?
+        bool has_trailing_comma() const { return this->comma; }
+        
+        //! has a trailing semicolon on RHS?
+        bool has_trailing_semicolon() const { return this->semicolon; }
+        
+        
+        // INTERNAL DATA
+        
+      private:
 
         //! left-hand side
         std::string left;
@@ -158,11 +183,8 @@ class macro_agent
 
     //! do the heavy lifting of applying macro substitution to a line
     std::unique_ptr< std::list<std::string> > apply_line(const std::string& line, unsigned int& replacements);
-
-    //! find a split-point in a line, if one exists
-    macro_impl::split_string split(const std::string& line);
-
-
+    
+    
     // INTERNAL API -- HANDLE INDEX SET BY UNROLLING
 
   protected:
