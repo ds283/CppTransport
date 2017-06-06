@@ -259,7 +259,7 @@ translator::process_line(std::ifstream& inf, package_group& package, macro_agent
             std::string out_line = l + (annotate && c > 0 ? " " + printer.comment(continuation_tag.str()) : "");
 
             if(filter != nullptr) buf.write_to_end((*filter)(out_line));
-            else                  buf.write_to_end(out_line);
+            else buf.write_to_end(out_line);
 
             ++c;
           }

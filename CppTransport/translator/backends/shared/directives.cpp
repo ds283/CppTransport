@@ -81,7 +81,7 @@ namespace macro_packages
             return this->printer.comment(msg.str());
           }
 
-        macro_table::const_iterator t = this->macros.find(name);
+        auto t = this->macros.find(name);
         if(t != this->macros.end())
           {
             const error_context& ctx = args[SET_DIRECTIVE_DEFINITION_ARGUMENT].get_declaration_point();
@@ -106,7 +106,7 @@ namespace macro_packages
         // inject this macro into the top-of-stack macro package
         if(result.second)
           {
-            ma.inject_macro(result.first->second.get());
+            ma.inject_macro(*result.first->second);
           }
 
         std::ostringstream msg;

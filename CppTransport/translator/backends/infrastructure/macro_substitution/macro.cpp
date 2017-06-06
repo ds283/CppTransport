@@ -44,9 +44,6 @@ macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf,
     recursion_max(dm),
     recursion_depth(0),
     package(pkg),
-    pre_rule_cache(pkg.get_pre_ruleset()),
-    post_rule_cache(pkg.get_post_ruleset()),
-    index_rule_cache(pkg.get_index_ruleset()),
     output_enabled(true)
   {
     assert(recursion_max > 0);
@@ -73,6 +70,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply(const std::string& 
 		// So, use a std::unique_ptr<> to manage the result object
     std::unique_ptr< std::list<std::string> > r_list;
 
+    // check whether it is still safe
     if(++this->recursion_depth < this->recursion_max)
       {
         r_list = this->apply_line(line, replacements);
@@ -94,8 +92,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply(const std::string& 
 std::unique_ptr< token_list > macro_agent::tokenize(const std::string& line)
   {
     return std::make_unique<token_list>(line, this->prefix, this->fields, this->parameters,
-                                        this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache,
-                                        this->data_payload);
+                                        this->package, this->local_index_rules, this->data_payload);
   }
 
 
@@ -456,9 +453,9 @@ std::string macro_agent::dress(std::string out_str, const std::string& raw_inden
   }
 
 
-void macro_agent::inject_macro(macro_packages::replacement_rule_index* rule)
+void macro_agent::inject_macro(std::reference_wrapper< macro_packages::replacement_rule_index > rule)
   {
-    this->index_rule_cache.push_back(rule);
+    this->local_index_rules.push_back(std::move(rule));
   }
 
 

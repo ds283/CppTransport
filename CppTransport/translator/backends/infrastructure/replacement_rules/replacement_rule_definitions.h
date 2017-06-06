@@ -29,6 +29,7 @@
 
 
 #include <stdexcept>
+#include <functional>
 
 #include "index_assignment.h"
 #include "macro_types.h"
@@ -301,6 +302,13 @@ namespace macro_packages
       };
 
   } // namespace macro_packages
+
+
+// containers for rulesets; since we can't store references in a the STL
+// cotainers, they must be wrapped in std::reference_wrapper<>
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> > pre_ruleset;
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> > post_ruleset;
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_index> > index_ruleset;
 
 
 #endif //CPPTRANSPORT_REPLACEMENT_RULE_DEFINITIONS_H

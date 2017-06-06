@@ -29,465 +29,531 @@
 #include <stdexcept>
 
 #include "macro_tokenizer.h"
+#include "package_group.h"
 
 
 constexpr unsigned int MAX_TOKEN_ERRORS = 4;
 
 
-token_list::token_list(const std::string& input, const std::string& prefix,
-                       unsigned int nf, unsigned int np,
-                       std::vector<macro_packages::replacement_rule_simple*>& pre,
-                       std::vector<macro_packages::replacement_rule_simple*>& post,
-                       std::vector<macro_packages::replacement_rule_index*>& index,
-                       translator_data& d)
-  : num_fields(nf),
-    num_params(np),
-    data_payload(d),
-    input_string(std::make_shared<std::string>(input))
-	{
-		size_t position = 0;
-
-		while(position < input.length())
-			{
-				if(input[position] != prefix[0])  // not a candidate to be a macro or index
-					{
-            unsigned int start = position;    // remember start position
-				    std::string string_literal(1, input[position++]);
-						while(position < input.length() && input[position] != prefix[0])
-							{
-								string_literal += input[position++];
-							}
-
-            error_context ctx = this->data_payload.make_error_context(input_string, start, position);
-            std::unique_ptr<token_list_impl::text_token> tok = std::make_unique<token_list_impl::text_token>(string_literal, ctx);
-						this->tokens.push_back(std::move(tok));     // transfers ownership
-					}
-				else  // possible macro or index
-					{
-            unsigned int start = position;    // remember start position
-            
-						// first, check if we match the full prefix
-						unsigned int count = 0;
-						while(position + count < input.length() && count < prefix.length() && input[position+count] == prefix[count])
-							{
-								count++;
-							}
-
-						if(count >= prefix.length())   // we matched the full prefix
-							{
-								position += prefix.length();
-
-								// try to match the longest macro we can
-
-								// is there only one character left in the input string? if so, this must be a free index
-								if(position+1 >= input.length())
-									{
-                    abstract_index_list::const_iterator idx = this->add_index(input[position]);
-
-                    error_context ctx = this->data_payload.make_error_context(input_string, position, position+1);
-                    std::unique_ptr<token_list_impl::free_index_token> tok = std::make_unique<token_list_impl::free_index_token>(idx, ctx);
-                    this->free_index_tokens.push_back(tok.get());
-										this->tokens.push_back(std::move(tok));     // transfers ownership
-										position++;
-									}
-								else  // more than one character left, so could be free index or a macro
-									{
-										// build the first macro candidate -- the first two characters after the prefix
-								    std::string candidate(1, input[position]);
-										candidate += input[position+1];
-
-										// does this candidate (potentially) match any macros? (we can match a substring)
-										if(this->check_for_match(candidate, pre) || this->check_for_match(candidate, post) || this->check_for_match(candidate, index))
-											{
-												// yes, there was a match. Now greedily match the longest macro we can
-										    size_t candidate_length = 2;
-
-										    while(position + candidate_length < input.length()
-											        && input[position + candidate_length] != '['
-											        && input[position + candidate_length] != '{'
-											        && (isalnum(input[position + candidate_length]) || input[position + candidate_length] == '_')
-											        && (this->check_for_match(candidate + input[position + candidate_length], pre)
-										              || this->check_for_match(candidate + input[position + candidate_length], post)
-										              || this->check_for_match(candidate + input[position + candidate_length], index)))
-											    {
-										        candidate += input[position + candidate_length];
-										        candidate_length++;
-											    }
-
-										    try
-											    {
-										        if(this->check_for_match(candidate, pre, false))
-											        {
-										            // we matched a simple pre-macro
-										            macro_packages::replacement_rule_simple& rule = this->find_match(candidate, pre);
-
-												        // found a match -- move position past the candidate
-										            position += candidate_length;
-
-										            // shouldn't find an index list
-										            this->check_no_index_list(input, candidate, position);
-
-										            macro_argument_list arg_list;
-												        if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position);
-
-                                error_context ctx = this->data_payload.make_error_context(input_string, start, position);
-                                std::unique_ptr<token_list_impl::simple_macro_token> tok =
-                                  std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre, ctx);
-
-                                this->simple_macro_tokens.push_back(tok.get());
-												        this->tokens.push_back(std::move(tok));     // transfers ownership
-											        }
-										        else if(this->check_for_match(candidate, post, false))
-											        {
-										            // we matched a simple post-macro
-										            macro_packages::replacement_rule_simple& rule = this->find_match(candidate, post);
-
-										            // found a match -- move position past the candidate
-										            position += candidate_length;
-
-										            // shouldn't find an index list
-										            this->check_no_index_list(input, candidate, position);
-
-										            macro_argument_list arg_list;
-										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position);
-
-                                error_context ctx =this->data_payload.make_error_context(input_string, start, position);
-                                std::unique_ptr<token_list_impl::simple_macro_token> tok =
-                                  std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post, ctx);
-
-                                this->simple_macro_tokens.push_back(tok.get());
-												        this->tokens.push_back(std::move(tok));     // transfers ownership
-											        }
-										        else if(this->check_for_match(candidate, index, false))
-											        {
-										            // we matched an index macro
-										            macro_packages::replacement_rule_index& rule = this->find_match(candidate, index);
-
-										            // found a match -- move position past the candidate
-										            position += candidate_length;
-
-												        // should find an index list
-										            abstract_index_list idx_list = this->get_index_list(input, candidate, position, !rule.is_directive());
-
-                                // may find an argument list
-										            macro_argument_list arg_list;
-										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position);
-
-                                // determine unroll status flags, either inherited from the macro or by allowing suffixies
-                                if(rule.get_unroll() == unroll_behaviour::force)
-                                  {
-                                    this->force_unroll.push_back(candidate);
-                                  }
-                                else if(rule.get_unroll() == unroll_behaviour::prevent)
-                                  {
-                                    this->prevent_unroll.push_back(candidate);
-                                  }
-                                else if(position < input.length() && input[position] == '|')    // check for 'force unroll' suffix if macro is neutral; ignore suffixes otherwise
-                                  {
-                                    ++position;
-                                    this->force_unroll.push_back(candidate);
-                                  }
-                                else if(position < input.length() && input[position] == '@')    // check for 'prevent unroll' suffix if macro is neutral
-                                  {
-                                    ++position;
-                                    this->prevent_unroll.push_back(candidate);
-                                  }
-
-                                error_context ctx = this->data_payload.make_error_context(input_string, start, position);
-
-                                if(this->force_unroll.size() > 0 && this->prevent_unroll.size() > 0)
-                                  {
-                                    std::ostringstream msg;
-                                    msg << ERROR_INCOMPATIBLE_UNROLL << " '" << candidate << "'";
-                                    ctx.error(msg.str());
-                                  }
-
-                                std::unique_ptr<token_list_impl::index_macro_token> tok =
-                                  std::make_unique<token_list_impl::index_macro_token>(candidate, idx_list, arg_list, rule, ctx);
-
-                                this->index_macro_tokens.push_back(tok.get());
-												        this->tokens.push_back(std::move(tok));     // transfers ownership
-											        }
-										        else  // something has gone wrong
-											        {
-												        // we didn't find an exact match after all; we only matched a substring
-												        // assume it was a free index after all
-                                abstract_index_list::const_iterator idx = this->add_index(input[position]);
-
-                                error_context ctx = this->data_payload.make_error_context(input_string, position, position+1);
-                                std::unique_ptr<token_list_impl::free_index_token> tok =
-                                  std::make_unique<token_list_impl::free_index_token>(idx, ctx);
-
-                                this->free_index_tokens.push_back(tok.get());
-										            this->tokens.push_back(std::move(tok));     // transfers ownership
-
-										            position++;
-											        }
-											    }
-								        catch(std::runtime_error& xe)
-									        {
-										        // something went wrong
-										        // assume it was a free index after all
-                            abstract_index_list::const_iterator idx = this->add_index(input[position]);
-
-                            error_context ctx = this->data_payload.make_error_context(input_string, position, position+1);
-                            std::unique_ptr<token_list_impl::free_index_token> tok =
-                              std::make_unique<token_list_impl::free_index_token>(idx, ctx);
-
-                            this->free_index_tokens.push_back(tok.get());
-								            this->tokens.push_back(std::move(tok));     // transfers ownership
-
-								            position++;
-									        }
-											}
-										else  // no it doesn't; there's no match. It must have been a free index
-											{
-                        abstract_index_list::const_iterator idx = this->add_index(input[position]);
-
-                        error_context ctx = this->data_payload.make_error_context(input_string, position, position+1);
-                        std::unique_ptr<token_list_impl::free_index_token> tok =
-                          std::make_unique<token_list_impl::free_index_token>(idx, ctx);
-
-                        this->free_index_tokens.push_back(tok.get());
-												this->tokens.push_back(std::move(tok));     // transfers ownership
-
-												position++;
-											}
-									}
-							}
-						else                          // we did *not* match the full prefix; treat this as literal text
-							{
-                unsigned int start = position;
-                
-						    std::string string_literal(1, input[position++]);
-						    while(position < input.length() && input[position] != prefix[0])
-							    {
-						        string_literal += input[position++];
-							    }
-
-                error_context ctx = this->data_payload.make_error_context(input_string, start, position);
-                std::unique_ptr<token_list_impl::text_token> tok =
-                  std::make_unique<token_list_impl::text_token>(string_literal, ctx);
-
-						    this->tokens.push_back(std::move(tok));     // transfers ownership
-							}
-					}
-			}
-	}
-
-
-template <typename Rule>
-bool token_list::check_for_match(const std::string& candidate, std::vector<Rule*>& rule_list, bool allow_substring)
-	{
-		bool found = false;
-
-    for(Rule* const& t : rule_list)
-			{
-				if(candidate.length() <= t->get_name().length())
-					{
-				    std::string name_substring = allow_substring ? t->get_name().substr(0, candidate.length()) : t->get_name();
-						if(candidate == name_substring)
-							{
-								found = true;
-                break;
-							}
-					}
-			}
-
-		return(found);
-	}
-
-
 namespace macro_tokenizer_impl
   {
 
-    template <typename Rule>
+
+    // match a text token from the string starting at position
+    template <typename ContextFactory>
+    std::pair< std::unique_ptr<token_list_impl::text_token>, size_t >
+    match_string_literal(const std::string& input, const size_t position, char terminal, ContextFactory make_context)
+      {
+        size_t current = position;
+
+        // shift first character of text token into a std::string and move pointer past it
+        std::string string_literal(1, input[current++]);
+
+        while(current < input.length() && input[current] != terminal)
+          {
+            string_literal += input[current++];
+          }
+
+        return std::make_pair(
+          std::make_unique<token_list_impl::text_token>(string_literal, make_context(position, current)), current);
+      };
+
+
+    // check whether we match the full macro prefix, starting at position
+    bool check_match_prefix(const std::string& input, const size_t position, const std::string& prefix)
+      {
+        size_t count = 0;
+
+        while(position + count < input.length() && count < prefix.length() && input[position+count] == prefix[count])
+          {
+            count++;
+          }
+
+        return count >= prefix.length();
+      }
+
+
+    // get a macro argument list
+    template <typename ContextFactory>
+    std::pair<macro_argument_list, size_t>
+    get_argument_list(const std::string& input, const std::string& macro, const size_t position,
+                      ContextFactory make_context)
+      {
+        macro_argument_list arg_list;
+        size_t current_position = position;
+
+        // check that an argument list is present
+        if(current_position >= input.length() || input[current_position] != '{')
+          {
+            std::ostringstream msg;
+            msg << ERROR_EXPECTED_OPEN_ARGUMENT_LIST << " '" << macro << "'";
+            error_context ctx = make_context(current_position, current_position+1);
+            ctx.error(msg.str());
+
+            return std::make_pair(arg_list, current_position);
+          }
+
+        ++current_position;   // move past opening bracket of index list
+        std::string arg;
+
+        while(current_position < input.length() && input[current_position] != '}')
+          {
+            if(input[current_position] == ',')
+              {
+                error_context ctx = make_context(current_position - arg.length(), current_position);
+                arg_list.emplace_back(arg, ctx);
+                arg.clear();
+              }
+            else if(input[current_position] == '"' && arg.length() == 0)
+              {
+                ++current_position; // skip the opening quote
+
+                while(current_position < input.length() && input[current_position] != '"')
+                  {
+                    arg += input[current_position++];
+                  }
+
+                // check closing quote is in place
+                if(!(current_position < input.length() && input[current_position] == '"'))
+                  {
+                    std::ostringstream msg;
+                    msg  << ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE << " '" << macro << "'";
+                    error_context ctx = make_context(current_position, current_position+1);
+                    ctx.error(msg.str());
+                  }
+
+                // closing quote will be skipped by position++ below
+              }
+            else
+              {
+                // skip over white space, but add non-white-space characters to current argument string
+                if(!isspace(input[current_position]))
+                  {
+                    arg += input[current_position];
+                  }
+              }
+
+            ++current_position;
+          }
+
+        // complain if missing closing bracket
+        if(!(current_position < input.length() && input[current_position] == '}'))
+          {
+            std::ostringstream msg;
+            msg << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << macro << "'";
+            error_context ctx = make_context(current_position, current_position + 1);
+            ctx.error(msg.str());
+          }
+        else
+          {
+            current_position++;   // skip closing bracket '}'
+          }
+
+        // emplace last argument if it has not already been done
+        if(arg.length() > 0)
+          {
+            error_context ctx = make_context(current_position - arg.length(), current_position);
+            arg_list.emplace_back(arg, ctx);
+          }
+
+        return std::make_pair(arg_list, current_position);
+      }
+
+
+    // get a macro index list
+    template <typename ContextFactory, typename IndexHandler>
+    std::pair<abstract_index_list, size_t>
+    get_index_list(const std::string& input, const std::string& candidate, const size_t position,
+                   ContextFactory make_context, IndexHandler add_index)
+      {
+        abstract_index_list idx_list;
+        size_t current_position = position;
+
+        // check that an index list is present
+        if(current_position >= input.length() || input[current_position] != '[')
+          {
+            std::ostringstream msg;
+            msg << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'";
+            error_context ctx = make_context(current_position, current_position+1);
+            ctx.error(msg.str());
+
+            return std::make_pair(idx_list, current_position);
+          }
+
+        ++current_position;   // move past opening bracket of index list
+
+        // while not at end of index list, scan for indices
+        while(current_position < input.length() && input[current_position] != ']')
+          {
+            error_context ctx = make_context(current_position, current_position + 1);
+
+            if(isalnum(input[current_position]))
+              {
+                add_index(idx_list, input[current_position], ctx);
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << ERROR_EXPECTED_INDEX_LABEL_A << " '" << candidate << "', " << ERROR_EXPECTED_INDEX_LABEL_B << " '"
+                    << input[current_position] << "'";
+                ctx.error(msg.str());
+              }
+
+            ++current_position;
+          }
+
+        // complain if missing closing bracket ']'
+        if(current_position >= input.length() || input[current_position] != ']')
+          {
+            std::ostringstream msg;
+            msg << ERROR_EXPECTED_CLOSE_INDEX_LIST << " '" << candidate << "'";
+            error_context ctx = make_context(current_position, current_position + 1);
+            ctx.error(msg.str());
+          }
+        else
+          {
+            ++current_position;   // skip closing bracket ']'
+          }
+
+        return std::make_pair(idx_list, current_position);
+      }
+
+
+    // check no index list exists in the input string
+    template <typename ErrorHandler>
+    size_t check_no_index_list(const std::string& input, const size_t position, ErrorHandler err)
+      {
+        size_t current_position = position;
+
+        // if we see the opening bracket '[' belonging to an index list, complain
+        if(current_position < input.length() && input[current_position] == '[')
+          {
+            // invoke error handler
+            err(current_position);
+
+            // skip over the index list, until we find a closing bracket ']'
+            ++current_position;
+            while(current_position < input.length() && input[current_position] != ']')
+              {
+                ++current_position;
+              }
+
+            // skip past final bracket if needed
+            if(current_position < input.length()) ++current_position;
+          }
+
+        return current_position;
+      }
+
+
+    template <typename RuleItem>
     class RuleNameComparator
       {
 
       public:
 
-        RuleNameComparator(const std::string n)
-          : name(std::move(n))
+        RuleNameComparator(const std::string n, bool s=false)
+          : name(std::move(n)),
+            allow_substring(s)
           {
           }
 
-        bool operator()(Rule* const& r)
+
+        bool operator()(const RuleItem& r)
           {
-            return(this->name == r->get_name());
+            const auto& T = r.get();
+
+            std::string test_string = this->allow_substring ? T.get_name().substr(0, this->name.length())
+                                                            : T.get_name();
+            return this->name == test_string;
           }
+
 
       private:
 
+        //! name to match
         std::string name;
+
+        //! allow matching to a substring of each rule name?
+        bool allow_substring;
 
       };
 
+
+    template <typename RuleSet>
+    bool check_for_match(const std::string& candidate, const RuleSet& rule_list, bool allow_substring = true)
+      {
+        auto t = std::find_if(rule_list.begin(), rule_list.end(),
+                              RuleNameComparator<typename RuleSet::value_type>(candidate, allow_substring));
+
+        return t != rule_list.end();
+      }
+
+
+    template <typename RuleSet>
+    auto find_match(const std::string& candidate, const RuleSet& rule_list) -> decltype(rule_list.front().get()) const
+      {
+        auto t = std::find_if(rule_list.begin(), rule_list.end(),
+                              RuleNameComparator<typename RuleSet::value_type>(candidate));
+
+        if(t != rule_list.end()) return(t->get());
+
+        throw std::runtime_error(ERROR_TOKENIZE_NO_MACRO_MATCH);
+      }
+
+  }   // namespace macro_tokenizer_impl
+
+
+using namespace macro_tokenizer_impl;
+
+
+token_list::token_list(const std::string& input, const std::string& prefix, const unsigned int nf, const unsigned int np,
+                       const package_group& package, const index_ruleset& local_rules, translator_data& d)
+  : num_fields(nf),
+    num_params(np),
+    data_payload(d),
+    input_string(std::make_shared<std::string>(input))
+	{
+    const pre_ruleset& pre = package.get_pre_ruleset();
+    const post_ruleset& post = package.get_post_ruleset();
+    const index_ruleset& index = package.get_index_ruleset();
+
+    auto make_context = [&](unsigned int start, unsigned int end) -> auto
+      { return this->data_payload.make_error_context(input_string, start, end); };
+
+    // loop over line, trying to match tokens
+    size_t position = 0;
+		while(position < input.length())
+			{
+        std::unique_ptr<token_list_impl::generic_token> tok;
+
+				if(input[position] != prefix[0]) // doesn't start with first symbol from prefix, so not a candidate to be a macro or index
+					{
+            std::tie(tok, position) = match_string_literal(input, position, prefix[0], make_context);
+					}
+				else  // possible macro or index
+					{
+            if(check_match_prefix(input, position, prefix))
+              {
+								position += prefix.length();
+
+                std::tie(tok, position) = this->match_macro_or_index(input, position, pre, post, index, local_rules,
+                                                                     make_context);
+							}
+						else // we did *not* match the full prefix; treat this as literal text
+							{
+                std::tie(tok, position) = match_string_literal(input, position, prefix[0], make_context);
+							}
+					}
+
+        this->tokens.push_back(std::move(tok)); // transfers ownership of tok to the token list
+			}
+	}
+
+
+template <typename ContextFactory>
+std::pair<std::unique_ptr<token_list_impl::generic_token>, size_t>
+token_list::match_macro_or_index(const std::string& input, const size_t position, const pre_ruleset& pre,
+                                 const post_ruleset& post, const index_ruleset& index, const index_ruleset& local_rules,
+                                 ContextFactory make_context)
+  {
+    // try to match the longest macro we can from the current position, or if we cannot match a macro
+    // then identify an index literal
+
+    // first, is there only one character left in the input string? if so, this must be an index literal
+    bool possible_match = position+1 < input.length();
+    std::string candidate(1, input[position]);
+
+    // otherwise, build a macro candidate from the next two characters and check whether it can match
+    // and macros in the ruleset (we can match a substring at this stage)
+    if(possible_match)
+      {
+        candidate += input[position+1];
+        possible_match = check_for_match(candidate, pre) || check_for_match(candidate, post)
+                         || check_for_match(candidate, index) || check_for_match(candidate, local_rules);
+      }
+
+    // if no possible match then this must be an index literal, so build it and return
+    if(!possible_match)
+      {
+        auto tok = this->make_index_literal(input, position, make_context);
+        return std::make_pair(std::move(tok), position+1);
+      }
+
+    // There is a possible match. Now greedily match the longest macro we can
+    size_t candidate_length = 2;
+
+    while(position + candidate_length < input.length()
+          && input[position + candidate_length] != '['
+          && input[position + candidate_length] != '{'
+          && (isalnum(input[position + candidate_length]) || input[position + candidate_length] == '_')
+          && (check_for_match(candidate + input[position + candidate_length], pre)
+              || check_for_match(candidate + input[position + candidate_length], post)
+              || check_for_match(candidate + input[position + candidate_length], index)
+              || check_for_match(candidate + input[position + candidate_length], local_rules)))
+      {
+        candidate += input[position + candidate_length];
+        candidate_length++;
+      }
+
+    // now determine what we have found
+    try
+      {
+        if(check_for_match(candidate, pre, false))
+          {
+            // we matched a simple pre-macro
+            return this->make_simple_macro(input, candidate, position, pre, simple_macro_type::pre, make_context);
+          }
+        else if(check_for_match(candidate, post, false))
+          {
+            // we matched a simple post-macro
+            return this->make_simple_macro(input, candidate, position, post, simple_macro_type::post, make_context);
+          }
+        else if(check_for_match(candidate, index, false))
+          {
+            // we matched an index macro
+            return this->make_index_macro(input, candidate, position, index, make_context);
+          }
+        else if(check_for_match(candidate, local_rules, false))
+          {
+            // we matched a locally-defined macro
+            return this->make_index_macro(input, candidate, position, local_rules, make_context);
+          }
+        else  // something has gone wrong
+          {
+            // we didn't find an exact match after all; we only matched a substring
+            // assume it was a free index after all
+            auto tok = this->make_index_literal(input, position, make_context);
+            return std::make_pair(std::move(tok), position+1);
+          }
+      }
+    catch(std::runtime_error& xe)
+      {
+        // something went wrong
+        // assume it was an index literal after all
+        auto tok = this->make_index_literal(input, position, make_context);
+        return std::make_pair(std::move(tok), position+1);
+      }
   }
 
 
-template <typename Rule>
-Rule& token_list::find_match(const std::string& candidate, std::vector<Rule*>& rule_list)
-	{
-    typename std::vector<Rule*>::const_iterator t = std::find_if(rule_list.begin(), rule_list.end(), macro_tokenizer_impl::RuleNameComparator<Rule>(candidate));
+template <typename ContextFactory>
+std::unique_ptr<token_list_impl::index_literal_token>
+token_list::make_index_literal(const std::string& input, const size_t position, ContextFactory make_context)
+  {
+    abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
-    if(t != rule_list.end()) return(*(*t));
+    auto tok = std::make_unique<token_list_impl::index_literal_token>(idx, make_context(position, position+1));
+    this->index_literal_tokens.push_back(std::ref(*tok));
 
-		throw std::runtime_error(ERROR_TOKENIZE_NO_MACRO_MATCH);
-	}
+    return tok;
+  }
 
 
-void token_list::check_no_index_list(const std::string& input, const std::string& candidate, size_t& position)
-	{
-    if(position < input.length() && input[position] == '[')
-	    {
+template <typename RuleSet, typename ContextFactory>
+std::pair<std::unique_ptr<token_list_impl::simple_macro_token>, size_t>
+token_list::make_simple_macro(const std::string& input, const std::string& macro, const size_t position,
+                              const RuleSet& rules, simple_macro_type type, ContextFactory make_context)
+  {
+    // find rule for this macro
+    auto& rule = find_match(macro, rules);
+
+    // move position past the macro name
+    size_t current_position = position + macro.length();
+
+    // shouldn't find an index list
+    auto err_handler = [&](size_t p) -> void
+      {
         std::ostringstream msg;
-        msg << ERROR_TOKENIZE_UNEXPECTED_LIST << " '" << candidate << "'; " << ERROR_TOKENIZE_SKIPPING;
-        error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
+        msg << ERROR_TOKENIZE_UNEXPECTED_LIST << " '" << macro << "'; " << ERROR_TOKENIZE_SKIPPING;
+        auto ctx = make_context(p, p+1);
         ctx.error(msg.str());
+      };
+    current_position = check_no_index_list(input, current_position, err_handler);
 
-        position++;
-        while(position < input.length() && input[position] != ']')
-	        {
-            position++;
-	        }
-        if(position < input.length()) position++;
-	    }
-	}
-
-
-macro_argument_list token_list::get_argument_list(const std::string& input, const std::string& candidate, size_t& position)
-	{
+    // get argument list, if one is expected
     macro_argument_list arg_list;
+    if(rule.get_number_args() > 0)
+      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, make_context);
 
-		if(position < input.length() && input[position] == '{')
-			{
-				position++;
-		    std::string arg;
+    // build token
+    auto tok = std::make_unique<token_list_impl::simple_macro_token>(macro, arg_list, rule, type,
+                                                                     make_context(position, current_position));
+    this->simple_macro_tokens.push_back(*tok);
 
-		    while(position < input.length() && input[position] != '}')
-			    {
-				    if(input[position] == ',')
-					    {
-                error_context ctx = this->data_payload.make_error_context(this->input_string, position-arg.length(), position);
-						    arg_list.emplace_back(arg, ctx);
-						    arg.clear();
-					    }
-				    else if(input[position] == '"' && arg.length() == 0)
-					    {
-						    position++; // skip the opening quote
-
-				        while(position < input.length() && input[position] != '"')
-					        {
-				            arg += input[position++];
-					        }
-
-				        // check closing quote is in place
-				        if(!(position < input.length() && input[position] == '"'))
-					        {
-				            std::cout << ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE << " '" << candidate << "'";
-					        }
-						    // closing quote will be skipped by position++ below
-					    }
-				    else
-					    {
-						    if(!isspace(input[position]))
-							    {
-								    arg += input[position];
-							    }
-					    }
-
-						++position;
-			    }
-
-				if(!(position < input.length() && input[position] == '}'))
-					{
-            std::ostringstream msg;
-            msg << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'";
-            error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
-            ctx.error(msg.str());
-					}
-				else
-					{
-						position++;   // skip closing }
-					}
-
-				if(arg.length() > 0)
-					{
-            error_context ctx =this->data_payload.make_error_context(this->input_string, position-arg.length(), position);
-						arg_list.emplace_back(arg, ctx);
-					}
-			}
-		else  // expected to find an argument list
-			{
-        std::ostringstream msg;
-		    msg << ERROR_EXPECTED_OPEN_ARGUMENT_LIST << " '" << candidate << "'";
-        error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
-        ctx.error(msg.str());
-			}
-
-		return(arg_list);
-	}
+    return std::make_pair(std::move(tok), current_position);
+  }
 
 
-abstract_index_list token_list::get_index_list(const std::string& input, const std::string& candidate, size_t& position, bool accumulate_indices)
-	{
+template <typename RuleSet, typename ContextFactory>
+std::pair<std::unique_ptr<token_list_impl::index_macro_token>, size_t>
+token_list::make_index_macro(const std::string& input, const std::string& macro, const size_t position,
+                             const RuleSet& rules, ContextFactory make_context)
+  {
+    // find rule for this macro
+    auto& rule = find_match(macro, rules);
+
+    // found a match -- move position past the candidate
+    size_t current_position = position + macro.length();
+
+    // should find an index list
     abstract_index_list idx_list;
+    auto add_index = [&](abstract_index_list& idxs, char label, error_context& ctx) -> void
+      {
+        // add to index list if we haven't already seen it;
+        // the constructor for abstract_index will assign a suitable type based on the index symbol
+        std::pair<abstract_index_list::iterator, bool> result = idxs.emplace_back(
+          std::make_pair(label, std::make_shared<abstract_index>(label, this->num_fields, this->num_params)));
 
-		if(position < input.length() && input[position] == '[')
-			{
-				position++;   // matched opening bracket of index list
+        // if the index was new, add to list for this entire tokenization job unless this
+        // if the index has already been seen for a previous macro then add_index() will do nothing provided
+        // the index type is consistent
+        if(result.second && !rule.is_directive()) this->add_index(*result.first, ctx);
+      };
+    std::tie(idx_list, current_position) = get_index_list(input, macro, current_position, make_context, add_index);
 
-        // while not at end of index list, scan for indices
-				while(position < input.length() && input[position] != ']')
-					{
-            error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
+    // may find an argument list
+    macro_argument_list arg_list;
+    if(rule.get_number_args() > 0)
+      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, make_context);
 
-						if(isalnum(input[position]))
-							{
-                // add to index list for this macro if we haven't already seen it
-                // the constructor for abstract_index will assign a suitable type
-                std::pair< abstract_index_list::iterator, bool > result = idx_list.emplace_back(std::make_pair(input[position],
-                                                                                                               std::make_shared<abstract_index>(input[position], this->num_fields, this->num_params)));    // will guess suitable index class
+    // determine unroll status flags, either inherited from the macro or by allowing a suffix to the argument list
+    if(rule.get_unroll() == unroll_behaviour::force)
+      {
+        this->force_unroll.push_back(macro);
+      }
+    else if(rule.get_unroll() == unroll_behaviour::prevent)
+      {
+        this->prevent_unroll.push_back(macro);
+      }
+    else if(current_position < input.length() && input[current_position] ==
+                                         '|')    // check for 'force unroll' suffix if macro is neutral; ignore suffixes otherwise
+      {
+        ++current_position;
+        this->force_unroll.push_back(macro);
+      }
+    else if(position < input.length() &&
+            input[position] == '@')    // check for 'prevent unroll' suffix if macro is neutral
+      {
+        ++current_position;
+        this->prevent_unroll.push_back(macro);
+      }
 
-                // if the index was new, add to list for this entire tokenization job unless this
-                // if the index has already been seen for a previous macro then add_index() will do nothing provided
-                // the index type is consistent
-								if(result.second && accumulate_indices) this->add_index(*result.first, ctx);
-							}
-						else
-							{
-                std::ostringstream msg;
-						    msg << ERROR_EXPECTED_INDEX_LABEL_A << " '" << candidate << "', " << ERROR_EXPECTED_INDEX_LABEL_B << " '" << input[position] << "'";
-                error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
-                ctx.error(msg.str());
-							}
+    error_context ctx = make_context(position, current_position);
 
-						position++;
-					}
-
-				if(!(position < input.length() && input[position] == ']'))
-					{
-            std::ostringstream msg;
-				    msg << ERROR_EXPECTED_CLOSE_INDEX_LIST << " '" << candidate << "'";
-            error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
-            ctx.error(msg.str());
-					}
-				else
-					{
-						position++;   // skip closing ]
-					}
-			}
-		else    // expected to find an index list
-			{
+    if(!this->force_unroll.empty() && !this->prevent_unroll.empty())
+      {
         std::ostringstream msg;
-		    msg << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'";
-        error_context ctx = this->data_payload.make_error_context(this->input_string, position, position+1);
+        msg << ERROR_INCOMPATIBLE_UNROLL << " '" << macro << "'";
         ctx.error(msg.str());
-			}
+      }
 
-		return(idx_list);
-	}
+    auto tok = std::make_unique<token_list_impl::index_macro_token>(macro, idx_list, arg_list, rule, ctx);
+
+    this->index_macro_tokens.push_back(std::ref(*tok));
+
+    return std::make_pair(std::move(tok), current_position);
+  }
 
 
 abstract_index_list::const_iterator token_list::add_index(char label)
@@ -524,11 +590,13 @@ unsigned int token_list::evaluate_macros(simple_macro_type type)
 	{
 		unsigned int replacements = 0;
 
-    for(token_list_impl::simple_macro_token* t : this->simple_macro_tokens)
+    for(auto& t : this->simple_macro_tokens)
 			{
-        if(t->get_type() == type)
+        auto& T = t.get();
+
+        if(T.get_type() == type)
           {
-            t->evaluate();
+            T.evaluate();
             replacements++;
           }
 			}
@@ -541,15 +609,17 @@ unsigned int token_list::evaluate_macros(const assignment_list& a)
 	{
 		unsigned int replacements = 0;
 
-    for(token_list_impl::free_index_token*& t : this->free_index_tokens)
+    for(auto& t : this->index_literal_tokens)
       {
-        t->evaluate(a);
+        auto& T = t.get();
+        T.evaluate(a);
         replacements++;
       }
 
-    for(token_list_impl::index_macro_token*& t : this->index_macro_tokens)
+    for(auto& t : this->index_macro_tokens)
       {
-        t->evaluate_unroll(a);
+        auto& T = t.get();
+        T.evaluate_unroll(a);
         replacements++;
       }
 
@@ -561,15 +631,17 @@ unsigned int token_list::evaluate_macros()
   {
     unsigned int replacements = 0;
 
-    for(token_list_impl::free_index_token*& t : this->free_index_tokens)
+    for(auto& t : this->index_literal_tokens)
       {
-        t->evaluate();
+        auto& T = t.get();
+        T.evaluate();
         replacements++;
       }
 
-    for(token_list_impl::index_macro_token*& t : this->index_macro_tokens)
+    for(auto& t : this->index_macro_tokens)
       {
-        t->evaluate_roll();
+        auto& T = t.get();
+        T.evaluate_roll();
         replacements++;
       }
 
@@ -581,15 +653,17 @@ unsigned int token_list::evaluate_macros(const index_remap_rule& rule)
   {
     unsigned int replacements = 0;
 
-    for(token_list_impl::free_index_token*& t : this->free_index_tokens)
+    for(auto& t : this->index_literal_tokens)
       {
-        t->evaluate(rule);
+        auto& T = t.get();
+        T.evaluate(rule);
         replacements++;
       }
 
-    for(token_list_impl::index_macro_token*& t : this->index_macro_tokens)
+    for(auto& t : this->index_macro_tokens)
       {
-        t->evaluate_roll(rule);
+        auto& T = t.get();
+        T.evaluate_roll(rule);
         replacements++;
       }
 
@@ -601,7 +675,7 @@ std::string token_list::to_string()
 	{
     std::string output;
 
-    for(const std::unique_ptr< token_list_impl::generic_token >& t : this->tokens)
+    for(const auto& t : this->tokens)
 			{
 				output += t->to_string();
 			}
@@ -623,12 +697,12 @@ unroll_behaviour token_list::unroll_status() const
 void token_list::reset()
   {
     // reset initialization status of all index macro tokens
-    for(token_list_impl::index_macro_token* tok : this->index_macro_tokens)
+    for(auto& t : this->index_macro_tokens)
       {
-        tok->reset();
+        auto& T = t.get();
+        T.reset();
       }
   }
-
 
 
 // TOKEN IMPLEMENTATION
@@ -666,18 +740,18 @@ token_list_impl::text_token::text_token(const std::string& l, error_context ec)
 	}
 
 
-token_list_impl::free_index_token::free_index_token(abstract_index_list::const_iterator& it, error_context ec)
+token_list_impl::index_literal_token::index_literal_token(abstract_index_list::const_iterator& it, error_context ec)
 	: generic_token(std::string(1, it->get_label()), std::move(ec)),
     index(*it)
 	{
 	}
 
 
-void token_list_impl::free_index_token::evaluate(const assignment_list& a)
+void token_list_impl::index_literal_token::evaluate(const assignment_list& a)
 	{
-    assignment_list::const_iterator it = a.find(this->index.get_label());
+    auto t = a.find(this->index.get_label());
 
-    if(it == a.end())
+    if(t == a.end())
       {
         std::ostringstream msg;
         msg << ERROR_MISSING_INDEX_ASSIGNMENT << " '" << this->index.get_label() << "'";
@@ -686,18 +760,18 @@ void token_list_impl::free_index_token::evaluate(const assignment_list& a)
       }
 
     std::ostringstream cnv;
-    cnv << it->get_numeric_value();
+    cnv << t->get_numeric_value();
     this->conversion = cnv.str();
 	}
 
 
-void token_list_impl::free_index_token::evaluate()
+void token_list_impl::index_literal_token::evaluate()
   {
     this->conversion = this->index.get_loop_variable();
   }
 
 
-void token_list_impl::free_index_token::evaluate(const index_remap_rule& rule)
+void token_list_impl::index_literal_token::evaluate(const index_remap_rule& rule)
   {
     // find substitution for this index
     index_remap_rule::const_iterator t = rule.find(this->index);

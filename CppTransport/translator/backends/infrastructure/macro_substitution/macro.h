@@ -152,7 +152,7 @@ class macro_agent
     std::unique_ptr< token_list > tokenize(const std::string& line);
 
     //! inject a new macro definition
-    void inject_macro(macro_packages::replacement_rule_index* rule);
+    void inject_macro(std::reference_wrapper< macro_packages::replacement_rule_index > rule);
 
 
     // INTERFACE -- OUTPUT CONTROL
@@ -264,19 +264,16 @@ class macro_agent
     //! indexes to macro package
     package_group& package;
 
-    //! cache pre-rules; note we take a copy, not a reference, so we can inject further rules later if required
-    std::vector<macro_packages::replacement_rule_simple*> pre_rule_cache;
-
-    //! cache post-rules; note we take a copy, not a reference, so we can inject further rules later if required
-    std::vector<macro_packages::replacement_rule_simple*> post_rule_cache;
-
-    //! cache index rules; note we take a copy, not a reference, so we can inject further rules later if required
-    std::vector<macro_packages::replacement_rule_index*> index_rule_cache;
+    //! local index rule cache, used for storing macros dynamically defined within the template
+    //! (this still contains references to rule objects; the objects themselves are owned by the
+    //! set_directive class within the package_group, which maintains a symbol table of
+    //! user-defined macros)
+    index_ruleset local_index_rules;
 
 
     // MACRO CONFIGURATION
 
-    //! macro prefix string (usually '$$__')
+    //! macro prefix string (usually '$')
     const std::string prefix;
 
     //! split-equality symbol (usually '$$=')

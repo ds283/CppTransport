@@ -67,8 +67,8 @@ class translator_data
     error_context make_error_context() const { return error_context(this->outstack, this->err, this->wrn); }
     
     //! make an error_context object with full context data
-    error_context make_error_context(std::shared_ptr<std::string>& l, unsigned int s, unsigned int e) const
-      { return error_context(this->outstack, l, s, e, this->err, this->wrn); }
+    error_context make_error_context(std::shared_ptr<std::string> l, unsigned int s, unsigned int e) const
+      { return error_context(this->outstack, std::move(l), s, e, this->err, this->wrn); }
     
     //! get error handler
     error_context::error_handler get_error_handler() const { return this->err; }

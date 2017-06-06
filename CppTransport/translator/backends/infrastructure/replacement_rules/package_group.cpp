@@ -55,16 +55,16 @@ package_group::~package_group()
 
 void package_group::build_pre_ruleset()
   {
-    this->pre_ruleset.clear();
+    this->pre_rules.clear();
 
     for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
         const std::vector< std::unique_ptr<macro_packages::replacement_rule_simple> >& rules = pkg->get_pre_rules();
 
-        this->pre_ruleset.reserve(this->pre_ruleset.size() + rules.size());
+        this->pre_rules.reserve(this->pre_rules.size() + rules.size());
         for(const std::unique_ptr<macro_packages::replacement_rule_simple>& rule : rules)
           {
-            this->pre_ruleset.emplace_back(rule.get());
+            this->pre_rules.emplace_back(std::ref(*rule));
           }
       }
   }
@@ -72,16 +72,16 @@ void package_group::build_pre_ruleset()
 
 void package_group::build_post_ruleset()
   {
-    this->post_ruleset.clear();
+    this->post_rules.clear();
 
     for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
         const std::vector< std::unique_ptr<macro_packages::replacement_rule_simple> >& rules = pkg->get_post_rules();
 
-        this->post_ruleset.reserve(this->post_ruleset.size() + rules.size());
+        this->post_rules.reserve(this->post_rules.size() + rules.size());
         for(const std::unique_ptr<macro_packages::replacement_rule_simple>& rule : rules)
           {
-            this->post_ruleset.emplace_back(rule.get());
+            this->post_rules.emplace_back(std::ref(*rule));
           }
       }
   }
@@ -89,16 +89,16 @@ void package_group::build_post_ruleset()
 
 void package_group::build_index_ruleset()
   {
-    this->index_ruleset.clear();
+    this->index_rules.clear();
 
     for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
         const std::vector< std::unique_ptr<macro_packages::replacement_rule_index> >& rules = pkg->get_index_rules();
 
-        this->index_ruleset.reserve(this->index_ruleset.size() + rules.size());
+        this->index_rules.reserve(this->index_rules.size() + rules.size());
         for(const std::unique_ptr<macro_packages::replacement_rule_index>& rule : rules)
           {
-            this->index_ruleset.emplace_back(rule.get());
+            this->index_rules.emplace_back(std::ref(*rule));
           }
       }
   }
