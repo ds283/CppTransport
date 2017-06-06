@@ -80,7 +80,7 @@ abstract_index index_traits::momentum_to_species(const abstract_index& index)
 
     std::ostringstream tag;
     tag << "-" << index.get_number_fields();
-    converted.set_post_string(tag.str());
+    converted.push_post_modifier(tag.str());
 
     return(converted);
   }

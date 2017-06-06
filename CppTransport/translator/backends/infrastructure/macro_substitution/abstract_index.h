@@ -64,7 +64,7 @@ class abstract_index
   public:
 
     //! return equivalent 'for'-loop variable for this abstract index
-    std::string get_loop_variable() const { return(this->pre_string + this->label + this->post_string); }
+    std::string get_loop_variable() const;
 
 
     // INTERFACE -- SPECIFIC TO INDEX_ABSTRACT
@@ -80,8 +80,18 @@ class abstract_index
     //! return total number of parameters
     unsigned int get_number_parameters() const { return(this->params); }
 
-    //! set post string; used when subtracting values to convert momenta to fields
-    void set_post_string(std::string s) { this->post_string = std::move(s); }
+    //! add a new post modifier; used when subtracting values to convert momenta to fields
+    void push_post_modifier(std::string s);
+
+    //! remove the last post modifier
+    void pop_post_modifier();
+
+    //! add a new pre modifier
+    void push_pre_modifier(std::string s);
+
+    //! remove the last pre modifier
+    void push_pre_modifier();
+
 
     // INTERNAL DATA
 
@@ -99,11 +109,11 @@ class abstract_index
     //! cache total number of parameters
     unsigned int params;
 
-    //! pre-string for conversion to loop variable
-    std::string pre_string;
+    //! set of "pre" modifiers to be applied during conversion to a loop variable
+    std::list<std::string> pre_string;
 
-    //! post-string for conversion to loop variable
-    std::string post_string;
+    //! set of "post" modifiers to be applied during conversion to a loop variable
+    std::list<std::string> post_string;
 
   };
 
