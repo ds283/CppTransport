@@ -89,8 +89,10 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/infrastructure/language_concepts/lambda_manager.cpp
   translator/backends/infrastructure/macro_substitution/index_assignment.cpp
   translator/backends/infrastructure/macro_substitution/macro.cpp
-  translator/backends/infrastructure/macro_substitution/macro_tokenizer.cpp
+  translator/backends/infrastructure/macro_substitution/token_list.cpp
+  translator/backends/infrastructure/macro_substitution/macro_tokens.cpp
   translator/backends/infrastructure/macro_substitution/abstract_index.cpp
+  translator/backends/infrastructure/macro_substitution/index_literal.cpp
   translator/backends/infrastructure/macro_substitution/index_class.cpp
   translator/backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
   translator/backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
@@ -319,9 +321,13 @@ set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
   translator/backends/infrastructure/macro_substitution/index_database.h
   translator/backends/infrastructure/macro_substitution/macro.cpp
   translator/backends/infrastructure/macro_substitution/macro.h
-  translator/backends/infrastructure/macro_substitution/macro_tokenizer.cpp
-  translator/backends/infrastructure/macro_substitution/macro_tokenizer.h
+  translator/backends/infrastructure/macro_substitution/token_list.cpp
+  translator/backends/infrastructure/macro_substitution/token_list.h
   translator/backends/infrastructure/macro_substitution/macro_types.h
+  translator/backends/infrastructure/macro_substitution/macro_tokens.cpp
+  translator/backends/infrastructure/macro_substitution/macro_tokens.h
+  translator/backends/infrastructure/macro_substitution/index_literal.cpp
+  translator/backends/infrastructure/macro_substitution/index_literal.h
   )
 
 set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES

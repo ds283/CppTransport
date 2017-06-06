@@ -118,6 +118,36 @@ class abstract_index
   };
 
 
+namespace std
+  {
+
+    // provide std::equal_to implementation for abstract_index
+    template <>
+    struct equal_to<abstract_index>
+      {
+
+        bool operator()(const abstract_index& lhs, const abstract_index& rhs) const
+          {
+            return (lhs.get_label() == rhs.get_label()) && (lhs.get_class() == rhs.get_class());
+          }
+
+      };
+
+    // provide std::hash implementation for abstract_index, so it can be used in a std::unordered_map
+    template <>
+    struct hash<abstract_index>
+      {
+
+        size_t operator()(const abstract_index& idx) const
+          {
+            return static_cast<size_t>(idx.get_label());
+          }
+
+      };
+
+  }   // namespace std
+
+
 //! set up typedef for database of abstract_index records
 typedef index_database<abstract_index> abstract_index_list;
 

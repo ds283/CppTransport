@@ -40,7 +40,7 @@
 #include "translator_data.h"
 #include "package_group.h"
 #include "replacement_rule_definitions.h"
-#include "macro_tokenizer.h"
+#include "token_list.h"
 
 #include "boost/timer/timer.hpp"
 
