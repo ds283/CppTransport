@@ -249,7 +249,9 @@ namespace macro_packages
 
             while(indices_t != this->indices.end() && idxs_t != idxs.end())
               {
-                remap_idx.emplace_back(std::make_pair(indices_t->get_label(), std::make_shared<assignment_record>(*indices_t, idxs_t->get_numeric_value())));
+                remap_idx.emplace_back(std::make_pair(indices_t->get_label(),
+                                                      std::make_shared<assignment_record>(*indices_t,
+                                                                                          idxs_t->get_numeric_value())));
 
                 ++indices_t;
                 ++idxs_t;

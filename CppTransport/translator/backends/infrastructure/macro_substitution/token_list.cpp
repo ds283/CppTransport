@@ -563,24 +563,26 @@ abstract_index_list::const_iterator token_list::add_index(char label)
 
 abstract_index_list::const_iterator token_list::add_index(const abstract_index& index, error_context& ctx)
 	{
-    // emplace does nothing if a record already exists;
-    // we want to ensure class compatibility, so we have to take this responsibility on ourselves
+    // check whether an existing record for this index exiosts
     abstract_index_list::const_iterator t = this->indices.find(index.get_label());
 
-    if(t != this->indices.end())
+    if(t == this->indices.end())
       {
-        if(index.get_class() != t->get_class())
-          {
-            std::ostringstream msg;
-            msg << ERROR_TOKENIZE_INDEX_MISMATCH << " '" << index.get_label() << "'";
-            ctx.error(msg.str());
-          }
-        return(t);
-      }
-    else
-      {
+        // no record currently exists, so emplace a copy in the database and return
+        // an iterator to it
         return (this->indices.emplace_back(index.get_label(), std::make_unique<abstract_index>(index))).first;
       }
+
+    // a record did previously exist, so check its class and report an error if they do not agree
+    if(index.get_class() != t->get_class())
+      {
+        std::ostringstream msg;
+        msg << ERROR_TOKENIZE_INDEX_MISMATCH << " '" << index.get_label() << "'";
+        ctx.error(msg.str());
+      }
+
+    // return iterator to existing record
+    return(t);
 	}
 
 

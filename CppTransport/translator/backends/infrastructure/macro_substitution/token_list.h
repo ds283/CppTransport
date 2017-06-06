@@ -68,8 +68,7 @@ class token_list
   public:
 
     //! get number of tokens
-    unsigned int size() const
-      { return (this->tokens.size()); }
+    unsigned int size() const { return (this->tokens.size()); }
 
 
     //! reset token list to pristine state, as if no evaluations had taken place
@@ -164,17 +163,22 @@ class token_list
 
     // TOKEN DATA
 
+    typedef std::list< std::unique_ptr< token_list_impl::generic_token > > token_database;
+    typedef std::list< std::reference_wrapper< token_list_impl::simple_macro_token > > simple_macro_token_database;
+    typedef std::list< std::reference_wrapper< token_list_impl::index_macro_token > > index_macro_token_database;
+    typedef std::list< std::reference_wrapper< token_list_impl::index_literal_token > > index_literal_token_database;
+
     //! tokenized version of input
-    std::list<std::unique_ptr<token_list_impl::generic_token> > tokens;
+    token_database tokens;
 
     //! auxiliary list of simple macro tokens
-    std::list< std::reference_wrapper<token_list_impl::simple_macro_token> > simple_macro_tokens;
+    simple_macro_token_database simple_macro_tokens;
 
     //! auxiliary list of index macro tokens
-    std::list< std::reference_wrapper<token_list_impl::index_macro_token> > index_macro_tokens;
+    index_macro_token_database index_macro_tokens;
 
-    //! auxiliary list of index literal
-    std::list< std::reference_wrapper<token_list_impl::index_literal_token> > index_literal_tokens;
+    //! auxiliary list of index literal tokens
+    index_literal_token_database index_literal_tokens;
 
 
     // MACRO DATA
@@ -188,7 +192,7 @@ class token_list
 
     // INDEX DATA (maintains information about indices encountered in this entire line)
 
-    //! list of indices found in input
+    //! database of indices found in input
     abstract_index_list indices;
 
 
