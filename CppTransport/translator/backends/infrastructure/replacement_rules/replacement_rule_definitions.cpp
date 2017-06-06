@@ -75,7 +75,7 @@ namespace macro_packages
 
 
     std::string replacement_rule_index::evaluate_roll(const macro_argument_list& args,
-                                                      const abstract_index_list& indices)
+                                                      const abstract_index_database& indices)
       {
         this->check(args, indices);
 

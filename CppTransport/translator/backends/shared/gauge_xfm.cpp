@@ -50,14 +50,14 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::string replace_zeta1::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_zeta1::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::unique_ptr<map_lambda> lambda = this->zeta1_tensor->compute_lambda(indices[0]);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    std::string replace_zeta2::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_zeta2::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::symbol  k = sym_factory.get_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
         GiNaC::symbol k1 = sym_factory.get_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
@@ -69,13 +69,13 @@ namespace macro_packages
       }
 
 
-    std::string replace_dN1::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_dN1::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         throw rule_apply_fail(ERROR_DN_DOES_NOT_ROLL);
       }
 
 
-    std::string replace_dN2::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_dN2::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         throw rule_apply_fail(ERROR_DN_DOES_NOT_ROLL);
       }

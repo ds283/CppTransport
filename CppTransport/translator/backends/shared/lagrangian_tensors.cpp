@@ -108,7 +108,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::string replace_A::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_A::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[A_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[A_K2_ARGUMENT]);
@@ -120,7 +120,7 @@ namespace macro_packages
       }
     
     
-    std::string replace_Atilde::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_Atilde::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[ATILDE_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[ATILDE_K2_ARGUMENT]);
@@ -132,7 +132,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_B::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_B::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[A_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[A_K2_ARGUMENT]);
@@ -144,7 +144,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_C::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_C::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[A_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[A_K2_ARGUMENT]);
@@ -156,7 +156,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_M::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_M::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->M_tensor->compute_lambda(indices[0], indices[1]);
         return this->lambda_mgr.cache(std::move(lambda));

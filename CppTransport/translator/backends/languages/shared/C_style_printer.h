@@ -232,7 +232,7 @@ class C_style_printer: public language_printer
     virtual std::string lambda_invokation(const std::string& name, const generic_lambda& lambda) const override;
 
     //! format a lambda definition open string
-    virtual std::string open_lambda(const abstract_index_list& indices, const std::string& return_type) const override;
+    virtual std::string open_lambda(const abstract_index_database& indices, const std::string& return_type) const override;
 
     //! format a lambda definition close string
     virtual std::string close_lambda() const override;

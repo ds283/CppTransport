@@ -55,7 +55,7 @@ namespace macro_packages
       }
 
 
-    std::string set_directive::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string set_directive::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::string name = args[SET_DIRECTIVE_NAME_ARGUMENT];
         std::string defn = args[SET_DIRECTIVE_DEFINITION_ARGUMENT];
@@ -69,7 +69,7 @@ namespace macro_packages
         try
           {
             // check that indices discovered during tokenization match those declared to SET
-            this->validate_discovered_indices(indices, tokens->get_indices());
+            this->validate_discovered_indices(indices, tokens->get_index_database());
           }
         catch(index_mismatch& xe)
           {
@@ -115,7 +115,7 @@ namespace macro_packages
       }
 
 
-    void set_directive::validate_discovered_indices(const abstract_index_list& supplied, const abstract_index_list& discovered)
+    void set_directive::validate_discovered_indices(const abstract_index_database& supplied, const abstract_index_database& discovered)
       {
         if(supplied.size() != discovered.size())
           {
@@ -126,7 +126,7 @@ namespace macro_packages
 
         for(const abstract_index& idx : discovered)
           {
-            abstract_index_list::const_iterator t = supplied.find(idx.get_label());
+            abstract_index_database::const_iterator t = supplied.find(idx.get_label());
 
             if(t == supplied.end())
               {
@@ -244,7 +244,7 @@ namespace macro_packages
             // map indices between declaration and assignment
             assignment_list remap_idx;
 
-            abstract_index_list::const_iterator indices_t = this->indices.begin();
+            abstract_index_database::const_iterator indices_t = this->indices.begin();
             assignment_list::const_iterator idxs_t = idxs.begin();
 
             while(indices_t != this->indices.end() && idxs_t != idxs.end())
@@ -264,13 +264,13 @@ namespace macro_packages
           }
 
 
-        std::string user_macro::roll(const macro_argument_list& args, const abstract_index_list& idxs)
+        std::string user_macro::roll(const macro_argument_list& args, const abstract_index_database& idxs)
           {
             // map indices between declaration and assignment
             index_remap_rule rule;
 
-            abstract_index_list::const_iterator indices_t = this->indices.begin();
-            abstract_index_list::const_iterator idxs_t = idxs.begin();
+            abstract_index_database::const_iterator indices_t = this->indices.begin();
+            abstract_index_database::const_iterator idxs_t = idxs.begin();
 
             while(indices_t != this->indices.end() && idxs_t != idxs.end())
               {

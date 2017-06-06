@@ -63,7 +63,7 @@ class assignment_set
   public:
 
     //! construct an assignment set from a given list of abstract indices
-    assignment_set(const abstract_index_list& s, index_order o = index_order::right);
+    assignment_set(const abstract_index_database& s, index_order o = index_order::right);
 
     //! destructor is default
     ~assignment_set() = default;
@@ -97,10 +97,10 @@ class assignment_set
   public:
 
     //! begin
-    abstract_index_list::const_iterator idx_set_begin() const { return(this->source_set.cbegin()); }
+    abstract_index_database::const_iterator idx_set_begin() const { return(this->source_set.cbegin()); }
 
     //! end
-    abstract_index_list::const_iterator idx_set_end() const { return(this->source_set.cend()); }
+    abstract_index_database::const_iterator idx_set_end() const { return(this->source_set.cend()); }
 
 
     // INTERNAL DATA
@@ -108,7 +108,7 @@ class assignment_set
   private:
 
     //! reference to abstract index list used to construct this assignment set
-    const abstract_index_list& source_set;
+    const abstract_index_database& source_set;
 
     //! size of assignment set
     unsigned int assignments_size;

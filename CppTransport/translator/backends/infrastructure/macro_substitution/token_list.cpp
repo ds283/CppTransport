@@ -159,11 +159,11 @@ namespace macro_tokenizer_impl
 
     // get a macro index list
     template <typename ContextFactory, typename IndexHandler>
-    std::pair<abstract_index_list, size_t>
+    std::pair<abstract_index_database, size_t>
     get_index_list(const std::string& input, const std::string& candidate, const size_t position,
                    ContextFactory make_context, IndexHandler add_index)
       {
-        abstract_index_list idx_list;
+        abstract_index_database idx_list;
         size_t current_position = position;
 
         // check that an index list is present
@@ -362,7 +362,7 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
     std::string candidate(1, input[position]);
 
     // otherwise, build a macro candidate from the next two characters and check whether it can match
-    // and macros in the ruleset (we can match a substring at this stage)
+    // any macros in the ruleset (we can match a substring at this stage)
     if(possible_match)
       {
         candidate += input[position+1];
@@ -438,7 +438,7 @@ template <typename ContextFactory>
 std::unique_ptr<token_list_impl::index_literal_token>
 token_list::make_index_literal(const std::string& input, const size_t position, ContextFactory make_context)
   {
-    abstract_index_list::const_iterator idx = this->add_index(input[position]);
+    abstract_index_database::const_iterator idx = this->add_index(input[position]);
 
     auto tok = std::make_unique<token_list_impl::index_literal_token>(idx, make_context(position, position+1));
     this->index_literal_tokens.push_back(std::ref(*tok));
@@ -494,12 +494,12 @@ token_list::make_index_macro(const std::string& input, const std::string& macro,
     size_t current_position = position + macro.length();
 
     // should find an index list
-    abstract_index_list idx_list;
-    auto add_index = [&](abstract_index_list& idxs, char label, error_context& ctx) -> void
+    abstract_index_database idx_list;
+    auto add_index = [&](abstract_index_database& idxs, char label, error_context& ctx) -> void
       {
         // add to index list if we haven't already seen it;
         // the constructor for abstract_index will assign a suitable type based on the index symbol
-        std::pair<abstract_index_list::iterator, bool> result = idxs.emplace_back(
+        std::pair<abstract_index_database::iterator, bool> result = idxs.emplace_back(
           std::make_pair(label, std::make_shared<abstract_index>(label, this->num_fields, this->num_params)));
 
         // if the index was new, add to list for this entire tokenization job unless this
@@ -553,7 +553,7 @@ token_list::make_index_macro(const std::string& input, const std::string& macro,
   }
 
 
-abstract_index_list::const_iterator token_list::add_index(char label)
+abstract_index_database::const_iterator token_list::add_index(char label)
 	{
     // emplace does nothing if a record already exists
     return (this->indices.emplace_back(
@@ -561,10 +561,10 @@ abstract_index_list::const_iterator token_list::add_index(char label)
 	}
 
 
-abstract_index_list::const_iterator token_list::add_index(const abstract_index& index, error_context& ctx)
+abstract_index_database::const_iterator token_list::add_index(const abstract_index& index, error_context& ctx)
 	{
     // check whether an existing record for this index exiosts
-    abstract_index_list::const_iterator t = this->indices.find(index.get_label());
+    abstract_index_database::const_iterator t = this->indices.find(index.get_label());
 
     if(t == this->indices.end())
       {

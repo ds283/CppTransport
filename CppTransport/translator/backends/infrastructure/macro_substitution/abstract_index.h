@@ -149,7 +149,7 @@ namespace std
 
 
 //! set up typedef for database of abstract_index records
-typedef index_database<abstract_index> abstract_index_list;
+typedef index_database<abstract_index> abstract_index_database;
 
 
 

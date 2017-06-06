@@ -143,7 +143,7 @@ class language_printer
     virtual std::string lambda_invokation(const std::string& name, const generic_lambda& lambda) const = 0;
 
     //! format a lambda definition open string
-    virtual std::string open_lambda(const abstract_index_list& indices, const std::string& return_type) const = 0;
+    virtual std::string open_lambda(const abstract_index_database& indices, const std::string& return_type) const = 0;
 
     //! format a lambda definition close string
     virtual std::string close_lambda() const = 0;

@@ -192,7 +192,7 @@ std::string C_style_printer::lambda_invokation(const std::string& name, const ge
     std::ostringstream stmt;
     stmt << name << this->function_open;
 
-    const abstract_index_list& index_list = lambda.get_index_list();
+    const abstract_index_database& index_list = lambda.get_index_list();
 
     unsigned int count = 0;
     for(const abstract_index& idx : index_list)
@@ -208,7 +208,7 @@ std::string C_style_printer::lambda_invokation(const std::string& name, const ge
   }
 
 
-std::string C_style_printer::open_lambda(const abstract_index_list& indices, const std::string& return_type) const
+std::string C_style_printer::open_lambda(const abstract_index_database& indices, const std::string& return_type) const
   {
     std::ostringstream stmt;
 

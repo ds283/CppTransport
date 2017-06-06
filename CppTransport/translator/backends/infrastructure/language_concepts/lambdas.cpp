@@ -30,7 +30,7 @@
 #include "language_printer.h"
 
 
-generic_lambda::generic_lambda(const abstract_index_list& list, expression_item_types t, const ginac_cache_tags& tg, std::string ty)
+generic_lambda::generic_lambda(const abstract_index_database& list, expression_item_types t, const ginac_cache_tags& tg, std::string ty)
   : index_list(list),
     type(t),
     tags(tg),
@@ -102,7 +102,7 @@ std::string map_lambda::make_temporary(language_printer& printer, unsigned int n
 
         // work through index list in reverse order, assuming this is the order given by the lambda_flatten() functions
         // calculate out the appropriate conditions for this index from the current position in the map, and push them to the list
-        for(abstract_index_list::const_reverse_iterator t = this->index_list.crbegin(); t != this->index_list.crend(); ++t)
+        for(abstract_index_database::const_reverse_iterator t = this->index_list.crbegin(); t != this->index_list.crend(); ++t)
           {
             GiNaC::symbol sym(t->get_loop_variable());
             GiNaC::ex rel = state % 2 == 1 ? sym >= num_fields : sym < num_fields;

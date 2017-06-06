@@ -81,14 +81,14 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::string replace_U1::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_U1::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::unique_ptr<map_lambda> lambda = this->u1_tensor->compute_lambda(indices[0]);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    std::string replace_U2::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_U2::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::symbol k = sym_factory.get_symbol(args[U2_K_ARGUMENT]);
         GiNaC::symbol a = sym_factory.get_symbol(args[U2_A_ARGUMENT]);
@@ -98,7 +98,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_U3::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_U3::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[U3_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[U3_K2_ARGUMENT]);

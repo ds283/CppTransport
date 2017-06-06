@@ -48,7 +48,7 @@ class index_literal
   public:
 
     //! constructor; defaults to unset variance
-    index_literal(abstract_index_list::iterator& i, variance t = variance::none)
+    index_literal(abstract_index& i, variance t = variance::none)
       : idx(i),
         type(t)
       {
@@ -63,10 +63,10 @@ class index_literal
   public:
 
     //! get underlying an abstract_index object
-    abstract_index& get() { return *this->idx; }
+    abstract_index& get() { return this->idx; }
 
     //! get underlying an abstract_index object (const version)
-    const abstract_index& get() const { abstract_index_list::const_iterator t = this->idx; return *t; }
+    const abstract_index& get() const { return this->idx; }
 
     //! allow conversion to abstract_index
     operator abstract_index() { return this->get(); }
@@ -83,7 +83,7 @@ class index_literal
   private:
 
     //! link to abstract index of which this is an instance
-    abstract_index_list::iterator idx;
+    abstract_index& idx;
 
     //! variance
     variance type;

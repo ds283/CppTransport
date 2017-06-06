@@ -82,7 +82,7 @@ namespace shared
         // build a set of assignments for a fake index 'A'
         // the assignments will range over all possible values which A can assume
         // we use these to construct a list of arguments, one for each possible value
-        abstract_index_list indices;
+        abstract_index_database indices;
         indices.emplace_back('A',
                              std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
                                                               this->data_payload.model.get_number_params()));
@@ -112,7 +112,7 @@ namespace shared
 
         std::ostringstream out;
 
-        abstract_index_list indices;
+        abstract_index_database indices;
         indices.emplace_back('A',
                              std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
                                                               this->data_payload.model.get_number_params()));
@@ -145,7 +145,7 @@ namespace shared
 
         std::ostringstream out;
 
-        abstract_index_list indices;
+        abstract_index_database indices;
         indices.emplace_back('A',
                              std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
                                                               this->data_payload.model.get_number_params()));

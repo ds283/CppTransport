@@ -51,7 +51,7 @@ class generic_lambda
   public:
 
     //! pre-supplied database constructor
-    generic_lambda(const abstract_index_list& list, expression_item_types t, const ginac_cache_tags& tg, std::string ty);
+    generic_lambda(const abstract_index_database& list, expression_item_types t, const ginac_cache_tags& tg, std::string ty);
 
     //! one-index lambda constructor
     generic_lambda(const abstract_index& i, expression_item_types t, const ginac_cache_tags& tg, std::string ty);
@@ -77,7 +77,7 @@ class generic_lambda
     const ginac_cache_tags& get_tags() const { return(this->tags); }
 
     //! get index list
-    const abstract_index_list& get_index_list() const { return(this->index_list); }
+    const abstract_index_database& get_index_list() const { return(this->index_list); }
 
 
     // INTERNAL DATA
@@ -85,7 +85,7 @@ class generic_lambda
   protected:
 
     //! index list associated with this lambda
-    abstract_index_list index_list;
+    abstract_index_database index_list;
 
     //! transport object with which this lambda is associated
     expression_item_types type;
@@ -109,7 +109,7 @@ class atomic_lambda: public generic_lambda
   public:
 
     //! constructor
-    atomic_lambda(const abstract_index_list& list, GiNaC::ex e, expression_item_types t, const ginac_cache_tags& tg, std::string ty)
+    atomic_lambda(const abstract_index_database& list, GiNaC::ex e, expression_item_types t, const ginac_cache_tags& tg, std::string ty)
       : generic_lambda(list, t, tg, ty)
       {
         expr.swap(e);
@@ -174,7 +174,7 @@ class map_lambda: public generic_lambda
   public:
 
     //! constructor
-    map_lambda(const abstract_index_list& list, map_lambda_table t, expression_item_types tp, const ginac_cache_tags& tg, std::string ty)
+    map_lambda(const abstract_index_database& list, map_lambda_table t, expression_item_types tp, const ginac_cache_tags& tg, std::string ty)
       : generic_lambda(list, tp, tg, ty),
         map(t)
       {

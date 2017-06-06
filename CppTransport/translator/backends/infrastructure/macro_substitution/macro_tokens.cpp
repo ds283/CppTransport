@@ -68,7 +68,7 @@ namespace token_list_impl
       }
 
 
-    index_literal_token::index_literal_token(abstract_index_list::const_iterator& it, error_context ec)
+    index_literal_token::index_literal_token(abstract_index_database::const_iterator& it, error_context ec)
       : generic_token(std::string(1, it->get_label()), std::move(ec)),
         index(*it)
       {
@@ -163,7 +163,7 @@ namespace token_list_impl
       }
 
 
-    index_macro_token::index_macro_token(const std::string& m, const abstract_index_list i,
+    index_macro_token::index_macro_token(const std::string& m, const abstract_index_database i,
                                          const macro_argument_list& a, macro_packages::replacement_rule_index& r,
                                          error_context ec)
       : generic_token(m, std::move(ec)),
@@ -289,7 +289,7 @@ namespace token_list_impl
     void index_macro_token::evaluate_roll(const index_remap_rule& rule)
       {
         // build index set using substitution rules
-        abstract_index_list list;
+        abstract_index_database list;
 
         for(const abstract_index& idx : this->indices)
           {

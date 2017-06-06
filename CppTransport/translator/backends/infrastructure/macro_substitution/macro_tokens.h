@@ -51,8 +51,7 @@ namespace token_list_impl
 
         //! constructor
         generic_token(const std::string& c, error_context ec);
-
-
+        
         //! destructor is default, but icpc fails with explictly-defaulted destructor
         virtual ~generic_token()
           {
@@ -66,15 +65,12 @@ namespace token_list_impl
         //! convert this token to its string equivalent
         std::string to_string() const
           { return (conversion); }
-
-
+        
         //! raise error
         void error(const std::string& msg);
-
-
+        
         //! mark this token as silent for error reporting
-        void mark_silent()
-          { this->silent = true; }
+        void mark_silent() { this->silent = true; }
 
 
         // INTERNAL DATA
@@ -118,7 +114,7 @@ namespace token_list_impl
       public:
 
         //! constructor
-        index_literal_token(abstract_index_list::const_iterator& it, error_context ec);
+        index_literal_token(abstract_index_database::const_iterator& it, error_context ec);
 
 
         //! destructor is default, but icpc fails with explicitly-default destructor
@@ -161,8 +157,7 @@ namespace token_list_impl
         //! constructor
         simple_macro_token(const std::string& m, const macro_argument_list& a,
                            macro_packages::replacement_rule_simple& r, simple_macro_type t, error_context ec);
-
-
+        
         //! destructor is default, but icpc fails with explicitly-default destructor
         virtual ~simple_macro_token()
           {
@@ -174,10 +169,8 @@ namespace token_list_impl
       public:
 
         //! get type
-        simple_macro_type get_type() const
-          { return (this->type); }
-
-
+        simple_macro_type get_type() const { return (this->type); }
+        
         //! evaluate and cache the result
         void evaluate();
 
@@ -203,7 +196,7 @@ namespace token_list_impl
       public:
 
         //! constructor
-        index_macro_token(const std::string& m, const abstract_index_list i, const macro_argument_list& a,
+        index_macro_token(const std::string& m, const abstract_index_database i, const macro_argument_list& a,
                           macro_packages::replacement_rule_index& r, error_context ec);
 
         //! destructor
@@ -242,7 +235,7 @@ namespace token_list_impl
         const macro_argument_list args;
 
         //! index list for this token
-        const abstract_index_list indices;
+        const abstract_index_database indices;
 
         //! reference to replacement rule object for this token
         macro_packages::replacement_rule_index& rule;

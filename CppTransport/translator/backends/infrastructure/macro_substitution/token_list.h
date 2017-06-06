@@ -37,6 +37,7 @@
 #include "core.h"
 #include "error_context.h"
 #include "index_assignment.h"
+#include "index_literal.h"
 #include "replacement_rule_definitions.h"
 #include "macro_types.h"
 #include "translator_data.h"
@@ -100,8 +101,7 @@ class token_list
 
 
     //! get list of indices identified during tokenization
-    const abstract_index_list& get_indices()
-      { return (this->indices); }
+    const abstract_index_database& get_index_database() const { return this->indices; }
 
 
     // INTERFACE -- INDEX SET UNROLLING
@@ -141,10 +141,10 @@ class token_list
                      const RuleSet& rules, ContextFactory make_context);
 
     //! add an index to our internal list
-    abstract_index_list::const_iterator add_index(char label);
+    abstract_index_database::const_iterator add_index(char label);
 
     //! add an index to our internal list
-    abstract_index_list::const_iterator add_index(const abstract_index& index, error_context& ctx);
+    abstract_index_database::const_iterator add_index(const abstract_index& index, error_context& ctx);
 
 
     // INTERNAL DATA
@@ -192,8 +192,8 @@ class token_list
 
     // INDEX DATA (maintains information about indices encountered in this entire line)
 
-    //! database of indices found in input
-    abstract_index_list indices;
+    //! master database of indices found in input line
+    abstract_index_database indices;
 
 
     // CACHE DATA ABOUT MODEL

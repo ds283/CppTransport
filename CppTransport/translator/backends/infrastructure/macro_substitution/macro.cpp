@@ -121,15 +121,15 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     counter += right_tokens->evaluate_macros(simple_macro_type::pre);
 
     // generate assignments for the LHS indices
-    assignment_set LHS_assignments(left_tokens->get_indices());
+    assignment_set LHS_assignments(left_tokens->get_index_database());
 
     // generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
-    abstract_index_list RHS_indices;
+    abstract_index_database RHS_indices;
     error_context ctx = this->data_payload.make_error_context();
 
     try
       {
-        RHS_indices = right_tokens->get_indices() - left_tokens->get_indices();
+        RHS_indices = right_tokens->get_index_database() - left_tokens->get_index_database();
       }
     catch(index_exception& xe)
       {

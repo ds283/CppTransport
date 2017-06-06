@@ -169,21 +169,21 @@ namespace macro_packages
     // ******************************************************************
 
 
-    std::string replace_parameter::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_parameter::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::ex sym = this->shared.generate_parameters(indices[0], this->printer);
         return this->printer.ginac(sym);
       }
 
 
-    std::string replace_field::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_field::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         GiNaC::ex sym = this->shared.generate_fields(indices[0], this->printer);
         return this->printer.ginac(sym);
       }
 
 
-    std::string replace_coordinate::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_coordinate::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         // safe to re-use generate_fields since the symbol is the same as for the field list
         GiNaC::ex sym = this->shared.generate_fields(indices[0], this->printer);
@@ -191,14 +191,14 @@ namespace macro_packages
       }
 
 
-    std::string replace_SR_velocity::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_SR_velocity::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->SR_velocity_tensor->compute_lambda(indices[0]);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    std::string replace_dV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_dV::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->dV_tensor->compute_lambda(indices[0]);
 
@@ -207,7 +207,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_ddV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_ddV::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->ddV_tensor->compute_lambda(indices[0], indices[1]);
 
@@ -216,7 +216,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_dddV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_dddV::roll(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->dddV_tensor->compute_lambda(indices[0], indices[1], indices[2]);
 

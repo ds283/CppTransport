@@ -61,7 +61,7 @@ namespace macro_packages
           public:
 
             //! constructor
-            user_macro(std::string n, std::unique_ptr<token_list> t, const abstract_index_list& i, error_context d)
+            user_macro(std::string n, std::unique_ptr<token_list> t, const abstract_index_database& i, error_context d)
               : replacement_rule_index(n, 0, i.size()),
                 tokens(std::move(t)),
                 indices(i),
@@ -99,7 +99,7 @@ namespace macro_packages
             virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
 
             //! roll-up evaluation
-            virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+            virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
 
 
             // INTERNAL DATA
@@ -110,7 +110,7 @@ namespace macro_packages
             std::unique_ptr<token_list> tokens;
 
             //! list of indices defining this macro
-            abstract_index_list indices;
+            abstract_index_database indices;
 
             //! record declaration point
             const error_context declaration_point;
@@ -214,7 +214,7 @@ namespace macro_packages
         virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
 
         //! evaluate directive
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
 
 
         // INTERNAL API
@@ -222,7 +222,7 @@ namespace macro_packages
       protected:
 
         //! validate indices discovered during tokenization against a supplied index list
-        void validate_discovered_indices(const abstract_index_list& supplied, const abstract_index_list& discovered);
+        void validate_discovered_indices(const abstract_index_database& supplied, const abstract_index_database& discovered);
 
 
         // INTERNAL DATA
