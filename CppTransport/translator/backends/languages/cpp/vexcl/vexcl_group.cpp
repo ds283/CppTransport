@@ -52,7 +52,7 @@ vexcl_group::vexcl_group(translator_data& p, tensor_factory& fctry)
     cse_worker = std::make_unique<cpp::cpp_cse>(0, *this->l_printer, this->data_payload);
 
     // construct replacement rule packages
-    this->add_rule_package<macro_packages::directives>(p, *l_printer);
+    this->add_directive_package<macro_packages::directives>(p);
     this->add_rule_package<macro_packages::fundamental>(p, *l_printer);
     this->add_rule_package<macro_packages::flow_tensors>(p, *l_printer);
     this->add_rule_package<macro_packages::lagrangian_tensors>(p, *l_printer);

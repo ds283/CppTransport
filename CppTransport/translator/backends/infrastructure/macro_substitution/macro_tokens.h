@@ -35,6 +35,7 @@
 #include "error_context.h"
 #include "index_assignment.h"
 #include "replacement_rule_definitions.h"
+#include "directive_definitions.h"
 #include "macro_types.h"
 
 
@@ -63,8 +64,7 @@ namespace token_list_impl
       public:
 
         //! convert this token to its string equivalent
-        std::string to_string() const
-          { return (conversion); }
+        std::string to_string() const { return conversion; }
         
         //! raise error
         void error(const std::string& msg);
@@ -77,7 +77,7 @@ namespace token_list_impl
 
       protected:
 
-        //! converted value of this macro
+        //! converted value of this token
         std::string conversion;
 
         //! context for error messages involving this token
@@ -86,11 +86,12 @@ namespace token_list_impl
         //! number of errors raised by this token
         unsigned int num_errors;
 
-        //! error reported silenced?
+        //! error reports silenced?
         bool silent;
 
       };
 
+    
     class text_token : public generic_token
       {
 
@@ -179,10 +180,16 @@ namespace token_list_impl
 
       protected:
 
+        //! macro name
         const std::string name;
+        
+        //! macro argument list
         const macro_argument_list args;
+        
+        //! reference to owning replacement rule
         macro_packages::replacement_rule_simple& rule;
 
+        //! macro type -- pre or post?
         simple_macro_type type;
 
         //! have argument-related errors been reported yet? if so, silence further errors
@@ -190,6 +197,7 @@ namespace token_list_impl
 
       };
 
+    
     class index_macro_token : public generic_token
       {
 
@@ -249,6 +257,92 @@ namespace token_list_impl
         //! have index-related errors been reported yet? if so, silence further errors
         bool index_error;
 
+      };
+    
+    
+    class simple_directive_token : public generic_token
+      {
+      
+      public:
+        
+        //! constructor
+        simple_directive_token(const std::string& m, const macro_argument_list& a,
+                               macro_packages::directive_simple& r, error_context ec);
+        
+        //! destructor is default, but icpc fails with explicitly-default destructor
+        virtual ~simple_directive_token() = default;
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! evaluate and cache the result
+        void evaluate();
+        
+        
+        // INTERNAL DATA
+      
+      protected:
+        
+        //! directive name
+        const std::string name;
+        
+        //! macro argument list
+        const macro_argument_list args;
+        
+        //! reference to owning replacement rule
+        macro_packages::directive_simple& rule;
+        
+        //! have argument-related errors been reported yet? if so, silence further errors
+        bool argument_error;
+        
+      };
+    
+    
+    class index_directive_token : public generic_token
+      {
+      
+      public:
+        
+        //! constructor
+        index_directive_token(const std::string& m, const abstract_index_database i, const macro_argument_list& a,
+                              macro_packages::directive_index& r, error_context ec);
+        
+        //! destructor
+        virtual ~index_directive_token() = default;
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! evaluate and cache the result
+        void evaluate();
+        
+        
+        // INTERNAL DATA
+      
+      protected:
+        
+        //! name of this macro token
+        const std::string name;
+        
+        //! argument list for this token
+        const macro_argument_list args;
+        
+        //! index list for this token
+        const abstract_index_database indices;
+        
+        //! reference to replacement rule object for this token
+        macro_packages::directive_index& rule;
+        
+        //! have argument-related errors been reported yet? if so, silence further errors
+        bool argument_error;
+        
+        //! have index-related errors been reported yet? if so, silence further errors
+        bool index_error;
+        
       };
 
   }   // namespace token_list_impl

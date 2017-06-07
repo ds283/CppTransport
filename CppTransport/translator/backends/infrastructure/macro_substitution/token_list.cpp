@@ -91,19 +91,29 @@ namespace macro_tokenizer_impl
           }
 
         ++current_position;   // move past opening bracket of index list
-        std::string arg;
-
+        
         while(current_position < input.length() && input[current_position] != '}')
           {
+            // skip over any white space characters
+            while(current_position < input.length() && isspace(input[current_position]))
+              {
+                ++current_position;
+              }
+            
             if(input[current_position] == ',')
               {
-                error_context ctx = make_context(current_position - arg.length(), current_position);
-                arg_list.emplace_back(arg, ctx);
-                arg.clear();
+                std::ostringstream msg;
+                msg  << ERROR_UNEXPECTED_COMMA << " '" << macro << "'";
+                error_context ctx = make_context(current_position, current_position+1);
+                ctx.error(msg.str());
               }
-            else if(input[current_position] == '"' && arg.length() == 0)
+            else if(input[current_position] == '"')
               {
-                ++current_position; // skip the opening quote
+                size_t start = current_position;
+                std::string arg;
+    
+                // skip opening quote
+                ++current_position;
 
                 while(current_position < input.length() && input[current_position] != '"')
                   {
@@ -118,19 +128,54 @@ namespace macro_tokenizer_impl
                     error_context ctx = make_context(current_position, current_position+1);
                     ctx.error(msg.str());
                   }
-
-                // closing quote will be skipped by position++ below
+                else
+                  {
+                    ++current_position;
+                  }
+    
+                error_context ctx = make_context(start, current_position);
+                arg_list.emplace_back(arg, ctx);
               }
             else
               {
-                // skip over white space, but add non-white-space characters to current argument string
-                if(!isspace(input[current_position]))
+                // now at the start of an argument
+                size_t start = current_position;
+                std::string arg;
+    
+                while(current_position < input.length()
+                      && input[current_position] != ','
+                      && input[current_position] != '}'
+                      && !isspace(input[current_position]))
                   {
                     arg += input[current_position];
+                    ++current_position;
                   }
+    
+                error_context ctx = make_context(start, current_position);
+                arg_list.emplace_back(arg, ctx);
               }
 
-            ++current_position;
+            // skip over any white space characters
+            while(current_position < input.length() && isspace(input[current_position]))
+              {
+                ++current_position;
+              }
+            
+            // look for argument separator and wrap up
+            if(input[current_position] == ',')
+              {
+                ++current_position;
+                continue;
+              }
+            else if(input[current_position] == '}')
+              {
+                continue;
+              }
+    
+            std::ostringstream msg;
+            msg  << ERROR_EXPECTED_COMMA << " '" << macro << "'";
+            error_context ctx = make_context(current_position, current_position+1);
+            ctx.error(msg.str());
           }
 
         // complain if missing closing bracket
@@ -144,13 +189,6 @@ namespace macro_tokenizer_impl
         else
           {
             ++current_position;   // skip closing bracket '}'
-          }
-
-        // emplace last argument if it has not already been done
-        if(arg.length() > 0)
-          {
-            error_context ctx = make_context(current_position - arg.length(), current_position);
-            arg_list.emplace_back(arg, ctx);
           }
 
         return std::make_pair(arg_list, current_position);
@@ -314,6 +352,8 @@ token_list::token_list(const std::string& input, const std::string& prefix, cons
     const pre_ruleset& pre = package.get_pre_ruleset();
     const post_ruleset& post = package.get_post_ruleset();
     const index_ruleset& index = package.get_index_ruleset();
+    const simple_directiveset& simp_dir = package.get_simple_directiveset();
+    const index_directiveset& ind_dir = package.get_index_directiveset();
 
     auto make_context = [&](unsigned int start, unsigned int end) -> auto
       { return this->data_payload.make_error_context(input_string, start, end); };
@@ -328,14 +368,14 @@ token_list::token_list(const std::string& input, const std::string& prefix, cons
 					{
             std::tie(tok, position) = match_string_literal(input, position, prefix[0], make_context);
 					}
-				else  // possible macro or index
+				else  // possible macro, directive or index
 					{
             if(check_match_prefix(input, position, prefix))
               {
 								position += prefix.length();
 
-                std::tie(tok, position) = this->match_macro_or_index(input, position, pre, post, index, local_rules,
-                                                                     make_context);
+                std::tie(tok, position) =
+                  this->match_macro_or_index(input, position, pre, post, index, local_rules, simp_dir, ind_dir, make_context);
 							}
 						else // we did *not* match the full prefix; treat this as literal text
 							{
@@ -343,16 +383,17 @@ token_list::token_list(const std::string& input, const std::string& prefix, cons
 							}
 					}
 
-        this->tokens.push_back(std::move(tok)); // transfers ownership of tok to the token list
+        // if a token was recognized, push it onto token list
+        if(tok) this->tokens.push_back(std::move(tok));
 			}
 	}
 
 
 template <typename ContextFactory>
 std::pair<std::unique_ptr<token_list_impl::generic_token>, size_t>
-token_list::match_macro_or_index(const std::string& input, const size_t position, const pre_ruleset& pre,
-                                 const post_ruleset& post, const index_ruleset& index, const index_ruleset& local_rules,
-                                 ContextFactory make_context)
+token_list::match_macro_or_index(const std::string& input, const size_t position, const pre_ruleset& pre, const post_ruleset& post,
+                                 const index_ruleset& index, const index_ruleset& local_rules, const simple_directiveset& simp_dir,
+                                 const index_directiveset& ind_dir, ContextFactory make_context)
   {
     // try to match the longest macro we can from the current position, or if we cannot match a macro
     // then identify an index literal
@@ -367,7 +408,8 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
       {
         candidate += input[position+1];
         possible_match = check_for_match(candidate, pre) || check_for_match(candidate, post)
-                         || check_for_match(candidate, index) || check_for_match(candidate, local_rules);
+                         || check_for_match(candidate, index) || check_for_match(candidate, local_rules)
+                         || check_for_match(candidate, simp_dir) || check_for_match(candidate, ind_dir);
       }
 
     // if no possible match then this must be an index literal, so build it and return
@@ -379,7 +421,7 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
 
     // There is a possible match. Now greedily match the longest macro we can
     size_t candidate_length = 2;
-
+    
     while(position + candidate_length < input.length()
           && input[position + candidate_length] != '['
           && input[position + candidate_length] != '{'
@@ -387,7 +429,9 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
           && (check_for_match(candidate + input[position + candidate_length], pre)
               || check_for_match(candidate + input[position + candidate_length], post)
               || check_for_match(candidate + input[position + candidate_length], index)
-              || check_for_match(candidate + input[position + candidate_length], local_rules)))
+              || check_for_match(candidate + input[position + candidate_length], local_rules)
+              || check_for_match(candidate + input[position + candidate_length], simp_dir)
+              || check_for_match(candidate + input[position + candidate_length], ind_dir)))
       {
         candidate += input[position + candidate_length];
         ++candidate_length;
@@ -415,6 +459,16 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
           {
             // we matched a locally-defined macro
             return this->make_index_macro(input, candidate, position, local_rules, make_context);
+          }
+        else if(check_for_match(candidate, simp_dir, false))
+          {
+            // we matched a simple directive
+            return this->make_simple_directive(input, candidate, position, simp_dir, make_context);
+          }
+        else if(check_for_match(candidate, ind_dir, false))
+          {
+            // we matched an index directive
+            return this->make_index_directive(input, candidate, position, ind_dir, make_context);
           }
         else  // something has gone wrong
           {
@@ -452,6 +506,13 @@ std::pair<std::unique_ptr<token_list_impl::simple_macro_token>, size_t>
 token_list::make_simple_macro(const std::string& input, const std::string& macro, const size_t position,
                               const RuleSet& rules, simple_macro_type type, ContextFactory make_context)
   {
+    // check whether we've previously seen a directive and therefore replacement rules should be disallowed
+    if(!this->validate_replacement_rule(macro, position, make_context))
+      {
+        std::unique_ptr<token_list_impl::simple_macro_token> tok;
+        return std::make_pair(std::move(tok), position + macro.length());
+      }
+    
     // find rule for this macro
     auto& rule = find_match(macro, rules);
 
@@ -487,6 +548,13 @@ std::pair<std::unique_ptr<token_list_impl::index_macro_token>, size_t>
 token_list::make_index_macro(const std::string& input, const std::string& macro, const size_t position,
                              const RuleSet& rules, ContextFactory make_context)
   {
+    // check whether we've previously seen a directive and therefore replacement rules should be disallowed
+    if(!this->validate_replacement_rule(macro, position, make_context))
+      {
+        std::unique_ptr<token_list_impl::index_macro_token> tok;
+        return std::make_pair(std::move(tok), position + macro.length());
+      }
+
     // find rule for this macro
     auto& rule = find_match(macro, rules);
 
@@ -505,7 +573,7 @@ token_list::make_index_macro(const std::string& input, const std::string& macro,
         // if the index was new, add to list for this entire tokenization job unless this
         // if the index has already been seen for a previous macro then add_index() will do nothing provided
         // the index type is consistent
-        if(result.second && !rule.is_directive()) this->add_index(*result.first, ctx);
+        if(result.second) this->add_index(*result.first, ctx);
       };
     std::tie(idx_list, current_position) = get_index_list(input, macro, current_position, make_context, add_index);
 
@@ -551,6 +619,97 @@ token_list::make_index_macro(const std::string& input, const std::string& macro,
 
     return std::make_pair(std::move(tok), current_position);
   }
+
+
+template <typename RuleSet, typename ContextFactory>
+std::pair<std::unique_ptr<token_list_impl::simple_directive_token>, size_t>
+token_list::make_simple_directive(const std::string& input, const std::string& macro, const size_t position,
+                                  const RuleSet& rules, ContextFactory make_context)
+  {
+    // check whether we've previously seen a replacement rule and therefore directives should be disallowed
+    if(!this->validate_directive(macro, position, make_context))
+      {
+        std::unique_ptr<token_list_impl::simple_directive_token> tok;
+        return std::make_pair(std::move(tok), position + macro.length());
+      }
+
+    // find rule for this directive
+    auto& rule = find_match(macro, rules);
+    
+    // move position past the macro name
+    size_t current_position = position + macro.length();
+    
+    // shouldn't have an index list
+    auto err_handler = [&](size_t p) -> void
+      {
+        std::ostringstream msg;
+        msg << ERROR_TOKENIZE_UNEXPECTED_LIST << " '" << macro << "'; " << ERROR_TOKENIZE_SKIPPING;
+        auto ctx = make_context(p, p+1);
+        ctx.error(msg.str());
+      };
+    current_position = check_no_index_list(input, current_position, err_handler);
+    
+    // get argument list, if one is expected
+    macro_argument_list arg_list;
+    if(rule.get_number_args() > 0)
+      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, make_context);
+    
+    // build token
+    auto tok = std::make_unique<token_list_impl::simple_directive_token>(macro, arg_list, rule,
+                                                                         make_context(position, current_position));
+    this->simple_directive_tokens.push_back(*tok);
+    
+    return std::make_pair(std::move(tok), current_position);
+  }
+
+
+template <typename RuleSet, typename ContextFactory>
+std::pair<std::unique_ptr<token_list_impl::index_directive_token>, size_t>
+token_list::make_index_directive(const std::string& input, const std::string& macro, const size_t position,
+                                 const RuleSet& rules, ContextFactory make_context)
+  {
+    // check whether we've previously seen a replacement rule and therefore directives should be disallowed
+    if(!this->validate_directive(macro, position, make_context))
+      {
+        std::unique_ptr<token_list_impl::index_directive_token> tok;
+        return std::make_pair(std::move(tok), position + macro.length());
+      }
+
+    // find rule for this directive
+    auto& rule = find_match(macro, rules);
+    
+    // found a match -- move position past the candidate
+    size_t current_position = position + macro.length();
+    
+    // should find an index list
+    abstract_index_database idx_list;
+    auto add_index = [&](abstract_index_database& idxs, char label, error_context& ctx) -> void
+      {
+        // add to index list if we haven't already seen it;
+        // the constructor for abstract_index will assign a suitable type based on the index symbol
+        std::pair<abstract_index_database::iterator, bool> result = idxs.emplace_back(
+          std::make_pair(label, std::make_shared<abstract_index>(label, this->num_fields, this->num_params)));
+        
+        // if the index was new, add to list for this entire tokenization job unless this
+        // if the index has already been seen for a previous macro then add_index() will do nothing provided
+        // the index type is consistent
+        if(result.second) this->add_index(*result.first, ctx);
+      };
+    std::tie(idx_list, current_position) = get_index_list(input, macro, current_position, make_context, add_index);
+    
+    // may find an argument list
+    macro_argument_list arg_list;
+    if(rule.get_number_args() > 0)
+      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, make_context);
+    
+    auto tok = std::make_unique<token_list_impl::index_directive_token>(macro, idx_list, arg_list, rule,
+                                                                        make_context(position, current_position));
+    
+    this->index_directive_tokens.push_back(std::ref(*tok));
+    
+    return std::make_pair(std::move(tok), current_position);
+  }
+
 
 
 abstract_index_database::const_iterator token_list::add_index(char label)
@@ -704,3 +863,24 @@ void token_list::reset()
       }
   }
 
+
+template <typename ContextFactory>
+bool token_list::validate_replacement_rule(const std::string& macro, const size_t position, ContextFactory make_context)
+  {
+    if(this->simple_directive_tokens.empty() && this->index_directive_tokens.empty()) return true;
+    
+    error_context ctx = make_context(position, position + macro.length());
+    ctx.error(ERROR_RULE_AFTER_DIRECTIVE);
+    return false;
+  }
+
+
+template <typename ContextFactory>
+bool token_list::validate_directive(const std::string& macro, const size_t position, ContextFactory make_context)
+  {
+    if(this->simple_macro_tokens.empty() && this->index_macro_tokens.empty() && this->index_literal_tokens.empty()) return true;
+    
+    error_context ctx = make_context(position, position + macro.length());
+    ctx.error(ERROR_DIRECTIVE_AFTER_RULE);
+    return false;
+  }

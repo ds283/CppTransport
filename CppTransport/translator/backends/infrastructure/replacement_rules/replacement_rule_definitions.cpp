@@ -97,12 +97,12 @@ namespace macro_packages
     void replacement_rule_index::validate(const IndexDatabase& indices)
       {
         // check that correct number of indices have been supplied
-        if(this->num_indices && indices.size() != *this->num_indices)
+        if(indices.size() != this->num_indices)
           {
             std::ostringstream msg;
     
             msg << ERROR_MACRO_WRONG_INDEX_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_INDEX_COUNT << " "
-                << *this->num_indices << ", " << ERROR_RECEIVED_INDEX_COUNT << " " << indices.size();
+                << this->num_indices << ", " << ERROR_RECEIVED_INDEX_COUNT << " " << indices.size();
             throw index_mismatch(msg.str());
           }
 

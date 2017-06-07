@@ -39,6 +39,7 @@
 #include "index_assignment.h"
 #include "index_literal.h"
 #include "replacement_rule_definitions.h"
+#include "directive_definitions.h"
 #include "macro_types.h"
 #include "translator_data.h"
 #include "macro_tokens.h"
@@ -110,6 +111,14 @@ class token_list
 
     //! does this token set prevent, force or allow unrolling?
     unroll_behaviour unroll_status() const;
+    
+    
+    // INTERFACE -- DIRECTIVES
+    
+  public:
+    
+    //! does the tokenized form contain directives?
+    bool is_directive() const { return !this->simple_directive_tokens.empty() || !this->index_directive_tokens.empty(); }
 
 
     // INTERNAL API
@@ -119,9 +128,9 @@ class token_list
     //! tokenize a macro or free index
     template <typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::generic_token>, size_t>
-    match_macro_or_index(const std::string& input, const size_t position, const pre_ruleset& pre,
-                             const post_ruleset& post, const index_ruleset& index, const index_ruleset& local_rules,
-                             ContextFactory make_context);
+    match_macro_or_index(const std::string& input, const size_t position, const pre_ruleset& pre, const post_ruleset& post,
+                             const index_ruleset& index, const index_ruleset& local_rules, const simple_directiveset& simp_dir,
+                             const index_directiveset& ind_dir, ContextFactory make_context);
 
     //! build an index literal token
     template <typename ContextFactory>
@@ -146,6 +155,26 @@ class token_list
     //! add an index to our internal list
     abstract_index_database::const_iterator add_index(const abstract_index& index, error_context& ctx);
 
+    //! build a simple directive token
+    template <typename RuleSet, typename ContextFactory>
+    std::pair<std::unique_ptr<token_list_impl::simple_directive_token>, size_t>
+    make_simple_directive(const std::string& input, const std::string& macro, const size_t position,
+                          const RuleSet& rules, ContextFactory make_context);
+    
+    //! build an index directive token
+    template <typename RuleSet, typename ContextFactory>
+    std::pair<std::unique_ptr<token_list_impl::index_directive_token>, size_t>
+    make_index_directive(const std::string& input, const std::string& macro, const size_t position,
+                         const RuleSet& rules, ContextFactory make_context);
+    
+    //! validate whether it's OK to process a replacement rule (directives and rules should not be mixed)
+    template <typename ContextFactory>
+    bool validate_replacement_rule(const std::string& macro, const size_t position, ContextFactory make_context);
+    
+    //! validate whether it's OK to process a directive (directives and rules should not be mixed)
+    template <typename ContextFactory>
+    bool validate_directive(const std::string& macro, const size_t position, ContextFactory make_context);
+    
 
     // INTERNAL DATA
 
@@ -167,6 +196,8 @@ class token_list
     typedef std::list< std::reference_wrapper< token_list_impl::simple_macro_token > > simple_macro_token_database;
     typedef std::list< std::reference_wrapper< token_list_impl::index_macro_token > > index_macro_token_database;
     typedef std::list< std::reference_wrapper< token_list_impl::index_literal_token > > index_literal_token_database;
+    typedef std::list< std::reference_wrapper< token_list_impl::simple_directive_token > > simple_directive_token_database;
+    typedef std::list< std::reference_wrapper< token_list_impl::index_directive_token > > index_directive_token_database;
 
     //! tokenized version of input
     token_database tokens;
@@ -179,6 +210,12 @@ class token_list
 
     //! auxiliary list of index literal tokens
     index_literal_token_database index_literal_tokens;
+    
+    //! auxiliary list of simple directive tokens
+    simple_directive_token_database simple_directive_tokens;
+    
+    //! axiliary list of index directive tokens
+    index_directive_token_database index_directive_tokens;
 
 
     // MACRO DATA
@@ -188,7 +225,7 @@ class token_list
 
     //! list of macro names forcing loop unroll
     std::list<std::string> force_unroll;
-
+    
 
     // INDEX DATA (maintains information about indices encountered in this entire line)
 

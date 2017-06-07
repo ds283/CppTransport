@@ -164,6 +164,9 @@ class macro_agent
 
     //! re-enable output
     void enable_output() { this->output_enabled = true; }
+    
+    //! query whether output is enabled
+    bool is_enabled() const { return this->output_enabled; }
 
 
 		// INTERFACE - STATISTICS

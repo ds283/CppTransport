@@ -104,28 +104,75 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     macro_impl::split_string split_result(line, this->split_equal, this->split_sum_equal);
 
     timing_instrument tok_timer(this->tokenization_timer);
-    std::unique_ptr<token_list> left_tokens = this->tokenize(split_result.get_left());
-    std::unique_ptr<token_list> right_tokens = this->tokenize(split_result.get_right());
+    auto left_tokens = this->tokenize(split_result.get_left());
+    auto right_tokens = this->tokenize(split_result.get_right());
     tok_timer.stop();
 
+    // return quickly if output is disabled
+    // (tokenization always happens so we can process directives such as eg. $ELSE, $ENDIF)
+    if(!this->output_enabled) return r_list;
+    
+    // generate error context, contexted at split-point if one is available
+    error_context ctx = this->data_payload.make_error_context();
+    switch(split_result.get_split_type())
+      {
+        case macro_impl::split_type::none:
+          {
+            ctx = this->data_payload.make_error_context();
+            break;
+          }
+        
+        case macro_impl::split_type::sum:
+          {
+            unsigned int p = split_result.get_split_point();
+            ctx = this->data_payload.make_error_context(std::make_shared<std::string>(line),
+                                                        p, p+this->split_equal.size());
+            break;
+          }
+    
+        case macro_impl::split_type::sum_equal:
+          {
+            unsigned int p = split_result.get_split_point();
+            ctx = this->data_payload.make_error_context(std::make_shared<std::string>(line),
+                                                        p, p+this->split_sum_equal.size());
+            break;
+          }
+      }
+    
+    // check whether any directives were recognized in this line;
+    // if so, the line should be simple -- it shouldn't have a left-hand side and right-hand side
+    if(split_result.get_split_type() != macro_impl::split_type::none
+       && (right_tokens->is_directive() || left_tokens->is_directive()))
+      {
+        ctx.error(ERROR_DIRECTIVE_ON_RHS);
+        return r_list;
+      }
+
+    // if the line contains a directive then handle quickly and return
+    if(right_tokens->is_directive())
+      {
+        // the line is a directive, so won't contain any replacement rules
+        language_printer& prn = this->package.get_language_printer();
+        r_list->push_back(prn.comment(right_tokens->to_string()));
+        return r_list;
+      }
+    
+    // at this stage we know the line wasn't a directive, and instead contains possible
+    // replacement rules or index sets that should be expanded
+    
     // running total of number of macro replacements
     unsigned int counter = 0;
-
-    // return quickly if output is disabled
-    // (tokenization always happens so we can catch eg. $ELSE, $ENDIF)
-    if(!this->output_enabled) return(r_list);
 
     // evaluate pre macros and cache the results
     // we'd like to do this only once if possible, because evaluation may be expensive
     counter += left_tokens->evaluate_macros(simple_macro_type::pre);
     counter += right_tokens->evaluate_macros(simple_macro_type::pre);
-
+    
     // generate assignments for the LHS indices
     assignment_set LHS_assignments(left_tokens->get_index_database());
 
     // generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
     abstract_index_database RHS_indices;
-    error_context ctx = this->data_payload.make_error_context();
 
     try
       {
@@ -296,7 +343,8 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
 			}
 		else
 			{
-				r_list.push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
+        language_printer& prn = this->package.get_language_printer();
+				r_list.push_back(prn.comment("Skipped: empty index range (LHS index set is empty)"));
 			}
 	}
 
@@ -317,7 +365,8 @@ void macro_agent::forloop_index_assignment(token_list& left_tokens, token_list& 
       }
     else
       {
-        r_list.push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
+        language_printer& prn = this->package.get_language_printer();
+        r_list.push_back(prn.comment("Skipped: empty index range (LHS index set is empty)"));
       }
   }
 

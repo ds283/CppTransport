@@ -32,10 +32,14 @@
 #include "error.h"
 
 
-constexpr auto ANSI_BOLD_RED     = "\033[1;31m";
-constexpr auto ANSI_BOLD_GREEN   = "\033[1;32m";
-constexpr auto ANSI_BOLD_MAGENTA = "\033[1;35m";
-constexpr auto ANSI_NORMAL       = "\033[0m";
+constexpr auto ANSI_BOLD_RED      = "\033[1;31m";
+constexpr auto ANSI_BOLD_GREEN    = "\033[1;32m";
+constexpr auto ANSI_BOLD_MAGENTA  = "\033[1;35m";
+
+constexpr auto ANSI_BOLD          = "\033[1m";
+constexpr auto ANSI_NORMAL        = "\033[0m";
+
+constexpr auto ANSI_ESCAPE_LENGTH = 4;
 
 
 // ******************************************************************
@@ -113,7 +117,10 @@ std::string print_contexted_message(const std::string& msg, const argument_cache
         if(line_no > 0)
           {
             std::ostringstream hbuf;
-            hbuf << line_no << ":" << context.get_context_start_position() << "," << context.get_context_end_position()-1;
+            hbuf << (colour_output ? ANSI_BOLD : "")
+                 << line_no
+                 << (colour_output ? ANSI_NORMAL : "")
+                 << ":" << context.get_context_start_position() << "," << context.get_context_end_position()-1;
             header = hbuf.str() + " ";
           }
         
@@ -125,7 +132,7 @@ std::string print_contexted_message(const std::string& msg, const argument_cache
         out << ERROR_MESSAGE_WRAP_PAD;
 
         // pad for length of line header
-        for(unsigned int i = 0; i < header.length(); ++i)
+        for(unsigned int i = 0; i < header.length() - (colour_output ? 2*ANSI_ESCAPE_LENGTH : 0); ++i)
           {
             out << " ";
           }

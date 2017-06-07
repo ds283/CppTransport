@@ -125,19 +125,6 @@ namespace token_list_impl
         type(t),
         argument_error(false)
       {
-        try
-          {
-            this->rule.post_tokenize_hook(a);
-          }
-        catch(macro_packages::argument_mismatch& xe)
-          {
-            this->error(xe.what());
-            this->argument_error = true;
-          }
-        catch(macro_packages::rule_apply_fail& xe)
-          {
-            this->error(xe.what());
-          }
       }
 
 
@@ -330,6 +317,75 @@ namespace token_list_impl
             this->error(xe.what());
           }
       }
-
-
+    
+    
+    simple_directive_token::simple_directive_token(const std::string& m, const macro_argument_list& a,
+                                                   macro_packages::directive_simple& r, error_context ec)
+      : generic_token(m, std::move(ec)),
+        name(m),
+        args(a),
+        rule(r),
+        argument_error(false)
+      {
+        // evaluation occurs on construction in order to guarantee that
+        // each directive is evaluated exactly once
+        try
+          {
+            conversion = rule(args);
+          }
+        catch(macro_packages::argument_mismatch& xe)
+          {
+            this->error(xe.what());
+            argument_error = true;
+          }
+        catch(macro_packages::rule_apply_fail& xe)
+          {
+            this->error(xe.what());
+          }
+      }
+    
+    
+    void simple_directive_token::evaluate()
+      {
+      }
+    
+    
+    index_directive_token::index_directive_token(const std::string& m, const abstract_index_database i,
+                                                 const macro_argument_list& a, macro_packages::directive_index& r,
+                                                 error_context ec)
+      : generic_token(m, std::move(ec)),
+        name(m),
+        args(a),
+        indices(std::move(i)),
+        rule(r),
+        argument_error(false),
+        index_error(false)
+      {
+        // evaluation occurs on construction in order to guarantee that
+        // each directive is evaluated exactly once
+        try
+          {
+            conversion = rule(args, indices);
+          }
+        catch(macro_packages::argument_mismatch& xe)
+          {
+            this->error(xe.what());
+            argument_error = true;
+          }
+        catch(macro_packages::index_mismatch& xe)
+          {
+            this->error(xe.what());
+            index_error = true;
+          }
+        catch(macro_packages::rule_apply_fail& xe)
+          {
+            this->error(xe.what());
+          }
+      }
+    
+    
+    void index_directive_token::evaluate()
+      {
+      }
+    
   }   // namespace token_list_impl

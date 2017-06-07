@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <functional>
 
+#include "translator_data.h"
 #include "index_assignment.h"
 #include "macro_types.h"
 #include "rules_common.h"
@@ -47,9 +48,10 @@ namespace macro_packages
       public:
       
         //! constructor
-        directive_simple(std::string nm, unsigned int n)
+        directive_simple(std::string nm, unsigned int n, translator_data& p)
           : name(std::move(nm)),
-            num_args(n)
+            num_args(n),
+            payload(p)
           {
           }
           
@@ -81,7 +83,13 @@ namespace macro_packages
       protected:
         
         //! evaluation function; has to be supplied by implementation
+        //! unlike for a macro, evaluate() for a directive is guaranteed to be called exactly once
         virtual std::string evaluate(const macro_argument_list& args) = 0;
+    
+        //! should this directive always be evaluated, even if output is disabled?
+        //! defaults to false, but can be overridden if evaluation must always be performed,
+        //! eg. as for #if, #else, #endif
+        virtual bool always_evaluate() const { return false; }
     
     
         // VALIDATION
@@ -101,6 +109,9 @@ namespace macro_packages
         
         //! number of arguments expected
         unsigned int num_args;
+        
+        //! translator data payload
+        translator_data& payload;
       
       };
     
@@ -114,9 +125,10 @@ namespace macro_packages
       public:
         
         //! constructor that accepts a variable number of indices
-        directive_index(std::string nm, unsigned int a)
+        directive_index(std::string nm, unsigned int a, translator_data& p)
           : name(std::move(nm)),
-            num_args(a)
+            num_args(a),
+            payload(p)
           {
           }
         
@@ -130,8 +142,8 @@ namespace macro_packages
         
         //! evaluate the macro on an abstract index assignment
         std::string operator()(const macro_argument_list& args, const abstract_index_database& indices);
-        
-        
+    
+    
         // INTERFACE -- QUERY FOR DATA
         
       public:
@@ -156,9 +168,15 @@ namespace macro_packages
         // INTERNAL API
         
       protected:
-        
-        //! evaluation function; should be supplied by implemnentation
+    
+        //! evaluation function; has to be supplied by implementation
+        //! unlike for a macro, evaluate() for a directive is guaranteed to be called exactly once
         virtual std::string evaluate(const macro_argument_list& args, const abstract_index_database& indices) = 0;
+    
+        //! should this directive always be evaluated, even if output is disabled?
+        //! defaults to false, but can be overridden if evaluation must always be performed,
+        //! eg. as for #if, #else, #endif
+        virtual bool always_evaluate() const { return false; }
     
     
         // VALIDATION
@@ -182,13 +200,16 @@ namespace macro_packages
         
         //! number of arguments expected
         unsigned int num_args;
+    
+        //! translator data payload
+        translator_data& payload;
         
         //! number of indices expected
         boost::optional<unsigned int> num_indices;
         
         //! class of index expected
         boost::optional<index_class> idx_class;
-        
+    
       };
     
   }   // namespace macro_packages

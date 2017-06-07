@@ -75,10 +75,7 @@ namespace macro_packages
 
         //! evaluate the macro
         std::string operator()(const macro_argument_list& args);
-
-        //! perform any required setup after tokenization; here a no-op but can be overridden if needed
-        virtual void post_tokenize_hook(const macro_argument_list& args) { return; }
-
+    
         //! report end of input; here a no-op but but can be overridden if needed
         virtual void report_end_of_input() { return; }
 
@@ -139,8 +136,6 @@ namespace macro_packages
             num_indices(i),
             idx_class(c)
           {
-            // traditional rules are always macros
-            rule_class = replacement_rule_class::macro;
           }
 
         //! constructor for a 'traditional' index macro with a fixed number of arguments and indices,
@@ -150,17 +145,6 @@ namespace macro_packages
             num_args(a),
             num_indices(i)
           {
-            // traditional rules are always macros
-            rule_class = replacement_rule_class::macro;
-          }
-
-        //! constructor for a 'variable' index macro which can accept a variable number of indices
-        replacement_rule_index(std::string nm, unsigned int a)
-          : name(std::move(nm)),
-            num_args(a)
-          {
-            // for the time being, variable rules are always directives
-            rule_class = replacement_rule_class::directive;
           }
 
         //! destructor is default
@@ -191,10 +175,10 @@ namespace macro_packages
         //! get number of arguments associated with this macro
         unsigned int get_number_args() const { return this->num_args; }
 
-        //! get number of indices associated with this macro;
+        //! get number of indices associated with this macro
         //! returned as a boost::optional which will be empty if the macro can accept a variable
         //! number of indices
-        boost::optional<unsigned int> get_number_indices() const { return this->num_indices; }
+        unsigned int get_number_indices() const { return this->num_indices; }
 
         //! get index class associated with this macro;
         //! returned as a boost::optional which will be empty if the macro can accept variable
@@ -206,11 +190,8 @@ namespace macro_packages
 
         //! get unroll status for this macro -- must be handled by implementation
         virtual unroll_behaviour get_unroll() const = 0;
-
-        //! determine whether this rule is a directive
-        bool is_directive() const { return this->rule_class == replacement_rule_class::directive; }
-
-
+    
+    
         // INTERNAL API
 
       protected:
@@ -254,7 +235,7 @@ namespace macro_packages
         unsigned int num_args;
 
         //! number of indices expected
-        boost::optional<unsigned int> num_indices;
+        unsigned int num_indices;
 
         //! class of index expected
         boost::optional<index_class> idx_class;

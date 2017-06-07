@@ -178,6 +178,8 @@ constexpr auto ERROR_EXPECTED_CLOSE_INDEX_LIST       = "Expected close of index 
 constexpr auto ERROR_EXPECTED_OPEN_ARGUMENT_LIST     = "Missing open of argument list '{' for macro";
 constexpr auto ERROR_EXPECTED_CLOSE_ARGUMENT_LIST    = "Missing close of argument list '}' for macro";
 constexpr auto ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE   = "Missing closing quotation '\"' for macro";
+constexpr auto ERROR_UNEXPECTED_COMMA                = "Unexpected argument separator ',' for macro";
+constexpr auto ERROR_EXPECTED_COMMA                  = "Expected argument separator ',' for macro";
 constexpr auto ERROR_MACRO_WRONG_ARGUMENT_COUNT      = "Incorrect number of arguments for macro";
 constexpr auto ERROR_DIRECTIVE_WRONG_ARGUMENT_COUNT  = "Incorrect number of arguments for directive";
 constexpr auto ERROR_EXPECTED_ARGUMENT_COUNT         = "expected";
@@ -189,6 +191,11 @@ constexpr auto ERROR_RECEIVED_INDEX_COUNT            = "received";
 
 constexpr auto ERROR_WRONG_INDEX_CLASS               = "Index type mismatch for";
 constexpr auto ERROR_WRONG_INDEX_LABEL               = "index";
+
+constexpr auto ERROR_RULE_AFTER_DIRECTIVE            = "Directives can not be mixed with other macros or index literals";
+constexpr auto ERROR_DIRECTIVE_AFTER_RULE            = "Directives can not be mixed with other macros or index literals";
+constexpr auto ERROR_DIRECTIVE_ON_RHS                = "Directives should not appear on the right-hand side of a line";
+constexpr auto ERROR_DIRECTIVE_NO_RHS                = "Directives should not appear on a line containing a right-hand side";
 
 constexpr auto ERROR_MISSING_LHS                     = "Missing left-hand side in temporary template ";
 constexpr auto ERROR_MISSING_RHS                     = "Missing right-hand side in temporary template ";
@@ -245,6 +252,8 @@ constexpr auto DIRECTIVE_SET_MACRO_A                 = "set macro";
 constexpr auto DIRECTIVE_SET_MACRO_B                 = "to";
 
 constexpr auto ERROR_DIRECTIVE_SET                   = "Error while evaluating set directive for";
+
+constexpr auto NOTIFY_DIRECTIVE_NOT_EVALUATED        = "Output disabled, so did not evaluate directive";
 
 constexpr auto ERROR_SET_WRONG_NUMBER_INDICES_A      = "Macro body contains unexpected number of indices; expected";
 constexpr auto ERROR_SET_WRONG_NUMBER_INDICES_B      = "received";

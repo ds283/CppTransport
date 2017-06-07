@@ -31,31 +31,25 @@
 #include "msg_en.h"
 
 
-#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, p, prn))
-#define BIND_IF_SYMBOL(X, N) std::move(std::make_unique<X>(N, p, prn, istack))
+#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, p))
+#define BIND_IF_SYMBOL(X, N) std::move(std::make_unique<X>(N, p, istack))
 
 
 namespace macro_packages
   {
 
-    directives::directives(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
-      : replacement_rule_package(f, cw, lm, p, prn)
+    directives::directives(translator_data& p)
+      : directive_package(p)
       {
-        pre_package.emplace_back(BIND_IF_SYMBOL(if_directive, "IF"));
-        pre_package.emplace_back(BIND_IF_SYMBOL(else_directive, "ELSE"));
-        pre_package.emplace_back(BIND_IF_SYMBOL(endif_directive, "ENDIF"));
+        simple_package.emplace_back(BIND_IF_SYMBOL(if_directive, "IF"));
+        simple_package.emplace_back(BIND_IF_SYMBOL(else_directive, "ELSE"));
+        simple_package.emplace_back(BIND_IF_SYMBOL(endif_directive, "ENDIF"));
 
         index_package.emplace_back(BIND_SYMBOL(set_directive, "SET"));
       }
 
 
-    std::string set_directive::unroll(const macro_argument_list& args, const assignment_list& indices)
-      {
-        throw rule_apply_fail(ERROR_DIRECTIVE_CALLED_AS_UNROLL);
-      }
-
-
-    std::string set_directive::roll(const macro_argument_list& args, const abstract_index_database& indices)
+    std::string set_directive::evaluate(const macro_argument_list& args, const abstract_index_database& indices)
       {
         std::string name = args[SET_DIRECTIVE_NAME_ARGUMENT];
         std::string defn = args[SET_DIRECTIVE_DEFINITION_ARGUMENT];
@@ -78,23 +72,20 @@ namespace macro_packages
 
             std::ostringstream msg;
             msg << ERROR_DIRECTIVE_SET << " '" << name << "': " << xe.what();
-            return this->printer.comment(msg.str());
+            return msg.str();
           }
 
         auto t = this->macros.find(name);
         if(t != this->macros.end())
           {
-            const error_context& ctx = args[SET_DIRECTIVE_DEFINITION_ARGUMENT].get_declaration_point();
+            const error_context& ctx = args[SET_DIRECTIVE_NAME_ARGUMENT].get_declaration_point();
 
             std::ostringstream msg;
             msg << ERROR_SET_REDEFINITION << " '" << name << "'";
             ctx.error(msg.str());
 
             const error_context& prior_ctx = t->second->get_declaration_point();
-
-            std::ostringstream prior_msg;
-            prior_msg << WARN_PRIOR_REDEFINITION;
-            prior_ctx.warn(prior_msg.str());
+            prior_ctx.warn(WARN_PRIOR_REDEFINITION);
           }
 
         // construct user-defined macro corresponding to this token list
@@ -103,7 +94,7 @@ namespace macro_packages
             std::make_pair(name, std::make_unique<directives_impl::user_macro>(name, std::move(tokens), indices,
                                                                                args[SET_DIRECTIVE_NAME_ARGUMENT].get_declaration_point())));
 
-        // inject this macro into the top-of-stack macro package
+        // inject this macro into the local definitions for the top-of-stack macro package
         if(result.second)
           {
             ma.inject_macro(*result.first->second);
@@ -111,7 +102,7 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << DIRECTIVE_SET_MACRO_A << " '" << name << "' " << DIRECTIVE_SET_MACRO_B << " \"" << defn << "\"";
-        return this->printer.comment(msg.str());
+        return msg.str();
       }
 
 
@@ -146,11 +137,16 @@ namespace macro_packages
 
         macro_agent& ma = this->payload.get_stack().top_macro_package();
 
+        // currently we support only the "fast" condition, so we can bodge the job
+        // of evaluating the conditional clause; in general, this would require
+        // tokenization, parsing, and the result would be a lot more complex
         if(condition == std::string("fast") && this->payload.fast()) truth = true;
         else if(condition == std::string("!fast") && !this->payload.fast()) truth = true;
 
+        // push a new clause onto the "if" stack, with the determined truth value
         this->istack.emplace(condition, truth);
 
+        // enable or disable output, as appropriate
         if(this->istack.top().is_enabled())
           {
             ma.enable_output();
@@ -162,19 +158,21 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << "IF " << condition;
-        return this->printer.comment(msg.str());
+        return msg.str();
       }
-
-
-    void else_directive::post_tokenize_hook(const macro_argument_list& args)
+    
+    
+    std::string else_directive::evaluate(const macro_argument_list& args)
       {
+        // check for unpaired or duplicate "else" clause
         if(this->istack.size() == 0) throw rule_apply_fail(ERROR_UNPAIRED_ELSE);
         if(!this->istack.top().in_if_branch()) throw rule_apply_fail(ERROR_DUPLICATE_ELSE);
-
+    
         this->istack.top().mark_else_branch();
-
+    
         macro_agent& ma = this->payload.get_stack().top_macro_package();
-
+    
+        // enable or disable output, as appropriate
         if(this->istack.top().is_enabled())
           {
             ma.enable_output();
@@ -183,26 +181,27 @@ namespace macro_packages
           {
             ma.disable_output();
           }
-      }
 
-
-    std::string else_directive::evaluate(const macro_argument_list& args)
-      {
         std::ostringstream msg;
         msg << "ELSE " << this->istack.top().get_condition();
-        return this->printer.comment(msg.str());
+        return msg.str();
       }
-
-
-    void endif_directive::post_tokenize_hook(const macro_argument_list& args)
+    
+    
+    std::string endif_directive::evaluate(const macro_argument_list& args)
       {
+        // check for an unpaired "endif" clause
         if(this->istack.size() == 0) throw rule_apply_fail(ERROR_UNPAIRED_ENDIF);
-
+    
         macro_agent& ma = this->payload.get_stack().top_macro_package();
-
-        this->condition_cache = this->istack.top().get_condition();
+    
+        // cache condition string from #if clause
+        std::string if_condition = this->istack.top().get_condition();
+    
+        // remove top-of-stack #if clause
         this->istack.pop();
-
+    
+        // enable or disable output, as appropriate
         if(this->istack.size() == 0 || this->istack.top().is_enabled())
           {
             ma.enable_output();
@@ -211,15 +210,11 @@ namespace macro_packages
           {
             ma.disable_output();
           }
-      }
 
-
-    std::string endif_directive::evaluate(const macro_argument_list& args)
-      {
         std::ostringstream msg;
-        msg << "ENDIF " << this->condition_cache;
+        msg << "ENDIF " << if_condition;
 
-        return this->printer.comment(msg.str());
+        return msg.str();
       }
 
 
