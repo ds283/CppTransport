@@ -178,10 +178,12 @@ constexpr auto ERROR_EXPECTED_CLOSE_INDEX_LIST       = "Expected close of index 
 constexpr auto ERROR_EXPECTED_OPEN_ARGUMENT_LIST     = "Missing open of argument list '{' for macro";
 constexpr auto ERROR_EXPECTED_CLOSE_ARGUMENT_LIST    = "Missing close of argument list '}' for macro";
 constexpr auto ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE   = "Missing closing quotation '\"' for macro";
-constexpr auto ERROR_WRONG_ARGUMENT_COUNT            = "Incorrect number of arguments for macro";
+constexpr auto ERROR_MACRO_WRONG_ARGUMENT_COUNT      = "Incorrect number of arguments for macro";
+constexpr auto ERROR_DIRECTIVE_WRONG_ARGUMENT_COUNT  = "Incorrect number of arguments for directive";
 constexpr auto ERROR_EXPECTED_ARGUMENT_COUNT         = "expected";
 constexpr auto ERROR_RECEIVED_ARGUMENT_COUNT         = "received";
-constexpr auto ERROR_WRONG_INDEX_COUNT               = "Incorrect number of indices for macro";
+constexpr auto ERROR_MACRO_WRONG_INDEX_COUNT         = "Incorrect number of indices for macro";
+constexpr auto ERROR_DIRECTIVE_WRONG_INDEX_COUNT     = "Incorrect number of indices for directive";
 constexpr auto ERROR_EXPECTED_INDEX_COUNT            = "expected";
 constexpr auto ERROR_RECEIVED_INDEX_COUNT            = "received";
 

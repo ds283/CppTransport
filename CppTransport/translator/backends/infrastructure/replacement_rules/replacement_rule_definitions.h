@@ -34,6 +34,7 @@
 #include "index_assignment.h"
 #include "macro_types.h"
 #include "cse_map.h"
+#include "rules_common.h"
 
 
 namespace macro_packages
@@ -87,10 +88,10 @@ namespace macro_packages
       public:
 
         //! get number of arguments associated with this macro
-        unsigned int get_number_args() const { return(this->num_args); };
+        unsigned int get_number_args() const { return this->num_args; };
 
         //! get name associated with this macro
-        const std::string& get_name() const { return(this->name); }
+        const std::string& get_name() const { return this->name; }
 
 
         // INTERNAL API
@@ -99,6 +100,14 @@ namespace macro_packages
 
         //! evaluation function; has to be supplied by implementation
         virtual std::string evaluate(const macro_argument_list& args) = 0;
+    
+    
+        // VALIDATION
+  
+      protected:
+    
+        //! validate supplied arguments
+        void validate(const macro_argument_list& args);
 
 
         // INTERNAL DATA
@@ -154,7 +163,7 @@ namespace macro_packages
             rule_class = replacement_rule_class::directive;
           }
 
-        //! destructor
+        //! destructor is default
         virtual ~replacement_rule_index() = default;
 
 
@@ -180,26 +189,26 @@ namespace macro_packages
       public:
 
         //! get number of arguments associated with this macro
-        unsigned int get_number_args() const { return(this->num_args); }
+        unsigned int get_number_args() const { return this->num_args; }
 
         //! get number of indices associated with this macro;
         //! returned as a boost::optional which will be empty if the macro can accept a variable
         //! number of indices
-        boost::optional<unsigned int> get_number_indices() const { return(this->num_indices); }
+        boost::optional<unsigned int> get_number_indices() const { return this->num_indices; }
 
         //! get index class associated with this macro;
         //! returned as a boost::optional which will be empty if the macro can accept variable
         //! index types
-        boost::optional<index_class> get_index_class() const { return(this->idx_class); }
+        boost::optional<index_class> get_index_class() const { return this->idx_class; }
 
         //! get name associated with this macro
-        const std::string& get_name() const { return(this->name); }
+        const std::string& get_name() const { return this->name; }
 
         //! get unroll status for this macro -- must be handled by implementation
         virtual unroll_behaviour get_unroll() const = 0;
 
         //! determine whether this rule is a directive
-        bool is_directive() const { return(this->rule_class == replacement_rule_class::directive); }
+        bool is_directive() const { return this->rule_class == replacement_rule_class::directive; }
 
 
         // INTERNAL API
@@ -218,9 +227,17 @@ namespace macro_packages
         //! evaluation function for rolled-up index sets; has to be supplied by implementation
         virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) = 0;
 
-        //! validate supplies arguments and index assignments
+        
+        // VALIDATION
+        
+      protected:
+        
+        //! validate supplied arguments
+        void validate(const macro_argument_list& args);
+        
+        //! validate supplied index assignments
         template <typename IndexDatabase>
-        void check(const macro_argument_list& args, const IndexDatabase& indices);
+        void validate(const IndexDatabase& indices);
 
 
         // INTERNAL DATA
@@ -244,67 +261,10 @@ namespace macro_packages
 
       };
 
-
-    class rule_apply_fail: public std::runtime_error
-      {
-
-        // CONSTRUCTOR, DESTRUCTOR
-
-      public:
-
-        //! constructor
-        rule_apply_fail(const std::string x)
-          : std::runtime_error(std::move(x))
-          {
-          }
-
-        //! destructor is default
-        virtual ~rule_apply_fail() = default;
-
-      };
-
-
-    class argument_mismatch: public std::runtime_error
-      {
-
-        // CONSTRUCTOR, DESTRUCTOR
-
-      public:
-
-        //! constructor
-        argument_mismatch(const std::string x)
-          : std::runtime_error(std::move(x))
-          {
-          }
-
-        //! destructor is default
-        virtual ~argument_mismatch() = default;
-
-      };
-
-
-    class index_mismatch: public std::runtime_error
-      {
-
-        // CONSTRUCTOR, DESTRUCTOR
-
-      public:
-
-        //! constructor
-        index_mismatch(const std::string x)
-          : std::runtime_error(std::move(x))
-          {
-          }
-
-        //! destructor is default
-        virtual ~index_mismatch() = default;
-
-      };
-
   } // namespace macro_packages
 
 
-// containers for rulesets; since we can't store references in a the STL
+// containers for rulesets; since we can't store references in the STL
 // cotainers, they must be wrapped in std::reference_wrapper<>
 typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> > pre_ruleset;
 typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> > post_ruleset;

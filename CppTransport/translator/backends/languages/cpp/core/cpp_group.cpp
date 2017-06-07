@@ -52,13 +52,13 @@ cpp_group::cpp_group(translator_data& p, tensor_factory& fctry)
     lambda_mgr = std::make_unique<lambda_manager>(0, *l_printer, this->data_payload);
 
     // construct replacement rule packages
-    this->add_package<macro_packages::directives>        (p, *l_printer);
-    this->add_package<macro_packages::fundamental>       (p, *l_printer);
-    this->add_package<macro_packages::flow_tensors>      (p, *l_printer);
-    this->add_package<macro_packages::lagrangian_tensors>(p, *l_printer);
-    this->add_package<macro_packages::utensors>          (p, *l_printer);
-    this->add_package<macro_packages::gauge_xfm>         (p, *l_printer);
-    this->add_package<macro_packages::resources>         (p, *l_printer);
-    this->add_package<macro_packages::temporary_pool>    (p, *l_printer);
-    this->add_package<cpp::cpp_steppers>                 (p, *l_printer);
+    this->add_rule_package<macro_packages::directives>(p, *l_printer);
+    this->add_rule_package<macro_packages::fundamental>(p, *l_printer);
+    this->add_rule_package<macro_packages::flow_tensors>(p, *l_printer);
+    this->add_rule_package<macro_packages::lagrangian_tensors>(p, *l_printer);
+    this->add_rule_package<macro_packages::utensors>(p, *l_printer);
+    this->add_rule_package<macro_packages::gauge_xfm>(p, *l_printer);
+    this->add_rule_package<macro_packages::resources>(p, *l_printer);
+    this->add_rule_package<macro_packages::temporary_pool>(p, *l_printer);
+    this->add_rule_package<cpp::cpp_steppers>(p, *l_printer);
   }

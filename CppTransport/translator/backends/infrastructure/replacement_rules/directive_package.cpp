@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 06/12/2015.
+// Created by David Seery on 07/06/2017.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2017 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -23,19 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_MACRO_TYPES_H
-#define CPPTRANSPORT_MACRO_TYPES_H
+#include "directive_package.h"
 
 
-#include <string>
-#include <vector>
+namespace macro_packages
+  {
 
-#include "contexted_value.h"
-
-
-enum class simple_macro_type { pre, post };
-
-enum class unroll_behaviour { force, prevent, allow };
-
-
-#endif //CPPTRANSPORT_MACRO_TYPES_H
+    directive_package::directive_package(translator_data& p)
+      : data_payload(p)
+      {
+      }
+    
+  }   // namespace macro_packages

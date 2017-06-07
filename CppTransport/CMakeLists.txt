@@ -98,8 +98,10 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
   translator/backends/infrastructure/replacement_rules/package_group.cpp
   translator/backends/infrastructure/replacement_rules/package_group_factory.cpp
-  translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
   translator/backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
+  translator/backends/infrastructure/replacement_rules/directive_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/directive_package.cpp
   translator/backends/languages/cpp/core/cpp_group.cpp
   translator/backends/languages/cpp/core/cpp_steppers.cpp
   translator/backends/languages/cpp/vexcl/vexcl_group.cpp
@@ -343,6 +345,11 @@ set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
   translator/backends/infrastructure/replacement_rules/replacement_rule_definitions.h
   translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
   translator/backends/infrastructure/replacement_rules/replacement_rule_package.h
+  translator/backends/infrastructure/replacement_rules/directive_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/directive_definitions.h
+  translator/backends/infrastructure/replacement_rules/rules_common.h
+  translator/backends/infrastructure/replacement_rules/directive_package.cpp
+  translator/backends/infrastructure/replacement_rules/directive_package.h
   )
 
 set(TRANSLATOR_BACKENDS_LANGUAGES_CPP_CORE_FILES
