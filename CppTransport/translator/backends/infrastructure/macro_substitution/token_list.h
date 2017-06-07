@@ -134,7 +134,7 @@ class token_list
 
     //! build an index literal token
     template <typename ContextFactory>
-    std::unique_ptr<token_list_impl::index_literal_token>
+    std::pair<std::unique_ptr<token_list_impl::index_literal_token>, size_t>
     make_index_literal(const std::string& input, const size_t position, ContextFactory make_context);
 
     //! build a simple macro token
@@ -150,10 +150,10 @@ class token_list
                      const RuleSet& rules, ContextFactory make_context);
 
     //! add an index to our internal list
-    abstract_index_database::const_iterator add_index(char label);
+    abstract_index_database::iterator add_index(char label);
 
     //! add an index to our internal list
-    abstract_index_database::const_iterator add_index(const abstract_index& index, error_context& ctx);
+    abstract_index_database::iterator add_index(const abstract_index& index, error_context& ctx);
 
     //! build a simple directive token
     template <typename RuleSet, typename ContextFactory>

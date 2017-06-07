@@ -415,11 +415,10 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
     // if no possible match then this must be an index literal, so build it and return
     if(!possible_match)
       {
-        auto tok = this->make_index_literal(input, position, make_context);
-        return std::make_pair(std::move(tok), position+1);
+        return this->make_index_literal(input, position, make_context);
       }
 
-    // There is a possible match. Now greedily match the longest macro we can
+    // There is a possible match. Now greedily match the *longest* macro we can, from any available package
     size_t candidate_length = 2;
     
     while(position + candidate_length < input.length()
@@ -473,31 +472,60 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
         else  // something has gone wrong
           {
             // we didn't find an exact match after all; we only matched a substring
-            // assume it was a free index after all
-            auto tok = this->make_index_literal(input, position, make_context);
-            return std::make_pair(std::move(tok), position+1);
+            // assume it was an index literal after all
+            return this->make_index_literal(input, position, make_context);
           }
       }
     catch(std::runtime_error& xe)
       {
         // something went wrong
         // assume it was an index literal after all
-        auto tok = this->make_index_literal(input, position, make_context);
-        return std::make_pair(std::move(tok), position+1);
+        return this->make_index_literal(input, position, make_context);
       }
   }
 
 
 template <typename ContextFactory>
-std::unique_ptr<token_list_impl::index_literal_token>
+std::pair<std::unique_ptr<token_list_impl::index_literal_token>, size_t>
 token_list::make_index_literal(const std::string& input, const size_t position, ContextFactory make_context)
   {
-    abstract_index_database::const_iterator idx = this->add_index(input[position]);
+    size_t current_position = position;
+    
+    variance v = variance::none;
+    
+    while(current_position < input.length() &&
+          (input[current_position] == '^' || input[current_position] == '_'))
+      {
+        if(input[current_position] == '^') v = variance::contravariant;
+        if(input[current_position] == '_') v = variance::covariant;
+        ++current_position;
+      }
+    
+    // check that an index kernel letter is available to be read
+    if(current_position >= input.length())
+      {
+        std::ostringstream msg;
+        auto ctx = make_context(current_position-1, current_position);
+        ctx.error(ERROR_INDEX_LITERAL_NO_KERNEL);
+        
+        std::unique_ptr<token_list_impl::index_literal_token> tok;
+        return std::make_pair(std::move(tok), current_position);
+      }
+    
+    // insert an abstract index with this kernel letter into the main database
+    abstract_index_database::iterator idx = this->add_index(input[current_position]);
+    
+    // generate a record of this index instance, keeping the variance information
+    index_literal l(*idx, v);
 
-    auto tok = std::make_unique<token_list_impl::index_literal_token>(idx, make_context(position, position+1));
+    // generate a token
+    auto tok = std::make_unique<token_list_impl::index_literal_token>(l, make_context(position, position+1));
     this->index_literal_tokens.push_back(std::ref(*tok));
+    
+    // step past the kernel letter
+    ++current_position;
 
-    return tok;
+    return std::make_pair(std::move(tok), current_position);
   }
 
 
@@ -712,7 +740,7 @@ token_list::make_index_directive(const std::string& input, const std::string& ma
 
 
 
-abstract_index_database::const_iterator token_list::add_index(char label)
+abstract_index_database::iterator token_list::add_index(char label)
 	{
     // emplace does nothing if a record already exists
     return (this->indices.emplace_back(
@@ -720,10 +748,10 @@ abstract_index_database::const_iterator token_list::add_index(char label)
 	}
 
 
-abstract_index_database::const_iterator token_list::add_index(const abstract_index& index, error_context& ctx)
+abstract_index_database::iterator token_list::add_index(const abstract_index& index, error_context& ctx)
 	{
     // check whether an existing record for this index exiosts
-    abstract_index_database::const_iterator t = this->indices.find(index.get_label());
+    abstract_index_database::iterator t = this->indices.find(index.get_label());
 
     if(t == this->indices.end())
       {

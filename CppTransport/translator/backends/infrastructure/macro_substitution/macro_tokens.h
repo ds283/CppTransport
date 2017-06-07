@@ -34,6 +34,7 @@
 #include "core.h"
 #include "error_context.h"
 #include "index_assignment.h"
+#include "index_literal.h"
 #include "replacement_rule_definitions.h"
 #include "directive_definitions.h"
 #include "macro_types.h"
@@ -115,7 +116,7 @@ namespace token_list_impl
       public:
 
         //! constructor
-        index_literal_token(abstract_index_database::const_iterator& it, error_context ec);
+        index_literal_token(index_literal l, error_context ec);
 
 
         //! destructor is default, but icpc fails with explicitly-default destructor
@@ -144,8 +145,8 @@ namespace token_list_impl
 
       protected:
 
-        //! record index
-        abstract_index index;
+        //! record index data
+        index_literal index;
 
       };
 

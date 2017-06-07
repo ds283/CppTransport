@@ -196,6 +196,8 @@ constexpr auto ERROR_RULE_AFTER_DIRECTIVE            = "Directives can not be mi
 constexpr auto ERROR_DIRECTIVE_AFTER_RULE            = "Directives can not be mixed with other macros or index literals";
 constexpr auto ERROR_DIRECTIVE_ON_RHS                = "A line containing a directive should not have a right-hand side";
 
+constexpr auto ERROR_INDEX_LITERAL_NO_KERNEL         = "Line ended before kernel letter for index literal";
+
 constexpr auto ERROR_MISSING_LHS                     = "Missing left-hand side in temporary template ";
 constexpr auto ERROR_MISSING_RHS                     = "Missing right-hand side in temporary template ";
 

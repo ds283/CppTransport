@@ -68,21 +68,23 @@ namespace token_list_impl
       }
 
 
-    index_literal_token::index_literal_token(abstract_index_database::const_iterator& it, error_context ec)
-      : generic_token(std::string(1, it->get_label()), std::move(ec)),
-        index(*it)
+    index_literal_token::index_literal_token(index_literal l, error_context ec)
+      : generic_token(std::string(1, l.get().get_label()), std::move(ec)),
+        index(std::move(l))
       {
       }
 
 
     void index_literal_token::evaluate(const assignment_list& a)
       {
-        auto t = a.find(this->index.get_label());
+        abstract_index& idx = this->index.get();
+        
+        auto t = a.find(idx.get_label());
 
         if(t == a.end())
           {
             std::ostringstream msg;
-            msg << ERROR_MISSING_INDEX_ASSIGNMENT << " '" << this->index.get_label() << "'";
+            msg << ERROR_MISSING_INDEX_ASSIGNMENT << " '" << idx.get_label() << "'";
 
             throw macro_packages::rule_apply_fail(msg.str());
           }
@@ -95,19 +97,22 @@ namespace token_list_impl
 
     void index_literal_token::evaluate()
       {
-        this->conversion = this->index.get_loop_variable();
+        abstract_index& idx = this->index.get();
+        this->conversion = idx.get_loop_variable();
       }
 
 
     void index_literal_token::evaluate(const index_remap_rule& rule)
       {
+        abstract_index& idx = this->index.get();
+
         // find substitution for this index
-        index_remap_rule::const_iterator t = rule.find(this->index);
+        index_remap_rule::const_iterator t = rule.find(idx);
 
         if(t == rule.end())
           {
             std::ostringstream msg;
-            msg << ERROR_INDEX_SUBSTITUTION << " '" << this->index.get_label() << "'";
+            msg << ERROR_INDEX_SUBSTITUTION << " '" << idx.get_label() << "'";
             throw macro_packages::rule_apply_fail(msg.str());
           }
 
