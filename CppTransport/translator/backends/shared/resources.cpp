@@ -30,26 +30,26 @@
 #include "resources.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, f.get_resource_manager(), prn))
+#define BIND(X, N) std::move(std::make_unique<X>(N, m, p))
 
 
 namespace macro_packages
   {
 
-    resources::resources(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
-      : replacement_rule_package(f, cw, lm, p, prn)
+    resources::resources(translator_data& p, resource_manager& m)
+      : directive_package(p)
       {
-        pre_package.emplace_back(BIND(set_params, "RESOURCE_PARAMETERS"));
-        pre_package.emplace_back(BIND(set_coordinates, "RESOURCE_COORDINATES"));
-        pre_package.emplace_back(BIND(set_phase_flatten, "PHASE_FLATTEN"));
-        pre_package.emplace_back(BIND(set_field_flatten, "FIELD_FLATTEN"));
-        pre_package.emplace_back(BIND(release_flatteners, "RELEASE_FLATTENERS"));
-        pre_package.emplace_back(BIND(set_dV, "RESOURCE_DV"));
-        pre_package.emplace_back(BIND(set_ddV, "RESOURCE_DDV"));
-        pre_package.emplace_back(BIND(set_dddV, "RESOURCE_DDDV"));
-        pre_package.emplace_back(BIND(release, "RESOURCE_RELEASE"));
-        pre_package.emplace_back(BIND(set_working_type, "WORKING_TYPE"));
-        pre_package.emplace_back(BIND(release_working_type, "RELEASE_WORKING_TYPE"));
+        simple_package.emplace_back(BIND(set_params, "RESOURCE_PARAMETERS"));
+        simple_package.emplace_back(BIND(set_coordinates, "RESOURCE_COORDINATES"));
+        simple_package.emplace_back(BIND(set_phase_flatten, "PHASE_FLATTEN"));
+        simple_package.emplace_back(BIND(set_field_flatten, "FIELD_FLATTEN"));
+        simple_package.emplace_back(BIND(release_flatteners, "RELEASE_FLATTENERS"));
+        simple_package.emplace_back(BIND(set_dV, "RESOURCE_DV"));
+        simple_package.emplace_back(BIND(set_ddV, "RESOURCE_DDV"));
+        simple_package.emplace_back(BIND(set_dddV, "RESOURCE_DDDV"));
+        simple_package.emplace_back(BIND(release, "RESOURCE_RELEASE"));
+        simple_package.emplace_back(BIND(set_working_type, "WORKING_TYPE"));
+        simple_package.emplace_back(BIND(release_working_type, "RELEASE_WORKING_TYPE"));
       }
 
 
@@ -60,7 +60,7 @@ namespace macro_packages
         std::ostringstream msg;
         msg << RESOURCE_SET_PARAMETERS << " '" << static_cast<std::string>(args[RESOURCES::PARAMETERS_KERNEL_ARGUMENT]) << "'";
 
-        return this->printer.comment(msg.str());
+        return msg.str();
       }
 
 
@@ -70,8 +70,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_COORDINATES << " '" << static_cast<std::string>(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -81,8 +81,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_PHASE_FLATTEN << " '" << static_cast<std::string>(args[RESOURCES::PHASE_FLATTEN_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -92,8 +92,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_FIELD_FLATTEN << " '" << static_cast<std::string>(args[RESOURCES::FIELD_FLATTEN_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -101,7 +101,7 @@ namespace macro_packages
       {
         this->mgr.release_flatteners();
 
-        return this->printer.comment(RESOURCE_RELEASE_FLATTENERS);
+        return RESOURCE_RELEASE_FLATTENERS;
       }
 
 
@@ -111,8 +111,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DV << " '" << static_cast<std::string>(args[RESOURCES::DV_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -122,8 +122,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DDV << " '" << static_cast<std::string>(args[RESOURCES::DDV_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -133,8 +133,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DDDV << " '" << static_cast<std::string>(args[RESOURCES::DDDV_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -144,8 +144,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_CONNEXION << " '" << static_cast<std::string>(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -155,8 +155,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -164,7 +164,7 @@ namespace macro_packages
       {
         this->mgr.release();
 
-        return this->printer.comment(RESOURCE_RELEASE);
+        return RESOURCE_RELEASE;
       }
 
 
@@ -174,8 +174,8 @@ namespace macro_packages
 
         std::ostringstream msg;
         msg << RESOURCE_SET_WORKING_TYPE << " '" << static_cast<std::string>(args[RESOURCES::WORKING_TYPE_KERNEL_ARGUMENT]) << "'";
-
-        return this->printer.comment(msg.str());
+    
+        return msg.str();
       }
 
 
@@ -183,6 +183,6 @@ namespace macro_packages
       {
         this->mgr.release_working_type();
 
-        return this->printer.comment(RESOURCE_RELEASE_WORKING_TYPE);
+        return RESOURCE_RELEASE_WORKING_TYPE;
       }
   }

@@ -27,7 +27,8 @@
 #define CPPTRANSPORT_MACROS_RESOURCES_H
 
 
-#include "replacement_rule_package.h"
+#include "directive_package.h"
+#include "resource_manager.h"
 
 
 namespace macro_packages
@@ -75,7 +76,7 @@ namespace macro_packages
       }   // namespace RESOURCES
 
 
-    class set_params : public replacement_rule_simple
+    class set_params : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -83,10 +84,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_params(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::PARAMETERS_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_params(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::PARAMETERS_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -99,7 +99,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -109,13 +109,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_coordinates : public replacement_rule_simple
+    class set_coordinates : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -123,10 +120,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_coordinates(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_coordinates(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -149,13 +145,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_phase_flatten : public replacement_rule_simple
+    class set_phase_flatten : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -163,10 +156,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_phase_flatten(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::PHASE_FLATTEN_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_phase_flatten(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::PHASE_FLATTEN_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -189,13 +181,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_field_flatten : public replacement_rule_simple
+    class set_field_flatten : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -203,10 +192,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_field_flatten(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::FIELD_FLATTEN_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_field_flatten(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::FIELD_FLATTEN_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -229,13 +217,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_dV : public replacement_rule_simple
+    class set_dV : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -243,10 +228,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_dV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::DV_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_dV(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::DV_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -269,13 +253,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_ddV : public replacement_rule_simple
+    class set_ddV : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -283,10 +264,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_ddV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::DDV_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_ddV(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::DDV_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -309,13 +289,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_dddV : public replacement_rule_simple
+    class set_dddV : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -323,10 +300,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_dddV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::DDDV_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_dddV(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::DDDV_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -349,13 +325,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_connexion : public replacement_rule_simple
+    class set_connexion : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -363,10 +336,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_connexion(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_connexion(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -389,13 +361,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_Riemann : public replacement_rule_simple
+    class set_Riemann : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -403,10 +372,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_Riemann(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::RIEMANN_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_Riemann(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::RIEMANN_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -429,13 +397,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class release : public replacement_rule_simple
+    class release : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -443,10 +408,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        release(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        release(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::RELEASE_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -469,13 +433,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class release_flatteners : public replacement_rule_simple
+    class release_flatteners : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -483,10 +444,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        release_flatteners(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_FLATTENERS_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        release_flatteners(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::RELEASE_FLATTENERS_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -509,13 +469,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_working_type : public replacement_rule_simple
+    class set_working_type : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -523,10 +480,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_working_type(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::WORKING_TYPE_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_working_type(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::WORKING_TYPE_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -549,13 +505,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class release_working_type : public replacement_rule_simple
+    class release_working_type : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -563,10 +516,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        release_working_type(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_WORKING_TYPE_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        release_working_type(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::RELEASE_WORKING_TYPE_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -589,13 +541,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class resources : public replacement_rule_package
+    class resources : public directive_package
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -603,7 +552,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        resources(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
+        resources(translator_data& p, resource_manager& m);
 
         //! destructor is default
         virtual ~resources() = default;
