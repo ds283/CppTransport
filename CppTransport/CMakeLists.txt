@@ -615,6 +615,7 @@ set(TRANSLATOR_UTILITIES_FILES
   translator/utilities/local_environment.h
   translator/utilities/to_printable.cpp
   translator/utilities/to_printable.h
+  translator/utilities/hash_combine.h
   )
 
 set(TRANSPORT_RUNTIME_CONCEPTS_FILES

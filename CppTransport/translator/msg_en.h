@@ -197,6 +197,10 @@ constexpr auto ERROR_DIRECTIVE_AFTER_RULE            = "Directives can not be mi
 constexpr auto ERROR_DIRECTIVE_ON_RHS                = "A line containing a directive should not have a right-hand side";
 
 constexpr auto ERROR_INDEX_LITERAL_NO_KERNEL         = "Line ended before kernel letter for index literal";
+constexpr auto ERROR_INDEX_VALIDATION_FAIL           = "Mismatched index literal: expected";
+constexpr auto ERROR_INDEX_NOT_VALID                 = "Use of undeclared index literal";
+
+constexpr auto ERROR_INDEX_LITERAL_REASSIGN          = "Internal error: missing database entry during index literal reassignment, for index";
 
 constexpr auto ERROR_MISSING_LHS                     = "Missing left-hand side in temporary template ";
 constexpr auto ERROR_MISSING_RHS                     = "Missing right-hand side in temporary template ";
@@ -256,9 +260,10 @@ constexpr auto ERROR_DIRECTIVE_SET                   = "Error while evaluating s
 
 constexpr auto NOTIFY_DIRECTIVE_NOT_EVALUATED        = "Output disabled, so did not evaluate directive";
 
-constexpr auto ERROR_SET_WRONG_NUMBER_INDICES_A      = "Macro body contains unexpected number of indices; expected";
+constexpr auto ERROR_SET_WRONG_NUMBER_INDICES_A      = "Replacement rule body contains unexpected number of indices; expected";
 constexpr auto ERROR_SET_WRONG_NUMBER_INDICES_B      = "received";
-constexpr auto ERROR_SET_UNDECLARED_INDEX            = "Macro body contains undeclared index";
+constexpr auto ERROR_SET_UNDECLARED_INDEX            = "Replacement rule body contains undeclared index";
+constexpr auto ERROR_SET_INDEX_DUPLICATE             = "Index list declared to $SET contains duplicated index";
 
 constexpr auto ERROR_SET_REDEFINITION                = "Redefinition of macro";
 constexpr auto WARN_PRIOR_REDEFINITION               = "Earlier definition of this macro was here";

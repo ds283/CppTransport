@@ -32,6 +32,7 @@
 
 #include "translator_data.h"
 #include "index_assignment.h"
+#include "index_literal.h"
 #include "macro_types.h"
 #include "rules_common.h"
 
@@ -141,7 +142,7 @@ namespace macro_packages
       public:
         
         //! evaluate the macro on an abstract index assignment
-        std::string operator()(const macro_argument_list& args, const abstract_index_database& indices);
+        std::string operator()(const macro_argument_list& args, const index_literal_list& indices);
     
     
         // INTERFACE -- QUERY FOR DATA
@@ -171,7 +172,7 @@ namespace macro_packages
     
         //! evaluation function; has to be supplied by implementation
         //! unlike for a macro, evaluate() for a directive is guaranteed to be called exactly once
-        virtual std::string evaluate(const macro_argument_list& args, const abstract_index_database& indices) = 0;
+        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) = 0;
     
         //! should this directive always be evaluated, even if output is disabled?
         //! defaults to false, but can be overridden if evaluation must always be performed,

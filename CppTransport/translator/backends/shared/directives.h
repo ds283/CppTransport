@@ -61,10 +61,10 @@ namespace macro_packages
           public:
 
             //! constructor
-            user_macro(std::string n, std::unique_ptr<token_list> t, const abstract_index_database& i, error_context d)
+            user_macro(std::string n, std::unique_ptr<token_list> t, index_literal_list i, error_context d)
               : replacement_rule_index(n, 0, i.size()),
                 tokens(std::move(t)),
-                indices(i),
+                indices(std::move(i)),
                 declaration_point(std::move(d))
               {
               }
@@ -99,7 +99,7 @@ namespace macro_packages
             std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
 
             //! roll-up evaluation
-            std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+            std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
             // INTERNAL DATA
@@ -107,10 +107,11 @@ namespace macro_packages
           private:
 
             //! tokenized version of macro definition
+            //! (contains an abstract_index_database that defines the indices associated with this macro)
             std::unique_ptr<token_list> tokens;
 
-            //! list of indices defining this macro
-            abstract_index_database indices;
+            //! index literal list for this macro
+            const index_literal_list indices;
 
             //! record declaration point
             const error_context declaration_point;
@@ -185,9 +186,8 @@ namespace macro_packages
         
       protected:
     
-        //! symbol table for user-defined macros
+        //! symbol table for user-defined replacement rules
         typedef std::unordered_map< std::string, std::unique_ptr<directives_impl::user_macro> > macro_table;
-        
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -208,15 +208,7 @@ namespace macro_packages
       protected:
 
         //! evaluate directive
-        std::string evaluate(const macro_argument_list& args, const abstract_index_database& indices) override;
-
-
-        // INTERNAL API
-
-      protected:
-
-        //! validate indices discovered during tokenization against a supplied index list
-        void validate_discovered_indices(const abstract_index_database& supplied, const abstract_index_database& discovered);
+        std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -224,7 +216,7 @@ namespace macro_packages
       private:
 
         //! symbol table for macros
-        macro_table macros;
+        macro_table rules;
 
       };
 

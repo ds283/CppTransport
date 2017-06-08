@@ -180,6 +180,30 @@ class assignment_record
   };
 
 
+namespace index_traits_impl
+  {
+    
+    template <typename RecordType>
+    index_class get_index_class(RecordType item);
+    
+    template <typename RecordType>
+    char get_index_label(RecordType item);
+    
+    template <>
+    inline index_class get_index_class<const assignment_record&>(const assignment_record& item)
+      {
+        return item.get_class();
+      }
+    
+    template <>
+    inline char get_index_label<const assignment_record&>(const assignment_record& item)
+      {
+        return item.get_label();
+      }
+    
+  }   // index_traits
+
+
 //! set up assignment_list as a database of assignment records
 typedef index_database<assignment_record> assignment_list;
 

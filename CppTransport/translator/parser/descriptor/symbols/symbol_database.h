@@ -32,6 +32,8 @@
 #include "generic_iterator.h"
 
 #include "msg_en.h"
+#include "hash_combine.h"
+
 
 
 template <typename RecordType>
@@ -197,11 +199,12 @@ namespace std
         //! hash operation
         size_t operator()(const tensor_index& idx) const
           {
-            std::hash<std::string> hash;
-            size_t hash_A = hash(idx.first);
-            size_t hash_B = hash(idx.second);
+            std::hash<std::string> h;
+
+            size_t hash = h(idx.first);
+            hash_combine(hash, idx.second);
             
-            return hash_A ^ (hash_B + 0x9e3779b9 + (hash_A << 6) + (hash_A >> 2));
+            return hash;
           }
         
       };

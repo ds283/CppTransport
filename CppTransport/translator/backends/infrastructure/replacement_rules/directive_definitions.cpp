@@ -59,7 +59,7 @@ namespace macro_packages
       }
     
     
-    std::string directive_index::operator()(const macro_argument_list& args, const abstract_index_database& indices)
+    std::string directive_index::operator()(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->validate(args);
         this->validate(indices);
@@ -102,55 +102,57 @@ namespace macro_packages
           }
         
         // check that index types are compatible
-        if(this->idx_class)
+        if(!this->idx_class) return;
+
+        for(const auto& T : indices)
           {
-            for(const typename IndexDatabase::underlying_type& rec : indices)
+            index_class cl = index_traits_impl::get_index_class<decltype(T)>(T);
+            char lb = index_traits_impl::get_index_label<decltype(T)>(T);
+
+            switch(*this->idx_class)
               {
-                switch(*this->idx_class)
+                case index_class::full:
                   {
-                    case index_class::full:
+                    // full is compatible with either full or field_only
+                    if(cl != index_class::full && cl != index_class::field_only)
                       {
-                        // full is compatible with either full or field_only
-                        if(rec.get_class() != index_class::full && rec.get_class() != index_class::field_only)
-                          {
-                            std::ostringstream msg;
-                            
-                            msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << rec.get_label() << "'";
-                            throw index_mismatch(msg.str());
-                          }
-                        
-                        break;
+                        std::ostringstream msg;
+
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << lb << "'";
+                        throw index_mismatch(msg.str());
                       }
-                    
-                    case index_class::field_only:
+
+                    break;
+                  }
+
+                case index_class::field_only:
+                  {
+                    // field_only is compatible only with field_only
+
+                    if(cl != index_class::field_only)
                       {
-                        // field_only is compatible only with field_only
-                        
-                        if(rec.get_class() != index_class::field_only)
-                          {
-                            std::ostringstream msg;
-                            
-                            msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << rec.get_label() << "'";
-                            throw index_mismatch(msg.str());
-                          }
-                        
-                        break;
+                        std::ostringstream msg;
+
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << lb << "'";
+                        throw index_mismatch(msg.str());
                       }
-                    
-                    case index_class::parameter:
+
+                    break;
+                  }
+
+                case index_class::parameter:
+                  {
+                    // parameter is compatible only with parameter
+
+                    if(cl != index_class::parameter)
                       {
-                        // parameter is compatible only with parameter
-                        
-                        if(rec.get_class() != index_class::parameter)
-                          {
-                            std::ostringstream msg;
-                            
-                            msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << rec.get_label() << "'";
-                            throw index_mismatch(msg.str());
-                          }
-                        
-                        break;
+                        std::ostringstream msg;
+
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << lb << "'";
+                        throw index_mismatch(msg.str());
                       }
+
+                    break;
                   }
               }
           }

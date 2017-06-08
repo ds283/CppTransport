@@ -89,10 +89,11 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply(const std::string& 
   }
 
 
-std::unique_ptr< token_list > macro_agent::tokenize(const std::string& line)
+std::unique_ptr<token_list>
+macro_agent::tokenize(const std::string& line, boost::optional<index_literal_database&> validate_db, bool strict)
   {
-    return std::make_unique<token_list>(line, this->prefix, this->fields, this->parameters,
-                                        this->package, this->local_index_rules, this->data_payload);
+    return std::make_unique<token_list>(line, this->prefix, this->fields, this->parameters, this->package,
+                                        this->local_index_rules, this->data_payload, validate_db, strict);
   }
 
 
@@ -103,6 +104,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     // break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
     macro_impl::split_string split_result(line, this->split_equal, this->split_sum_equal);
 
+    // perform tokenization, keeping track of the time required
     timing_instrument tok_timer(this->tokenization_timer);
     auto left_tokens = this->tokenize(split_result.get_left());
     auto right_tokens = this->tokenize(split_result.get_right());
@@ -184,6 +186,10 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
         msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
         ctx.error(msg.str());
       }
+
+    // TODO: check all LHS-indices have the same variance (on LHS and RHS)
+    // TODO: warn if a LHS-index occurs more than once on LHS
+    // TODO: check that RHS-indices are compatible with summation convention where possible; easy if index occurs twice, otherwise have to issue a warning
 
     assignment_set RHS_assignments(RHS_indices);
 

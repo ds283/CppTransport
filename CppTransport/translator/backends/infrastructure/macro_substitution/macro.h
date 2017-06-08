@@ -36,6 +36,7 @@
 
 #include "core.h"
 #include "index_assignment.h"
+#include "index_literal.h"
 #include "cse.h"
 #include "translator_data.h"
 #include "package_group.h"
@@ -149,7 +150,9 @@ class macro_agent
 
     //! tokenize a line; used internally, but also available as a service to clients which may need
     //! to inspect tokenized strings (eg. directive implementations)
-    std::unique_ptr< token_list > tokenize(const std::string& line);
+    std::unique_ptr<token_list>
+    tokenize(const std::string& line, boost::optional<index_literal_database&> validate_db=boost::none,
+             bool strict=false);
 
     //! inject a new macro definition
     void inject_macro(std::reference_wrapper< macro_packages::replacement_rule_index > rule);

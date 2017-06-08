@@ -26,7 +26,6 @@
 
 #include <assert.h>
 #include <sstream>
-#include <stdexcept>
 
 #include "token_list.h"
 #include "package_group.h"
@@ -196,13 +195,14 @@ namespace macro_tokenizer_impl
 
 
     // get a macro index list
-    template <typename ContextFactory, typename IndexHandler>
-    std::pair<abstract_index_database, size_t>
+    template <typename ContextFactory, typename IndexHandler, typename IndexValidator>
+    std::pair<index_literal_list, size_t>
     get_index_list(const std::string& input, const std::string& candidate, const size_t position,
-                   ContextFactory make_context, IndexHandler add_index)
+                   ContextFactory make_context, IndexHandler add_index, IndexValidator validate_index)
       {
-        abstract_index_database idx_list;
+        index_literal_list idx_list;
         size_t current_position = position;
+        variance v = variance::none;
 
         // check that an index list is present
         if(current_position >= input.length() || input[current_position] != '[')
@@ -222,9 +222,24 @@ namespace macro_tokenizer_impl
           {
             error_context ctx = make_context(current_position, current_position + 1);
 
-            if(isalnum(input[current_position]))
+            if(input[current_position] == '^')
               {
-                add_index(idx_list, input[current_position], ctx);
+                v = variance::contravariant;
+              }
+            else if(input[current_position] == '_')
+              {
+                v = variance::covariant;
+              }
+            else if(isalnum(input[current_position]))
+              {
+                // push this index into the main database and receive a reference to its record
+                abstract_index& idx = add_index(input[current_position], ctx);
+
+                // now push a copy of this index literal into the literal list
+                idx_list.emplace_back(std::make_shared<index_literal>(idx, v));
+
+                // finally, validate the index
+                validate_index(*idx_list.back(), ctx);
               }
             else
               {
@@ -342,44 +357,49 @@ namespace macro_tokenizer_impl
 using namespace macro_tokenizer_impl;
 
 
-token_list::token_list(const std::string& input, const std::string& prefix, const unsigned int nf, const unsigned int np,
-                       const package_group& package, const index_ruleset& local_rules, translator_data& d)
+token_list::token_list(const std::string& in, const std::string& pfx, unsigned int nf, unsigned int np,
+                       const package_group& pkg, const index_ruleset& lr, translator_data& d,
+                       boost::optional<index_literal_database&> v, bool s)
   : num_fields(nf),
     num_params(np),
     data_payload(d),
-    input_string(std::make_shared<std::string>(input))
+    package(pkg),
+    input_string(std::make_shared<std::string>(in)),
+    prefix(pfx),
+    validation_db(v),
+    strict(s),
+    pre(pkg.get_pre_ruleset()),
+    post(pkg.get_post_ruleset()),
+    index(pkg.get_index_ruleset()),
+    simp_dir(pkg.get_simple_directiveset()),
+    ind_dir(pkg.get_index_directiveset()),
+    local_rules(lr)
 	{
-    const pre_ruleset& pre = package.get_pre_ruleset();
-    const post_ruleset& post = package.get_post_ruleset();
-    const index_ruleset& index = package.get_index_ruleset();
-    const simple_directiveset& simp_dir = package.get_simple_directiveset();
-    const index_directiveset& ind_dir = package.get_index_directiveset();
-
     auto make_context = [&](unsigned int start, unsigned int end) -> auto
       { return this->data_payload.make_error_context(input_string, start, end); };
 
     // loop over line, trying to match tokens
     size_t position = 0;
-		while(position < input.length())
+		while(position < in.length())
 			{
         std::unique_ptr<token_list_impl::generic_token> tok;
 
-				if(input[position] != prefix[0]) // doesn't start with first symbol from prefix, so not a candidate to be a macro or index
+				if(in[position] != pfx[0]) // doesn't start with first symbol from prefix, so not a candidate to be a macro or index
 					{
-            std::tie(tok, position) = match_string_literal(input, position, prefix[0], make_context);
+            std::tie(tok, position) = match_string_literal(*input_string, position, prefix[0], make_context);
 					}
 				else  // possible macro, directive or index
 					{
-            if(check_match_prefix(input, position, prefix))
+            if(check_match_prefix(in, position, pfx))
               {
-								position += prefix.length();
+								position += pfx.length();
 
                 std::tie(tok, position) =
-                  this->match_macro_or_index(input, position, pre, post, index, local_rules, simp_dir, ind_dir, make_context);
+                  this->match_macro_or_index(position, make_context);
 							}
 						else // we did *not* match the full prefix; treat this as literal text
 							{
-                std::tie(tok, position) = match_string_literal(input, position, prefix[0], make_context);
+                std::tie(tok, position) = match_string_literal(in, position, pfx[0], make_context);
 							}
 					}
 
@@ -391,12 +411,11 @@ token_list::token_list(const std::string& input, const std::string& prefix, cons
 
 template <typename ContextFactory>
 std::pair<std::unique_ptr<token_list_impl::generic_token>, size_t>
-token_list::match_macro_or_index(const std::string& input, const size_t position, const pre_ruleset& pre, const post_ruleset& post,
-                                 const index_ruleset& index, const index_ruleset& local_rules, const simple_directiveset& simp_dir,
-                                 const index_directiveset& ind_dir, ContextFactory make_context)
+token_list::match_macro_or_index(const size_t position, ContextFactory make_context)
   {
     // try to match the longest macro we can from the current position, or if we cannot match a macro
     // then identify an index literal
+    const std::string& input = *this->input_string;
 
     // first, is there only one character left in the input string? if so, this must be an index literal
     bool possible_match = position+1 < input.length();
@@ -407,15 +426,15 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
     if(possible_match)
       {
         candidate += input[position+1];
-        possible_match = check_for_match(candidate, pre) || check_for_match(candidate, post)
-                         || check_for_match(candidate, index) || check_for_match(candidate, local_rules)
-                         || check_for_match(candidate, simp_dir) || check_for_match(candidate, ind_dir);
+        possible_match = check_for_match(candidate, this->pre) || check_for_match(candidate, this->post)
+                         || check_for_match(candidate, this->index) || check_for_match(candidate, this->local_rules)
+                         || check_for_match(candidate, this->simp_dir) || check_for_match(candidate, this->ind_dir);
       }
 
     // if no possible match then this must be an index literal, so build it and return
     if(!possible_match)
       {
-        return this->make_index_literal(input, position, make_context);
+        return this->make_index_literal(position, make_context);
       }
 
     // There is a possible match. Now greedily match the *longest* macro we can, from any available package
@@ -425,12 +444,12 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
           && input[position + candidate_length] != '['
           && input[position + candidate_length] != '{'
           && (isalnum(input[position + candidate_length]) || input[position + candidate_length] == '_')
-          && (check_for_match(candidate + input[position + candidate_length], pre)
-              || check_for_match(candidate + input[position + candidate_length], post)
-              || check_for_match(candidate + input[position + candidate_length], index)
-              || check_for_match(candidate + input[position + candidate_length], local_rules)
-              || check_for_match(candidate + input[position + candidate_length], simp_dir)
-              || check_for_match(candidate + input[position + candidate_length], ind_dir)))
+          && (check_for_match(candidate + input[position + candidate_length], this->pre)
+              || check_for_match(candidate + input[position + candidate_length], this->post)
+              || check_for_match(candidate + input[position + candidate_length], this->index)
+              || check_for_match(candidate + input[position + candidate_length], this->local_rules)
+              || check_for_match(candidate + input[position + candidate_length], this->simp_dir)
+              || check_for_match(candidate + input[position + candidate_length], this->ind_dir)))
       {
         candidate += input[position + candidate_length];
         ++candidate_length;
@@ -439,60 +458,61 @@ token_list::match_macro_or_index(const std::string& input, const size_t position
     // now determine what we have found
     try
       {
-        if(check_for_match(candidate, pre, false))
+        if(check_for_match(candidate, this->pre, false))
           {
             // we matched a simple pre-macro
-            return this->make_simple_macro(input, candidate, position, pre, simple_macro_type::pre, make_context);
+            return this->make_simple_macro(candidate, position, this->pre, simple_macro_type::pre, make_context);
           }
-        else if(check_for_match(candidate, post, false))
+        else if(check_for_match(candidate, this->post, false))
           {
             // we matched a simple post-macro
-            return this->make_simple_macro(input, candidate, position, post, simple_macro_type::post, make_context);
+            return this->make_simple_macro(candidate, position, this->post, simple_macro_type::post, make_context);
           }
-        else if(check_for_match(candidate, index, false))
+        else if(check_for_match(candidate, this->index, false))
           {
             // we matched an index macro
-            return this->make_index_macro(input, candidate, position, index, make_context);
+            return this->make_index_macro(candidate, position, this->index, make_context);
           }
-        else if(check_for_match(candidate, local_rules, false))
+        else if(check_for_match(candidate, this->local_rules, false))
           {
             // we matched a locally-defined macro
-            return this->make_index_macro(input, candidate, position, local_rules, make_context);
+            return this->make_index_macro(candidate, position, this->local_rules, make_context);
           }
-        else if(check_for_match(candidate, simp_dir, false))
+        else if(check_for_match(candidate, this->simp_dir, false))
           {
             // we matched a simple directive
-            return this->make_simple_directive(input, candidate, position, simp_dir, make_context);
+            return this->make_simple_directive(candidate, position, this->simp_dir, make_context);
           }
-        else if(check_for_match(candidate, ind_dir, false))
+        else if(check_for_match(candidate, this->ind_dir, false))
           {
             // we matched an index directive
-            return this->make_index_directive(input, candidate, position, ind_dir, make_context);
+            return this->make_index_directive(candidate, position, this->ind_dir, make_context);
           }
         else  // something has gone wrong
           {
             // we didn't find an exact match after all; we only matched a substring
             // assume it was an index literal after all
-            return this->make_index_literal(input, position, make_context);
+            return this->make_index_literal(position, make_context);
           }
       }
     catch(std::runtime_error& xe)
       {
         // something went wrong
         // assume it was an index literal after all
-        return this->make_index_literal(input, position, make_context);
+        return this->make_index_literal(position, make_context);
       }
   }
 
 
 template <typename ContextFactory>
 std::pair<std::unique_ptr<token_list_impl::index_literal_token>, size_t>
-token_list::make_index_literal(const std::string& input, const size_t position, ContextFactory make_context)
+token_list::make_index_literal(const size_t position, ContextFactory make_context)
   {
+    const std::string& input = *this->input_string;
     size_t current_position = position;
     
     variance v = variance::none;
-    
+
     while(current_position < input.length() &&
           (input[current_position] == '^' || input[current_position] == '_'))
       {
@@ -514,16 +534,20 @@ token_list::make_index_literal(const std::string& input, const size_t position, 
     
     // insert an abstract index with this kernel letter into the main database
     abstract_index_database::iterator idx = this->add_index(input[current_position]);
-    
+
+    // step past the kernel letter
+    ++current_position;
+
     // generate a record of this index instance, keeping the variance information
     index_literal l(*idx, v);
 
-    // generate a token
-    auto tok = std::make_unique<token_list_impl::index_literal_token>(l, make_context(position, position+1));
+    // validate this literal (no-op if no validation database was supplied)
+    error_context ctx = make_context(position, current_position);
+    this->validate_index_literal(l, ctx);
+
+    // generate a token corresponding to this literal
+    auto tok = std::make_unique<token_list_impl::index_literal_token>(l, ctx);
     this->index_literal_tokens.push_back(std::ref(*tok));
-    
-    // step past the kernel letter
-    ++current_position;
 
     return std::make_pair(std::move(tok), current_position);
   }
@@ -531,9 +555,11 @@ token_list::make_index_literal(const std::string& input, const size_t position, 
 
 template <typename RuleSet, typename ContextFactory>
 std::pair<std::unique_ptr<token_list_impl::simple_macro_token>, size_t>
-token_list::make_simple_macro(const std::string& input, const std::string& macro, const size_t position,
-                              const RuleSet& rules, simple_macro_type type, ContextFactory make_context)
+token_list::make_simple_macro(const std::string& macro, const size_t position, const RuleSet& rules, simple_macro_type type,
+                              ContextFactory make_context)
   {
+    const std::string& input = *this->input_string;
+
     // check whether we've previously seen a directive and therefore replacement rules should be disallowed
     if(!this->validate_replacement_rule(macro, position, make_context))
       {
@@ -573,9 +599,10 @@ token_list::make_simple_macro(const std::string& input, const std::string& macro
 
 template <typename RuleSet, typename ContextFactory>
 std::pair<std::unique_ptr<token_list_impl::index_macro_token>, size_t>
-token_list::make_index_macro(const std::string& input, const std::string& macro, const size_t position,
-                             const RuleSet& rules, ContextFactory make_context)
+token_list::make_index_macro(const std::string& macro, const size_t position, const RuleSet& rules, ContextFactory make_context)
   {
+    const std::string& input = *this->input_string;
+
     // check whether we've previously seen a directive and therefore replacement rules should be disallowed
     if(!this->validate_replacement_rule(macro, position, make_context))
       {
@@ -590,20 +617,23 @@ token_list::make_index_macro(const std::string& input, const std::string& macro,
     size_t current_position = position + macro.length();
 
     // should find an index list
-    abstract_index_database idx_list;
-    auto add_index = [&](abstract_index_database& idxs, char label, error_context& ctx) -> void
-      {
-        // add to index list if we haven't already seen it;
-        // the constructor for abstract_index will assign a suitable type based on the index symbol
-        std::pair<abstract_index_database::iterator, bool> result = idxs.emplace_back(
-          std::make_pair(label, std::make_shared<abstract_index>(label, this->num_fields, this->num_params)));
+    index_literal_list idx_list;
 
-        // if the index was new, add to list for this entire tokenization job unless this
-        // if the index has already been seen for a previous macro then add_index() will do nothing provided
-        // the index type is consistent
-        if(result.second) this->add_index(*result.first, ctx);
+    auto add_index = [&](char l, error_context& ctx) -> auto&
+      {
+        // add this index to the main database; if it has already been seen the we will just get
+        // an iterator to the original record. We return a reference to the abstract_index& record
+        auto idx = this->add_index(l);
+        return *idx;
       };
-    std::tie(idx_list, current_position) = get_index_list(input, macro, current_position, make_context, add_index);
+
+    auto validate_index = [&](index_literal& l, error_context& ctx) -> void
+      {
+        this->validate_index_literal(l, ctx);
+      };
+
+    std::tie(idx_list, current_position) =
+      get_index_list(input, macro, current_position, make_context, add_index, validate_index);
 
     // may find an argument list
     macro_argument_list arg_list;
@@ -651,9 +681,11 @@ token_list::make_index_macro(const std::string& input, const std::string& macro,
 
 template <typename RuleSet, typename ContextFactory>
 std::pair<std::unique_ptr<token_list_impl::simple_directive_token>, size_t>
-token_list::make_simple_directive(const std::string& input, const std::string& macro, const size_t position,
-                                  const RuleSet& rules, ContextFactory make_context)
+token_list::make_simple_directive(const std::string& macro, const size_t position, const RuleSet& rules,
+                                  ContextFactory make_context)
   {
+    const std::string& input = *this->input_string;
+
     // check whether we've previously seen a replacement rule and therefore directives should be disallowed
     if(!this->validate_directive(macro, position, make_context))
       {
@@ -693,9 +725,11 @@ token_list::make_simple_directive(const std::string& input, const std::string& m
 
 template <typename RuleSet, typename ContextFactory>
 std::pair<std::unique_ptr<token_list_impl::index_directive_token>, size_t>
-token_list::make_index_directive(const std::string& input, const std::string& macro, const size_t position,
-                                 const RuleSet& rules, ContextFactory make_context)
+token_list::make_index_directive(const std::string& macro, const size_t position, const RuleSet& rules,
+                                 ContextFactory make_context)
   {
+    const std::string& input = *this->input_string;
+
     // check whether we've previously seen a replacement rule and therefore directives should be disallowed
     if(!this->validate_directive(macro, position, make_context))
       {
@@ -710,20 +744,23 @@ token_list::make_index_directive(const std::string& input, const std::string& ma
     size_t current_position = position + macro.length();
     
     // should find an index list
-    abstract_index_database idx_list;
-    auto add_index = [&](abstract_index_database& idxs, char label, error_context& ctx) -> void
+    index_literal_list idx_list;
+
+    auto add_index = [&](char l, error_context& ctx) -> auto&
       {
-        // add to index list if we haven't already seen it;
-        // the constructor for abstract_index will assign a suitable type based on the index symbol
-        std::pair<abstract_index_database::iterator, bool> result = idxs.emplace_back(
-          std::make_pair(label, std::make_shared<abstract_index>(label, this->num_fields, this->num_params)));
-        
-        // if the index was new, add to list for this entire tokenization job unless this
-        // if the index has already been seen for a previous macro then add_index() will do nothing provided
-        // the index type is consistent
-        if(result.second) this->add_index(*result.first, ctx);
+        // add this index to the main database; if it has already been seen the we will just get
+        // an iterator to the original record. We return a reference to the abstract_index& record
+        auto idx = this->add_index(l);
+        return *idx;
       };
-    std::tie(idx_list, current_position) = get_index_list(input, macro, current_position, make_context, add_index);
+
+    auto validate_index = [&](index_literal& l, error_context& ctx) -> void
+      {
+        this->validate_index_literal(l, ctx);
+      };
+
+    std::tie(idx_list, current_position) =
+      get_index_list(input, macro, current_position, make_context, add_index, validate_index);
     
     // may find an argument list
     macro_argument_list arg_list;
@@ -737,7 +774,6 @@ token_list::make_index_directive(const std::string& input, const std::string& ma
     
     return std::make_pair(std::move(tok), current_position);
   }
-
 
 
 abstract_index_database::iterator token_list::add_index(char label)
@@ -911,4 +947,37 @@ bool token_list::validate_directive(const std::string& macro, const size_t posit
     error_context ctx = make_context(position, position + macro.length());
     ctx.error(ERROR_DIRECTIVE_AFTER_RULE);
     return false;
+  }
+
+
+void token_list::validate_index_literal(index_literal& l, error_context& ctx)
+  {
+    if(!this->validation_db) return;
+
+    const abstract_index& idx = l;
+
+    // if this index isn't in the validation database then there is nothing to do: return immediately
+    auto t = this->validation_db->find(idx.get_label());
+    if(t == this->validation_db->end())
+      {
+        if(this->strict)
+          {
+            std::ostringstream msg;
+            msg << ERROR_INDEX_NOT_VALID << " '" << l.to_string() << "'";
+            ctx.error(msg.str());
+          }
+
+        return;
+      }
+
+    // otherwise, verify that this index literal matches the expected properties of the database version
+    index_literal& validation_copy = *t->second;
+
+    // check whether validation copy agrees with the version supplied
+    if(!std::equal_to<index_literal>()(validation_copy, l))
+      {
+        std::ostringstream msg;
+        msg << ERROR_INDEX_VALIDATION_FAIL << " '" << validation_copy.to_string() << "'";
+        ctx.error(msg.str());
+      }
   }

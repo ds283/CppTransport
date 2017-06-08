@@ -49,34 +49,42 @@ namespace macro_packages
       }
 
 
-    std::string set_directive::evaluate(const macro_argument_list& args, const abstract_index_database& indices)
+    std::string set_directive::evaluate(const macro_argument_list& args, const index_literal_list& indices)
       {
         std::string name = args[SET_DIRECTIVE_NAME_ARGUMENT];
         std::string defn = args[SET_DIRECTIVE_DEFINITION_ARGUMENT];
+
+        auto fail_handler = [&](const std::string& msg) -> std::string
+          {
+            const error_context& ctx = args[SET_DIRECTIVE_DEFINITION_ARGUMENT].get_declaration_point();
+            ctx.error(msg);
+
+            std::ostringstream rval;
+            rval << ERROR_DIRECTIVE_SET << " '" << name << "': " << msg;
+            return rval.str();
+          };
+
+        // convert the supplied index_literal_list to an index_literal_database
+        // fails if the index_literal_list contains more than a single instance of any index
+        // if successful, returns a database view onto the original index_literal_list
+        std::unique_ptr<index_literal_database> db;
+        boost::optional<std::string> decl_fail;
+        std:tie(db, decl_fail) = to_database(indices);
+        if(decl_fail) return fail_handler(*decl_fail);
 
         // get macro agent associated with current top-of-stack output file;
         // this will be our own parent macro agent
         macro_agent& ma = this->payload.get_stack().top_macro_package();
 
-        std::unique_ptr<token_list> tokens = ma.tokenize(defn);
+        // tokenize the macro definition provided by the user,
+        // asking the tokenizer to validate all supplied indices against
+        // the provided index_literal_database.
+        // requires strict validation -- indices not in the validation database are rejected
+        std::unique_ptr<token_list> tokens = ma.tokenize(defn, *db, true);
 
-        try
-          {
-            // check that indices discovered during tokenization match those declared to SET
-            this->validate_discovered_indices(indices, tokens->get_index_database());
-          }
-        catch(index_mismatch& xe)
-          {
-            const error_context& ctx = args[SET_DIRECTIVE_DEFINITION_ARGUMENT].get_declaration_point();
-            ctx.error(xe.what());
-
-            std::ostringstream msg;
-            msg << ERROR_DIRECTIVE_SET << " '" << name << "': " << xe.what();
-            return msg.str();
-          }
-
-        auto t = this->macros.find(name);
-        if(t != this->macros.end())
+        // check whether a replacement rule with the required name already exists
+        auto t = this->rules.find(name);
+        if(t != this->rules.end())
           {
             const error_context& ctx = args[SET_DIRECTIVE_NAME_ARGUMENT].get_declaration_point();
 
@@ -88,11 +96,18 @@ namespace macro_packages
             prior_ctx.warn(WARN_PRIOR_REDEFINITION);
           }
 
+        // move references to parent abstract_index objects to those contained in the database held by tokens
+        // these will persist (because ownership of tokens will move to the newly-created user_macro
+        // record), whereas those currently held by indices will become invalidated when the token_list
+        // for the line currently being recognized (ie. the one containing the $SET) is destroyed
+        auto new_indices = indices;
+        replace_database(new_indices, tokens->get_index_database());
+
         // construct user-defined macro corresponding to this token list
-        std::pair<macro_table::iterator, bool> result =
-          this->macros.emplace(
-            std::make_pair(name, std::make_unique<directives_impl::user_macro>(name, std::move(tokens), indices,
-                                                                               args[SET_DIRECTIVE_NAME_ARGUMENT].get_declaration_point())));
+        std::pair<macro_table::iterator, bool> result = this->rules.emplace(
+          std::make_pair(name,
+                         std::make_unique<directives_impl::user_macro>(name, std::move(tokens), std::move(new_indices),
+                                                                       args[SET_DIRECTIVE_NAME_ARGUMENT].get_declaration_point())));
 
         // inject this macro into the local definitions for the top-of-stack macro package
         if(result.second)
@@ -103,29 +118,6 @@ namespace macro_packages
         std::ostringstream msg;
         msg << DIRECTIVE_SET_MACRO_A << " '" << name << "' " << DIRECTIVE_SET_MACRO_B << " \"" << defn << "\"";
         return msg.str();
-      }
-
-
-    void set_directive::validate_discovered_indices(const abstract_index_database& supplied, const abstract_index_database& discovered)
-      {
-        if(supplied.size() != discovered.size())
-          {
-            std::ostringstream msg;
-            msg << ERROR_SET_WRONG_NUMBER_INDICES_A << " " << supplied.size() << ", " << ERROR_SET_WRONG_NUMBER_INDICES_B << " " << discovered.size();
-            throw index_mismatch(msg.str());
-          }
-
-        for(const abstract_index& idx : discovered)
-          {
-            abstract_index_database::const_iterator t = supplied.find(idx.get_label());
-
-            if(t == supplied.end())
-              {
-                std::ostringstream msg;
-                msg << ERROR_SET_UNDECLARED_INDEX << " '" << idx.get_label() << "'";
-                throw index_mismatch(msg.str());
-              }
-          }
       }
 
 
@@ -237,42 +229,44 @@ namespace macro_packages
         std::string user_macro::unroll(const macro_argument_list& args, const assignment_list& idxs)
           {
             // map indices between declaration and assignment
-            assignment_list remap_idx;
+            assignment_list rule;
 
-            abstract_index_database::const_iterator indices_t = this->indices.begin();
-            assignment_list::const_iterator idxs_t = idxs.begin();
+            auto declare_t = this->indices.begin();
+            auto invoke_t = idxs.begin();
 
-            while(indices_t != this->indices.end() && idxs_t != idxs.end())
+            while(declare_t != this->indices.end() && invoke_t != idxs.end())
               {
-                remap_idx.emplace_back(std::make_pair(indices_t->get_label(),
-                                                      std::make_shared<assignment_record>(*indices_t,
-                                                                                          idxs_t->get_numeric_value())));
+                const index_literal& lit = **declare_t;
+                const abstract_index& idx = lit;
+                
+                rule.emplace_back(
+                  std::make_pair(idx.get_label(), std::make_shared<assignment_record>(idx, invoke_t->get_numeric_value())));
 
-                ++indices_t;
-                ++idxs_t;
+                ++declare_t;
+                ++invoke_t;
               }
 
-            this->tokens->evaluate_macros(remap_idx);
+            this->tokens->evaluate_macros(rule);
             this->tokens->evaluate_macros(simple_macro_type::post);
 
             return this->tokens->to_string();
           }
 
 
-        std::string user_macro::roll(const macro_argument_list& args, const abstract_index_database& idxs)
+        std::string user_macro::roll(const macro_argument_list& args, const index_literal_list& idxs)
           {
             // map indices between declaration and assignment
             index_remap_rule rule;
 
-            abstract_index_database::const_iterator indices_t = this->indices.begin();
-            abstract_index_database::const_iterator idxs_t = idxs.begin();
+            auto declare_t = this->indices.begin();
+            auto invoke_t = idxs.begin();
 
-            while(indices_t != this->indices.end() && idxs_t != idxs.end())
+            while(declare_t != this->indices.end() && invoke_t != idxs.end())
               {
-                rule.emplace(std::make_pair(*indices_t, *idxs_t));
+                rule.emplace(std::make_pair(std::ref(**declare_t), std::ref(**invoke_t)));
 
-                ++indices_t;
-                ++idxs_t;
+                ++declare_t;
+                ++invoke_t;
               }
 
             this->tokens->evaluate_macros(rule);

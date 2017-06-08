@@ -90,7 +90,7 @@ namespace macro_packages
         virtual void pre_hook(const macro_argument_list& args) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -157,7 +157,7 @@ namespace macro_packages
         virtual void pre_hook(const macro_argument_list& args) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -224,7 +224,7 @@ namespace macro_packages
         virtual void pre_hook(const macro_argument_list& args) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA

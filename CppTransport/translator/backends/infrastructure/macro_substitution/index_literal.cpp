@@ -23,4 +23,64 @@
 // --@@
 //
 
+
+#include <sstream>
+#include <stdexcept>
+
 #include "index_literal.h"
+#include "msg_en.h"
+
+
+std::pair<std::unique_ptr<index_literal_database>, boost::optional<std::string> >
+to_database(const index_literal_list& indices)
+  {
+    auto db = std::make_unique<index_literal_database>();
+
+    for(const auto& T : indices)
+      {
+        const index_literal& rec = *T;
+        const abstract_index& idx = rec;
+
+        if(db->count(idx.get_label()) > 0)
+          {
+            std::ostringstream msg;
+            msg << ERROR_SET_INDEX_DUPLICATE << " '" << idx.get_label() << "'";
+            return std::make_pair(std::move(db), msg.str());
+          }
+
+        db->emplace(std::make_pair(idx.get_label(), T));
+      }
+
+    return std::make_pair(std::move(db), boost::none);
+  }
+
+
+std::string index_literal::to_string() const
+  {
+    std::string str;
+
+    // write variance modifier, if one is present
+    switch(this->type)
+      {
+        case variance::none:
+          {
+            break;
+          }
+
+        case variance::contravariant:
+          {
+            str = "^";
+            break;
+          }
+
+        case variance::covariant:
+          {
+            str = "_";
+          }
+      }
+
+    // append index kernel letter
+    str += this->idx.get().get_label();
+
+    return str;
+  }

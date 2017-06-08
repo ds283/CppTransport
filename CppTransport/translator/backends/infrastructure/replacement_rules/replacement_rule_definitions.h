@@ -32,6 +32,7 @@
 #include <functional>
 
 #include "index_assignment.h"
+#include "index_literal.h"
 #include "macro_types.h"
 #include "cse_map.h"
 #include "rules_common.h"
@@ -128,7 +129,7 @@ namespace macro_packages
 
       public:
 
-        //! constructor for a 'traditional' index macro with a fixed number of arguments and indices,
+        //! constructor for an index macro with a fixed number of arguments and indices,
         //! and enforcing a specific class for the index type
         replacement_rule_index(std::string nm, unsigned int a, unsigned int i, index_class c)
           : name(std::move(nm)),
@@ -138,7 +139,7 @@ namespace macro_packages
           {
           }
 
-        //! constructor for a 'traditional' index macro with a fixed number of arguments and indices,
+        //! constructor for an index macro with a fixed number of arguments and indices,
         //! but no specific class for the index types
         replacement_rule_index(std::string nm, unsigned int a, unsigned int i)
           : name(std::move(nm)),
@@ -159,7 +160,7 @@ namespace macro_packages
         std::string evaluate_unroll(const macro_argument_list& args, const assignment_list& indices);
 
         //! evaluate the macro on an abstract (rolled-up) index assignment
-        std::string evaluate_roll(const macro_argument_list& args, const abstract_index_database& indices);
+        std::string evaluate_roll(const macro_argument_list& args, const index_literal_list& indices);
 
         //! pre-evaluation
         void pre(const macro_argument_list& args);
@@ -206,7 +207,7 @@ namespace macro_packages
         virtual void post_hook(const macro_argument_list& args) { return; }
 
         //! evaluation function for rolled-up index sets; has to be supplied by implementation
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) = 0;
+        virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) = 0;
 
         
         // VALIDATION

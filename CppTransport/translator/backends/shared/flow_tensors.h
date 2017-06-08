@@ -88,7 +88,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -132,7 +132,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -176,7 +176,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -229,10 +229,10 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+        std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -288,10 +288,10 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+        std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -347,10 +347,10 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+        std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -407,10 +407,10 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        void pre_hook(const macro_argument_list& args) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -470,10 +470,10 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        void pre_hook(const macro_argument_list& args) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -533,10 +533,10 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        void pre_hook(const macro_argument_list& args) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -596,10 +596,10 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        void pre_hook(const macro_argument_list& args) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_database& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA

@@ -40,7 +40,44 @@
 #include "macro_types.h"
 
 
-typedef std::unordered_map<abstract_index, abstract_index> index_remap_rule;
+namespace std
+  {
+    
+    template<>
+    struct equal_to< std::reference_wrapper<index_literal> >
+      {
+        
+        bool operator()(const std::reference_wrapper<index_literal>& lhs, const std::reference_wrapper<index_literal>& rhs) const
+          {
+            const index_literal& lhs_T = lhs.get();
+            const index_literal& rhs_T = rhs.get();
+            
+            return equal_to<index_literal>()(lhs_T, rhs_T);
+          }
+        
+      };
+    
+    
+    template <>
+    struct hash< std::reference_wrapper<index_literal> >
+      {
+        
+        size_t operator()(const std::reference_wrapper<index_literal>& item) const
+          {
+            const index_literal& T = item.get();
+            
+            std::hash<index_literal> h;
+            return h(T);
+          }
+        
+      };
+    
+  }   // namespace std
+
+
+//! index_remap_rule is a conversion table from the indices used to declare a user-defined replacement rule
+//! to the indices used when it is invoked
+typedef std::unordered_map< std::reference_wrapper<index_literal>, std::reference_wrapper<index_literal> > index_remap_rule;
 
 
 namespace token_list_impl
@@ -205,7 +242,7 @@ namespace token_list_impl
       public:
 
         //! constructor
-        index_macro_token(const std::string& m, const abstract_index_database i, const macro_argument_list& a,
+        index_macro_token(const std::string& m, const index_literal_list& i, const macro_argument_list& a,
                           macro_packages::replacement_rule_index& r, error_context ec);
 
         //! destructor
@@ -244,7 +281,7 @@ namespace token_list_impl
         const macro_argument_list args;
 
         //! index list for this token
-        const abstract_index_database indices;
+        const index_literal_list indices;
 
         //! reference to replacement rule object for this token
         macro_packages::replacement_rule_index& rule;
@@ -307,7 +344,7 @@ namespace token_list_impl
       public:
         
         //! constructor
-        index_directive_token(const std::string& m, const abstract_index_database i, const macro_argument_list& a,
+        index_directive_token(const std::string& m, const index_literal_list& i, const macro_argument_list& a,
                               macro_packages::directive_index& r, error_context ec);
         
         //! destructor
@@ -333,7 +370,7 @@ namespace token_list_impl
         const macro_argument_list args;
         
         //! index list for this token
-        const abstract_index_database indices;
+        const index_literal_list indices;
         
         //! reference to replacement rule object for this token
         macro_packages::directive_index& rule;

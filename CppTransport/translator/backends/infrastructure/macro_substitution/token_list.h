@@ -44,19 +44,29 @@
 #include "translator_data.h"
 #include "macro_tokens.h"
 
+#include "boost/optional.hpp"
+
 
 // forward-declare package_group, if needed
 class package_group;
 
 
+//! tokenize a string and supply methods on the resulting list of tokens
 class token_list
   {
 
   public:
 
     //! build a token list from an input string
-    token_list(const std::string& input, const std::string& prefix, unsigned int nf, unsigned int np,
-               const package_group& package, const index_ruleset& local_rules, translator_data& d);
+    //! the supplied package_group determined which replacement rules and directives are recognized during
+    //! tokenization, and the index_ruleset 'lr' provides a list of local rules (eg. injected by the user
+    //! using the $SET directive).
+    //! If the optional index_literal_database 'v' is provided then it is used to validate the properties
+    //! of recognized indices -- eg. RHS indices that match LHS indices should also match the variance
+    //! specified on the LHS
+    token_list(const std::string& in, const std::string& pfx, unsigned int nf, unsigned int np,
+               const package_group& pkg, const index_ruleset& lr, translator_data& d,
+               boost::optional<index_literal_database&> v=boost::none, bool s=false);
 
     // suppress default copy constructor
     token_list(const token_list& obj) = delete;
@@ -128,26 +138,23 @@ class token_list
     //! tokenize a macro or free index
     template <typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::generic_token>, size_t>
-    match_macro_or_index(const std::string& input, const size_t position, const pre_ruleset& pre, const post_ruleset& post,
-                             const index_ruleset& index, const index_ruleset& local_rules, const simple_directiveset& simp_dir,
-                             const index_directiveset& ind_dir, ContextFactory make_context);
+    match_macro_or_index(const size_t position, ContextFactory make_context);
 
     //! build an index literal token
     template <typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::index_literal_token>, size_t>
-    make_index_literal(const std::string& input, const size_t position, ContextFactory make_context);
+    make_index_literal(const size_t position, ContextFactory make_context);
 
     //! build a simple macro token
     template <typename RuleSet, typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::simple_macro_token>, size_t>
-    make_simple_macro(const std::string& input, const std::string& macro, const size_t position,
-                      const RuleSet& rules, simple_macro_type type, ContextFactory make_context);
+    make_simple_macro(const std::string& macro, const size_t position, const RuleSet& rules, simple_macro_type type,
+                      ContextFactory make_context);
 
     //! build an index macro token
     template <typename RuleSet, typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::index_macro_token>, size_t>
-    make_index_macro(const std::string& input, const std::string& macro, const size_t position,
-                     const RuleSet& rules, ContextFactory make_context);
+    make_index_macro(const std::string& macro, const size_t position, const RuleSet& rules, ContextFactory make_context);
 
     //! add an index to our internal list
     abstract_index_database::iterator add_index(char label);
@@ -158,14 +165,19 @@ class token_list
     //! build a simple directive token
     template <typename RuleSet, typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::simple_directive_token>, size_t>
-    make_simple_directive(const std::string& input, const std::string& macro, const size_t position,
-                          const RuleSet& rules, ContextFactory make_context);
+    make_simple_directive(const std::string& macro, const size_t position, const RuleSet& rules,
+                              ContextFactory make_context);
     
     //! build an index directive token
     template <typename RuleSet, typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::index_directive_token>, size_t>
-    make_index_directive(const std::string& input, const std::string& macro, const size_t position,
-                         const RuleSet& rules, ContextFactory make_context);
+    make_index_directive(const std::string& macro, const size_t position, const RuleSet& rules,
+                             ContextFactory make_context);
+
+
+    // VALIDATION
+
+  protected:
     
     //! validate whether it's OK to process a replacement rule (directives and rules should not be mixed)
     template <typename ContextFactory>
@@ -174,6 +186,9 @@ class token_list
     //! validate whether it's OK to process a directive (directives and rules should not be mixed)
     template <typename ContextFactory>
     bool validate_directive(const std::string& macro, const size_t position, ContextFactory make_context);
+
+    //! validate an index_literal against a supplied database
+    void validate_index_literal(index_literal& l, error_context& ctx);
     
 
     // INTERNAL DATA
@@ -188,6 +203,42 @@ class token_list
 
     //! reference to translator data payload
     translator_data& data_payload;
+
+    //! reference to replacement rule package
+    const package_group& package;
+
+
+    // SETTINGS
+
+    //! rule prefix
+    const std::string prefix;
+
+    //! validation database, if supplied
+    boost::optional< index_literal_database& > validation_db;
+
+    //! is validation strict? ie., should we reject indices not in the validation database?
+    const bool strict;
+
+
+    // RULE SET CACHES
+
+    //! pre-rules
+    const pre_ruleset& pre;
+
+    //! post-rules
+    const post_ruleset& post;
+
+    //! index rules
+    const index_ruleset& index;
+
+    //! locally-defined index rules
+    const index_ruleset& local_rules;
+
+    //! simple directives
+    const simple_directiveset& simp_dir;
+
+    //! index directives
+    const index_directiveset& ind_dir;
 
 
     // TOKEN DATA
@@ -236,10 +287,10 @@ class token_list
     // CACHE DATA ABOUT MODEL
 
     //! cache number of fields
-    unsigned int num_fields;
+    const unsigned int num_fields;
 
     //! cache number of parameters
-    unsigned int num_params;
+    const unsigned int num_params;
 
   };
 

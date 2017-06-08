@@ -81,31 +81,31 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::string replace_U1::roll(const macro_argument_list& args, const abstract_index_database& indices)
+    std::string replace_U1::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<map_lambda> lambda = this->u1_tensor->compute_lambda(indices[0]);
+        std::unique_ptr<map_lambda> lambda = this->u1_tensor->compute_lambda(*indices[0]);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    std::string replace_U2::roll(const macro_argument_list& args, const abstract_index_database& indices)
+    std::string replace_U2::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol k = sym_factory.get_symbol(args[U2_K_ARGUMENT]);
         GiNaC::symbol a = sym_factory.get_symbol(args[U2_A_ARGUMENT]);
 
-        std::unique_ptr<map_lambda> lambda = this->u2_tensor->compute_lambda(indices[0], indices[1], k, a);
+        std::unique_ptr<map_lambda> lambda = this->u2_tensor->compute_lambda(*indices[0], *indices[1], k, a);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    std::string replace_U3::roll(const macro_argument_list& args, const abstract_index_database& indices)
+    std::string replace_U3::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[U3_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[U3_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[U3_K3_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[U3_A_ARGUMENT]);
 
-        std::unique_ptr<map_lambda> lambda = this->u3_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        std::unique_ptr<map_lambda> lambda = this->u3_tensor->compute_lambda(*indices[0], *indices[1], *indices[2], k1, k2, k3, a);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 

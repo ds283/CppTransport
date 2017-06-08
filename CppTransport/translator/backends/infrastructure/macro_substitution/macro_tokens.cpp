@@ -77,7 +77,7 @@ namespace token_list_impl
 
     void index_literal_token::evaluate(const assignment_list& a)
       {
-        abstract_index& idx = this->index.get();
+        const abstract_index& idx = this->index;
         
         auto t = a.find(idx.get_label());
 
@@ -97,26 +97,24 @@ namespace token_list_impl
 
     void index_literal_token::evaluate()
       {
-        abstract_index& idx = this->index.get();
+        const abstract_index& idx = this->index;
         this->conversion = idx.get_loop_variable();
       }
 
 
     void index_literal_token::evaluate(const index_remap_rule& rule)
       {
-        abstract_index& idx = this->index.get();
-
-        // find substitution for this index
-        index_remap_rule::const_iterator t = rule.find(idx);
+        // find substitution for the index we are carrying
+        auto t = rule.find(std::ref(this->index));
 
         if(t == rule.end())
           {
             std::ostringstream msg;
-            msg << ERROR_INDEX_SUBSTITUTION << " '" << idx.get_label() << "'";
+            msg << ERROR_INDEX_SUBSTITUTION << " '" << this->index.get().get_label() << "'";
             throw macro_packages::rule_apply_fail(msg.str());
           }
 
-        this->conversion = t->second.get_loop_variable();
+        this->conversion = t->second.get().get().get_loop_variable();
       }
 
 
@@ -155,7 +153,7 @@ namespace token_list_impl
       }
 
 
-    index_macro_token::index_macro_token(const std::string& m, const abstract_index_database i,
+    index_macro_token::index_macro_token(const std::string& m, const index_literal_list& i,
                                          const macro_argument_list& a, macro_packages::replacement_rule_index& r,
                                          error_context ec)
       : generic_token(m, std::move(ec)),
@@ -220,8 +218,10 @@ namespace token_list_impl
         // preserves ordering
         assignment_list index_values;
 
-        for(const abstract_index& idx : this->indices)
+        for(const auto& T : this->indices)
           {
+            const abstract_index& idx = *T;
+            
             assignment_list::const_iterator it = a.find(idx.get_label());
             if(it == a.end())
               {
@@ -281,27 +281,29 @@ namespace token_list_impl
     void index_macro_token::evaluate_roll(const index_remap_rule& rule)
       {
         // build index set using substitution rules
-        abstract_index_database list;
+        index_literal_list remap_list;
 
-        for(const abstract_index& idx : this->indices)
+        // loop through index_literal_list provided at declaration and map its entries to the corresponding ones
+        // provided by the index_remap_rule
+        for(auto& T : this->indices)
           {
-            index_remap_rule::const_iterator t = rule.find(idx);
+            index_literal& decl_idx = *T;
+            auto t = rule.find(std::ref(decl_idx));
 
             if(t == rule.end())
               {
                 std::ostringstream msg;
-                msg << ERROR_INDEX_SUBSTITUTION << " '" << idx.get_label() << "'";
+                msg << ERROR_INDEX_SUBSTITUTION << " '" << decl_idx.get().get_label() << "'";
                 throw macro_packages::rule_apply_fail(msg.str());
               }
-
-            const abstract_index& subs = t->second;
-
-            list.emplace_back(std::make_pair(subs.get_label(), std::make_shared<abstract_index>(subs)));
+            
+            index_literal& mapped_idx = t->second.get();
+            remap_list.emplace_back(std::make_shared<index_literal>(mapped_idx));
           }
 
         try
           {
-            this->conversion = this->rule.evaluate_roll(this->args, list);
+            this->conversion = this->rule.evaluate_roll(this->args, remap_list);
           }
         catch(macro_packages::rule_apply_fail& xe)
           {
@@ -355,7 +357,7 @@ namespace token_list_impl
       }
     
     
-    index_directive_token::index_directive_token(const std::string& m, const abstract_index_database i,
+    index_directive_token::index_directive_token(const std::string& m, const index_literal_list& i,
                                                  const macro_argument_list& a, macro_packages::directive_index& r,
                                                  error_context ec)
       : generic_token(m, std::move(ec)),
