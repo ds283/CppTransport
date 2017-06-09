@@ -195,11 +195,11 @@ namespace macro_tokenizer_impl
 
 
     // get a macro index list
-    template <typename ContextFactory, typename IndexHandler, typename IndexValidator, typename VarianceValidator>
+    template <typename ContextFactory, typename IndexHandler, typename IndexValidator, typename PropertiesValidator>
     std::pair<index_literal_list, size_t>
     get_index_list(const std::string& input, const std::string& candidate, const size_t position,
-                   ContextFactory make_context, IndexHandler add_index, IndexValidator validate_index,
-                   VarianceValidator validate_variance)
+                   ContextFactory make_context, IndexHandler add_index, PropertiesValidator validate_properties,
+                   IndexValidator validate_index)
       {
         index_literal_list idx_list;
         size_t current_position = position;
@@ -236,12 +236,18 @@ namespace macro_tokenizer_impl
                 // push this index into the main database and receive a reference to its record
                 abstract_index& idx = add_index(input[current_position], ctx);
 
-                // now push a copy of this index literal into the literal list
-                validate_variance(v, ctx);
-                idx_list.emplace_back(std::make_shared<index_literal>(idx, ctx, v));
+                // construct index literal
+                auto l = std::make_shared<index_literal>(idx, ctx, v);
 
-                // finally, validate the index
-                validate_index(*idx_list.back());
+                // validate its properties (currently its variance)
+                validate_properties(*l);
+    
+                // validate this literal against pre-supplied database of acceptable
+                // kernel names (no-op if no validation database was supplied)
+                validate_index(*l);
+
+                // move index literal record into central list
+                idx_list.push_back(std::move(l));
               }
             else
               {
@@ -539,10 +545,11 @@ token_list::make_index_literal(const size_t position, ContextFactory make_contex
 
     // generate a record of this index instance, keeping the variance information
     error_context ctx = make_context(position, current_position);
-    this->validate_index_variance(v, ctx);
     index_literal l(*idx, ctx, v);
+    this->validate_index_properties(l);
 
-    // validate this literal (no-op if no validation database was supplied)
+    // validate this literal against pre-supplied database of acceptable
+    // kernel names (no-op if no validation database was supplied)
     this->validate_index_literal(l);
 
     // generate a token corresponding to this literal
@@ -636,10 +643,10 @@ token_list::make_index_macro(const std::string& macro, const size_t position, co
         this->index_decls.emplace_back(std::make_shared<index_literal>(l));
       };
 
-    auto validate_variance = [&](variance& v, error_context& ctx) -> void { this->validate_index_variance(v, ctx); };
+    auto validate_properties = [&](index_literal& l) -> void { this->validate_index_properties(l); };
 
     std::tie(idx_list, current_position) =
-      get_index_list(input, macro, current_position, make_context, add_index, validate_index, validate_variance);
+      get_index_list(input, macro, current_position, make_context, add_index, validate_properties, validate_index);
 
     // may find an argument list
     macro_argument_list arg_list;
@@ -765,11 +772,11 @@ token_list::make_index_directive(const std::string& macro, const size_t position
         this->validate_index_literal(l);
         this->index_decls.emplace_back(std::make_shared<index_literal>(l));
       };
-
-    auto validate_variance = [&](variance& v, error_context& ctx) -> void { this->validate_index_variance(v, ctx); };
+    
+    auto validate_properties = [&](index_literal& l) -> void { this->validate_index_properties(l); };
 
     std::tie(idx_list, current_position) =
-      get_index_list(input, macro, current_position, make_context, add_index, validate_index, validate_variance);
+      get_index_list(input, macro, current_position, make_context, add_index, validate_properties, validate_index);
     
     // may find an argument list
     macro_argument_list arg_list;
@@ -969,15 +976,28 @@ void token_list::validate_index_literal(index_literal& l)
   }
 
 
-void token_list::validate_index_variance(variance& v, error_context& ctx)
+void token_list::validate_index_properties(index_literal& l)
   {
+    const abstract_index& idx = l.get();
+    
+    // if a parameter index, drop any variance qualifier and return
+    if(idx.get_class() == index_class::parameter)
+      {
+        if(l.get_variance() != variance::none)
+          {
+            l.set_variance(variance::none);
+            l.get_declaration_point().warn(NOTIFY_PARAMETER_VARIANCE_IGNORED);
+          }
+        return;
+      }
+    
     // if a canonical model, nothing to do
     if(this->data_payload.model.get_lagrangian_type() == model_type::canonical) return;
     
     // if a nontrivial metric model, all indices should have a variance assignment
-    if(v == variance::none)
+    if(l.get_variance() == variance::none)
       {
-        v = variance::contravariant;
-        ctx.error(ERROR_NONTRIVIAL_REQUIRES_VARIANCE);
+        l.set_variance(variance::contravariant);
+        l.get_declaration_point().error(ERROR_NONTRIVIAL_REQUIRES_VARIANCE);
       }
   }

@@ -197,7 +197,7 @@ class token_list
     void validate_index_literal(index_literal& l);
     
     //! validate variance assignment
-    void validate_index_variance(variance& v, error_context& ctx);
+    void validate_index_properties(index_literal& l);
     
 
     // INTERNAL DATA

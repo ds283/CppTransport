@@ -119,6 +119,9 @@ class index_literal
     //! get index variance
     variance get_variance() const { return this->type; }
     
+    //! set index variance
+    index_literal& set_variance(variance v) { this->type = v; return *this; }
+    
     //! get error context
     const error_context& get_declaration_point() const { return this->ctx; }
 

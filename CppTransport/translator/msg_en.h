@@ -200,7 +200,8 @@ constexpr auto ERROR_INDEX_LITERAL_NO_KERNEL         = "Line ended before kernel
 constexpr auto ERROR_INDEX_VALIDATION_FAIL           = "Mismatched index literal: expected";
 constexpr auto NOTIFY_INDEX_DECLARATION_WAS          = "Location of original index declaration was";
 constexpr auto ERROR_INDEX_NOT_VALID                 = "Use of undeclared index literal";
-constexpr auto ERROR_NONTRIVIAL_REQUIRES_VARIANCE    = "Variance must be assigned when using a nontrival field-space metric";
+constexpr auto ERROR_NONTRIVIAL_REQUIRES_VARIANCE    = "Variance must be assigned when using a nontrival field-space metric: assuming covariant";
+constexpr auto NOTIFY_PARAMETER_VARIANCE_IGNORED     = "Variance specifier ignored for parameter-type index";
 
 constexpr auto ERROR_INDEX_LITERAL_REASSIGN          = "Internal error: missing database entry during index literal reassignment, for index";
 
