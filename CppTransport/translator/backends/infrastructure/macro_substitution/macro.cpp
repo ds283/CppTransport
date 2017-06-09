@@ -149,7 +149,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     // generate assignments for the LHS indices
     assignment_set LHS_assignments(left_tokens->get_index_database());
 
-    // generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
+    // generate an assignment for each RHS index; first get RHS indices that are not also LHS indices
     abstract_index_database RHS_indices;
 
     try
@@ -162,8 +162,6 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
         msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
         ctx.error(msg.str());
       }
-
-    // TODO: check that RHS-indices are compatible with summation convention where possible; easy if index occurs twice, otherwise have to issue a warning
 
     assignment_set RHS_assignments(RHS_indices);
 
@@ -215,8 +213,8 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
                                           unsigned int& counter, macro_impl::split_string& split_result,
                                           error_context& ctx, std::list<std::string>& r_list)
   {
-    // LHS_assignments may be *empty* (ie size=0) if there are no valid assignments (probably one of the index
-    // ranges is empty).
+    // LHS_assignments may be *empty* (ie size=0) if there are no valid assignments
+    // (probably one of the index ranges is empty).
     // If there are no LHS indices then it will report size=1, ie. the trivial index assignment
     // It's important to distinguish these two cases!
 
