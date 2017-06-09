@@ -34,6 +34,66 @@
 #include "formatter.h"
 
 
+class TemplateJanitor
+  {
+    
+    // CONSTRUCTOR, DESTRUCTOR
+    
+  public:
+    
+    //! constructor
+    TemplateJanitor(std::unique_ptr<std::ifstream> f, output_stack& os)
+      : inf(std::move(f)),
+        out_stack(os),
+        closed(false)
+      {
+      }
+    
+    //! destructor
+    ~TemplateJanitor()
+      {
+        if(!closed) this->close();
+      }
+    
+    
+    // INTERFACE
+    
+  public:
+    
+    void close()
+      {
+        this->inf->close();
+        this->out_stack.pop();
+        this->closed = true;
+      }
+    
+    std::ifstream& get()
+      {
+        return *this->inf;
+      }
+    
+    std::ifstream& operator*()
+      {
+        return this->get();
+      }
+    
+    
+    // INTERNAL DATA
+    
+  public:
+    
+    //! ifstream object -- we assume ownership of it
+    std::unique_ptr<std::ifstream> inf;
+    
+    //! output stack
+    output_stack& out_stack;
+    
+    //! flag to indicate whether we have already cleaned up
+    bool closed;
+    
+  };
+
+
 translator::translator(translator_data& payload)
   : data_payload(payload)
   {
@@ -70,7 +130,7 @@ unsigned int translator::translate(const std::string& in, const error_context& c
 
 unsigned int translator::translate(const std::string& in, const error_context& ctx, buffer& buf, process_type type, filter_function* filter)
   {
-    unsigned int            rval = 0;
+    unsigned int rval = 0;
     boost::filesystem::path template_in;
 
     finder& path = this->data_payload.get_finder();
@@ -119,15 +179,18 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
     // push this input file to the top of the filestack
     output_stack& os = this->data_payload.get_stack();
     os.push(in, buf, agent, type);  // current line number is automatically set to 2 (accounting for the header line)
+    
+    // set up janitor object to clean up if an exception is encountered during translation
+    TemplateJanitor j(std::move(inf), os);
 
     // are we annotating the translated template?
     bool annotate = this->data_payload.annotate();
 
     unsigned int replacements = 0;
 
-    while(!inf->eof() && !inf->fail())
+    while(!(*j).eof() && !(*j).fail())
       {
-        replacements += this->process_line(*inf, *package, agent, buf, os, filter, annotate);
+        replacements += this->process_line(*j, *package, agent, buf, os, filter, annotate);
         os.increment_line();
       }
 
@@ -135,7 +198,6 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
     // this enables it to do any tidying-up which may be required,
     // such as depositing temporaries to a temporary pool
     package->report_end_of_input();
-    os.pop();
 
     // emit advisory that translation is complete
     std::ostringstream finished_msg;
@@ -143,12 +205,12 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
     this->data_payload.message(finished_msg.str());
 
     // report time spent doing macro replacement
+    // package will also report on time and memory use when it goes out of scope and is destroyed
     package->report_macro_metadata(agent.get_total_work_time(), agent.get_tokenization_time());
 
-    // package will report on time and memory use when it goes out of scope and is destroyed
-
-    inf->close();
-
+    // close janitor object
+    j.close();
+    
     return(replacements);
   }
 
