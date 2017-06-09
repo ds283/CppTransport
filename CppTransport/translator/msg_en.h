@@ -184,7 +184,7 @@ constexpr auto ERROR_MACRO_WRONG_ARGUMENT_COUNT      = "Incorrect number of argu
 constexpr auto ERROR_DIRECTIVE_WRONG_ARGUMENT_COUNT  = "Incorrect number of arguments for directive";
 constexpr auto ERROR_EXPECTED_ARGUMENT_COUNT         = "expected";
 constexpr auto ERROR_RECEIVED_ARGUMENT_COUNT         = "received";
-constexpr auto ERROR_MACRO_WRONG_INDEX_COUNT         = "Incorrect number of indices for macro";
+constexpr auto ERROR_MACRO_WRONG_INDEX_COUNT         = "Incorrect number of indices for replacement rule";
 constexpr auto ERROR_DIRECTIVE_WRONG_INDEX_COUNT     = "Incorrect number of indices for directive";
 constexpr auto ERROR_EXPECTED_INDEX_COUNT            = "expected";
 constexpr auto ERROR_RECEIVED_INDEX_COUNT            = "received";
@@ -199,6 +199,7 @@ constexpr auto ERROR_DIRECTIVE_ON_RHS                = "A line containing a dire
 constexpr auto ERROR_INDEX_LITERAL_NO_KERNEL         = "Line ended before kernel letter for index literal";
 constexpr auto ERROR_INDEX_VALIDATION_FAIL           = "Mismatched index literal: expected";
 constexpr auto ERROR_INDEX_NOT_VALID                 = "Use of undeclared index literal";
+constexpr auto ERROR_NONTRIVIAL_REQUIRES_VARIANCE    = "Variance must be assigned when using a nontrival field-space metric";
 
 constexpr auto ERROR_INDEX_LITERAL_REASSIGN          = "Internal error: missing database entry during index literal reassignment, for index";
 
