@@ -104,67 +104,21 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     // break the line at the split point, if one exists, to get a 'left-hand' side and a 'right-hand' side
     macro_impl::split_string split_result(line, this->split_equal, this->split_sum_equal);
 
-    // PERFORM TOKENIZATION
+    // tokenize
+    std::unique_ptr<token_list> left_tokens;
+    std::unique_ptr<token_list> right_tokens;
+    std::tie(left_tokens, right_tokens) = this->perform_tokenization(split_result);
 
-    // keep track of the time required
-    timing_instrument tok_timer(this->tokenization_timer);
-    auto left_tokens = this->tokenize(split_result.get_left());
-
-    // collect indices defined on LHS and convert to a validation database
-    const auto& left_index_decls = left_tokens->get_index_declarations();
-    std::unique_ptr<index_literal_database> validation_db;
-    try
-      {
-        validation_db = to_database(left_index_decls);
-      }
-    catch(duplicate_index& xe)
-      {
-        const error_context& ctx = xe.get_error_point();
-
-        std::ostringstream msg;
-        msg << ERROR_LHS_INDEX_DUPLICATE << " '" << xe.what() << "'";
-        ctx.error(msg.str());
-      }
-
-    // tokenize RHS, enforcing that indices shared with LHS have the same properties
-    boost::optional<index_literal_database&> vdb;
-    if(validation_db) vdb = *validation_db;
-    auto right_tokens = this->tokenize(split_result.get_right(), vdb);
-    tok_timer.stop();
-
-    // return quickly if output is disabled
+    // if output is disabled then there is nothing to do, so we should return as quickly as possible after tokenization
     // (tokenization always happens so we can process directives such as eg. $ELSE, $ENDIF)
     if(!this->output_enabled) return r_list;
     
     // generate error context, contexted at split-point if one is available
-    error_context ctx = this->data_payload.make_error_context();
-    switch(split_result.get_split_type())
-      {
-        case macro_impl::split_type::none:
-          {
-            ctx = this->data_payload.make_error_context();
-            break;
-          }
-        
-        case macro_impl::split_type::sum:
-          {
-            unsigned int p = split_result.get_split_point();
-            ctx = this->data_payload.make_error_context(std::make_shared<std::string>(line),
-                                                        p, p+this->split_equal.size());
-            break;
-          }
-    
-        case macro_impl::split_type::sum_equal:
-          {
-            unsigned int p = split_result.get_split_point();
-            ctx = this->data_payload.make_error_context(std::make_shared<std::string>(line),
-                                                        p, p+this->split_sum_equal.size());
-            break;
-          }
-      }
-    
+    error_context ctx = this->make_split_point_context(line, split_result);
+
     // check whether any directives were recognized in this line;
-    // if so, the line should be simple -- it shouldn't have a left-hand side and right-hand side
+    // if so, the line should be simple -- it shouldn't have a left-hand side and right-hand side,
+    // so flag an error if it does
     if(split_result.get_split_type() != macro_impl::split_type::none
        && (right_tokens->is_directive() || left_tokens->is_directive()))
       {
@@ -530,6 +484,103 @@ std::string macro_agent::dress(std::string out_str, const std::string& raw_inden
 void macro_agent::inject_macro(std::reference_wrapper< macro_packages::replacement_rule_index > rule)
   {
     this->local_index_rules.push_back(std::move(rule));
+  }
+
+
+std::pair< std::unique_ptr<token_list>, std::unique_ptr<token_list> >
+macro_agent::perform_tokenization(const macro_impl::split_string& split_result)
+  {
+    // keep track of the time required for tokenization
+    timing_instrument tok_timer(this->tokenization_timer);
+
+    // tokenize LHS if it is present
+    auto left_tokens = this->tokenize(split_result.get_left());
+
+    // collect indices defined on LHS and convert to a validation database
+    const auto& left_index_decls = left_tokens->get_index_declarations();
+    std::unique_ptr<index_literal_database> validation_db;
+    try
+      {
+        validation_db = to_database(left_index_decls);
+      }
+    catch(duplicate_index& xe)
+      {
+        const error_context& ctx = xe.get_error_point();
+
+        std::ostringstream msg;
+        msg << ERROR_LHS_INDEX_DUPLICATE << " '" << xe.what() << "'";
+        ctx.error(msg.str());
+      }
+
+    // tokenize RHS, enforcing that indices shared with LHS have the same properties
+    boost::optional<index_literal_database&> vdb;
+    if(validation_db) vdb = *validation_db;
+    auto right_tokens = this->tokenize(split_result.get_right(), vdb);
+
+    // validate RHS index instances
+    if(split_result.get_split_type() != macro_impl::split_type::none)
+      this->validate_RHS_indices(*right_tokens);
+
+    // stop tokenization timer
+    tok_timer.stop();
+
+    return std::make_pair(std::move(left_tokens), std::move(right_tokens));
+  }
+
+
+error_context macro_agent::make_split_point_context(const std::string& line, const macro_impl::split_string& split_result)
+  {
+    error_context ctx = this->data_payload.make_error_context();
+
+    switch(split_result.get_split_type())
+      {
+        case macro_impl::split_type::none:
+          {
+            ctx = this->data_payload.make_error_context();
+            break;
+          }
+
+        case macro_impl::split_type::sum:
+          {
+            unsigned int p = split_result.get_split_point();
+            ctx = this->data_payload.make_error_context(std::make_shared<std::string>(line),
+                                                        p, p+this->split_equal.size());
+            break;
+          }
+
+        case macro_impl::split_type::sum_equal:
+          {
+            unsigned int p = split_result.get_split_point();
+            ctx = this->data_payload.make_error_context(std::make_shared<std::string>(line),
+                                                        p, p+this->split_sum_equal.size());
+            break;
+          }
+      }
+
+    return ctx;
+  }
+
+
+void macro_agent::validate_RHS_indices(token_list& right_tokens)
+  {
+    // check how many times each RHS index occurs
+    this->validate_RHS_count(right_tokens);
+
+    // for nontrivial metric models, perform rudimentary checks on index position
+    if(this->data_payload.model.get_lagrangian_type() == model_type::nontrivial_metric)
+      this->validate_RHS_variances(right_tokens);
+  }
+
+
+void macro_agent::validate_RHS_count(token_list& right_tokens)
+  {
+
+  }
+
+
+void macro_agent::validate_RHS_variances(token_list& right_tokens)
+  {
+
   }
 
 

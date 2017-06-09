@@ -189,8 +189,29 @@ class macro_agent
 
     //! do the heavy lifting of applying macro substitution to a line
     std::unique_ptr< std::list<std::string> > apply_line(const std::string& line, unsigned int& replacements);
-    
-    
+
+    //! perform tokenization of a split line
+    std::pair< std::unique_ptr<token_list>, std::unique_ptr<token_list> >
+    perform_tokenization(const macro_impl::split_string& split_result);
+
+    //! construct error_context associated with split point
+    error_context make_split_point_context(const std::string& line, const macro_impl::split_string& split_result);
+
+
+    // INTERNAL API -- VALIDATION
+
+  protected:
+
+    //! perform validation of a set of RHS indices
+    void validate_RHS_indices(token_list& right_tokens);
+
+    //! check number of occurrrences of each RHS index, and flag warnings for those that occur only once
+    void validate_RHS_count(token_list& right_tokens);
+
+    //! check index positioning for nontrivial-metric cases
+    void validate_RHS_variances(token_list& right_tokens);
+
+
     // INTERNAL API -- HANDLE INDEX SET BY UNROLLING
 
   protected:
