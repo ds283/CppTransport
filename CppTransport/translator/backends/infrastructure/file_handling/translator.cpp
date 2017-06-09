@@ -58,7 +58,7 @@ void translator::print_advisory(const std::string& msg)
 	}
 
 
-unsigned int translator::translate(const std::string& in, const error_context& ctx, const std::string& out, process_type type, filter_function* filter)
+unsigned int translator::translate(const std::string& in, const error_context& ctx, const boost::filesystem::path& out, process_type type, filter_function* filter)
   {
 		buffer buf(out);
 
@@ -224,7 +224,7 @@ std::unique_ptr<std::ifstream> translator::open_template(const boost::filesystem
     translation_msg << MESSAGE_TRANSLATING << " '" << in.string() << "'";
     if(!buf.is_memory())
       {
-        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
+        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename().string() << "'";
       }
     this->data_payload.message(translation_msg.str());
 

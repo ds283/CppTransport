@@ -26,6 +26,8 @@
 #ifndef CPPTRANSPORT_TRANSLATION_UNIT_H
 #define CPPTRANSPORT_TRANSLATION_UNIT_H
 
+#include <stdexcept>
+
 #include "lexstream.h"
 #include "y_common.h"
 #include "y_lexer.h"
@@ -42,6 +44,25 @@
 #include "version_policy.h"
 
 #include "symbol_factory.h"
+
+
+class exit_parse : public std::runtime_error
+  {
+    
+    // CONSTRUCTOR, DESTRUCTOR
+    
+  public:
+    
+    //! constructor
+    exit_parse(std::string m)
+      : std::runtime_error(std::move(m))
+      {
+      }
+    
+    //! destructor is default
+    ~exit_parse() = default;
+    
+  };
 
 
 //! encapsulates the entire pipeline for translating an input script

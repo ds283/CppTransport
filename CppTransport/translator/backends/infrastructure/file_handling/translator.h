@@ -63,7 +63,7 @@ class translator
 
     //! translate from template 'in', depositing output in the file 'out'
 		//! implemented internally by constructed a buffer and calling the next variant
-    unsigned int translate(const std::string& in, const error_context& ctx, const std::string& out, process_type type, filter_function* filter=nullptr);
+    unsigned int translate(const std::string& in, const error_context& ctx, const boost::filesystem::path& out, process_type type, filter_function* filter=nullptr);
 
 		//! translate from template 'in', depositing output in the supplied buffer 'buf'
     unsigned int translate(const std::string& in, const error_context& ctx, buffer& buf, process_type type, filter_function* filter=nullptr);

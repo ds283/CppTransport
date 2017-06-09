@@ -32,5 +32,7 @@ constexpr double DEFAULT_REL_ERR   = 1E-6;
 constexpr double DEFAULT_STEP_SIZE = 1E-12;
 constexpr auto   DEFAULT_STEPPER   = "runge_kutta_dopri5";
 
+constexpr unsigned int DEFAULT_MAX_ERROR_COUNT = 20;
+
 
 #endif //CPPTRANSPORT_DEFAULTS_H

@@ -25,6 +25,7 @@
 
 
 #include "core.h"
+#include "defaults.h"
 #include "translation_unit.h"
 #include "model_descriptor.h"
 #include "output_stack.h"
@@ -263,12 +264,23 @@ unsigned int translation_unit::apply()
 		if(this->parse_failed || this->errors > 0) return rval;
     
     this->populate_output_filenames();
+
+    const boost::filesystem::path& core_output = this->translator_payload.get_core_filename();
+    const boost::filesystem::path& impl_output = this->translator_payload.get_implementation_filename();
     
     boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core_template();
     if(core)
       {
-        rval += this->outstream.translate(*core, (*core).get_declaration_point(),
-                                          this->translator_payload.get_core_filename().string(), process_type::process_core);
+        try
+          {
+            rval += this->outstream.translate(*core, (*core).get_declaration_point(), core_output, process_type::process_core);
+          }
+        catch(exit_parse& xe)
+          {
+            std::ostringstream msg;
+            msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+            this->warn(msg.str());
+          }
       }
     else
       {
@@ -278,15 +290,31 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation_template();
     if(impl)
       {
-        rval += this->outstream.translate(*impl, (*core).get_declaration_point(),
-                                          this->translator_payload.get_implementation_filename().string(), process_type::process_implementation);
+
+        try
+          {
+            rval += this->outstream.translate(*impl, (*core).get_declaration_point(), impl_output, process_type::process_implementation);
+          }
+        catch(exit_parse& xe)
+          {
+            std::ostringstream msg;
+            msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+            this->warn(msg.str());
+          }
       }
     else
       {
         this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
       }
 
-    if(this->errors > 0) this->parse_failed = true;
+    if(this->errors > 0)
+      {
+        this->parse_failed = true;
+
+        // remove output files
+        if(boost::filesystem::exists(core_output)) boost::filesystem::remove(core_output);
+        if(boost::filesystem::exists(impl_output)) boost::filesystem::remove(impl_output);
+      }
 
     return(rval);
   }
@@ -332,7 +360,9 @@ void translation_unit::print_advisory(const std::string& msg)
 void translation_unit::error(const std::string& msg)
 	{
 		::error(msg, this->cache, this->env);
+    
     ++this->errors;
+    if(this->errors > DEFAULT_MAX_ERROR_COUNT) throw exit_parse(NOTIFY_TOO_MANY_ERRORS);
 	}
 
 
@@ -346,7 +376,9 @@ void translation_unit::warn(const std::string& msg)
 void translation_unit::context_error(const std::string& msg, const error_context& ctx)
   {
     ::error(msg, this->cache, this->env, ctx);
+
     ++this->errors;
+    if(this->errors > DEFAULT_MAX_ERROR_COUNT) throw exit_parse(NOTIFY_TOO_MANY_ERRORS);
   }
 
 

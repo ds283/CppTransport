@@ -43,16 +43,16 @@
 #define BUFFER_MAGIC_TAG "MAGIC_TAG"
 
 
-buffer::buffer(const std::string& fn, unsigned int cp)
+buffer::buffer(boost::filesystem::path fn, unsigned int cp)
 	: in_memory(false),
-	  filename(fn),
+	  filename(std::move(fn)),
 		capacity(cp),
 		size(0)
   {
     tag = buf.insert(buf.end(), BUFFER_MAGIC_TAG);
 
 		// connect output stream to the destination file
-		out_stream.open(filename);
+		out_stream.open(filename.string());
 
 		if(!out_stream.is_open() || out_stream.fail())
 			{
@@ -89,9 +89,9 @@ buffer::~buffer()
 		    // presumably this was flagged on construction
 				if(this->out_stream.is_open())
 					{
-						for(std::list<std::string>::iterator t = this->buf.begin(); t != this->buf.end(); ++t)
+						for(const auto& str : this->buf)
 							{
-								this->out_stream << (*t) << '\n';
+								this->out_stream << str << '\n';
 							}
 
 						this->out_stream.close();
@@ -106,22 +106,21 @@ void buffer::write(std::string& line, std::list<std::string>::iterator insertion
     std::vector<std::string> lines;
     boost::split(lines, line, boost::is_any_of(NEWLINE_CHAR));
 
-    for(std::vector<std::string>::const_iterator t = lines.begin(); t != lines.end(); ++t)
+    for(auto& str : lines)
       {
         bool write = true;
         if(this->skips.size() > 0)
           {
-            if(this->skips.front() && t->length() == 0) write = false;
+            if(this->skips.front() && str.length() == 0) write = false;
           }
 
         if(write)
           {
-            std::string item = *t;
-            this->delimit_line(item);
+            this->delimit_line(str);
 
 		        // insert line, and increase size accordingly
-            this->buf.insert(insertion_point, item);
-		        this->size += item.length();
+            this->buf.insert(insertion_point, str);
+		        this->size += str.length();
           }
       }
 
@@ -132,9 +131,9 @@ void buffer::write(std::string& line, std::list<std::string>::iterator insertion
 		    // iterators to std::list are not random access, so we cannot work out our position
 		    // in the buffer simply by comparison.
 		    // First, work out the position of the tag:
-		    unsigned int pos = std::distance(this->buf.begin(), this->tag);
+		    size_t pos = std::distance(this->buf.begin(), this->tag);
 
-		    unsigned int i = 0;
+		    size_t i = 0;
 		    while(this->size > this->capacity && i < pos)
 			    {
 		        if(this->out_stream.is_open() && !this->out_stream.fail())
@@ -249,9 +248,14 @@ void buffer::inherit_decoration(buffer& source)
 void buffer::print_lines(unsigned int lines)
 	{
 		unsigned int c = 0;
-		for(std::list<std::string>::iterator t = this->buf.begin(); t != this->buf.end() && c < lines; ++t, ++c)
+    for(const auto& str : this->buf)
 			{
-		    std::cout << (*t) << '\n';
+		    std::cout << str << '\n';
+
+        ++c;
+        if(c >= lines) break;
 			}
+
+    // print continuation ellipsis if output was truncated
 		if(c == lines) std::cout << "..." << '\n';
 	}
