@@ -241,7 +241,7 @@ namespace macro_tokenizer_impl
                 idx_list.emplace_back(std::make_shared<index_literal>(idx, ctx, v));
 
                 // finally, validate the index
-                validate_index(*idx_list.back(), ctx);
+                validate_index(*idx_list.back());
               }
             else
               {
@@ -434,10 +434,7 @@ token_list::match_macro_or_index(const size_t position, ContextFactory make_cont
       }
 
     // if no possible match then this must be an index literal, so build it and return
-    if(!possible_match)
-      {
-        return this->make_index_literal(position, make_context);
-      }
+    if(!possible_match) return this->make_index_literal(position, make_context);
 
     // There is a possible match. Now greedily match the *longest* macro we can, from any available package
     size_t candidate_length = 2;
@@ -546,7 +543,7 @@ token_list::make_index_literal(const size_t position, ContextFactory make_contex
     index_literal l(*idx, ctx, v);
 
     // validate this literal (no-op if no validation database was supplied)
-    this->validate_index_literal(l, ctx);
+    this->validate_index_literal(l);
 
     // generate a token corresponding to this literal
     auto tok = std::make_unique<token_list_impl::index_literal_token>(l, ctx);
@@ -630,7 +627,7 @@ token_list::make_index_macro(const std::string& macro, const size_t position, co
         return *idx;
       };
     
-    auto validate_index = [&](index_literal& l, error_context& ctx) -> void { this->validate_index_literal(l, ctx); };
+    auto validate_index = [&](index_literal& l) -> void { this->validate_index_literal(l); };
     auto validate_variance = [&](variance& v, error_context& ctx) -> void { this->validate_index_variance(v, ctx); };
 
     std::tie(idx_list, current_position) =
@@ -755,7 +752,7 @@ token_list::make_index_directive(const std::string& macro, const size_t position
         return *idx;
       };
 
-    auto validate_index = [&](index_literal& l, error_context& ctx) -> void { this->validate_index_literal(l, ctx); };
+    auto validate_index = [&](index_literal& l) -> void { this->validate_index_literal(l); };
     auto validate_variance = [&](variance& v, error_context& ctx) -> void { this->validate_index_variance(v, ctx); };
 
     std::tie(idx_list, current_position) =
@@ -924,7 +921,7 @@ bool token_list::validate_directive(const std::string& macro, const size_t posit
   }
 
 
-void token_list::validate_index_literal(index_literal& l, error_context& ctx)
+void token_list::validate_index_literal(index_literal& l)
   {
     if(!this->validation_db) return;
 
@@ -938,7 +935,7 @@ void token_list::validate_index_literal(index_literal& l, error_context& ctx)
           {
             std::ostringstream msg;
             msg << ERROR_INDEX_NOT_VALID << " '" << l.to_string() << "'";
-            ctx.error(msg.str());
+            l.get_declaration_point().error(msg.str());
           }
 
         return;
@@ -952,7 +949,9 @@ void token_list::validate_index_literal(index_literal& l, error_context& ctx)
       {
         std::ostringstream msg;
         msg << ERROR_INDEX_VALIDATION_FAIL << " '" << validation_copy.to_string() << "'";
-        ctx.error(msg.str());
+        l.get_declaration_point().error(msg.str());
+
+        validation_copy.get_declaration_point().warn(NOTIFY_INDEX_DECLARATION_WAS);
       }
   }
 

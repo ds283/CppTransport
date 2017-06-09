@@ -198,6 +198,7 @@ constexpr auto ERROR_DIRECTIVE_ON_RHS                = "A line containing a dire
 
 constexpr auto ERROR_INDEX_LITERAL_NO_KERNEL         = "Line ended before kernel letter for index literal";
 constexpr auto ERROR_INDEX_VALIDATION_FAIL           = "Mismatched index literal: expected";
+constexpr auto NOTIFY_INDEX_DECLARATION_WAS          = "Location of original index declaration was";
 constexpr auto ERROR_INDEX_NOT_VALID                 = "Use of undeclared index literal";
 constexpr auto ERROR_NONTRIVIAL_REQUIRES_VARIANCE    = "Variance must be assigned when using a nontrival field-space metric";
 

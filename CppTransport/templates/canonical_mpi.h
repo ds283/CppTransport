@@ -78,7 +78,7 @@ namespace transport
 
       $SET[MN]{U2_DECLARE, "__u2[FLATTEN($M,$N)]"}
 
-      $SET[MN]{U2_k1_DECLARE, "__u2_k1[FLATTEN($M,$N)]"}
+      $SET[M^N]{U2_k1_DECLARE, "__u2_k1[FLATTEN($M,$N)]"}
       $SET[MN]{U2_k2_DECLARE, "__u2_k2[FLATTEN($M,$N)]"}
       $SET[MN]{U2_k3_DECLARE, "__u2_k3[FLATTEN($M,$N)]"}
 
