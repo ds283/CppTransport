@@ -162,6 +162,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     policy(vp),
     parse_failed(false),
     errors(0),
+    file_errors(0),
     warnings(0),
     lexstream_payload(file,
                       std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
@@ -271,6 +272,7 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core_template();
     if(core)
       {
+        this->file_errors = 0;
         try
           {
             rval += this->outstream.translate(*core, (*core).get_declaration_point(), core_output, process_type::process_core);
@@ -290,7 +292,7 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation_template();
     if(impl)
       {
-
+        this->file_errors = 0;
         try
           {
             rval += this->outstream.translate(*impl, (*core).get_declaration_point(), impl_output, process_type::process_implementation);
@@ -362,7 +364,8 @@ void translation_unit::error(const std::string& msg)
 		::error(msg, this->cache, this->env);
     
     ++this->errors;
-    if(this->errors > DEFAULT_MAX_ERROR_COUNT) throw exit_parse(NOTIFY_TOO_MANY_ERRORS);
+    ++this->file_errors;
+    if(this->file_errors > DEFAULT_MAX_ERROR_COUNT) throw exit_parse(NOTIFY_TOO_MANY_ERRORS);
 	}
 
 
@@ -378,7 +381,8 @@ void translation_unit::context_error(const std::string& msg, const error_context
     ::error(msg, this->cache, this->env, ctx);
 
     ++this->errors;
-    if(this->errors > DEFAULT_MAX_ERROR_COUNT) throw exit_parse(NOTIFY_TOO_MANY_ERRORS);
+    ++this->file_errors;
+    if(this->file_errors > DEFAULT_MAX_ERROR_COUNT) throw exit_parse(NOTIFY_TOO_MANY_ERRORS);
   }
 
 

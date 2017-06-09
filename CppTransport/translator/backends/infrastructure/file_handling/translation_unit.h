@@ -158,8 +158,11 @@ class translation_unit
     //! flag to capture state of parse
     bool parse_failed;
 
-    //! number of reported errors
+    //! number of reported errors (global)
     unsigned int errors;
+    
+    //! number of reported errors (per file)
+    unsigned int file_errors;
 
     //! number of reported warnings
     unsigned int warnings;
