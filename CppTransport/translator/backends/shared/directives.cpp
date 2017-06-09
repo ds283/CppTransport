@@ -68,9 +68,20 @@ namespace macro_packages
         // fails if the index_literal_list contains more than a single instance of any index
         // if successful, returns a database view onto the original index_literal_list
         std::unique_ptr<index_literal_database> db;
-        boost::optional<std::string> decl_fail;
-        std:tie(db, decl_fail) = to_database(indices);
-        if(decl_fail) return fail_handler(*decl_fail);
+        try
+          {
+            db = to_database(indices);
+          }
+        catch(duplicate_index& xe)
+          {
+            const error_context& ctx = xe.get_error_point();
+            
+            std::ostringstream msg;
+            msg << ERROR_SET_INDEX_DUPLICATE << " '" << xe.what() << "'";
+            ctx.error(msg.str());
+            
+            return msg.str();
+          }
 
         // get macro agent associated with current top-of-stack output file;
         // this will be our own parent macro agent
@@ -94,6 +105,8 @@ namespace macro_packages
 
             const error_context& prior_ctx = t->second->get_declaration_point();
             prior_ctx.warn(WARN_PRIOR_REDEFINITION);
+            
+            return msg.str();
           }
 
         // move references to parent abstract_index objects to those contained in the database held by tokens

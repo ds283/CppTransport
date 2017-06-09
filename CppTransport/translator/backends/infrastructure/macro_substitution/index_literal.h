@@ -30,9 +30,11 @@
 
 #include <memory>
 #include <vector>
+#include <stdexcept>
 #include <map>
 
 #include "abstract_index.h"
+#include "error_context.h"
 #include "hash_combine.h"
 
 #include "boost/optional.hpp"
@@ -40,6 +42,42 @@
 
 //! enumeration representing variance type (co-, contra-, or unset)
 enum class variance { covariant, contravariant, none };
+
+
+class duplicate_index : public std::out_of_range
+  {
+    
+    // CONSTRUCTOR, DESTRUCTOR
+  
+  public:
+    
+    //! constructor
+    duplicate_index(std::string m, error_context c)
+      : std::out_of_range(std::move(m)),
+        ctx(c)
+      {
+      }
+    
+    //! destructor
+    ~duplicate_index() = default;
+    
+    
+    // INTERFACE
+  
+  public:
+    
+    //! get error context
+    const error_context& get_error_point() const { return this->ctx; }
+    
+    
+    // INTERNAL DATA
+  
+  public:
+    
+    //! error context
+    error_context ctx;
+    
+  };
 
 
 //! index literal represents an instance of an abstract index, and carries context information
@@ -52,8 +90,9 @@ class index_literal
   public:
 
     //! constructor; defaults to unset variance
-    index_literal(abstract_index& i, variance t = variance::none)
+    index_literal(abstract_index& i, error_context ec, variance t)
       : idx(i),
+        ctx(std::move(ec)),
         type(t)
       {
       }
@@ -79,6 +118,9 @@ class index_literal
 
     //! get index variance
     variance get_variance() const { return this->type; }
+    
+    //! get error context
+    const error_context& get_declaration_point() const { return this->ctx; }
 
 
     // FORMAT
@@ -105,6 +147,9 @@ class index_literal
     //! held as a std::reference_wrapper<> so that we can reassign
     //! it later if needed
     std::reference_wrapper<const abstract_index> idx;
+    
+    //! context for this instance
+    error_context ctx;
 
     //! variance
     variance type;
@@ -218,8 +263,7 @@ namespace index_traits_impl
 //! convert between index_literal_list and index_literal_database;
 //! throws std::runtime_error if the conversion cannot be done because
 //! index_literal_list contains more than a single instance of an idex
-std::pair< std::unique_ptr<index_literal_database>, boost::optional<std::string> >
-to_database(const index_literal_list& indices);
+std::unique_ptr<index_literal_database> to_database(const index_literal_list& indices);
 
 //! change the references held in an index_literal_list or index_literal_database
 //! from one database to another

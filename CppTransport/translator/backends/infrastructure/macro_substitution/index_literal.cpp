@@ -25,14 +25,11 @@
 
 
 #include <sstream>
-#include <stdexcept>
 
 #include "index_literal.h"
-#include "msg_en.h"
 
 
-std::pair<std::unique_ptr<index_literal_database>, boost::optional<std::string> >
-to_database(const index_literal_list& indices)
+std::unique_ptr<index_literal_database> to_database(const index_literal_list& indices)
   {
     auto db = std::make_unique<index_literal_database>();
 
@@ -43,15 +40,13 @@ to_database(const index_literal_list& indices)
 
         if(db->count(idx.get_label()) > 0)
           {
-            std::ostringstream msg;
-            msg << ERROR_SET_INDEX_DUPLICATE << " '" << idx.get_label() << "'";
-            return std::make_pair(std::move(db), msg.str());
+            throw duplicate_index(std::string(1, idx.get_label()), rec.get_declaration_point());
           }
 
         db->emplace(std::make_pair(idx.get_label(), T));
       }
 
-    return std::make_pair(std::move(db), boost::none);
+    return std::move(db);
   }
 
 

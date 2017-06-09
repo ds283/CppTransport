@@ -158,10 +158,7 @@ class token_list
 
     //! add an index to our internal list
     abstract_index_database::iterator add_index(char label);
-
-    //! add an index to our internal list
-    abstract_index_database::iterator add_index(const abstract_index& index, error_context& ctx);
-
+    
     //! build a simple directive token
     template <typename RuleSet, typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::simple_directive_token>, size_t>

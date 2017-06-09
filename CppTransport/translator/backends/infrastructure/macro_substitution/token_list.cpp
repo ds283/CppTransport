@@ -236,7 +236,7 @@ namespace macro_tokenizer_impl
                 abstract_index& idx = add_index(input[current_position], ctx);
 
                 // now push a copy of this index literal into the literal list
-                idx_list.emplace_back(std::make_shared<index_literal>(idx, v));
+                idx_list.emplace_back(std::make_shared<index_literal>(idx, ctx, v));
 
                 // finally, validate the index
                 validate_index(*idx_list.back(), ctx);
@@ -539,10 +539,10 @@ token_list::make_index_literal(const size_t position, ContextFactory make_contex
     ++current_position;
 
     // generate a record of this index instance, keeping the variance information
-    index_literal l(*idx, v);
+    error_context ctx = make_context(position, current_position);
+    index_literal l(*idx, ctx, v);
 
     // validate this literal (no-op if no validation database was supplied)
-    error_context ctx = make_context(position, current_position);
     this->validate_index_literal(l, ctx);
 
     // generate a token corresponding to this literal
@@ -781,31 +781,6 @@ abstract_index_database::iterator token_list::add_index(char label)
     // emplace does nothing if a record already exists
     return (this->indices.emplace_back(
       std::make_pair(label, std::make_unique<abstract_index>(label, this->num_fields, this->num_params)))).first;
-	}
-
-
-abstract_index_database::iterator token_list::add_index(const abstract_index& index, error_context& ctx)
-	{
-    // check whether an existing record for this index exiosts
-    abstract_index_database::iterator t = this->indices.find(index.get_label());
-
-    if(t == this->indices.end())
-      {
-        // no record currently exists, so emplace a copy in the database and return
-        // an iterator to it
-        return (this->indices.emplace_back(index.get_label(), std::make_unique<abstract_index>(index))).first;
-      }
-
-    // a record did previously exist, so check its class and report an error if they do not agree
-    if(index.get_class() != t->get_class())
-      {
-        std::ostringstream msg;
-        msg << ERROR_TOKENIZE_INDEX_MISMATCH << " '" << index.get_label() << "'";
-        ctx.error(msg.str());
-      }
-
-    // return iterator to existing record
-    return(t);
 	}
 
 
