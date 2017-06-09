@@ -35,6 +35,7 @@
 constexpr auto ANSI_BOLD_RED      = "\033[1;31m";
 constexpr auto ANSI_BOLD_GREEN    = "\033[1;32m";
 constexpr auto ANSI_BOLD_MAGENTA  = "\033[1;35m";
+constexpr auto ANSI_BOLD_YELLOW   = "\033[1;33m";
 
 constexpr auto ANSI_BOLD          = "\033[1m";
 constexpr auto ANSI_NORMAL        = "\033[0m";
@@ -91,7 +92,7 @@ void error(const std::string& msg, const argument_cache& cache, const local_envi
 
 
 std::string print_contexted_message(const std::string& msg, const argument_cache& cache, const local_environment& env,
-                                    const error_context& context, unsigned int level)
+                                    const error_context& context, unsigned int level, const std::string highlight_colour=ANSI_BOLD_RED)
   {
     std::ostringstream out;
     
@@ -108,7 +109,7 @@ std::string print_contexted_message(const std::string& msg, const argument_cache
       }
     
     bool colour_output = cache.colourize() && env.has_colour_terminal_support();
-    out << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "");
+    out << (colour_output ? highlight_colour : "") << msg << (colour_output ? ANSI_NORMAL : "");
     
     if(context.has_full_context())
       {
@@ -156,7 +157,7 @@ std::string print_contexted_message(const std::string& msg, const argument_cache
 
 void warn(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level)
   {
-    std::string cmsg = print_contexted_message(msg, cache, env, context, level);
+    std::string cmsg = print_contexted_message(msg, cache, env, context, level, ANSI_BOLD_YELLOW);
     
     bool colour_output = cache.colourize() && env.has_colour_terminal_support();
     
