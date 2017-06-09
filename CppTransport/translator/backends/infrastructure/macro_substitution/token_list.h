@@ -55,6 +55,8 @@ class package_group;
 class token_list
   {
 
+    // CONSTRUCTOR, DESTRUCTOR
+
   public:
 
     //! build a token list from an input string
@@ -111,8 +113,15 @@ class token_list
     unsigned int evaluate_macros(const index_remap_rule& rule);
 
 
-    //! get list of indices identified during tokenization
-    const abstract_index_database& get_index_database() const { return this->indices; }
+    // INDEX SERVICES
+
+  public:
+
+    //! get database of abstract indices identified during tokenization
+    const abstract_index_database& get_index_database() const { return this->index_db; }
+
+    //! get list of index instances identified during tokenization
+    const index_literal_list& get_index_declarations() const { return this->index_decls; }
 
 
     // INTERFACE -- INDEX SET UNROLLING
@@ -281,7 +290,10 @@ class token_list
     // INDEX DATA (maintains information about indices encountered in this entire line)
 
     //! master database of indices found in input line
-    abstract_index_database indices;
+    abstract_index_database index_db;
+
+    //! list of index instances found in input line, in parse order
+    index_literal_list index_decls;
 
 
     // CACHE DATA ABOUT MODEL

@@ -549,6 +549,9 @@ token_list::make_index_literal(const size_t position, ContextFactory make_contex
     auto tok = std::make_unique<token_list_impl::index_literal_token>(l, ctx);
     this->index_literal_tokens.push_back(std::ref(*tok));
 
+    // push this literal onto the declaration list (makes a new copy)
+    this->index_decls.emplace_back(std::make_shared<index_literal>(l));
+
     return std::make_pair(std::move(tok), current_position);
   }
 
@@ -627,7 +630,12 @@ token_list::make_index_macro(const std::string& macro, const size_t position, co
         return *idx;
       };
     
-    auto validate_index = [&](index_literal& l) -> void { this->validate_index_literal(l); };
+    auto validate_index = [&](index_literal& l) -> void
+      {
+        this->validate_index_literal(l);
+        this->index_decls.emplace_back(std::make_shared<index_literal>(l));
+      };
+
     auto validate_variance = [&](variance& v, error_context& ctx) -> void { this->validate_index_variance(v, ctx); };
 
     std::tie(idx_list, current_position) =
@@ -752,7 +760,12 @@ token_list::make_index_directive(const std::string& macro, const size_t position
         return *idx;
       };
 
-    auto validate_index = [&](index_literal& l) -> void { this->validate_index_literal(l); };
+    auto validate_index = [&](index_literal& l) -> void
+      {
+        this->validate_index_literal(l);
+        this->index_decls.emplace_back(std::make_shared<index_literal>(l));
+      };
+
     auto validate_variance = [&](variance& v, error_context& ctx) -> void { this->validate_index_variance(v, ctx); };
 
     std::tie(idx_list, current_position) =
@@ -775,7 +788,7 @@ token_list::make_index_directive(const std::string& macro, const size_t position
 abstract_index_database::iterator token_list::add_index(char label)
 	{
     // emplace does nothing if a record already exists
-    return (this->indices.emplace_back(
+    return (this->index_db.emplace_back(
       std::make_pair(label, std::make_unique<abstract_index>(label, this->num_fields, this->num_params)))).first;
 	}
 

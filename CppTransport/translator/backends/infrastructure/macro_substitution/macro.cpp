@@ -101,13 +101,35 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
   {
     std::unique_ptr< std::list<std::string> > r_list = std::make_unique<std::list<std::string> >();
 
-    // break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
+    // break the line at the split point, if one exists, to get a 'left-hand' side and a 'right-hand' side
     macro_impl::split_string split_result(line, this->split_equal, this->split_sum_equal);
 
-    // perform tokenization, keeping track of the time required
+    // PERFORM TOKENIZATION
+
+    // keep track of the time required
     timing_instrument tok_timer(this->tokenization_timer);
     auto left_tokens = this->tokenize(split_result.get_left());
-    auto right_tokens = this->tokenize(split_result.get_right());
+
+    // collect indices defined on LHS and convert to a validation database
+    const auto& left_index_decls = left_tokens->get_index_declarations();
+    std::unique_ptr<index_literal_database> validation_db;
+    try
+      {
+        validation_db = to_database(left_index_decls);
+      }
+    catch(duplicate_index& xe)
+      {
+        const error_context& ctx = xe.get_error_point();
+
+        std::ostringstream msg;
+        msg << ERROR_LHS_INDEX_DUPLICATE << " '" << xe.what() << "'";
+        ctx.error(msg.str());
+      }
+
+    // tokenize RHS, enforcing that indices shared with LHS have the same properties
+    boost::optional<index_literal_database&> vdb;
+    if(validation_db) vdb = *validation_db;
+    auto right_tokens = this->tokenize(split_result.get_right(), vdb);
     tok_timer.stop();
 
     // return quickly if output is disabled
@@ -187,8 +209,6 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
         ctx.error(msg.str());
       }
 
-    // TODO: check all LHS-indices have the same variance (on LHS and RHS)
-    // TODO: warn if a LHS-index occurs more than once on LHS
     // TODO: check that RHS-indices are compatible with summation convention where possible; easy if index occurs twice, otherwise have to issue a warning
 
     assignment_set RHS_assignments(RHS_indices);
@@ -246,79 +266,37 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
     // If there are no LHS indices then it will report size=1, ie. the trivial index assignment
     // It's important to distinguish these two cases!
 
-		if(LHS_assignments.size() > 0)
-			{
-        // compute raw indent for LHS
-        std::string raw_indent = this->compute_prefix(split_result);
+		if(LHS_assignments.size() == 0)
+      {
+        language_printer& prn = this->package.get_language_printer();
+        r_list.push_back(prn.comment("Skipped: empty index range (LHS index set is empty)"));
+        return;
+      }
 
-        for(std::unique_ptr<assignment_list> LHS_assign : LHS_assignments)
-			    {
-				    // evaluate LHS macros on this index assignment;
-            // only need index- and post-macros; pre-macros were evaluated earlier
-				    counter += left_tokens.evaluate_macros(*LHS_assign);
-						counter += left_tokens.evaluate_macros(simple_macro_type::post);
+    // compute raw indent for LHS
+    std::string raw_indent = this->compute_prefix(split_result);
 
-						if(RHS_assignments.size() > 1)   // multiple RHS assignments
-							{
-						    // push the LHS evaluated on this assignment into the output list, if it is non-empty
-						    if(left_tokens.size() > 0)
-							    {
-                    std::string lhs = left_tokens.to_string();
-                    if(split_result.get_split_type() == macro_impl::split_type::sum)       lhs += " = ";
-                    if(split_result.get_split_type() == macro_impl::split_type::sum_equal) lhs += " += ";
-						        r_list.push_back(lhs);
-							    }
+    for(std::unique_ptr<assignment_list> LHS_assign : LHS_assignments)
+      {
+        // evaluate LHS macros on this index assignment;
+        // only need index- and post-macros; pre-macros were evaluated earlier
+        counter += left_tokens.evaluate_macros(*LHS_assign);
+        counter += left_tokens.evaluate_macros(simple_macro_type::post);
 
-						    // now generate a set of RHS evaluations for this LHS evaluation
-                for(std::unique_ptr<assignment_list> RHS_assign : RHS_assignments)
-							    {
-                    assignment_list total_assignment;
-                    try
-                      {
-                        total_assignment = *LHS_assign + *RHS_assign;
-                      }
-                    catch(index_exception& xe)
-                      {
-                        std::ostringstream msg;
-                        msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
-                        ctx.error(msg.str());
-                      }
+        if(RHS_assignments.size() > 1)   // multiple RHS assignments
+          {
+            // push the LHS evaluated on this assignment into the output list, if it is non-empty
+            if(left_tokens.size() > 0)
+              {
+                std::string lhs = left_tokens.to_string();
+                if(split_result.get_split_type() == macro_impl::split_type::sum) lhs += " = ";
+                if(split_result.get_split_type() == macro_impl::split_type::sum_equal) lhs += " += ";
+                r_list.push_back(lhs);
+              }
 
-						        counter += right_tokens.evaluate_macros(total_assignment);
-						        counter += right_tokens.evaluate_macros(simple_macro_type::post);
-
-								    // set up replacement right hand side; add trailing ; and , only if the LHS is empty
-                    std::string this_line = right_tokens.to_string() +
-                                            (left_tokens.size() == 0 && split_result.has_trailing_semicolon() ? ";" : "") +
-                                            (left_tokens.size() == 0 && split_result.has_trailing_comma() ? "," : "");
-
-                    if(left_tokens.size() == 0)   // no need to format for indentation if no LHS; RHS will already include indentation
-                      {
-                        r_list.push_back(this_line);
-                      }
-                    else
-                      {
-                        r_list.push_back(this->dress(this_line, raw_indent, 3));
-                      }
-							    }
-
-								// add a trailing ; and , if the LHS is nonempty
-						    if(left_tokens.size() > 0 && r_list.size() > 0)
-							    {
-						        if(split_result.has_trailing_semicolon())
-							        {
-						            r_list.back() += ";";
-							        }
-						        if(split_result.has_trailing_comma())
-							        {
-						            r_list.back() += ",";
-							        }
-							    }
-							}
-						else if(RHS_assignments.size() == 1)  // just one RHS assignment, so coalesce with LHS
-							{
-                std::unique_ptr<assignment_list> RHS_assign = *RHS_assignments.begin();
-
+            // now generate a set of RHS evaluations for this LHS evaluation
+            for(std::unique_ptr<assignment_list> RHS_assign : RHS_assignments)
+              {
                 assignment_list total_assignment;
                 try
                   {
@@ -331,27 +309,69 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
                     ctx.error(msg.str());
                   }
 
-						    counter += right_tokens.evaluate_macros(total_assignment);
-						    counter += right_tokens.evaluate_macros(simple_macro_type::post);
+                counter += right_tokens.evaluate_macros(total_assignment);
+                counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
-								// set up line with macro replacements, and add trailing ; and , if necessary;
-                // since the line includes the full LHS it needs no special formatting to account for indentation
-						    std::string full_line = left_tokens.to_string();
-                if(split_result.get_split_type() == macro_impl::split_type::sum)       full_line += " =";
-                if(split_result.get_split_type() == macro_impl::split_type::sum_equal) full_line += " +=";
-                
-                full_line += (left_tokens.size() > 0 ? " " : "") + right_tokens.to_string() +
-                             (split_result.has_trailing_semicolon() ? ";" : "") +
-                             (split_result.has_trailing_comma() ? "," : "");
-								r_list.push_back(full_line);
-							}
-			    }
-			}
-		else
-			{
-        language_printer& prn = this->package.get_language_printer();
-				r_list.push_back(prn.comment("Skipped: empty index range (LHS index set is empty)"));
-			}
+                // set up replacement right hand side; add trailing ; and , only if the LHS is empty
+                std::string this_line = right_tokens.to_string() +
+                                        (left_tokens.size() == 0 && split_result.has_trailing_semicolon() ? ";" : "") +
+                                        (left_tokens.size() == 0 && split_result.has_trailing_comma() ? "," : "");
+
+                if(left_tokens.size() ==
+                   0)   // no need to format for indentation if no LHS; RHS will already include indentation
+                  {
+                    r_list.push_back(this_line);
+                  }
+                else
+                  {
+                    r_list.push_back(this->dress(this_line, raw_indent, 3));
+                  }
+              }
+
+            // add a trailing ; and , if the LHS is nonempty
+            if(left_tokens.size() > 0 && r_list.size() > 0)
+              {
+                if(split_result.has_trailing_semicolon())
+                  {
+                    r_list.back() += ";";
+                  }
+                if(split_result.has_trailing_comma())
+                  {
+                    r_list.back() += ",";
+                  }
+              }
+          }
+        else if(RHS_assignments.size() == 1)  // just one RHS assignment, so coalesce with LHS
+          {
+            std::unique_ptr<assignment_list> RHS_assign = *RHS_assignments.begin();
+
+            assignment_list total_assignment;
+            try
+              {
+                total_assignment = *LHS_assign + *RHS_assign;
+              }
+            catch(index_exception& xe)
+              {
+                std::ostringstream msg;
+                msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
+                ctx.error(msg.str());
+              }
+
+            counter += right_tokens.evaluate_macros(total_assignment);
+            counter += right_tokens.evaluate_macros(simple_macro_type::post);
+
+            // set up line with macro replacements, and add trailing ; and , if necessary;
+            // since the line includes the full LHS it needs no special formatting to account for indentation
+            std::string full_line = left_tokens.to_string();
+            if(split_result.get_split_type() == macro_impl::split_type::sum) full_line += " =";
+            if(split_result.get_split_type() == macro_impl::split_type::sum_equal) full_line += " +=";
+
+            full_line += (left_tokens.size() > 0 ? " " : "") + right_tokens.to_string() +
+                         (split_result.has_trailing_semicolon() ? ";" : "") +
+                         (split_result.has_trailing_comma() ? "," : "");
+            r_list.push_back(full_line);
+          }
+      }
 	}
 
 
@@ -363,17 +383,16 @@ void macro_agent::forloop_index_assignment(token_list& left_tokens, token_list& 
     std::string raw_indent = this->compute_prefix(split_result);
     unsigned int current_indent = 0;
 
-    if(LHS_assignments.size() > 0)
-      {
-        this->plant_LHS_forloop(LHS_assignments.idx_set_begin(), LHS_assignments.idx_set_end(),
-                                RHS_assignments, left_tokens, right_tokens, counter, split_result,
-                                ctx, r_list, raw_indent, current_indent);
-      }
-    else
+    if(LHS_assignments.size() == 0)
       {
         language_printer& prn = this->package.get_language_printer();
         r_list.push_back(prn.comment("Skipped: empty index range (LHS index set is empty)"));
+      return;
       }
+
+    this->plant_LHS_forloop(LHS_assignments.idx_set_begin(), LHS_assignments.idx_set_end(),
+                            RHS_assignments, left_tokens, right_tokens, counter, split_result,
+                            ctx, r_list, raw_indent, current_indent);
   }
 
 

@@ -271,6 +271,8 @@ constexpr auto ERROR_SET_REDEFINITION                = "Redefinition of macro";
 constexpr auto WARN_PRIOR_REDEFINITION               = "Earlier definition of this macro was here";
 constexpr auto ERROR_INDEX_SUBSTITUTION              = "Missing substitution for index";
 
+constexpr auto ERROR_LHS_INDEX_DUPLICATE             = "Left-hand side contains duplicated index";
+
 constexpr auto ERROR_UNPAIRED_ELSE                   = "Unexpected $ELSE without opening $IF";
 constexpr auto ERROR_UNPAIRED_ENDIF                  = "Unexpected $ENDIF without opening $IF";
 constexpr auto ERROR_DUPLICATE_ELSE                  = "Duplicate $ELSE clause";
