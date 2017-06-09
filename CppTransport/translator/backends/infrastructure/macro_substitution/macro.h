@@ -203,13 +203,13 @@ class macro_agent
   protected:
 
     //! perform validation of a set of RHS indices
-    void validate_RHS_indices(token_list& right_tokens);
+    void validate_RHS_indices(token_list& left_tokens, token_list& right_tokens);
 
     //! check number of occurrrences of each RHS index, and flag warnings for those that occur only once
-    void validate_RHS_count(token_list& right_tokens);
+    void validate_RHS_count(const index_literal_list& right_indices);
 
     //! check index positioning for nontrivial-metric cases
-    void validate_RHS_variances(token_list& right_tokens);
+    void validate_RHS_variances(const index_literal_list& decls);
 
 
     // INTERNAL API -- HANDLE INDEX SET BY UNROLLING

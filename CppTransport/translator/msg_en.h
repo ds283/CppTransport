@@ -272,6 +272,8 @@ constexpr auto WARN_PRIOR_REDEFINITION               = "Earlier definition of th
 constexpr auto ERROR_INDEX_SUBSTITUTION              = "Missing substitution for index";
 
 constexpr auto ERROR_LHS_INDEX_DUPLICATE             = "Left-hand side contains duplicated index";
+constexpr auto NOTIFY_RHS_INDEX_SINGLE_OCCURRENCE    = "Index occurs only once on right-hand side";
+constexpr auto NOTIFY_RHS_INDEX_SINGLE_VARIANCE      = "Right-hand side index does not occur in both covariant and contravariant positions";
 
 constexpr auto ERROR_UNPAIRED_ELSE                   = "Unexpected $ELSE without opening $IF";
 constexpr auto ERROR_UNPAIRED_ENDIF                  = "Unexpected $ENDIF without opening $IF";

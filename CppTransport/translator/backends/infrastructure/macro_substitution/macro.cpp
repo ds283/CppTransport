@@ -519,7 +519,7 @@ macro_agent::perform_tokenization(const macro_impl::split_string& split_result)
 
     // validate RHS index instances
     if(split_result.get_split_type() != macro_impl::split_type::none)
-      this->validate_RHS_indices(*right_tokens);
+      this->validate_RHS_indices(*left_tokens, *right_tokens);
 
     // stop tokenization timer
     tok_timer.stop();
@@ -561,26 +561,99 @@ error_context macro_agent::make_split_point_context(const std::string& line, con
   }
 
 
-void macro_agent::validate_RHS_indices(token_list& right_tokens)
+void macro_agent::validate_RHS_indices(token_list& left_tokens, token_list& right_tokens)
   {
+    // get RHS index declarations, and erase any indices occurring on the LHS
+    index_literal_list decls = right_tokens.get_index_declarations();
+    const abstract_index_database& LHS_db = left_tokens.get_index_database();
+    
+    auto T = decls.begin();
+    while(T != decls.end())
+      {
+        // does this index occur on the LHS?
+        auto t = LHS_db.find(T->get()->get().get_label());
+        if(t != LHS_db.end())
+          {
+            T = decls.erase(T);
+          }
+        else
+          {
+            ++T;
+          }
+      }
+    
     // check how many times each RHS index occurs
-    this->validate_RHS_count(right_tokens);
+    this->validate_RHS_count(decls);
 
     // for nontrivial metric models, perform rudimentary checks on index position
     if(this->data_payload.model.get_lagrangian_type() == model_type::nontrivial_metric)
-      this->validate_RHS_variances(right_tokens);
+      this->validate_RHS_variances(decls);
   }
 
 
-void macro_agent::validate_RHS_count(token_list& right_tokens)
+void macro_agent::validate_RHS_count(const index_literal_list& decls)
   {
-
+    // count number of times each RHS index occurs
+    std::map< char, unsigned int > count;
+    std::map< char, std::reference_wrapper<const error_context> > ctxs;
+    
+    for(const auto& T : decls)
+      {
+        const index_literal& l = *T;
+        char label = l.get().get_label();
+        
+        if(ctxs.count(label) == 0) ctxs.emplace(std::make_pair(label, std::cref(l.get_declaration_point())));
+        count[label] = count[label] + 1;
+      }
+    
+    // search for indices that occurred only once
+    for(const auto& T : count)
+      {
+        if(T.second == 1)
+          {
+            auto t = ctxs.find(T.first);
+            if(t != ctxs.end())
+              {
+                const error_context& ctx = t->second.get();
+                ctx.warn(NOTIFY_RHS_INDEX_SINGLE_OCCURRENCE);
+              }
+          }
+      }
   }
 
 
-void macro_agent::validate_RHS_variances(token_list& right_tokens)
+void macro_agent::validate_RHS_variances(const index_literal_list& decls)
   {
+    // search for any indices which don't occur in both co- and contra-variant forms
+    std::map< char, std::pair<bool, bool> > flags;
+    std::map< char, std::reference_wrapper<const error_context> > ctxs;
+    
+    for(const auto& T : decls)
+      {
+        const index_literal& l = *T;
+        char label = l.get().get_label();
+        variance v = T.get()->get_variance();
 
+        if(ctxs.count(label) == 0) ctxs.emplace(std::make_pair(label, std::cref(l.get_declaration_point())));
+    
+        if(v == variance::covariant) flags[label].first = true;
+        if(v == variance::contravariant) flags[label].second = true;
+      }
+    
+    // search for indices that didn't occur both ways
+    for(const auto& T : flags)
+      {
+        const auto& F = T.second;
+        if(!F.first || !F.second)
+          {
+            auto t = ctxs.find(T.first);
+            if(t != ctxs.end())
+              {
+                const error_context& ctx = t->second.get();
+                ctx.warn(NOTIFY_RHS_INDEX_SINGLE_VARIANCE);
+              }
+          }
+      }
   }
 
 
