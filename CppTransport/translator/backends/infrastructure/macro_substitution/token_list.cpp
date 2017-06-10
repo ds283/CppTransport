@@ -991,8 +991,18 @@ void token_list::validate_index_properties(index_literal& l)
         return;
       }
     
-    // if a canonical model, nothing to do
-    if(this->data_payload.model.get_lagrangian_type() == model_type::canonical) return;
+    // if a canonical model, warn that index variance is ignored
+    if(this->data_payload.model.get_lagrangian_type() == model_type::canonical)
+      {
+        if(l.get_variance() != variance::none)
+          {
+            l.set_variance(variance::none);
+            l.get_declaration_point().warn(NOTIFY_CANONICAL_IGNORES_VARIANCE);
+          }
+        return;
+      }
+    
+    // assume a nontrivial metric model
     
     // if a nontrivial metric model, all indices should have a variance assignment
     if(l.get_variance() == variance::none)
