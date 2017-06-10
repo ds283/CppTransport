@@ -168,7 +168,7 @@ namespace token_list_impl
 
         //! evaluate on a specific assignment and cache the result;
         //! used when unrolling an index set
-        void evaluate(const assignment_list& a);
+        void evaluate(const indices_assignment& a);
 
         //! evaluate on an abstract index and cache the result; used when
         //! planting code as a 'for'-loop
@@ -256,7 +256,7 @@ namespace token_list_impl
 
         //! evaluate (and cache the result) given a list of concrete index assignments;
         //! used to replace this macro while unrolling an index set
-        void evaluate_unroll(const assignment_list& a);
+        void evaluate_unroll(const indices_assignment& a);
 
         //! evaluate (and cache the result) on an abstract index assignment;
         //! used to replace this macro while handling an index set by
@@ -269,6 +269,11 @@ namespace token_list_impl
 
         //! call post-hook and reset initialization status
         void reset();
+        
+      protected:
+        
+        //! call 'pre' handler for rule
+        void invoke_pre_handler();
 
 
         // INTERNAL DATA

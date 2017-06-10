@@ -97,34 +97,40 @@ namespace macro_packages
     // ******************************************************************
 
 
-    std::string replace_parameter::unroll(const macro_argument_list& args, const assignment_list& indices)
+    std::string replace_parameter::unroll(const macro_argument_list& args, const index_literal_assignment& indices)
       {
+        const index_value& idx = indices[0].second.get();
         std::unique_ptr<symbol_list> parameters = this->shared.generate_parameters(this->printer);
-        return this->printer.ginac((*parameters)[indices[0].get_numeric_value()]);
+
+        return this->printer.ginac((*parameters)[idx.get_numeric_value()]);
       }
 
 
-    std::string replace_field::unroll(const macro_argument_list& args, const assignment_list& indices)
+    std::string replace_field::unroll(const macro_argument_list& args, const index_literal_assignment& indices)
       {
+        const index_value& idx = indices[0].second.get();
         std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
-        return this->printer.ginac((*fields)[indices[0].get_numeric_value()]);
+        
+        return this->printer.ginac((*fields)[idx.get_numeric_value()]);
       }
 
 
-    std::string replace_coordinate::unroll(const macro_argument_list& args, const assignment_list& indices)
+    std::string replace_coordinate::unroll(const macro_argument_list& args, const index_literal_assignment& indices)
       {
         std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
         std::unique_ptr<symbol_list> derivs = this->shared.generate_derivs(this->printer);
 
         std::string rval;
+        
+        const index_value& idx = indices[0].second.get();
 
-        if(indices[0].is_field())
+        if(idx.is_field())
           {
-            rval = this->printer.ginac((*fields)[indices[0].species()]);
+            rval = this->printer.ginac((*fields)[idx.species()]);
           }
-        else if(indices[0].is_momentum())
+        else if(idx.is_momentum())
           {
-            rval = this->printer.ginac((*derivs)[indices[0].species()]);
+            rval = this->printer.ginac((*derivs)[idx.species()]);
           }
         else
           {

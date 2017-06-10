@@ -37,6 +37,7 @@
 #include "model_settings.h"
 #include "index_class.h"
 #include "abstract_index.h"
+#include "index_literal.h"
 
 #include "msg_en.h"
 
@@ -119,9 +120,9 @@ class assignment_set
   };
 
 
-//! assignment_record represents the assignment of some specific
+//! index_value represents the assignment of some specific
 //! numerical value to an abstract index
-class assignment_record
+class index_value
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -129,14 +130,14 @@ class assignment_record
   public:
 
     //! constructor
-    assignment_record(const abstract_index& a, unsigned int v)
+    index_value(const abstract_index& a, unsigned int v)
       : abstract(a),
         value(v)
       {
       }
 
     //! destructor is default
-    ~assignment_record() = default;
+    ~index_value() = default;
 
 
     // INTERFACE -- REQUIRED FOR INDEX_DATABASE
@@ -180,6 +181,14 @@ class assignment_record
   };
 
 
+//! set up index_assignment as a database of assignment records
+typedef index_database<index_value> indices_assignment;
+
+//! set up a map between index literals and index assignments
+typedef std::pair< std::reference_wrapper<const index_literal>, std::reference_wrapper<const index_value> > index_literal_value;
+typedef std::vector< index_literal_value > index_literal_assignment;
+
+
 namespace index_traits_impl
   {
     
@@ -190,22 +199,30 @@ namespace index_traits_impl
     char get_index_label(RecordType item);
     
     template <>
-    inline index_class get_index_class<const assignment_record&>(const assignment_record& item)
+    inline index_class get_index_class<const index_value&>(const index_value& item)
       {
         return item.get_class();
       }
     
     template <>
-    inline char get_index_label<const assignment_record&>(const assignment_record& item)
+    inline char get_index_label<const index_value&>(const index_value& item)
       {
         return item.get_label();
       }
     
+    template<>
+    inline index_class get_index_class<const index_literal_value&>(const index_literal_value& item)
+      {
+        return item.second.get().get_class();
+      }
+    
+    template<>
+    inline char get_index_label<const index_literal_value&>(const index_literal_value& item)
+      {
+        return item.second.get().get_label();
+      }
+    
   }   // index_traits
-
-
-//! set up assignment_list as a database of assignment records
-typedef index_database<assignment_record> assignment_list;
 
 
 namespace index_assignment_impl
@@ -318,7 +335,7 @@ namespace index_assignment_impl
     
         //! dereference to get the assignment group corresponding to our current position within the
         //! assignment set
-        std::unique_ptr<assignment_list> operator*() const;
+        std::unique_ptr<indices_assignment> operator*() const;
     
     
         // INTERNAL API

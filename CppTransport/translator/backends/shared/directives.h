@@ -96,7 +96,7 @@ namespace macro_packages
             void post_hook(const macro_argument_list& args) override;
 
             //! unrolled evaluation
-            std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+            std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) override;
 
             //! roll-up evaluation
             std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;

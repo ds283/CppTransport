@@ -107,7 +107,7 @@ namespace macro_packages
     
         const auto& expected_classes = *this->idx_classes;
     
-        // TODO: add context information to error reports once assignment_record has been modified to include index_literal data
+        // TODO: add context information to error reports once index_value has been modified to include index_literal data
 
         for(unsigned int i = 0; i < indices.size(); ++i)
           {

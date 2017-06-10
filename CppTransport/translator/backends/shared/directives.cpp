@@ -239,10 +239,10 @@ namespace macro_packages
           }
 
 
-        std::string user_macro::unroll(const macro_argument_list& args, const assignment_list& idxs)
+        std::string user_macro::unroll(const macro_argument_list& args, const index_literal_assignment& idxs)
           {
             // map indices between declaration and assignment
-            assignment_list rule;
+            indices_assignment rule;
 
             auto declare_t = this->indices.begin();
             auto invoke_t = idxs.begin();
@@ -252,8 +252,10 @@ namespace macro_packages
                 const index_literal& lit = **declare_t;
                 const abstract_index& idx = lit;
                 
+                const index_value& value = invoke_t->second.get();
+                
                 rule.emplace_back(
-                  std::make_pair(idx.get_label(), std::make_shared<assignment_record>(idx, invoke_t->get_numeric_value())));
+                  std::make_pair(idx.get_label(), std::make_shared<index_value>(idx, value.get_numeric_value())));
 
                 ++declare_t;
                 ++invoke_t;

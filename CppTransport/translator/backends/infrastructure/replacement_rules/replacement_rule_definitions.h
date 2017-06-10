@@ -156,7 +156,7 @@ namespace macro_packages
       public:
 
         //! evaluate the macro on a concrete (unrolled) index assignment
-        std::string evaluate_unroll(const macro_argument_list& args, const assignment_list& indices);
+        std::string evaluate_unroll(const macro_argument_list& args, const index_literal_assignment& indices);
 
         //! evaluate the macro on an abstract (rolled-up) index assignment
         std::string evaluate_roll(const macro_argument_list& args, const index_literal_list& indices);
@@ -197,7 +197,7 @@ namespace macro_packages
       protected:
 
         //! evaluation function for unrolled index sets; has to be supplied by implementation
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) = 0;
+        virtual std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) = 0;
 
         //! pre-evaluation; if needed, can be supplied by implementation; default is no-op
         virtual void pre_hook(const macro_argument_list& args) { return; }

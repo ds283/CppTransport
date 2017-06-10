@@ -75,7 +75,7 @@ namespace token_list_impl
       }
 
 
-    void index_literal_token::evaluate(const assignment_list& a)
+    void index_literal_token::evaluate(const indices_assignment& a)
       {
         const abstract_index& idx = this->index;
         
@@ -181,48 +181,22 @@ namespace token_list_impl
       }
 
 
-    void index_macro_token::evaluate_unroll(const assignment_list& a)
+    void index_macro_token::evaluate_unroll(const indices_assignment& a)
       {
         // call 'pre'-handler if it has not already been invoked
-        if(!initialized)
-          {
-            try
-              {
-                this->rule.pre(args);
-              }
-            catch(macro_packages::argument_mismatch& xe)
-              {
-                if(!this->argument_error)
-                  {
-                    this->error(xe.what());
-                    this->argument_error = true;
-                  }
-              }
-            catch(macro_packages::index_mismatch& xe)
-              {
-                if(!this->index_error)
-                  {
-                    this->error(xe.what());
-                    this->index_error = true;
-                  }
-              }
-            catch(macro_packages::rule_apply_fail& xe)
-              {
-                this->error(xe.what());
-              }
-
-            initialized = true;
-          }
+        this->invoke_pre_handler();
 
         // strip out the index assignment -- just for the indices this macro requires;
-        // preserves ordering
-        assignment_list index_values;
+        // we preserve the ordering and bundle the assignments together with the index_literals
+        // that define the location of the original declarations
+        index_literal_assignment index_values;
 
         for(const auto& T : this->indices)
           {
-            const abstract_index& idx = *T;
+            const index_literal& l = *T;
+            const abstract_index& idx = l;
             
-            assignment_list::const_iterator it = a.find(idx.get_label());
+            auto it = a.find(idx.get_label());
             if(it == a.end())
               {
                 std::ostringstream msg;
@@ -230,8 +204,10 @@ namespace token_list_impl
 
                 throw macro_packages::rule_apply_fail(msg.str());
               }
-
-            index_values.emplace_back(std::make_pair(idx.get_label(), std::make_shared<assignment_record>(*it)));
+            
+            const index_value& rec = *it;
+            
+            index_values.emplace_back(std::make_pair(std::cref(l), std::cref(rec)));
           }
 
         try
@@ -322,6 +298,40 @@ namespace token_list_impl
         catch(macro_packages::rule_apply_fail& xe)
           {
             this->error(xe.what());
+          }
+      }
+    
+    
+    void index_macro_token::invoke_pre_handler()
+      {
+        if(!initialized)
+          {
+            try
+              {
+                this->rule.pre(args);
+              }
+            catch(macro_packages::argument_mismatch& xe)
+              {
+                if(!this->argument_error)
+                  {
+                    this->error(xe.what());
+                    this->argument_error = true;
+                  }
+              }
+            catch(macro_packages::index_mismatch& xe)
+              {
+                if(!this->index_error)
+                  {
+                    this->error(xe.what());
+                    this->index_error = true;
+                  }
+              }
+            catch(macro_packages::rule_apply_fail& xe)
+              {
+                this->error(xe.what());
+              }
+        
+            initialized = true;
           }
       }
     

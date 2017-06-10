@@ -38,9 +38,9 @@
 namespace index_assignment_impl
   {
 
-    std::unique_ptr<assignment_list> assignment_set_iterator::operator*() const
+    std::unique_ptr<indices_assignment> assignment_set_iterator::operator*() const
       {
-        std::unique_ptr<assignment_list> rval = std::make_unique<assignment_list>();
+        std::unique_ptr<indices_assignment> rval = std::make_unique<indices_assignment>();
         if(!this->parent) return rval;
         
         assignment_set& p = this->parent.get();
@@ -50,14 +50,14 @@ namespace index_assignment_impl
             case index_order::left:
               {
                 // arrange for insertion at the back, so indices are in correct order
-                this->construct_assignment(p.source_set.begin(), p.source_set.end(), database_back_inserter<assignment_list>(*rval));
+                this->construct_assignment(p.source_set.begin(), p.source_set.end(), database_back_inserter<indices_assignment>(*rval));
                 break;
               }
 
             case index_order::right:
               {
                 // arrange for insertion at the front, so indices remain in correct order
-                this->construct_assignment(p.source_set.rbegin(), p.source_set.rend(), database_front_inserter<assignment_list>(*rval));
+                this->construct_assignment(p.source_set.rbegin(), p.source_set.rend(), database_front_inserter<indices_assignment>(*rval));
                 break;
               }
           }
@@ -80,7 +80,7 @@ namespace index_assignment_impl
             unsigned int range = it->numeric_range();
 
             // assign current % range as the value of this particular index
-            ins.insert(std::make_pair(it->get_label(), std::make_shared<assignment_record>(*it, current % range)));
+            ins.insert(std::make_pair(it->get_label(), std::make_shared<index_value>(*it, current % range)));
             current = current / range;
 
             it++;

@@ -819,7 +819,7 @@ unsigned int token_list::evaluate_macros(simple_macro_type type)
 	}
 
 
-unsigned int token_list::evaluate_macros(const assignment_list& a)
+unsigned int token_list::evaluate_macros(const indices_assignment& a)
 	{
 		unsigned int replacements = 0;
 

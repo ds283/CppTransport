@@ -103,7 +103,7 @@ class token_list
 
     //! evaluate index macros on a specific assignment and cache the result;
     //! used when unrolling index sets
-    unsigned int evaluate_macros(const assignment_list& a);
+    unsigned int evaluate_macros(const indices_assignment& a);
 
     //! evaluate index macros on an abstract assignment and cache the result;
     //! used when planting code as a 'for'-loop

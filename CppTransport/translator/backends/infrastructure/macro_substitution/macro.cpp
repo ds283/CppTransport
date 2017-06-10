@@ -228,7 +228,7 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
     // compute raw indent for LHS
     std::string raw_indent = this->compute_prefix(split_result);
 
-    for(std::unique_ptr<assignment_list> LHS_assign : LHS_assignments)
+    for(std::unique_ptr<indices_assignment> LHS_assign : LHS_assignments)
       {
         // evaluate LHS macros on this index assignment;
         // only need index- and post-macros; pre-macros were evaluated earlier
@@ -247,9 +247,9 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
               }
 
             // now generate a set of RHS evaluations for this LHS evaluation
-            for(std::unique_ptr<assignment_list> RHS_assign : RHS_assignments)
+            for(std::unique_ptr<indices_assignment> RHS_assign : RHS_assignments)
               {
-                assignment_list total_assignment;
+                indices_assignment total_assignment;
                 try
                   {
                     total_assignment = *LHS_assign + *RHS_assign;
@@ -295,9 +295,9 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
           }
         else if(RHS_assignments.size() == 1)  // just one RHS assignment, so coalesce with LHS
           {
-            std::unique_ptr<assignment_list> RHS_assign = *RHS_assignments.begin();
+            std::unique_ptr<indices_assignment> RHS_assign = *RHS_assignments.begin();
 
-            assignment_list total_assignment;
+            indices_assignment total_assignment;
             try
               {
                 total_assignment = *LHS_assign + *RHS_assign;

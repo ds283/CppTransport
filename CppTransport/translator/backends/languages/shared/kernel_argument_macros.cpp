@@ -90,11 +90,11 @@ namespace shared
         assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
-        for(std::unique_ptr<assignment_list> assign : assignments)
+        for(std::unique_ptr<indices_assignment> assign : assignments)
           {
             out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
 
-            for(const assignment_record& t : *assign)
+            for(const index_value& t : *assign)
               {
                 out << "_" << t.get_numeric_value();
               }
@@ -123,11 +123,11 @@ namespace shared
         assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
-        for(std::unique_ptr<assignment_list> assign : assignments)
+        for(std::unique_ptr<indices_assignment> assign : assignments)
           {
             out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
 
-            for(const assignment_record& t : *assign)
+            for(const index_value& t : *assign)
               {
                 out << "_" << t.get_numeric_value();
               }
@@ -159,11 +159,11 @@ namespace shared
         assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
-        for(std::unique_ptr<assignment_list> assign : assignments)
+        for(std::unique_ptr<indices_assignment> assign : assignments)
           {
             out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
 
-            for(const assignment_record& t : *assign)
+            for(const index_value& t : *assign)
               {
                 out << "_" << t.get_numeric_value();
               }

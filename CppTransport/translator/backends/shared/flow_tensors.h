@@ -229,7 +229,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+        std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) override;
 
         //! evaluate
         std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
@@ -288,7 +288,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+        std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) override;
 
         //! evaluate
         std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
@@ -347,7 +347,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+        std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) override;
 
         //! evaluate
         std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
