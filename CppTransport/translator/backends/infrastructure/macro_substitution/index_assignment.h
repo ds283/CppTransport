@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_INDEX_ASSIGNMENT_H_
-#define CPPTRANSPORT_INDEX_ASSIGNMENT_H_
+#ifndef CPPTRANSPORT_INDEX_ASSIGNMENT_H
+#define CPPTRANSPORT_INDEX_ASSIGNMENT_H
 
 
 #include <iostream>
@@ -211,133 +211,142 @@ typedef index_database<assignment_record> assignment_list;
 namespace index_assignment_impl
   {
 
-    //! iterate through an index assignent set, constructing assignment lists
+    //! iterate through an index assigment set, constructing assignment lists
     //! when dereferenced
     class assignment_set_iterator
       {
-
+    
         // CONSTRUCTOR, DESTRUCTOR
-
+  
       public:
-
+    
         //! empty constructor
         assignment_set_iterator()
-          : parent(nullptr),
+          : parent(boost::none),
             pos(0),
             max_pos(0)
           {
           }
-
+    
         //! value constructor
-        assignment_set_iterator(assignment_set* p, unsigned int cp)
+        assignment_set_iterator(assignment_set& p, unsigned int cp)
           : parent(p),
             pos(cp),
-            max_pos(p != nullptr ? p->size() : 0)
+            max_pos(p.size())
           {
           }
-
+    
         //! destructor is default
         ~assignment_set_iterator() = default;
-
-
+    
+    
         // COMPARISON
-
+  
       public:
-
+    
         //! equality comparison
-        bool operator=(const assignment_set_iterator& obj) const
+        bool operator==(const assignment_set_iterator& obj) const
           {
-            return(this->parent == obj.parent && this->pos == obj.pos);
+            if(this->pos != obj.pos) return false;
+            if(this->parent && !obj.parent) return false;
+            if(!this->parent && obj.parent) return false;
+        
+            return &(*this->parent) == &(*obj.parent);
           }
-
+    
         //! inequality comparison
         bool operator!=(const assignment_set_iterator& obj) const
           {
-            return(this->parent != obj.parent || this->pos != obj.pos);
+            if(this->pos != obj.pos) return true;
+            if(this->parent && !obj.parent) return true;
+            if(!this->parent && obj.parent) return true;
+        
+            return &(*this->parent) != &(*obj.parent);
           }
-
-
+    
+    
         // INCREMENT, DECREMENT
-
+  
       public:
-
+    
         //! prefix decrement
         assignment_set_iterator& operator--()
           {
-            if(this->parent == nullptr)    throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
-            if(this->pos == 0)             throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_DECREMENT);
-
+            if(!this->parent) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
+            if(this->pos == 0) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_DECREMENT);
+        
             --this->pos;
             return(*this);
           }
-
+    
         //! postfix decrement
         assignment_set_iterator operator--(int)
           {
-            if(this->parent == nullptr)    throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
-            if(this->pos == 0)             throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_DECREMENT);
-
+            if(!this->parent) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
+            if(this->pos == 0) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_DECREMENT);
+        
             const assignment_set_iterator old(*this);
             --this->pos;
             return(old);
           }
-
+    
         //! prefix increment
         assignment_set_iterator& operator++()
           {
-            if(this->parent == nullptr)    throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
+            if(!this->parent) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
             if(this->pos == this->max_pos) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_INCREMENT);
-
+        
             ++this->pos;
             return(*this);
           }
-
+    
         //! postfix increment
         assignment_set_iterator operator++(int)
           {
-            if(this->parent == nullptr)    throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
+            if(!this->parent) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
             if(this->pos == this->max_pos) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_INCREMENT);
-
+        
             const assignment_set_iterator old(*this);
             ++this->pos;
             return(old);
           }
-
-
+    
+    
         // DEREFERENCE
-
+  
       public:
-
+    
         //! dereference to get the assignment group corresponding to our current position within the
         //! assignment set
         std::unique_ptr<assignment_list> operator*() const;
-
-
+    
+    
         // INTERNAL API
-
+  
       private:
-
+    
         //! construct an assignment group given an iterator range over abstract indices
         template <typename IteratorType, typename Inserter>
         void construct_assignment(IteratorType begin, IteratorType end, Inserter ins) const;
-
-
+    
+    
         // INTERNAL DATA
-
+  
       private:
-
+    
         //! parent assignment set
-        assignment_set* parent;
-
-        //! current position
+        boost::optional<assignment_set&> parent;
+    
+        //! current position in the set of index assignments;
+        //! used to compute the value of each index when constructing a particular assignment
         unsigned int pos;
-
+    
         //! total size of set
         unsigned int max_pos;
-
+    
       };
-
+    
   }   // namespace index_assignment_impl
 
 
-#endif //CPPTRANSPORT_INDEX_ASSIGNMENT_H_
+#endif //CPPTRANSPORT_INDEX_ASSIGNMENT_H

@@ -41,20 +41,23 @@ namespace index_assignment_impl
     std::unique_ptr<assignment_list> assignment_set_iterator::operator*() const
       {
         std::unique_ptr<assignment_list> rval = std::make_unique<assignment_list>();
+        if(!this->parent) return rval;
+        
+        assignment_set& p = this->parent.get();
 
-        switch(this->parent->order)
+        switch(p.order)
           {
             case index_order::left:
               {
                 // arrange for insertion at the back, so indices are in correct order
-                this->construct_assignment(this->parent->source_set.begin(), this->parent->source_set.end(), database_back_inserter<assignment_list>(*rval));
+                this->construct_assignment(p.source_set.begin(), p.source_set.end(), database_back_inserter<assignment_list>(*rval));
                 break;
               }
 
             case index_order::right:
               {
                 // arrange for insertion at the front, so indices remain in correct order
-                this->construct_assignment(this->parent->source_set.rbegin(), this->parent->source_set.rend(), database_front_inserter<assignment_list>(*rval));
+                this->construct_assignment(p.source_set.rbegin(), p.source_set.rend(), database_front_inserter<assignment_list>(*rval));
                 break;
               }
           }
@@ -66,13 +69,17 @@ namespace index_assignment_impl
     template <typename IteratorType, typename Inserter>
     void assignment_set_iterator::construct_assignment(IteratorType begin, IteratorType end, Inserter ins) const
       {
-        IteratorType it      = begin;
+        // work through list of indices, constructing assignment records for each one
+        IteratorType it = begin;
+        
+        // assignments are encoded in the current position
         unsigned int current = this->pos;
 
         while(it != end)
           {
             unsigned int range = it->numeric_range();
 
+            // assign current % range as the value of this particular index
             ins.insert(std::make_pair(it->get_label(), std::make_shared<assignment_record>(*it, current % range)));
             current = current / range;
 
@@ -97,11 +104,11 @@ assignment_set::assignment_set(const abstract_index_database& s, index_order o)
 
 assignment_set::iterator assignment_set::begin()
   {
-    return iterator(this, 0);
+    return iterator(*this, 0);
   }
 
 
 assignment_set::iterator assignment_set::end()
   {
-    return iterator(this, this->assignments_size);
+    return iterator(*this, this->assignments_size);
   }
