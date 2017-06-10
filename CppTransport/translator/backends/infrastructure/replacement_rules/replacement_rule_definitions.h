@@ -30,12 +30,15 @@
 
 #include <stdexcept>
 #include <functional>
+#include <vector>
 
 #include "index_assignment.h"
 #include "index_literal.h"
 #include "macro_types.h"
 #include "cse_map.h"
 #include "rules_common.h"
+
+#include "boost/optional.hpp"
 
 
 namespace macro_packages
@@ -129,23 +132,19 @@ namespace macro_packages
 
       public:
 
-        //! constructor for an index macro with a fixed number of arguments and indices,
-        //! and enforcing a specific class for the index type
-        replacement_rule_index(std::string nm, unsigned int a, unsigned int i, index_class c)
+        //! constructor for an index macro with a fixed number of arguments and indices.
+        //! optionally enforces specific classes for the index types if the fourth argument
+        //! 'c' is given
+        replacement_rule_index(std::string nm, unsigned int a, unsigned int i,
+                               boost::optional< std::vector<index_class> > c = boost::none)
           : name(std::move(nm)),
             num_args(a),
             num_indices(i),
-            idx_class(c)
+            idx_classes(std::move(c))
           {
-          }
-
-        //! constructor for an index macro with a fixed number of arguments and indices,
-        //! but no specific class for the index types
-        replacement_rule_index(std::string nm, unsigned int a, unsigned int i)
-          : name(std::move(nm)),
-            num_args(a),
-            num_indices(i)
-          {
+            if(!idx_classes) return;
+            
+            if(num_indices != idx_classes.get().size()) throw std::runtime_error(ERROR_REPLACEMENT_RULE_INDEX_COUNT);
           }
 
         //! destructor is default
@@ -184,7 +183,7 @@ namespace macro_packages
         //! get index class associated with this macro;
         //! returned as a boost::optional which will be empty if the macro can accept variable
         //! index types
-        boost::optional<index_class> get_index_class() const { return this->idx_class; }
+        const boost::optional< std::vector<index_class> >& get_index_class() const { return this->idx_classes; }
 
         //! get name associated with this macro
         const std::string& get_name() const { return this->name; }
@@ -239,7 +238,7 @@ namespace macro_packages
         unsigned int num_indices;
 
         //! class of index expected
-        boost::optional<index_class> idx_class;
+        boost::optional< std::vector<index_class> > idx_classes;
 
       };
 

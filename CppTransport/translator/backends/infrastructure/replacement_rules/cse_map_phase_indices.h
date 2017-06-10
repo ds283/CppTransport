@@ -45,7 +45,7 @@ namespace macro_packages
 
         //! constructor
         cse_map_phase1(std::string nm, unsigned int a, param_index num_params, field_index num_fields)
-          : replacement_rule_index(std::move(nm), a, 1, index_class::full),
+          : replacement_rule_index(std::move(nm), a, 1, std::vector<index_class>({ index_class::full })),
             fl(static_cast<unsigned int>(num_params), static_cast<unsigned int>(num_fields))
           {
           }
@@ -87,7 +87,7 @@ namespace macro_packages
 
         //! constructor
         cse_map_phase2(std::string nm, unsigned int a, param_index num_params, field_index num_fields)
-          : replacement_rule_index(std::move(nm), a, 2, index_class::full),
+          : replacement_rule_index(std::move(nm), a, 2, std::vector<index_class>({ index_class::full, index_class::full })),
             fl(static_cast<unsigned int>(num_params), static_cast<unsigned int>(num_fields))
           {
           }
@@ -129,7 +129,7 @@ namespace macro_packages
 
         //! constructor
         cse_map_phase3(std::string nm, unsigned int a, param_index num_params, field_index num_fields)
-          : replacement_rule_index(std::move(nm), a, 3, index_class::full),
+          : replacement_rule_index(std::move(nm), a, 3, std::vector<index_class>({ index_class::full, index_class::full, index_class::full })),
             fl(static_cast<unsigned int>(num_params), static_cast<unsigned int>(num_fields))
           {
           }

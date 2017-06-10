@@ -23,9 +23,11 @@
 // --@@
 //
 
-#include "index_class.h"
 
 #include <ctype.h>
+
+#include "index_class.h"
+#include "msg_en.h"
 
 
 index_class identify_index(char label)
@@ -45,4 +47,15 @@ index_class identify_index(char label)
 
     // assume an unclassified index ranges over all of phase-space
     return index_class::full;
+  }
+
+
+std::string to_string(index_class c)
+  {
+    switch(c)
+      {
+        case index_class::parameter: return LABEL_INDEX_CLASS_PARAMETER;
+        case index_class::field_only: return LABEL_INDEX_CLASS_FIELD;
+        case index_class::full: return LABEL_INDEX_CLASS_FULL;
+      }
   }

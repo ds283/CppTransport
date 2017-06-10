@@ -27,14 +27,19 @@
 #define CPPTRANSPORT_INDEX_CLASS_H
 
 
+#include <string>
+
+
 enum class index_class
   {
     field_only, full, parameter
   };
 
 
-index_class identify_index (char label);
+index_class identify_index(char label);
 
+
+std::string to_string(index_class c);
 
 
 #endif //CPPTRANSPORT_INDEX_CLASS_H

@@ -204,7 +204,7 @@ namespace macro_packages
 
         //! constructor
         replace_parameter(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : replacement_rule_index(std::move(n), PARAMETER_TOTAL_ARGUMENTS, PARAMETER_TOTAL_INDICES, index_class::parameter),
+          : replacement_rule_index(std::move(n), PARAMETER_TOTAL_ARGUMENTS, PARAMETER_TOTAL_INDICES, std::vector<index_class>({ index_class::parameter })),
             cse_worker(cw),
             lambda_mgr(lm),
             printer(prn),
@@ -263,7 +263,7 @@ namespace macro_packages
 
         //! constructor
         replace_field(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : replacement_rule_index(std::move(n), FIELD_TOTAL_ARGUMENTS, FIELD_TOTAL_INDICES, index_class::field_only),
+          : replacement_rule_index(std::move(n), FIELD_TOTAL_ARGUMENTS, FIELD_TOTAL_INDICES, std::vector<index_class>({ index_class::field_only })),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
@@ -322,7 +322,7 @@ namespace macro_packages
 
         //! constructor
         replace_coordinate(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : replacement_rule_index(std::move(n), COORDINATE_TOTAL_ARGUMENTS, COORDINATE_TOTAL_INDICES, index_class::full),
+          : replacement_rule_index(std::move(n), COORDINATE_TOTAL_ARGUMENTS, COORDINATE_TOTAL_INDICES, std::vector<index_class>({ index_class::full })),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),

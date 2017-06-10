@@ -99,7 +99,8 @@ namespace macro_packages
     void replacement_rule_index::validate(const IndexDatabase& indices)
       {
         // check that correct number of indices have been supplied
-        if(indices.size() != this->num_indices)
+        if(indices.size() != this->num_indices
+           || (this->idx_classes && indices.size() != this->idx_classes.get().size()))
           {
             std::ostringstream msg;
     
@@ -109,14 +110,21 @@ namespace macro_packages
           }
 
         // check that index types are compatible
-        if(!this->idx_class) return;
+        if(!this->idx_classes) return;
     
-        for(const auto& T : indices)
+        const auto& expected_classes = *this->idx_classes;
+        
+        // TODO: add context information to error reports once assignment_record has been modified to include index_literal data
+        
+        for(unsigned int i = 0; i < indices.size(); ++i)
           {
+            const auto& T = indices[i];
+            index_class expected = expected_classes[i];
+            
             index_class cl = index_traits_impl::get_index_class<decltype(T)>(T);
             char lb = index_traits_impl::get_index_label<decltype(T)>(T);
         
-            switch(*this->idx_class)
+            switch(expected)
               {
                 case index_class::full:
                   {
@@ -125,8 +133,8 @@ namespace macro_packages
                       {
                         std::ostringstream msg;
                     
-                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '"
-                            << lb << "'";
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
+                            << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
                         throw index_mismatch(msg.str());
                       }
                 
@@ -141,8 +149,8 @@ namespace macro_packages
                       {
                         std::ostringstream msg;
                     
-                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '"
-                            << lb << "'";
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
+                            << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
                         throw index_mismatch(msg.str());
                       }
                 
@@ -157,8 +165,8 @@ namespace macro_packages
                       {
                         std::ostringstream msg;
                     
-                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '"
-                            << lb << "'";
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
+                            << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
                         throw index_mismatch(msg.str());
                       }
                 

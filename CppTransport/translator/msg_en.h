@@ -191,6 +191,7 @@ constexpr auto ERROR_RECEIVED_INDEX_COUNT            = "received";
 
 constexpr auto ERROR_WRONG_INDEX_CLASS               = "Index type mismatch for";
 constexpr auto ERROR_WRONG_INDEX_LABEL               = "index";
+constexpr auto ERROR_WRONG_INDEX_EXPECTED            = "expected type";
 
 constexpr auto ERROR_RULE_AFTER_DIRECTIVE            = "Directives can not be mixed with other macros or index literals";
 constexpr auto ERROR_DIRECTIVE_AFTER_RULE            = "Directives can not be mixed with other macros or index literals";
@@ -200,7 +201,7 @@ constexpr auto ERROR_INDEX_LITERAL_NO_KERNEL         = "Line ended before kernel
 constexpr auto ERROR_INDEX_VALIDATION_FAIL           = "Mismatched index literal: expected";
 constexpr auto NOTIFY_INDEX_DECLARATION_WAS          = "Location of original index declaration was";
 constexpr auto ERROR_INDEX_NOT_VALID                 = "Use of undeclared index literal";
-constexpr auto ERROR_NONTRIVIAL_REQUIRES_VARIANCE    = "Variance must be assigned when using a nontrival field-space metric: assuming covariant";
+constexpr auto ERROR_NONTRIVIAL_REQUIRES_VARIANCE    = "Variance must be assigned when using a nontrival field-space metric: assuming contravariant";
 constexpr auto NOTIFY_PARAMETER_VARIANCE_IGNORED     = "Variance specifier ignored for parameter-type index";
 
 constexpr auto ERROR_INDEX_LITERAL_REASSIGN          = "Internal error: missing database entry during index literal reassignment, for index";
@@ -212,6 +213,9 @@ constexpr auto ERROR_MACRO_LHS_RHS_MISMATCH          = "Mismatched index class o
 
 constexpr auto ERROR_INDEX_DATABASE_EMPLACE_FAIL     = "Internal error: emplacement in index database failed";
 constexpr auto ERROR_INDEX_DATABASE_OUT_OF_RANGE     = "Internal error: out of range access in index database";
+
+constexpr auto ERROR_REPLACEMENT_RULE_INDEX_COUNT    = "Internal error: number of index classes provided to replacement rule constructor does not match declared number of indices";
+constexpr auto ERROR_DIRECTIVE_RULE_INDEX_COUNT      = "Internal error: number of index classes provided to directive constructor does not match declared number of indices";
 
 constexpr auto ERROR_DN_DOES_NOT_ROLL                = "Internal error: attempt to roll-up a delta-N macro";
 constexpr auto ERROR_INCONSISTENT_LAMBDA_MAP         = "Internal error: inconsistent lambda map size";
@@ -318,5 +322,9 @@ constexpr auto NOTIFY_TOO_MANY_ERRORS                = "encountered too many err
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";
 constexpr auto MESSAGE_SECOND_LABEL                  = "s";
+
+constexpr auto LABEL_INDEX_CLASS_PARAMETER           = "parameter";
+constexpr auto LABEL_INDEX_CLASS_FIELD               = "field";
+constexpr auto LABEL_INDEX_CLASS_FULL                = "full phase-space";
 
 #endif //CPPTRANSPORT_MSG_EN_H

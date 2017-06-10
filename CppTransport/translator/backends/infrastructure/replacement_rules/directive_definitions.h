@@ -126,11 +126,20 @@ namespace macro_packages
       public:
         
         //! constructor that accepts a variable number of indices
-        directive_index(std::string nm, unsigned int a, translator_data& p)
+        directive_index(std::string nm, unsigned int a, translator_data& p,
+                        boost::optional<unsigned int> i = boost::none,
+                        boost::optional< std::vector<index_class> > c = boost::none)
           : name(std::move(nm)),
             num_args(a),
-            payload(p)
+            payload(p),
+            num_indices(i),
+            idx_classes(c)
           {
+            if(idx_classes && !num_indices) throw std::runtime_error(ERROR_DIRECTIVE_RULE_INDEX_COUNT);
+            
+            if(!idx_classes) return;
+            
+            if(num_indices.get() != idx_classes.get().size()) throw std::runtime_error(ERROR_DIRECTIVE_RULE_INDEX_COUNT);
           }
         
         //! destructor is default
@@ -160,7 +169,7 @@ namespace macro_packages
         //! get index class associated with this macro;
         //! returned as a boost::optional which will be empty if the directive can accept variable
         //! index types
-        boost::optional<index_class> get_index_class() const { return this->idx_class; }
+        const boost::optional< std::vector<index_class> >& get_index_class() const { return this->idx_classes; }
         
         //! get name associated with this directive
         const std::string& get_name() const { return this->name; }
@@ -209,7 +218,7 @@ namespace macro_packages
         boost::optional<unsigned int> num_indices;
         
         //! class of index expected
-        boost::optional<index_class> idx_class;
+        boost::optional< std::vector<index_class> > idx_classes;
     
       };
     
