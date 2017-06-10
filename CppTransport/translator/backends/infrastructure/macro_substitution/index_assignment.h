@@ -198,17 +198,8 @@ namespace index_traits_impl
     template <typename RecordType>
     char get_index_label(RecordType item);
     
-    template <>
-    inline index_class get_index_class<const index_value&>(const index_value& item)
-      {
-        return item.get_class();
-      }
-    
-    template <>
-    inline char get_index_label<const index_value&>(const index_value& item)
-      {
-        return item.get_label();
-      }
+    template <typename RecordType>
+    const error_context& get_index_declaration(RecordType item);
     
     template<>
     inline index_class get_index_class<const index_literal_value&>(const index_literal_value& item)
@@ -220,6 +211,12 @@ namespace index_traits_impl
     inline char get_index_label<const index_literal_value&>(const index_literal_value& item)
       {
         return item.second.get().get_label();
+      }
+    
+    template<>
+    inline const error_context& get_index_declaration<const index_literal_value&>(const index_literal_value& item)
+      {
+        return item.first.get().get_declaration_point();
       }
     
   }   // index_traits

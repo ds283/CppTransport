@@ -80,14 +80,30 @@ namespace macro_packages
       public:
 
         //! constructor
-        index_mismatch(const std::string x)
-          : std::runtime_error(std::move(x))
+        index_mismatch(const std::string x, const error_context c)
+          : std::runtime_error(std::move(x)),
+            ctx(std::move(c))
           {
           }
 
         //! destructor is default
         virtual ~index_mismatch() = default;
 
+        
+        // INTERFACE
+        
+      public:
+        
+        //! get error context
+        const error_context& get_declaration_point() const { return this->ctx; }
+        
+        // INTERNAL DATA
+        
+      private:
+        
+        //! error context
+        error_context ctx;
+        
       };
   
   };

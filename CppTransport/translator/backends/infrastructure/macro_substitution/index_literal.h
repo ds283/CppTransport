@@ -248,6 +248,9 @@ namespace index_traits_impl
     template <typename RecordType>
     char get_index_label(RecordType item);
     
+    template <typename RecordType>
+    const error_context& get_index_declaration(RecordType item);
+    
     template <>
     inline index_class get_index_class< const std::shared_ptr<index_literal>& >(const std::shared_ptr<index_literal>& item)
       {
@@ -258,6 +261,12 @@ namespace index_traits_impl
     inline char get_index_label< const std::shared_ptr<index_literal>& >(const std::shared_ptr<index_literal>& item)
       {
         return item->get().get_label();
+      }
+    
+    template <>
+    inline const error_context& get_index_declaration< const std::shared_ptr<index_literal>& >(const std::shared_ptr<index_literal>& item)
+      {
+        return item->get_declaration_point();
       }
     
   }   // index_traits

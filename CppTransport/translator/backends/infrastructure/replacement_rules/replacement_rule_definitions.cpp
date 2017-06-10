@@ -106,15 +106,13 @@ namespace macro_packages
     
             msg << ERROR_MACRO_WRONG_INDEX_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_INDEX_COUNT << " "
                 << this->num_indices << ", " << ERROR_RECEIVED_INDEX_COUNT << " " << indices.size();
-            throw index_mismatch(msg.str());
+            throw rule_apply_fail(msg.str());
           }
 
         // check that index types are compatible
         if(!this->idx_classes) return;
     
         const auto& expected_classes = *this->idx_classes;
-        
-        // TODO: add context information to error reports once index_value has been modified to include index_literal data
         
         for(unsigned int i = 0; i < indices.size(); ++i)
           {
@@ -123,6 +121,7 @@ namespace macro_packages
             
             index_class cl = index_traits_impl::get_index_class<decltype(T)>(T);
             char lb = index_traits_impl::get_index_label<decltype(T)>(T);
+            const error_context& ctx = index_traits_impl::get_index_declaration<decltype(T)>(T);
         
             switch(expected)
               {
@@ -135,7 +134,7 @@ namespace macro_packages
                     
                         msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
                             << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
-                        throw index_mismatch(msg.str());
+                        throw index_mismatch(msg.str(), ctx);
                       }
                 
                     break;
@@ -151,7 +150,7 @@ namespace macro_packages
                     
                         msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
                             << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
-                        throw index_mismatch(msg.str());
+                        throw index_mismatch(msg.str(), ctx);
                       }
                 
                     break;
@@ -167,7 +166,7 @@ namespace macro_packages
                     
                         msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
                             << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
-                        throw index_mismatch(msg.str());
+                        throw index_mismatch(msg.str(), ctx);
                       }
                 
                     break;

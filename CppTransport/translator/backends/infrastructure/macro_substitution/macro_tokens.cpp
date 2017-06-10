@@ -222,11 +222,12 @@ namespace token_list_impl
                 this->argument_error = true;
               }
           }
-        catch(macro_packages::index_mismatch& xe)
+         catch(macro_packages::index_mismatch& xe)
           {
             if(!this->index_error)
               {
-                this->error(xe.what());
+                const error_context& ctx = xe.get_declaration_point();
+                ctx.error(xe.what());
                 this->index_error = true;
               }
           }
@@ -322,7 +323,8 @@ namespace token_list_impl
               {
                 if(!this->index_error)
                   {
-                    this->error(xe.what());
+                    const error_context& ctx = xe.get_declaration_point();
+                    ctx.error(xe.what());
                     this->index_error = true;
                   }
               }
@@ -391,7 +393,8 @@ namespace token_list_impl
           }
         catch(macro_packages::index_mismatch& xe)
           {
-            this->error(xe.what());
+            const error_context& ctx = xe.get_declaration_point();
+            ctx.error(xe.what());
             index_error = true;
           }
         catch(macro_packages::rule_apply_fail& xe)
