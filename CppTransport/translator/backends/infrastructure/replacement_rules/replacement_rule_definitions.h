@@ -142,8 +142,10 @@ namespace macro_packages
             num_indices(i),
             idx_classes(std::move(c))
           {
+            // if no list of index classes supplied, then nothing to do
             if(!idx_classes) return;
             
+            // if a list was supplied, its length should match the specified number of indices
             if(num_indices != idx_classes.get().size()) throw std::runtime_error(ERROR_REPLACEMENT_RULE_INDEX_COUNT);
           }
 

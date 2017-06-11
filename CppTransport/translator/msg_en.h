@@ -155,15 +155,13 @@ constexpr auto ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   = "Internal error: incremen
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_DECREMENT   = "Internal error: attempt to decrement assignment iterator before first element";
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_INCREMENT   = "Internal error: attempt to increment assignment iterator after last element";
 
-constexpr auto ERROR_TOKENIZE_INDEX_MISMATCH         = "Duplicate inequivalent declaration of index";
 constexpr auto ERROR_TOKENIZE_NO_MACRO_MATCH         = "Internal error: unexpectedly failed to match a macro";
 constexpr auto ERROR_TOKENIZE_UNEXPECTED_LIST        = "Did not expect index list following simple macro";
 constexpr auto ERROR_TOKENIZE_SKIPPING               = "skipping";
 
 constexpr auto ERROR_TOKENIZE_TOO_MANY_ERRORS        = "Too many errors from this token; further output will be suppressed";
-constexpr auto ERROR_DIRECTIVE_CALLED_AS_UNROLL      = "Internal error: directive called as unroll";
 
-constexpr auto ERROR_NO_PRE_MAP                      = "Missing data to perform macro replacement";
+constexpr auto ERROR_NO_PRE_MAP                      = "Internal error: Data to perform macro replacement was not correctly pre-mapped";
 
 constexpr auto ERROR_INCOMPATIBLE_UNROLL             = "Unrolling requirements are incompatible with earlier macros for";
 constexpr auto ERROR_LHS_RHS_INCOMPATIBLE_UNROLL     = "Left-hand side and right-hand side have incompatible unrolling requirements";

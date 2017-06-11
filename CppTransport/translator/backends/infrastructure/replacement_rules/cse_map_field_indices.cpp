@@ -31,7 +31,7 @@
 std::string macro_packages::cse_map_field1::unroll(const macro_argument_list& args,
                                                    const index_literal_assignment& indices)
   {
-    if(this->map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
+    if(!this->map) throw rule_apply_fail(ERROR_NO_PRE_MAP);
     
     const index_value& idx = indices[0].second.get();
 
@@ -44,7 +44,7 @@ std::string macro_packages::cse_map_field1::unroll(const macro_argument_list& ar
 std::string macro_packages::cse_map_field2::unroll(const macro_argument_list& args,
                                                    const index_literal_assignment& indices)
   {
-    if(this->map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
+    if(!this->map) throw rule_apply_fail(ERROR_NO_PRE_MAP);
     
     const index_value& idx_i = indices[0].second.get();
     const index_value& idx_j = indices[1].second.get();
@@ -59,7 +59,7 @@ std::string macro_packages::cse_map_field2::unroll(const macro_argument_list& ar
 std::string macro_packages::cse_map_field3::unroll(const macro_argument_list& args,
                                                    const index_literal_assignment& indices)
   {
-    if(this->map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
+    if(!this->map) throw rule_apply_fail(ERROR_NO_PRE_MAP);
     
     const index_value& idx_i = indices[0].second.get();
     const index_value& idx_j = indices[1].second.get();

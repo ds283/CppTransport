@@ -59,10 +59,8 @@ namespace macro_packages
     std::string replace_V::evaluate(const macro_argument_list& args)
       {
         GiNaC::ex V = this->Hubble_obj->compute_V();
-
-
-
-        // pass to CSE module for evalaution
+        
+        // pass to CSE module for evaluation
         this->cse_worker.parse(V);
 
         // emit
