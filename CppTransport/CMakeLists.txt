@@ -548,6 +548,7 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/A.h
+  translator/transport-objects/concepts/Atilde.h
   translator/transport-objects/concepts/B.h
   translator/transport-objects/concepts/C.h
   translator/transport-objects/concepts/dddV.h
