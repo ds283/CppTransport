@@ -951,8 +951,8 @@ namespace transport
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __x, __dV);
-          $MODEL_compute_ddV(__raw_params, __x, __ddV);
+          $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __x, __Mp, __ddV);
 
           // capture resources for transport tensors
           $RESOURCE_DV{__dV}
@@ -1055,9 +1055,9 @@ namespace transport
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __x, __dV);
-          $MODEL_compute_ddV(__raw_params, __x, __ddV);
-          $MODEL_compute_dddV(__raw_params, __x, __dddV);
+          $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __x, __Mp, __ddV);
+          $MODEL_compute_dddV(__raw_params, __x, __Mp, __dddV);
 
           // capture resources for transport tensors
           $RESOURCE_DV{__dV}

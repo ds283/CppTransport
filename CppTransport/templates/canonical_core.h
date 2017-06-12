@@ -51,6 +51,7 @@
 #include "Eigen/Core"
 
 #include "transport-runtime/transport.h"
+#include "transport-runtime/models/canonical_model.h"
 
 
 // #define CPPTRANSPORT_INSTRUMENT
@@ -58,9 +59,6 @@
 
 namespace transport
   {
-
-    template <typename number>
-    using backg_state = std::vector<number>;
 
     // Literal data pool
     namespace $MODEL_pool
@@ -223,25 +221,25 @@ namespace transport
       public:
 
         // Over-ride functions inherited from 'model'
-        number H(const parameters<number>& __params, const std::vector<number>& __coords) const override;
-        number epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const override;
+        number H(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
+        number epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
 
         // Over-ride functions inherited from 'canonical_model'
-        number V(const parameters<number>& __params, const std::vector<number>& __coords) const override;
+        number V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
 
 
         // INITIAL CONDITIONS HANDLING -- implements a 'model' interface
 
       public:
 
-        void validate_ics(const parameters<number>& p, const std::vector<number>& input, std::vector<number>& output) override;
+        void validate_ics(const parameters<number>& p, const flattened_tensor<number>& input, flattened_tensor<number>& output) override;
 
 
         // PARAMETER HANDLING -- implements a 'model' interface
 
       public:
 
-        void validate_params(const std::vector<number>& input, std::vector<number>& output) override;
+        void validate_params(const flattened_tensor<number>& input, flattened_tensor<number>& output) override;
 
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES -- implements a 'model' interface
@@ -249,29 +247,29 @@ namespace transport
       public:
 
         // calculate gauge transformations to zeta
-        void compute_gauge_xfm_1(const twopf_db_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        void compute_gauge_xfm_2(const twopf_db_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) override;
+        void compute_gauge_xfm_1(const twopf_db_task<number>* __task, const flattened_tensor<number>& __state, flattened_tensor<number>& __dN) override;
+        void compute_gauge_xfm_2(const twopf_db_task<number>* __task, const flattened_tensor<number>& __state, double __k, double __k1, double __k2, double __N, flattened_tensor<number>& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        void u2(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) override;
-        void u3(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) override;
+        void u2(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k, double __N, flattened_tensor<number>& __u2) override;
+        void u3(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __u3) override;
 
-        void A(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) override;
-        void B(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) override;
-        void C(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) override;
+        void A(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __A) override;
+        void B(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __B) override;
+        void C(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) override;
 
         // calculate mass matrix
-        void M(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __N, std::vector<number>& __M) override;
+        void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) override;
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
       public:
 
-        void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
+        void backend_process_backg(const background_task<number>* tk, backg_history<number>& solution, bool silent=false) override;
 
         double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
 
-		    void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k) override;
+		    void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k) override;
 
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
@@ -279,17 +277,17 @@ namespace transport
       protected:
 
         number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k_norm);
+                                const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k_norm);
 
         number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k_norm);
+                                const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k_norm);
 
         number make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                    const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k_norm);
+                                    const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k_norm);
 
         number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                double kmode_1, double kmode_2, double kmode_3, double __Ninit,
-                               const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k_norm);
+                               const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k_norm);
 
 
         // INTERNAL DATA
@@ -386,7 +384,7 @@ namespace transport
 
       public:
 
-        $MODEL_background_observer(typename model<number>::backg_history& h, const time_config_database& t)
+        $MODEL_background_observer(backg_history<number>& h, const time_config_database& t)
           : history(h),
             time_db(t)
           {
@@ -397,7 +395,7 @@ namespace transport
 
       private:
 
-        typename model<number>::backg_history& history;
+        backg_history<number>& history;
 
         const time_config_database& time_db;
 
@@ -482,7 +480,7 @@ namespace transport
 
 
     template <typename number>
-    number $MODEL<number>::H(const parameters<number>& __params, const std::vector<number>& __coords) const
+    number $MODEL<number>::H(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
 
@@ -490,7 +488,7 @@ namespace transport
           {
             $RESOURCE_RELEASE
             const auto __Mp = __params.get_Mp();
-            const std::vector<number>& __param_vector = __params.get_vector();
+            const flattened_tensor<number>& __param_vector = __params.get_vector();
 
             $RESOURCE_PARAMETERS{__param_vector}
             $RESOURCE_COORDINATES{__coords}
@@ -509,7 +507,7 @@ namespace transport
 
 
     template <typename number>
-    number $MODEL<number>::epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const
+    number $MODEL<number>::epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
 
@@ -534,7 +532,7 @@ namespace transport
 
 
     template <typename number>
-    number $MODEL<number>::V(const parameters<number>& __params, const std::vector<number>& __coords) const
+    number $MODEL<number>::V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
 
@@ -542,7 +540,7 @@ namespace transport
           {
             $RESOURCE_RELEASE
             const auto __Mp = __params.get_Mp();
-            const std::vector<number>& __param_vector = __params.get_vector();
+            const flattened_tensor<number>& __param_vector = __params.get_vector();
 
             $RESOURCE_PARAMETERS{__param_vector}
             $RESOURCE_COORDINATES{__coords}
@@ -562,11 +560,13 @@ namespace transport
 
     $IF{!fast}
       template <typename number>
-      void $MODEL_compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
+      void $MODEL_compute_dV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* dV)
         {
           $RESOURCE_RELEASE
+
           $RESOURCE_PARAMETERS{raw_params}
           $RESOURCE_COORDINATES{__x}
+
           $TEMP_POOL{"const auto $1 = $2;"}
 
           dV[FIELDS_FLATTEN($a)] = $DV[a];
@@ -574,11 +574,13 @@ namespace transport
 
 
       template <typename number>
-      void $MODEL_compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
+      void $MODEL_compute_ddV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* ddV)
         {
           $RESOURCE_RELEASE
+
           $RESOURCE_PARAMETERS{raw_params}
           $RESOURCE_COORDINATES{__x}
+
           $TEMP_POOL{"const auto $1 = $2;"}
 
           ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
@@ -586,11 +588,13 @@ namespace transport
 
 
       template <typename number>
-      void $MODEL_compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
+      void $MODEL_compute_dddV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* dddV)
         {
           $RESOURCE_RELEASE
+
           $RESOURCE_PARAMETERS{raw_params}
           $RESOURCE_COORDINATES{__x}
+
           $TEMP_POOL{"const auto $1 = $2;"}
 
           dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc];
@@ -602,7 +606,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::validate_ics(const parameters<number>& __params, const std::vector<number>& __input, std::vector<number>& __output)
+    void $MODEL<number>::validate_ics(const parameters<number>& __params, const flattened_tensor<number>& __input, flattened_tensor<number>& __output)
       {
         __output.clear();
         __output.reserve(2*$NUMBER_FIELDS);
@@ -643,7 +647,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::validate_params(const std::vector<number>& input, std::vector<number>& output)
+    void $MODEL<number>::validate_params(const flattened_tensor<number>& input, flattened_tensor<number>& output)
       {
         output.clear();
 
@@ -669,7 +673,7 @@ namespace transport
     // __fields -- vector of initial conditions for the background fields (or fields+momenta)
     template <typename number>
     number $MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                            const twopf_db_task<number>* __task, const std::vector<number>& __fields,
+                                            const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
                                             double __k_norm)
       {
         $RESOURCE_RELEASE
@@ -756,7 +760,7 @@ namespace transport
   // set up initial conditions for the imaginary part of the equal-time two-point function
   template <typename number>
   number $MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                          const twopf_db_task<number>* __task, const std::vector<number>& __fields,
+                                          const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
                                           double __k_norm)
     {
       $RESOURCE_RELEASE
@@ -805,7 +809,7 @@ namespace transport
     // set up initial conditions for the real part of the equal-time tensor two-point function
     template <typename number>
     number $MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                                const twopf_db_task<number>* __task, const std::vector<number>& __fields,
+                                                const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
                                                 double __k_norm)
       {
         $RESOURCE_RELEASE
@@ -856,7 +860,7 @@ namespace transport
     template <typename number>
     number $MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                            double __k1, double __k2, double __k3, double __Ninit,
-                                           const twopf_db_task<number>* __task, const std::vector<number>& __fields,
+                                           const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
                                            double __k_norm)
       {
         $RESOURCE_RELEASE
@@ -866,9 +870,9 @@ namespace transport
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __fields, __dV);
-          $MODEL_compute_ddV(__raw_params, __fields, __ddV);
-          $MODEL_compute_dddV(__raw_params, __fields, __dddV);
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
+          $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1127,8 +1131,8 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::compute_gauge_xfm_1(const twopf_db_task<number>* __task,
-                                             const std::vector<number>& __state,
-                                             std::vector<number>& __dN)
+                                             const flattened_tensor<number>& __state,
+                                             flattened_tensor<number>& __dN)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1145,9 +1149,9 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::compute_gauge_xfm_2(const twopf_db_task<number>* __task,
-                                             const std::vector<number>& __state,
+                                             const flattened_tensor<number>& __state,
                                              double __k, double __k1, double __k2, double __N,
-                                             std::vector<number>& __ddN)
+                                             flattened_tensor<number>& __ddN)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1155,7 +1159,7 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __state, __dV);
+          $MODEL_compute_dV(__raw_params, __state, __Mp, __dV);
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
@@ -1175,8 +1179,8 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::u2(const twopf_db_task<number>* __task,
-                            const std::vector<number>& __fields, double __k, double __N,
-                            std::vector<number>& __u2)
+                            const flattened_tensor<number>& __fields, double __k, double __N,
+                            flattened_tensor<number>& __u2)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1184,8 +1188,8 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __fields, __dV);
-          $MODEL_compute_ddV(__raw_params, __fields, __ddV);
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
@@ -1203,8 +1207,8 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::u3(const twopf_db_task<number>* __task,
-                            const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                            std::vector<number>& __u3)
+                            const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
+                            flattened_tensor<number>& __u3)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1212,9 +1216,9 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __fields, __dV);
-          $MODEL_compute_ddV(__raw_params, __fields, __ddV);
-          $MODEL_compute_dddV(__raw_params, __fields, __dddV);
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
+          $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
@@ -1233,8 +1237,8 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::A(const twopf_db_task<number>* __task,
-                           const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                           std::vector<number>& __A)
+                           const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
+                           flattened_tensor<number>& __A)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1242,9 +1246,9 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __fields, __dV);
-          $MODEL_compute_ddV(__raw_params, __fields, __ddV);
-          $MODEL_compute_dddV(__raw_params, __fields, __dddV);
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
+          $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
@@ -1263,8 +1267,8 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::B(const twopf_db_task<number>* __task,
-                           const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                           std::vector<number>& __B)
+                           const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
+                           flattened_tensor<number>& __B)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1272,7 +1276,7 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __fields, __dV);
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
@@ -1289,8 +1293,8 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::C(const twopf_db_task<number>* __task,
-                           const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                           std::vector<number>& __C)
+                           const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
+                           flattened_tensor<number>& __C)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1307,8 +1311,8 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::M(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __N,
-                           std::vector<number>& __M)
+    void $MODEL<number>::M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N,
+                           flattened_tensor<number>& __M)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1324,7 +1328,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent)
+    void $MODEL<number>::backend_process_backg(const background_task<number>* tk, backg_history<number>& solution, bool silent)
       {
         assert(tk != nullptr);
 
@@ -1424,7 +1428,7 @@ namespace transport
           {
           public:
             aHAggregatorPredicate(const twopf_db_task<number>* tk, model<number>* m, std::vector<double>& N,
-                                  std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double lk)
+                                  flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double lk)
               : params(tk->get_params()),
                 task(tk),
                 mdl(m),
@@ -1490,7 +1494,7 @@ namespace transport
             const parameters<number>& params;
 
             //! cache parameters vectors
-            std::vector<number> param_vector;
+            flattened_tensor<number> param_vector;
 
             //! cache Planck mass
             number __Mp;
@@ -1499,13 +1503,13 @@ namespace transport
             std::vector<double>& N_vector;
 
             //! output vector for values log(aH)
-            std::vector<number>& log_aH_vector;
+            flattened_tensor<number>& log_aH_vector;
 
             //! output vector for field values
-            std::vector<number>& log_a2H2M_vector;
+            flattened_tensor<number>& log_a2H2M_vector;
 
             //! working space for calculation of mass matrix
-            std::vector<number> flat_M;
+            flattened_tensor<number> flat_M;
 
             //! Eigen matrix representing mass matrix
             Eigen::Matrix<number, $NUMBER_FIELDS, $NUMBER_FIELDS> mass_matrix;
@@ -1525,7 +1529,7 @@ namespace transport
 
 
 		template <typename number>
-		void $MODEL<number>::compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k)
+		void $MODEL<number>::compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k)
 			{
 				N.clear();
 				log_aH.clear();
@@ -1581,14 +1585,13 @@ namespace transport
     template <typename number>
     void $MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
       {
-        $IF{!fast}
-          $RESOURCE_RELEASE
-          $MODEL_compute_dV(__raw_params, __x, __dV);
-        $ENDIF
-
+        $RESOURCE_RELEASE
+  
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__x}
+
         $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
           $RESOURCE_DV{__dV}
         $ENDIF
 
