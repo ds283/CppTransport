@@ -898,6 +898,7 @@ set(TRANSPORT_RUNTIME_MANAGER_FILES
 set(TRANSPORT_RUNTIME_MODELS_FILES
   transport-runtime/models/advisory_classes.h
   transport-runtime/models/canonical_model.h
+  transport-runtime/models/nontrivial_metric_model.h
   transport-runtime/models/model.h
   transport-runtime/models/model_forward_declare.h
   transport-runtime/models/observers.h

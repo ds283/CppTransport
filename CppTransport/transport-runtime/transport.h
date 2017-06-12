@@ -49,6 +49,7 @@
 
 #include "transport-runtime/models/observers.h"
 #include "transport-runtime/models/canonical_model.h"
+#include "transport-runtime/models/nontrivial_metric_model.h"
 
 #include "transport-runtime/tasks/task_helper.h"
 

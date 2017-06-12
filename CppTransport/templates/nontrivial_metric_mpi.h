@@ -54,47 +54,47 @@ namespace transport
 
     $IF{fast}
 
-      $SET[MN]{U2_DECLARE, "const auto __u2_$M_$N"}
+      $SET[_MN]{U2_DECLARE, "const auto __u2_$_M_$_N"}
 
-      $SET[MN]{U2_k1_DECLARE, "const auto __u2_k1_$M_$N"}
-      $SET[MN]{U2_k2_DECLARE, "const auto __u2_k2_$M_$N"}
-      $SET[MN]{U2_k3_DECLARE, "const auto __u2_k3_$M_$N"}
+      $SET[_MN]{U2_k1_DECLARE, "const auto __u2_k1_$_M_$_N"}
+      $SET[_MN]{U2_k2_DECLARE, "const auto __u2_k2_$_M_$_N"}
+      $SET[_MN]{U2_k3_DECLARE, "const auto __u2_k3_$_M_$_N"}
 
-      $SET[LMN]{U3_k1k2k3_DECLARE, "const auto __u3_k1k2k3_$L_$M_$N"}
-      $SET[LMN]{U3_k2k1k3_DECLARE, "const auto __u3_k2k1k3_$L_$M_$N"}
-      $SET[LMN]{U3_k3k1k2_DECLARE, "const auto __u3_k3k1k2_$L_$M_$N"}
+      $SET[_LMN]{U3_k1k2k3_DECLARE, "const auto __u3_k1k2k3_$_L_$_M_$_N"}
+      $SET[_LMN]{U3_k2k1k3_DECLARE, "const auto __u3_k2k1k3_$_L_$_M_$_N"}
+      $SET[_LMN]{U3_k3k1k2_DECLARE, "const auto __u3_k3k1k2_$_L_$_M_$_N"}
 
-      $SET[MN]{U2_CONTAINER, "__u2_$M_$N"}
+      $SET[_MN]{U2_CONTAINER, "__u2_$_M_$_N"}
 
-      $SET[MN]{U2_k1_CONTAINER, "__u2_k1_$M_$N"}
-      $SET[MN]{U2_k2_CONTAINER, "__u2_k2_$M_$N"}
-      $SET[MN]{U2_k3_CONTAINER, "__u2_k3_$M_$N"}
+      $SET[_MN]{U2_k1_CONTAINER, "__u2_k1_$_M_$_N"}
+      $SET[_MN]{U2_k2_CONTAINER, "__u2_k2_$_M_$_N"}
+      $SET[_MN]{U2_k3_CONTAINER, "__u2_k3_$_M_$_N"}
 
-      $SET[LMN]{U3_k1k2k3_CONTAINER, "__u3_k1k2k3_$L_$M_$N"}
-      $SET[LMN]{U3_k2k1k3_CONTAINER, "__u3_k2k1k3_$L_$M_$N"}
-      $SET[LMN]{U3_k3k1k2_CONTAINER, "__u3_k3k1k2_$L_$M_$N"}
+      $SET[_LMN]{U3_k1k2k3_CONTAINER, "__u3_k1k2k3_$_L_$_M_$_N"}
+      $SET[_LMN]{U3_k2k1k3_CONTAINER, "__u3_k2k1k3_$_L_$_M_$_N"}
+      $SET[_LMN]{U3_k3k1k2_CONTAINER, "__u3_k3k1k2_$_L_$_M_$_N"}
 
     $ELSE
 
-      $SET[MN]{U2_DECLARE, "__u2[FLATTEN($M,$N)]"}
+      $SET[_MN]{U2_DECLARE, "__u2[FLATTEN($_M,$_N)]"}
 
-      $SET[MN]{U2_k1_DECLARE, "__u2_k1[FLATTEN($M,$N)]"}
-      $SET[MN]{U2_k2_DECLARE, "__u2_k2[FLATTEN($M,$N)]"}
-      $SET[MN]{U2_k3_DECLARE, "__u2_k3[FLATTEN($M,$N)]"}
+      $SET[_MN]{U2_k1_DECLARE, "__u2_k1[FLATTEN($_M,$_N)]"}
+      $SET[_MN]{U2_k2_DECLARE, "__u2_k2[FLATTEN($_M,$_N)]"}
+      $SET[_MN]{U2_k3_DECLARE, "__u2_k3[FLATTEN($_M,$_N)]"}
 
-      $SET[LMN]{U3_k1k2k3_DECLARE, "__u3_k1k2k3[FLATTEN($L,$M,$N)]"}
-      $SET[LMN]{U3_k2k1k3_DECLARE, "__u3_k2k1k3[FLATTEN($L,$M,$N)]"}
-      $SET[LMN]{U3_k3k1k2_DECLARE, "__u3_k3k1k2[FLATTEN($L,$M,$N)]"}
+      $SET[_LMN]{U3_k1k2k3_DECLARE, "__u3_k1k2k3[FLATTEN($_L,$_M,$_N)]"}
+      $SET[_LMN]{U3_k2k1k3_DECLARE, "__u3_k2k1k3[FLATTEN($_L,$_M,$_N)]"}
+      $SET[_LMN]{U3_k3k1k2_DECLARE, "__u3_k3k1k2[FLATTEN($_L,$_M,$_N)]"}
 
-      $SET[MN]{U2_CONTAINER, "__u2[FLATTEN($M,$N)]"}
+      $SET[_MN]{U2_CONTAINER, "__u2[FLATTEN($_M,$_N)]"}
 
-      $SET[MN]{U2_k1_CONTAINER, "__u2_k1[FLATTEN($M,$N)]"}
-      $SET[MN]{U2_k2_CONTAINER, "__u2_k2[FLATTEN($M,$N)]"}
-      $SET[MN]{U2_k3_CONTAINER, "__u2_k3[FLATTEN($M,$N)]"}
+      $SET[_MN]{U2_k1_CONTAINER, "__u2_k1[FLATTEN($_M,$_N)]"}
+      $SET[_MN]{U2_k2_CONTAINER, "__u2_k2[FLATTEN($_M,$_N)]"}
+      $SET[_MN]{U2_k3_CONTAINER, "__u2_k3[FLATTEN($_M,$_N)]"}
 
-      $SET[LMN]{U3_k1k2k3_CONTAINER, "__u3_k1k2k3[FLATTEN($L,$M,$N)]"}
-      $SET[LMN]{U3_k2k1k3_CONTAINER, "__u3_k2k1k3[FLATTEN($L,$M,$N)]"}
-      $SET[LMN]{U3_k3k1k2_CONTAINER, "__u3_k3k1k2[FLATTEN($L,$M,$N)]"}
+      $SET[_LMN]{U3_k1k2k3_CONTAINER, "__u3_k1k2k3[FLATTEN($_L,$_M,$_N)]"}
+      $SET[_LMN]{U3_k2k1k3_CONTAINER, "__u3_k2k1k3[FLATTEN($_L,$_M,$_N)]"}
+      $SET[_LMN]{U3_k3k1k2_CONTAINER, "__u3_k3k1k2[FLATTEN($_L,$_M,$_N)]"}
 
     $ENDIF
 
@@ -704,7 +704,7 @@ namespace transport
 
         // fix initial conditions - background
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
-        x[$MODEL_pool::backg_start + FLATTEN($A)] = ics[$A];
+        x[$MODEL_pool::backg_start + FLATTEN($^A)] = ics[$^A];
 
         if(batcher.is_collecting_initial_conditions())
           {
@@ -756,7 +756,7 @@ namespace transport
         assert(x.size() >= start + $MODEL_pool::twopf_size);
 
         // populate components of the 2pf
-        x[start + FLATTEN($A,$B)] = imaginary ? this->make_twopf_im_ic($A, $B, kmode, Ninit, tk, ics, k_normalize) : this->make_twopf_re_ic($A, $B, kmode, Ninit, tk, ics, k_normalize);
+        x[start + FLATTEN($^A,$^B)] = imaginary ? this->make_twopf_im_ic($^A, $^B, kmode, Ninit, tk, ics, k_normalize) : this->make_twopf_re_ic($^A, $^B, kmode, Ninit, tk, ics, k_normalize);
       }
 
 
@@ -873,7 +873,7 @@ namespace transport
         // use adaptive ics if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
-        x[$MODEL_pool::backg_start + $A] = ics[$A];
+        x[$MODEL_pool::backg_start + $^A] = ics[$^A];
 
         if(batcher.is_collecting_initial_conditions())
           {
@@ -932,7 +932,7 @@ namespace transport
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::threepf_size);
 
-        x[start + FLATTEN($A,$B,$C)] = this->make_threepf_ic($A, $B, $C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, tk, ics, k_normalize);
+        x[start + FLATTEN($^A,$^B,$^C)] = this->make_threepf_ic($^A, $^B, $^C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, tk, ics, k_normalize);
       }
 
 
@@ -992,7 +992,7 @@ namespace transport
 #endif
 
         // evolve the background
-        __background($A) = $U1_TENSOR[A];
+        __background($^A) = $U1_TENSOR[^A];
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __eps = $EPSILON;
@@ -1008,7 +1008,7 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        $U2_DECLARE[AB] = $U2_TENSOR[AB]{__k, __a};
+        $U2_DECLARE[^A_B] = $U2_TENSOR[^A_B]{__k, __a};
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __u_tensor_timer.stop();
@@ -1018,8 +1018,8 @@ namespace transport
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
         // so the index placement is not important
-        __dtwopf($A, $B) $=  + $U2_CONTAINER[AC] * __twopf($C, $B);
-        __dtwopf($A, $B) $+= + $U2_CONTAINER[BC] * __twopf($A, $C);
+        __dtwopf($^A, $^B) $=  + $U2_CONTAINER[^A_C] * __twopf($^C, $^B);
+        __dtwopf($^A, $^B) $+= + $U2_CONTAINER[^B_C] * __twopf($^A, $^C);
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();
@@ -1139,7 +1139,7 @@ namespace transport
 #endif
 
         // evolve the background
-        __background($A) = $U1_TENSOR[A];
+        __background($^A) = $U1_TENSOR[^A];
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __eps = $EPSILON;
@@ -1168,14 +1168,14 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        $U2_k1_DECLARE[AB] = $U2_TENSOR[AB]{__k1, __a};
-        $U2_k2_DECLARE[AB] = $U2_TENSOR[AB]{__k2, __a};
-        $U2_k3_DECLARE[AB] = $U2_TENSOR[AB]{__k3, __a};
+        $U2_k1_DECLARE[^A_B] = $U2_TENSOR[^A_B]{__k1, __a};
+        $U2_k2_DECLARE[^A_B] = $U2_TENSOR[^A_B]{__k2, __a};
+        $U2_k3_DECLARE[^A_B] = $U2_TENSOR[^A_B]{__k3, __a};
 
         // set up components of the u3 tensor
-        $U3_k1k2k3_DECLARE[ABC] = $U3_TENSOR[ABC]{__k1, __k2, __k3, __a};
-        $U3_k2k1k3_DECLARE[ABC] = $U3_TENSOR[ABC]{__k2, __k1, __k3, __a};
-        $U3_k3k1k2_DECLARE[ABC] = $U3_TENSOR[ABC]{__k3, __k1, __k2, __a};
+        $U3_k1k2k3_DECLARE[^A_BC] = $U3_TENSOR[^A_BC]{__k1, __k2, __k3, __a};
+        $U3_k2k1k3_DECLARE[^A_BC] = $U3_TENSOR[^A_BC]{__k2, __k1, __k3, __a};
+        $U3_k3k1k2_DECLARE[^A_BC] = $U3_TENSOR[^A_BC]{__k3, __k1, __k2, __a};
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __u_tensor_timer.stop();
@@ -1184,39 +1184,39 @@ namespace transport
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
-        __dtwopf_re_k1($A, $B) $=  + $U2_k1_CONTAINER[AC] * __twopf_re_k1($C, $B);
-        __dtwopf_re_k1($A, $B) $+= + $U2_k1_CONTAINER[BC] * __twopf_re_k1($A, $C);
+        __dtwopf_re_k1($^A, $^B) $=  + $U2_k1_CONTAINER[^A_C] * __twopf_re_k1($^C, $^B);
+        __dtwopf_re_k1($^A, $^B) $+= + $U2_k1_CONTAINER[^B_C] * __twopf_re_k1($^A, $^C);
 
-        __dtwopf_im_k1($A, $B) $=  + $U2_k1_CONTAINER[AC] * __twopf_im_k1($C, $B);
-        __dtwopf_im_k1($A, $B) $+= + $U2_k1_CONTAINER[BC] * __twopf_im_k1($A, $C);
+        __dtwopf_im_k1($^A, $^B) $=  + $U2_k1_CONTAINER[^A_C] * __twopf_im_k1($^C, $^B);
+        __dtwopf_im_k1($^A, $^B) $+= + $U2_k1_CONTAINER[^B_C] * __twopf_im_k1($^A, $^C);
 
-        __dtwopf_re_k2($A, $B) $=  + $U2_k2_CONTAINER[AC] * __twopf_re_k2($C, $B);
-        __dtwopf_re_k2($A, $B) $+= + $U2_k2_CONTAINER[BC] * __twopf_re_k2($A, $C);
+        __dtwopf_re_k2($^A, $^B) $=  + $U2_k2_CONTAINER[^A_C] * __twopf_re_k2($^C, $^B);
+        __dtwopf_re_k2($^A, $^B) $+= + $U2_k2_CONTAINER[^B_C] * __twopf_re_k2($^A, $^C);
 
-        __dtwopf_im_k2($A, $B) $=  + $U2_k2_CONTAINER[AC] * __twopf_im_k2($C, $B);
-        __dtwopf_im_k2($A, $B) $+= + $U2_k2_CONTAINER[BC] * __twopf_im_k2($A, $C);
+        __dtwopf_im_k2($^A, $^B) $=  + $U2_k2_CONTAINER[^A_C] * __twopf_im_k2($^C, $^B);
+        __dtwopf_im_k2($^A, $^B) $+= + $U2_k2_CONTAINER[^B_C] * __twopf_im_k2($^A, $^C);
 
-        __dtwopf_re_k3($A, $B) $=  + $U2_k3_CONTAINER[AC] * __twopf_re_k3($C, $B);
-        __dtwopf_re_k3($A, $B) $+= + $U2_k3_CONTAINER[BC] * __twopf_re_k3($A, $C);
+        __dtwopf_re_k3($^A, $^B) $=  + $U2_k3_CONTAINER[^A_C] * __twopf_re_k3($^C, $^B);
+        __dtwopf_re_k3($^A, $^B) $+= + $U2_k3_CONTAINER[^B_C] * __twopf_re_k3($^A, $^C);
 
-        __dtwopf_im_k3($A, $B) $=  + $U2_k3_CONTAINER[AC] * __twopf_im_k3($C, $B);
-        __dtwopf_im_k3($A, $B) $+= + $U2_k3_CONTAINER[BC] * __twopf_im_k3($A, $C);
+        __dtwopf_im_k3($^A, $^B) $=  + $U2_k3_CONTAINER[^A_C] * __twopf_im_k3($^C, $^B);
+        __dtwopf_im_k3($^A, $^B) $+= + $U2_k3_CONTAINER[^B_C] * __twopf_im_k3($^A, $^C);
 
         // evolve the components of the 3pf
         // index placement matters, partly because of the k-dependence
         // but also in the source terms from the imaginary components of the 2pf
 
-        __dthreepf($A, $B, $C) $=  + $U2_k1_CONTAINER[AM] * __threepf($M, $B, $C);
-        __dthreepf($A, $B, $C) $+= + $U3_k1k2k3_CONTAINER[AMN] * __twopf_re_k2($M, $B) * __twopf_re_k3($N, $C);
-        __dthreepf($A, $B, $C) $+= - $U3_k1k2k3_CONTAINER[AMN] * __twopf_im_k2($M, $B) * __twopf_im_k3($N, $C);
+        __dthreepf($^A, $^B, $^C) $=  + $U2_k1_CONTAINER[^A_M] * __threepf($^M, $^B, $^C);
+        __dthreepf($^A, $^B, $^C) $+= + $U3_k1k2k3_CONTAINER[^A_MN] * __twopf_re_k2($^M, $^B) * __twopf_re_k3($^N, $^C);
+        __dthreepf($^A, $^B, $^C) $+= - $U3_k1k2k3_CONTAINER[^A_MN] * __twopf_im_k2($^M, $^B) * __twopf_im_k3($^N, $^C);
 
-        __dthreepf($A, $B, $C) $+= + $U2_k2_CONTAINER[BM] * __threepf($A, $M, $C);
-        __dthreepf($A, $B, $C) $+= + $U3_k2k1k3_CONTAINER[BMN] * __twopf_re_k1($A, $M) * __twopf_re_k3($N, $C);
-        __dthreepf($A, $B, $C) $+= - $U3_k2k1k3_CONTAINER[BMN] * __twopf_im_k1($A, $M) * __twopf_im_k3($N, $C);
+        __dthreepf($^A, $^B, $^C) $+= + $U2_k2_CONTAINER[^B_M] * __threepf($^A, $^M, $^C);
+        __dthreepf($^A, $^B, $^C) $+= + $U3_k2k1k3_CONTAINER[^B_MN] * __twopf_re_k1($^A, $^M) * __twopf_re_k3($^N, $^C);
+        __dthreepf($^A, $^B, $^C) $+= - $U3_k2k1k3_CONTAINER[^B_MN] * __twopf_im_k1($^A, $^M) * __twopf_im_k3($^N, $^C);
 
-        __dthreepf($A, $B, $C) $+= + $U2_k3_CONTAINER[CM] * __threepf($A, $B, $M);
-        __dthreepf($A, $B, $C) $+= + $U3_k3k1k2_CONTAINER[CMN] * __twopf_re_k1($A, $M) * __twopf_re_k2($B, $N);
-        __dthreepf($A, $B, $C) $+= - $U3_k3k1k2_CONTAINER[CMN] * __twopf_im_k1($A, $M) * __twopf_im_k2($B, $N);
+        __dthreepf($^A, $^B, $^C) $+= + $U2_k3_CONTAINER[^C_M] * __threepf($^A, $^B, $^M);
+        __dthreepf($^A, $^B, $^C) $+= + $U3_k3k1k2_CONTAINER[^C_MN] * __twopf_re_k1($^A, $^M) * __twopf_re_k2($^B, $^N);
+        __dthreepf($^A, $^B, $^C) $+= - $U3_k3k1k2_CONTAINER[^C_MN] * __twopf_im_k1($^A, $^M) * __twopf_im_k2($^B, $^N);
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();

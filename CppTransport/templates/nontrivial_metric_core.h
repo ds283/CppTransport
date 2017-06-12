@@ -144,7 +144,7 @@ namespace transport
     // contains code and functionality shared by all the compute backends (OpenMP, MPI, OpenCL, CUDA, ...)
     // these backends are implemented by classes which inherit from this common core
     template <typename number>
-    class $MODEL : public canonical_model<number>
+    class $MODEL : public nontrivial_metric_model<number>
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -569,7 +569,7 @@ namespace transport
           $RESOURCE_COORDINATES{__x}
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          dV[FIELDS_FLATTEN($a)] = $DV[a];
+          dV[FIELDS_FLATTEN($_a)] = $DV[_a];
         }
 
 
@@ -581,7 +581,7 @@ namespace transport
           $RESOURCE_COORDINATES{__x}
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
+          ddV[FIELDS_FLATTEN($_a,$_b)] = $DDV[_ab];
         }
 
 
@@ -593,7 +593,7 @@ namespace transport
           $RESOURCE_COORDINATES{__x}
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc];
+          dddV[FIELDS_FLATTEN($_a,$_b,$_c)] = $DDDV[_abc];
         }
     $ENDIF
 
@@ -620,7 +620,8 @@ namespace transport
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
-            __output.push_back($SR_VELOCITY[a]);
+            // phase-space coordinates are provided in contravariant form, so we need the slow-roll velocity estimate in the same form
+            __output.push_back($SR_VELOCITY[^a]);
           }
         else if(__input.size() == 2*$NUMBER_FIELDS)  // initial conditions for momenta *were* supplied
           {
@@ -893,47 +894,49 @@ namespace transport
 
         number __tpf = 0.0;
 
-        $SET[abc]{B_k1k2k3, "__B_k1k2k3[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{B_k1k3k2, "__B_k1k3k2[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{C_k1k2k3, "__C_k1k2k3[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{C_k1k3k2, "__C_k1k3k2[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{Atilde_k1k2k3, "__A_k1k2k3[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{Atilde_k1k3k2, "__A_k1k3k2[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[_abc]{B_k1k2k3, "__B_k1k2k3[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{B_k1k3k2, "__B_k1k3k2[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{C_k1k2k3, "__C_k1k2k3[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{C_k1k3k2, "__C_k1k3k2[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{Atilde_k1k2k3, "__A_k1k2k3[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{Atilde_k1k3k2, "__A_k1k3k2[FIELDS_FLATTEN($_a,$_b,$_c)]"}
 
-        $SET[abc]{B_k2k3k1, "__B_k2k3k1[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{B_k2k1k3, "__B_k2k1k3[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{C_k2k3k1, "__C_k2k3k1[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{C_k2k1k3, "__C_k2k1k3[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{Atilde_k2k3k1, "__A_k2k3k1[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{Atilde_k2k1k3, "__A_k2k1k3[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[_abc]{B_k2k3k1, "__B_k2k3k1[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{B_k2k1k3, "__B_k2k1k3[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{C_k2k3k1, "__C_k2k3k1[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{C_k2k1k3, "__C_k2k1k3[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{Atilde_k2k3k1, "__A_k2k3k1[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{Atilde_k2k1k3, "__A_k2k1k3[FIELDS_FLATTEN($_a,$_b,$_c)]"}
 
-        $SET[abc]{B_k3k1k2, "__B_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{B_k3k2k1, "__B_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{C_k3k1k2, "__C_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{C_k3k2k1, "__C_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{Atilde_k3k1k2, "__A_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
-        $SET[abc]{Atilde_k3k2k1, "__A_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[_abc]{B_k3k1k2, "__B_k3k1k2[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{B_k3k2k1, "__B_k3k2k1[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{C_k3k1k2, "__C_k3k1k2[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{C_k3k2k1, "__C_k3k2k1[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{Atilde_k3k1k2, "__A_k3k1k2[FIELDS_FLATTEN($_a,$_b,$_c)]"}
+        $SET[_abc]{Atilde_k3k2k1, "__A_k3k2k1[FIELDS_FLATTEN($_a,$_b,$_c)]"}
 
-        $B_k1k2k3[abc] = $B_TENSOR[abc]{__k1, __k2, __k3, __a};
-        $B_k1k3k2[abc] = $B_TENSOR[abc]{__k1, __k3, __k2, __a};
-        $C_k1k2k3[abc] = $C_TENSOR[abc]{__k1, __k2, __k3, __a};
-        $C_k1k3k2[abc] = $C_TENSOR[abc]{__k1, __k3, __k2, __a};
-        $Atilde_k1k2k3[abc] = $ATILDE_TENSOR[abc]{__k1, __k2, __k3, __a};
-        $Atilde_k1k3k2[abc] = $ATILDE_TENSOR[abc]{__k1, __k3, __k2, __a};
+        // the initial conditions are for up-index versions of each phase-space coordinate, so we need to build them
+        // from up-index versions of each tensor
+        $B_k1k2k3[^abc] = $B_TENSOR[^abc]{__k1, __k2, __k3, __a};
+        $B_k1k3k2[^abc] = $B_TENSOR[^abc]{__k1, __k3, __k2, __a};
+        $C_k1k2k3[^abc] = $C_TENSOR[^abc]{__k1, __k2, __k3, __a};
+        $C_k1k3k2[^abc] = $C_TENSOR[^abc]{__k1, __k3, __k2, __a};
+        $Atilde_k1k2k3[^abc] = $ATILDE_TENSOR[^abc]{__k1, __k2, __k3, __a};
+        $Atilde_k1k3k2[^abc] = $ATILDE_TENSOR[^abc]{__k1, __k3, __k2, __a};
 
-        $B_k2k3k1[abc] = $B_TENSOR[abc]{__k2, __k3, __k1, __a};
-        $B_k2k1k3[abc] = $B_TENSOR[abc]{__k2, __k1, __k3, __a};
-        $C_k2k3k1[abc] = $C_TENSOR[abc]{__k2, __k3, __k1, __a};
-        $C_k2k1k3[abc] = $C_TENSOR[abc]{__k2, __k1, __k3, __a};
-        $Atilde_k2k3k1[abc] = $ATILDE_TENSOR[abc]{__k2, __k3, __k1, __a};
-        $Atilde_k2k1k3[abc] = $ATILDE_TENSOR[abc]{__k2, __k1, __k3, __a};
+        $B_k2k3k1[^abc] = $B_TENSOR[^abc]{__k2, __k3, __k1, __a};
+        $B_k2k1k3[^abc] = $B_TENSOR[^abc]{__k2, __k1, __k3, __a};
+        $C_k2k3k1[^abc] = $C_TENSOR[^abc]{__k2, __k3, __k1, __a};
+        $C_k2k1k3[^abc] = $C_TENSOR[^abc]{__k2, __k1, __k3, __a};
+        $Atilde_k2k3k1[^abc] = $ATILDE_TENSOR[^abc]{__k2, __k3, __k1, __a};
+        $Atilde_k2k1k3[^abc] = $ATILDE_TENSOR[^abc]{__k2, __k1, __k3, __a};
 
-        $B_k3k1k2[abc] = $B_TENSOR[abc]{__k3, __k1, __k2, __a};
-        $B_k3k2k1[abc] = $B_TENSOR[abc]{__k3, __k2, __k1, __a};
-        $C_k3k1k2[abc] = $C_TENSOR[abc]{__k3, __k1, __k2, __a};
-        $C_k3k2k1[abc] = $C_TENSOR[abc]{__k3, __k2, __k1, __a};
-        $Atilde_k3k1k2[abc] = $ATILDE_TENSOR[abc]{__k3, __k1, __k2, __a};
-        $Atilde_k3k2k1[abc] = $ATILDE_TENSOR[abc]{__k3, __k2, __k1, __a};
+        $B_k3k1k2[^abc] = $B_TENSOR[^abc]{__k3, __k1, __k2, __a};
+        $B_k3k2k1[^abc] = $B_TENSOR[^abc]{__k3, __k2, __k1, __a};
+        $C_k3k1k2[^abc] = $C_TENSOR[^abc]{__k3, __k1, __k2, __a};
+        $C_k3k2k1[^abc] = $C_TENSOR[^abc]{__k3, __k2, __k1, __a};
+        $Atilde_k3k1k2[^abc] = $ATILDE_TENSOR[^abc]{__k3, __k1, __k2, __a};
+        $Atilde_k3k2k1[^abc] = $ATILDE_TENSOR[^abc]{__k3, __k2, __k1, __a};
 
         unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
         unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
@@ -1139,7 +1142,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __dN[FLATTEN($A)] = $ZETA_XFM_1[A];
+        __dN[FLATTEN($_A)] = $ZETA_XFM_1[_A];
       }
 
 
@@ -1166,7 +1169,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __ddN[FLATTEN($A,$B)] = $ZETA_XFM_2[AB]{__k, __k1, __k2, __a};
+        __ddN[FLATTEN($_A,$_B)] = $ZETA_XFM_2[_AB]{__k, __k1, __k2, __a};
       }
 
 
@@ -1197,7 +1200,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u2[FLATTEN($A,$B)] = $U2_TENSOR[AB]{__k, __a};
+        __u2[FLATTEN($_A,$_B)] = $U2_TENSOR[_AB]{__k, __a};
       }
 
 
@@ -1227,7 +1230,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u3[FLATTEN($A,$B,$C)] = $U3_TENSOR[ABC]{__k1, __k1, __k3, __a};
+        __u3[FLATTEN($_A,$_B,$_C)] = $U3_TENSOR[_ABC]{__k1, __k1, __k3, __a};
       }
 
 
@@ -1257,7 +1260,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __A[FIELDS_FLATTEN($a,$b,$c)] = $A_TENSOR[abc]{__k1, __k2, __k3, __a};
+        __A[FIELDS_FLATTEN($_a,$_b,$_c)] = $A_TENSOR[_abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1283,7 +1286,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __B[FIELDS_FLATTEN($a,$b,$c)] = $B_TENSOR[abc]{__k1, __k2, __k3, __a};
+        __B[FIELDS_FLATTEN($_a,$_b,$_c)] = $B_TENSOR[_abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1302,7 +1305,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __C[FIELDS_FLATTEN($a,$b,$c)] = $C_TENSOR[abc]{__k1, __k2, __k3, __a};
+        __C[FIELDS_FLATTEN($_a,$_b,$_c)] = $C_TENSOR[_abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1319,7 +1322,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __M[FIELDS_FLATTEN($a,$b)] = $M_TENSOR[ab];
+        __M[FIELDS_FLATTEN($_a,$_b)] = $M_TENSOR[_ab];
       }
 
 
@@ -1345,7 +1348,7 @@ namespace transport
         auto ics = tk->get_ics_vector();
 
         backg_state<number> x($MODEL_pool::backg_state_size);
-        x[FLATTEN($A)] = ics[$A];
+        x[FLATTEN($^A)] = ics[$^A];
 
         boost::numeric::odeint::integrate_times($MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $BACKG_STEP_SIZE, obs);
         system.close_down_workspace();
@@ -1398,7 +1401,7 @@ namespace transport
         auto ics = tk->get_ics_vector();
 
         backg_state<number> x($MODEL_pool::backg_state_size);
-        x[FLATTEN($A)] = ics[$A];
+        x[FLATTEN($^A)] = ics[$^A];
 
 		    // find point where epsilon = 1
         auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>};
@@ -1444,13 +1447,13 @@ namespace transport
               {
                 this->mdl->M(this->task, fields, N, this->flat_M);
 
-                mass_matrix($a,$b) = flat_M[FIELDS_FLATTEN($a,$b)];
+                mass_matrix($^a,$_b) = flat_M[FIELDS_FLATTEN($^a,$_b)];
 
                 // result of computing eigenvalues is a vector of complex numbers
                 auto evalues = mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
                 number largest_eigenvalue = -std::numeric_limits<number>().max();
 
-                if(std::abs(evalues($a)) > largest_eigenvalue) { largest_eigenvalue = std::abs(evalues($a)); }
+                if(std::abs(evalues($_a)) > largest_eigenvalue) { largest_eigenvalue = std::abs(evalues($_a)); }
 
                 return largest_eigenvalue;
               }
@@ -1538,7 +1541,7 @@ namespace transport
 				auto ics = tk->integration_task<number>::get_ics_vector();
 
 				backg_state<number> x($MODEL_pool::backg_state_size);
-				x[FLATTEN($A)] = ics[$A];
+				x[FLATTEN($^A)] = ics[$^A];
 
 				auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>};
 
@@ -1600,9 +1603,9 @@ namespace transport
         if(__Hsq < 0) throw Hsq_is_negative(__t);
 
         // check for nan being produced
-        if(std::isnan(__x[$A])) throw integration_produced_nan(__t);
+        if(std::isnan(__x[$^A])) throw integration_produced_nan(__t);
 
-        __dxdt[FLATTEN($A)] = $U1_TENSOR[A];
+        __dxdt[FLATTEN($^A)] = $U1_TENSOR[^A];
       }
 
 
