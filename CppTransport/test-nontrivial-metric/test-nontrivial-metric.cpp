@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     transport::task_manager<> mgr(argc, argv);
     
     // create model instance
-    std::shared_ptr< transport::gelaton_mpi<> > model = mgr.create_model< transport::gelaton_mpi<> >();
+    auto model = mgr.create_model< transport::gelaton_mpi<> >();
     
     // write tasks to repository
     mgr.add_generator([=](transport::repository<>& repo) -> void { write_tasks(repo, model.get()); });
