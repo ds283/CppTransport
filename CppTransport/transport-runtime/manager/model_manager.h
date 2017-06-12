@@ -288,9 +288,8 @@ namespace transport
       {
         std::shared_ptr<Model> model = std::make_shared<Model>(this->env, this->arg_cache);
 
-        // register the model in our database
         this->register_model(model);
-
+        
         return(model);
       }
 
