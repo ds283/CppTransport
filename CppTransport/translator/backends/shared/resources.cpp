@@ -52,6 +52,8 @@ namespace macro_packages
         emplace_directive(index_package, BIND(set_dV, "RESOURCE_DV"));
         emplace_directive(index_package, BIND(set_ddV, "RESOURCE_DDV"));
         emplace_directive(index_package, BIND(set_dddV, "RESOURCE_DDDV"));
+        emplace_directive(index_package, BIND(set_connexion, "RESOURCE_CONNECTION"));
+        emplace_directive(index_package, BIND(set_Riemann, "RESOURCE_RIEMANN"));
       }
 
 

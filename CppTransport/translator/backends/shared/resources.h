@@ -381,6 +381,13 @@ namespace macro_packages
         virtual ~set_connexion() = default;
 
 
+        // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
+
+      public:
+
+        bool enable_if(model_type t) const override { return t == model_type::nontrivial_metric; }
+
+
         // INTERNAL API
 
       protected:
@@ -422,6 +429,13 @@ namespace macro_packages
 
         //! destructor
         virtual ~set_Riemann() = default;
+
+
+        // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
+
+      public:
+
+        bool enable_if(model_type t) const override { return t == model_type::nontrivial_metric; }
 
 
         // INTERNAL API
