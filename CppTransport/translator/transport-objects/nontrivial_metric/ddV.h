@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_CANONICAL_DDV_H
-#define CPPTRANSPORT_CANONICAL_DDV_H
+#ifndef CPPTRANSPORT_NONCANONICAL_DDV_H
+#define CPPTRANSPORT_NONCANONICAL_DDV_H
 
 
 #include <memory>
 
 #include "concepts/ddV.h"
 #include "utilities/shared_resources.h"
-#include "canonical/resources.h"
+#include "nontrivial_metric/resources.h"
 
 #include "indices.h"
 
@@ -42,7 +42,7 @@
 #include "expression_cache.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     class canonical_ddV: public ddV
@@ -113,7 +113,7 @@ namespace canonical
 
       };
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric
 
 
 

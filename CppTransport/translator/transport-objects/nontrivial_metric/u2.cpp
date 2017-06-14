@@ -26,7 +26,7 @@
 #include "u2.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor> canonical_u2::compute(GiNaC::symbol& k, GiNaC::symbol& a)
@@ -200,4 +200,4 @@ namespace canonical
         return std::make_unique<map_lambda>(i, j, map, expression_item_types::U2_lambda, *args, this->shared.generate_working_type());
       }
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric

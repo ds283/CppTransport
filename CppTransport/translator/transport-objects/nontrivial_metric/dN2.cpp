@@ -26,7 +26,7 @@
 #include "dN2.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor> canonical_dN2::compute()
@@ -111,4 +111,4 @@ namespace canonical
       {
         return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
       }
-  }   // namespace canonical
+  }   // namespace nontrivial_metric

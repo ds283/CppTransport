@@ -26,7 +26,7 @@
 #include "dV.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor> canonical_dV::compute()
@@ -56,4 +56,4 @@ namespace canonical
         return std::make_unique<atomic_lambda>(i, result, expression_item_types::dV_lambda, *args, this->shared.generate_working_type());
       }
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric

@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_CANONICAL_U3_H
-#define CPPTRANSPORT_CANONICAL_U3_H
+#ifndef CPPTRANSPORT_NONCANONICAL_U3_H
+#define CPPTRANSPORT_NONCANONICAL_U3_H
 
 
 #include <memory>
 
 #include "concepts/u3.h"
 #include "utilities/shared_resources.h"
-#include "canonical/resources.h"
+#include "nontrivial_metric/resources.h"
 
 #include "indices.h"
 
@@ -47,7 +47,7 @@
 
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     class canonical_u3: public u3
@@ -156,7 +156,7 @@ namespace canonical
 
       };
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric
 
 
 #endif //CPPTRANSPORT_CANONICAL_U3_H

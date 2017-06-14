@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_CANONICAL_DN2_H
-#define CPPTRANSPORT_CANONICAL_DN2_H
+#ifndef CPPTRANSPORT_NONCANONICAL_DN2_H
+#define CPPTRANSPORT_NONCANONICAL_DN2_H
 
 
 #include <memory>
 
 #include "concepts/dN2.h"
 #include "utilities/shared_resources.h"
-#include "canonical/resources.h"
+#include "nontrivial_metric/resources.h"
 
 #include "indices.h"
 
@@ -43,7 +43,7 @@
 
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     class canonical_dN2: public dN2
@@ -171,7 +171,7 @@ namespace canonical
 
       };
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric
 
 
 #endif //CPPTRANSPORT_CANONICAL_DN2_H

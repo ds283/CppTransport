@@ -27,7 +27,7 @@
 #include "Hubble.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     GiNaC::ex canonical_Hubble::compute_V()
@@ -47,5 +47,5 @@ namespace canonical
         return this->res.eps_resource(this->cse_worker, this->printer);
       }
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric
 

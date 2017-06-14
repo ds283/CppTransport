@@ -23,28 +23,28 @@
 // --@@
 //
 
-#include "tensor_factory.h"
+#include "nontrivial_metric/tensor_factory.h"
 
-#include "Hubble.h"
-#include "dV.h"
-#include "ddV.h"
-#include "dddV.h"
-#include "SR_velocity.h"
-#include "A.h"
-#include "Atilde.h"
-#include "B.h"
-#include "C.h"
-#include "M.h"
-#include "u1.h"
-#include "u2.h"
-#include "u3.h"
-#include "zeta1.h"
-#include "zeta2.h"
-#include "dN1.h"
-#include "dN2.h"
+#include "nontrivial_metric/Hubble.h"
+#include "nontrivial_metric/dV.h"
+#include "nontrivial_metric/ddV.h"
+#include "nontrivial_metric/dddV.h"
+#include "nontrivial_metric/SR_velocity.h"
+#include "nontrivial_metric/A.h"
+#include "nontrivial_metric/Atilde.h"
+#include "nontrivial_metric/B.h"
+#include "nontrivial_metric/C.h"
+#include "nontrivial_metric/M.h"
+#include "nontrivial_metric/u1.h"
+#include "nontrivial_metric/u2.h"
+#include "nontrivial_metric/u3.h"
+#include "nontrivial_metric/zeta1.h"
+#include "nontrivial_metric/zeta2.h"
+#include "nontrivial_metric/dN1.h"
+#include "nontrivial_metric/dN2.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     std::unique_ptr<Hubble> tensor_factory::make_Hubble(language_printer& p, cse& cw)

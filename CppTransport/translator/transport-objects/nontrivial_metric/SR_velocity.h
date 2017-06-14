@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_CANONICAL_SR_VELOCITY_H
-#define CPPTRANSPORT_CANONICAL_SR_VELOCITY_H
+#ifndef CPPTRANSPORT_NONCANONICAL_SR_VELOCITY_H
+#define CPPTRANSPORT_NONCANONICAL_SR_VELOCITY_H
 
 
 #include <memory>
 
 #include "concepts/SR_velocity.h"
 #include "utilities/shared_resources.h"
-#include "canonical/resources.h"
+#include "nontrivial_metric/resources.h"
 
 #include "indices.h"
 
@@ -42,7 +42,7 @@
 #include "expression_cache.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     class canonical_SR_velocity: public SR_velocity
@@ -164,7 +164,7 @@ namespace canonical
 
       };
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric
 
 
 

@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_CANONICAL_RESOURCES_H
-#define CPPTRANSPORT_CANONICAL_RESOURCES_H
+#ifndef CPPTRANSPORT_NONCANONICAL_RESOURCES_H
+#define CPPTRANSPORT_NONCANONICAL_RESOURCES_H
 
 
 #include <memory>
@@ -48,7 +48,7 @@
 #include "ginac/ginac.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     constexpr unsigned int use_dV_argument = 1;
@@ -195,6 +195,12 @@ namespace canonical
         //! potential
         GiNaC::ex V;
 
+        //! field metric
+        std::unique_ptr<GiNaC::matrix> G;
+
+        //! inverse field metric
+        std::unique_ptr<GiNaC::matrix> Ginv;
+
 
         // AGENTS
 
@@ -209,7 +215,7 @@ namespace canonical
 
       };
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric
 
 
 #endif //CPPTRANSPORT_CANONICAL_RESOURCES_H

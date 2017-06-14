@@ -26,7 +26,7 @@
 #include "Atilde.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor> canonical_Atilde::compute(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
@@ -206,4 +206,4 @@ namespace canonical
         return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::Atilde_lambda, *args, this->shared.generate_working_type());
       }
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric

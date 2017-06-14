@@ -26,7 +26,7 @@
 #include "M.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor> canonical_M::compute()
@@ -152,4 +152,4 @@ namespace canonical
         return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::M_lambda, *args, this->shared.generate_working_type());
       }
 
-  }   // namespace canonical
+  }   // namespace nontrivial_metric
