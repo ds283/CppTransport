@@ -494,7 +494,7 @@ namespace transport
             const flattened_tensor<number>& __param_vector = __params.get_vector();
 
             $RESOURCE_PARAMETERS{__param_vector}
-            $RESOURCE_COORDINATES{__coords}
+            $RESOURCE_COORDINATES[^A]{__coords}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -519,7 +519,7 @@ namespace transport
             $RESOURCE_RELEASE
             const auto __Mp = __params.get_Mp();
 
-            $RESOURCE_COORDINATES{__coords}
+            $RESOURCE_COORDINATES[^A]{__coords}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -546,7 +546,7 @@ namespace transport
             const flattened_tensor<number>& __param_vector = __params.get_vector();
 
             $RESOURCE_PARAMETERS{__param_vector}
-            $RESOURCE_COORDINATES{__coords}
+            $RESOURCE_COORDINATES[^A]{__coords}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -566,9 +566,9 @@ namespace transport
       void $MODEL_compute_dV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* dV)
         {
           $RESOURCE_RELEASE
-          
+
           $RESOURCE_PARAMETERS{raw_params}
-          $RESOURCE_COORDINATES{__x}
+          $RESOURCE_COORDINATES[^A]{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -582,7 +582,7 @@ namespace transport
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{raw_params}
-          $RESOURCE_COORDINATES{__x}
+          $RESOURCE_COORDINATES[^A]{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -596,7 +596,7 @@ namespace transport
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{raw_params}
-          $RESOURCE_COORDINATES{__x}
+          $RESOURCE_COORDINATES[^A]{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -623,7 +623,7 @@ namespace transport
             const auto __Mp = __params.get_Mp();
 
             $RESOURCE_PARAMETERS{__params.get_vector()}
-            $RESOURCE_COORDINATES{__input}
+            $RESOURCE_COORDINATES[^A]{__input}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -687,7 +687,7 @@ namespace transport
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -774,7 +774,7 @@ namespace transport
       const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
       $RESOURCE_PARAMETERS{__raw_params}
-      $RESOURCE_COORDINATES{__fields}
+      $RESOURCE_COORDINATES[^A]{__fields}
 
       $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -804,7 +804,7 @@ namespace transport
 
           __tpf = - __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
-    
+
       // return value, rescaled to give dimensionless correlation function
       return(__tpf * __k_norm*__k_norm*__k_norm);
     }
@@ -825,7 +825,7 @@ namespace transport
         $TEMP_POOL{"const auto $1 = $2;"}
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
@@ -854,7 +854,7 @@ namespace transport
           {
             assert(false);
           }
-    
+
         // return value, rescaled to give dimensionless correlation function
         return(__tpf * __k_norm*__k_norm*__k_norm);
       }
@@ -882,11 +882,11 @@ namespace transport
         $TEMP_POOL{"const auto $1 = $2;"}
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
         $IF{!fast}
-          $RESOURCE_DV{__dV}
-          $RESOURCE_DDV{__ddV}
-          $RESOURCE_DDDV{__dddV}
+          $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_DDV[_ab]{__ddV}
+          $RESOURCE_DDDV[_abc]{__dddV}
         $ENDIF
 
         const auto __Hsq = $HUBBLE_SQ;
@@ -969,12 +969,12 @@ namespace transport
                 __tpf += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k2/2.0;
                 __tpf += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k3/2.0;
                 __tpf += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k3/2.0;
-                
+
                 // these components are dimension 1
                 __tpf += __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) / 2.0;
                 __tpf += __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) / 2.0;
                 __tpf += __a*__a * __Hsq * (__A_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))] + __A_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) / 2.0;
-                
+
                 // these components are dimension 1
                 __tpf += __a*__a * __Hsq * (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * ( (__k1+__k2)*__k3 / (__k1*__k2) - __Ksq / (__k1*__k2)) / 2.0;
                 __tpf += __a*__a * __Hsq * (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * ( (__k1+__k3)*__k2 / (__k1*__k3) - __Ksq / (__k1*__k3)) / 2.0;
@@ -993,7 +993,7 @@ namespace transport
 
                 // prefactor has dimension 3
                 auto __prefactor = __k1*__k2*__k3 / (__kt * __a*__a*__a*__a);
-                
+
                 // component of prefactor that should not be symmetrized; has dimension 2
                 auto __mom_factor_1 = __momentum_k*__momentum_k*(__kt-__momentum_k);
 
@@ -1007,12 +1007,12 @@ namespace transport
                      __tpf_1 += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k2 / 2.0;
                      __tpf_1 += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k3 / 2.0;
                      __tpf_1 += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k3 / 2.0;
-                
+
                 // these components are dimension 1
                      __tpf_1 += __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) / 2.0;
                      __tpf_1 += __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) / 2.0;
                      __tpf_1 += __a*__a * __Hsq * (__A_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))] + __A_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) / 2.0;
-                
+
                 __tpf = __prefactor * __mom_factor_1 * __tpf_1 / __kprod3;
 
                 // this prefactor has dimension 3
@@ -1033,7 +1033,7 @@ namespace transport
                      __tpf_2 += (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k1*__k1*__k2*__k3 / 2.0;
                      __tpf_2 += (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k2*__k2*__k1*__k3 / 2.0;
                      __tpf_2 += (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k3*__k3*__k1*__k2 / 2.0;
-                
+
                 // these components are dimension 3
                      __tpf_2 += - __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
                      __tpf_2 += - __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
@@ -1064,7 +1064,7 @@ namespace transport
                      __tpf_1 += (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * __k1*__k2 / 2.0;
                      __tpf_1 += (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * __k1*__k3 / 2.0;
                      __tpf_1 += (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * __k2*__k3 / 2.0;
-                
+
                 // these components have dimension 1
                      __tpf_1 += - __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) / 2.0;
                      __tpf_1 += - __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) / 2.0;
@@ -1074,17 +1074,17 @@ namespace transport
                      __tpf_1 += - __a*__a * __Hsq * (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * (__k1+__k2)*__k3 / (__k1*__k2) / 2.0;
                      __tpf_1 += - __a*__a * __Hsq * (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * (__k1+__k3)*__k2 / (__k1*__k3) / 2.0;
                      __tpf_1 += - __a*__a * __Hsq * (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * (__k2+__k3)*__k1 / (__k2*__k3) / 2.0;
-    
+
                 __tpf = __prefactor * __mom_factor1 * __tpf_1 / __kprod3;
 
                 // prefactor has dimension 4
                 auto __mom_factor2 = (IS_FIELD(__i) ? __k2*__k2*__k3*__k3 : 0.0) + (IS_FIELD(__j) ? __k1*__k1*__k3*__k3 : 0.0) + (IS_FIELD(__k) ? __k1*__k1*__k2*__k2 : 0.0);
-                
+
                 // these components have dimension 2
                 auto __tpf_2  = __a*__a * __Hsq * (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * __k3 / 2.0;
                      __tpf_2 += __a*__a * __Hsq * (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * __k2 / 2.0;
                      __tpf_2 += __a*__a * __Hsq * (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * __k1 / 2.0;
-                
+
                 __tpf += __prefactor * __mom_factor2 * __tpf_2 / __kprod3;
 
                 break;
@@ -1112,7 +1112,7 @@ namespace transport
                 __tpf += - (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k1*__k1*__k2*__k3/2.0;
                 __tpf += - (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k2*__k2*__k1*__k3/2.0;
                 __tpf += - (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k3*__k3*__k1*__k2/2.0;
-                
+
                 // these components are dimension 3
                 __tpf += __a*__a * __Hsq * (__A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __A_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
                 __tpf += __a*__a * __Hsq * (__A_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))] + __A_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))]) * (__Ksq - __k1*__k2*__k3/__kt) / 2.0;
@@ -1126,7 +1126,7 @@ namespace transport
             default:
               assert(false);
           }
-    
+
         // return value, rescaled to give dimensionless correlation function
         return(__tpf * __k_norm*__k_norm*__k_norm*__k_norm*__k_norm*__k_norm);
       }
@@ -1145,7 +1145,7 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_COORDINATES[^A]{__state}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1169,9 +1169,9 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_COORDINATES[^A]{__state}
         $IF{!fast}
-          $RESOURCE_DV{__dV}
+          $RESOURCE_DV[_a]{__dV}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1199,10 +1199,10 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
         $IF{!fast}
-          $RESOURCE_DV{__dV}
-          $RESOURCE_DDV{__ddV}
+          $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_DDV[_ab]{__ddV}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1228,11 +1228,11 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
         $IF{!fast}
-          $RESOURCE_DV{__dV}
-          $RESOURCE_DDV{__ddV}
-          $RESOURCE_DDDV{__dddV}
+          $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_DDV[_ab]{__ddV}
+          $RESOURCE_DDDV[_abc]{__dddV}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1258,11 +1258,11 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
         $IF{!fast}
-          $RESOURCE_DV{__dV}
-          $RESOURCE_DDV{__ddV}
-          $RESOURCE_DDDV{__dddV}
+          $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_DDV[_ab]{__ddV}
+          $RESOURCE_DDDV[_abc]{__dddV}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1286,9 +1286,9 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
         $IF{!fast}
-          $RESOURCE_DV{__dV}
+          $RESOURCE_DV[_a]{__dV}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1308,7 +1308,7 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1325,7 +1325,7 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_COORDINATES[^A]{__fields}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1379,7 +1379,7 @@ namespace transport
                 $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
 
-                $RESOURCE_COORDINATES{__x.first}
+                $RESOURCE_COORDINATES[^A]{__x.first}
 
                 const auto __eps = $EPSILON;
 
@@ -1471,7 +1471,7 @@ namespace transport
                 $TEMP_POOL{"const auto $1 = $2;"}
 
                 $RESOURCE_PARAMETERS{param_vector}
-                $RESOURCE_COORDINATES{__x.first}
+                $RESOURCE_COORDINATES[^A]{__x.first}
 
                 const auto __Hsq = $HUBBLE_SQ;
                 const auto __H   = std::sqrt(__Hsq);
@@ -1594,11 +1594,11 @@ namespace transport
         $RESOURCE_RELEASE
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__x}
+        $RESOURCE_COORDINATES[^A]{__x}
 
         $IF{!fast}
           $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
-          $RESOURCE_DV{__dV}
+          $RESOURCE_DV[_a]{__dV}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}

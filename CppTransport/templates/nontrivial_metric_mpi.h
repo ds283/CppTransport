@@ -712,9 +712,9 @@ namespace transport
             double t_exit = tk->get_ics_exit_time(*kconfig);
             batcher.push_ics(kconfig->serial, t_exit, ics_1);
           }
-    
+
         // observers expect all correlation functions to be dimensionless and rescaled by the same factors
-    
+
         // fix initial conditions - tensors (use dimensionless correlation functions)
         this->populate_tensor_ic(x, $MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
 
@@ -886,7 +886,7 @@ namespace transport
           }
 
         // observers expect all correlation functions to be dimensionless and rescaled by the same factors
-        
+
         // fix initial conditions - tensors (use dimensionless correlation functions, all rescaled by k_t to be consistent)
         this->populate_tensor_ic(x, $MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
         this->populate_tensor_ic(x, $MODEL_pool::tensor_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
@@ -947,7 +947,7 @@ namespace transport
         const auto __a = std::exp(__t - this->__N_horizon_exit + this->__astar_normalization);
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__x}
+        $RESOURCE_COORDINATES[^A]{__x}
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
@@ -955,8 +955,8 @@ namespace transport
           $MODEL_compute_ddV(__raw_params, __x, __Mp, __ddV);
 
           // capture resources for transport tensors
-          $RESOURCE_DV{__dV}
-          $RESOURCE_DDV{__ddV}
+          $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_DDV[_ab]{__ddV}
         $ENDIF
 
 #ifdef CPPTRANSPORT_INSTRUMENT
@@ -1051,7 +1051,7 @@ namespace transport
         const auto __a = std::exp(__t - this->__N_horizon_exit + this->__astar_normalization);
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__x}
+        $RESOURCE_COORDINATES[^A]{__x}
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
@@ -1060,9 +1060,9 @@ namespace transport
           $MODEL_compute_dddV(__raw_params, __x, __Mp, __dddV);
 
           // capture resources for transport tensors
-          $RESOURCE_DV{__dV}
-          $RESOURCE_DDV{__ddV}
-          $RESOURCE_DDDV{__dddV}
+          $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_DDV[_ab]{__ddV}
+          $RESOURCE_DDDV[_abc]{__dddV}
         $ENDIF
 
 #ifdef CPPTRANSPORT_INSTRUMENT
