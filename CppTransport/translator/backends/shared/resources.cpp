@@ -53,7 +53,9 @@ namespace macro_packages
         emplace_directive(index_package, BIND(set_ddV, "RESOURCE_DDV"));
         emplace_directive(index_package, BIND(set_dddV, "RESOURCE_DDDV"));
         emplace_directive(index_package, BIND(set_connexion, "RESOURCE_CONNECTION"));
-        emplace_directive(index_package, BIND(set_Riemann, "RESOURCE_RIEMANN"));
+        emplace_directive(index_package, BIND(set_Riemann_A2, "RESOURCE_RIEMANN_A2"));
+        emplace_directive(index_package, BIND(set_Riemann_A3, "RESOURCE_RIEMANN_A3"));
+        emplace_directive(index_package, BIND(set_Riemann_B3, "RESOURCE_RIEMANN_B3"));
       }
 
 
@@ -70,7 +72,14 @@ namespace macro_packages
 
     std::string set_coordinates::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->mgr.assign_coordinates(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]);
+        // build list of index variances
+        std::array<variance, resource_manager_impl::COORDINATES_INDICES> v = { variance::none };
+        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
+          {
+            v[i] = indices[i].get()->get_variance();
+          }
+        
+        this->mgr.assign_coordinates(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT], v);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_COORDINATES << " '" << static_cast<std::string>(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]) << "'";
@@ -131,7 +140,14 @@ namespace macro_packages
 
     std::string set_dV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->mgr.assign_dV(args[RESOURCES::DV_KERNEL_ARGUMENT]);
+        // build list of index variances
+        std::array<variance, resource_manager_impl::DV_INDICES> v = { variance::none };
+        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
+          {
+            v[i] = indices[i].get()->get_variance();
+          }
+
+        this->mgr.assign_dV(args[RESOURCES::DV_KERNEL_ARGUMENT], v);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DV << " '" << static_cast<std::string>(args[RESOURCES::DV_KERNEL_ARGUMENT]) << "'";
@@ -162,7 +178,14 @@ namespace macro_packages
 
     std::string set_ddV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->mgr.assign_ddV(args[RESOURCES::DDV_KERNEL_ARGUMENT]);
+        // build list of index variances
+        std::array<variance, resource_manager_impl::DDV_INDICES> v = { variance::none, variance::none };
+        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
+          {
+            v[i] = indices[i].get()->get_variance();
+          }
+
+        this->mgr.assign_ddV(args[RESOURCES::DDV_KERNEL_ARGUMENT], v);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DDV << " '" << static_cast<std::string>(args[RESOURCES::DDV_KERNEL_ARGUMENT]) << "'";
@@ -187,14 +210,21 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>({index_class::field_only, index_class::field_only});
+              return std::vector<index_class>({ index_class::field_only, index_class::field_only });
           }
       }
 
 
     std::string set_dddV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->mgr.assign_dddV(args[RESOURCES::DDDV_KERNEL_ARGUMENT]);
+        // build list of index variances
+        std::array<variance, resource_manager_impl::DDDV_INDICES> v = { variance::none, variance::none, variance::none };
+        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
+          {
+            v[i] = indices[i].get()->get_variance();
+          }
+
+        this->mgr.assign_dddV(args[RESOURCES::DDDV_KERNEL_ARGUMENT], v);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DDDV << " '" << static_cast<std::string>(args[RESOURCES::DDDV_KERNEL_ARGUMENT]) << "'";
@@ -219,15 +249,21 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>(
-                {index_class::field_only, index_class::field_only, index_class::field_only});
+              return std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only });
           }
       }
 
 
     std::string set_connexion::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->mgr.assign_connexion(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]);
+        // build list of index variances
+        std::array<variance, resource_manager_impl::CONNEXION_INDICES> v = { variance::none, variance::none, variance::none };
+        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
+          {
+            v[i] = indices[i].get()->get_variance();
+          }
+
+        this->mgr.assign_connexion(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT], v);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_CONNEXION << " '" << static_cast<std::string>(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]) << "'";
@@ -252,41 +288,124 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>(
-                {index_class::field_only, index_class::field_only, index_class::field_only});
+              return std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only });
           }
       }
 
 
-    std::string set_Riemann::apply(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_Riemann_A2::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->mgr.assign_Riemann(args[RESOURCES::RIEMANN_KERNEL_ARGUMENT]);
+        // build list of index variances
+        std::array<variance, resource_manager_impl::RIEMANN_A2_INDICES> v = { variance::none, variance::none };
+        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
+          {
+            v[i] = indices[i].get()->get_variance();
+          }
+
+        this->mgr.assign_Riemann_A2(args[RESOURCES::RIEMANN_A2_KERNEL_ARGUMENT], v);
 
         std::ostringstream msg;
-        msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_KERNEL_ARGUMENT]) << "'";
+        msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_A2_KERNEL_ARGUMENT]) << "'";
     
         return msg.str();
       }
 
 
-    boost::optional<unsigned int> set_Riemann::define_indices(model_type t)
+    boost::optional<unsigned int> set_Riemann_A2::define_indices(model_type t)
       {
         switch(t)
           {
             case model_type::canonical: return 0;
-            case model_type::nontrivial_metric: return RESOURCES::RIEMANN_TOTAL_INDICES;
+            case model_type::nontrivial_metric: return RESOURCES::RIEMANN_A2_TOTAL_INDICES;
           }
       }
 
 
-    boost::optional<std::vector<index_class> > set_Riemann::define_classes(model_type t)
+    boost::optional< std::vector<index_class> > set_Riemann_A2::define_classes(model_type t)
       {
         switch(t)
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>(
-                {index_class::field_only, index_class::field_only, index_class::field_only, index_class::field_only});
+              return std::vector<index_class>({ index_class::field_only, index_class::field_only });
+          }
+      }
+    
+    
+    std::string set_Riemann_A3::apply(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        // build list of index variances
+        std::array<variance, resource_manager_impl::RIEMANN_A3_INDICES> v = { variance::none, variance::none };
+        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
+          {
+            v[i] = indices[i].get()->get_variance();
+          }
+
+        this->mgr.assign_Riemann_A3(args[RESOURCES::RIEMANN_A3_KERNEL_ARGUMENT], v);
+        
+        std::ostringstream msg;
+        msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_A3_KERNEL_ARGUMENT]) << "'";
+        
+        return msg.str();
+      }
+    
+    
+    boost::optional<unsigned int> set_Riemann_A3::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return RESOURCES::RIEMANN_A3_TOTAL_INDICES;
+          }
+      }
+    
+    
+    boost::optional<std::vector<index_class> > set_Riemann_A3::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric:
+              return std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only });
+          }
+      }
+    
+    
+    std::string set_Riemann_B3::apply(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        // build list of index variances
+        std::array<variance, resource_manager_impl::RIEMANN_B3_INDICES> v = { variance::none, variance::none };
+        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
+          {
+            v[i] = indices[i].get()->get_variance();
+          }
+
+        this->mgr.assign_Riemann_B3(args[RESOURCES::RIEMANN_B3_KERNEL_ARGUMENT], v);
+        
+        std::ostringstream msg;
+        msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_B3_KERNEL_ARGUMENT]) << "'";
+        
+        return msg.str();
+      }
+    
+    
+    boost::optional<unsigned int> set_Riemann_B3::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return RESOURCES::RIEMANN_B3_TOTAL_INDICES;
+          }
+      }
+    
+    
+    boost::optional<std::vector<index_class> > set_Riemann_B3::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric:
+              return std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only });
           }
       }
 

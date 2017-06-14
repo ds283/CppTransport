@@ -73,7 +73,7 @@ namespace macro_tokenizer_impl
     template <typename ContextFactory>
     std::pair<macro_argument_list, size_t>
     get_argument_list(const std::string& input, const std::string& macro, const size_t position, bool error_if_absent,
-                          ContextFactory make_context)
+                      ContextFactory make_context)
       {
         macro_argument_list arg_list;
         size_t current_position = position;
@@ -420,8 +420,7 @@ token_list::token_list(const std::string& in, const std::string& pfx, unsigned i
               {
 								position += pfx.length();
 
-                std::tie(tok, position) =
-                  this->match_macro_or_index(position, make_context);
+                std::tie(tok, position) = this->match_macro_or_index(position, make_context);
 							}
 						else // we did *not* match the full prefix; treat this as literal text
 							{

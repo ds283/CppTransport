@@ -28,6 +28,7 @@
 #define CPPTRANSPORT_ABSTRACT_INDEX_INSTANCE_H
 
 
+#include <sstream>
 #include <memory>
 #include <vector>
 #include <stdexcept>

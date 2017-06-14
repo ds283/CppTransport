@@ -68,9 +68,17 @@ namespace macro_packages
         constexpr unsigned int CONNEXION_TOTAL_ARGUMENTS = 1;
         constexpr unsigned int CONNEXION_TOTAL_INDICES = 3;
 
-        constexpr unsigned int RIEMANN_KERNEL_ARGUMENT = 0;
-        constexpr unsigned int RIEMANN_TOTAL_ARGUMENTS = 1;
-        constexpr unsigned int RIEMANN_TOTAL_INDICES = 4;
+        constexpr unsigned int RIEMANN_A2_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int RIEMANN_A2_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int RIEMANN_A2_TOTAL_INDICES = 2;
+    
+        constexpr unsigned int RIEMANN_A3_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int RIEMANN_A3_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int RIEMANN_A3_TOTAL_INDICES = 3;
+    
+        constexpr unsigned int RIEMANN_B3_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int RIEMANN_B3_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int RIEMANN_B3_TOTAL_INDICES = 3;
 
         constexpr unsigned int RELEASE_TOTAL_ARGUMENTS = 0;
 
@@ -412,7 +420,9 @@ namespace macro_packages
       };
 
 
-    class set_Riemann : public directive_index
+    //! Riemann 'A2' is the 2-index combination of the Riemann tensor appearing in the A-tensor
+    //! (it also appears in the M-tensor)
+    class set_Riemann_A2 : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -420,15 +430,15 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_Riemann(std::string n, resource_manager& m, translator_data& p)
-          : directive_index(std::move(n), RESOURCES::RIEMANN_TOTAL_ARGUMENTS, p,
+        set_Riemann_A2(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::RIEMANN_A2_TOTAL_ARGUMENTS, p,
                             define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
             mgr(m)
           {
           }
 
         //! destructor
-        virtual ~set_Riemann() = default;
+        virtual ~set_Riemann_A2() = default;
 
 
         // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
@@ -459,6 +469,108 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
+      };
+    
+    
+    //! Riemann 'A3' is the 3-index combination of the Riemann tensor appearing in the A-tensor
+    class set_Riemann_A3 : public directive_index
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        set_Riemann_A3(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::RIEMANN_A3_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(m)
+          {
+          }
+        
+        //! destructor
+        virtual ~set_Riemann_A3() = default;
+        
+        
+        // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
+      
+      public:
+        
+        bool enable_if(model_type t) const override { return t == model_type::nontrivial_metric; }
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+        
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! resource manager
+        resource_manager& mgr;
+        
+      };
+    
+    
+    //! Riemann 'B3' is the 2-index combination of the Riemann tensor appearing in the B-tensor
+    class set_Riemann_B3 : public directive_index
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        set_Riemann_B3(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::RIEMANN_B3_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(m)
+          {
+          }
+        
+        //! destructor
+        virtual ~set_Riemann_B3() = default;
+        
+        
+        // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
+      
+      public:
+        
+        bool enable_if(model_type t) const override { return t == model_type::nontrivial_metric; }
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+        
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! resource manager
+        resource_manager& mgr;
+        
       };
 
 

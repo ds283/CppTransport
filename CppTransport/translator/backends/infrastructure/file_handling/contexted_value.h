@@ -63,7 +63,7 @@ class contexted_value
     const ValueType& get() const { return this->value; }
 
     //! get declaration point
-    const error_context& get_declaration_point() const { return(*this->declaration_point); }
+    const error_context& get_declaration_point() const { return *this->declaration_point; }
 
 
     // INTERNAL DATA

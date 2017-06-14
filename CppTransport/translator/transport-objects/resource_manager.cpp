@@ -34,7 +34,9 @@ void resource_manager::release()
     this->ddV_cache.reset();
     this->dddV_cache.reset();
     this->connexion_cache.reset();
-    this->Riemann_cache.reset();
+    this->Riemann_A2_cache.reset();
+    this->Riemann_A3_cache.reset();
+    this->Riemann_B3_cache.reset();
   }
 
 
