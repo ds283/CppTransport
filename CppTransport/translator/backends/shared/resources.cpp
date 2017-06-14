@@ -28,6 +28,7 @@
 #include <functional>
 
 #include "resources.h"
+#include "flow_tensors.h"
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, m, p))
@@ -40,16 +41,17 @@ namespace macro_packages
       : directive_package(p)
       {
         simple_package.emplace_back(BIND(set_params, "RESOURCE_PARAMETERS"));
-        simple_package.emplace_back(BIND(set_coordinates, "RESOURCE_COORDINATES"));
         simple_package.emplace_back(BIND(set_phase_flatten, "PHASE_FLATTEN"));
         simple_package.emplace_back(BIND(set_field_flatten, "FIELD_FLATTEN"));
         simple_package.emplace_back(BIND(release_flatteners, "RELEASE_FLATTENERS"));
-        simple_package.emplace_back(BIND(set_dV, "RESOURCE_DV"));
-        simple_package.emplace_back(BIND(set_ddV, "RESOURCE_DDV"));
-        simple_package.emplace_back(BIND(set_dddV, "RESOURCE_DDDV"));
         simple_package.emplace_back(BIND(release, "RESOURCE_RELEASE"));
         simple_package.emplace_back(BIND(set_working_type, "WORKING_TYPE"));
         simple_package.emplace_back(BIND(release_working_type, "RELEASE_WORKING_TYPE"));
+
+        index_package.emplace_back(BIND(set_coordinates, "RESOURCE_COORDINATES"));
+        index_package.emplace_back(BIND(set_dV, "RESOURCE_DV"));
+        index_package.emplace_back(BIND(set_ddV, "RESOURCE_DDV"));
+        index_package.emplace_back(BIND(set_dddV, "RESOURCE_DDDV"));
       }
 
 
@@ -64,14 +66,34 @@ namespace macro_packages
       }
 
 
-    std::string set_coordinates::evaluate(const macro_argument_list& args)
+    std::string set_coordinates::evaluate(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_coordinates(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_COORDINATES << " '" << static_cast<std::string>(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]) << "'";
-    
+
         return msg.str();
+      }
+
+
+    boost::optional<unsigned int> set_coordinates::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return RESOURCES::COORDINATES_TOTAL_INDICES;
+          }
+      }
+
+
+    boost::optional< std::vector<index_class> > set_coordinates::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric: return std::vector<index_class>({ index_class::full });
+          }
       }
 
 
@@ -105,7 +127,7 @@ namespace macro_packages
       }
 
 
-    std::string set_dV::evaluate(const macro_argument_list& args)
+    std::string set_dV::evaluate(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_dV(args[RESOURCES::DV_KERNEL_ARGUMENT]);
 
@@ -116,7 +138,27 @@ namespace macro_packages
       }
 
 
-    std::string set_ddV::evaluate(const macro_argument_list& args)
+    boost::optional<unsigned int> set_dV::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return RESOURCES::DV_TOTAL_INDICES;
+          }
+      }
+
+
+    boost::optional<std::vector<index_class> > set_dV::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric: return std::vector<index_class>({ index_class::field_only });
+          }
+      }
+
+
+    std::string set_ddV::evaluate(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_ddV(args[RESOURCES::DDV_KERNEL_ARGUMENT]);
 
@@ -127,7 +169,28 @@ namespace macro_packages
       }
 
 
-    std::string set_dddV::evaluate(const macro_argument_list& args)
+    boost::optional<unsigned int> set_ddV::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return RESOURCES::DDV_TOTAL_INDICES;
+          }
+      }
+
+
+    boost::optional<std::vector<index_class> > set_ddV::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric:
+              return std::vector<index_class>({index_class::field_only, index_class::field_only});
+          }
+      }
+
+
+    std::string set_dddV::evaluate(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_dddV(args[RESOURCES::DDDV_KERNEL_ARGUMENT]);
 
@@ -138,7 +201,29 @@ namespace macro_packages
       }
 
 
-    std::string set_connexion::evaluate(const macro_argument_list& args)
+    boost::optional<unsigned int> set_dddV::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return RESOURCES::DDDV_TOTAL_INDICES;
+          }
+      }
+
+
+    boost::optional<std::vector<index_class> > set_dddV::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric:
+              return std::vector<index_class>(
+                {index_class::field_only, index_class::field_only, index_class::field_only});
+          }
+      }
+
+
+    std::string set_connexion::evaluate(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_connexion(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]);
 
@@ -149,7 +234,29 @@ namespace macro_packages
       }
 
 
-    std::string set_Riemann::evaluate(const macro_argument_list& args)
+    boost::optional<unsigned int> set_connexion::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return RESOURCES::CONNEXION_TOTAL_INDICES;
+          }
+      }
+
+
+    boost::optional<std::vector<index_class> > set_connexion::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric:
+              return std::vector<index_class>(
+                {index_class::field_only, index_class::field_only, index_class::field_only});
+          }
+      }
+
+
+    std::string set_Riemann::evaluate(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_Riemann(args[RESOURCES::RIEMANN_KERNEL_ARGUMENT]);
 
@@ -157,6 +264,28 @@ namespace macro_packages
         msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_KERNEL_ARGUMENT]) << "'";
     
         return msg.str();
+      }
+
+
+    boost::optional<unsigned int> set_Riemann::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return RESOURCES::RIEMANN_TOTAL_INDICES;
+          }
+      }
+
+
+    boost::optional<std::vector<index_class> > set_Riemann::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric:
+              return std::vector<index_class>(
+                {index_class::field_only, index_class::field_only, index_class::field_only, index_class::field_only});
+          }
       }
 
 

@@ -42,6 +42,7 @@ namespace macro_packages
 
         constexpr unsigned int COORDINATES_KERNEL_ARGUMENT = 0;
         constexpr unsigned int COORDINATES_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int COORDINATES_TOTAL_INDICES = 1;
 
         constexpr unsigned int PHASE_FLATTEN_KERNEL_ARGUMENT = 0;
         constexpr unsigned int PHASE_FLATTEN_TOTAL_ARGUMENTS = 1;
@@ -53,18 +54,23 @@ namespace macro_packages
 
         constexpr unsigned int DV_KERNEL_ARGUMENT = 0;
         constexpr unsigned int DV_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int DV_TOTAL_INDICES = 1;
 
         constexpr unsigned int DDV_KERNEL_ARGUMENT = 0;
         constexpr unsigned int DDV_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int DDV_TOTAL_INDICES = 2;
 
         constexpr unsigned int DDDV_KERNEL_ARGUMENT = 0;
         constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int DDDV_TOTAL_INDICES = 3;
 
         constexpr unsigned int CONNEXION_KERNEL_ARGUMENT = 0;
         constexpr unsigned int CONNEXION_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int CONNEXION_TOTAL_INDICES = 3;
 
         constexpr unsigned int RIEMANN_KERNEL_ARGUMENT = 0;
         constexpr unsigned int RIEMANN_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int RIEMANN_TOTAL_INDICES = 4;
 
         constexpr unsigned int RELEASE_TOTAL_ARGUMENTS = 0;
 
@@ -112,7 +118,7 @@ namespace macro_packages
       };
 
 
-    class set_coordinates : public directive_simple
+    class set_coordinates : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -121,7 +127,8 @@ namespace macro_packages
 
         //! constructor
         set_coordinates(std::string n, resource_manager& m, translator_data& p)
-          : directive_simple(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS, p),
+          : directive_index(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
             mgr(m)
           {
           }
@@ -135,7 +142,13 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -220,7 +233,7 @@ namespace macro_packages
       };
 
 
-    class set_dV : public directive_simple
+    class set_dV : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -229,7 +242,8 @@ namespace macro_packages
 
         //! constructor
         set_dV(std::string n, resource_manager& m, translator_data& p)
-          : directive_simple(std::move(n), RESOURCES::DV_TOTAL_ARGUMENTS, p),
+          : directive_index(std::move(n), RESOURCES::DV_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
             mgr(m)
           {
           }
@@ -243,7 +257,13 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -256,7 +276,7 @@ namespace macro_packages
       };
 
 
-    class set_ddV : public directive_simple
+    class set_ddV : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -265,7 +285,8 @@ namespace macro_packages
 
         //! constructor
         set_ddV(std::string n, resource_manager& m, translator_data& p)
-          : directive_simple(std::move(n), RESOURCES::DDV_TOTAL_ARGUMENTS, p),
+          : directive_index(std::move(n), RESOURCES::DDV_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
             mgr(m)
           {
           }
@@ -279,7 +300,13 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -292,7 +319,7 @@ namespace macro_packages
       };
 
 
-    class set_dddV : public directive_simple
+    class set_dddV : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -301,7 +328,8 @@ namespace macro_packages
 
         //! constructor
         set_dddV(std::string n, resource_manager& m, translator_data& p)
-          : directive_simple(std::move(n), RESOURCES::DDDV_TOTAL_ARGUMENTS, p),
+          : directive_index(std::move(n), RESOURCES::DDDV_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
             mgr(m)
           {
           }
@@ -315,7 +343,13 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -328,7 +362,7 @@ namespace macro_packages
       };
 
 
-    class set_connexion : public directive_simple
+    class set_connexion : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -337,7 +371,8 @@ namespace macro_packages
 
         //! constructor
         set_connexion(std::string n, resource_manager& m, translator_data& p)
-          : directive_simple(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS, p),
+          : directive_index(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
             mgr(m)
           {
           }
@@ -351,7 +386,13 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -364,7 +405,7 @@ namespace macro_packages
       };
 
 
-    class set_Riemann : public directive_simple
+    class set_Riemann : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -373,7 +414,8 @@ namespace macro_packages
 
         //! constructor
         set_Riemann(std::string n, resource_manager& m, translator_data& p)
-          : directive_simple(std::move(n), RESOURCES::RIEMANN_TOTAL_ARGUMENTS, p),
+          : directive_index(std::move(n), RESOURCES::RIEMANN_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
             mgr(m)
           {
           }
@@ -387,7 +429,13 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
