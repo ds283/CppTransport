@@ -46,12 +46,12 @@ namespace shared
     kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(args_params, "PARAM_ARGS"));
-        pre_package.emplace_back(BIND(args_1index, "COORD_ARGS"));
-        pre_package.emplace_back(BIND(args_2index, "U2_ARGS"));
-        pre_package.emplace_back(BIND(args_2index, "TWOPF_ARGS"));
-        pre_package.emplace_back(BIND(args_3index, "U3_ARGS"));
-        pre_package.emplace_back(BIND(args_3index, "THREEPF_ARGS"));
+        emplace_rule(pre_package, BIND(args_params, "PARAM_ARGS"));
+        emplace_rule(pre_package, BIND(args_1index, "COORD_ARGS"));
+        emplace_rule(pre_package, BIND(args_2index, "U2_ARGS"));
+        emplace_rule(pre_package, BIND(args_2index, "TWOPF_ARGS"));
+        emplace_rule(pre_package, BIND(args_3index, "U3_ARGS"));
+        emplace_rule(pre_package, BIND(args_3index, "THREEPF_ARGS"));
       }
 
 

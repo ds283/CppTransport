@@ -46,7 +46,7 @@ namespace vexcl
     vexcl_kernels::vexcl_kernels(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(import_kernel, "IMPORT_KERNEL"));
+        emplace_rule(pre_package, BIND(import_kernel, "IMPORT_KERNEL"));
       }
 
 

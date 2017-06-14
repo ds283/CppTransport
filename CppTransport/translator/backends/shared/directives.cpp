@@ -41,11 +41,11 @@ namespace macro_packages
     directives::directives(translator_data& p)
       : directive_package(p)
       {
-        simple_package.emplace_back(BIND_IF_SYMBOL(if_directive, "IF"));
-        simple_package.emplace_back(BIND_IF_SYMBOL(else_directive, "ELSE"));
-        simple_package.emplace_back(BIND_IF_SYMBOL(endif_directive, "ENDIF"));
+        emplace_directive(simple_package, BIND_IF_SYMBOL(if_directive, "IF"));
+        emplace_directive(simple_package, BIND_IF_SYMBOL(else_directive, "ELSE"));
+        emplace_directive(simple_package, BIND_IF_SYMBOL(endif_directive, "ENDIF"));
 
-        index_package.emplace_back(BIND_SYMBOL(set_directive, "SET"));
+        emplace_directive(index_package, BIND_SYMBOL(set_directive, "SET"));
       }
 
 

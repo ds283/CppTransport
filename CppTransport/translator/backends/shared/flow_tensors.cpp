@@ -39,17 +39,17 @@ namespace macro_packages
     flow_tensors::flow_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(replace_V, "POTENTIAL"));
-        pre_package.emplace_back(BIND(replace_Hsq, "HUBBLE_SQ"));
-        pre_package.emplace_back(BIND(replace_eps, "EPSILON"));
+        emplace_rule(pre_package, BIND(replace_V, "POTENTIAL"));
+        emplace_rule(pre_package, BIND(replace_Hsq, "HUBBLE_SQ"));
+        emplace_rule(pre_package, BIND(replace_eps, "EPSILON"));
 
-        index_package.emplace_back(BIND(replace_parameter, "PARAMETER"));
-        index_package.emplace_back(BIND(replace_field, "FIELD"));
-        index_package.emplace_back(BIND(replace_coordinate, "COORDINATE"));
-        index_package.emplace_back(BIND(replace_SR_velocity, "SR_VELOCITY"));
-        index_package.emplace_back(BIND(replace_dV, "DV"));
-        index_package.emplace_back(BIND(replace_ddV, "DDV"));
-        index_package.emplace_back(BIND(replace_dddV, "DDDV"));
+        emplace_rule(index_package, BIND(replace_parameter, "PARAMETER"));
+        emplace_rule(index_package, BIND(replace_field, "FIELD"));
+        emplace_rule(index_package, BIND(replace_coordinate, "COORDINATE"));
+        emplace_rule(index_package, BIND(replace_SR_velocity, "SR_VELOCITY"));
+        emplace_rule(index_package, BIND(replace_dV, "DV"));
+        emplace_rule(index_package, BIND(replace_ddV, "DDV"));
+        emplace_rule(index_package, BIND(replace_dddV, "DDDV"));
       }
 
 

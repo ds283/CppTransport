@@ -40,10 +40,10 @@ namespace macro_packages
     gauge_xfm::gauge_xfm(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        index_package.emplace_back(BIND(replace_zeta1, "ZETA_XFM_1"));
-        index_package.emplace_back(BIND_SYMBOL(replace_zeta2, "ZETA_XFM_2"));
-        index_package.emplace_back(BIND(replace_dN1, "DELTAN_XFM_1"));
-        index_package.emplace_back(BIND(replace_dN2, "DELTAN_XFM_2"));
+        emplace_rule(index_package, BIND(replace_zeta1, "ZETA_XFM_1"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_zeta2, "ZETA_XFM_2"));
+        emplace_rule(index_package, BIND(replace_dN1, "DELTAN_XFM_1"));
+        emplace_rule(index_package, BIND(replace_dN2, "DELTAN_XFM_2"));
       }
 
 

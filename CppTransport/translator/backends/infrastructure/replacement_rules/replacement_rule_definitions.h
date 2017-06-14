@@ -44,15 +44,6 @@
 namespace macro_packages
   {
 
-    //! tag for type of replacement rule;
-    //! either a macro, which evaluates to text and is replaced in the template,
-    //! or a directive, which does not evaluate to text and instead causes a
-    //! change of state in the translator
-    enum class replacement_rule_class
-      {
-        macro, directive
-      };
-
 
     //! base class for a 'simple' macro which takes arguments but not indices
     class replacement_rule_simple
@@ -94,6 +85,10 @@ namespace macro_packages
         //! get name associated with this macro
         const std::string& get_name() const { return this->name; }
 
+        //! determine whether this directive is enabled for a particular model type
+        //! defaults to true, but can be overridden if required
+        virtual bool enable_if(model_type t) const { return true; }
+
 
         // INTERNAL API
 
@@ -101,8 +96,8 @@ namespace macro_packages
 
         //! evaluation function; has to be supplied by implementation
         virtual std::string evaluate(const macro_argument_list& args) = 0;
-    
-    
+
+
         // VALIDATION
   
       protected:
@@ -194,8 +189,12 @@ namespace macro_packages
 
         //! get unroll status for this macro -- must be handled by implementation
         virtual unroll_behaviour get_unroll() const = 0;
-    
-    
+
+        //! determine whether this directive is enabled for a particular model type
+        //! defaults to true, but can be overridden if required
+        virtual bool enable_if(model_type t) const { return true; }
+
+
         // INTERNAL API
 
       protected:
@@ -231,9 +230,6 @@ namespace macro_packages
 
         //! name of this replacement rule
         std::string name;
-
-        //! class of this replacement rule
-        enum replacement_rule_class rule_class;
 
         //! number of arguments expected
         unsigned int num_args;

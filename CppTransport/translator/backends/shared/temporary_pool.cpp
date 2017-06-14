@@ -43,7 +43,7 @@ namespace macro_packages
     temporary_pool::temporary_pool(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
 	    : replacement_rule_package(f, cw, lm, p, prn)
 	    {
-        pre_package.emplace_back(BIND(replace_temp_pool, "TEMP_POOL"));
+        emplace_rule(pre_package, BIND(replace_temp_pool, "TEMP_POOL"));
 	    }
 
 

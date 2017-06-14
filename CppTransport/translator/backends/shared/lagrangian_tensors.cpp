@@ -39,11 +39,11 @@ namespace macro_packages
     lagrangian_tensors::lagrangian_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        index_package.emplace_back(BIND_SYMBOL(replace_A, "A_TENSOR"));
-        index_package.emplace_back(BIND_SYMBOL(replace_Atilde, "ATILDE_TENSOR"));
-        index_package.emplace_back(BIND_SYMBOL(replace_B, "B_TENSOR"));
-        index_package.emplace_back(BIND_SYMBOL(replace_C, "C_TENSOR"));
-        index_package.emplace_back(BIND_SYMBOL(replace_M, "M_TENSOR"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_A, "A_TENSOR"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_Atilde, "ATILDE_TENSOR"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_B, "B_TENSOR"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_C, "C_TENSOR"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_M, "M_TENSOR"));
       }
 
 

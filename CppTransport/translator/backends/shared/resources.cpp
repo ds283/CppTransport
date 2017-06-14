@@ -40,18 +40,18 @@ namespace macro_packages
     resources::resources(translator_data& p, resource_manager& m)
       : directive_package(p)
       {
-        simple_package.emplace_back(BIND(set_params, "RESOURCE_PARAMETERS"));
-        simple_package.emplace_back(BIND(set_phase_flatten, "PHASE_FLATTEN"));
-        simple_package.emplace_back(BIND(set_field_flatten, "FIELD_FLATTEN"));
-        simple_package.emplace_back(BIND(release_flatteners, "RELEASE_FLATTENERS"));
-        simple_package.emplace_back(BIND(release, "RESOURCE_RELEASE"));
-        simple_package.emplace_back(BIND(set_working_type, "WORKING_TYPE"));
-        simple_package.emplace_back(BIND(release_working_type, "RELEASE_WORKING_TYPE"));
+        emplace_directive(simple_package, BIND(set_params, "RESOURCE_PARAMETERS"));
+        emplace_directive(simple_package, BIND(set_phase_flatten, "PHASE_FLATTEN"));
+        emplace_directive(simple_package, BIND(set_field_flatten, "FIELD_FLATTEN"));
+        emplace_directive(simple_package, BIND(release_flatteners, "RELEASE_FLATTENERS"));
+        emplace_directive(simple_package, BIND(release, "RESOURCE_RELEASE"));
+        emplace_directive(simple_package, BIND(set_working_type, "WORKING_TYPE"));
+        emplace_directive(simple_package, BIND(release_working_type, "RELEASE_WORKING_TYPE"));
 
-        index_package.emplace_back(BIND(set_coordinates, "RESOURCE_COORDINATES"));
-        index_package.emplace_back(BIND(set_dV, "RESOURCE_DV"));
-        index_package.emplace_back(BIND(set_ddV, "RESOURCE_DDV"));
-        index_package.emplace_back(BIND(set_dddV, "RESOURCE_DDDV"));
+        emplace_directive(index_package, BIND(set_coordinates, "RESOURCE_COORDINATES"));
+        emplace_directive(index_package, BIND(set_dV, "RESOURCE_DV"));
+        emplace_directive(index_package, BIND(set_ddV, "RESOURCE_DDV"));
+        emplace_directive(index_package, BIND(set_dddV, "RESOURCE_DDDV"));
       }
 
 

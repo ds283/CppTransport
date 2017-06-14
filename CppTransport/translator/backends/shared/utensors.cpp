@@ -40,9 +40,9 @@ namespace macro_packages
     utensors::utensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        index_package.emplace_back(BIND_SYMBOL(replace_U1, "U1_TENSOR"));
-        index_package.emplace_back(BIND_SYMBOL(replace_U2, "U2_TENSOR"));
-        index_package.emplace_back(BIND_SYMBOL(replace_U3, "U3_TENSOR"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_U1, "U1_TENSOR"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_U2, "U2_TENSOR"));
+        emplace_rule(index_package, BIND_SYMBOL(replace_U3, "U3_TENSOR"));
       }
 
 

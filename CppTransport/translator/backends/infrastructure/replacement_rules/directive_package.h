@@ -63,9 +63,18 @@ namespace macro_packages
         
         //! destructure is default
         virtual ~directive_package() = default;
-        
-        
-        // INTERFACE
+
+
+        // EMPLACE RULE
+
+      public:
+
+        //! emplace a rule into a rule package
+        template <typename RulePackage>
+        void emplace_directive(RulePackage& pkg, typename RulePackage::value_type rule);
+
+
+        // GET DIRECTIVE PACKAGES
         
       public:
         
@@ -95,7 +104,18 @@ namespace macro_packages
         translator_data& data_payload;
         
       };
-  
+
+
+    template <typename RulePackage>
+    void directive_package::emplace_directive(RulePackage& pkg, typename RulePackage::value_type rule)
+      {
+        // determine whether this directive is enabled for this model type
+        if(rule->enable_if(this->data_payload.model.get_lagrangian_type()))
+          {
+            pkg.emplace_back(std::move(rule));
+          }
+      }
+
   }   // namespace macro_packages;
 
 

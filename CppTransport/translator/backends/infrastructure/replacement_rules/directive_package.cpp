@@ -33,5 +33,5 @@ namespace macro_packages
       : data_payload(p)
       {
       }
-    
+
   }   // namespace macro_packages
