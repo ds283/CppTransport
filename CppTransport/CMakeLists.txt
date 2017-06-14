@@ -160,6 +160,25 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/dN1.cpp
   translator/transport-objects/canonical/dN2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
+  translator/transport-objects/nontrivial_metric/resources.cpp
+  translator/transport-objects/nontrivial_metric/Hubble.cpp
+  translator/transport-objects/nontrivial_metric/dV.cpp
+  translator/transport-objects/nontrivial_metric/ddV.cpp
+  translator/transport-objects/nontrivial_metric/dddV.cpp
+  translator/transport-objects/nontrivial_metric/SR_velocity.cpp
+  translator/transport-objects/nontrivial_metric/A.cpp
+  translator/transport-objects/nontrivial_metric/Atilde.cpp
+  translator/transport-objects/nontrivial_metric/B.cpp
+  translator/transport-objects/nontrivial_metric/C.cpp
+  translator/transport-objects/nontrivial_metric/M.cpp
+  translator/transport-objects/nontrivial_metric/u1.cpp
+  translator/transport-objects/nontrivial_metric/u2.cpp
+  translator/transport-objects/nontrivial_metric/u3.cpp
+  translator/transport-objects/nontrivial_metric/zeta1.cpp
+  translator/transport-objects/nontrivial_metric/zeta2.cpp
+  translator/transport-objects/nontrivial_metric/dN1.cpp
+  translator/transport-objects/nontrivial_metric/dN2.cpp
+  translator/transport-objects/nontrivial_metric/tensor_factory.cpp
   translator/transport-objects/resource_manager.cpp
   translator/transport-objects/concepts/transport_tensor.cpp
   translator/transport-objects/indices/indices.cpp

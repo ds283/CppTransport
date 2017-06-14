@@ -24,10 +24,11 @@
 //
 
 
-#include "resources.h"
+#include "nontrivial_metric/resources.h"
+#include "ginac/ginac.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     resources::resources(translator_data& p, resource_manager& m, expression_cache& c, shared_resources& s, boost::timer::cpu_timer& t)
@@ -48,11 +49,30 @@ namespace canonical
         if(pot) V = **(pot.get()); else V = GiNaC::ex(0);
 
         auto metric = p.model.get_metric();
+        this -> G = std::make_unique<GiNaC::matrix>(num_fields, num_fields);
+        this -> Ginv = std::make_unique<GiNaC::matrix>(num_fields, num_fields);
+
         if(metric)
         {
-          populate GiNaC::matrix representing the metric
-          initialize the Christoffel class
-              initialize the Riemann class
+          auto& G = **(metric.get());
+
+          field_index i(0);
+          field_index j(0);
+          for (i = 0; i < num_fields; ++i) {
+            for(j = 0; j < num_fields; ++j) {
+              field_metric::index_type idx = std::make_pair(field_list[i].get_name(), field_list[j].get_name());
+              GiNaC::ex comp = G(idx);
+              this -> G -> set(i, j, comp);
+            }
+
+            *this -> Ginv = this -> G ->inverse();
+
+          } else {
+            *this -> G = GiNaC::unit_matrix(num_fields);
+          }
+//          populate GiNaC::matrix representing the metric
+//          initialize the Christoffel class
+//              initialize the Riemann class
         }
 
         compute_timer.stop();
@@ -553,5 +573,5 @@ namespace canonical
         std::string variable = printer.array_subscript(*resource, a, b, c, *flatten);
         return this->sym_factory.get_symbol(variable);
       }
-  }   // namespace canonical
+  }   // namespace nontrivial_metric
 
