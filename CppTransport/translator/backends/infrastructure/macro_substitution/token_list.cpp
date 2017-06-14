@@ -72,19 +72,28 @@ namespace macro_tokenizer_impl
     // get a macro argument list
     template <typename ContextFactory>
     std::pair<macro_argument_list, size_t>
-    get_argument_list(const std::string& input, const std::string& macro, const size_t position,
-                      ContextFactory make_context)
+    get_argument_list(const std::string& input, const std::string& macro, const size_t position, bool error_if_absent,
+                          ContextFactory make_context)
       {
         macro_argument_list arg_list;
         size_t current_position = position;
 
+        // skip over any white space characters
+        while(current_position < input.length() && isspace(input[current_position]))
+          {
+            ++current_position;
+          }
+
         // check that an argument list is present
         if(current_position >= input.length() || input[current_position] != '{')
           {
-            std::ostringstream msg;
-            msg << ERROR_EXPECTED_OPEN_ARGUMENT_LIST << " '" << macro << "'";
-            error_context ctx = make_context(current_position, current_position+1);
-            ctx.error(msg.str());
+            if(error_if_absent)
+              {
+                std::ostringstream msg;
+                msg << ERROR_EXPECTED_OPEN_ARGUMENT_LIST << " '" << macro << "'";
+                error_context ctx = make_context(current_position, current_position+1);
+                ctx.error(msg.str());
+              }
 
             return std::make_pair(arg_list, current_position);
           }
@@ -197,21 +206,30 @@ namespace macro_tokenizer_impl
     // get a macro index list
     template <typename ContextFactory, typename IndexHandler, typename IndexValidator, typename PropertiesValidator>
     std::pair<index_literal_list, size_t>
-    get_index_list(const std::string& input, const std::string& candidate, const size_t position,
-                   ContextFactory make_context, IndexHandler add_index, PropertiesValidator validate_properties,
-                   IndexValidator validate_index)
+    get_index_list(const std::string& input, const std::string& candidate, const size_t position, bool error_if_absent,
+                       ContextFactory make_context, IndexHandler add_index, PropertiesValidator validate_properties,
+                       IndexValidator validate_index)
       {
         index_literal_list idx_list;
         size_t current_position = position;
         variance v = variance::none;
 
+        // skip over any white space characters
+        while(current_position < input.length() && isspace(input[current_position]))
+          {
+            ++current_position;
+          }
+
         // check that an index list is present
         if(current_position >= input.length() || input[current_position] != '[')
           {
-            std::ostringstream msg;
-            msg << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'";
-            error_context ctx = make_context(current_position, current_position+1);
-            ctx.error(msg.str());
+            if(error_if_absent)
+              {
+                std::ostringstream msg;
+                msg << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'";
+                error_context ctx = make_context(current_position, current_position+1);
+                ctx.error(msg.str());
+              }
 
             return std::make_pair(idx_list, current_position);
           }
@@ -596,7 +614,7 @@ token_list::make_simple_macro(const std::string& macro, const size_t position, c
     // get argument list, if one is expected
     macro_argument_list arg_list;
     if(rule.get_number_args() > 0)
-      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, make_context);
+      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, true, make_context);
 
     // build token
     auto tok = std::make_unique<token_list_impl::simple_macro_token>(macro, arg_list, rule, type,
@@ -646,12 +664,12 @@ token_list::make_index_macro(const std::string& macro, const size_t position, co
     auto validate_properties = [&](index_literal& l) -> void { this->validate_index_properties(l); };
 
     std::tie(idx_list, current_position) =
-      get_index_list(input, macro, current_position, make_context, add_index, validate_properties, validate_index);
+      get_index_list(input, macro, current_position, true, make_context, add_index, validate_properties, validate_index);
 
     // may find an argument list
     macro_argument_list arg_list;
     if(rule.get_number_args() > 0)
-      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, make_context);
+      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, true, make_context);
 
     // determine unroll status flags, either inherited from the macro or by allowing a suffix to the argument list
     if(rule.get_unroll() == unroll_behaviour::force)
@@ -725,7 +743,7 @@ token_list::make_simple_directive(const std::string& macro, const size_t positio
     // get argument list, if one is expected
     macro_argument_list arg_list;
     if(rule.get_number_args() > 0)
-      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, make_context);
+      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, true, make_context);
     
     // build token
     auto tok = std::make_unique<token_list_impl::simple_directive_token>(macro, arg_list, rule,
@@ -755,33 +773,61 @@ token_list::make_index_directive(const std::string& macro, const size_t position
     
     // found a match -- move position past the candidate
     size_t current_position = position + macro.length();
-    
-    // should find an index list
+
     index_literal_list idx_list;
 
-    auto add_index = [&](char l, error_context& ctx) -> auto&
-      {
-        // add this index to the main database; if it has already been seen the we will just get
-        // an iterator to the original record. We return a reference to the abstract_index& record
-        auto idx = this->add_index(l);
-        return *idx;
-      };
+    // determine whether we definitely expect an index list; if accepts a variable number of indices,
+    // the none might not be present.
+    // Also, although this is an indexed directive, we allow it to specify that zero indices should be
+    // provided (eg. this is a use case for $RESOURCE_DV which might need 0 or 1 indices depending on the
+    // model). If so we should enforce that
+    auto expected_indices = rule.get_number_indices();
 
-    auto validate_index = [&](index_literal& l) -> void
+    if(expected_indices && expected_indices.get() == 0)
       {
-        this->validate_index_literal(l);
-        this->index_decls.emplace_back(std::make_shared<index_literal>(l));
-      };
-    
-    auto validate_properties = [&](index_literal& l) -> void { this->validate_index_properties(l); };
+        // shouldn't have an index list
+        auto err_handler = [&](size_t p) -> void
+          {
+            std::ostringstream msg;
+            msg << ERROR_TOKENIZE_UNEXPECTED_LIST << " '" << macro << "'; " << ERROR_TOKENIZE_SKIPPING;
+            auto ctx = make_context(p, p+1);
+            ctx.error(msg.str());
+          };
 
-    std::tie(idx_list, current_position) =
-      get_index_list(input, macro, current_position, make_context, add_index, validate_properties, validate_index);
-    
+        current_position = check_no_index_list(input, current_position, err_handler);
+      }
+    else
+      {
+        // expect an index list, depending how many indices this directive expects
+
+        auto add_index = [&](char l, error_context& ctx) -> auto&
+          {
+            // add this index to the main database; if it has already been seen the we will just get
+            // an iterator to the original record. We return a reference to the abstract_index& record
+            auto idx = this->add_index(l);
+            return *idx;
+          };
+
+        auto validate_index = [&](index_literal& l) -> void
+          {
+            this->validate_index_literal(l);
+            this->index_decls.emplace_back(std::make_shared<index_literal>(l));
+          };
+
+        auto validate_properties = [&](index_literal& l) -> void { this->validate_index_properties(l); };
+
+        // if this directive allows a variable number of indices, then we shouldn't raise an error report
+        // if no indices are given
+        bool expect_indices = static_cast<bool>(expected_indices);
+
+        std::tie(idx_list, current_position) =
+          get_index_list(input, macro, current_position, expect_indices, make_context, add_index, validate_properties, validate_index);
+      }
+
     // may find an argument list
     macro_argument_list arg_list;
     if(rule.get_number_args() > 0)
-      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, make_context);
+      std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, true, make_context);
     
     auto tok = std::make_unique<token_list_impl::index_directive_token>(macro, idx_list, arg_list, rule,
                                                                         make_context(position, current_position));
