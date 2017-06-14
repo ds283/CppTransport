@@ -215,6 +215,7 @@ constexpr auto ERROR_INDEX_DATABASE_OUT_OF_RANGE     = "Internal error: out of r
 
 constexpr auto ERROR_REPLACEMENT_RULE_INDEX_COUNT    = "Internal error: number of index classes provided to replacement rule constructor does not match declared number of indices";
 constexpr auto ERROR_DIRECTIVE_RULE_INDEX_COUNT      = "Internal error: number of index classes provided to directive constructor does not match declared number of indices";
+constexpr auto ERROR_REPLACEMENT_RULE_ZERO_INDICES   = "Internal error: number of indices for an indexed replacement rule cannot be zero";
 
 constexpr auto ERROR_DN_DOES_NOT_ROLL                = "Internal error: attempt to roll-up a delta-N macro";
 constexpr auto ERROR_INCONSISTENT_LAMBDA_MAP         = "Internal error: inconsistent lambda map size";

@@ -142,6 +142,8 @@ namespace macro_packages
             num_indices(i),
             idx_classes(std::move(c))
           {
+            if(num_indices == 0) throw std::runtime_error(ERROR_REPLACEMENT_RULE_ZERO_INDICES);
+
             // if no list of index classes supplied, then nothing to do
             if(!idx_classes) return;
             
