@@ -462,6 +462,10 @@ namespace macro_packages
       };
 
 
+    //! directive to release all resources, *except* flattener
+    //! this is the most common use case; we wish to release resources for eg. coordinates or
+    //! dV, ddV, dddV that have been used in a function body, but we don't want to
+    //! change the flattener function
     class release : public directive_simple
       {
 
@@ -498,6 +502,8 @@ namespace macro_packages
       };
 
 
+    //! directive to release names of flattener functions
+    //! this is a much less common use-case than just release of resources
     class release_flatteners : public directive_simple
       {
 
