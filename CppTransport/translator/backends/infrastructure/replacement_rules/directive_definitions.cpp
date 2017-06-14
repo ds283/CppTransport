@@ -35,14 +35,14 @@ namespace macro_packages
         this->validate(args);
         
         macro_agent& ma = this->payload.get_stack().top_macro_package();
-        if(!ma.is_enabled() && !this->always_evaluate())
+        if(!ma.is_enabled() && !this->always_apply())
           {
             std::ostringstream msg;
             msg << NOTIFY_DIRECTIVE_NOT_EVALUATED << " '" << this->name << "'";
             return msg.str();
           }
 
-        return this->evaluate(args);
+        return this->apply(args);
       }
     
     
@@ -65,14 +65,14 @@ namespace macro_packages
         this->validate(indices);
     
         macro_agent& ma = this->payload.get_stack().top_macro_package();
-        if(!ma.is_enabled() && !this->always_evaluate())
+        if(!ma.is_enabled() && !this->always_apply())
           {
             std::ostringstream msg;
             msg << NOTIFY_DIRECTIVE_NOT_EVALUATED << " '" << this->name << "'";
             return msg.str();
           }
 
-        return this->evaluate(args, indices);
+        return this->apply(args, indices);
       }
     
     

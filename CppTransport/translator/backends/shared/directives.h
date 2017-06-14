@@ -207,8 +207,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate directive
-        std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+        //! apply directive
+        std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
@@ -246,11 +246,11 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        std::string apply(const macro_argument_list& args) override;
 
         //! force evaluation even when output is disabled
-        bool always_evaluate() const override { return true; }
+        bool always_apply() const override { return true; }
         
 
         // INTERNAL DATA
@@ -285,11 +285,11 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        std::string apply(const macro_argument_list& args) override;
     
         //! force evaluation even when output is disabled
-        bool always_evaluate() const override { return true; }
+        bool always_apply() const override { return true; }
     
     
         // INTERNAL DATA
@@ -324,11 +324,11 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        std::string apply(const macro_argument_list& args) override;
         
         //! force evaluation even when output is disabled
-        bool always_evaluate() const override { return true; }
+        bool always_apply() const override { return true; }
     
     
         // INTERNAL DATA

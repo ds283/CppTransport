@@ -55,7 +55,7 @@ namespace macro_packages
       }
 
 
-    std::string set_params::evaluate(const macro_argument_list& args)
+    std::string set_params::apply(const macro_argument_list& args)
       {
         this->mgr.assign_parameters(args[RESOURCES::PARAMETERS_KERNEL_ARGUMENT]);
 
@@ -66,7 +66,7 @@ namespace macro_packages
       }
 
 
-    std::string set_coordinates::evaluate(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_coordinates::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_coordinates(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]);
 
@@ -97,7 +97,7 @@ namespace macro_packages
       }
 
 
-    std::string set_phase_flatten::evaluate(const macro_argument_list& args)
+    std::string set_phase_flatten::apply(const macro_argument_list& args)
       {
         this->mgr.assign_phase_flatten(args[RESOURCES::PHASE_FLATTEN_KERNEL_ARGUMENT]);
 
@@ -108,7 +108,7 @@ namespace macro_packages
       }
 
 
-    std::string set_field_flatten::evaluate(const macro_argument_list& args)
+    std::string set_field_flatten::apply(const macro_argument_list& args)
       {
         this->mgr.assign_field_flatten(args[RESOURCES::FIELD_FLATTEN_KERNEL_ARGUMENT]);
 
@@ -119,7 +119,7 @@ namespace macro_packages
       }
 
 
-    std::string release_flatteners::evaluate(const macro_argument_list& args)
+    std::string release_flatteners::apply(const macro_argument_list& args)
       {
         this->mgr.release_flatteners();
 
@@ -127,7 +127,7 @@ namespace macro_packages
       }
 
 
-    std::string set_dV::evaluate(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_dV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_dV(args[RESOURCES::DV_KERNEL_ARGUMENT]);
 
@@ -158,7 +158,7 @@ namespace macro_packages
       }
 
 
-    std::string set_ddV::evaluate(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_ddV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_ddV(args[RESOURCES::DDV_KERNEL_ARGUMENT]);
 
@@ -190,7 +190,7 @@ namespace macro_packages
       }
 
 
-    std::string set_dddV::evaluate(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_dddV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_dddV(args[RESOURCES::DDDV_KERNEL_ARGUMENT]);
 
@@ -223,7 +223,7 @@ namespace macro_packages
       }
 
 
-    std::string set_connexion::evaluate(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_connexion::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_connexion(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]);
 
@@ -256,7 +256,7 @@ namespace macro_packages
       }
 
 
-    std::string set_Riemann::evaluate(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_Riemann::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->mgr.assign_Riemann(args[RESOURCES::RIEMANN_KERNEL_ARGUMENT]);
 
@@ -289,7 +289,7 @@ namespace macro_packages
       }
 
 
-    std::string release::evaluate(const macro_argument_list& args)
+    std::string release::apply(const macro_argument_list& args)
       {
         this->mgr.release();
 
@@ -297,7 +297,7 @@ namespace macro_packages
       }
 
 
-    std::string set_working_type::evaluate(const macro_argument_list& args)
+    std::string set_working_type::apply(const macro_argument_list& args)
       {
         this->mgr.assign_working_type(args[RESOURCES::WORKING_TYPE_KERNEL_ARGUMENT]);
 
@@ -308,7 +308,7 @@ namespace macro_packages
       }
 
 
-    std::string release_working_type::evaluate(const macro_argument_list& args)
+    std::string release_working_type::apply(const macro_argument_list& args)
       {
         this->mgr.release_working_type();
 

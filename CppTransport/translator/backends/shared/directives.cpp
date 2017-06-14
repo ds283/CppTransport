@@ -49,7 +49,7 @@ namespace macro_packages
       }
 
 
-    std::string set_directive::evaluate(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_directive::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         std::string name = args[SET_DIRECTIVE_NAME_ARGUMENT];
         std::string defn = args[SET_DIRECTIVE_DEFINITION_ARGUMENT];
@@ -134,7 +134,7 @@ namespace macro_packages
       }
 
 
-    std::string if_directive::evaluate(const macro_argument_list& args)
+    std::string if_directive::apply(const macro_argument_list& args)
       {
         std::string condition = args[IF_DIRECTIVE_CONDITION_ARGUMENT];
 
@@ -167,7 +167,7 @@ namespace macro_packages
       }
     
     
-    std::string else_directive::evaluate(const macro_argument_list& args)
+    std::string else_directive::apply(const macro_argument_list& args)
       {
         // check for unpaired or duplicate "else" clause
         if(this->istack.size() == 0) throw rule_apply_fail(ERROR_UNPAIRED_ELSE);
@@ -193,7 +193,7 @@ namespace macro_packages
       }
     
     
-    std::string endif_directive::evaluate(const macro_argument_list& args)
+    std::string endif_directive::apply(const macro_argument_list& args)
       {
         // check for an unpaired "endif" clause
         if(this->istack.size() == 0) throw rule_apply_fail(ERROR_UNPAIRED_ENDIF);

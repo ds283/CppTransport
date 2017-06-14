@@ -104,8 +104,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -141,8 +141,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! determine how many indices should be expected
         boost::optional<unsigned int> define_indices(model_type t);
@@ -183,8 +183,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -219,8 +219,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -256,8 +256,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! determine how many indices should be expected
         boost::optional<unsigned int> define_indices(model_type t);
@@ -299,8 +299,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! determine how many indices should be expected
         boost::optional<unsigned int> define_indices(model_type t);
@@ -342,8 +342,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! determine how many indices should be expected
         boost::optional<unsigned int> define_indices(model_type t);
@@ -385,8 +385,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! determine how many indices should be expected
         boost::optional<unsigned int> define_indices(model_type t);
@@ -428,8 +428,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! determine how many indices should be expected
         boost::optional<unsigned int> define_indices(model_type t);
@@ -470,8 +470,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -506,8 +506,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -542,8 +542,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -578,8 +578,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA

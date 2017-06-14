@@ -83,14 +83,14 @@ namespace macro_packages
         
       protected:
         
-        //! evaluation function; has to be supplied by implementation
-        //! unlike for a macro, evaluate() for a directive is guaranteed to be called exactly once
-        virtual std::string evaluate(const macro_argument_list& args) = 0;
+        //! apply function; has to be supplied by implementation
+        //! unlike for a macro, apply() for a directive is guaranteed to be called exactly once
+        virtual std::string apply(const macro_argument_list& args) = 0;
     
         //! should this directive always be evaluated, even if output is disabled?
         //! defaults to false, but can be overridden if evaluation must always be performed,
         //! eg. as for #if, #else, #endif
-        virtual bool always_evaluate() const { return false; }
+        virtual bool always_apply() const { return false; }
     
     
         // VALIDATION
@@ -150,7 +150,7 @@ namespace macro_packages
         
       public:
         
-        //! evaluate the macro on an abstract index assignment
+        //! apply this directive
         std::string operator()(const macro_argument_list& args, const index_literal_list& indices);
     
     
@@ -179,14 +179,14 @@ namespace macro_packages
         
       protected:
     
-        //! evaluation function; has to be supplied by implementation
-        //! unlike for a macro, evaluate() for a directive is guaranteed to be called exactly once
-        virtual std::string evaluate(const macro_argument_list& args, const index_literal_list& indices) = 0;
+        //! apply function; has to be supplied by implementation
+        //! unlike for a macro, apply() for a directive is guaranteed to be called exactly once
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) = 0;
     
         //! should this directive always be evaluated, even if output is disabled?
         //! defaults to false, but can be overridden if evaluation must always be performed,
-        //! eg. as for #if, #else, #endif
-        virtual bool always_evaluate() const { return false; }
+        //! eg. as for $IF, $ELSE, $ENDIF
+        virtual bool always_apply() const { return false; }
     
     
         // VALIDATION
