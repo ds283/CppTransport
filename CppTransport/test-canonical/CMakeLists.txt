@@ -42,6 +42,7 @@ ADD_CUSTOM_COMMAND(
   DEPENDS defaults.model
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/canonical_mpi.h
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/canonical_core.h
+  DEPENDS CppTransport
 )
 
 
