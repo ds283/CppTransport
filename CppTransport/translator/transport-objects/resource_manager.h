@@ -371,7 +371,7 @@ class resource_manager
     ~resource_manager() = default;
 
 
-    // INTERFACE - QUERY FOR RESOURCES
+    // INTERFACE - QUERY FOR RESOURCE LABELS
 
   public:
 
@@ -439,7 +439,7 @@ class resource_manager
       { return this->working_type_cache.find(); }
 
 
-    // INTERFACE - ASSIGN RESOURCES
+    // INTERFACE - ASSIGN RESOURCE LABELS
 
   public:
 
@@ -502,7 +502,7 @@ class resource_manager
       { this->working_type_cache.assign(t); }
 
 
-    // INTERFACE - RELEASE RESOURCES
+    // INTERFACE - RELEASE INDIVIDUAL RESOURCE LABELS
 
   public:
 
@@ -557,7 +557,7 @@ class resource_manager
       { this->working_type_cache.reset(); }
 
 
-    // INTERFACE - UTILITY FUNCTIONS
+    // INTERFACE - GLOBAL RELEASE OF RESOURCE LABELS
 
   public:
 
