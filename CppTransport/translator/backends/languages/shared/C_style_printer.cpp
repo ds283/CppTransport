@@ -187,15 +187,14 @@ std::string C_style_printer::initialization_list(const std::vector<std::string>&
   }
 
 
-std::string C_style_printer::lambda_invokation(const std::string& name, const generic_lambda& lambda) const
+std::string C_style_printer::lambda_invokation(const std::string& name, const generic_lambda& lambda,
+                                               const abstract_index_database& indices) const
   {
     std::ostringstream stmt;
     stmt << name << this->function_open;
 
-    const abstract_index_database& index_list = lambda.get_index_list();
-
     unsigned int count = 0;
-    for(const abstract_index& idx : index_list)
+    for(const abstract_index& idx : indices)
       {
         if(count > 0) stmt << this->argument_sep;
         stmt << idx.get_loop_variable();

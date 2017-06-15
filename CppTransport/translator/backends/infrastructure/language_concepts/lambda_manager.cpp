@@ -49,14 +49,22 @@ std::string lambda_manager::cache(std::unique_ptr<atomic_lambda> lambda)
     timing_instrument mgr(this->timer);
     
     auto t = this->find(this->atomic_cache.cbegin(), this->atomic_cache.cend(), *lambda);
+    
+    // make a copy of the lambda index list before it is (potentially) moved
+    const abstract_index_database& indices = lambda->get_index_list();
 
     if(t == this->atomic_cache.end())
       {
-        this->atomic_cache.emplace_front(std::make_unique<atomic_lambda_record>(this->make_name(), std::move(lambda), this->data_payload.model.get_number_fields()));
+        this->atomic_cache.emplace_front(
+          std::make_unique<atomic_lambda_record>(this->make_name(), std::move(lambda),
+                                                 this->data_payload.model.get_number_fields()));
         t = this->atomic_cache.begin();
       }
 
-    return this->printer.lambda_invokation((*t)->get_name(), (*t)->get_lambda());
+    // format an invokation of this lambda, remembering that the index set being used here
+    // (supplied in 'lambda') may not agree with the index set the lambda was defined with
+    // (stored in the record pointed to by t)
+    return this->printer.lambda_invokation(t->get()->get_name(), t->get()->get_lambda(), indices);
   }
 
 
@@ -66,13 +74,21 @@ std::string lambda_manager::cache(std::unique_ptr<map_lambda> lambda)
     
     auto t = this->find(this->map_cache.cbegin(), this->map_cache.cend(), *lambda);
 
+    // make a copy of the lambda index list before it is (potentially) moved
+    const abstract_index_database& indices = lambda->get_index_list();
+    
     if(t == this->map_cache.end())
       {
-        this->map_cache.emplace_front(std::make_unique<map_lambda_record>(this->make_name(), std::move(lambda), this->data_payload.model.get_number_fields()));
+        this->map_cache.emplace_front(
+          std::make_unique<map_lambda_record>(this->make_name(), std::move(lambda),
+                                              this->data_payload.model.get_number_fields()));
         t = this->map_cache.begin();
       }
 
-    return this->printer.lambda_invokation((*t)->get_name(), (*t)->get_lambda());
+    // format an invokation of this lambda, remembering that the index string being used here
+    // (supplied in 'lambda') may not agree with the index set the lambda was defined with
+    // (stored in the record pointed to by t)
+    return this->printer.lambda_invokation(t->get()->get_name(), t->get()->get_lambda(), indices);
   }
 
 

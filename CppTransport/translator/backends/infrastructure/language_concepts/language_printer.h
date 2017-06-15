@@ -138,9 +138,11 @@ class language_printer
     // INTERFACE -- LAMBDAS
 
   public:
-
-    //! format a lambda invokation string
-    virtual std::string lambda_invokation(const std::string& name, const generic_lambda& lambda) const = 0;
+    
+    //! format a lambda invokation string, remembering that the indices it is being invoked with (supplied in
+    //! 'indices') may be different from the indices it was defined with
+    virtual std::string lambda_invokation(const std::string& name, const generic_lambda& lambda,
+                                          const abstract_index_database& indices) const = 0;
 
     //! format a lambda definition open string
     virtual std::string open_lambda(const abstract_index_database& indices, const std::string& return_type) const = 0;
