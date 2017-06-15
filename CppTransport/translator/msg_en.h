@@ -265,6 +265,7 @@ constexpr auto RESOURCE_RELEASE_WORKING_TYPE         = "release working type";
 constexpr auto NOTIFY_RESOURCE_REDECLARATION         = "Note: redeclaration of resource without prior release";
 constexpr auto NOTIFY_RESOURCE_DECLARATION_WAS       = "Note: location of original declaration was";
 constexpr auto ERROR_RESOURCE_LABEL_IN_USE           = "Resource label already in use for an index assignment with different variance";
+constexpr auto NOTIFY_RESOURCE_DECLARED_NOT_USED     = "Note: resource label declared but not used; consider removal as a performance optimization";
 
 constexpr auto DIRECTIVE_SET_MACRO_A                 = "set macro";
 constexpr auto DIRECTIVE_SET_MACRO_B                 = "to";

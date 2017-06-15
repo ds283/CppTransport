@@ -116,9 +116,13 @@ class indexed_resource
     //! type to represent the index variances
     using variance_list = std::array<variance, Indices>;
     
+    //! type to represent a label assignment; bool represents a usage flag to track labels that are
+    //! declared but not used
+    using label_record = std::pair< bool, std::unique_ptr< contexted_value<DataType> > >;
+    
     //! use a std::map to associate a variance list with a data item
     //! no benefit from using a std::unordered_map since these arrays will typically be quite small
-    using database = std::map< variance_list, std::unique_ptr< contexted_value<DataType> > >;
+    using database = std::map< variance_list, label_record >;
     
     
     // CONSTRUCTOR, DESTRUCTOR
@@ -128,8 +132,8 @@ class indexed_resource
     //! constructor is default
     indexed_resource() = default;
     
-    //! destructor is default
-    ~indexed_resource() = default;
+    //! destructor checks whether any labels are unused
+    ~indexed_resource();
     
     
     // INTERFACE
@@ -141,15 +145,19 @@ class indexed_resource
     
     //! lookup a resource assignment by variance
     //! if exact is false then the nearest match is found, no matter what its variance is
-    boost::optional< std::pair< std::array<variance, Indices>, contexted_value<DataType> > > find(variance_list v, bool exact=true) const;
+    boost::optional< std::pair< std::array<variance, Indices>, contexted_value<DataType> > >
+    find(variance_list v, bool exact=true);
 
     //! clear any stored values
-    indexed_resource& reset() { this->labels.clear(); return *this; }
+    indexed_resource& reset();
 
   protected:
 
     //! lookup a resource assignment by value
     typename database::const_iterator find(DataType d) const;
+    
+    //! check for unused resource labels and issue an appropriate warning
+    void warn_unused() const;
 
     
     // INTERNAL DATA
@@ -163,6 +171,13 @@ class indexed_resource
     DistanceMetric metric;
     
   };
+
+
+template <unsigned int Indices, typename DataType, typename DistanceMetric>
+indexed_resource<Indices, DataType, DistanceMetric>::~indexed_resource()
+  {
+    this->warn_unused();
+  }
 
 
 template <unsigned int Indices, typename DataType, typename DistanceMetric>
@@ -184,11 +199,11 @@ indexed_resource<Indices, DataType, DistanceMetric>::assign(const contexted_valu
             const error_context& ctx = d.get_declaration_point();
             ctx.error(ERROR_RESOURCE_LABEL_IN_USE);
 
-            const error_context& u_ctx = u->second->get_declaration_point();
+            const error_context& u_ctx = u->second.second->get_declaration_point();
             u_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
           }
 
-        this->labels.emplace(std::make_pair(std::move(v), std::move(dp)));
+        this->labels.emplace(std::make_pair(std::move(v), std::move(std::make_pair(false, std::move(dp)))));
         return *this;
       }
     
@@ -196,7 +211,7 @@ indexed_resource<Indices, DataType, DistanceMetric>::assign(const contexted_valu
     const error_context& ctx = d.get_declaration_point();
     ctx.warn(NOTIFY_RESOURCE_REDECLARATION);
     
-    const error_context& p_ctx = t->second->get_declaration_point();
+    const error_context& p_ctx = t->second.second->get_declaration_point();
     p_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
 
     // check whether label is already in use by an assignment with different variance,
@@ -206,24 +221,39 @@ indexed_resource<Indices, DataType, DistanceMetric>::assign(const contexted_valu
       {
         ctx.error(ERROR_RESOURCE_LABEL_IN_USE);
 
-        const error_context& u_ctx = u->second->get_declaration_point();
+        const error_context& u_ctx = u->second.second->get_declaration_point();
         u_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
       }
 
     // swap old and new pointers; old pointer will lapse and be destroyed
     // when dp goes out of scope
-    t->second.swap(dp);
+    t->second.second.swap(dp);
     
     return *this;
   }
 
 
 template <unsigned int Indices, typename DataType, typename DistanceMetric>
+void indexed_resource<Indices, DataType, DistanceMetric>::warn_unused() const
+  {
+    for(const auto& r : this->labels)
+      {
+        const label_record& rec = r.second;
+        if(!rec.first)
+          {
+            const error_context& ctx = rec.second->get_declaration_point();
+            ctx.warn(NOTIFY_RESOURCE_DECLARED_NOT_USED);
+          }
+      }
+  }
+
+
+template <unsigned int Indices, typename DataType, typename DistanceMetric>
 boost::optional< std::pair< typename indexed_resource<Indices, DataType, DistanceMetric>::variance_list, contexted_value<DataType> > >
-indexed_resource<Indices, DataType, DistanceMetric>::find(variance_list v, bool exact) const
+indexed_resource<Indices, DataType, DistanceMetric>::find(variance_list v, bool exact)
   {
     using rtype = boost::optional< std::pair< variance_list, contexted_value<DataType> > >;
-    using record_type = std::pair< unsigned int, typename database::const_iterator >;
+    using record_type = std::pair< unsigned int, typename database::iterator >;
     using record_list = std::vector<record_type>;
 
     // if no records, nothing to do
@@ -239,7 +269,8 @@ indexed_resource<Indices, DataType, DistanceMetric>::find(variance_list v, bool 
         // if exact match, abandon the search and return immediately
         if(dist == 0)
           {
-            rtype rval = std::make_pair(t->first, *t->second);
+            t->second.first = true;
+            rtype rval = std::make_pair(t->first, *t->second.second);
             return rval;
           }
 
@@ -261,8 +292,9 @@ indexed_resource<Indices, DataType, DistanceMetric>::find(variance_list v, bool 
 
     // pick the record with least distance to the desired variance assignment and return
     const record_type& top_choice = records.front();
+    top_choice.second->second.first = true;
 
-    rtype rval = std::make_pair(top_choice.second->first, *top_choice.second->second);
+    rtype rval = std::make_pair(top_choice.second->first, *top_choice.second->second.second);
     return rval;
   }
 
@@ -273,11 +305,21 @@ indexed_resource<Indices, DataType, DistanceMetric>::find(DataType d) const
   {
     auto comparator = [&](const typename database::value_type& a) -> bool
       {
-        const DataType& v = a.second->get();
+        const DataType& v = a.second.second->get();
         return v == d;
       };
 
     return std::find_if(this->labels.begin(), this->labels.end(), comparator);
+  }
+
+
+template <unsigned int Indices, typename DataType, typename DistanceMetric>
+indexed_resource<Indices, DataType, DistanceMetric>&
+indexed_resource<Indices, DataType, DistanceMetric>::reset()
+  {
+    this->warn_unused();
+    this->labels.clear();
+    return *this;
   }
 
 
@@ -289,11 +331,13 @@ class simple_resource
     
   public:
     
-    //! constructor is default
-    simple_resource() = default;
+    //! constructor should set useage flag
+    simple_resource();
     
-    //! destructor is default
-    ~simple_resource() = default;
+    simple_resource(bool used);
+    
+    //! destructor checks whether label is unused
+    ~simple_resource();
     
     
     // INTERFACE
@@ -304,10 +348,15 @@ class simple_resource
     simple_resource& assign(const contexted_value<DataType>& d);
     
     //! lookup value
-    const boost::optional< contexted_value<DataType> >& find() const;
+    const boost::optional< contexted_value<DataType> >& find();
     
     //! clear any stored values
-    simple_resource& reset() { this->label.reset(); return *this; }
+    simple_resource& reset();
+    
+  protected:
+    
+    //! check whether the label is unused, and if so issue an appropriate warning
+    void warn_unused() const;
     
     
     // INTERNAL DATA
@@ -317,7 +366,25 @@ class simple_resource
     //! resource label, if set
     boost::optional< contexted_value<DataType> > label;
     
+    //! usage flag -- to track whether unused resources are being declared
+    //! (if so then they are presumably also being computed, so should be eliminated)
+    bool used;
+    
   };
+
+
+template <typename DataType>
+simple_resource<DataType>::simple_resource()
+  : used(false)
+  {
+  }
+
+
+template <typename DataType>
+simple_resource<DataType>::~simple_resource()
+  {
+    this->warn_unused();
+  }
 
 
 template <typename DataType>
@@ -344,9 +411,30 @@ simple_resource<DataType>& simple_resource<DataType>::assign(const contexted_val
 
 
 template <typename DataType>
-const boost::optional<contexted_value<DataType> >& simple_resource<DataType>::find() const
+const boost::optional<contexted_value<DataType> >& simple_resource<DataType>::find()
   {
+    this->used = true;
     return this->label;
+  }
+
+
+template <typename DataType>
+simple_resource<DataType>& simple_resource<DataType>::reset()
+  {
+    this->warn_unused();
+    this->label.reset();
+    return *this;
+  }
+
+
+template <typename DataType>
+void simple_resource<DataType>::warn_unused() const
+  {
+    if(!this->used && this->label)
+      {
+        const error_context& ctx = this->label->get_declaration_point();
+        ctx.warn(NOTIFY_RESOURCE_DECLARED_NOT_USED);
+      }
   }
 
 
@@ -377,65 +465,65 @@ class resource_manager
 
     //! get parameters label
     const boost::optional< contexted_value<std::string> >&
-    parameters() const
+    parameters()
       { return this->parameters_cache.find(); }
 
     //! get phase-space coordinates label
     //! if exact is false then the closest possible match is returned, if one is found
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES>, contexted_value<std::string> > >
-    coordinates(std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none }, bool exact=true) const
+    coordinates(std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none }, bool exact=true)
       { return this->coordinates_cache.find(v, exact); }
 
     //! get V,i label
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DV_INDICES>, contexted_value<std::string> > >
-    dV(std::array<variance, RESOURCE_INDICES::DV_INDICES> v = { variance::none }, bool exact=true) const
+    dV(std::array<variance, RESOURCE_INDICES::DV_INDICES> v = { variance::none }, bool exact=true)
       { return this->dV_cache.find(v, exact); }
 
     //! get V,ij label
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDV_INDICES>, contexted_value<std::string> > >
-    ddV(std::array<variance, RESOURCE_INDICES::DDV_INDICES> v = { variance::none, variance::none }, bool exact=true) const
+    ddV(std::array<variance, RESOURCE_INDICES::DDV_INDICES> v = { variance::none, variance::none }, bool exact=true)
       { return this->ddV_cache.find(v, exact); }
 
     //! get V,ijk label
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDDV_INDICES>, contexted_value<std::string> > >
-    dddV(std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v = { variance::none, variance::none, variance::none }, bool exact=true) const
+    dddV(std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v = { variance::none, variance::none, variance::none }, bool exact=true)
       { return this->dddV_cache.find(v, exact); }
 
     //! get connexion label
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES>, contexted_value<std::string> > >
-    connexion(std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v, bool exact=true) const
+    connexion(std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v, bool exact=true)
       { return this->connexion_cache.find(v, exact); }
 
     //! get Riemann A2 label
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES>, contexted_value<std::string> > >
-    Riemann_A2(std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v, bool exact=true) const
+    Riemann_A2(std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v, bool exact=true)
       { return this->Riemann_A2_cache.find(v, exact); }
     
     //! get Riemann A3 label
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES>, contexted_value<std::string> > >
-    Riemann_A3(std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v, bool exact=true) const
+    Riemann_A3(std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v, bool exact=true)
       { return this->Riemann_A3_cache.find(v, exact); }
     
     //! get Riemann B3 label
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES>, contexted_value<std::string> > >
-    Riemann_B3(std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v, bool exact=true) const
+    Riemann_B3(std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v, bool exact=true)
       { return this->Riemann_B3_cache.find(v, exact); }
 
 
     //! get phase-space flattening function
     const boost::optional< contexted_value<std::string> >&
-    phase_flatten() const
+    phase_flatten()
       { return this->phase_flatten_cache.find(); }
 
     //! get field-space flattening function
     const boost::optional< contexted_value<std::string> >&
-    field_flatten() const
+    field_flatten()
       { return this->field_flatten_cache.find(); }
 
 
     //! get working type
     const boost::optional< contexted_value<std::string> >&
-    working_type() const
+    working_type()
       { return this->working_type_cache.find(); }
 
 
