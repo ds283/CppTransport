@@ -32,8 +32,8 @@ abstract_index::abstract_index(char l, unsigned int f, unsigned int p)
     classification(identify_index(l)),
     fields(f),
     params(p),
-    pre_string(),
-    post_string({"_"})
+    pre_string({"__"}),
+    post_string()
   {
   }
 
@@ -43,8 +43,8 @@ abstract_index::abstract_index(char l, index_class c, unsigned int f, unsigned i
     classification(c),
     fields(f),
     params(p),
-    pre_string(),
-    post_string({"_"})
+    pre_string({"__"}),
+    post_string()
   {
   }
 
