@@ -82,22 +82,32 @@ namespace lambda_manager_impl
 
       public:
 
+        //! constructor
         LambdaRecordComparator(const typename RecordType::lambda_type& a)
           : rhs(a)
           {
           }
+
+        //! destructor is default
+        ~LambdaRecordComparator() = default;
 
 
         // INTERFACE
 
       public:
 
+        //! perform lambda comparison
         bool operator()(const std::unique_ptr<RecordType>& b)
           {
             const typename RecordType::lambda_type& lhs = b->get_lambda();
 
+            // lambdas are not equal if they are of different types
+            // ('type' here means the expression type, eg. ddV or u2_tensor,
+            // taken from the enumeration expression_item_types)
             if(lhs.get_type() != rhs.get_type()) return false;
 
+            // lambdas are not equal if their tags disagree; the tags are a list of GiNaC
+            // symbols similar to those used to identify expressions in the expression cache
             auto lhs_tags = lhs.get_tags();
             auto rhs_tags = rhs.get_tags();
 
@@ -113,6 +123,7 @@ namespace lambda_manager_impl
                 ++rhs_it;
               }
 
+            // otherwise, expression type agrees and tags agree, so lambda must also agree
             return(true);
           }
 
@@ -121,6 +132,7 @@ namespace lambda_manager_impl
 
       protected:
 
+        //! lambda record to compare
         const typename RecordType::lambda_type& rhs;
 
       };

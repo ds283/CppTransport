@@ -164,6 +164,39 @@ class atomic_lambda: public generic_lambda
 typedef std::vector<GiNaC::ex> map_lambda_table;
 
 
+constexpr unsigned int LAMBDA_FIELD = 0;
+constexpr unsigned int LAMBDA_MOMENTUM = 1;
+constexpr unsigned int LAMBDA_TOTAL_SPECIES = 2;
+
+
+constexpr unsigned int lambda_flatten(unsigned int a)
+  {
+    return(a);
+  }
+
+
+constexpr unsigned int lambda_flatten(unsigned int a, unsigned int b)
+  {
+    return(LAMBDA_TOTAL_SPECIES*a + b);
+  }
+
+
+constexpr unsigned int lambda_flatten(unsigned int a, unsigned int b, unsigned int c)
+  {
+    return(LAMBDA_TOTAL_SPECIES*LAMBDA_TOTAL_SPECIES*a + LAMBDA_TOTAL_SPECIES*b + c);
+  }
+
+
+constexpr unsigned int lambda_flattened_map_size(unsigned int d)
+  {
+    return(d > 0 ? LAMBDA_TOTAL_SPECIES*lambda_flattened_map_size(d-1) : 1);
+  }
+
+constexpr unsigned int LAMBDA_1_MAP_SIZE = lambda_flattened_map_size(1);
+constexpr unsigned int LAMBDA_2_MAP_SIZE = lambda_flattened_map_size(2);
+constexpr unsigned int LAMBDA_3_MAP_SIZE = lambda_flattened_map_size(3);
+
+
 //! lambda-map expression, with a collection of different symbolic expressions for
 //! different combinations of field/momentum indices
 class map_lambda: public generic_lambda
@@ -181,7 +214,7 @@ class map_lambda: public generic_lambda
         unsigned int size = 1;
         for(unsigned int i = 0; i < list.size(); ++i)
           {
-            size *= 2;
+            size *= LAMBDA_TOTAL_SPECIES;
           }
 
         if(t.size() != size) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
@@ -192,7 +225,7 @@ class map_lambda: public generic_lambda
       : generic_lambda(i, tp, tg, ty),
         map(t)
       {
-        if(t.size() != 2) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
+        if(t.size() != LAMBDA_1_MAP_SIZE) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
       }
 
     //! two-index lambda constructor
@@ -200,7 +233,7 @@ class map_lambda: public generic_lambda
       : generic_lambda(i, j, tp, tg, ty),
         map(t)
       {
-        if(t.size() != 4) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
+        if(t.size() != LAMBDA_2_MAP_SIZE) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
       }
 
     //! three-index lambda constructor
@@ -208,7 +241,7 @@ class map_lambda: public generic_lambda
       : generic_lambda(i, j, k, tp, tg, ty),
         map(t)
       {
-        if(t.size() != 8) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
+        if(t.size() != LAMBDA_3_MAP_SIZE) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
       }
 
     //! destructor is default
@@ -231,34 +264,6 @@ class map_lambda: public generic_lambda
     map_lambda_table map;
 
   };
-
-
-constexpr unsigned int LAMBDA_FIELD = 0;
-constexpr unsigned int LAMBDA_MOMENTUM = 1;
-
-
-constexpr unsigned int lambda_flatten(unsigned int a)
-  {
-    return(a);
-  }
-
-
-constexpr unsigned int lambda_flatten(unsigned int a, unsigned int b)
-  {
-    return(2*a + b);
-  }
-
-
-constexpr unsigned int lambda_flatten(unsigned int a, unsigned int b, unsigned int c)
-  {
-    return(2*2*a + 2*b + c);
-  }
-
-
-constexpr unsigned int lambda_flattened_map_size(unsigned int d)
-  {
-    return(d > 0 ? 2*lambda_flattened_map_size(d-1) : 1);
-  }
 
 
 #endif //CPPTRANSPORT_LAMBDAS_H
