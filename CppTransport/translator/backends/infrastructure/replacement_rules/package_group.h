@@ -70,7 +70,7 @@ class PackageGroupComponentAgent
 
     //! make a lambda agent
     std::unique_ptr<LambdaAgent> make_lambda_agent(language_printer& p, translator_data& d) const
-      { return std::make_unique<LambdaAgent>(0, p, d); }
+      { return std::make_unique<LambdaAgent>(0, p, d, std::move(make_cse_agent(p, d))); }
 
   };
 

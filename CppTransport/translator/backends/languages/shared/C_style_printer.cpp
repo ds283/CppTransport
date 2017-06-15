@@ -248,6 +248,16 @@ std::string C_style_printer::format_return(const GiNaC::ex& expr) const
   }
 
 
+std::string C_style_printer::format_return(const std::string& expr) const
+  {
+    std::ostringstream stmt;
+
+    stmt << this->return_keyword << " " << expr << this->semicolon;
+
+    return(stmt.str());
+  }
+
+
 std::string C_style_printer::format_if(const std::list<GiNaC::ex>& conditions) const
   {
     return this->format_if_stmt(this->if_keyword, conditions);

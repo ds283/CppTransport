@@ -30,6 +30,7 @@
 #include "lambdas.h"
 #include "language_printer.h"
 #include "translator_data.h"
+#include "cse.h"
 
 #include "boost/timer/timer.hpp"
 
@@ -67,7 +68,9 @@ class lambda_record
     const lambda_type& get_lambda() const { return(*this->lambda); }
 
     //! make temporary object for deposition into a pool
-    std::string make_temporary(const std::string& left, const std::string& mid, const std::string& right, language_printer& printer) const;
+    std::unique_ptr<std::list<std::string>>
+    make_temporary(const std::string& left, const std::string& mid, const std::string& right,
+                   language_printer& printer, cse& cse_worker) const;
 
 
     // INTERNAL DATA
@@ -87,13 +90,53 @@ class lambda_record
 
 
 template <typename LambdaItem>
-std::string lambda_record<LambdaItem>::make_temporary(const std::string& left, const std::string& mid, const std::string& right, language_printer& printer) const
+std::unique_ptr<std::list<std::string> >
+lambda_record<LambdaItem>::make_temporary(const std::string& left, const std::string& mid, const std::string& right,
+                                          language_printer& printer, cse& cse_worker) const
   {
     std::ostringstream out;
 
-    out << left << this->name << mid << lambda->make_temporary(printer, this->num_fields) << right << '\n';
+    auto rval = std::make_unique< std::list<std::string> >();
 
-    return(out.str());
+    // ask this lambda to format itself for deposition into the temporary pool
+    auto v = lambda->make_temporary(left, mid, right, printer, cse_worker, this->num_fields);
+
+    if(!v || v->size() == 0) return rval;
+
+    if(v->size() == 1)
+      {
+        std::ostringstream out;
+        const std::string& l = v->front();
+
+        out << left << this->name << mid << l << right;
+        rval->push_back(out.str());
+      }
+    else
+      {
+        std::ostringstream first;
+        const std::string& l = v->front();
+
+        first << left << this->name << mid << l;
+        rval->push_back(first.str());
+
+        auto t = v->begin();
+        ++t;                    // points at second element in list, which is guaranteed to exist
+        auto u = t;
+        ++u;                    // points at third element in list, which may be end()
+
+        while(u != v->end())
+          {
+            rval->push_back(*t);
+            ++t;
+            ++u;
+          }
+
+        std::ostringstream last;
+        last << *t << right;
+        rval->push_back(last.str());
+      }
+
+    return rval;
   }
 
 
@@ -111,7 +154,9 @@ class lambda_manager
   public:
 
     //! constructor
-    lambda_manager(unsigned int s, language_printer& p, translator_data& pd, std::string k= OUTPUT_DEFAULT_LAMBDA_TEMPORARY_NAME);
+    lambda_manager(unsigned int s, language_printer& p, translator_data& pd, std::unique_ptr<cse> cw,
+                   std::string k = OUTPUT_DEFAULT_LAMBDA_TEMPORARY_NAME,
+                   std::string lt = OUTPUT_DEFAULT_LAMBDA_CSE_NAME);
 
     //! destructor is default
     ~lambda_manager() = default;
@@ -130,7 +175,8 @@ class lambda_manager
     std::string cache(std::unique_ptr<map_lambda> lambda);
 
     //! compute list of temporaries which should be deposited in the current pool
-    std::unique_ptr< std::list<std::string> > temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
+    std::unique_ptr< std::list<std::string> >
+    temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
 
     //! reset lambda manager on replacement of a temporary pool
     void clear();
@@ -142,9 +188,10 @@ class lambda_manager
 
     //! search for a lambda record
     template <typename RecordType>
-    typename std::list<std::unique_ptr<RecordType> >::const_iterator find(typename std::list<std::unique_ptr<RecordType> >::const_iterator begin,
-                                                                          typename std::list<std::unique_ptr<RecordType> >::const_iterator end,
-                                                                          const typename RecordType::lambda_type& lambda) const;
+    typename std::list<std::unique_ptr<RecordType> >::const_iterator
+    find(typename std::list<std::unique_ptr<RecordType> >::const_iterator begin,
+         typename std::list<std::unique_ptr<RecordType> >::const_iterator end,
+         const typename RecordType::lambda_type& lambda) const;
 
     //! make a lambda name
     std::string make_name();
@@ -183,6 +230,12 @@ class lambda_manager
 
     //! map lambda cache
     map_cache_type map_cache;
+
+
+    // SERVICE OBJECTS
+
+    // CSE worker
+    std::unique_ptr<cse> cse_worker;
 
   };
 

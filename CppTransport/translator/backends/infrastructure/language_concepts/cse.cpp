@@ -137,7 +137,8 @@ void cse::parse(const GiNaC::ex& expr, std::string name)
   }
 
 
-std::unique_ptr< std::list<std::string> > cse::temporaries(const std::string& left, const std::string& mid, const std::string& right) const
+std::unique_ptr< std::list<std::string> >
+cse::temporaries(const std::string& left, const std::string& mid, const std::string& right) const
   {
     std::unique_ptr< std::list<std::string> > rval = std::make_unique< std::list<std::string> >();
 

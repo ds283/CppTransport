@@ -28,14 +28,18 @@
 #include "timing_instrument.h"
 
 
-lambda_manager::lambda_manager(unsigned int s, language_printer& p, translator_data& pd, std::string k)
+lambda_manager::lambda_manager(unsigned int s, language_printer& p, translator_data& pd, std::unique_ptr<cse> cw,
+                               std::string k, std::string lt)
   : serial_number(s),
     symbol_counter(0),
     temporary_name_kernel(k),
     printer(p),
-    data_payload(pd)
+    data_payload(pd),
+    cse_worker(std::move(cw))
   {
     timer.stop();
+
+    cse_worker->set_temporary_kernel(lt);
   }
 
 
@@ -141,9 +145,10 @@ namespace lambda_manager_impl
 
 
 template <typename RecordType>
-typename std::list< std::unique_ptr<RecordType> >::const_iterator lambda_manager::find(typename std::list< std::unique_ptr<RecordType> >::const_iterator begin,
-                                                                                       typename std::list< std::unique_ptr<RecordType> >::const_iterator end,
-                                                                                       const typename RecordType::lambda_type& lambda) const
+typename std::list< std::unique_ptr<RecordType> >::const_iterator
+lambda_manager::find(typename std::list< std::unique_ptr<RecordType> >::const_iterator begin,
+                     typename std::list< std::unique_ptr<RecordType> >::const_iterator end,
+                     const typename RecordType::lambda_type& lambda) const
   {
     return std::find_if(begin, end, lambda_manager_impl::LambdaRecordComparator<RecordType>(lambda));
   }
@@ -174,16 +179,21 @@ void lambda_manager::clear()
 
 std::unique_ptr< std::list<std::string> > lambda_manager::temporaries(const std::string& left, const std::string& mid, const std::string& right) const
   {
-    std::unique_ptr< std::list<std::string> > rval = std::make_unique< std::list<std::string> >();
 
+    auto rval = std::make_unique< std::list<std::string> >();
+
+    // CSE worker is cleared by the lambdas after output of their temporaries, so there is no need
+    // to perform a clear here
     for(const std::unique_ptr<atomic_lambda_record>& rec : this->atomic_cache)
       {
-        rval->push_back(rec->make_temporary(left, mid, right, this->printer));
+        auto v = rec->make_temporary(left, mid, right, this->printer, *this->cse_worker);
+        rval->splice(rval->end(), *v);
       }
 
     for(const std::unique_ptr<map_lambda_record>& rec : this->map_cache)
       {
-        rval->push_back(rec->make_temporary(left, mid, right, this->printer));
+        auto v = rec->make_temporary(left, mid, right, this->printer, *this->cse_worker);
+        rval->splice(rval->end(), *v);
       }
 
     return(rval);

@@ -39,6 +39,9 @@
 // forward-declare language_printer class
 class language_printer;
 
+// forward-declare CSE class
+class cse;
+
 
 //! generic lambda-representable object;
 //! concrete realizations are just atomic, ie. a single expression,
@@ -148,7 +151,10 @@ class atomic_lambda: public generic_lambda
     const GiNaC::ex& operator*() const { return(this->expr); }
 
     //! format for deposition as a temporary
-    std::string make_temporary(language_printer& printer, unsigned int) const;
+    //! we're entitled to assume that the CSE worker is empty
+    std::unique_ptr< std::list<std::string> >
+    make_temporary(const std::string& left, const std::string& mid, const std::string& right,
+                   language_printer& printer, cse& cse_worker, unsigned int) const;
 
 
     // INTERNAL DATA
@@ -253,7 +259,10 @@ class map_lambda: public generic_lambda
   public:
 
     //! format for deposition as a temporary
-    std::string make_temporary(language_printer& printer, unsigned int num_fields) const;
+    //! we're entitled to assume that the CSE worker is empty
+    std::unique_ptr< std::list<std::string> >
+    make_temporary(const std::string& left, const std::string& mid, const std::string& right,
+                   language_printer& printer, cse& cse_worker, unsigned int) const;
 
 
     // INTERNAL DATA

@@ -155,12 +155,13 @@ class cse
     void parse(const GiNaC::ex& expr, std::string name="");
 
     //! obtain list of temporary definitions which should be deposited in the current pool
-    std::unique_ptr<std::list<std::string> > temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
+    std::unique_ptr< std::list<std::string> >
+    temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
 
-    // two methods for getting the symbol corresponding to a GiNaC expression
-    // get_symbol_without_use_count() just returns the symbol and is used during the parsing phase
-    // get_symbol_with_use_count() marks each temporary as 'used', and injects it into the declarations.
-    // This method is used when actually outputting symbols
+    //! two methods for getting the symbol corresponding to a GiNaC expression
+    //! -- get_symbol_without_use_count() just returns the symbol and is used during the parsing phase
+    //! -- get_symbol_with_use_count() marks each temporary as 'used', and injects it into the declarations.
+    //!    this method is used when actually outputting symbols
     std::string get_symbol_with_use_count(const GiNaC::ex& expr);
 
     //! clear all current temporary definitions;

@@ -150,6 +150,7 @@ class language_printer
 
     //! format a return statement
     virtual std::string format_return(const GiNaC::ex& expr) const = 0;
+    virtual std::string format_return(const std::string& expr) const = 0;
 
     //! format an if statement
     virtual std::string format_if(const std::list<GiNaC::ex>& conditions) const = 0;

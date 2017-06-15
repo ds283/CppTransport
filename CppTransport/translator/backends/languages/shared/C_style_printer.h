@@ -239,6 +239,7 @@ class C_style_printer: public language_printer
 
     //! format a return statement
     virtual std::string format_return(const GiNaC::ex& expr) const override;
+    virtual std::string format_return(const std::string& expr) const override;
 
     //! format an if statement
     virtual std::string format_if(const std::list<GiNaC::ex>& conditions) const override;
