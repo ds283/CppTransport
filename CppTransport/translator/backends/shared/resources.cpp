@@ -73,7 +73,7 @@ namespace macro_packages
     std::string set_coordinates::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         // build list of index variances
-        std::array<variance, resource_manager_impl::COORDINATES_INDICES> v = { variance::none };
+        std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none };
         for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
           {
             v[i] = indices[i].get()->get_variance();
@@ -141,7 +141,7 @@ namespace macro_packages
     std::string set_dV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         // build list of index variances
-        std::array<variance, resource_manager_impl::DV_INDICES> v = { variance::none };
+        std::array<variance, RESOURCE_INDICES::DV_INDICES> v = { variance::none };
         for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
           {
             v[i] = indices[i].get()->get_variance();
@@ -179,7 +179,7 @@ namespace macro_packages
     std::string set_ddV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         // build list of index variances
-        std::array<variance, resource_manager_impl::DDV_INDICES> v = { variance::none, variance::none };
+        std::array<variance, RESOURCE_INDICES::DDV_INDICES> v = { variance::none, variance::none };
         for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
           {
             v[i] = indices[i].get()->get_variance();
@@ -218,7 +218,7 @@ namespace macro_packages
     std::string set_dddV::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         // build list of index variances
-        std::array<variance, resource_manager_impl::DDDV_INDICES> v = { variance::none, variance::none, variance::none };
+        std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v = { variance::none, variance::none, variance::none };
         for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
           {
             v[i] = indices[i].get()->get_variance();
@@ -257,7 +257,7 @@ namespace macro_packages
     std::string set_connexion::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         // build list of index variances
-        std::array<variance, resource_manager_impl::CONNEXION_INDICES> v = { variance::none, variance::none, variance::none };
+        std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v = { variance::none, variance::none, variance::none };
         for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
           {
             v[i] = indices[i].get()->get_variance();
@@ -296,7 +296,7 @@ namespace macro_packages
     std::string set_Riemann_A2::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         // build list of index variances
-        std::array<variance, resource_manager_impl::RIEMANN_A2_INDICES> v = { variance::none, variance::none };
+        std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v = { variance::none, variance::none };
         for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
           {
             v[i] = indices[i].get()->get_variance();
@@ -335,7 +335,7 @@ namespace macro_packages
     std::string set_Riemann_A3::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         // build list of index variances
-        std::array<variance, resource_manager_impl::RIEMANN_A3_INDICES> v = { variance::none, variance::none };
+        std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v = { variance::none, variance::none };
         for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
           {
             v[i] = indices[i].get()->get_variance();
@@ -374,7 +374,7 @@ namespace macro_packages
     std::string set_Riemann_B3::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
         // build list of index variances
-        std::array<variance, resource_manager_impl::RIEMANN_B3_INDICES> v = { variance::none, variance::none };
+        std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v = { variance::none, variance::none };
         for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
           {
             v[i] = indices[i].get()->get_variance();

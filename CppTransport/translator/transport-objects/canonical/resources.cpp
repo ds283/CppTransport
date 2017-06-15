@@ -55,9 +55,9 @@ namespace canonical
         std::unique_ptr<ginac_cache_tags> args = std::make_unique<ginac_cache_tags>();
 
         // query resource manager for parameter and coordinate labels
-        const boost::optional< contexted_value<std::string> >& param_resource = this->mgr.parameters();
-        const boost::optional< contexted_value<std::string> >& coord_resource = this->mgr.coordinates();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+        const auto& param_resource = this->mgr.parameters();
+        const auto coord_resource = this->mgr.coordinates();
+        const auto& flatten = this->mgr.phase_flatten();
 
         if(param_resource)
           {
@@ -67,7 +67,7 @@ namespace canonical
 
         if(coord_resource && flatten)
           {
-            GiNaC::symbol sym = this->sym_factory.get_symbol(*coord_resource);
+            GiNaC::symbol sym = this->sym_factory.get_symbol(coord_resource.get().second);
             args->push_back(sym);
           }
 
@@ -100,7 +100,7 @@ namespace canonical
 
     GiNaC::ex resources::raw_V_resource(const language_printer& printer)
       {
-        std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
+        auto args = this->generate_arguments(printer);
 
         // if no substitutions, then nothing to do, so exit immediately
         if(args->size() == 0) return(this->V);
@@ -114,9 +114,9 @@ namespace canonical
 
             // we didn't find an expression for V with this set of substitutions in the cache, so
             // query resource manager for parameter and coordinate labels, then build a substitution map
-            const boost::optional< contexted_value<std::string> >& param_resource = this->mgr.parameters();
-            const boost::optional< contexted_value<std::string> >& coord_resource = this->mgr.coordinates();
-            const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+            const auto& param_resource = this->mgr.parameters();
+            const auto coord_resource = this->mgr.coordinates();
+            const auto& flatten = this->mgr.phase_flatten();
 
             // build substitution map
             GiNaC::exmap subs_map;
@@ -174,7 +174,7 @@ namespace canonical
 
     GiNaC::ex resources::raw_eps_resource(const language_printer& printer)
       {
-        std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
+        auto args = this->generate_arguments(printer);
 
         GiNaC::ex eps;
 
@@ -221,7 +221,7 @@ namespace canonical
 
     GiNaC::ex resources::raw_Hsq_resource(const language_printer& printer)
       {
-        std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
+        auto args = this->generate_arguments(printer);
 
         GiNaC::ex Hsq;
 
@@ -243,10 +243,10 @@ namespace canonical
 
     std::unique_ptr<flattened_tensor> resources::dV_resource(const language_printer& printer)
       {
-        std::unique_ptr<flattened_tensor> list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(1));
+        auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(1));
 
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const auto resource = this->mgr.dV();
+        const auto& flatten = this->mgr.field_flatten();
 
         if(resource && flatten)     // dV is available
           {
@@ -254,7 +254,7 @@ namespace canonical
               {
                 unsigned int index = this->fl.flatten(i);
 
-                std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), *flatten);
+                std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten);
 
                 (*list)[index] = this->sym_factory.get_symbol(variable);
               }
@@ -302,10 +302,10 @@ namespace canonical
 
     std::unique_ptr<flattened_tensor> resources::ddV_resource(const language_printer& printer)
       {
-        std::unique_ptr<flattened_tensor> list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
+        auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
 
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.ddV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const auto resource = this->mgr.ddV();
+        const auto& flatten = this->mgr.field_flatten();
 
         if(resource && flatten)     // ddV is available
           {
@@ -315,7 +315,7 @@ namespace canonical
                   {
                     unsigned int index = this->fl.flatten(i,j);
 
-                    std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
+                    std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), this->fl.flatten(j), *flatten);
 
                     (*list)[index] = this->sym_factory.get_symbol(variable);
                   }
@@ -368,10 +368,10 @@ namespace canonical
 
     std::unique_ptr<flattened_tensor> resources::dddV_resource(const language_printer& printer)
       {
-        std::unique_ptr<flattened_tensor> list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
+        auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
 
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dddV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const auto resource = this->mgr.dddV();
+        const auto& flatten = this->mgr.field_flatten();
 
         if(resource && flatten)     // dddV is available
           {
@@ -383,7 +383,7 @@ namespace canonical
                       {
                         unsigned int index = this->fl.flatten(i,j,k);
 
-                        std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k), *flatten);
+                        std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k), *flatten);
 
                         (*list)[index] = this->sym_factory.get_symbol(variable);
                       }
@@ -442,35 +442,35 @@ namespace canonical
     std::unique_ptr<ginac_cache_tags> resources::generate_arguments(unsigned int flags, const language_printer& printer) const
       {
         // first, generate arguments from param/coordinates if they exist
-        std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        auto args = this->generate_arguments(printer);
+        const auto& flatten = this->mgr.field_flatten();
 
         if(flatten && (flags & use_dV_argument))
           {
-            const boost::optional< contexted_value<std::string> >& dV_resource = this->mgr.dV();
+            const auto dV_resource = this->mgr.dV();
             if(dV_resource)   // no need to push arguments if no resource available
               {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(*dV_resource);
+                GiNaC::symbol sym = this->sym_factory.get_symbol(dV_resource.get().second);
                 args->push_back(sym);
               }
           }
 
         if(flatten && (flags & use_ddV_argument))
           {
-            const boost::optional< contexted_value<std::string> >& ddV_resource = this->mgr.ddV();
+            const auto ddV_resource = this->mgr.ddV();
             if(ddV_resource)
               {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(*ddV_resource);
+                GiNaC::symbol sym = this->sym_factory.get_symbol(ddV_resource.get().second);
                 args->push_back(sym);
               }
           }
 
         if(flatten && (flags & use_dddV_argument))
           {
-            const boost::optional< contexted_value<std::string> >& dddV_resource = this->mgr.dddV();
+            const auto dddV_resource = this->mgr.dddV();
             if(dddV_resource)
               {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(*dddV_resource);
+                GiNaC::symbol sym = this->sym_factory.get_symbol(dddV_resource.get().second);
                 args->push_back(sym);
               }
           }
@@ -481,9 +481,9 @@ namespace canonical
 
     bool resources::roll_dV() const
       {
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
-        const boost::optional< contexted_value<std::string> >& working_type = this->mgr.working_type();
+        const auto resource = this->mgr.dV();
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
 
         return(resource && flatten && working_type);
       }
@@ -491,9 +491,9 @@ namespace canonical
 
     bool resources::roll_ddV() const
       {
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.ddV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
-        const boost::optional< contexted_value<std::string> >& working_type = this->mgr.working_type();
+        const auto resource = this->mgr.ddV();
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
 
         return(resource && flatten && working_type);
       }
@@ -501,9 +501,9 @@ namespace canonical
 
     bool resources::roll_dddV() const
       {
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dddV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
-        const boost::optional< contexted_value<std::string> >& working_type = this->mgr.working_type();
+        const auto resource = this->mgr.dddV();
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
 
         return(resource && flatten && working_type);
       }
@@ -511,24 +511,24 @@ namespace canonical
 
     GiNaC::symbol resources::dV_resource(const abstract_index& a, const language_printer& printer)
       {
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const auto resource = this->mgr.dV();
+        const auto& flatten = this->mgr.field_flatten();
 
         if(!resource || !flatten) throw resource_failure(a.get_loop_variable());
 
-        std::string variable = printer.array_subscript(*resource, a, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a, *flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
 
     GiNaC::symbol resources::ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer)
       {
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.ddV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const auto resource = this->mgr.ddV();
+        const auto& flatten = this->mgr.field_flatten();
 
         if(!resource || !flatten) throw resource_failure(a.get_loop_variable() + ", " + b.get_loop_variable());
 
-        std::string variable = printer.array_subscript(*resource, a, b, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a, b, *flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
@@ -536,13 +536,15 @@ namespace canonical
     GiNaC::symbol resources::dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c,
                                            const language_printer& printer)
       {
-        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dddV();
-        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const auto resource = this->mgr.dddV();
+        const auto& flatten = this->mgr.field_flatten();
 
         if(!resource || !flatten) throw resource_failure(a.get_loop_variable() + ", " + b.get_loop_variable() + ", " + c.get_loop_variable());
 
-        std::string variable = printer.array_subscript(*resource, a, b, c, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a, b, c, *flatten);
         return this->sym_factory.get_symbol(variable);
       }
+
+
   }   // namespace canonical
 

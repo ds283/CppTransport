@@ -30,6 +30,7 @@
 #include <map>
 #include <array>
 #include <string>
+#include <limits>
 
 #include "contexted_value.h"
 #include "index_literal.h"
@@ -39,7 +40,7 @@
 #include "boost/optional.hpp"
 
 
-namespace resource_manager_impl
+namespace RESOURCE_INDICES
   {
     
     constexpr auto COORDINATES_INDICES = 1;
@@ -51,12 +52,60 @@ namespace resource_manager_impl
     constexpr auto RIEMANN_A3_INDICES = 3;
     constexpr auto RIEMANN_B3_INDICES = 3;
     
+  }   // namespace RESOURCE_INDICES
+
+
+namespace resource_manager_impl
+  {
+
+    // distance function on two index variances;
+    // returns infinity is either is missing variance information but the other has it
+    // otherwise returns 1 if the variances differ, and 0 if they agree
+    inline unsigned int variance_distance(variance a, variance b)
+      {
+        if(a == variance::none || b == variance::none)
+          {
+            if(a == b) return 0;
+            return std::numeric_limits<unsigned int>::infinity();
+          }
+
+        if(a != b) return 1;
+        return 0;
+      }
+
+    // taxicab metric on an array of variances
+    template <unsigned int Indices>
+    class variance_metric
+      {
+
+      public:
+
+        //! constructor is default
+        variance_metric() = default;
+
+        //! destructor is default
+        ~variance_metric() = default;
+
+        //! measure the distance between two arrays
+        unsigned int operator()(const std::array<variance, Indices>& a, const std::array<variance, Indices>& b) const
+          {
+            unsigned int v = 0;
+            for(unsigned int i = 0; i < Indices; ++i)
+              {
+                v += variance_distance(a[i], b[i]);
+              }
+
+            return v;
+          }
+
+      };
+
   }   // namespace resource_manager_impl
 
 
 //! represents a resource that can be indexed with indices of different variance.
 //! therefore we may have several versions
-template <unsigned int Indices, typename DataType = std::string>
+template <unsigned int Indices, typename DataType = std::string, typename DistanceMetric = resource_manager_impl::variance_metric<Indices> >
 class indexed_resource
   {
     
@@ -91,7 +140,8 @@ class indexed_resource
     indexed_resource& assign(const contexted_value<DataType>& d, variance_list v);
     
     //! lookup a resource assignment by variance
-    boost::optional< contexted_value<DataType> > find(variance_list v) const;
+    //! if exact is false then the nearest match is found, no matter what its variance is
+    boost::optional< std::pair< std::array<variance, Indices>, contexted_value<DataType> > > find(variance_list v, bool exact=true) const;
 
     //! clear any stored values
     indexed_resource& reset() { this->labels.clear(); return *this; }
@@ -108,14 +158,16 @@ class indexed_resource
     
     //! database of resource labels
     database labels;
+
+    //! distance metric agent -- measures distance between two variance lists
+    DistanceMetric metric;
     
   };
 
 
-template <unsigned int Indices, typename DataType>
-indexed_resource<Indices, DataType>&
-indexed_resource<Indices, DataType>::assign(const contexted_value<DataType>& d,
-                                            typename indexed_resource<Indices, DataType>::variance_list v)
+template <unsigned int Indices, typename DataType, typename DistanceMetric>
+indexed_resource<Indices, DataType, DistanceMetric>&
+indexed_resource<Indices, DataType, DistanceMetric>::assign(const contexted_value<DataType>& d, variance_list v)
   {
     auto t = this->labels.find(v);
     
@@ -166,21 +218,58 @@ indexed_resource<Indices, DataType>::assign(const contexted_value<DataType>& d,
   }
 
 
-template <unsigned int Indices, typename DataType>
-boost::optional< contexted_value<DataType> >
-indexed_resource<Indices, DataType>::find(typename indexed_resource<Indices, DataType>::variance_list v) const
+template <unsigned int Indices, typename DataType, typename DistanceMetric>
+boost::optional< std::pair< typename indexed_resource<Indices, DataType, DistanceMetric>::variance_list, contexted_value<DataType> > >
+indexed_resource<Indices, DataType, DistanceMetric>::find(variance_list v, bool exact) const
   {
-    auto t = this->labels.find(v);
-    
-    if(t == this->labels.end()) return boost::none;
-    
-    return boost::optional< contexted_value<DataType> >(*t->second);
+    using rtype = boost::optional< std::pair< variance_list, contexted_value<DataType> > >;
+    using record_type = std::pair< unsigned int, typename database::const_iterator >;
+    using record_list = std::vector<record_type>;
+
+    // if no records, nothing to do
+    if(this->labels.empty()) return boost::none;
+
+    record_list records;
+
+    // compute and store the distance of each label from the required variance list
+    for(auto t = this->labels.begin(); t != this->labels.end(); ++t)
+      {
+        unsigned int dist = this->metric(v, t->first);
+
+        // if exact match, abandon the search and return immediately
+        if(dist == 0)
+          {
+            rtype rval = std::make_pair(t->first, *t->second);
+            return rval;
+          }
+
+        // push back the distance for this rec
+        records.emplace_back(std::make_pair(dist, t));
+      }
+
+    // if exact flag is set then return no value, since if we got to this point then we didn't
+    // encounter any record with an exact match for the variance list
+    if(exact) return boost::none;
+
+    auto sort_comparator = [&](const record_type& a, const record_type& b) -> bool
+      {
+        return a.first < b.first;
+      };
+
+    // sort into order of distance from the desired variance list
+    std::sort(records.begin(), records.end(), sort_comparator);
+
+    // pick the record with least distance to the desired variance assignment and return
+    const record_type& top_choice = records.front();
+
+    rtype rval = std::make_pair(top_choice.second->first, *top_choice.second->second);
+    return rval;
   }
 
 
-template <unsigned int Indices, typename DataType>
-typename indexed_resource<Indices, DataType>::database::const_iterator
-indexed_resource<Indices, DataType>::find(DataType d) const
+template <unsigned int Indices, typename DataType, typename DistanceMetric>
+typename indexed_resource<Indices, DataType, DistanceMetric>::database::const_iterator
+indexed_resource<Indices, DataType, DistanceMetric>::find(DataType d) const
   {
     auto comparator = [&](const typename database::value_type& a) -> bool
       {
@@ -292,44 +381,45 @@ class resource_manager
       { return this->parameters_cache.find(); }
 
     //! get phase-space coordinates label
-    boost::optional< contexted_value<std::string> >
-    coordinates(std::array<variance, resource_manager_impl::COORDINATES_INDICES> v = { variance::none }) const
-      { return this->coordinates_cache.find(v); }
+    //! if exact is false then the closest possible match is returned, if one is found
+    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES>, contexted_value<std::string> > >
+    coordinates(std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none }, bool exact=true) const
+      { return this->coordinates_cache.find(v, exact); }
 
     //! get V,i label
-    boost::optional< contexted_value<std::string> >
-    dV(std::array<variance, resource_manager_impl::DV_INDICES> v = { variance::none }) const
-      { return this->dV_cache.find(v); }
+    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DV_INDICES>, contexted_value<std::string> > >
+    dV(std::array<variance, RESOURCE_INDICES::DV_INDICES> v = { variance::none }, bool exact=true) const
+      { return this->dV_cache.find(v, exact); }
 
     //! get V,ij label
-    boost::optional< contexted_value<std::string> >
-    ddV(std::array<variance, resource_manager_impl::DDV_INDICES> v = { variance::none, variance::none }) const
-      { return this->ddV_cache.find(v); }
+    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDV_INDICES>, contexted_value<std::string> > >
+    ddV(std::array<variance, RESOURCE_INDICES::DDV_INDICES> v = { variance::none, variance::none }, bool exact=true) const
+      { return this->ddV_cache.find(v, exact); }
 
     //! get V,ijk label
-    boost::optional< contexted_value<std::string> >
-    dddV(std::array<variance, resource_manager_impl::DDDV_INDICES> v = { variance::none, variance::none, variance::none }) const
-      { return this->dddV_cache.find(v); }
+    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDDV_INDICES>, contexted_value<std::string> > >
+    dddV(std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v = { variance::none, variance::none, variance::none }, bool exact=true) const
+      { return this->dddV_cache.find(v, exact); }
 
     //! get connexion label
-    boost::optional< contexted_value<std::string> >
-    connexion(std::array<variance, resource_manager_impl::CONNEXION_INDICES> v) const
-      { return this->connexion_cache.find(v); }
+    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES>, contexted_value<std::string> > >
+    connexion(std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v, bool exact=true) const
+      { return this->connexion_cache.find(v, exact); }
 
     //! get Riemann A2 label
-    boost::optional< contexted_value<std::string> >
-    Riemann_A2(std::array<variance, resource_manager_impl::RIEMANN_A2_INDICES> v) const
-      { return this->Riemann_A2_cache.find(v); }
+    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES>, contexted_value<std::string> > >
+    Riemann_A2(std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v, bool exact=true) const
+      { return this->Riemann_A2_cache.find(v, exact); }
     
     //! get Riemann A3 label
-    boost::optional< contexted_value<std::string> >
-    Riemann_A3(std::array<variance, resource_manager_impl::RIEMANN_A3_INDICES> v) const
-      { return this->Riemann_A3_cache.find(v); }
+    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES>, contexted_value<std::string> > >
+    Riemann_A3(std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v, bool exact=true) const
+      { return this->Riemann_A3_cache.find(v, exact); }
     
     //! get Riemann B3 label
-    boost::optional< contexted_value<std::string> >
-    Riemann_B3(std::array<variance, resource_manager_impl::RIEMANN_B3_INDICES> v) const
-      { return this->Riemann_B3_cache.find(v); }
+    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES>, contexted_value<std::string> > >
+    Riemann_B3(std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v, bool exact=true) const
+      { return this->Riemann_B3_cache.find(v, exact); }
 
 
     //! get phase-space flattening function
@@ -359,42 +449,42 @@ class resource_manager
 
     //! assign phase-space coordinate resource label
     void assign_coordinates(const contexted_value<std::string>& c,
-                            std::array<variance, resource_manager_impl::COORDINATES_INDICES> v)
+                            std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v)
       { this->coordinates_cache.assign(c, v); }
     
     //! assign V,i resource label
     void assign_dV(const contexted_value<std::string>& d,
-                   std::array<variance, resource_manager_impl::DV_INDICES> v)
+                   std::array<variance, RESOURCE_INDICES::DV_INDICES> v)
       { this->dV_cache.assign(d, v); }
     
     //! assign V,ij resource label
     void assign_ddV(const contexted_value<std::string>& d,
-                    std::array<variance, resource_manager_impl::DDV_INDICES> v)
+                    std::array<variance, RESOURCE_INDICES::DDV_INDICES> v)
       { this->ddV_cache.assign(d, v); }
     
     //! assign V,ijk resource label
     void assign_dddV(const contexted_value<std::string>& d,
-                     std::array<variance, resource_manager_impl::DDDV_INDICES> v)
+                     std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v)
       { this->dddV_cache.assign(d, v); }
     
     //! assign connexion resource label
     void assign_connexion(const contexted_value<std::string>& c,
-                          std::array<variance, resource_manager_impl::CONNEXION_INDICES> v)
+                          std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v)
       { this->connexion_cache.assign(c, v); }
     
     //! assign Riemann A2 resource label
     void assign_Riemann_A2(const contexted_value<std::string>& R,
-                           std::array<variance, resource_manager_impl::RIEMANN_A2_INDICES> v)
+                           std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v)
       { this->Riemann_A2_cache.assign(R, v); }
     
     //! assign Riemann A3 resource label
     void assign_Riemann_A3(const contexted_value<std::string>& R,
-                           std::array<variance, resource_manager_impl::RIEMANN_A3_INDICES> v)
+                           std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v)
       { this->Riemann_A3_cache.assign(R, v); }
     
     //! assign Riemann B3 resource label
     void assign_Riemann_B3(const contexted_value<std::string>& R,
-                           std::array<variance, resource_manager_impl::RIEMANN_B3_INDICES> v)
+                           std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v)
       { this->Riemann_B3_cache.assign(R, v); }
     
     
@@ -486,28 +576,28 @@ class resource_manager
     simple_resource<std::string> parameters_cache;
 
     //! cache parameters resource labels
-    indexed_resource<resource_manager_impl::COORDINATES_INDICES, std::string> coordinates_cache;
+    indexed_resource<RESOURCE_INDICES::COORDINATES_INDICES, std::string> coordinates_cache;
 
     //! cache V, resource labels
-    indexed_resource<resource_manager_impl::DV_INDICES, std::string> dV_cache;
+    indexed_resource<RESOURCE_INDICES::DV_INDICES, std::string> dV_cache;
 
     //! cache V,ij resource labels
-    indexed_resource<resource_manager_impl::DDV_INDICES, std::string> ddV_cache;
+    indexed_resource<RESOURCE_INDICES::DDV_INDICES, std::string> ddV_cache;
 
     //! cache V,ijk resource labels
-    indexed_resource<resource_manager_impl::DDDV_INDICES, std::string> dddV_cache;
+    indexed_resource<RESOURCE_INDICES::DDDV_INDICES, std::string> dddV_cache;
 
     //! cache connexion resource labels
-    indexed_resource<resource_manager_impl::CONNEXION_INDICES, std::string> connexion_cache;
+    indexed_resource<RESOURCE_INDICES::CONNEXION_INDICES, std::string> connexion_cache;
 
     //! cache Riemann A2 resource labels
-    indexed_resource<resource_manager_impl::RIEMANN_A2_INDICES, std::string> Riemann_A2_cache;
+    indexed_resource<RESOURCE_INDICES::RIEMANN_A2_INDICES, std::string> Riemann_A2_cache;
     
     //! cache Riemann A3 resource labels
-    indexed_resource<resource_manager_impl::RIEMANN_A3_INDICES, std::string> Riemann_A3_cache;
+    indexed_resource<RESOURCE_INDICES::RIEMANN_A3_INDICES, std::string> Riemann_A3_cache;
     
     //! cache Riemann B3 resource labels
-    indexed_resource<resource_manager_impl::RIEMANN_B3_INDICES, std::string> Riemann_B3_cache;
+    indexed_resource<RESOURCE_INDICES::RIEMANN_B3_INDICES, std::string> Riemann_B3_cache;
 
 
     //! cache flattening function - full phase-space coordinates

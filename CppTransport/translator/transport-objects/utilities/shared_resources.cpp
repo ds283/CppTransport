@@ -48,9 +48,9 @@ shared_resources::shared_resources(translator_data& p, resource_manager& m, expr
 
 std::unique_ptr<symbol_list> shared_resources::generate_parameters(const language_printer& printer) const
   {
-    std::unique_ptr<symbol_list> list = std::make_unique< std::vector<GiNaC::symbol> >();
+    auto list = std::make_unique<symbol_list>();
 
-    const boost::optional< contexted_value<std::string> >& resource = this->mgr.parameters();
+    const auto& resource = this->mgr.parameters();
 
     if(resource)
       {
@@ -75,16 +75,16 @@ std::unique_ptr<symbol_list> shared_resources::generate_parameters(const languag
 
 std::unique_ptr<symbol_list> shared_resources::generate_fields(const language_printer& printer) const
   {
-    std::unique_ptr<symbol_list> list = std::make_unique< std::vector<GiNaC::symbol> >();
+    auto list = std::make_unique<symbol_list>();
 
-    const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
-    const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+    const auto resource = this->mgr.coordinates();
+    const auto& flatten = this->mgr.phase_flatten();
 
     if(resource && flatten)
       {
         for(field_index i = field_index(0); i < this->num_fields; ++i)
           {
-            std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), *flatten);
+            std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten);
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
@@ -103,17 +103,17 @@ std::unique_ptr<symbol_list> shared_resources::generate_fields(const language_pr
 
 std::unique_ptr<symbol_list> shared_resources::generate_derivs(const language_printer& printer) const
   {
-    std::unique_ptr<symbol_list> list = std::make_unique< std::vector<GiNaC::symbol> >();
+    auto list = std::make_unique<symbol_list>();
 
-    const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
-    const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+    const auto resource = this->mgr.coordinates();
+    const auto& flatten = this->mgr.phase_flatten();
 
     if(resource && flatten)
       {
         for(field_index i = field_index(0); i < this->num_fields; ++i)
           {
             // TODO: explicit offset by this->num_fields is a bit ugly; would be nice to find a better approach
-            std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), *flatten, static_cast<unsigned int>(this->num_fields));
+            std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten, static_cast<unsigned int>(this->num_fields));
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
@@ -132,7 +132,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_derivs(const language_pr
 
 bool shared_resources::roll_parameters() const
   {
-    const boost::optional< contexted_value<std::string> >& resource = this->mgr.parameters();
+    const auto& resource = this->mgr.parameters();
 
     return(static_cast<bool>(resource));
   }
@@ -140,8 +140,8 @@ bool shared_resources::roll_parameters() const
 
 bool shared_resources::roll_coordinates() const
   {
-    const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
-    const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+    const auto resource = this->mgr.coordinates();
+    const auto& flatten = this->mgr.phase_flatten();
 
     return(resource && flatten);
   }
@@ -149,7 +149,7 @@ bool shared_resources::roll_coordinates() const
 
 GiNaC::symbol shared_resources::generate_parameters(const abstract_index& idx, const language_printer& printer) const
   {
-    const boost::optional< contexted_value<std::string> >& resource = this->mgr.parameters();
+    const auto& resource = this->mgr.parameters();
 
     if(!resource) throw resource_failure(idx.get_loop_variable());
 
@@ -160,31 +160,31 @@ GiNaC::symbol shared_resources::generate_parameters(const abstract_index& idx, c
 
 GiNaC::symbol shared_resources::generate_fields(const abstract_index& idx, const language_printer& printer) const
   {
-    const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
-    const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+    const auto resource = this->mgr.coordinates();
+    const auto& flatten = this->mgr.phase_flatten();
 
     if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
 
-    std::string variable = printer.array_subscript(*resource, idx, *flatten);
+    std::string variable = printer.array_subscript(resource.get().second, idx, *flatten);
     return this->sym_factory.get_symbol(variable);
   }
 
 
 GiNaC::symbol shared_resources::generate_derivs(const abstract_index& idx, const language_printer& printer) const
   {
-    const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
-    const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+    const auto resource = this->mgr.coordinates();
+    const auto& flatten = this->mgr.phase_flatten();
 
     if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
 
-    std::string variable = printer.array_subscript(*resource, idx, *flatten, static_cast<unsigned int>(this->num_fields));
+    std::string variable = printer.array_subscript(resource.get().second, idx, *flatten, static_cast<unsigned int>(this->num_fields));
     return this->sym_factory.get_symbol(variable);
   }
 
 
 std::string shared_resources::generate_working_type() const
   {
-    const boost::optional< contexted_value<std::string> >& working_type = this->mgr.working_type();
+    const auto& working_type = this->mgr.working_type();
 
     if(!working_type) throw resource_failure("WORKING TYPE");
 
