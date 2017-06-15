@@ -295,7 +295,7 @@ unsigned int translation_unit::apply()
         this->file_errors = 0;
         try
           {
-            rval += this->outstream.translate(*impl, (*core).get_declaration_point(), impl_output, process_type::process_implementation);
+            rval += this->outstream.translate(*impl, (*impl).get_declaration_point(), impl_output, process_type::process_implementation);
           }
         catch(exit_parse& xe)
           {
