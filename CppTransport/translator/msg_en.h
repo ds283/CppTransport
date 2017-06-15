@@ -103,7 +103,7 @@ constexpr auto ERROR_EXPECTED_CLOSE_QUOTE            = "Unterminated string lite
 constexpr auto ERROR_EXPECTED_ELLIPSIS               = "Expected '...', not '..'";
 
 constexpr auto ERROR_SYMBOL_EXISTS                   = "Redefinition of existing symbol";
-constexpr auto NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS      = "Location of original definition for symbol";
+constexpr auto NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS      = "Note: location of original definition for symbol";
 constexpr auto ERROR_IDENTIFIER_LOOKUP               = "Lookup of identifier name failed";
 constexpr auto ERROR_STRING_LOOKUP                   = "Lookup of string literal value failed";
 constexpr auto ERROR_INTEGER_LOOKUP                  = "Lookup of integer literal value failed";
@@ -111,10 +111,10 @@ constexpr auto ERROR_DECIMAL_LOOKUP                  = "Lookup of decimal litera
 constexpr auto ERROR_UNKNOWN_IDENTIFIER              = "Undeclared identifier";
 
 constexpr auto ERROR_AUTHOR_EXISTS                   = "Redeclaration of existing author";
-constexpr auto NOTIFY_DUPLICATE_AUTHOR_WAS           = "Location of original declaration for author";
+constexpr auto NOTIFY_DUPLICATE_AUTHOR_WAS           = "Note: location of original declaration for author";
 
-constexpr auto NOTIFY_DUPLICATION_DECLARATION_WAS    = "Location of original declaration was";
-constexpr auto NOTIFY_DUPLICATION_DEFINITION_WAS     = "Location of original definition was";
+constexpr auto NOTIFY_DUPLICATION_DECLARATION_WAS    = "Note: location of original declaration was";
+constexpr auto NOTIFY_DUPLICATION_DEFINITION_WAS     = "Note: location of original definition was";
 
 constexpr auto ERROR_MODEL_REDECLARATION             = "Redeclaration of model block";
 constexpr auto ERROR_NAME_REDECLARATION              = "Redeclaration of name metadata";
@@ -197,11 +197,11 @@ constexpr auto ERROR_DIRECTIVE_ON_RHS                = "A line containing a dire
 
 constexpr auto ERROR_INDEX_LITERAL_NO_KERNEL         = "Line ended before kernel letter for index literal";
 constexpr auto ERROR_INDEX_VALIDATION_FAIL           = "Mismatched index literal: expected";
-constexpr auto NOTIFY_INDEX_DECLARATION_WAS          = "Location of original index declaration was";
+constexpr auto NOTIFY_INDEX_DECLARATION_WAS          = "Note: location of original index declaration was";
 constexpr auto ERROR_INDEX_NOT_VALID                 = "Use of undeclared index literal";
 constexpr auto ERROR_NONTRIVIAL_REQUIRES_VARIANCE    = "Variance must be assigned when using a nontrival field-space metric: assuming index is contravariant";
-constexpr auto NOTIFY_CANONICAL_IGNORES_VARIANCE     = "Variance specifiers are ignored in canonical models";
-constexpr auto NOTIFY_PARAMETER_VARIANCE_IGNORED     = "Variance specifier ignored for parameter-type index";
+constexpr auto NOTIFY_CANONICAL_IGNORES_VARIANCE     = "Note: variance specifiers are ignored in canonical models";
+constexpr auto NOTIFY_PARAMETER_VARIANCE_IGNORED     = "Note: variance specifier ignored for parameter-type index";
 
 constexpr auto ERROR_INDEX_LITERAL_REASSIGN          = "Internal error: missing database entry during index literal reassignment, for index";
 
@@ -261,14 +261,15 @@ constexpr auto RESOURCE_SET_WORKING_TYPE             = "working type set to";
 constexpr auto RESOURCE_RELEASE_WORKING_TYPE         = "release working type";
 
 constexpr auto NOTIFY_RESOURCE_REDECLARATION         = "Note: redeclaration of resource without prior release";
-constexpr auto NOTIFY_RESOURCE_REDECLARATION_WAS     = "Location of original declaration was";
+constexpr auto NOTIFY_RESOURCE_DECLARATION_WAS       = "Note: location of original declaration was";
+constexpr auto ERROR_RESOURCE_LABEL_IN_USE           = "Resource label already in use for an index assignment with different variance";
 
 constexpr auto DIRECTIVE_SET_MACRO_A                 = "set macro";
 constexpr auto DIRECTIVE_SET_MACRO_B                 = "to";
 
 constexpr auto ERROR_DIRECTIVE_SET                   = "Error while evaluating set directive for";
 
-constexpr auto NOTIFY_DIRECTIVE_NOT_EVALUATED        = "Output disabled, so did not evaluate directive";
+constexpr auto NOTIFY_DIRECTIVE_NOT_EVALUATED        = "Note: output disabled, so did not evaluate directive";
 
 constexpr auto ERROR_SET_INDEX_DUPLICATE             = "Index list declared to $SET contains duplicated index";
 
@@ -277,8 +278,8 @@ constexpr auto WARN_PRIOR_REDEFINITION               = "Earlier definition of th
 constexpr auto ERROR_INDEX_SUBSTITUTION              = "Missing substitution for index";
 
 constexpr auto ERROR_LHS_INDEX_DUPLICATE             = "Left-hand side contains duplicated index";
-constexpr auto NOTIFY_RHS_INDEX_SINGLE_OCCURRENCE    = "Index occurs only once on right-hand side";
-constexpr auto NOTIFY_RHS_INDEX_SINGLE_VARIANCE      = "Right-hand side index does not occur in both covariant and contravariant positions";
+constexpr auto NOTIFY_RHS_INDEX_SINGLE_OCCURRENCE    = "Note: index occurs only once on right-hand side";
+constexpr auto NOTIFY_RHS_INDEX_SINGLE_VARIANCE      = "Note: right-hand side index does not occur in both covariant and contravariant positions";
 
 constexpr auto ERROR_UNPAIRED_ELSE                   = "Unexpected $ELSE without opening $IF";
 constexpr auto ERROR_UNPAIRED_ENDIF                  = "Unexpected $ENDIF without opening $IF";

@@ -54,6 +54,8 @@ namespace resource_manager_impl
   }   // namespace resource_manager_impl
 
 
+//! represents a resource that can be indexed with indices of different variance.
+//! therefore we may have several versions
 template <unsigned int Indices, typename DataType = std::string>
 class indexed_resource
   {
@@ -88,12 +90,17 @@ class indexed_resource
     //! assign a value associated with the given variance list
     indexed_resource& assign(const contexted_value<DataType>& d, variance_list v);
     
-    //! lookup a value
+    //! lookup a resource assignment by variance
     boost::optional< contexted_value<DataType> > find(variance_list v) const;
-    
+
     //! clear any stored values
     indexed_resource& reset() { this->labels.clear(); return *this; }
-    
+
+  protected:
+
+    //! lookup a resource assignment by value
+    typename database::const_iterator find(DataType d) const;
+
     
     // INTERNAL DATA
     
@@ -118,6 +125,17 @@ indexed_resource<Indices, DataType>::assign(const contexted_value<DataType>& d,
     // if there is no existing value associated with this variance list, move our copy into the database and return
     if(t == this->labels.end())
       {
+        // check whether label is already in use, and issue an error if it is
+        auto u = this->find(d);
+        if(u != this->labels.end())
+          {
+            const error_context& ctx = d.get_declaration_point();
+            ctx.error(ERROR_RESOURCE_LABEL_IN_USE);
+
+            const error_context& u_ctx = u->second->get_declaration_point();
+            u_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
+          }
+
         this->labels.emplace(std::make_pair(std::move(v), std::move(dp)));
         return *this;
       }
@@ -127,7 +145,18 @@ indexed_resource<Indices, DataType>::assign(const contexted_value<DataType>& d,
     ctx.warn(NOTIFY_RESOURCE_REDECLARATION);
     
     const error_context& p_ctx = t->second->get_declaration_point();
-    p_ctx.warn(NOTIFY_RESOURCE_REDECLARATION_WAS);
+    p_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
+
+    // check whether label is already in use by an assignment with different variance,
+    // and issue an error if it is
+    auto u = this->find(d);
+    if(u != this->labels.end() && t->first != v)
+      {
+        ctx.error(ERROR_RESOURCE_LABEL_IN_USE);
+
+        const error_context& u_ctx = u->second->get_declaration_point();
+        u_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
+      }
 
     // swap old and new pointers; old pointer will lapse and be destroyed
     // when dp goes out of scope
@@ -146,6 +175,20 @@ indexed_resource<Indices, DataType>::find(typename indexed_resource<Indices, Dat
     if(t == this->labels.end()) return boost::none;
     
     return boost::optional< contexted_value<DataType> >(*t->second);
+  }
+
+
+template <unsigned int Indices, typename DataType>
+typename indexed_resource<Indices, DataType>::database::const_iterator
+indexed_resource<Indices, DataType>::find(DataType d) const
+  {
+    auto comparator = [&](const typename database::value_type& a) -> bool
+      {
+        const DataType& v = a.second->get();
+        return v == d;
+      };
+
+    return std::find_if(this->labels.begin(), this->labels.end(), comparator);
   }
 
 
@@ -203,7 +246,7 @@ simple_resource<DataType>& simple_resource<DataType>::assign(const contexted_val
     ctx.warn(NOTIFY_RESOURCE_REDECLARATION);
     
     const error_context& p_ctx = this->label.get().get_declaration_point();
-    p_ctx.warn(NOTIFY_RESOURCE_REDECLARATION_WAS);
+    p_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
     
     this->label = d;
     
