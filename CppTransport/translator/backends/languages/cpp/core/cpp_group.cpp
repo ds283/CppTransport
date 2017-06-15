@@ -41,16 +41,8 @@
 
 
 cpp_group::cpp_group(translator_data& p, tensor_factory& fctry)
-  : package_group(p, fctry)
+  : package_group(p, fctry, PackageGroupComponentAgent<cpp::cpp_printer, cpp::cpp_cse, lambda_manager>())
   {
-    // set up cse worker instance
-    // this has to happen before setting up the individual macro packages,
-    // because it gets pushed to them automatically when we add this packages
-    // to our list
-    l_printer = std::make_unique<cpp::cpp_printer>();
-    cse_worker = std::make_unique<cpp::cpp_cse>(0, *l_printer, this->data_payload);
-    lambda_mgr = std::make_unique<lambda_manager>(0, *l_printer, this->data_payload);
-
     // construct replacement rule packages
     this->add_directive_package<macro_packages::directives>(p);
     this->add_directive_package<macro_packages::resources>(p, fctry.get_resource_manager());

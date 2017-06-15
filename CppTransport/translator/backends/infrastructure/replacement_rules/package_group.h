@@ -41,6 +41,40 @@
 #include "error.h"
 
 
+template <typename PrinterAgent, typename CSEAgent, typename LambdaAgent>
+class PackageGroupComponentAgent
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    PackageGroupComponentAgent() = default;
+
+    //! destructor
+    ~PackageGroupComponentAgent() = default;
+
+
+    // SERVICES
+
+  public:
+
+    //! make a printer agent
+    std::unique_ptr<PrinterAgent> make_printer_agent() const
+      { return std::make_unique<PrinterAgent>(); }
+
+    //! make a CSE agent
+    std::unique_ptr<CSEAgent> make_cse_agent(language_printer& p, translator_data& d) const
+      { return std::make_unique<CSEAgent>(0, p, d); }
+
+    //! make a lambda agent
+    std::unique_ptr<LambdaAgent> make_lambda_agent(language_printer& p, translator_data& d) const
+      { return std::make_unique<LambdaAgent>(0, p, d); }
+
+  };
+
+
 class package_group
   {
     
@@ -59,8 +93,10 @@ class package_group
 
   public:
 
-    //! constructor
-    package_group(translator_data& p, tensor_factory& fctry);
+    //! constructor accepts a generic ComponentFactory object whose job is to
+    //! construct the langugae printer, CSE and lambda management agents that we need
+    template <typename ComponentFactory>
+    package_group(translator_data& p, tensor_factory& fctry, ComponentFactory F);
 
     //! destructor reports statistics for replacements associated with this group
     virtual ~package_group();
@@ -168,17 +204,19 @@ class package_group
     //! may depend on what kind of model is being processed, eg. canonical, noncanonical
     tensor_factory& fctry;
 
+    //! polymorphic pointer to language printer; as above, depends on what kind
+    //! of model is being processed
+    std::unique_ptr<language_printer> l_printer;
+
     //! polymorphic pointer to CSE worker; as above exactly which CSE scheme is
     //! involved may depend what kind of model is being processed
-    std::unique_ptr<cse> cse_worker;  // should be set by implementations
+    //! must be declared *after* l_printer, since depends on l_printer during construction
+    std::unique_ptr<cse> cse_worker;
 
     //! lambda manager; has to be held as a managed pointer since depends on
     //! the language printer, which isn't known until construction
+    //! must be declared *after* l_printer, since depends on l_printer during construction
     std::unique_ptr<lambda_manager> lambda_mgr;
-
-    //! polymorphic pointer to language printer; as above, depends on what kind
-    //! of model is being processed
-    std::unique_ptr<language_printer> l_printer;  // should be set by implementations
 
 
     // MACRO PACKAGE CACHE
@@ -190,7 +228,7 @@ class package_group
     directive_database directive_packages;
 
 
-    // RULE CACHE, BUILD BY AGGREGATING RULES FROM MACRO PACKAGES
+    // RULE CACHE, BUILT BY AGGREGATING RULES FROM MACRO PACKAGES
 
     // all these are held as raw pointers because
     // we have no ownership in these objects.
@@ -224,6 +262,18 @@ class package_group
     boost::timer::nanosecond_type macro_tokenization_time;
 
   };
+
+
+template <typename ComponentFactory>
+package_group::package_group(translator_data& p, tensor_factory& _f, ComponentFactory F)
+  : data_payload(p),
+    statistics_reported(false),
+    fctry(_f),
+    l_printer(F.make_printer_agent()),
+    cse_worker(F.make_cse_agent(*l_printer, p)),
+    lambda_mgr(F.make_lambda_agent(*l_printer, p))
+  {
+  }
 
 
 template <typename PackageType, typename ... Args>

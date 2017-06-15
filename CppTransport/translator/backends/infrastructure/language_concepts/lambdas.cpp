@@ -110,16 +110,14 @@ std::string map_lambda::make_temporary(language_printer& printer, unsigned int n
             state = state / 2;
           }
 
-        if(counter > 0) stmt << printer.format_elseif(conditions);
-        else            stmt << printer.format_if(conditions);
-
-        stmt << " " << printer.format_return(expr) << '\n';
+        // each case can be a separate 'if' statement since the function exits whenever one is executed
+        stmt << printer.format_if(conditions) << " " << printer.format_return(expr) << '\n';
         ++counter;
       }
 
     // kill compiler warning about possible void return
     GiNaC::ex null_value = 0;
-    if(counter > 0) stmt << printer.format_else(null_value);
+    stmt << printer.format_return(null_value);
 
     stmt << " " << close;
 

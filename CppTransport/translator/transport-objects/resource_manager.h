@@ -561,7 +561,8 @@ class resource_manager
 
   public:
 
-    //! release all resources, but not flatteners
+    //! release all resources, but not flatteners (this is the most common use case;
+    //! we wish to release resource labels at the end of a function, but not the flattener labels)
     void release();
 
     //! release flatteners

@@ -42,15 +42,9 @@
 
 
 cuda_group::cuda_group(translator_data& p, tensor_factory& fctry)
-  : package_group(p, fctry)
+  : package_group(p, fctry, PackageGroupComponentAgent<cuda::cuda_printer, cpp::cpp_cse, lambda_manager>())
   {
-    // set up cse worker instance
-    // this has to happen before setting up the individual macro packages,
-    // because it gets pushed to them when they join the package group
-    l_printer = std::make_unique<cuda::cuda_printer>();
-    lambda_mgr = std::make_unique<lambda_manager>(0, *l_printer, this->data_payload);
-    cse_worker = std::make_unique<cpp::cpp_cse>(0, *l_printer, this->data_payload);
-    
+    // construct replacement rule packages
     this->add_directive_package<macro_packages::directives>(p);
     this->add_directive_package<macro_packages::resources>(p, fctry.get_resource_manager());
 

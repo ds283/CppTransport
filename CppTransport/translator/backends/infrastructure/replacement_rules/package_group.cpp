@@ -29,14 +29,6 @@
 #include "formatter.h"
 
 
-package_group::package_group(translator_data& p, tensor_factory& _f)
-  : data_payload(p),
-		statistics_reported(false),
-    fctry(_f)
-  {
-  }
-
-
 package_group::~package_group()
   {
 		if(this->statistics_reported)
