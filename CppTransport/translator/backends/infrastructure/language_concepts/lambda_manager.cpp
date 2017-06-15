@@ -23,6 +23,7 @@
 // --@@
 //
 
+
 #include "lambda_manager.h"
 
 #include "timing_instrument.h"
@@ -45,9 +46,9 @@ lambda_manager::lambda_manager(unsigned int s, language_printer& p, translator_d
 
 std::string lambda_manager::cache(std::unique_ptr<atomic_lambda> lambda)
   {
-    timing_instrument(this->timer);
-
-    atomic_cache_type::const_iterator t = this->find<atomic_lambda_record>(this->atomic_cache.cbegin(), this->atomic_cache.cend(), *lambda);
+    timing_instrument mgr(this->timer);
+    
+    auto t = this->find(this->atomic_cache.cbegin(), this->atomic_cache.cend(), *lambda);
 
     if(t == this->atomic_cache.end())
       {
@@ -61,9 +62,9 @@ std::string lambda_manager::cache(std::unique_ptr<atomic_lambda> lambda)
 
 std::string lambda_manager::cache(std::unique_ptr<map_lambda> lambda)
   {
-    timing_instrument(this->timer);
-
-    map_cache_type::const_iterator t = this->find<map_lambda_record>(this->map_cache.cbegin(), this->map_cache.cend(), *lambda);
+    timing_instrument mgr(this->timer);
+    
+    auto t = this->find(this->map_cache.cbegin(), this->map_cache.cend(), *lambda);
 
     if(t == this->map_cache.end())
       {
@@ -144,12 +145,11 @@ namespace lambda_manager_impl
   }   // namespace lambda_manager_impl
 
 
-template <typename RecordType>
-typename std::list< std::unique_ptr<RecordType> >::const_iterator
-lambda_manager::find(typename std::list< std::unique_ptr<RecordType> >::const_iterator begin,
-                     typename std::list< std::unique_ptr<RecordType> >::const_iterator end,
-                     const typename RecordType::lambda_type& lambda) const
+template <typename Iterator>
+Iterator lambda_manager::find(Iterator begin, Iterator end, const typename Iterator::value_type::element_type::lambda_type& lambda) const
   {
+    using RecordType = typename Iterator::value_type::element_type;
+
     return std::find_if(begin, end, lambda_manager_impl::LambdaRecordComparator<RecordType>(lambda));
   }
 

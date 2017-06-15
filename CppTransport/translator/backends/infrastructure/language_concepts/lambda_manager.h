@@ -187,11 +187,8 @@ class lambda_manager
   protected:
 
     //! search for a lambda record
-    template <typename RecordType>
-    typename std::list<std::unique_ptr<RecordType> >::const_iterator
-    find(typename std::list<std::unique_ptr<RecordType> >::const_iterator begin,
-         typename std::list<std::unique_ptr<RecordType> >::const_iterator end,
-         const typename RecordType::lambda_type& lambda) const;
+    template <typename Iterator>
+    Iterator find(Iterator begin, Iterator end, const typename Iterator::value_type::element_type::lambda_type& lambda) const;
 
     //! make a lambda name
     std::string make_name();
