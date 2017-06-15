@@ -23,6 +23,7 @@
 // --@@
 //
 
+
 #include <iostream>
 #include <fstream>
 
@@ -30,6 +31,7 @@
 
 #include "core.h"
 #include "switches.h"
+#include "msg_en.h"
 
 #include "build_data.h"
 
@@ -150,25 +152,27 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
           {
             for(const std::string& option : unrecognized_cmdline_options)
               {
-                std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                this->err_msgs.push_back(std::make_pair(false, msg.str()));
               }
           }
       }
     catch(boost::program_options::ambiguous_option& xe)
       {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+        this->err_msgs.push_back(std::make_pair(true, xe.what()));
       }
     catch(boost::program_options::invalid_command_line_style& xe)
       {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+        this->err_msgs.push_back(std::make_pair(true, xe.what()));
       }
     catch(boost::program_options::invalid_command_line_syntax& xe)
       {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+        this->err_msgs.push_back(std::make_pair(true, xe.what()));
       }
     catch(boost::program_options::invalid_syntax& xe)
       {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+        this->err_msgs.push_back(std::make_pair(true, xe.what()));
       }
 
 
@@ -193,21 +197,23 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
                       {
                         for(const std::string& option : unrecognized_config_options)
                           {
-                            std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                            std::ostringstream msg;
+                            msg << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                            this->err_msgs.push_back(std::make_pair(false, msg.str()));
                           }
                       }
                   }
                 catch(boost::program_options::ambiguous_option& xe)
                   {
-                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+                    this->err_msgs.push_back(std::make_pair(true, xe.what()));
                   }
                 catch(boost::program_options::invalid_config_file_syntax& xe)
                   {
-                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+                    this->err_msgs.push_back(std::make_pair(true, xe.what()));
                   }
                 catch(boost::program_options::invalid_syntax& xe)
                   {
-                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+                    this->err_msgs.push_back(std::make_pair(true, xe.what()));
                   }
               }
           }
@@ -264,6 +270,13 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
           {
             boost::filesystem::path p = path;
             if(!p.is_absolute()) p = boost::filesystem::absolute(p);
+
+            if(p.has_leaf() && p.leaf() == boost::filesystem::path(CPPTRANSPORT_TEMPLATE_PATH))
+              {
+                std::ostringstream msg;
+                msg << NOTIFY_PATH_INCLUDES_TEMPLATES << ": '" << p.string() << "'";
+                this->err_msgs.push_back(std::make_pair(false, msg.str()));
+              }
 
             this->search_path_list.emplace_back(p / CPPTRANSPORT_TEMPLATE_PATH);
           }

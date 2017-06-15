@@ -38,6 +38,14 @@
 class argument_cache
   {
 
+    // TYPES
+
+  public:
+
+    //! payload for a message
+    using message_payload = std::pair< bool, std::string >;
+
+
     // CONSTRUCTOR, DESTRUCTOR
 
   public:
@@ -101,6 +109,14 @@ class argument_cache
     const std::list<boost::filesystem::path>& input_files() const { return(this->input_file_list); }
 
 
+    // GET ERROR MESSAGES GENERATED DURING CONSTRUCTION
+
+  public:
+
+    //! get messages
+    const std::list< message_payload >& get_messages() const { return this->err_msgs; }
+
+
     // INTERNAL DATA
 
   private:
@@ -150,6 +166,12 @@ class argument_cache
 
     //! list of files to process
     std::list< boost::filesystem::path > input_file_list;
+
+
+    // LIST OF EXCEPTIONS GENERATED DURING CONSTRUCTION
+
+    //! exception messages
+    std::list< message_payload > err_msgs;
 
   };
 

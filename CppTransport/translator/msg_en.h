@@ -44,6 +44,8 @@ constexpr auto WARNING_TOKEN                         = "warning: ";
 constexpr auto ERROR_TOKEN                           = "error: ";
 constexpr auto FATAL_TOKEN                           = "fatal: ";
 
+constexpr auto NOTIFY_PATH_INCLUDES_TEMPLATES        = "Note: search path includes leaf 'templates'";
+
 constexpr auto WARNING_PARSING_FAILED                = "Failed to parse file";
 constexpr auto WARNING_VALIDATION_ERRORS             = "The following validation errors occurred:";
 
