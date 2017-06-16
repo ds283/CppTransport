@@ -29,7 +29,7 @@
 namespace canonical
   {
 
-    std::unique_ptr<flattened_tensor> canonical_ddV::compute()
+    std::unique_ptr<flattened_tensor> canonical_ddV::compute(const index_literal_list& indices)
       {
         return(this->res.ddV_resource(this->printer));
       }

@@ -89,7 +89,7 @@ namespace macro_packages
           protected:
 
             //! pre-hook required to call all pre-macros
-            void pre_hook(const macro_argument_list& args) override;
+            void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
             //! post-hook, required to call post-hook of all tokens we contain
             //! should reset token list to pristine state for next evaluation

@@ -161,7 +161,7 @@ namespace macro_packages
         std::string evaluate_roll(const macro_argument_list& args, const index_literal_list& indices);
 
         //! pre-evaluation
-        void pre(const macro_argument_list& args);
+        void pre(const macro_argument_list& args, const index_literal_list& indices);
 
         //! post-evaluation
         void post(const macro_argument_list& args);
@@ -203,7 +203,7 @@ namespace macro_packages
         virtual std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) = 0;
 
         //! pre-evaluation; if needed, can be supplied by implementation; default is no-op
-        virtual void pre_hook(const macro_argument_list& args) { return; }
+        virtual void pre_hook(const macro_argument_list& args, const index_literal_list& indices) { return; }
 
         //! post-evaluation; if needed, can be supplied by implementation; default is no-op
         virtual void post_hook(const macro_argument_list& args) { return; }

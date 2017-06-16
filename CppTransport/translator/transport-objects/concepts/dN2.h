@@ -31,6 +31,7 @@
 #include "flattened_tensor.h"
 
 #include "indices.h"
+#include "index_literal.h"
 
 
 class dN2: public transport_tensor
@@ -52,10 +53,12 @@ class dN2: public transport_tensor
   public:
 
     //! evaluate full tensor, returning a flattened list
-    virtual std::unique_ptr<flattened_tensor> compute() = 0;
+    virtual std::unique_ptr<flattened_tensor>
+    compute(const index_literal_list& indices) = 0;
 
     //! evaluate component of tensor
-    virtual GiNaC::ex compute_component(phase_index i, phase_index j) = 0;
+    virtual GiNaC::ex
+    compute_component(phase_index i, phase_index j) = 0;
 
     //! invalidate cache
     virtual void reset_cache() = 0;

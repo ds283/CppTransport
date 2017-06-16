@@ -50,57 +50,57 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void replace_A::pre_hook(const macro_argument_list& args)
+    void replace_A::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[A_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[A_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[A_K3_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[A_A_ARGUMENT]);
 
-        std::unique_ptr<flattened_tensor> container = this->A_tensor->compute(k1, k2, k3, a);
+        std::unique_ptr<flattened_tensor> container = this->A_tensor->compute(indices, k1, k2, k3, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
     
     
-    void replace_Atilde::pre_hook(const macro_argument_list& args)
+    void replace_Atilde::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[ATILDE_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[ATILDE_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[ATILDE_K3_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[ATILDE_A_ARGUMENT]);
         
-        std::unique_ptr<flattened_tensor> container = this->Atilde_tensor->compute(k1, k2, k3, a);
+        std::unique_ptr<flattened_tensor> container = this->Atilde_tensor->compute(indices, k1, k2, k3, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_B::pre_hook(const macro_argument_list& args)
+    void replace_B::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[B_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[B_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[B_K3_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[B_A_ARGUMENT]);
 
-        std::unique_ptr<flattened_tensor> container = this->B_tensor->compute(k1, k2, k3, a);
+        std::unique_ptr<flattened_tensor> container = this->B_tensor->compute(indices, k1, k2, k3, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_C::pre_hook(const macro_argument_list& args)
+    void replace_C::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[C_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[C_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[C_K3_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[C_A_ARGUMENT]);
 
-        std::unique_ptr<flattened_tensor> container = this->C_tensor->compute(k1, k2, k3, a);
+        std::unique_ptr<flattened_tensor> container = this->C_tensor->compute(indices, k1, k2, k3, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_M::pre_hook(const macro_argument_list& args)
+    void replace_M::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> container = this->M_tensor->compute();
+        std::unique_ptr<flattened_tensor> container = this->M_tensor->compute(indices);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 

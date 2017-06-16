@@ -29,7 +29,7 @@
 namespace canonical
   {
 
-    std::unique_ptr<flattened_tensor> canonical_M::compute()
+    std::unique_ptr<flattened_tensor> canonical_M::compute(const index_literal_list& indices)
       {
         std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
 

@@ -309,7 +309,7 @@ namespace token_list_impl
           {
             try
               {
-                this->rule.pre(args);
+                this->rule.pre(args, this->indices);
               }
             catch(macro_packages::argument_mismatch& xe)
               {

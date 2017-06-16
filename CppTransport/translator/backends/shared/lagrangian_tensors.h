@@ -104,7 +104,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
         virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
@@ -171,7 +171,7 @@ namespace macro_packages
       protected:
         
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
         
         //! evaluate
         virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
@@ -238,7 +238,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
         virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
@@ -305,7 +305,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
         virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
@@ -372,7 +372,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
         virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;

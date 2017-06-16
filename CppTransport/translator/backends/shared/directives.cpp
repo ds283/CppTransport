@@ -226,7 +226,7 @@ namespace macro_packages
     namespace directives_impl
       {
 
-        void directives_impl::user_macro::pre_hook(const macro_argument_list& args)
+        void directives_impl::user_macro::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
           {
             this->tokens->evaluate_macros(simple_macro_type::pre);
           }

@@ -165,7 +165,6 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/dN2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
   translator/transport-objects/resource_manager.cpp
-  translator/transport-objects/concepts/transport_tensor.cpp
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
@@ -561,7 +560,6 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/M.h
   translator/transport-objects/concepts/SR_velocity.h
   translator/transport-objects/concepts/tensor_factory.h
-  translator/transport-objects/concepts/transport_tensor.cpp
   translator/transport-objects/concepts/transport_tensor.h
   translator/transport-objects/concepts/u1.h
   translator/transport-objects/concepts/u2.h

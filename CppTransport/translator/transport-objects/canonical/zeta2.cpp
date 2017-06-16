@@ -29,8 +29,9 @@
 namespace canonical
   {
 
-    std::unique_ptr<flattened_tensor> canonical_zeta2::compute(GiNaC::symbol& k, GiNaC::symbol& k1,
-                                                               GiNaC::symbol& k2, GiNaC::symbol& a)
+    std::unique_ptr<flattened_tensor>
+    canonical_zeta2::compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                             GiNaC::symbol& a)
       {
         std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(2));
 

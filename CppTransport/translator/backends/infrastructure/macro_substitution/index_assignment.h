@@ -184,8 +184,10 @@ class index_value
 //! set up index_assignment as a database of assignment records
 typedef index_database<index_value> indices_assignment;
 
-//! set up a map between index literals and index assignments
+//! an index literal value is a map between an index literal and a numerical index value
 typedef std::pair< std::reference_wrapper<const index_literal>, std::reference_wrapper<const index_value> > index_literal_value;
+
+//! an index literal assignment is a list of index literal values, one for each index in the set
 typedef std::vector< index_literal_value > index_literal_assignment;
 
 

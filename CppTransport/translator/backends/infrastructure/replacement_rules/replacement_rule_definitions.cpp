@@ -59,10 +59,10 @@ namespace macro_packages
       }
 
 
-    void replacement_rule_index::pre(const macro_argument_list& args)
+    void replacement_rule_index::pre(const macro_argument_list& args, const index_literal_list& indices)
       {
         this->validate(args);
-        this->pre_hook(args);
+        this->pre_hook(args, indices);
       }
 
 

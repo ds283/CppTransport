@@ -49,31 +49,31 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void replace_U1::pre_hook(const macro_argument_list& args)
+    void replace_U1::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> container = this->u1_tensor->compute();
+        std::unique_ptr<flattened_tensor> container = this->u1_tensor->compute(indices);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_U2::pre_hook(const macro_argument_list& args)
+    void replace_U2::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol k = sym_factory.get_symbol(args[U2_K_ARGUMENT]);
         GiNaC::symbol a = sym_factory.get_symbol(args[U2_A_ARGUMENT]);
 
-        std::unique_ptr<flattened_tensor> container = this->u2_tensor->compute(k, a);
+        std::unique_ptr<flattened_tensor> container = this->u2_tensor->compute(indices, k, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_U3::pre_hook(const macro_argument_list& args)
+    void replace_U3::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[U3_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[U3_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[U3_K3_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[U3_A_ARGUMENT]);
 
-        std::unique_ptr<flattened_tensor> container = this->u3_tensor->compute(k1, k2, k3, a);
+        std::unique_ptr<flattened_tensor> container = this->u3_tensor->compute(indices, k1, k2, k3, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 

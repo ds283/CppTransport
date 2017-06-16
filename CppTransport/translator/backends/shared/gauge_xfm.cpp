@@ -84,35 +84,35 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void replace_zeta1::pre_hook(const macro_argument_list& args)
+    void replace_zeta1::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> container = this->zeta1_tensor->compute();
+        std::unique_ptr<flattened_tensor> container = this->zeta1_tensor->compute(indices);
         this->map =  std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_zeta2::pre_hook(const macro_argument_list& args)
+    void replace_zeta2::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
         GiNaC::symbol  k = sym_factory.get_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
         GiNaC::symbol k1 = sym_factory.get_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[ZETA_XFM_2_K2_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
 
-        std::unique_ptr<flattened_tensor> container = this->zeta2_tensor->compute(k, k1, k2, a);
+        std::unique_ptr<flattened_tensor> container = this->zeta2_tensor->compute(indices, k, k1, k2, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_dN1::pre_hook(const macro_argument_list& args)
+    void replace_dN1::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
 	    {
-        std::unique_ptr<flattened_tensor> container = this->dN1_tensor->compute();
+        std::unique_ptr<flattened_tensor> container = this->dN1_tensor->compute(indices);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }
 
 
-    void replace_dN2::pre_hook(const macro_argument_list& args)
+    void replace_dN2::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
 	    {
-        std::unique_ptr<flattened_tensor> container = this->dN2_tensor->compute();
+        std::unique_ptr<flattened_tensor> container = this->dN2_tensor->compute(indices);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }
 

@@ -29,7 +29,7 @@
 namespace canonical
   {
 
-    std::unique_ptr<flattened_tensor> canonical_zeta1::compute()
+    std::unique_ptr<flattened_tensor> canonical_zeta1::compute(const index_literal_list& indices)
       {
         std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(1));
 
