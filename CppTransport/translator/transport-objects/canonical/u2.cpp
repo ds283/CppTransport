@@ -32,14 +32,18 @@ namespace canonical
     std::unique_ptr<flattened_tensor> canonical_u2::compute(const index_literal_list& indices, GiNaC::symbol& k,
                                                             GiNaC::symbol& a)
       {
-        std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(2));
+        if(indices.size() != U2_TENSOR_INDICES) throw tensor_exception("U2 indices");
 
-        const phase_index num_phase = this->shared.get_number_phase();
+        auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(U2_TENSOR_INDICES));
+    
+        const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
+        const phase_index max_j = this->shared.get_max_phase_index(indices[1]->get_variance());
+
         this->cached = false;
 
-        for(phase_index i = phase_index(0); i < num_phase; ++i)
+        for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
-            for(phase_index j = phase_index(0); j < num_phase; ++j)
+            for(phase_index j = phase_index(0, indices[1]->get_variance()); j < max_j; ++j)
               {
                 (*result)[this->fl.flatten(i, j)] = this->compute_component(i, j, k, a);
               }
@@ -140,7 +144,7 @@ namespace canonical
 
     unroll_behaviour canonical_u2::get_unroll()
       {
-        if(this->shared.roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 

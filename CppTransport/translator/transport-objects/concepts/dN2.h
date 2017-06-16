@@ -34,6 +34,9 @@
 #include "index_literal.h"
 
 
+constexpr auto DN2_TENSOR_INDICES = 2;
+
+
 class dN2: public transport_tensor
   {
 

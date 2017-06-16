@@ -58,18 +58,18 @@ class shared_resources
     ~shared_resources() = default;
 
 
-    // INTERFACE - QUERY DATA
+    // INTERFACE - GENERATE MAXIMUM INDEX VALUES
 
   public:
 
     //! get number of parameter indices
-    param_index get_number_parameters() const { return(this->num_params); }
+    param_index get_max_param_index() const { return param_index(this->num_params); }
 
     //! get number of field-space indices
-    field_index get_number_field() const { return(this->num_fields); }
+    field_index get_max_field_index(variance v) const { return field_index(this->num_fields, v); }
 
     //! get number of phase-space indices
-    phase_index get_number_phase() const { return(this->num_phase); }
+    phase_index get_max_phase_index(variance v) const { return phase_index(this->num_phase, v); }
 
 
     // INTERFACE -- GENERATE RESOURCES
@@ -125,13 +125,13 @@ class shared_resources
   public:
 
     //! query whether parameters can be rolled-up into loops
-    bool roll_parameters() const;
+    bool can_roll_parameters() const;
 
     //! query whether coordinate labels can be rolled-up into loops
-    bool roll_coordinates() const;
+    bool can_roll_coordinates() const;
 
 
-    // INTERFACE -- MAKE INDICES
+    // INTERFACE -- MANUFACTURE GINAC INDICES
 
   public:
 
@@ -182,13 +182,13 @@ class shared_resources
     // LOCAL COPIES OF MODEL DATA
 
     //! number of parameters
-    const param_index num_params;
+    const unsigned int num_params;
 
     //! number of field-space indices
-    const field_index num_fields;
+    const unsigned int num_fields;
 
     //! number of phase-space indices
-    const phase_index num_phase;
+    const unsigned int num_phase;
 
 
     // AGENTS

@@ -320,6 +320,8 @@ constexpr auto ERROR_COMPONENT_DATABASE_INCONSISTENT = "Internal error: metric c
 constexpr auto ERROR_COMPONENT_REDEFINITION          = "Redefinition of metric component";
 constexpr auto ERROR_BAD_INDEX_LABEL                 = "Unknown field-space metric index label";
 
+constexpr auto ERROR_MISMATCHED_TENSOR_INDICES       = "Internal error: comparison of tensor indices with different variance";
+
 constexpr auto NOTIFY_PARSE_TERMINATED               = "Translation terminated";
 constexpr auto NOTIFY_TOO_MANY_ERRORS                = "encountered too many errors";
 

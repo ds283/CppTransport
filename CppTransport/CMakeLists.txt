@@ -147,6 +147,8 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/y_lexer.cpp
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/Hubble.cpp
+  translator/transport-objects/canonical/coordinates.cpp
+  translator/transport-objects/canonical/fields.cpp
   translator/transport-objects/canonical/dV.cpp
   translator/transport-objects/canonical/ddV.cpp
   translator/transport-objects/canonical/dddV.cpp
@@ -164,6 +166,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/dN1.cpp
   translator/transport-objects/canonical/dN2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
+  translator/transport-objects/concepts/parameters.cpp
   translator/transport-objects/resource_manager.cpp
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
@@ -543,6 +546,10 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
   translator/transport-objects/canonical/zeta1.h
   translator/transport-objects/canonical/zeta2.cpp
   translator/transport-objects/canonical/zeta2.h
+  translator/transport-objects/canonical/coordinates.cpp
+  translator/transport-objects/canonical/coordinates.h
+  translator/transport-objects/canonical/fields.cpp
+  translator/transport-objects/canonical/fields.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
@@ -566,6 +573,10 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/u3.h
   translator/transport-objects/concepts/zeta1.h
   translator/transport-objects/concepts/zeta2.h
+  translator/transport-objects/concepts/coordinates.h
+  translator/transport-objects/concepts/fields.h
+  translator/transport-objects/concepts/parameters.h
+  translator/transport-objects/concepts/parameters.cpp
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_FILES

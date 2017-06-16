@@ -31,6 +31,8 @@ namespace canonical
 
     std::unique_ptr<flattened_tensor> canonical_dddV::compute(const index_literal_list& indices)
       {
+        if(indices.size() != DDDV_TENSOR_INDICES) throw tensor_exception("dddV indices");
+
         return(this->res.dddV_resource(this->printer));
       }
 

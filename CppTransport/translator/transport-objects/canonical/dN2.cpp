@@ -31,14 +31,18 @@ namespace canonical
 
     std::unique_ptr<flattened_tensor> canonical_dN2::compute(const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(2));
+        if(indices.size() != DN2_TENSOR_INDICES) throw tensor_exception("dN2 indices");
 
-        const phase_index num_phase = this->shared.get_number_phase();
+        auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(DN2_TENSOR_INDICES));
+
+        const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
+        const phase_index max_j = this->shared.get_max_phase_index(indices[1]->get_variance());
+
         this->cached = false;
 
-        for(phase_index i = phase_index(0); i < num_phase; ++i)
+        for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
-            for(phase_index j = phase_index(0); j < num_phase; ++j)
+            for(phase_index j = phase_index(0, indices[1]->get_variance()); j < max_j; ++j)
               {
                 (*result)[this->fl.flatten(i, j)] = this->compute_component(i, j);
               }
@@ -53,7 +57,8 @@ namespace canonical
         unsigned int index = this->fl.flatten(i, j);
         std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
 
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
+        if(!cached) { this->populate_workspace();
+            this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -87,8 +92,10 @@ namespace canonical
         std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
 
         p = 0;
-        field_index num_fields = this->shared.get_number_field();
-        for(field_index i = field_index(0); i < num_fields; ++i)
+
+        field_index max_i = this->shared.get_max_field_index(variance::none);
+
+        for(field_index i = field_index(0, variance::none); i < max_i; ++i)
           {
             p += diff(1/(2*dotH), (*f)[this->fl.flatten(i)]) * (*d)[this->fl.flatten(i)];
 

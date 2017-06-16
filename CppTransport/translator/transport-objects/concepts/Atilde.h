@@ -35,6 +35,9 @@
 #include "index_literal.h"
 
 
+constexpr auto A_TILDE_TENSOR_INDICES = 3;
+
+
 class Atilde: public transport_tensor
   {
 

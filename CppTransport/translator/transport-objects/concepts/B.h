@@ -35,6 +35,9 @@
 #include "index_literal.h"
 
 
+constexpr auto B_TENSOR_INDICES = 3;
+
+
 class B: public transport_tensor
   {
 

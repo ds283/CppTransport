@@ -35,6 +35,9 @@
 #include "index_literal.h"
 
 
+constexpr auto U3_TENSOR_INDICES = 3;
+
+
 class u3: public transport_tensor
   {
 

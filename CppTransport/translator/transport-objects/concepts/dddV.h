@@ -35,6 +35,9 @@
 #include "index_literal.h"
 
 
+constexpr auto DDDV_TENSOR_INDICES = 3;
+
+
 class dddV: public transport_tensor
   {
 

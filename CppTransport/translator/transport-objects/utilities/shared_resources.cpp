@@ -51,10 +51,12 @@ std::unique_ptr<symbol_list> shared_resources::generate_parameters(const languag
     auto list = std::make_unique<symbol_list>();
 
     const auto& resource = this->mgr.parameters();
+    
+    const auto max_i = this->get_max_param_index();
 
     if(resource)
       {
-        for(param_index i = param_index(0); i < this->num_params; ++i)
+        for(param_index i = param_index(0); i < max_i; ++i)
           {
             std::string variable = printer.array_subscript(*resource, this->fl.flatten(i));
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
@@ -63,7 +65,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_parameters(const languag
       }
     else
       {
-        for(param_index i = param_index(0); i < this->num_params; ++i)
+        for(param_index i = param_index(0); i < max_i; ++i)
           {
             list->push_back(this->param_list[this->fl.flatten(i)]);
           }
@@ -79,10 +81,12 @@ std::unique_ptr<symbol_list> shared_resources::generate_fields(const language_pr
 
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
+    
+    const auto max_i = this->get_max_field_index(variance::none);
 
     if(resource && flatten)
       {
-        for(field_index i = field_index(0); i < this->num_fields; ++i)
+        for(field_index i = field_index(0); i < max_i; ++i)
           {
             std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten);
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
@@ -91,7 +95,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_fields(const language_pr
       }
     else
       {
-        for(field_index i = field_index(0); i < this->num_fields; ++i)
+        for(field_index i = field_index(0); i < max_i; ++i)
           {
             list->push_back(this->field_list[this->fl.flatten(i)]);
           }
@@ -107,10 +111,12 @@ std::unique_ptr<symbol_list> shared_resources::generate_derivs(const language_pr
 
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
+    
+    const auto max_i = this->get_max_field_index(variance::none);
 
     if(resource && flatten)
       {
-        for(field_index i = field_index(0); i < this->num_fields; ++i)
+        for(field_index i = field_index(0); i < max_i; ++i)
           {
             // TODO: explicit offset by this->num_fields is a bit ugly; would be nice to find a better approach
             std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten, static_cast<unsigned int>(this->num_fields));
@@ -120,7 +126,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_derivs(const language_pr
       }
     else
       {
-        for(field_index i = field_index(0); i < this->num_fields; ++i)
+        for(field_index i = field_index(0); i < max_i; ++i)
           {
             list->push_back(this->deriv_list[this->fl.flatten(i)]);
           }
@@ -130,7 +136,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_derivs(const language_pr
   }
 
 
-bool shared_resources::roll_parameters() const
+bool shared_resources::can_roll_parameters() const
   {
     const auto& resource = this->mgr.parameters();
 
@@ -138,7 +144,7 @@ bool shared_resources::roll_parameters() const
   }
 
 
-bool shared_resources::roll_coordinates() const
+bool shared_resources::can_roll_coordinates() const
   {
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();

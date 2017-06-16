@@ -31,12 +31,15 @@ namespace canonical
 
     std::unique_ptr<flattened_tensor> canonical_u1::compute(const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(1));
+        if(indices.size() != U1_TENSOR_INDICES) throw tensor_exception("U1 indices");
 
-        const phase_index num_phase = this->shared.get_number_phase();
+        auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(U1_TENSOR_INDICES));
+    
+        const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
+        
         this->cached = false;
 
-        for(phase_index i = phase_index(0); i < num_phase; ++i)
+        for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
             (*result)[this->fl.flatten(i)] = this->compute_component(i);
           }
@@ -106,7 +109,7 @@ namespace canonical
 
     unroll_behaviour canonical_u1::get_unroll()
       {
-        if(this->shared.roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 

@@ -50,7 +50,8 @@ enum class expression_item_types
     ddV_item, ddV_lambda,
     dddV_item, dddV_lambda,
     Hubble2_item,
-    epsilon_item
+    epsilon_item,
+    parameters_lambda, coordinates_lambda, fields_lambda
   };
 
 

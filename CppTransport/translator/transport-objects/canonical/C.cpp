@@ -33,16 +33,21 @@ namespace canonical
     canonical_C::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
                          GiNaC::symbol& a)
       {
-        std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
+        if(indices.size() != C_TENSOR_INDICES) throw tensor_exception("C indices");
 
-        const field_index num_field = this->shared.get_number_field();
+        auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(C_TENSOR_INDICES));
+    
+        const field_index max_i = this->shared.get_max_field_index(indices[0]->get_variance());
+        const field_index max_j = this->shared.get_max_field_index(indices[1]->get_variance());
+        const field_index max_k = this->shared.get_max_field_index(indices[2]->get_variance());
+
         this->cached = false;
 
-        for(field_index i = field_index(0); i < num_field; ++i)
+        for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
-            for(field_index j = field_index(0); j < num_field; ++j)
+            for(field_index j = field_index(0, indices[1]->get_variance()); j < max_j; ++j)
               {
-                for(field_index k = field_index(0); k < num_field; ++k)
+                for(field_index k = field_index(0, indices[2]->get_variance()); k < max_k; ++k)
                   {
                     (*result)[this->fl.flatten(i, j, k)] = this->compute_component(i, j, k, k1, k2, k3, a);
                   }
@@ -126,7 +131,7 @@ namespace canonical
 
     unroll_behaviour canonical_C::get_unroll()
       {
-        if(this->shared.roll_coordinates()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't unroll
       }
 

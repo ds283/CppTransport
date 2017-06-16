@@ -63,6 +63,12 @@ namespace canonical
 
         //! obtain a Hubble-object
         virtual std::unique_ptr<Hubble> make_Hubble(language_printer& p, cse& cw) override;
+    
+        //! obtain a fields object
+        virtual std::unique_ptr<fields> make_fields(language_printer& p, cse& cw) override;
+    
+        //! obtain a coordinates object
+        virtual std::unique_ptr<coordinates> make_coordinates(language_printer& p, cse& cw) override;
 
         //! obtain a dV-tensor
         virtual std::unique_ptr<dV> make_dV(language_printer& p, cse& cw) override;

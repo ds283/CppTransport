@@ -60,11 +60,10 @@ namespace macro_packages
 
         //! constructor
         replace_U1(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_phase1(std::move(n), U1_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_phase1(std::move(n), U1_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
-            shared(f.get_shared_resources()),
             sym_factory(s)
           {
             u1_tensor = f.make_u1(prn, cw);
@@ -97,9 +96,6 @@ namespace macro_packages
 
       private:
 
-        //! reference to shared resource
-        shared_resources& shared;
-
         //! CSE worker
         cse& cse_worker;
 
@@ -127,11 +123,10 @@ namespace macro_packages
 
         //! constructor
         replace_U2(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_phase2(std::move(n), U2_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_phase2(std::move(n), U2_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
-            shared(f.get_shared_resources()),
             sym_factory(s)
           {
             u2_tensor = f.make_u2(prn, cw);
@@ -164,9 +159,6 @@ namespace macro_packages
 
       private:
 
-        //! reference to shared resource
-        shared_resources& shared;
-
         //! CSE worker
         cse& cse_worker;
 
@@ -194,11 +186,10 @@ namespace macro_packages
 
         //! constructor
         replace_U3(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_phase3(std::move(n), U3_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_phase3(std::move(n), U3_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
-            shared(f.get_shared_resources()),
             sym_factory(s)
           {
             u3_tensor = f.make_u3(prn, cw);
@@ -230,9 +221,6 @@ namespace macro_packages
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;

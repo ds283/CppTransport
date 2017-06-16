@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 19/12/2015.
+// Created by David Seery on 16/06/2017.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2017 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_SR_VELOCITY_H
-#define CPPTRANSPORT_SR_VELOCITY_H
+#ifndef CPPTRANSPORT_FIELDS_H
+#define CPPTRANSPORT_FIELDS_H
 
 
 #include "transport_tensor.h"
@@ -35,44 +35,40 @@
 #include "index_literal.h"
 
 
-constexpr auto SR_VELOCITY_TENSOR_INDICES = 1;
+constexpr auto FIELD_TENSOR_INDICES = 1;
 
 
-class SR_velocity: public transport_tensor
+class fields: public transport_tensor
   {
-
+    
     // CONSTRUCTOR, DESTRUCTOR
-
+    
   public:
-
+    
     //! constructor is default
-    SR_velocity() = default;
-
+    fields() = default;
+    
     //! destructor is default
-    virtual ~SR_velocity() = default;
-
-
+    virtual ~fields() = default;
+    
+    
     // INTERFACE
-
+    
   public:
-
+    
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
     compute(const index_literal_list& indices) = 0;
-
+    
     //! evaluate component of tensor
     virtual GiNaC::ex
     compute_component(field_index i) = 0;
-
+    
     //! evaluate lambda for tensor
     virtual std::unique_ptr<atomic_lambda>
     compute_lambda(const abstract_index& i) = 0;
-
-    //! invalidate cache
-    virtual void reset_cache() = 0;
-
+    
   };
 
 
-
-#endif //CPPTRANSPORT_SR_VELOCITY_H
+#endif //CPPTRANSPORT_FIELDS_H

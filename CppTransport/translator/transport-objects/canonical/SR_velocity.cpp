@@ -31,12 +31,15 @@ namespace canonical
 
     std::unique_ptr<flattened_tensor> canonical_SR_velocity::compute(const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(1));
+        if(indices.size() != SR_VELOCITY_TENSOR_INDICES) throw tensor_exception("SRvelocity indices");
 
-        const field_index num_field = this->shared.get_number_field();
+        auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(SR_VELOCITY_TENSOR_INDICES));
+    
+        const field_index max_i = this->shared.get_max_field_index(indices[0]->get_variance());
+
         this->cached = false;
 
-        for(field_index i = field_index(0); i < num_field; ++i)
+        for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
             (*result)[this->fl.flatten(i)] = this->compute_component(i);
           }

@@ -41,6 +41,9 @@
 #include "index_traits.h"
 
 #include "Hubble.h"
+#include "parameters.h"
+#include "fields.h"
+#include "coordinates.h"
 #include "SR_velocity.h"
 #include "dV.h"
 #include "ddV.h"
@@ -80,8 +83,16 @@ class tensor_factory
 
     //! destructor
     virtual ~tensor_factory() = default;
+    
+    
+    // SERVICES
+    
+  public:
+    
+    //! make an index flatten object
+    index_flatten make_flatten() const { return fl; }
 
-
+    
     // INTERFACE -- MANUFACTURE TENSOR OBJECTS
 
   public:
@@ -89,6 +100,18 @@ class tensor_factory
     //! obtain a Hubble-object
     virtual std::unique_ptr<Hubble> make_Hubble(language_printer& p, cse& cw) = 0;
 
+    //! obtain a parameter object
+    virtual std::unique_ptr<parameters> make_parameters(language_printer& p, cse& cw)
+      {
+        return std::make_unique<parameters>(p, cw, this->shared, this->fl, this->traits);
+      }
+    
+    //! obtain a fields object
+    virtual std::unique_ptr<fields> make_fields(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a coordinates object
+    virtual std::unique_ptr<coordinates> make_coordinates(language_printer& p, cse& cw) = 0;
+    
     //! obtain a dV-tensor
     virtual std::unique_ptr<dV> make_dV(language_printer& p, cse& cw) = 0;
 
@@ -144,11 +167,8 @@ class tensor_factory
 
     //! link to resource manager object
     resource_manager& get_resource_manager() { return(this->mgr); }
-
-    //! link to shared resources object
-    shared_resources& get_shared_resources() { return(this->shared); }
-
-
+    
+    
     // INTERFACE -- QUERY FOR PERFORMANCE
 
   public:

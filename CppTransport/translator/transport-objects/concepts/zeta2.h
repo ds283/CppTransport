@@ -35,6 +35,9 @@
 #include "index_literal.h"
 
 
+constexpr auto ZETA2_TENSOR_INDICES = 2;
+
+
 class zeta2: public transport_tensor
   {
 

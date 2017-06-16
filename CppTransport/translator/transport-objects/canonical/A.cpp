@@ -33,16 +33,21 @@ namespace canonical
     canonical_A::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
                          GiNaC::symbol& a)
       {
-        std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
+        if(indices.size() != A_TENSOR_INDICES) throw tensor_exception("A indices");
+        
+        auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(A_TENSOR_INDICES));
 
-        const field_index num_field = this->shared.get_number_field();
+        const field_index max_i = this->shared.get_max_field_index(indices[0]->get_variance());
+        const field_index max_j = this->shared.get_max_field_index(indices[1]->get_variance());
+        const field_index max_k = this->shared.get_max_field_index(indices[2]->get_variance());
+        
         this->cached = false;
 
-        for(field_index i = field_index(0); i < num_field; ++i)
+        for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
-            for(field_index j = field_index(0); j < num_field; ++j)
+            for(field_index j = field_index(0, indices[1]->get_variance()); j < max_j; ++j)
               {
-                for(field_index k = field_index(0); k < num_field; ++k)
+                for(field_index k = field_index(0, indices[2]->get_variance()); k < max_k; ++k)
                   {
                     (*result)[this->fl.flatten(i, j, k)] = this->compute_component(i, j, k, k1, k2, k3, a);
                   }
@@ -57,7 +62,7 @@ namespace canonical
                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j, k);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        auto args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -160,7 +165,7 @@ namespace canonical
 
     unroll_behaviour canonical_A::get_unroll()
       {
-        if(this->shared.roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV() && this->res.roll_dddV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV() && this->res.roll_dddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -176,7 +181,7 @@ namespace canonical
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        auto args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -212,8 +217,9 @@ namespace canonical
 
             this->cache.store(expression_item_types::A_lambda, 0, *args, result);
           }
-
-        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::A_lambda, *args, this->shared.generate_working_type());
+    
+        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::A_lambda, *args,
+                                               this->shared.generate_working_type());
       }
 
   }   // namespace canonical

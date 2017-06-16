@@ -77,11 +77,10 @@ namespace macro_packages
 
         //! constructor
         replace_A(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field3(std::move(n), A_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field3(std::move(n), A_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
-            shared(f.get_shared_resources()),
             sym_factory(s)
           {
             A_tensor = f.make_A(prn, cw);
@@ -114,9 +113,6 @@ namespace macro_packages
 
       private:
 
-        //! reference to shared resource
-        shared_resources& shared;
-
         //! CSE worker
         cse& cse_worker;
 
@@ -144,11 +140,10 @@ namespace macro_packages
         
         //! constructor
         replace_Atilde(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field3(std::move(n), ATILDE_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field3(std::move(n), ATILDE_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
-            shared(f.get_shared_resources()),
             sym_factory(s)
           {
             Atilde_tensor = f.make_Atilde(prn, cw);
@@ -181,9 +176,6 @@ namespace macro_packages
       
       private:
         
-        //! reference to shared resource
-        shared_resources& shared;
-        
         //! CSE worker
         cse& cse_worker;
         
@@ -211,11 +203,10 @@ namespace macro_packages
 
         //! constructor
         replace_B(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field3(std::move(n), B_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field3(std::move(n), B_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
-            shared(f.get_shared_resources()),
             sym_factory(s)
           {
             B_tensor = f.make_B(prn, cw);
@@ -248,9 +239,6 @@ namespace macro_packages
 
       private:
 
-        //! reference to shared resource
-        shared_resources& shared;
-
         //! CSE worker
         cse& cse_worker;
 
@@ -278,11 +266,10 @@ namespace macro_packages
 
         //! constructor
         replace_C(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field3(std::move(n), C_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field3(std::move(n), C_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
-            shared(f.get_shared_resources()),
             sym_factory(s)
           {
             C_tensor = f.make_C(prn, cw);
@@ -315,9 +302,6 @@ namespace macro_packages
 
       private:
 
-        //! reference to shared resource
-        shared_resources& shared;
-
         //! CSE worker
         cse& cse_worker;
 
@@ -345,11 +329,10 @@ namespace macro_packages
 
         //! constructor
         replace_M(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
-          : cse_map_field2(std::move(n), M_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field2(std::move(n), M_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
             lambda_mgr(lm),
-            shared(f.get_shared_resources()),
             sym_factory(s)
           {
             M_tensor = f.make_M(prn, cw);
@@ -381,9 +364,6 @@ namespace macro_packages
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;

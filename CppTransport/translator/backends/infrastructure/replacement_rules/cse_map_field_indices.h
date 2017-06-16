@@ -44,9 +44,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        cse_map_field1(std::string nm, unsigned int a, param_index num_params, field_index num_fields)
+        cse_map_field1(std::string nm, unsigned int a, index_flatten f)
           : replacement_rule_index(std::move(nm), a, 1, std::vector<index_class>({ index_class::field_only })),
-            fl(static_cast<unsigned int>(num_params), static_cast<unsigned int>(num_fields))
+            fl(std::move(f))
           {
           }
 
@@ -86,9 +86,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        cse_map_field2(std::string nm, unsigned int a, param_index num_params, field_index num_fields)
+        cse_map_field2(std::string nm, unsigned int a, index_flatten f)
           : replacement_rule_index(std::move(nm), a, 2, std::vector<index_class>({ index_class::field_only, index_class::field_only })),
-            fl(static_cast<unsigned int>(num_params), static_cast<unsigned int>(num_fields))
+            fl(std::move(f))
           {
           }
 
@@ -128,9 +128,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        cse_map_field3(std::string nm, unsigned int a, param_index num_params, field_index num_fields)
+        cse_map_field3(std::string nm, unsigned int a, index_flatten f)
           : replacement_rule_index(std::move(nm), a, 3, std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only })),
-            fl(static_cast<unsigned int>(num_params), static_cast<unsigned int>(num_fields))
+            fl(std::move(f))
           {
           }
 
