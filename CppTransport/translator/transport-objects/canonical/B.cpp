@@ -77,17 +77,17 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex& Vi   = (*dV)[this->fl.flatten(i)];
-            GiNaC::ex& Vj   = (*dV)[this->fl.flatten(j)];
-            GiNaC::ex& Vk   = (*dV)[this->fl.flatten(k)];
+            auto& Vi   = (*dV)[this->fl.flatten(i)];
+            auto& Vj   = (*dV)[this->fl.flatten(j)];
+            auto& Vk   = (*dV)[this->fl.flatten(k)];
 
-            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
-            GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
-            GiNaC::symbol& deriv_k = (*derivs)[this->fl.flatten(k)];
+            auto& deriv_i = (*derivs)[this->fl.flatten(i)];
+            auto& deriv_j = (*derivs)[this->fl.flatten(j)];
+            auto& deriv_k = (*derivs)[this->fl.flatten(k)];
 
-            GiNaC::idx idx_i = this->shared.generate_index(i);
-            GiNaC::idx idx_j = this->shared.generate_index(j);
-            GiNaC::idx idx_k = this->shared.generate_index(k);
+            auto idx_i = this->shared.generate_index(i);
+            auto idx_j = this->shared.generate_index(j);
+            auto idx_k = this->shared.generate_index(k);
 
             result = this->expr(idx_i, idx_j, idx_k, Vi, Vj, Vk,
                                 deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
@@ -101,7 +101,7 @@ namespace canonical
 
     GiNaC::ex canonical_B::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
                                 GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
-                                GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
+                                GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
                                 GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
@@ -161,13 +161,13 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::symbol deriv_i = this->shared.generate_deriv_vector(i, this->printer);
-            GiNaC::symbol deriv_j = this->shared.generate_deriv_vector(j, this->printer);
-            GiNaC::symbol deriv_k = this->shared.generate_deriv_vector(k, this->printer);
+            auto deriv_i = this->res.generate_deriv_vector(i, this->printer);
+            auto deriv_j = this->res.generate_deriv_vector(j, this->printer);
+            auto deriv_k = this->res.generate_deriv_vector(k, this->printer);
 
-            GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
-            GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
-            GiNaC::ex Vk   = this->res.dV_resource(k, this->printer);
+            auto Vi   = this->res.dV_resource(i, this->printer);
+            auto Vj   = this->res.dV_resource(j, this->printer);
+            auto Vk   = this->res.dV_resource(k, this->printer);
 
             result = this->expr(idx_i, idx_j, idx_k, Vi, Vj, Vk, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
@@ -207,7 +207,7 @@ namespace canonical
         if(cached) throw tensor_exception("B already cached");
 
         this->pre_lambda();
-        derivs = this->shared.generate_deriv_symbols(this->printer);
+        derivs = this->res.generate_deriv_vector(this->printer);
         dV = this->res.dV_resource(this->printer);
 
         this->cached = true;

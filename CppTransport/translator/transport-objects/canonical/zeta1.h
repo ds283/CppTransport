@@ -109,7 +109,7 @@ namespace canonical
         void populate_workspace();
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::symbol& deriv_i);
+        GiNaC::ex expr(GiNaC::ex& deriv_i);
 
 
         // INTERNAL DATA
@@ -153,7 +153,7 @@ namespace canonical
         // WORKSPACE AND CACHE
 
         //! list of momentum symbols
-        std::unique_ptr<symbol_list> derivs;
+        std::unique_ptr<flattened_tensor> derivs;
 
         //! epsilon
         GiNaC::ex eps;

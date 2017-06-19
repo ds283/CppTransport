@@ -64,7 +64,7 @@ namespace canonical
 
             field_index species_i = this->traits.to_species(i);
 
-            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(species_i)];
+            auto& deriv_i = (*derivs)[this->fl.flatten(species_i)];
 
             if(this->traits.is_species(i))
               {
@@ -88,7 +88,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_u1::expr_momentum(GiNaC::ex& Vi, GiNaC::symbol& deriv_i)
+    GiNaC::ex canonical_u1::expr_momentum(GiNaC::ex& Vi, GiNaC::ex& deriv_i)
       {
         return -(3-eps) * deriv_i - Vi/Hsq;
       }
@@ -111,8 +111,8 @@ namespace canonical
         const abstract_index i_field_a = this->traits.species_to_species(i);
         const abstract_index i_field_b = this->traits.momentum_to_species(i);
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_vector(i_field_a, this->printer);
-        GiNaC::symbol deriv_b_i = this->shared.generate_deriv_vector(i_field_b, this->printer);
+        auto deriv_a_i = this->res.generate_deriv_vector(i_field_a, this->printer);
+        auto deriv_b_i = this->res.generate_deriv_vector(i_field_b, this->printer);
 
         this->pre_lambda();
 
@@ -159,7 +159,7 @@ namespace canonical
         if(cached) throw tensor_exception("U1 already cached");
 
         this->pre_lambda();
-        derivs = this->shared.generate_deriv_symbols(this->printer);
+        derivs = this->res.generate_deriv_vector(this->printer);
         dV = this->res.dV_resource(this->printer);
 
         this->cached = true;

@@ -64,7 +64,7 @@ namespace canonical
 
             if(this->traits.is_species(i))
               {
-                GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
+                auto& deriv_i = (*derivs)[this->fl.flatten(i)];
                 result = this->expr(deriv_i);
               }
             else if(this->traits.is_momentum(i))
@@ -84,7 +84,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_zeta1::expr(GiNaC::symbol& deriv_i)
+    GiNaC::ex canonical_zeta1::expr(GiNaC::ex& deriv_i)
       {
         return -deriv_i / (2*Mp*Mp*eps);
       }
@@ -124,7 +124,7 @@ namespace canonical
 
         map_lambda_table table(lambda_flattened_map_size(1));
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_vector(i_field_a, this->printer);
+        auto deriv_a_i = this->res.generate_deriv_vector(i_field_a, this->printer);
 
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;
@@ -156,7 +156,7 @@ namespace canonical
         if(cached) throw tensor_exception("zeta1 already cached");
 
         this->pre_lambda();
-        derivs = this->shared.generate_deriv_symbols(this->printer);
+        derivs = this->res.generate_deriv_vector(this->printer);
 
         this->cached = true;
       }

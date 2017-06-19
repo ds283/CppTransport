@@ -72,7 +72,15 @@ class shared_resources
     phase_index get_max_phase_index(variance v) const { return phase_index(this->num_phase, v); }
 
 
-    // INTERFACE -- GENERATE RESOURCES
+    // SYMBOL SERVICES
+
+  public:
+
+    //! generate named symbol resource
+    GiNaC::symbol generate_symbol(const std::string& name) const { return this->sym_factory.get_symbol(name); }
+
+
+    // GENERATE RESOURCES -- SCALARS
 
   public:
 
@@ -88,15 +96,26 @@ class shared_resources
     //! generate V symbol resource
     GiNaC::symbol generate_V() const { return this->sym_factory.get_symbol(V_SYMBOL_NAME); }
 
-    //! generate named symbol resource
-    GiNaC::symbol generate_symbol(const std::string& name) const { return this->sym_factory.get_symbol(name); }
 
+    // GENERATE RESOURCES -- PARAMETERS
 
   public:
 
     //! generate concrete parameter label resource
     //! note that parameter indices have no variance
     std::unique_ptr<symbol_list> generate_parameter_symbols(const language_printer& printer) const;
+
+    //! generate abstract parameter label resource
+    //! note that parameter indices have no variance, and can therefore be sensibly handled
+    //! by shared_resources (which knows nothing about model-dependent details)
+    //! even though the equivalent field_# and deriv_# versions have to be handled
+    //! by a model-specific resource manager
+    GiNaC::symbol generate_parameter_vector(const abstract_index& idx, const language_printer& printer) const;
+
+
+    // GENERATE RESOURCES -- FIELD- AND PHASE-SPACE COORDINATE SYMBOLS
+
+  public:
 
     //! generate concrete field-space coordinate label resource
     //! note that these are the literal symbols that label the fields; they should be regarded
@@ -110,19 +129,8 @@ class shared_resources
     //! nontrivial field-space metric
     std::unique_ptr<symbol_list> generate_deriv_symbols(const language_printer& printer) const;
 
-    //! generate abstract parameter label resource
-    //! note that parameter indices have no variance, and can therefore be sensibly handled
-    //! by shared_resources (which knows nothing about model-dependent details)
-    //! even though the equivalent field_# and deriv_# versions have to be handled
-    //! by a model-specific resource manager
-    GiNaC::symbol generate_parameter_vector(const abstract_index& idx, const language_printer& printer) const;
 
-    //! generate abstract field-space coordinate label resource
-    GiNaC::symbol generate_field_vector(const abstract_index& idx, const language_printer& printer) const;
-
-    //! generate abstract fields-space derivative label resource
-    GiNaC::symbol generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const;
-
+    // GENERATE RESOURCES -- LAMBDA RETURN TYPE
 
   public:
 
@@ -131,7 +139,7 @@ class shared_resources
     std::string generate_working_type() const;
 
 
-    // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
+    // QUERY ROLL/UNROLL AVAILABILITY
 
   public:
 
@@ -142,7 +150,7 @@ class shared_resources
     bool can_roll_coordinates() const;
 
 
-    // INTERFACE -- MANUFACTURE GINAC INDICES
+    // MANUFACTURE GINAC INDICES
 
   public:
 

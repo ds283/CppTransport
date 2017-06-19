@@ -73,14 +73,14 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(this->traits.to_species(i))];
-            GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(this->traits.to_species(j))];
+            auto& deriv_i = (*derivs)[this->fl.flatten(this->traits.to_species(i))];
+            auto& deriv_j = (*derivs)[this->fl.flatten(this->traits.to_species(j))];
 
             field_index species_i = this->traits.to_species(i);
             field_index species_j = this->traits.to_species(j);
 
-            GiNaC::idx idx_i = this->shared.generate_index(species_i);
-            GiNaC::idx idx_j = this->shared.generate_index(species_j);
+            auto idx_i = this->shared.generate_index(species_i);
+            auto idx_j = this->shared.generate_index(species_j);
 
             if(this->traits.is_species(i) && this->traits.is_species(j))
               {
@@ -116,7 +116,7 @@ namespace canonical
         if(cached) throw tensor_exception("A already cached");
 
         this->pre_lambda();
-        derivs = this->shared.generate_deriv_symbols(this->printer);
+        derivs = this->res.generate_deriv_vector(this->printer);
         dV = this->res.dV_resource(this->printer);
 
         this->cached = true;
@@ -159,7 +159,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_zeta2::expr_field_field(GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+    GiNaC::ex canonical_zeta2::expr_field_field(GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
                                                 GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
                                                 GiNaC::symbol& a)
       {
@@ -169,8 +169,9 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_zeta2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
-                                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
+    GiNaC::ex canonical_zeta2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
+                                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                                   GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
 
@@ -210,15 +211,15 @@ namespace canonical
         const abstract_index j_field_a = this->traits.species_to_species(j);
         const abstract_index j_field_b = this->traits.momentum_to_species(j);
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_vector(i_field_a, this->printer);
-        GiNaC::symbol deriv_b_i = this->shared.generate_deriv_vector(i_field_b, this->printer);
-        GiNaC::symbol deriv_a_j = this->shared.generate_deriv_vector(j_field_a, this->printer);
-        GiNaC::symbol deriv_b_j = this->shared.generate_deriv_vector(j_field_b, this->printer);
+        auto deriv_a_i = this->res.generate_deriv_vector(i_field_a, this->printer);
+        auto deriv_b_i = this->res.generate_deriv_vector(i_field_b, this->printer);
+        auto deriv_a_j = this->res.generate_deriv_vector(j_field_a, this->printer);
+        auto deriv_b_j = this->res.generate_deriv_vector(j_field_b, this->printer);
 
-        GiNaC::idx idx_a_i = this->shared.generate_index(i_field_a);
-        GiNaC::idx idx_b_i = this->shared.generate_index(i_field_b);
-        GiNaC::idx idx_a_j = this->shared.generate_index(j_field_a);
-        GiNaC::idx idx_b_j = this->shared.generate_index(j_field_b);
+        auto idx_a_i = this->shared.generate_index(i_field_a);
+        auto idx_b_i = this->shared.generate_index(i_field_b);
+        auto idx_a_j = this->shared.generate_index(j_field_a);
+        auto idx_b_j = this->shared.generate_index(j_field_b);
 
         this->pre_lambda();
 
@@ -238,7 +239,8 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = this->expr_field_field(deriv_a_i, deriv_a_j, k, k1, k2, a);
+            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] =
+              this->expr_field_field(deriv_a_i, deriv_a_j, k, k1, k2, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]);
           }
@@ -247,7 +249,8 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = this->expr_field_momentum(idx_a_i, idx_b_j, deriv_a_i, deriv_b_j, k, k1, k2, a);
+            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] =
+              this->expr_field_momentum(idx_a_i, idx_b_j, deriv_a_i, deriv_b_j, k, k1, k2, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM), *args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)]);
           }
@@ -256,7 +259,8 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] = this->expr_field_momentum(idx_a_j, idx_b_i, deriv_a_j, deriv_b_i, k, k2, k1, a);
+            table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
+              this->expr_field_momentum(idx_a_j, idx_b_i, deriv_a_j, deriv_b_i, k, k2, k1, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }

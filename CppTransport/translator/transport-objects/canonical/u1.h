@@ -102,7 +102,7 @@ namespace canonical
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr_momentum(GiNaC::ex& Vi, GiNaC::symbol& deriv_i);
+        GiNaC::ex expr_momentum(GiNaC::ex& Vi, GiNaC::ex& deriv_i);
 
 
         // INTERNAL DATA
@@ -146,7 +146,7 @@ namespace canonical
         // WORKSPACE AND CACHE
 
         //! list of momentum symbols
-        std::unique_ptr<symbol_list> derivs;
+        std::unique_ptr<flattened_tensor> derivs;
 
         //! flattened dV tensor
         std::unique_ptr<flattened_tensor> dV;

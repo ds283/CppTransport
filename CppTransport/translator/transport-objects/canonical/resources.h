@@ -70,7 +70,7 @@ namespace canonical
         ~resources() = default;
 
 
-        // INTERFACE -- BUILD RESOURCES
+        // RAW RESOURCES -- NO COMMON SUBEXPRESSION ELIMINATION
 
       public:
 
@@ -87,6 +87,11 @@ namespace canonical
         GiNaC::ex raw_Hsq_resource(const language_printer& printer);
 
 
+        // SCALAR RESOURCES
+
+      public:
+
+
         //! generate V resource, including any necessary substitutions for parameters/coordinates
         GiNaC::ex V_resource(cse& cse_worker, const language_printer& printer);
 
@@ -96,6 +101,27 @@ namespace canonical
         //! generate Hubble-squared resource
         GiNaC::ex Hsq_resource(cse& cse_worker, const language_printer& printer);
 
+
+        // TENSOR RESOURCES -- COORDINATES
+
+      public:
+
+        //! generate concrete field-space coordinate label resource
+        std::unique_ptr<flattened_tensor> generate_field_vector(const language_printer& printer) const;
+
+        //! generate concrete field-space deriative label resource
+        std::unique_ptr<flattened_tensor> generate_deriv_vector(const language_printer& printer) const;
+
+        //! generate abstract field-space coordinate label resource
+        GiNaC::ex generate_field_vector(const abstract_index& idx, const language_printer& printer) const;
+
+        //! generate abstract fields-space derivative label resource
+        GiNaC::ex generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const;
+
+
+        // TENSOR RESOURCES -- DERIVATIVES OF THE POTENTIAL
+
+      public:
 
         //! generate concrete dV resource labels
         std::unique_ptr<flattened_tensor> dV_resource(const language_printer& printer);
@@ -108,18 +134,19 @@ namespace canonical
 
 
         //! generate abstract dV resource label
-        GiNaC::symbol dV_resource(const abstract_index& a, const language_printer& printer);
+        GiNaC::ex dV_resource(const abstract_index& a, const language_printer& printer);
 
         //! generate abstract ddV resource label
-        GiNaC::symbol ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer);
+        GiNaC::ex ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer);
 
         //! generate abstract dddV resource label
-        GiNaC::symbol dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c, const language_printer& printer);
+        GiNaC::ex dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c,
+                                const language_printer& printer);
 
 
 
-        // INTERFACE -- BUILD ARGUMENT LISTS
-        // used to interact with expression cache
+        // BUILD ARGUMENT LISTS
+        // used to interact with expression and lambda caches
 
       public:
 
@@ -127,7 +154,7 @@ namespace canonical
         std::unique_ptr<cache_tags> generate_cache_arguments(unsigned int flags, const language_printer& printer) const;
 
 
-        // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
+        // QUERY ROLL/UNROLL AVAILABILITY
 
       public:
 

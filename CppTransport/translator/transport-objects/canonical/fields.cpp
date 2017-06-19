@@ -69,7 +69,7 @@ namespace canonical
     
         auto args = std::make_unique<cache_tags>();
     
-        GiNaC::ex result = this->shared.generate_field_vector(i, this->printer);
+        auto result = this->res.generate_field_vector(i, this->printer);
     
         return std::make_unique<atomic_lambda>(i, result, expression_item_types::fields_lambda, *args, this->shared.generate_working_type());
       }

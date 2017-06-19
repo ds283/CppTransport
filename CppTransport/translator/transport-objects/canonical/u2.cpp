@@ -86,12 +86,12 @@ namespace canonical
               }
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
-                GiNaC::ex& Vij = (*ddV)[this->fl.flatten(species_i, species_j)];
-                GiNaC::ex& Vi  = (*dV)[this->fl.flatten(species_i)];
-                GiNaC::ex& Vj  = (*dV)[this->fl.flatten(species_j)];
+                auto& Vij = (*ddV)[this->fl.flatten(species_i, species_j)];
+                auto& Vi  = (*dV)[this->fl.flatten(species_i)];
+                auto& Vj  = (*dV)[this->fl.flatten(species_j)];
 
-                GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(species_i)];
-                GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(species_j)];
+                auto& deriv_i = (*derivs)[this->fl.flatten(species_i)];
+                auto& deriv_j = (*derivs)[this->fl.flatten(species_j)];
 
                 result = this->expr_field_momentum(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j, k, a);
               }
@@ -114,7 +114,7 @@ namespace canonical
 
     GiNaC::ex canonical_u2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
                                                 GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                                                GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+                                                GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
                                                 GiNaC::symbol& k, GiNaC::symbol& a)
       {
         GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
@@ -150,15 +150,15 @@ namespace canonical
         const abstract_index j_field_a = this->traits.species_to_species(j);
         const abstract_index j_field_b = this->traits.momentum_to_species(j);
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_vector(i_field_a, this->printer);
-        GiNaC::symbol deriv_b_i = this->shared.generate_deriv_vector(i_field_b, this->printer);
-        GiNaC::symbol deriv_a_j = this->shared.generate_deriv_vector(j_field_a, this->printer);
-        GiNaC::symbol deriv_b_j = this->shared.generate_deriv_vector(j_field_b, this->printer);
+        auto deriv_a_i = this->res.generate_deriv_vector(i_field_a, this->printer);
+        auto deriv_b_i = this->res.generate_deriv_vector(i_field_b, this->printer);
+        auto deriv_a_j = this->res.generate_deriv_vector(j_field_a, this->printer);
+        auto deriv_b_j = this->res.generate_deriv_vector(j_field_b, this->printer);
 
-        GiNaC::idx idx_a_i = this->shared.generate_index(i_field_a);
-        GiNaC::idx idx_b_i = this->shared.generate_index(i_field_b);
-        GiNaC::idx idx_a_j = this->shared.generate_index(j_field_a);
-        GiNaC::idx idx_b_j = this->shared.generate_index(j_field_b);
+        auto idx_a_i = this->shared.generate_index(i_field_a);
+        auto idx_b_i = this->shared.generate_index(i_field_b);
+        auto idx_a_j = this->shared.generate_index(j_field_a);
+        auto idx_b_j = this->shared.generate_index(j_field_b);
 
         this->pre_lambda();
 
@@ -178,12 +178,13 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex V_ba_ij = this->res.ddV_resource(i_field_b, j_field_a, this->printer);
+            auto V_ba_ij = this->res.ddV_resource(i_field_b, j_field_a, this->printer);
 
-            GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
-            GiNaC::ex V_a_j = this->res.dV_resource(j_field_a, this->printer);
+            auto V_b_i = this->res.dV_resource(i_field_b, this->printer);
+            auto V_a_j = this->res.dV_resource(j_field_a, this->printer);
 
-            map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] = this->expr_field_momentum(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);
+            map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
+              this->expr_field_momentum(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);
 
             this->cache.store(expression_item_types::U2_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
@@ -214,7 +215,7 @@ namespace canonical
         if(cached) throw tensor_exception("U2 already cached");
 
         this->pre_lambda();
-        derivs = this->shared.generate_deriv_symbols(this->printer);
+        derivs = this->res.generate_deriv_vector(this->printer);
         dV = this->res.dV_resource(this->printer);
         ddV = this->res.ddV_resource(this->printer);
 

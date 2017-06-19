@@ -75,6 +75,70 @@ namespace canonical
       }
 
 
+    std::unique_ptr<flattened_tensor> resources::generate_field_vector(const language_printer& printer) const
+      {
+        // no distinction between co- and contravariant indices in a flat model, so we can always return the
+        // raw variable labels (which notionally are the contravariant components)
+
+        auto X = std::make_unique<flattened_tensor>();
+
+        const auto Y = this->share.generate_field_symbols(printer);
+        for(const auto& label : *Y)
+          {
+            X->push_back(label);
+          }
+
+        return X;
+      }
+
+
+    std::unique_ptr<flattened_tensor> resources::generate_deriv_vector(const language_printer& printer) const
+      {
+        // no distinction between co- and contravariant indices in a flat model, so we can always return the
+        // raw variable labels (which notionally are the contravariant components)
+
+        auto X = std::make_unique<flattened_tensor>();
+
+        const auto Y = this->share.generate_field_symbols(printer);
+        for(const auto& label : *Y)
+          {
+            X->push_back(label);
+          }
+
+        return X;
+      }
+
+
+    GiNaC::ex resources::generate_field_vector(const abstract_index& idx, const language_printer& printer) const
+      {
+        // no distinction between co- and contravariant indices in a flat model, so we can always return the
+        // raw variable labels (which notionally are the contravariant components)
+
+        const auto resource = this->mgr.coordinates();
+        const auto& flatten = this->mgr.phase_flatten();
+
+        if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
+
+        std::string variable = printer.array_subscript(resource.get().second, idx, *flatten);
+        return this->sym_factory.get_symbol(variable);
+      }
+
+
+    GiNaC::ex resources::generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const
+      {
+        // no distinction between co- and contravariant indices in a flat model, so we can always return the
+        // raw variable labels (which notionally are the contravariant components)
+
+        const auto resource = this->mgr.coordinates();
+        const auto& flatten = this->mgr.phase_flatten();
+
+        if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
+
+        std::string variable = printer.array_subscript(resource.get().second, idx, *flatten, static_cast<unsigned int>(this->num_fields));
+        return this->sym_factory.get_symbol(variable);
+      }
+
+
     GiNaC::ex resources::V_resource(cse& cse_worker, const language_printer& printer)
       {
         // behaviour differs depending whether CSE is in use or not
@@ -510,7 +574,7 @@ namespace canonical
       }
 
 
-    GiNaC::symbol resources::dV_resource(const abstract_index& a, const language_printer& printer)
+    GiNaC::ex resources::dV_resource(const abstract_index& a, const language_printer& printer)
       {
         const auto resource = this->mgr.dV();
         const auto& flatten = this->mgr.field_flatten();
@@ -522,7 +586,7 @@ namespace canonical
       }
 
 
-    GiNaC::symbol resources::ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer)
+    GiNaC::ex resources::ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer)
       {
         const auto resource = this->mgr.ddV();
         const auto& flatten = this->mgr.field_flatten();
@@ -534,8 +598,8 @@ namespace canonical
       }
 
 
-    GiNaC::symbol resources::dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c,
-                                           const language_printer& printer)
+    GiNaC::ex resources::dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c,
+                                       const language_printer& printer)
       {
         const auto resource = this->mgr.dddV();
         const auto& flatten = this->mgr.field_flatten();

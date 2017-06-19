@@ -164,30 +164,6 @@ GiNaC::symbol shared_resources::generate_parameter_vector(const abstract_index& 
   }
 
 
-GiNaC::symbol shared_resources::generate_field_vector(const abstract_index& idx, const language_printer& printer) const
-  {
-    const auto resource = this->mgr.coordinates();
-    const auto& flatten = this->mgr.phase_flatten();
-
-    if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
-
-    std::string variable = printer.array_subscript(resource.get().second, idx, *flatten);
-    return this->sym_factory.get_symbol(variable);
-  }
-
-
-GiNaC::symbol shared_resources::generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const
-  {
-    const auto resource = this->mgr.coordinates();
-    const auto& flatten = this->mgr.phase_flatten();
-
-    if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
-
-    std::string variable = printer.array_subscript(resource.get().second, idx, *flatten, static_cast<unsigned int>(this->num_fields));
-    return this->sym_factory.get_symbol(variable);
-  }
-
-
 std::string shared_resources::generate_working_type() const
   {
     const auto& working_type = this->mgr.working_type();

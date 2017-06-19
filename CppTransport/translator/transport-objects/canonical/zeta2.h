@@ -106,14 +106,14 @@ namespace canonical
       private:
 
         //! compute field-field entry
-        GiNaC::ex expr_field_field(GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+        GiNaC::ex expr_field_field(GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
                                    GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
 
         //! compute field-momentum or momentum-field entry;
         //! field index is i, momentum index is j
         //! likewise, corresponding momenta are k1, k2 respectively
         GiNaC::ex expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
-                                      GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+                                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
                                       GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
 
 
@@ -158,7 +158,7 @@ namespace canonical
         // WORKSPACE AND CACHE
 
         //! list of momentum symbols
-        std::unique_ptr<symbol_list> derivs;
+        std::unique_ptr<flattened_tensor> derivs;
 
         //! flattened dV tensor
         std::unique_ptr<flattened_tensor> dV;
