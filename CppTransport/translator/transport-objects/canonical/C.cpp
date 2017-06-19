@@ -81,9 +81,9 @@ namespace canonical
             auto& deriv_j = (*derivs)[this->fl.flatten(j)];
             auto& deriv_k = (*derivs)[this->fl.flatten(k)];
 
-            auto idx_i = this->shared.generate_index(i);
-            auto idx_j = this->shared.generate_index(j);
-            auto idx_k = this->shared.generate_index(k);
+            auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+            auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
+            auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
 
             result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
@@ -132,9 +132,9 @@ namespace canonical
         if(j.get_class() != index_class::field_only) throw tensor_exception("C");
         if(k.get_class() != index_class::field_only) throw tensor_exception("C");
 
-        GiNaC::idx idx_i = this->shared.generate_index(i);
-        GiNaC::idx idx_j = this->shared.generate_index(j);
-        GiNaC::idx idx_k = this->shared.generate_index(k);
+        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
+        auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
 
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
         args->push_back(k1);

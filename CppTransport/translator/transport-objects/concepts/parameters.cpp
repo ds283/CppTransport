@@ -62,7 +62,7 @@ std::unique_ptr<atomic_lambda> parameters::compute_lambda(const abstract_index& 
   {
     if(i.get_class() != index_class::parameter) throw tensor_exception("parameters");
     
-    GiNaC::idx idx_i = this->shared.generate_index(i);
+    auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
     
     auto args = std::make_unique<cache_tags>();
     

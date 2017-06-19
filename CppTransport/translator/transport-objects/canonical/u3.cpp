@@ -144,12 +144,12 @@ namespace canonical
         if(j.get_class() != index_class::full) throw tensor_exception("U3");
         if(k.get_class() != index_class::full) throw tensor_exception("U3");
 
-        GiNaC::idx idx_i = this->shared.generate_index(i);
-        GiNaC::idx idx_j = this->shared.generate_index(j);
-        GiNaC::idx idx_k = this->shared.generate_index(k);
+        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
+        auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(
-          use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        std::unique_ptr<cache_tags> args =
+          this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);

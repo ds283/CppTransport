@@ -49,8 +49,8 @@ namespace canonical
         if(i.get_class() != index_class::field_only) throw tensor_exception("ddV");
         if(j.get_class() != index_class::field_only) throw tensor_exception("ddV");
 
-        GiNaC::idx idx_i = this->shared.generate_index(i);
-        GiNaC::idx idx_j = this->shared.generate_index(j);
+        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
 
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dddV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));

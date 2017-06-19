@@ -79,8 +79,8 @@ namespace canonical
             field_index species_i = this->traits.to_species(i);
             field_index species_j = this->traits.to_species(j);
 
-            auto idx_i = this->shared.generate_index(species_i);
-            auto idx_j = this->shared.generate_index(species_j);
+            auto idx_i = this->shared.generate_index<GiNaC::idx>(species_i);
+            auto idx_j = this->shared.generate_index<GiNaC::idx>(species_j);
 
             if(this->traits.is_species(i) && this->traits.is_species(j))
               {
@@ -202,8 +202,8 @@ namespace canonical
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
         if(j.get_class() != index_class::full) throw tensor_exception("U3");
 
-        GiNaC::idx idx_i = this->shared.generate_index(i);
-        GiNaC::idx idx_j = this->shared.generate_index(j);
+        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
 
         // convert these indices to species-only indices
         const abstract_index i_field_a = this->traits.species_to_species(i);
@@ -216,10 +216,10 @@ namespace canonical
         auto deriv_a_j = this->res.generate_deriv_vector(j_field_a, this->printer);
         auto deriv_b_j = this->res.generate_deriv_vector(j_field_b, this->printer);
 
-        auto idx_a_i = this->shared.generate_index(i_field_a);
-        auto idx_b_i = this->shared.generate_index(i_field_b);
-        auto idx_a_j = this->shared.generate_index(j_field_a);
-        auto idx_b_j = this->shared.generate_index(j_field_b);
+        auto idx_a_i = this->shared.generate_index<GiNaC::idx>(i_field_a);
+        auto idx_b_i = this->shared.generate_index<GiNaC::idx>(i_field_b);
+        auto idx_a_j = this->shared.generate_index<GiNaC::idx>(j_field_a);
+        auto idx_b_j = this->shared.generate_index<GiNaC::idx>(j_field_b);
 
         this->pre_lambda();
 

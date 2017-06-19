@@ -65,7 +65,7 @@ namespace canonical
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("fields");
     
-        GiNaC::idx idx_i = this->shared.generate_index(i);
+        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
     
         auto args = std::make_unique<cache_tags>();
     

@@ -74,8 +74,8 @@ namespace canonical
             auto& deriv_i = (*derivs)[this->fl.flatten(i)];
             auto& deriv_j = (*derivs)[this->fl.flatten(j)];
 
-            auto idx_i = this->shared.generate_index(i);
-            auto idx_j = this->shared.generate_index(j);
+            auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+            auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
 
             result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
 
@@ -111,8 +111,8 @@ namespace canonical
         if(i.get_class() != index_class::field_only) throw tensor_exception("M");
         if(j.get_class() != index_class::field_only) throw tensor_exception("M");
 
-        GiNaC::idx idx_i = this->shared.generate_index(i);
-        GiNaC::idx idx_j = this->shared.generate_index(j);
+        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
 
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));

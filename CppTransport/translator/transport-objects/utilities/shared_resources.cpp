@@ -174,19 +174,22 @@ std::string shared_resources::generate_working_type() const
   }
 
 
-GiNaC::idx shared_resources::generate_index(const field_index& i)
+template <>
+GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const field_index& i)
   {
     return GiNaC::idx(static_cast<unsigned int>(i), static_cast<unsigned int>(this->num_fields));
   }
 
 
-GiNaC::idx shared_resources::generate_index(const phase_index& i)
+template <>
+GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const phase_index& i)
   {
     return GiNaC::idx(static_cast<unsigned int>(i), 2*static_cast<unsigned int>(this->num_fields));
   }
 
 
-GiNaC::idx shared_resources::generate_index(const abstract_index& i)
+template <>
+GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const abstract_index& i)
   {
     std::string name = i.get_loop_variable();
     GiNaC::symbol sym = this->sym_factory.get_symbol(name);

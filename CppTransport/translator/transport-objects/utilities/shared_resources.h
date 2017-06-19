@@ -155,13 +155,16 @@ class shared_resources
   public:
 
     //! make a field-space index
-    GiNaC::idx generate_index(const field_index& i);
+    template <typename IndexType>
+    IndexType generate_index(const field_index& i);
 
     //! make a phase-space index
-    GiNaC::idx generate_index(const phase_index& i);
+    template <typename IndexType>
+    IndexType generate_index(const phase_index& i);
 
     //! make an abstract index
-    GiNaC::idx generate_index(const abstract_index& i);
+    template <typename IndexType>
+    IndexType generate_index(const abstract_index& i);
 
 
     // INTERNAL DATA
