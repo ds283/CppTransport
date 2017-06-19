@@ -153,7 +153,7 @@ bool shared_resources::can_roll_coordinates() const
   }
 
 
-GiNaC::symbol shared_resources::generate_parameter_symbols(const abstract_index& idx, const language_printer& printer) const
+GiNaC::symbol shared_resources::generate_parameter_vector(const abstract_index& idx, const language_printer& printer) const
   {
     const auto& resource = this->mgr.parameters();
 
@@ -164,7 +164,7 @@ GiNaC::symbol shared_resources::generate_parameter_symbols(const abstract_index&
   }
 
 
-GiNaC::symbol shared_resources::generate_field_symbols(const abstract_index& idx, const language_printer& printer) const
+GiNaC::symbol shared_resources::generate_field_vector(const abstract_index& idx, const language_printer& printer) const
   {
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
@@ -176,7 +176,7 @@ GiNaC::symbol shared_resources::generate_field_symbols(const abstract_index& idx
   }
 
 
-GiNaC::symbol shared_resources::generate_deriv_symbols(const abstract_index& idx, const language_printer& printer) const
+GiNaC::symbol shared_resources::generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const
   {
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();

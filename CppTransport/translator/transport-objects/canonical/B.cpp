@@ -161,9 +161,9 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::symbol deriv_i = this->shared.generate_deriv_symbols(i, this->printer);
-            GiNaC::symbol deriv_j = this->shared.generate_deriv_symbols(j, this->printer);
-            GiNaC::symbol deriv_k = this->shared.generate_deriv_symbols(k, this->printer);
+            GiNaC::symbol deriv_i = this->shared.generate_deriv_vector(i, this->printer);
+            GiNaC::symbol deriv_j = this->shared.generate_deriv_vector(j, this->printer);
+            GiNaC::symbol deriv_k = this->shared.generate_deriv_vector(k, this->printer);
 
             GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
             GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);

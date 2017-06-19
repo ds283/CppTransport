@@ -124,7 +124,7 @@ namespace canonical
 
         map_lambda_table table(lambda_flattened_map_size(1));
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_symbols(i_field_a, this->printer);
+        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_vector(i_field_a, this->printer);
 
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;

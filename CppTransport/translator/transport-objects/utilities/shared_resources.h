@@ -111,14 +111,17 @@ class shared_resources
     std::unique_ptr<symbol_list> generate_deriv_symbols(const language_printer& printer) const;
 
     //! generate abstract parameter label resource
-    //! note that parameter indices have no variance
-    GiNaC::symbol generate_parameter_symbols(const abstract_index& idx, const language_printer& printer) const;
+    //! note that parameter indices have no variance, and can therefore be sensibly handled
+    //! by shared_resources (which knows nothing about model-dependent details)
+    //! even though the equivalent field_# and deriv_# versions have to be handled
+    //! by a model-specific resource manager
+    GiNaC::symbol generate_parameter_vector(const abstract_index& idx, const language_printer& printer) const;
 
     //! generate abstract field-space coordinate label resource
-    GiNaC::symbol generate_field_symbols(const abstract_index& idx, const language_printer& printer) const;
+    GiNaC::symbol generate_field_vector(const abstract_index& idx, const language_printer& printer) const;
 
     //! generate abstract fields-space derivative label resource
-    GiNaC::symbol generate_deriv_symbols(const abstract_index& idx, const language_printer& printer) const;
+    GiNaC::symbol generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const;
 
 
   public:

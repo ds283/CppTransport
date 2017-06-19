@@ -66,7 +66,7 @@ std::unique_ptr<atomic_lambda> parameters::compute_lambda(const abstract_index& 
     
     auto args = std::make_unique<cache_tags>();
     
-    GiNaC::ex result = this->shared.generate_parameter_symbols(i, this->printer);
+    GiNaC::ex result = this->shared.generate_parameter_vector(i, this->printer);
     
     return std::make_unique<atomic_lambda>(i, result, expression_item_types::parameters_lambda, *args, this->shared.generate_working_type());
   }

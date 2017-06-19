@@ -150,10 +150,10 @@ namespace canonical
         const abstract_index j_field_a = this->traits.species_to_species(j);
         const abstract_index j_field_b = this->traits.momentum_to_species(j);
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_symbols(i_field_a, this->printer);
-        GiNaC::symbol deriv_b_i = this->shared.generate_deriv_symbols(i_field_b, this->printer);
-        GiNaC::symbol deriv_a_j = this->shared.generate_deriv_symbols(j_field_a, this->printer);
-        GiNaC::symbol deriv_b_j = this->shared.generate_deriv_symbols(j_field_b, this->printer);
+        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_vector(i_field_a, this->printer);
+        GiNaC::symbol deriv_b_i = this->shared.generate_deriv_vector(i_field_b, this->printer);
+        GiNaC::symbol deriv_a_j = this->shared.generate_deriv_vector(j_field_a, this->printer);
+        GiNaC::symbol deriv_b_j = this->shared.generate_deriv_vector(j_field_b, this->printer);
 
         GiNaC::idx idx_a_i = this->shared.generate_index(i_field_a);
         GiNaC::idx idx_b_i = this->shared.generate_index(i_field_b);
