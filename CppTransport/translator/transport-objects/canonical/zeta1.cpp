@@ -37,7 +37,8 @@ namespace canonical
     
         const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
 
-        this->cached = false;
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -50,10 +51,10 @@ namespace canonical
 
     GiNaC::ex canonical_zeta1::compute_component(phase_index i)
       {
+        if(!this->cached) throw tensor_exception("zeta1 cache not ready");
+
         unsigned int index = this->fl.flatten(i);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
-
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -91,14 +92,11 @@ namespace canonical
 
     void canonical_zeta1::cache_symbols()
       {
-        eps = this->res.eps_resource(this->cse_worker, this->printer);
-        Mp = this->shared.generate_Mp();
       }
 
 
     void canonical_zeta1::populate_workspace()
       {
-        derivs = this->shared.generate_deriv_symbols(this->printer);
       }
 
 
@@ -122,16 +120,60 @@ namespace canonical
         const abstract_index i_field_a = this->traits.species_to_species(i);
         const abstract_index i_field_b = this->traits.momentum_to_species(i);
 
+        this->pre_lambda();
+
         map_lambda_table table(lambda_flattened_map_size(1));
 
         GiNaC::symbol deriv_a_i = this->shared.generate_deriv_symbols(i_field_a, this->printer);
-
-        this->cache_symbols();
 
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;
 
         return std::make_unique<map_lambda>(i, table, expression_item_types::zxfm1_lambda, *args, this->shared.generate_working_type());
+      }
+
+
+    canonical_zeta1::canonical_zeta1(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                                     shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
+                                     index_traits& t)
+      : zeta1(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
+        Mp = this->shared.generate_Mp();
+      }
+
+
+    void canonical_zeta1::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("zeta1 already cached");
+
+        this->pre_lambda();
+        derivs = this->shared.generate_deriv_symbols(this->printer);
+
+        this->cached = true;
+      }
+
+
+    void canonical_zeta1::pre_lambda()
+      {
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
+      }
+
+
+    void canonical_zeta1::post()
+      {
+        if(!this->cached) throw tensor_exception("zeta1 not cached");
+
+        // invalidate cache
+        this->cached = false;
       }
 
   }   // namespace canonical

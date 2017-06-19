@@ -38,7 +38,8 @@ namespace canonical
         const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
         const phase_index max_j = this->shared.get_max_phase_index(indices[1]->get_variance());
 
-        this->cached = false;
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -54,11 +55,10 @@ namespace canonical
 
     GiNaC::ex canonical_dN2::compute_component(phase_index i, phase_index j)
       {
+        if(!this->cached) throw tensor_exception("dN2 cache not ready");
+
         unsigned int index = this->fl.flatten(i, j);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
-
-        if(!cached) { this->populate_workspace();
-            this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -81,41 +81,63 @@ namespace canonical
       }
 
 
-    void canonical_dN2::cache_symbols()
+    unroll_behaviour canonical_dN2::get_unroll()
       {
+        return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
+      }
+
+
+    canonical_dN2::canonical_dN2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                                 boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+      : dN2(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
+      }
+
+
+    void canonical_dN2::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("dN2 already cached");
+
+        fields = this->shared.generate_field_symbols(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
+        dV = this->res.dV_resource(this->printer);
+
         Hsq = this->res.raw_Hsq_resource(this->printer);
         eps = this->res.raw_eps_resource(this->printer);
         dotH = -eps*Hsq;
 
-        std::unique_ptr<symbol_list> f = this->shared.generate_field_symbols(this->printer);
-        std::unique_ptr<symbol_list> d = this->shared.generate_deriv_symbols(this->printer);
-        std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
-
-        p = 0;
+        this->p = 0;
 
         field_index max_i = this->shared.get_max_field_index(variance::none);
 
         for(field_index i = field_index(0, variance::none); i < max_i; ++i)
           {
-            p += diff(1/(2*dotH), (*f)[this->fl.flatten(i)]) * (*d)[this->fl.flatten(i)];
+            this->p += diff(1 / (2 * dotH), (*fields)[this->fl.flatten(i)]) * (*derivs)[this->fl.flatten(i)];
 
-            GiNaC::ex dXdN = (eps-3) * (*d)[this->fl.flatten(i)] - (*Vi)[this->fl.flatten(i)]/Hsq;
+            GiNaC::ex dXdN = (eps - 3) * (*derivs)[this->fl.flatten(i)] - (*dV)[this->fl.flatten(i)] / Hsq;
 
-            p += diff(1/(2*dotH), (*d)[this->fl.flatten(i)]) * dXdN;
+            this->p += diff(1 / (2 * dotH), (*derivs)[this->fl.flatten(i)]) * dXdN;
           }
+
+        this->cached = true;
       }
 
 
-    void canonical_dN2::populate_workspace()
+    void canonical_dN2::post()
       {
-        fields = this->shared.generate_field_symbols(this->printer);
-        derivs = this->shared.generate_deriv_symbols(this->printer);
-        dV = this->res.dV_resource(this->printer);
+        if(!this->cached) throw tensor_exception("dN2 not cached");
+
+        // invalidate cache
+        this->cached = false;
       }
 
-
-    unroll_behaviour canonical_dN2::get_unroll()
-      {
-        return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
-      }
   }   // namespace canonical

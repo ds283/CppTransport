@@ -36,8 +36,9 @@ namespace canonical
         auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(U1_TENSOR_INDICES));
     
         const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
-        
-        this->cached = false;
+
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -50,10 +51,10 @@ namespace canonical
 
     GiNaC::ex canonical_u1::compute_component(phase_index i)
       {
+        if(!this->cached) throw tensor_exception("U1 cache not ready");
+
         unsigned int index = this->fl.flatten(i);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
-
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -93,20 +94,6 @@ namespace canonical
       }
 
 
-    void canonical_u1::cache_symbols()
-      {
-        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
-        eps = this->res.eps_resource(this->cse_worker, this->printer);
-      }
-
-
-    void canonical_u1::populate_workspace()
-      {
-        derivs = this->shared.generate_deriv_symbols(this->printer);
-        dV = this->res.dV_resource(this->printer);
-      }
-
-
     unroll_behaviour canonical_u1::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV()) return unroll_behaviour::allow;
@@ -127,14 +114,14 @@ namespace canonical
         GiNaC::symbol deriv_a_i = this->shared.generate_deriv_symbols(i_field_a, this->printer);
         GiNaC::symbol deriv_b_i = this->shared.generate_deriv_symbols(i_field_b, this->printer);
 
+        this->pre_lambda();
+
         std::vector<GiNaC::ex> map(lambda_flattened_map_size(1));
 
         map[lambda_flatten(LAMBDA_FIELD)] = deriv_a_i;
 
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
-
-        this->cache_symbols();
 
         if(!this->cache.query(expression_item_types::U1_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM)]))
           {
@@ -148,6 +135,50 @@ namespace canonical
           }
 
         return std::make_unique<map_lambda>(i, map, expression_item_types::U1_lambda, *args, this->shared.generate_working_type());
+      }
+
+
+    canonical_u1::canonical_u1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                               boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+      : u1(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
+      }
+
+
+    void canonical_u1::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("U1 already cached");
+
+        this->pre_lambda();
+        derivs = this->shared.generate_deriv_symbols(this->printer);
+        dV = this->res.dV_resource(this->printer);
+
+        this->cached = true;
+      }
+
+
+    void canonical_u1::pre_lambda()
+      {
+        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
+      }
+
+
+    void canonical_u1::post()
+      {
+        if(!this->cached) throw tensor_exception("U1 not cached");
+
+        // invalidate cache
+        this->cached = false;
       }
 
   }   // namespace canonical

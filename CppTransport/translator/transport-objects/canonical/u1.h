@@ -55,18 +55,7 @@ namespace canonical
 
         //! constructor
         canonical_u1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : u1(),
-            printer(p),
-            cse_worker(cw),
-            cache(c),
-            res(r),
-            shared(s),
-            fl(f),
-            traits(t),
-            compute_timer(tm)
-          {
-          }
+                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
         virtual ~canonical_u1() = default;
@@ -77,18 +66,15 @@ namespace canonical
       public:
 
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor>
+        std::unique_ptr<flattened_tensor>
         compute(const index_literal_list& indices) override;
 
         //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(phase_index i) override;
+        GiNaC::ex compute_component(phase_index i) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<map_lambda>
+        std::unique_ptr<map_lambda>
         compute_lambda(const abstract_index& i) override;
-
-        //! invalidate cache
-        virtual void reset_cache() override { this->cached = false; }
 
 
         // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
@@ -96,18 +82,24 @@ namespace canonical
       public:
 
         //! determine whether this tensor can be unrolled with the current resources
-        virtual unroll_behaviour get_unroll() override;
+        unroll_behaviour get_unroll() override;
+
+
+        // INTERFACE -- JANITORIAL API
+
+        //! cache resources required for evaluation
+        void pre_explicit(const index_literal_list& indices) override;
+
+        //! cache resources required for evaluation on a lambda
+        void pre_lambda();
+
+        //! release resources
+        void post() override;
 
 
         // INTERNAL API
 
       private:
-
-        //! cache symbols
-        void cache_symbols();
-
-        //! populate workspace
-        void populate_workspace();
 
         //! underlying symbolic expression
         GiNaC::ex expr_momentum(GiNaC::ex& Vi, GiNaC::symbol& deriv_i);

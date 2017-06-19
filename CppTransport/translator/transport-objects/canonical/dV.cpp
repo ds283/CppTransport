@@ -58,4 +58,25 @@ namespace canonical
         return std::make_unique<atomic_lambda>(i, result, expression_item_types::dV_lambda, *args, this->shared.generate_working_type());
       }
 
+
+    canonical_dV::canonical_dV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
+      : dV(),
+        printer(p),
+        cse_worker(cw),
+        res(r),
+        shared(s),
+        fl(f)
+      {
+      }
+
+
+    void canonical_dV::pre_explicit(const index_literal_list& indices)
+      {
+      }
+
+
+    void canonical_dV::post()
+      {
+      }
+
   }   // namespace canonical

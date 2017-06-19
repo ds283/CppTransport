@@ -37,7 +37,8 @@ namespace canonical
 
         const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
 
-        this->cached = false;
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -50,10 +51,10 @@ namespace canonical
 
     GiNaC::ex canonical_dN1::compute_component(phase_index i)
       {
+        if(!this->cached) throw tensor_exception("dN1 cache not ready");
+
         unsigned int index = this->fl.flatten(i);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
-
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -71,22 +72,47 @@ namespace canonical
       }
 
 
-    void canonical_dN1::cache_symbols()
-      {
-        Hsq = this->res.raw_Hsq_resource(this->printer);
-        eps = this->res.raw_eps_resource(this->printer);
-        dotH = -eps*Hsq;
-      }
-
-
-    void canonical_dN1::populate_workspace()
-      {
-        fields = this->shared.generate_field_symbols(this->printer);
-      }
-
-
     unroll_behaviour canonical_dN1::get_unroll()
       {
         return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
       }
+
+
+    void canonical_dN1::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("dN1 already cached");
+
+        Hsq = this->res.raw_Hsq_resource(this->printer);
+        eps = this->res.raw_eps_resource(this->printer);
+        dotH = -eps*Hsq;
+        fields = this->shared.generate_field_symbols(this->printer);
+
+        this->cached = true;
+      }
+
+
+    void canonical_dN1::post()
+      {
+        if(!this->cached) throw tensor_exception("dN1 not cached");
+
+        // invalidate cache
+        this->cached = false;
+      }
+
+
+    canonical_dN1::canonical_dN1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                                 boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+      : dN1(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
+      }
+
   }   // namespace canonical

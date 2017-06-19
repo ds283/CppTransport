@@ -53,16 +53,7 @@ namespace canonical
       
         //! constructor
         canonical_coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
-                              index_flatten& f, index_traits& t)
-          : coordinates(),
-            printer(p),
-            cse_worker(cw),
-            res(r),
-            shared(s),
-            fl(f),
-            traits(t)
-          {
-          }
+                              index_flatten& f, index_traits& t);
         
         //! destructor is default
         virtual ~canonical_coordinates() = default;
@@ -71,17 +62,17 @@ namespace canonical
         // INTERFACE -- IMPLEMENTS A 'COORDINATES' TENSOR CONCEPT
         
       public:
-        
+
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor>
+        std::unique_ptr<flattened_tensor>
         compute(const index_literal_list& indices) override;
         
         //! evaluate component of tensor
-        virtual std::pair<GiNaC::ex, GiNaC::ex>
+        std::pair<GiNaC::ex, GiNaC::ex>
         compute_component(field_index i) override;
         
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda>
+        std::unique_ptr<atomic_lambda>
         compute_lambda(const abstract_index& i) override;
     
     
@@ -90,17 +81,24 @@ namespace canonical
       public:
     
         //! determine whether this tensor can be unrolled with the current resources
-        virtual unroll_behaviour get_unroll() override;
-        
-        
+        unroll_behaviour get_unroll() override;
+
+
+        // INTERFACE -- JANITORIAL API
+
+        //! cache resources required for evaluation
+        void pre_explicit(const index_literal_list& indices) override;
+
+        //! cache resources required for evaluation on a lambda
+        void pre_lambda();
+
+        //! release resources
+        void post() override;
+
+
         // INTERNAL API
-        
-      protected:
-        
-        //! populate workspace
-        void populate_workspace();
-    
-    
+
+
         // INTERNAL DATA
   
       private:

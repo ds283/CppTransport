@@ -41,9 +41,8 @@ namespace canonical
         const phase_index max_j = this->shared.get_max_phase_index(indices[1]->get_variance());
         const phase_index max_k = this->shared.get_max_phase_index(indices[2]->get_variance());
 
-        this->A_agent.reset_cache();
-        this->B_agent.reset_cache();
-        this->C_agent.reset_cache();
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -63,6 +62,8 @@ namespace canonical
     GiNaC::ex canonical_u3::compute_component(phase_index i, phase_index j, phase_index k,
                                               GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
+        if(!this->cached) throw tensor_exception("U3 cache not ready");
+
         GiNaC::ex result;
 
         // we don't actively cache u3 results; the A, B, C agents individually cache their own results, so
@@ -185,6 +186,50 @@ namespace canonical
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = **mmm;
 
         return std::make_unique<map_lambda>(i, j, k, table, expression_item_types::U3_lambda, *args, this->shared.generate_working_type());
+      }
+
+
+    canonical_u3::canonical_u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                               boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+      : u3(),
+        A_agent(p, cw, c, r, s, tm, f, t),
+        B_agent(p, cw, c, r, s, tm, f, t),
+        C_agent(p, cw, c, r, s, tm, f, t),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        shared(s),
+        res(r),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
+      }
+
+
+    void canonical_u3::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("U3 already cached");
+
+        this->A_Janitor = std::make_unique<TensorJanitor>(this->A_agent, indices);
+        this->B_Janitor = std::make_unique<TensorJanitor>(this->B_agent, indices);
+        this->C_Janitor = std::make_unique<TensorJanitor>(this->C_agent, indices);
+
+        this->cached = true;
+      }
+
+
+    void canonical_u3::post()
+      {
+        if(!this->cached) throw tensor_exception("U3 not cached");
+
+        // invalidate cache
+        this->A_Janitor.reset(nullptr);
+        this->B_Janitor.reset(nullptr);
+        this->C_Janitor.reset(nullptr);
+
+        this->cached = false;
       }
 
   }   // namespace canonical

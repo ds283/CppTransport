@@ -40,8 +40,9 @@ namespace canonical
         const field_index max_i = this->shared.get_max_field_index(indices[0]->get_variance());
         const field_index max_j = this->shared.get_max_field_index(indices[1]->get_variance());
         const field_index max_k = this->shared.get_max_field_index(indices[2]->get_variance());
-        
-        this->cached = false;
+
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -61,6 +62,8 @@ namespace canonical
     GiNaC::ex canonical_Atilde::compute_component(field_index i, field_index j, field_index k,
                                                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
+        if(!this->cached) throw tensor_exception("Atilde cache not ready");
+
         unsigned int index = this->fl.flatten(i, j, k);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(
           use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
@@ -68,8 +71,6 @@ namespace canonical
         args->push_back(k2);
         args->push_back(k3);
         args->push_back(a);
-
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -139,27 +140,11 @@ namespace canonical
       }
 
 
-    void canonical_Atilde::cache_symbols()
-      {
-        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
-        eps = this->res.eps_resource(this->cse_worker, this->printer);
-        Mp = this->shared.generate_Mp();
-      }
-
-
-    void canonical_Atilde::populate_workspace()
-      {
-        derivs = this->shared.generate_deriv_symbols(this->printer);
-        dV = this->res.dV_resource(this->printer);
-        ddV = this->res.ddV_resource(this->printer);
-        dddV = this->res.dddV_resource(this->printer);
-      }
-
-
     unroll_behaviour canonical_Atilde::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV() &&
           this->res.can_roll_dddV()) return unroll_behaviour::allow;
+
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -185,7 +170,7 @@ namespace canonical
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
 
-        this->cache_symbols();
+        this->pre_lambda();
 
         GiNaC::ex result;
 
@@ -214,6 +199,54 @@ namespace canonical
           }
 
         return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::Atilde_lambda, *args, this->shared.generate_working_type());
+      }
+
+
+    canonical_Atilde::canonical_Atilde(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                                       shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
+                                       index_traits& t)
+      : Atilde(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
+        Mp = this->shared.generate_Mp();
+      }
+
+
+    void canonical_Atilde::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("Atilde already cached");
+
+        this->pre_lambda();
+        derivs = this->shared.generate_deriv_symbols(this->printer);
+        dV = this->res.dV_resource(this->printer);
+        ddV = this->res.ddV_resource(this->printer);
+        dddV = this->res.dddV_resource(this->printer);
+
+        this->cached = true;
+      }
+
+
+    void canonical_Atilde::pre_lambda()
+      {
+        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
+      }
+
+
+    void canonical_Atilde::post()
+      {
+        if(!this->cached) throw tensor_exception("Atilde not cached");
+
+        // invalidate cache
+        this->cached = false;
       }
 
   }   // namespace canonical

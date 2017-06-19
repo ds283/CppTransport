@@ -68,9 +68,6 @@ class u1: public transport_tensor
     virtual std::unique_ptr<map_lambda>
     compute_lambda(const abstract_index& i) = 0;
 
-    //! invalidate cache
-    virtual void reset_cache() = 0;
-
   };
 
 

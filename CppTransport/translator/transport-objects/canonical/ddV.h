@@ -53,15 +53,7 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
-          : ddV(),
-            printer(p),
-            cse_worker(cw),
-            res(r),
-            shared(s),
-            fl(f)
-          {
-          }
+        canonical_ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f);
 
         //! destructor is default
         virtual ~canonical_ddV() = default;
@@ -72,11 +64,11 @@ namespace canonical
       public:
 
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor>
+        std::unique_ptr<flattened_tensor>
         compute(const index_literal_list& indices) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda>
+        std::unique_ptr<atomic_lambda>
         compute_lambda(const abstract_index& i, const abstract_index& j) override;
 
 
@@ -85,7 +77,19 @@ namespace canonical
       public:
 
         //! determine whether this tensor can be unrolled with the current resources
-        virtual unroll_behaviour get_unroll() override;
+        unroll_behaviour get_unroll() override;
+
+
+        // INTERFACE -- JANITORIAL API
+
+        //! cache resources required for evaluation
+        void pre_explicit(const index_literal_list& indices) override;
+
+        //! cache resources required for evaluation on a lambda
+        void pre_lambda();
+
+        //! release resources
+        void post() override;
 
 
         // INTERNAL DATA

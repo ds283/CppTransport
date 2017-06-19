@@ -71,9 +71,6 @@ class B: public transport_tensor
     compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
                    GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
 
-    //! invalidate cache
-    virtual void reset_cache() = 0;
-
   };
 
 

@@ -39,7 +39,8 @@ namespace canonical
         const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
         const phase_index max_j = this->shared.get_max_phase_index(indices[1]->get_variance());
 
-        this->cached = false;
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -55,13 +56,13 @@ namespace canonical
 
     GiNaC::ex canonical_u2::compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a)
       {
+        if(!this->cached) throw tensor_exception("U2 cache not ready");
+
         unsigned int index = this->fl.flatten(i, j);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument,
                                                                                     this->printer);
         args->push_back(k);
         args->push_back(a);
-
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -127,22 +128,6 @@ namespace canonical
       }
 
 
-    void canonical_u2::cache_symbols()
-      {
-        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
-        eps = this->res.eps_resource(this->cse_worker, this->printer);
-        Mp = this->shared.generate_Mp();
-      }
-
-
-    void canonical_u2::populate_workspace()
-      {
-        derivs = this->shared.generate_deriv_symbols(this->printer);
-        dV = this->res.dV_resource(this->printer);
-        ddV = this->res.ddV_resource(this->printer);
-      }
-
-
     unroll_behaviour canonical_u2::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV()) return unroll_behaviour::allow;
@@ -175,20 +160,19 @@ namespace canonical
         GiNaC::idx idx_a_j = this->shared.generate_index(j_field_a);
         GiNaC::idx idx_b_j = this->shared.generate_index(j_field_b);
 
+        this->pre_lambda();
+
         std::vector<GiNaC::ex> map(lambda_flattened_map_size(2));
 
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = 0;
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument,
-                                                                                    this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument, this->printer);
         args->push_back(k);
         args->push_back(a);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
-
-        this->cache_symbols();
 
         if(!this->cache.query(expression_item_types::U2_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]))
           {
@@ -205,6 +189,52 @@ namespace canonical
           }
 
         return std::make_unique<map_lambda>(i, j, map, expression_item_types::U2_lambda, *args, this->shared.generate_working_type());
+      }
+
+
+    canonical_u2::canonical_u2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                               boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+      : u2(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
+        Mp = this->shared.generate_Mp();
+      }
+
+
+    void canonical_u2::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("U2 already cached");
+
+        this->pre_lambda();
+        derivs = this->shared.generate_deriv_symbols(this->printer);
+        dV = this->res.dV_resource(this->printer);
+        ddV = this->res.ddV_resource(this->printer);
+
+        this->cached = true;
+      }
+
+
+    void canonical_u2::pre_lambda()
+      {
+        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
+      }
+
+
+    void canonical_u2::post()
+      {
+        if(!this->cached) throw tensor_exception("U2 not cached");
+
+        // invalidate cache
+        this->cached = false;
       }
 
   }   // namespace canonical

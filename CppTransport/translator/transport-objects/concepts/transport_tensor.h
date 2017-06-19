@@ -30,7 +30,11 @@
 #include <stdexcept>
 
 #include "macro_types.h"
+#include "index_literal.h"
 
+
+// forward-declare TensorJanitor class
+class TensorJanitor;
 
 //! define 'transport_tensor' concept, representing an arbitrary symbolic tensor
 //! (eg. U-tensor, Lagrangian tensor such as A, B, C)
@@ -59,9 +63,66 @@ class transport_tensor
     //! determine whether this tensor can be unrolled with the current resources
     virtual unroll_behaviour get_unroll() = 0;
 
+    // typical transport tensors will also define compute(), compute_component() and compute_lambda()
+    // methods, but since these carry a variable number of arguments depending on the requirements of
+    // the transport tensor being computed they are declared on a tensor-by-tensor basis
+
+
+    // JANITORIAL FUNCTIONS -- API USED BY JANITOR OBJECT
+
+  protected:
+
+    //! cache resources required for evaluation on an explicit index assignment
+    virtual void pre_explicit(const index_literal_list& indices) = 0;
+
+    //! release resources
+    virtual void post() = 0;
+
+    //! declare TensorJanitor a friend, so it has access to the pre() and post() methods
+    friend class TensorJanitor;
+
   };
 
 
+
+//! RAII janitor object for a transport tensor;
+//! must be used to wrap calls to the compute_component() (or similar)
+//! methods of the tensor. Handles resource acquisition and release.
+class TensorJanitor
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor accepts a tensor object to manage and an index_literal_list
+    //! that determines what variances the tensor should cache for.
+    //! It then calls the pre() method on t
+    TensorJanitor(transport_tensor& t, const index_literal_list& l)
+      : tensor(t)
+      {
+        tensor.pre_explicit(l);
+      }
+
+
+    //! destructor calls post() method on t
+    ~TensorJanitor()
+      {
+        this->tensor.post();
+      }
+
+
+    // INTERNAL DATA
+
+  private:
+
+    //! tensor object we are managing
+    transport_tensor& tensor;
+
+  };
+
+
+//! exception class thrown when errors occur during tensor evaluation
 class tensor_exception: std::runtime_error
   {
 

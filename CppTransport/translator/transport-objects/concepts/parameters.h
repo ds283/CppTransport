@@ -92,8 +92,19 @@ class parameters: public transport_tensor
     
     //! determine whether this tensor can be unrolled with the current resources
     virtual unroll_behaviour get_unroll() override;
-    
-    
+
+
+    // JANITORIAL FUNCTIONS -- API USED BY JANITOR OBJECT
+
+  protected:
+
+    //! cache resources required for evaluation on an explicit index assignment (here, nothing to do)
+    void pre_explicit(const index_literal_list& indices) override { return; };
+
+    //! release resources (here, nothing to do)
+    void post() override { return; };
+
+
     // INTERNAL API
     
   protected:

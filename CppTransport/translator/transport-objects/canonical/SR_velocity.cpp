@@ -37,7 +37,8 @@ namespace canonical
     
         const field_index max_i = this->shared.get_max_field_index(indices[0]->get_variance());
 
-        this->cached = false;
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -50,10 +51,10 @@ namespace canonical
 
     GiNaC::ex canonical_SR_velocity::compute_component(field_index i)
       {
+        if(!this->cached) throw tensor_exception("SR_velocity cache not ready");
+
         unsigned int index = this->fl.flatten(i);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
-
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -77,19 +78,6 @@ namespace canonical
       }
 
 
-    void canonical_SR_velocity::cache_symbols()
-      {
-        V = this->res.V_resource(this->cse_worker, this->printer);
-        Mp = this->shared.generate_Mp();
-      }
-
-
-    void canonical_SR_velocity::populate_workspace()
-      {
-        dV = this->res.dV_resource(this->printer);
-      }
-
-
     unroll_behaviour canonical_SR_velocity::get_unroll()
       {
         if(this->res.can_roll_dV()) return unroll_behaviour::allow;
@@ -106,9 +94,10 @@ namespace canonical
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
-        this->cache_symbols();
+        this->pre_lambda();
 
         GiNaC::ex result;
+
         if(!this->cache.query(expression_item_types::sr_U_lambda, 0, *args, result))
           {
             timing_instrument timer(this->compute_timer);
@@ -121,6 +110,48 @@ namespace canonical
           }
 
         return std::make_unique<atomic_lambda>(i, result, expression_item_types::sr_U_lambda, *args, this->shared.generate_working_type());
+      }
+
+
+    canonical_SR_velocity::canonical_SR_velocity(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                                                 shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f)
+      : SR_velocity(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        compute_timer(tm),
+        cached(false)
+      {
+      }
+
+
+    void canonical_SR_velocity::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("SR_velocity already cached");
+
+        this->pre_lambda();
+        dV = this->res.dV_resource(this->printer);
+
+        this->cached = true;
+      }
+
+
+    void canonical_SR_velocity::pre_lambda()
+      {
+        V = this->res.V_resource(this->cse_worker, this->printer);
+        Mp = this->shared.generate_Mp();
+      }
+
+
+    void canonical_SR_velocity::post()
+      {
+        if(!this->cached) throw tensor_exception("SR_velocity not cached");
+
+        // invalidate cache
+        this->cached = false;
       }
 
   }   // namespace canonical

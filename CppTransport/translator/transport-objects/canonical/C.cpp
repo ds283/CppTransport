@@ -41,7 +41,8 @@ namespace canonical
         const field_index max_j = this->shared.get_max_field_index(indices[1]->get_variance());
         const field_index max_k = this->shared.get_max_field_index(indices[2]->get_variance());
 
-        this->cached = false;
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -61,14 +62,14 @@ namespace canonical
     GiNaC::ex canonical_C::compute_component(field_index i, field_index j, field_index k,
                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
+        if(!this->cached) throw tensor_exception("C cache not ready");
+
         unsigned int index = this->fl.flatten(i, j, k);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
         args->push_back(a);
-
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
 
@@ -117,18 +118,6 @@ namespace canonical
       }
 
 
-    void canonical_C::cache_symbols()
-      {
-        Mp = this->shared.generate_Mp();
-      }
-
-
-    void canonical_C::populate_workspace()
-      {
-        derivs = this->shared.generate_deriv_symbols(this->printer);
-      }
-
-
     unroll_behaviour canonical_C::get_unroll()
       {
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
@@ -156,8 +145,6 @@ namespace canonical
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
 
-        this->cache_symbols();
-
         GiNaC::ex result;
 
         if(!this->cache.query(expression_item_types::C_lambda, 0, *args, result))
@@ -174,6 +161,42 @@ namespace canonical
           }
 
         return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::C_lambda, *args, this->shared.generate_working_type());
+      }
+
+
+    canonical_C::canonical_C(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                             boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+      : C(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
+        Mp = this->shared.generate_Mp();
+      }
+
+
+    void canonical_C::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("C already cached");
+
+        derivs = this->shared.generate_deriv_symbols(this->printer);
+
+        this->cached = true;
+      }
+
+
+    void canonical_C::post()
+      {
+        if(!this->cached) throw tensor_exception("C not cached");
+
+        // invalidate cache
+        this->cached = false;
       }
 
   }   // namespace canonical

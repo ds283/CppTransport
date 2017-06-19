@@ -63,9 +63,6 @@ class dN1: public transport_tensor
     virtual GiNaC::ex
     compute_component(phase_index i) = 0;
 
-    //! invalidate cache
-    virtual void reset_cache() = 0;
-
   };
 
 

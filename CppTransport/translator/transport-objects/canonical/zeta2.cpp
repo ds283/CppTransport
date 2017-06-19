@@ -40,7 +40,8 @@ namespace canonical
         const phase_index max_i = this->shared.get_max_phase_index(indices[0]->get_variance());
         const phase_index max_j = this->shared.get_max_phase_index(indices[1]->get_variance());
 
-        this->cached = false;
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
 
         for(phase_index i = phase_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -58,14 +59,14 @@ namespace canonical
                                                  GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
                                                  GiNaC::symbol& a)
       {
+        if(!this->cached) throw tensor_exception("zeta2 cache not ready");
+
         unsigned int index = this->fl.flatten(i, j);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(k);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(a);
-
-        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
         GiNaC::ex result;
         if(!this->cache.query(expression_item_types::zxfm2_item, index, *args, result))
@@ -110,36 +111,19 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_zeta2::expr_field_field(GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
-                                                GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                                GiNaC::symbol& a)
+    void canonical_zeta2::pre_explicit(const index_literal_list& indices)
       {
-        // formulae from DS calculation 28 May 2014
-        GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * deriv_i * deriv_j / (Mp*Mp*Mp*Mp*eps);
-        return(result);
+        if(cached) throw tensor_exception("A already cached");
+
+        this->pre_lambda();
+        derivs = this->shared.generate_deriv_symbols(this->printer);
+        dV = this->res.dV_resource(this->printer);
+
+        this->cached = true;
       }
 
 
-    GiNaC::ex canonical_zeta2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
-                                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
-      {
-        // formulae from DS calculation 28 May 2014
-
-        GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2) / 2;
-        GiNaC::ex k12sq = k*k;
-
-        GiNaC::ex result = deriv_i * deriv_j / (2 * Mp*Mp*Mp*Mp * eps*eps);
-
-        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
-
-        result += - delta_ij * (k1dotk2 / k12sq) / (2 * Mp*Mp * eps);
-        result += - delta_ij * (k1*k1 / k12sq)   / (2 * Mp*Mp * eps);
-
-        return(result);
-      }
-
-
-    void canonical_zeta2::cache_symbols()
+    void canonical_zeta2::pre_lambda()
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
@@ -166,10 +150,41 @@ namespace canonical
       }
 
 
-    void canonical_zeta2::populate_workspace()
+    void canonical_zeta2::post()
       {
-        derivs = this->shared.generate_deriv_symbols(this->printer);
-        dV = this->res.dV_resource(this->printer);
+        if(!this->cached) throw tensor_exception("zeta2 not cached");
+
+        // invalidate cache
+        this->cached = false;
+      }
+
+
+    GiNaC::ex canonical_zeta2::expr_field_field(GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+                                                GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                                GiNaC::symbol& a)
+      {
+        // formulae from DS calculation 28 May 2014
+        GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * deriv_i * deriv_j / (Mp*Mp*Mp*Mp*eps);
+        return(result);
+      }
+
+
+    GiNaC::ex canonical_zeta2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+                                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
+      {
+        // formulae from DS calculation 28 May 2014
+
+        GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2) / 2;
+        GiNaC::ex k12sq = k*k;
+
+        GiNaC::ex result = deriv_i * deriv_j / (2 * Mp*Mp*Mp*Mp * eps*eps);
+
+        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
+
+        result += - delta_ij * (k1dotk2 / k12sq) / (2 * Mp*Mp * eps);
+        result += - delta_ij * (k1*k1 / k12sq)   / (2 * Mp*Mp * eps);
+
+        return(result);
       }
 
 
@@ -205,6 +220,8 @@ namespace canonical
         GiNaC::idx idx_a_j = this->shared.generate_index(j_field_a);
         GiNaC::idx idx_b_j = this->shared.generate_index(j_field_b);
 
+        this->pre_lambda();
+
         map_lambda_table table(lambda_flattened_map_size(2));
 
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = 0;
@@ -216,8 +233,6 @@ namespace canonical
         args->push_back(a);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
-
-        this->cache_symbols();
 
         if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]))
           {
@@ -247,6 +262,23 @@ namespace canonical
           }
 
         return std::make_unique<map_lambda>(i, j, table, expression_item_types::zxfm2_lambda, *args, this->shared.generate_working_type());
+      }
+
+
+    canonical_zeta2::canonical_zeta2(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                                     shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
+                                     index_traits& t)
+      : zeta2(),
+        printer(p),
+        cse_worker(cw),
+        cache(c),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        compute_timer(tm),
+        cached(false)
+      {
       }
 
   }   // namespace canonical

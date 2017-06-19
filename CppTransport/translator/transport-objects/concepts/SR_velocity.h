@@ -68,9 +68,6 @@ class SR_velocity: public transport_tensor
     virtual std::unique_ptr<atomic_lambda>
     compute_lambda(const abstract_index& i) = 0;
 
-    //! invalidate cache
-    virtual void reset_cache() = 0;
-
   };
 
 

@@ -36,8 +36,9 @@ namespace canonical
         auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(FIELD_TENSOR_INDICES));
     
         const field_index max_i = this->shared.get_max_field_index(indices[0]->get_variance());
-    
-        this->cached = false;
+
+        // set up a TensorJanitor to manage use of cache
+        TensorJanitor J(*this, indices);
     
         for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
@@ -50,9 +51,9 @@ namespace canonical
     
     GiNaC::ex canonical_fields::compute_component(field_index i)
       {
+        if(!this->cached) throw tensor_exception("fields cache not ready");
+
         unsigned int index = this->fl.flatten(i);
-    
-        if(!cached) { this->populate_workspace(); this->cached = true; }
     
         GiNaC::ex result = (*this->fields)[index];
     
@@ -79,11 +80,38 @@ namespace canonical
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;
       }
-    
-    
-    void canonical_fields::populate_workspace()
+
+
+    canonical_fields::canonical_fields(language_printer& p, cse& cw, resources& r, shared_resources& s,
+                                       index_flatten& f, index_traits& t)
+      : fields(),
+        printer(p),
+        cse_worker(cw),
+        res(r),
+        shared(s),
+        fl(f),
+        traits(t),
+        cached(false)
       {
+      }
+
+
+    void canonical_fields::pre_explicit(const index_literal_list& indices)
+      {
+        if(cached) throw tensor_exception("fields already cached");
+
         fields = this->shared.generate_field_symbols(this->printer);
+
+        this->cached = true;
+      }
+
+
+    void canonical_fields::post()
+      {
+        if(!this->cached) throw tensor_exception("fields not cached");
+
+        // invalidate cache
+        this->cached = false;
       }
 
   }   // namespace canonical
