@@ -95,22 +95,30 @@ class shared_resources
   public:
 
     //! generate concrete parameter label resource
-    std::unique_ptr<symbol_list> generate_parameters(const language_printer& printer) const;
+    //! note that parameter indices have no variance
+    std::unique_ptr<symbol_list> generate_parameter_symbols(const language_printer& printer) const;
 
     //! generate concrete field-space coordinate label resource
-    std::unique_ptr<symbol_list> generate_fields(const language_printer& printer) const;
+    //! note that these are the literal symbols that label the fields; they should be regarded
+    //! as the components of the *contravariant* field-space coordinate in the case of a
+    //! nontrivial field-space metric
+    std::unique_ptr<symbol_list> generate_field_symbols(const language_printer& printer) const;
 
     //! generate concrete field-space derivative label resource
-    std::unique_ptr<symbol_list> generate_derivs(const language_printer& printer) const;
+    //! note that these are the literal symbols that label the fields; they should be regarded
+    //! as components of the *contravariant* phase-space coordinate in the case of a
+    //! nontrivial field-space metric
+    std::unique_ptr<symbol_list> generate_deriv_symbols(const language_printer& printer) const;
 
     //! generate abstract parameter label resource
-    GiNaC::symbol generate_parameters(const abstract_index& idx, const language_printer& printer) const;
+    //! note that parameter indices have no variance
+    GiNaC::symbol generate_parameter_symbols(const abstract_index& idx, const language_printer& printer) const;
 
     //! generate abstract field-space coordinate label resource
-    GiNaC::symbol generate_fields(const abstract_index& idx, const language_printer& printer) const;
+    GiNaC::symbol generate_field_symbols(const abstract_index& idx, const language_printer& printer) const;
 
     //! generate abstract fields-space derivative label resource
-    GiNaC::symbol generate_derivs(const abstract_index& idx, const language_printer& printer) const;
+    GiNaC::symbol generate_deriv_symbols(const abstract_index& idx, const language_printer& printer) const;
 
 
   public:

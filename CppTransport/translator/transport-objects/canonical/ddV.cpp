@@ -39,7 +39,7 @@ namespace canonical
 
     unroll_behaviour canonical_ddV::get_unroll()
       {
-        if(this->res.roll_ddV()) return unroll_behaviour::allow;
+        if(this->res.can_roll_ddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll
       }
 
@@ -52,7 +52,7 @@ namespace canonical
         GiNaC::idx idx_i = this->shared.generate_index(i);
         GiNaC::idx idx_j = this->shared.generate_index(j);
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dddV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dddV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
 

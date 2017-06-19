@@ -51,7 +51,7 @@ namespace canonical
     GiNaC::ex canonical_u1::compute_component(phase_index i)
       {
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
 
         if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
@@ -102,14 +102,14 @@ namespace canonical
 
     void canonical_u1::populate_workspace()
       {
-        derivs = this->shared.generate_derivs(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
         dV = this->res.dV_resource(this->printer);
       }
 
 
     unroll_behaviour canonical_u1::get_unroll()
       {
-        if(this->shared.can_roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -124,14 +124,14 @@ namespace canonical
         const abstract_index i_field_a = this->traits.species_to_species(i);
         const abstract_index i_field_b = this->traits.momentum_to_species(i);
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
-        GiNaC::symbol deriv_b_i = this->shared.generate_derivs(i_field_b, this->printer);
+        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_symbols(i_field_a, this->printer);
+        GiNaC::symbol deriv_b_i = this->shared.generate_deriv_symbols(i_field_b, this->printer);
 
         std::vector<GiNaC::ex> map(lambda_flattened_map_size(1));
 
         map[lambda_flatten(LAMBDA_FIELD)] = deriv_a_i;
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
         this->cache_symbols();

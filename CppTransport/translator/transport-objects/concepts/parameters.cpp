@@ -64,9 +64,9 @@ std::unique_ptr<atomic_lambda> parameters::compute_lambda(const abstract_index& 
     
     GiNaC::idx idx_i = this->shared.generate_index(i);
     
-    auto args = std::make_unique<ginac_cache_tags>();
+    auto args = std::make_unique<cache_tags>();
     
-    GiNaC::ex result = this->shared.generate_parameters(i, this->printer);
+    GiNaC::ex result = this->shared.generate_parameter_symbols(i, this->printer);
     
     return std::make_unique<atomic_lambda>(i, result, expression_item_types::parameters_lambda, *args, this->shared.generate_working_type());
   }
@@ -81,5 +81,5 @@ unroll_behaviour parameters::get_unroll()
 
 void parameters::populate_workspace()
   {
-    param_symbols = this->shared.generate_parameters(this->printer);
+    param_symbols = this->shared.generate_parameter_symbols(this->printer);
   }

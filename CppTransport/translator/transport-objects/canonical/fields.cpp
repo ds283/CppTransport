@@ -66,9 +66,9 @@ namespace canonical
     
         GiNaC::idx idx_i = this->shared.generate_index(i);
     
-        auto args = std::make_unique<ginac_cache_tags>();
+        auto args = std::make_unique<cache_tags>();
     
-        GiNaC::ex result = this->shared.generate_fields(i, this->printer);
+        GiNaC::ex result = this->shared.generate_field_symbols(i, this->printer);
     
         return std::make_unique<atomic_lambda>(i, result, expression_item_types::fields_lambda, *args, this->shared.generate_working_type());
       }
@@ -83,7 +83,7 @@ namespace canonical
     
     void canonical_fields::populate_workspace()
       {
-        fields = this->shared.generate_fields(this->printer);
+        fields = this->shared.generate_field_symbols(this->printer);
       }
 
   }   // namespace canonical

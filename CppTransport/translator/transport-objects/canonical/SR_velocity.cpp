@@ -51,7 +51,7 @@ namespace canonical
     GiNaC::ex canonical_SR_velocity::compute_component(field_index i)
       {
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
 
         if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
@@ -92,7 +92,7 @@ namespace canonical
 
     unroll_behaviour canonical_SR_velocity::get_unroll()
       {
-        if(this->res.roll_dV()) return unroll_behaviour::allow;
+        if(this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -103,7 +103,7 @@ namespace canonical
 
         GiNaC::idx idx_i = this->shared.generate_index(i);
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
         this->cache_symbols();

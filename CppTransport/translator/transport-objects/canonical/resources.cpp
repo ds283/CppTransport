@@ -50,9 +50,9 @@ namespace canonical
       }
 
 
-    std::unique_ptr<ginac_cache_tags> resources::generate_arguments(const language_printer& printer) const
+    std::unique_ptr<cache_tags> resources::generate_cache_arguments(const language_printer& printer) const
       {
-        std::unique_ptr<ginac_cache_tags> args = std::make_unique<ginac_cache_tags>();
+        std::unique_ptr<cache_tags> args = std::make_unique<cache_tags>();
 
         // query resource manager for parameter and coordinate labels
         const auto& param_resource = this->mgr.parameters();
@@ -100,7 +100,7 @@ namespace canonical
 
     GiNaC::ex resources::raw_V_resource(const language_printer& printer)
       {
-        auto args = this->generate_arguments(printer);
+        auto args = this->generate_cache_arguments(printer);
 
         // if no substitutions, then nothing to do, so exit immediately
         if(args->size() == 0) return(this->V);
@@ -123,7 +123,7 @@ namespace canonical
 
             if(param_resource)
               {
-                std::unique_ptr<symbol_list> p_list = this->share.generate_parameters(printer);
+                std::unique_ptr<symbol_list> p_list = this->share.generate_parameter_symbols(printer);
 
                 // copy parameter symbols into substitution list
                 for(param_index i = param_index(0); i < this->num_params; ++i)
@@ -134,7 +134,7 @@ namespace canonical
 
             if(coord_resource && flatten)
               {
-                std::unique_ptr<symbol_list> f_list = this->share.generate_fields(printer);
+                std::unique_ptr<symbol_list> f_list = this->share.generate_field_symbols(printer);
 
                 // copy field-label symbols into substitution list
                 for(field_index i = field_index(0); i < this->num_fields; ++i)
@@ -174,7 +174,7 @@ namespace canonical
 
     GiNaC::ex resources::raw_eps_resource(const language_printer& printer)
       {
-        auto args = this->generate_arguments(printer);
+        auto args = this->generate_cache_arguments(printer);
 
         GiNaC::ex eps;
 
@@ -182,7 +182,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            std::unique_ptr<symbol_list> derivs = this->share.generate_derivs(printer);
+            std::unique_ptr<symbol_list> derivs = this->share.generate_deriv_symbols(printer);
             GiNaC::symbol Mp = this->share.generate_Mp();
 
             eps = 0;
@@ -221,7 +221,7 @@ namespace canonical
 
     GiNaC::ex resources::raw_Hsq_resource(const language_printer& printer)
       {
-        auto args = this->generate_arguments(printer);
+        auto args = this->generate_cache_arguments(printer);
 
         GiNaC::ex Hsq;
 
@@ -262,7 +262,7 @@ namespace canonical
         else                        // have to construct dV ourselves
           {
             // build argument list
-            std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
+            std::unique_ptr<cache_tags> args = this->generate_cache_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -282,7 +282,7 @@ namespace canonical
                     if(!cached)
                       {
                         subs_V = this->raw_V_resource(printer);
-                        f_list = this->share.generate_fields(printer);
+                        f_list = this->share.generate_field_symbols(printer);
                         cached = true;
                       }
 
@@ -324,7 +324,7 @@ namespace canonical
         else                        // have to construct ddV ourselves
           {
             // build argument list
-            std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
+            std::unique_ptr<cache_tags> args = this->generate_cache_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -346,7 +346,7 @@ namespace canonical
                         if(!cached)
                           {
                             subs_V = this->raw_V_resource(printer);
-                            f_list = this->share.generate_fields(printer);
+                            f_list = this->share.generate_field_symbols(printer);
                             cached = true;
                           }
 
@@ -393,7 +393,7 @@ namespace canonical
         else                        // have to construct dddV ourselves
           {
             // build argument list
-            std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
+            std::unique_ptr<cache_tags> args = this->generate_cache_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -417,7 +417,7 @@ namespace canonical
                             if(!cached)
                               {
                                 subs_V = this->raw_V_resource(printer);
-                                f_list = this->share.generate_fields(printer);
+                                f_list = this->share.generate_field_symbols(printer);
                                 cached = true;
                               }
 
@@ -439,10 +439,11 @@ namespace canonical
       }
 
 
-    std::unique_ptr<ginac_cache_tags> resources::generate_arguments(unsigned int flags, const language_printer& printer) const
+    std::unique_ptr<cache_tags> resources::generate_cache_arguments(unsigned int flags,
+                                                                          const language_printer& printer) const
       {
         // first, generate arguments from param/coordinates if they exist
-        auto args = this->generate_arguments(printer);
+        auto args = this->generate_cache_arguments(printer);
         const auto& flatten = this->mgr.field_flatten();
 
         if(flatten && (flags & use_dV_argument))
@@ -479,7 +480,7 @@ namespace canonical
       }
 
 
-    bool resources::roll_dV() const
+    bool resources::can_roll_dV() const
       {
         const auto resource = this->mgr.dV();
         const auto& flatten = this->mgr.field_flatten();
@@ -489,7 +490,7 @@ namespace canonical
       }
 
 
-    bool resources::roll_ddV() const
+    bool resources::can_roll_ddV() const
       {
         const auto resource = this->mgr.ddV();
         const auto& flatten = this->mgr.field_flatten();
@@ -499,7 +500,7 @@ namespace canonical
       }
 
 
-    bool resources::roll_dddV() const
+    bool resources::can_roll_dddV() const
       {
         const auto resource = this->mgr.dddV();
         const auto& flatten = this->mgr.field_flatten();

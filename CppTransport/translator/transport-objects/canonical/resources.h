@@ -124,7 +124,7 @@ namespace canonical
       public:
 
         //! generate argument list
-        std::unique_ptr<ginac_cache_tags> generate_arguments(unsigned int flags, const language_printer& printer) const;
+        std::unique_ptr<cache_tags> generate_cache_arguments(unsigned int flags, const language_printer& printer) const;
 
 
         // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
@@ -132,13 +132,13 @@ namespace canonical
       public:
 
         //! query whether dV can be rolled-up into loops
-        bool roll_dV() const;
+        bool can_roll_dV() const;
 
         //! query whether ddV can be rolled-up into loops
-        bool roll_ddV() const;
+        bool can_roll_ddV() const;
 
         //! query whether dddV can be rolled-up into loops
-        bool roll_dddV() const;
+        bool can_roll_dddV() const;
 
 
         // INTERNAL API
@@ -147,7 +147,7 @@ namespace canonical
 
         //! generate argument list for param/field combinations;
         //! used internally and as the first step in generating an external argument list
-        std::unique_ptr<ginac_cache_tags> generate_arguments(const language_printer& printer) const;
+        std::unique_ptr<cache_tags> generate_cache_arguments(const language_printer& printer) const;
 
 
         // INTERNAL DATA

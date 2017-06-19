@@ -62,7 +62,8 @@ namespace canonical
                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j, k);
-        auto args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        auto args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument,
+                                                       this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -156,7 +157,7 @@ namespace canonical
 
     void canonical_A::populate_workspace()
       {
-        derivs = this->shared.generate_derivs(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
         dV = this->res.dV_resource(this->printer);
         ddV = this->res.ddV_resource(this->printer);
         dddV = this->res.dddV_resource(this->printer);
@@ -165,7 +166,8 @@ namespace canonical
 
     unroll_behaviour canonical_A::get_unroll()
       {
-        if(this->shared.can_roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV() && this->res.roll_dddV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV() &&
+          this->res.can_roll_dddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -181,7 +183,8 @@ namespace canonical
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
 
-        auto args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        auto args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument,
+                                                       this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -198,9 +201,9 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
-            GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
-            GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
+            GiNaC::symbol deriv_i = this->shared.generate_deriv_symbols(i, this->printer);
+            GiNaC::symbol deriv_j = this->shared.generate_deriv_symbols(j, this->printer);
+            GiNaC::symbol deriv_k = this->shared.generate_deriv_symbols(k, this->printer);
 
             GiNaC::ex Vijk = this->res.dddV_resource(i, j, k, this->printer);
 

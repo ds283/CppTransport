@@ -130,7 +130,8 @@ namespace canonical
 
     unroll_behaviour canonical_u3::get_unroll()
       {
-        if(this->shared.can_roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV() && this->res.roll_dddV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV() &&
+          this->res.can_roll_dddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -146,7 +147,8 @@ namespace canonical
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(
+          use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);

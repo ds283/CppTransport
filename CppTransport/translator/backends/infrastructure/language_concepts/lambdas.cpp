@@ -32,7 +32,7 @@
 #include "language_printer.h"
 
 
-generic_lambda::generic_lambda(const abstract_index_database& list, expression_item_types t, const ginac_cache_tags& tg, std::string ty)
+generic_lambda::generic_lambda(const abstract_index_database& list, expression_item_types t, const cache_tags& tg, std::string ty)
   : index_list(list),
     type(t),
     tags(tg),
@@ -41,7 +41,7 @@ generic_lambda::generic_lambda(const abstract_index_database& list, expression_i
   }
 
 
-generic_lambda::generic_lambda(const abstract_index& i, expression_item_types t, const ginac_cache_tags& tg, std::string ty)
+generic_lambda::generic_lambda(const abstract_index& i, expression_item_types t, const cache_tags& tg, std::string ty)
   : type(t),
     tags(tg),
     working_type(std::move(ty))
@@ -50,7 +50,7 @@ generic_lambda::generic_lambda(const abstract_index& i, expression_item_types t,
   }
 
 
-generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j, expression_item_types t, const ginac_cache_tags& tg, std::string ty)
+generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j, expression_item_types t, const cache_tags& tg, std::string ty)
   : type(t),
     tags(tg),
     working_type(std::move(ty))
@@ -60,7 +60,7 @@ generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j,
   }
 
 
-generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, expression_item_types t, const ginac_cache_tags& tg, std::string ty)
+generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, expression_item_types t, const cache_tags& tg, std::string ty)
   : type(t),
     tags(tg),
     working_type(std::move(ty))

@@ -55,7 +55,7 @@ namespace canonical
     GiNaC::ex canonical_dN2::compute_component(phase_index i, phase_index j)
       {
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
 
         if(!cached) { this->populate_workspace();
             this->cache_symbols(); this->cached = true; }
@@ -87,8 +87,8 @@ namespace canonical
         eps = this->res.raw_eps_resource(this->printer);
         dotH = -eps*Hsq;
 
-        std::unique_ptr<symbol_list> f = this->shared.generate_fields(this->printer);
-        std::unique_ptr<symbol_list> d = this->shared.generate_derivs(this->printer);
+        std::unique_ptr<symbol_list> f = this->shared.generate_field_symbols(this->printer);
+        std::unique_ptr<symbol_list> d = this->shared.generate_deriv_symbols(this->printer);
         std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
 
         p = 0;
@@ -108,8 +108,8 @@ namespace canonical
 
     void canonical_dN2::populate_workspace()
       {
-        fields = this->shared.generate_fields(this->printer);
-        derivs = this->shared.generate_derivs(this->printer);
+        fields = this->shared.generate_field_symbols(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
         dV = this->res.dV_resource(this->printer);
       }
 

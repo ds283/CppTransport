@@ -62,7 +62,7 @@ namespace canonical
                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j, k);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -135,14 +135,14 @@ namespace canonical
 
     void canonical_B::populate_workspace()
       {
-        derivs = this->shared.generate_derivs(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
         dV = this->res.dV_resource(this->printer);
       }
 
 
     unroll_behaviour canonical_B::get_unroll()
       {
-        if(this->shared.can_roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -158,7 +158,7 @@ namespace canonical
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -175,9 +175,9 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
-            GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
-            GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
+            GiNaC::symbol deriv_i = this->shared.generate_deriv_symbols(i, this->printer);
+            GiNaC::symbol deriv_j = this->shared.generate_deriv_symbols(j, this->printer);
+            GiNaC::symbol deriv_k = this->shared.generate_deriv_symbols(k, this->printer);
 
             GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
             GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);

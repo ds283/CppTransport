@@ -51,7 +51,7 @@ namespace canonical
     GiNaC::ex canonical_zeta1::compute_component(phase_index i)
       {
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
 
         if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
@@ -98,7 +98,7 @@ namespace canonical
 
     void canonical_zeta1::populate_workspace()
       {
-        derivs = this->shared.generate_derivs(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
       }
 
 
@@ -115,7 +115,7 @@ namespace canonical
 
         GiNaC::idx idx_i = this->shared.generate_index(i);
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
         // convert these indices to species-only indices
@@ -124,7 +124,7 @@ namespace canonical
 
         map_lambda_table table(lambda_flattened_map_size(1));
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
+        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_symbols(i_field_a, this->printer);
 
         this->cache_symbols();
 

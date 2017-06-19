@@ -75,9 +75,9 @@ namespace canonical
         
         GiNaC::idx idx_i = this->shared.generate_index(i);
         
-        auto args = std::make_unique<ginac_cache_tags>();
+        auto args = std::make_unique<cache_tags>();
         
-        GiNaC::ex result = this->shared.generate_fields(i, this->printer);
+        GiNaC::ex result = this->shared.generate_field_symbols(i, this->printer);
     
         return std::make_unique<atomic_lambda>(i, result, expression_item_types::coordinates_lambda, *args, this->shared.generate_working_type());
       }
@@ -92,8 +92,8 @@ namespace canonical
     
     void canonical_coordinates::populate_workspace()
       {
-        fields = this->shared.generate_fields(this->printer);
-        derivs = this->shared.generate_derivs(this->printer);
+        fields = this->shared.generate_field_symbols(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
       }
     
   }   // namespace canonical

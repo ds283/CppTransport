@@ -56,7 +56,8 @@ namespace canonical
     GiNaC::ex canonical_u2::compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument,
+                                                                                    this->printer);
         args->push_back(k);
         args->push_back(a);
 
@@ -136,7 +137,7 @@ namespace canonical
 
     void canonical_u2::populate_workspace()
       {
-        derivs = this->shared.generate_derivs(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
         dV = this->res.dV_resource(this->printer);
         ddV = this->res.ddV_resource(this->printer);
       }
@@ -144,7 +145,7 @@ namespace canonical
 
     unroll_behaviour canonical_u2::get_unroll()
       {
-        if(this->shared.can_roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -164,10 +165,10 @@ namespace canonical
         const abstract_index j_field_a = this->traits.species_to_species(j);
         const abstract_index j_field_b = this->traits.momentum_to_species(j);
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
-        GiNaC::symbol deriv_b_i = this->shared.generate_derivs(i_field_b, this->printer);
-        GiNaC::symbol deriv_a_j = this->shared.generate_derivs(j_field_a, this->printer);
-        GiNaC::symbol deriv_b_j = this->shared.generate_derivs(j_field_b, this->printer);
+        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_symbols(i_field_a, this->printer);
+        GiNaC::symbol deriv_b_i = this->shared.generate_deriv_symbols(i_field_b, this->printer);
+        GiNaC::symbol deriv_a_j = this->shared.generate_deriv_symbols(j_field_a, this->printer);
+        GiNaC::symbol deriv_b_j = this->shared.generate_deriv_symbols(j_field_b, this->printer);
 
         GiNaC::idx idx_a_i = this->shared.generate_index(i_field_a);
         GiNaC::idx idx_b_i = this->shared.generate_index(i_field_b);
@@ -180,7 +181,8 @@ namespace canonical
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument,
+                                                                                    this->printer);
         args->push_back(k);
         args->push_back(a);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));

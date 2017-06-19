@@ -62,7 +62,7 @@ namespace canonical
                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j, k);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -125,7 +125,7 @@ namespace canonical
 
     void canonical_C::populate_workspace()
       {
-        derivs = this->shared.generate_derivs(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
       }
 
 
@@ -147,7 +147,7 @@ namespace canonical
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -164,9 +164,9 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
-            GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
-            GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
+            GiNaC::symbol deriv_i = this->shared.generate_deriv_symbols(i, this->printer);
+            GiNaC::symbol deriv_j = this->shared.generate_deriv_symbols(j, this->printer);
+            GiNaC::symbol deriv_k = this->shared.generate_deriv_symbols(k, this->printer);
 
             result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 

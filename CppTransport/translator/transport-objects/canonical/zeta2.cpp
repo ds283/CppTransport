@@ -59,7 +59,7 @@ namespace canonical
                                                  GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(k);
         args->push_back(k1);
         args->push_back(k2);
@@ -147,7 +147,7 @@ namespace canonical
 
         // formulae from DS calculation 28 May 2014
 
-        std::unique_ptr<symbol_list> ds = this->shared.generate_derivs(this->printer);
+        std::unique_ptr<symbol_list> ds = this->shared.generate_deriv_symbols(this->printer);
         std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
 
         GiNaC::ex p_ex = 0;
@@ -168,14 +168,14 @@ namespace canonical
 
     void canonical_zeta2::populate_workspace()
       {
-        derivs = this->shared.generate_derivs(this->printer);
+        derivs = this->shared.generate_deriv_symbols(this->printer);
         dV = this->res.dV_resource(this->printer);
       }
 
 
     unroll_behaviour canonical_zeta2::get_unroll()
       {
-        if(this->shared.can_roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -195,10 +195,10 @@ namespace canonical
         const abstract_index j_field_a = this->traits.species_to_species(j);
         const abstract_index j_field_b = this->traits.momentum_to_species(j);
 
-        GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
-        GiNaC::symbol deriv_b_i = this->shared.generate_derivs(i_field_b, this->printer);
-        GiNaC::symbol deriv_a_j = this->shared.generate_derivs(j_field_a, this->printer);
-        GiNaC::symbol deriv_b_j = this->shared.generate_derivs(j_field_b, this->printer);
+        GiNaC::symbol deriv_a_i = this->shared.generate_deriv_symbols(i_field_a, this->printer);
+        GiNaC::symbol deriv_b_i = this->shared.generate_deriv_symbols(i_field_b, this->printer);
+        GiNaC::symbol deriv_a_j = this->shared.generate_deriv_symbols(j_field_a, this->printer);
+        GiNaC::symbol deriv_b_j = this->shared.generate_deriv_symbols(j_field_b, this->printer);
 
         GiNaC::idx idx_a_i = this->shared.generate_index(i_field_a);
         GiNaC::idx idx_b_i = this->shared.generate_index(i_field_b);
@@ -209,7 +209,7 @@ namespace canonical
 
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = 0;
 
-        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(k);
         args->push_back(k1);
         args->push_back(k2);

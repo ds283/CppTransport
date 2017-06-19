@@ -46,7 +46,7 @@ shared_resources::shared_resources(translator_data& p, resource_manager& m, expr
   }
 
 
-std::unique_ptr<symbol_list> shared_resources::generate_parameters(const language_printer& printer) const
+std::unique_ptr<symbol_list> shared_resources::generate_parameter_symbols(const language_printer& printer) const
   {
     auto list = std::make_unique<symbol_list>();
 
@@ -75,7 +75,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_parameters(const languag
   }
 
 
-std::unique_ptr<symbol_list> shared_resources::generate_fields(const language_printer& printer) const
+std::unique_ptr<symbol_list> shared_resources::generate_field_symbols(const language_printer& printer) const
   {
     auto list = std::make_unique<symbol_list>();
 
@@ -105,7 +105,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_fields(const language_pr
   }
 
 
-std::unique_ptr<symbol_list> shared_resources::generate_derivs(const language_printer& printer) const
+std::unique_ptr<symbol_list> shared_resources::generate_deriv_symbols(const language_printer& printer) const
   {
     auto list = std::make_unique<symbol_list>();
 
@@ -153,7 +153,7 @@ bool shared_resources::can_roll_coordinates() const
   }
 
 
-GiNaC::symbol shared_resources::generate_parameters(const abstract_index& idx, const language_printer& printer) const
+GiNaC::symbol shared_resources::generate_parameter_symbols(const abstract_index& idx, const language_printer& printer) const
   {
     const auto& resource = this->mgr.parameters();
 
@@ -164,7 +164,7 @@ GiNaC::symbol shared_resources::generate_parameters(const abstract_index& idx, c
   }
 
 
-GiNaC::symbol shared_resources::generate_fields(const abstract_index& idx, const language_printer& printer) const
+GiNaC::symbol shared_resources::generate_field_symbols(const abstract_index& idx, const language_printer& printer) const
   {
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
@@ -176,7 +176,7 @@ GiNaC::symbol shared_resources::generate_fields(const abstract_index& idx, const
   }
 
 
-GiNaC::symbol shared_resources::generate_derivs(const abstract_index& idx, const language_printer& printer) const
+GiNaC::symbol shared_resources::generate_deriv_symbols(const abstract_index& idx, const language_printer& printer) const
   {
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
