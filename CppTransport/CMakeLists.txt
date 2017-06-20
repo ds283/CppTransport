@@ -235,6 +235,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/parser/semantic-values
   translator/transport-objects
   translator/transport-objects/indices
+  translator/transport-objects/resources
   translator/transport-objects/utilities
   translator/utilities
   translator/version-policy
@@ -643,6 +644,11 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
   translator/transport-objects/nontrivial-metric/coordinates.h
   translator/transport-objects/nontrivial-metric/fields.cpp
   translator/transport-objects/nontrivial-metric/fields.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_RESOURCES_FILES
+  translator/transport-objects/resources/indexed_resource.h
+  translator/transport-objects/resources/simple_resource.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_FILES
@@ -1187,6 +1193,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_RESOURCES_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
   ${TRANSLATOR_UTILITIES_FILES}
   ${TRANSLATOR_VERSION_POLICY_FILES}
