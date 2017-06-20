@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_CANONICAL_FACTORY_H
-#define CPPTRANSPORT_CANONICAL_FACTORY_H
+#ifndef CPPTRANSPORT_NONTRIVIAL_METRIC_FACTORY_H
+#define CPPTRANSPORT_NONTRIVIAL_METRIC_FACTORY_H
 
 
 #include "concepts/tensor_factory.h"
 #include "resources.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     class tensor_factory: public ::tensor_factory
@@ -57,8 +57,8 @@ namespace canonical
       public:
 
         // NOTE we cannot use contravariant return types with managed pointers
-        // the u1, u2, u3, etc. classes visible within the 'canonical' namespace are
-        // canonical::u1, canonical::u2 etc., whereas the virtual functions being overridden
+        // the u1, u2, u3, etc. classes visible within the 'nontrivial_metric' namespace are
+        // nontrivial_metric::u1, nontrivial_metric::u2 etc., whereas the virtual functions being overridden
         // expect ::u1, ::u2, etc.
 
         //! obtain a Hubble-object
@@ -126,7 +126,7 @@ namespace canonical
 
         // RESOURCES
 
-        //! canonical resources
+        //! nontrivial_metric resources
         resources res;     // must be constructed after compute_timer
 
       };
@@ -134,4 +134,4 @@ namespace canonical
   }
 
 
-#endif //CPPTRANSPORT_CANONICAL_FACTORY_H
+#endif //CPPTRANSPORT_NONTRIVIAL_METRIC_FACTORY_H

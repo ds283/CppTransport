@@ -23,35 +23,29 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_MAKE_FACTORY_H
-#define CPPTRANSPORT_MAKE_FACTORY_H
+
+#include "Hubble.h"
 
 
-#include "backend_data.h"
-
-#include "canonical/tensor_factory.h"
-#include "nontrivial-metric/tensor_factory.h"
-
-
-// generate an appropriate tensor_factory instance
-inline std::unique_ptr<tensor_factory> make_tensor_factory(translator_data& p, expression_cache& cache)
+namespace nontrivial_metric
   {
-    switch(p.model.get_lagrangian_type())
-      {
-        case model_type::canonical:
-          {
-            return std::make_unique<canonical::tensor_factory>(p, cache);
-          }
 
-        case model_type::nontrivial_metric:
-          {
-            return std::make_unique<nontrivial_metric::tensor_factory>(p, cache);
-          }
+    GiNaC::ex nontrivial_metric_Hubble::compute_V()
+      {
+        return this->res.V_resource(this->cse_worker, this->printer);
       }
 
-    // at the moment, nothing to do - only canonical models implemented
-  }
+
+    GiNaC::ex nontrivial_metric_Hubble::compute_Hsq()
+      {
+        return this->res.Hsq_resource(this->cse_worker, this->printer);
+      }
 
 
+    GiNaC::ex nontrivial_metric_Hubble::compute_eps()
+      {
+        return this->res.eps_resource(this->cse_worker, this->printer);
+      }
 
-#endif //CPPTRANSPORT_MAKE_FACTORY_H
+  }   // namespace nontrivial_metric
+

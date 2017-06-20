@@ -171,6 +171,27 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
+  translator/transport-objects/nontrivial-metric/resources.cpp
+  translator/transport-objects/nontrivial-metric/Hubble.cpp
+  translator/transport-objects/nontrivial-metric/coordinates.cpp
+  translator/transport-objects/nontrivial-metric/fields.cpp
+  translator/transport-objects/nontrivial-metric/dV.cpp
+  translator/transport-objects/nontrivial-metric/ddV.cpp
+  translator/transport-objects/nontrivial-metric/dddV.cpp
+  translator/transport-objects/nontrivial-metric/SR_velocity.cpp
+  translator/transport-objects/nontrivial-metric/A.cpp
+  translator/transport-objects/nontrivial-metric/Atilde.cpp
+  translator/transport-objects/nontrivial-metric/B.cpp
+  translator/transport-objects/nontrivial-metric/C.cpp
+  translator/transport-objects/nontrivial-metric/M.cpp
+  translator/transport-objects/nontrivial-metric/u1.cpp
+  translator/transport-objects/nontrivial-metric/u2.cpp
+  translator/transport-objects/nontrivial-metric/u3.cpp
+  translator/transport-objects/nontrivial-metric/zeta1.cpp
+  translator/transport-objects/nontrivial-metric/zeta2.cpp
+  translator/transport-objects/nontrivial-metric/dN1.cpp
+  translator/transport-objects/nontrivial-metric/dN2.cpp
+  translator/transport-objects/nontrivial-metric/tensor_factory.cpp
   translator/transport-objects/utilities/symbol_factory.cpp
   translator/transport-objects/utilities/shared_resources.cpp
   translator/utilities/error.cpp
@@ -577,6 +598,51 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/fields.h
   translator/transport-objects/concepts/parameters.h
   translator/transport-objects/concepts/parameters.cpp
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
+  translator/transport-objects/nontrivial-metric/A.cpp
+  translator/transport-objects/nontrivial-metric/A.h
+  translator/transport-objects/nontrivial-metric/Atilde.cpp
+  translator/transport-objects/nontrivial-metric/Atilde.h
+  translator/transport-objects/nontrivial-metric/B.cpp
+  translator/transport-objects/nontrivial-metric/B.h
+  translator/transport-objects/nontrivial-metric/C.cpp
+  translator/transport-objects/nontrivial-metric/C.h
+  translator/transport-objects/nontrivial-metric/dddV.cpp
+  translator/transport-objects/nontrivial-metric/dddV.h
+  translator/transport-objects/nontrivial-metric/ddV.cpp
+  translator/transport-objects/nontrivial-metric/ddV.h
+  translator/transport-objects/nontrivial-metric/dN1.cpp
+  translator/transport-objects/nontrivial-metric/dN1.h
+  translator/transport-objects/nontrivial-metric/dN2.cpp
+  translator/transport-objects/nontrivial-metric/dN2.h
+  translator/transport-objects/nontrivial-metric/dV.cpp
+  translator/transport-objects/nontrivial-metric/dV.h
+  translator/transport-objects/nontrivial-metric/Hubble.cpp
+  translator/transport-objects/nontrivial-metric/Hubble.h
+  translator/transport-objects/nontrivial-metric/M.cpp
+  translator/transport-objects/nontrivial-metric/M.h
+  translator/transport-objects/nontrivial-metric/resources.cpp
+  translator/transport-objects/nontrivial-metric/resources.h
+  translator/transport-objects/nontrivial-metric/SR_velocity.cpp
+  translator/transport-objects/nontrivial-metric/SR_velocity.h
+  translator/transport-objects/nontrivial-metric/tensor_factory.cpp
+  translator/transport-objects/nontrivial-metric/tensor_factory.h
+  translator/transport-objects/nontrivial-metric/u1.cpp
+  translator/transport-objects/nontrivial-metric/u1.h
+  translator/transport-objects/nontrivial-metric/u2.cpp
+  translator/transport-objects/nontrivial-metric/u2.h
+  translator/transport-objects/nontrivial-metric/u3.cpp
+  translator/transport-objects/nontrivial-metric/u3.h
+  translator/transport-objects/nontrivial-metric/zeta1.cpp
+  translator/transport-objects/nontrivial-metric/zeta1.h
+  translator/transport-objects/nontrivial-metric/zeta2.cpp
+  translator/transport-objects/nontrivial-metric/zeta2.h
+  translator/transport-objects/nontrivial-metric/coordinates.cpp
+  translator/transport-objects/nontrivial-metric/coordinates.h
+  translator/transport-objects/nontrivial-metric/fields.cpp
+  translator/transport-objects/nontrivial-metric/fields.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_FILES
@@ -1117,6 +1183,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES}
   ${TRANSLATOR_PARSER_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}

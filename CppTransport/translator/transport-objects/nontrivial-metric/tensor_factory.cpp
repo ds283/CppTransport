@@ -47,120 +47,120 @@
 #include "dN2.h"
 
 
-namespace canonical
+namespace nontrivial_metric
   {
 
     std::unique_ptr<Hubble> tensor_factory::make_Hubble(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_Hubble>(p, cw, this->res);
+        return std::make_unique<nontrivial_metric_Hubble>(p, cw, this->res);
       }
 
 
     std::unique_ptr<dV> tensor_factory::make_dV(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_dV>(p, cw, this->res, this->shared, this->fl);
+        return std::make_unique<nontrivial_metric_dV>(p, cw, this->res, this->shared, this->fl);
       }
 
 
     std::unique_ptr<ddV> tensor_factory::make_ddV(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_ddV>(p, cw, this->res, this->shared, this->fl);
+        return std::make_unique<nontrivial_metric_ddV>(p, cw, this->res, this->shared, this->fl);
       }
 
 
     std::unique_ptr<dddV> tensor_factory::make_dddV(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_dddV>(p, cw, this->res, this->shared, this->fl);
+        return std::make_unique<nontrivial_metric_dddV>(p, cw, this->res, this->shared, this->fl);
       }
 
 
     std::unique_ptr<SR_velocity> tensor_factory::make_SR_velocity(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_SR_velocity>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl);
+        return std::make_unique<nontrivial_metric_SR_velocity>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl);
       }
 
 
     std::unique_ptr<A> tensor_factory::make_A(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_A>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_A>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
     
     
     std::unique_ptr<Atilde> tensor_factory::make_Atilde(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_Atilde>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_Atilde>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<B> tensor_factory::make_B(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_B>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_B>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<C> tensor_factory::make_C(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_C>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_C>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<M> tensor_factory::make_M(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_M>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_M>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<u1> tensor_factory::make_u1(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_u1>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_u1>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<u2> tensor_factory::make_u2(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_u2>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_u2>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<u3> tensor_factory::make_u3(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_u3>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_u3>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<zeta1> tensor_factory::make_zeta1(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_zeta1>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_zeta1>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<zeta2> tensor_factory::make_zeta2(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_zeta2>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_zeta2>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<dN1> tensor_factory::make_dN1(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_dN1>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_dN1>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
 
 
     std::unique_ptr<dN2> tensor_factory::make_dN2(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_dN2>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_dN2>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
     
     
     std::unique_ptr<fields> tensor_factory::make_fields(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_fields>(p, cw, this->res, this->shared, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_fields>(p, cw, this->res, this->shared, this->fl, this->traits);
       }
     
     
     std::unique_ptr<coordinates> tensor_factory::make_coordinates(language_printer& p, cse& cw)
       {
-        return std::make_unique<canonical_coordinates>(p, cw, this->res, this->shared, this->fl, this->traits);
+        return std::make_unique<nontrivial_metric_coordinates>(p, cw, this->res, this->shared, this->fl, this->traits);
       }
     
   }
