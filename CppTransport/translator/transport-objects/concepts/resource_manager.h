@@ -267,7 +267,7 @@ class resource_manager
 
     // INTERNAL DATA
 
-  private:
+  protected:
 
     //! cache parameters resource label
     simple_resource<std::string> parameters_cache;

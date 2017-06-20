@@ -31,7 +31,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "resource_manager.h"
+#include "concepts/resource_manager.h"
 #include "translator_data.h"
 #include "expression_cache.h"
 #include "indices.h"

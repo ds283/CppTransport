@@ -166,8 +166,9 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/dN1.cpp
   translator/transport-objects/canonical/dN2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
+  translator/transport-objects/canonical/resource_manager.cpp
   translator/transport-objects/concepts/parameters.cpp
-  translator/transport-objects/resource_manager.cpp
+  translator/transport-objects/concepts/resource_manager.cpp
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
@@ -192,6 +193,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/nontrivial-metric/dN1.cpp
   translator/transport-objects/nontrivial-metric/dN2.cpp
   translator/transport-objects/nontrivial-metric/tensor_factory.cpp
+  translator/transport-objects/nontrivial-metric/resource_manager.cpp
   translator/transport-objects/utilities/symbol_factory.cpp
   translator/transport-objects/utilities/shared_resources.cpp
   translator/utilities/error.cpp
@@ -235,7 +237,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/parser/semantic-values
   translator/transport-objects
   translator/transport-objects/indices
-  translator/transport-objects/resources
+  translator/transport-objects/concepts/resources
   translator/transport-objects/utilities
   translator/utilities
   translator/version-policy
@@ -572,6 +574,8 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
   translator/transport-objects/canonical/coordinates.h
   translator/transport-objects/canonical/fields.cpp
   translator/transport-objects/canonical/fields.h
+  translator/transport-objects/canonical/resource_manager.cpp
+  translator/transport-objects/canonical/resource_manager.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
@@ -599,6 +603,13 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/fields.h
   translator/transport-objects/concepts/parameters.h
   translator/transport-objects/concepts/parameters.cpp
+  translator/transport-objects/concepts/resource_manager.cpp
+  translator/transport-objects/concepts/resource_manager.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_FILES
+  translator/transport-objects/concepts/resources/indexed_resource.h
+  translator/transport-objects/concepts/resources/simple_resource.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
@@ -644,17 +655,12 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
   translator/transport-objects/nontrivial-metric/coordinates.h
   translator/transport-objects/nontrivial-metric/fields.cpp
   translator/transport-objects/nontrivial-metric/fields.h
-  )
-
-set(TRANSLATOR_TRANSPORT_OBJECTS_RESOURCES_FILES
-  translator/transport-objects/resources/indexed_resource.h
-  translator/transport-objects/resources/simple_resource.h
+  translator/transport-objects/nontrivial-metric/resource_manager.cpp
+  translator/transport-objects/nontrivial-metric/resource_manager.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_FILES
   translator/transport-objects/make_tensor_factory.h
-  translator/transport-objects/resource_manager.cpp
-  translator/transport-objects/resource_manager.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES
@@ -1193,7 +1199,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_RESOURCES_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
   ${TRANSLATOR_UTILITIES_FILES}
   ${TRANSLATOR_VERSION_POLICY_FILES}

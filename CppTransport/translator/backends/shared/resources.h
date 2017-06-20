@@ -28,7 +28,7 @@
 
 
 #include "directive_package.h"
-#include "resource_manager.h"
+#include "concepts/resource_manager.h"
 
 
 namespace macro_packages
