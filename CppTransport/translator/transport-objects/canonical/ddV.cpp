@@ -44,7 +44,7 @@ namespace canonical
       }
 
 
-    std::unique_ptr<atomic_lambda> canonical_ddV::compute_lambda(const abstract_index& i, const abstract_index& j)
+    std::unique_ptr<atomic_lambda> canonical_ddV::compute_lambda(const index_literal& i, const index_literal& j)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("ddV");
         if(j.get_class() != index_class::field_only) throw tensor_exception("ddV");

@@ -196,8 +196,9 @@ namespace canonical
       }
 
 
-    std::unique_ptr<map_lambda> canonical_zeta2::compute_lambda(const abstract_index& i, const abstract_index& j,
-                                                                GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
+    std::unique_ptr<map_lambda>
+    canonical_zeta2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k,
+                                    GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
         if(j.get_class() != index_class::full) throw tensor_exception("U3");
@@ -206,20 +207,20 @@ namespace canonical
         auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
 
         // convert these indices to species-only indices
-        const abstract_index i_field_a = this->traits.species_to_species(i);
-        const abstract_index i_field_b = this->traits.momentum_to_species(i);
-        const abstract_index j_field_a = this->traits.species_to_species(j);
-        const abstract_index j_field_b = this->traits.momentum_to_species(j);
+        const auto i_field_a = this->traits.species_to_species(i);
+        const auto i_field_b = this->traits.momentum_to_species(i);
+        const auto j_field_a = this->traits.species_to_species(j);
+        const auto j_field_b = this->traits.momentum_to_species(j);
 
-        auto deriv_a_i = this->res.generate_deriv_vector(i_field_a, this->printer);
-        auto deriv_b_i = this->res.generate_deriv_vector(i_field_b, this->printer);
-        auto deriv_a_j = this->res.generate_deriv_vector(j_field_a, this->printer);
-        auto deriv_b_j = this->res.generate_deriv_vector(j_field_b, this->printer);
+        auto deriv_a_i = this->res.generate_deriv_vector(*i_field_a.second, this->printer);
+        auto deriv_b_i = this->res.generate_deriv_vector(*i_field_b.second, this->printer);
+        auto deriv_a_j = this->res.generate_deriv_vector(*j_field_a.second, this->printer);
+        auto deriv_b_j = this->res.generate_deriv_vector(*j_field_b.second, this->printer);
 
-        auto idx_a_i = this->shared.generate_index<GiNaC::idx>(i_field_a);
-        auto idx_b_i = this->shared.generate_index<GiNaC::idx>(i_field_b);
-        auto idx_a_j = this->shared.generate_index<GiNaC::idx>(j_field_a);
-        auto idx_b_j = this->shared.generate_index<GiNaC::idx>(j_field_b);
+        auto idx_a_i = this->shared.generate_index<GiNaC::idx>(*i_field_a.second);
+        auto idx_b_i = this->shared.generate_index<GiNaC::idx>(*i_field_b.second);
+        auto idx_a_j = this->shared.generate_index<GiNaC::idx>(*j_field_a.second);
+        auto idx_b_j = this->shared.generate_index<GiNaC::idx>(*j_field_b.second);
 
         this->pre_lambda();
 

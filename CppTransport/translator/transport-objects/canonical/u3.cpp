@@ -137,8 +137,9 @@ namespace canonical
       }
 
 
-    std::unique_ptr<map_lambda> canonical_u3::compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
-                                                             GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    std::unique_ptr<map_lambda>
+    canonical_u3::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                                 GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
         if(j.get_class() != index_class::full) throw tensor_exception("U3");
@@ -159,22 +160,22 @@ namespace canonical
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
 
         // convert these indices to species-only indices
-        const abstract_index i_field_a = this->traits.species_to_species(i);
-        const abstract_index i_field_b = this->traits.momentum_to_species(i);
-        const abstract_index j_field_a = this->traits.species_to_species(j);
-        const abstract_index j_field_b = this->traits.momentum_to_species(j);
-        const abstract_index k_field_a = this->traits.species_to_species(k);
-        const abstract_index k_field_b = this->traits.momentum_to_species(k);
+        const auto i_field_a = this->traits.species_to_species(i);
+        const auto i_field_b = this->traits.momentum_to_species(i);
+        const auto j_field_a = this->traits.species_to_species(j);
+        const auto j_field_b = this->traits.momentum_to_species(j);
+        const auto k_field_a = this->traits.species_to_species(k);
+        const auto k_field_b = this->traits.momentum_to_species(k);
 
         map_lambda_table table(lambda_flattened_map_size(3));
 
-        std::unique_ptr<atomic_lambda> fff = B_agent.compute_lambda(j_field_a, k_field_a, i_field_a, k2, k3, k1, a);
-        std::unique_ptr<atomic_lambda> ffm = C_agent.compute_lambda(i_field_a, k_field_b, j_field_a, k1, k3, k2, a);
-        std::unique_ptr<atomic_lambda> fmf = C_agent.compute_lambda(i_field_a, j_field_b, k_field_a, k1, k2, k3, a);
-        std::unique_ptr<atomic_lambda> mff = A_agent.compute_lambda(i_field_b, j_field_a, k_field_a, k1, k2, k3, a);
-        std::unique_ptr<atomic_lambda> mfm = B_agent.compute_lambda(i_field_b, j_field_a, k_field_b, k1, k2, k3, a);
-        std::unique_ptr<atomic_lambda> mmf = B_agent.compute_lambda(i_field_b, k_field_a, j_field_b, k1, k3, k2, a);
-        std::unique_ptr<atomic_lambda> mmm = C_agent.compute_lambda(j_field_b, k_field_b, i_field_b, k2, k3, k1, a);
+        std::unique_ptr<atomic_lambda> fff = B_agent.compute_lambda(*j_field_a.second, *k_field_a.second, *i_field_a.second, k2, k3, k1, a);
+        std::unique_ptr<atomic_lambda> ffm = C_agent.compute_lambda(*i_field_a.second, *k_field_b.second, *j_field_a.second, k1, k3, k2, a);
+        std::unique_ptr<atomic_lambda> fmf = C_agent.compute_lambda(*i_field_a.second, *j_field_b.second, *k_field_a.second, k1, k2, k3, a);
+        std::unique_ptr<atomic_lambda> mff = A_agent.compute_lambda(*i_field_b.second, *j_field_a.second, *k_field_a.second, k1, k2, k3, a);
+        std::unique_ptr<atomic_lambda> mfm = B_agent.compute_lambda(*i_field_b.second, *j_field_a.second, *k_field_b.second, k1, k2, k3, a);
+        std::unique_ptr<atomic_lambda> mmf = B_agent.compute_lambda(*i_field_b.second, *k_field_a.second, *j_field_b.second, k1, k3, k2, a);
+        std::unique_ptr<atomic_lambda> mmm = C_agent.compute_lambda(*j_field_b.second, *k_field_b.second, *i_field_b.second, k2, k3, k1, a);
 
         table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD, LAMBDA_FIELD)] = -(**fff);
         table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD, LAMBDA_MOMENTUM)] = -(**ffm);

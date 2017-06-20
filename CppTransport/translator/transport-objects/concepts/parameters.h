@@ -83,7 +83,7 @@ class parameters: public transport_tensor
     
     //! evaluate lambda for tensor
     virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const abstract_index& i);
+    compute_lambda(const index_literal& i);
     
     
     // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT

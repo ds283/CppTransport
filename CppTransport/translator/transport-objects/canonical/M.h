@@ -75,7 +75,7 @@ namespace canonical
 
         //! evaluate lambda for tensor
         std::unique_ptr<atomic_lambda>
-        compute_lambda(const abstract_index& i, const abstract_index& j) override;
+        compute_lambda(const index_literal& i, const index_literal& j) override;
 
 
         // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT

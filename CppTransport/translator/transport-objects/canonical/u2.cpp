@@ -135,8 +135,8 @@ namespace canonical
       }
 
 
-    std::unique_ptr<map_lambda> canonical_u2::compute_lambda(const abstract_index& i, const abstract_index& j,
-                                                             GiNaC::symbol& k, GiNaC::symbol& a)
+    std::unique_ptr<map_lambda>
+    canonical_u2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U2");
         if(j.get_class() != index_class::full) throw tensor_exception("U2");
@@ -145,20 +145,20 @@ namespace canonical
         auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
 
         // convert these indices to species-only indices
-        const abstract_index i_field_a = this->traits.species_to_species(i);
-        const abstract_index i_field_b = this->traits.momentum_to_species(i);
-        const abstract_index j_field_a = this->traits.species_to_species(j);
-        const abstract_index j_field_b = this->traits.momentum_to_species(j);
+        const auto i_field_a = this->traits.species_to_species(i);
+        const auto i_field_b = this->traits.momentum_to_species(i);
+        const auto j_field_a = this->traits.species_to_species(j);
+        const auto j_field_b = this->traits.momentum_to_species(j);
 
-        auto deriv_a_i = this->res.generate_deriv_vector(i_field_a, this->printer);
-        auto deriv_b_i = this->res.generate_deriv_vector(i_field_b, this->printer);
-        auto deriv_a_j = this->res.generate_deriv_vector(j_field_a, this->printer);
-        auto deriv_b_j = this->res.generate_deriv_vector(j_field_b, this->printer);
+        auto deriv_a_i = this->res.generate_deriv_vector(*i_field_a.second, this->printer);
+        auto deriv_b_i = this->res.generate_deriv_vector(*i_field_b.second, this->printer);
+        auto deriv_a_j = this->res.generate_deriv_vector(*j_field_a.second, this->printer);
+        auto deriv_b_j = this->res.generate_deriv_vector(*j_field_b.second, this->printer);
 
-        auto idx_a_i = this->shared.generate_index<GiNaC::idx>(i_field_a);
-        auto idx_b_i = this->shared.generate_index<GiNaC::idx>(i_field_b);
-        auto idx_a_j = this->shared.generate_index<GiNaC::idx>(j_field_a);
-        auto idx_b_j = this->shared.generate_index<GiNaC::idx>(j_field_b);
+        auto idx_a_i = this->shared.generate_index<GiNaC::idx>(*i_field_a.second);
+        auto idx_b_i = this->shared.generate_index<GiNaC::idx>(*i_field_b.second);
+        auto idx_a_j = this->shared.generate_index<GiNaC::idx>(*j_field_a.second);
+        auto idx_b_j = this->shared.generate_index<GiNaC::idx>(*j_field_b.second);
 
         this->pre_lambda();
 
@@ -178,10 +178,10 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            auto V_ba_ij = this->res.ddV_resource(i_field_b, j_field_a, this->printer);
+            auto V_ba_ij = this->res.ddV_resource(*i_field_b.second, *j_field_a.second, this->printer);
 
-            auto V_b_i = this->res.dV_resource(i_field_b, this->printer);
-            auto V_a_j = this->res.dV_resource(j_field_a, this->printer);
+            auto V_b_i = this->res.dV_resource(*i_field_b.second, this->printer);
+            auto V_a_j = this->res.dV_resource(*j_field_a.second, this->printer);
 
             map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
               this->expr_field_momentum(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);

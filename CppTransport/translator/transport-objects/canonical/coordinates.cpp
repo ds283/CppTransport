@@ -90,7 +90,7 @@ namespace canonical
       }
 
 
-    std::unique_ptr<atomic_lambda> canonical_coordinates::compute_lambda(const abstract_index& i)
+    std::unique_ptr<atomic_lambda> canonical_coordinates::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("coordinates");
         

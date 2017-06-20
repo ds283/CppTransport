@@ -75,7 +75,7 @@ namespace canonical
 
         //! evaluate lambda for tensor
         std::unique_ptr<map_lambda>
-        compute_lambda(const abstract_index& i, const abstract_index& j,
+        compute_lambda(const index_literal& i, const index_literal& j,
                        GiNaC::symbol& k, GiNaC::symbol& a) override;
 
 

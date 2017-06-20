@@ -58,7 +58,7 @@ GiNaC::ex parameters::compute_component(param_index i)
   }
 
 
-std::unique_ptr<atomic_lambda> parameters::compute_lambda(const abstract_index& i)
+std::unique_ptr<atomic_lambda> parameters::compute_lambda(const index_literal& i)
   {
     if(i.get_class() != index_class::parameter) throw tensor_exception("parameters");
     

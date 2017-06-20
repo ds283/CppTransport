@@ -68,7 +68,7 @@ class B: public transport_tensor
 
     //! evaluate lambda for tensor
     virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
+    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
                    GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
 
   };

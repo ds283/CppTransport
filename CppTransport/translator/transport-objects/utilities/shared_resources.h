@@ -164,7 +164,7 @@ class shared_resources
 
     //! make an abstract index
     template <typename IndexType>
-    IndexType generate_index(const abstract_index& i);
+    IndexType generate_index(const index_literal& i);
 
 
     // INTERNAL DATA

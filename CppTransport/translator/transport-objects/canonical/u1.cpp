@@ -101,18 +101,18 @@ namespace canonical
       }
 
 
-    std::unique_ptr<map_lambda> canonical_u1::compute_lambda(const abstract_index& i)
+    std::unique_ptr<map_lambda> canonical_u1::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U1");
 
         auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
 
         // convert this index to species-only indices
-        const abstract_index i_field_a = this->traits.species_to_species(i);
-        const abstract_index i_field_b = this->traits.momentum_to_species(i);
+        const auto i_field_a = this->traits.species_to_species(i);
+        const auto i_field_b = this->traits.momentum_to_species(i);
 
-        auto deriv_a_i = this->res.generate_deriv_vector(i_field_a, this->printer);
-        auto deriv_b_i = this->res.generate_deriv_vector(i_field_b, this->printer);
+        auto deriv_a_i = this->res.generate_deriv_vector(*i_field_a.second, this->printer);
+        auto deriv_b_i = this->res.generate_deriv_vector(*i_field_b.second, this->printer);
 
         this->pre_lambda();
 
@@ -127,7 +127,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
+            GiNaC::ex V_b_i = this->res.dV_resource(*i_field_b.second, this->printer);
 
             map[lambda_flatten(LAMBDA_MOMENTUM)] = this->expr_momentum(V_b_i, deriv_b_i);
 

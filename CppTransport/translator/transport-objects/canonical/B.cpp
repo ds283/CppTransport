@@ -133,8 +133,9 @@ namespace canonical
       }
 
 
-    std::unique_ptr<atomic_lambda> canonical_B::compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
-                                                               GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    std::unique_ptr<atomic_lambda>
+    canonical_B::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("B");
         if(j.get_class() != index_class::field_only) throw tensor_exception("B");

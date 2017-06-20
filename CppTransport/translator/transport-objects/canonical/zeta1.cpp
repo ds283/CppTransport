@@ -107,7 +107,7 @@ namespace canonical
       }
 
 
-    std::unique_ptr<map_lambda> canonical_zeta1::compute_lambda(const abstract_index& i)
+    std::unique_ptr<map_lambda> canonical_zeta1::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
 
@@ -117,14 +117,13 @@ namespace canonical
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
         // convert these indices to species-only indices
-        const abstract_index i_field_a = this->traits.species_to_species(i);
-        const abstract_index i_field_b = this->traits.momentum_to_species(i);
-
+        const auto i_field_a = this->traits.species_to_species(i);
+    
         this->pre_lambda();
 
         map_lambda_table table(lambda_flattened_map_size(1));
 
-        auto deriv_a_i = this->res.generate_deriv_vector(i_field_a, this->printer);
+        auto deriv_a_i = this->res.generate_deriv_vector(*i_field_a.second, this->printer);
 
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;

@@ -32,55 +32,75 @@
 
 bool index_traits::is_species(const phase_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
-    return(raw < this->num_fields);
+    auto raw = static_cast<unsigned int>(index);
+    return raw < this->num_fields;
   }
 
 
 bool index_traits::is_momentum(const phase_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
-    return(raw >= this->num_fields && raw < 2 * this->num_fields);
+    auto raw = static_cast<unsigned int>(index);
+    return raw >= this->num_fields && raw < 2 * this->num_fields;
   }
 
 
 phase_index index_traits::to_momentum(const field_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
-    return phase_index(raw + this->num_fields);
+    auto raw = static_cast<unsigned int>(index);
+    return {raw + this->num_fields};
   }
 
 
 phase_index index_traits::to_momentum(const phase_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
+    auto raw = static_cast<unsigned int>(index);
     if(raw < this->num_fields) raw += this->num_fields;
-    return phase_index(raw);
+    return {raw};
   }
 
 
 field_index index_traits::to_species(const phase_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
+    auto raw = static_cast<unsigned int>(index);
     if(raw >= this->num_fields) raw -= this->num_fields;
-    return field_index(raw);
+    return {raw};
   }
 
 
-abstract_index index_traits::species_to_species(const abstract_index& index)
+std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>>
+index_traits::species_to_species(const index_literal& index)
   {
-    abstract_index converted(index.get_label(), index_class::field_only, index.get_number_fields(), index.get_number_parameters());
-    return(converted);
+    // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
+
+    const abstract_index& original_abst = index;
+
+    auto new_abst = std::make_unique<abstract_index>(original_abst.get_label(), index_class::field_only,
+                                                     original_abst.get_number_fields(), original_abst.get_number_parameters());
+    auto new_index = std::make_unique<index_literal>(index);
+    new_index->reassign(*new_abst);
+    
+    return std::make_pair(std::move(new_abst), std::move(new_index));
   }
 
 
-abstract_index index_traits::momentum_to_species(const abstract_index& index)
+std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>> index_traits::momentum_to_species(
+  const index_literal& index)
   {
-    abstract_index converted(index.get_label(), index_class::field_only, index.get_number_fields(), index.get_number_parameters());
+    // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
+    
+    
+    const abstract_index& original_abst = index;
+    
+    auto new_abst = std::make_unique<abstract_index>(original_abst.get_label(), index_class::field_only,
+                                                     original_abst.get_number_fields(), original_abst.get_number_parameters());
+    auto new_index = std::make_unique<index_literal>(index);
+    new_index->reassign(*new_abst);
 
-    std::ostringstream tag;
-    tag << "-" << index.get_number_fields();
-    converted.push_post_modifier(tag.str());
-
-    return(converted);
+    // add post-modified to loop label that subtracts an appropriate value to turn this momentum value
+    // into a species value
+    std::ostringstream post_modifier;
+    post_modifier << "-" << original_abst.get_number_fields();
+    new_abst->push_post_modifier(post_modifier.str());
+    
+    return std::make_pair(std::move(new_abst), std::move(new_index));
   }

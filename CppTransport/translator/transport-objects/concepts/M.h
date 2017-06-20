@@ -66,7 +66,7 @@ class M: public transport_tensor
 
     //! evaluate lambda for tensor
     virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const abstract_index& i, const abstract_index& j) = 0;
+    compute_lambda(const index_literal& i, const index_literal& j) = 0;
 
   };
 

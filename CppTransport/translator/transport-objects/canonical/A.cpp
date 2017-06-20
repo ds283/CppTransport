@@ -157,8 +157,9 @@ namespace canonical
       }
 
 
-    std::unique_ptr<atomic_lambda> canonical_A::compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
-                                                               GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    std::unique_ptr<atomic_lambda>
+    canonical_A::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("A");
         if(j.get_class() != index_class::field_only) throw tensor_exception("A");
@@ -168,8 +169,7 @@ namespace canonical
         auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
         auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
 
-        auto args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument,
-                                                       this->printer);
+        auto args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);

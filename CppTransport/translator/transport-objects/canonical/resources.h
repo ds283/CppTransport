@@ -134,13 +134,13 @@ namespace canonical
 
 
         //! generate abstract dV resource label
-        GiNaC::ex dV_resource(const abstract_index& a, const language_printer& printer);
+        GiNaC::ex dV_resource(const index_literal& a, const language_printer& printer);
 
         //! generate abstract ddV resource label
-        GiNaC::ex ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer);
+        GiNaC::ex ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
 
         //! generate abstract dddV resource label
-        GiNaC::ex dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c,
+        GiNaC::ex dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
                                 const language_printer& printer);
 
 

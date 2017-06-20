@@ -117,6 +117,9 @@ class index_literal
 
   public:
 
+    //! get index class
+    index_class get_class() const { return this->idx.get().get_class(); }
+    
     //! get index variance
     variance get_variance() const { return this->type; }
     

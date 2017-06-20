@@ -177,41 +177,45 @@ std::string shared_resources::generate_working_type() const
 template <>
 GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const field_index& i)
   {
-    return GiNaC::idx(static_cast<unsigned int>(i), static_cast<unsigned int>(this->num_fields));
+    return GiNaC::idx(static_cast<unsigned int>(i), this->num_fields);
   }
 
 
 template <>
 GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const phase_index& i)
   {
-    return GiNaC::idx(static_cast<unsigned int>(i), 2*static_cast<unsigned int>(this->num_fields));
+    return GiNaC::idx(static_cast<unsigned int>(i), 2*this->num_fields);
   }
 
 
 template <>
-GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const abstract_index& i)
+GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const index_literal& i)
   {
-    std::string name = i.get_loop_variable();
+    // GiNaC::idx discards variance data, so there is no need to include it
+    
+    const abstract_index& idx = i;
+
+    std::string name = idx.get_loop_variable();
     GiNaC::symbol sym = this->sym_factory.get_symbol(name);
 
     unsigned int size = 0;
-    switch(i.get_class())
+    switch(idx.get_class())
       {
         case index_class::parameter:
           {
-            size = static_cast<unsigned int>(this->num_params);
+            size = this->num_params;
             break;
           }
 
         case index_class::field_only:
           {
-            size = static_cast<unsigned int>(this->num_fields);
+            size = this->num_fields;
             break;
           }
 
         case index_class::full:
           {
-            size = static_cast<unsigned int>(this->num_phase);
+            size = this->num_phase;
             break;
           }
       }

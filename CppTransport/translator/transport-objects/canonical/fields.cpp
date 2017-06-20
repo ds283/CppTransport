@@ -61,7 +61,7 @@ namespace canonical
       }
     
     
-    std::unique_ptr<atomic_lambda> canonical_fields::compute_lambda(const abstract_index& i)
+    std::unique_ptr<atomic_lambda> canonical_fields::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("fields");
     

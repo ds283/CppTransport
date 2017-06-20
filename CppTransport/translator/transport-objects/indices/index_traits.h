@@ -79,11 +79,13 @@ class index_traits
 
     //! convert an abstract phase-space index to an abstract species index
     //! conversion is direct
-    abstract_index species_to_species(const abstract_index& index);
+    std::pair< std::unique_ptr<abstract_index>, std::unique_ptr<index_literal> >
+    species_to_species(const index_literal& index);
 
     //! convert an abstract phase-space index to an abstract species index
     //! conversion is offset by -number_fields
-    abstract_index momentum_to_species(const abstract_index& index);
+    std::pair< std::unique_ptr<abstract_index>, std::unique_ptr<index_literal> >
+    momentum_to_species(const index_literal& index);
 
     // INTERNAL DATA
 

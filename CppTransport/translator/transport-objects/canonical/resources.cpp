@@ -50,7 +50,8 @@ namespace canonical
       }
 
 
-    std::unique_ptr<cache_tags> resources::generate_cache_arguments(const language_printer& printer) const
+    std::unique_ptr<cache_tags>
+    resources::generate_cache_arguments(const language_printer& printer) const
       {
         std::unique_ptr<cache_tags> args = std::make_unique<cache_tags>();
 
@@ -75,7 +76,8 @@ namespace canonical
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::generate_field_vector(const language_printer& printer) const
+    std::unique_ptr<flattened_tensor>
+    resources::generate_field_vector(const language_printer& printer) const
       {
         // no distinction between co- and contravariant indices in a flat model, so we can always return the
         // raw variable labels (which notionally are the contravariant components)
@@ -305,7 +307,8 @@ namespace canonical
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::dV_resource(const language_printer& printer)
+    std::unique_ptr<flattened_tensor>
+    resources::dV_resource(const language_printer& printer)
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(1));
 
@@ -364,7 +367,8 @@ namespace canonical
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::ddV_resource(const language_printer& printer)
+    std::unique_ptr<flattened_tensor>
+    resources::ddV_resource(const language_printer& printer)
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
 
@@ -430,7 +434,8 @@ namespace canonical
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::dddV_resource(const language_printer& printer)
+    std::unique_ptr<flattened_tensor>
+    resources::dddV_resource(const language_printer& printer)
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
 
@@ -503,8 +508,8 @@ namespace canonical
       }
 
 
-    std::unique_ptr<cache_tags> resources::generate_cache_arguments(unsigned int flags,
-                                                                          const language_printer& printer) const
+    std::unique_ptr<cache_tags>
+    resources::generate_cache_arguments(unsigned int flags, const language_printer& printer) const
       {
         // first, generate arguments from param/coordinates if they exist
         auto args = this->generate_cache_arguments(printer);
@@ -574,39 +579,48 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::dV_resource(const abstract_index& a, const language_printer& printer)
+    GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer)
       {
         const auto resource = this->mgr.dV();
         const auto& flatten = this->mgr.field_flatten();
+        
+        const auto& a_idx = a.get();
 
-        if(!resource || !flatten) throw resource_failure(a.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, a, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, *flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
 
-    GiNaC::ex resources::ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer)
+    GiNaC::ex resources::ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
       {
         const auto resource = this->mgr.ddV();
         const auto& flatten = this->mgr.field_flatten();
+    
+        const auto& a_idx = a.get();
+        const auto& b_idx = b.get();
+    
+        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable());
 
-        if(!resource || !flatten) throw resource_failure(a.get_loop_variable() + ", " + b.get_loop_variable());
-
-        std::string variable = printer.array_subscript(resource.get().second, a, b, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, *flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
 
-    GiNaC::ex resources::dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c,
+    GiNaC::ex resources::dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
                                        const language_printer& printer)
       {
         const auto resource = this->mgr.dddV();
         const auto& flatten = this->mgr.field_flatten();
+    
+        const auto& a_idx = a.get();
+        const auto& b_idx = b.get();
+        const auto& c_idx = c.get();
 
-        if(!resource || !flatten) throw resource_failure(a.get_loop_variable() + ", " + b.get_loop_variable() + ", " + c.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable() + ", " + c_idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, a, b, c, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, *flatten);
         return this->sym_factory.get_symbol(variable);
       }
 

@@ -66,8 +66,7 @@ class u2: public transport_tensor
 
     //! evaluate lambda for tensor
     virtual std::unique_ptr<map_lambda>
-    compute_lambda(const abstract_index& i, const abstract_index& j,
-                   GiNaC::symbol& k, GiNaC::symbol& a) = 0;
+    compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k, GiNaC::symbol& a) = 0;
 
   };
 
