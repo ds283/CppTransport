@@ -26,6 +26,7 @@
 
 #include "nontrivial_metric/resources.h"
 #include "ginac/ginac.h"
+#include "nontrivial_metric/curvature_classes.h"
 
 
 namespace nontrivial_metric
@@ -51,6 +52,8 @@ namespace nontrivial_metric
         auto metric = p.model.get_metric();
         this -> G = std::make_unique<GiNaC::matrix>(num_fields, num_fields);
         this -> Ginv = std::make_unique<GiNaC::matrix>(num_fields, num_fields);
+        this -> Crstfl = std::make_unique<Christoffel>();
+        this -> Rie_T = std::make_unique<Riemann_T>();
 
         if(metric)
         {
@@ -58,23 +61,25 @@ namespace nontrivial_metric
 
           field_index i(0);
           field_index j(0);
+
           for (i = 0; i < num_fields; ++i) {
-            for(j = 0; j < num_fields; ++j) {
+            for (j = 0; j < num_fields; ++j) {
               field_metric::index_type idx = std::make_pair(field_list[i].get_name(), field_list[j].get_name());
               GiNaC::ex comp = G(idx);
-              this -> G -> set(i, j, comp);
+              this->G->set(i, j, comp);
             }
-
-            *this -> Ginv = this -> G ->inverse();
-
-          } else {
-            *this -> G = GiNaC::unit_matrix(num_fields);
           }
-//          populate GiNaC::matrix representing the metric
-//          initialize the Christoffel class
-//              initialize the Riemann class
-        }
 
+          *this->Ginv = this -> G->inverse();
+
+          Crstfl -> setGamma(num_fields, *this -> G, *this -> Ginv, field_list);
+          Rie_T -> setRieT(num_fields, *this -> G, field_list, *this -> Crstfl);
+
+        } else {
+          *this -> G = GiNaC::unit_matrix(num_fields);
+          *this -> Ginv = GiNaC::unit_matrix(num_fields);
+          // I should set curvature terms to zero here.
+        }
         compute_timer.stop();
       }
 

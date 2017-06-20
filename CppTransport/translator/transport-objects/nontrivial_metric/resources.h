@@ -46,6 +46,7 @@
 
 #include "disable_warnings.h"
 #include "ginac/ginac.h"
+#include "nontrivial_metric/curvature_classes.h"
 
 
 namespace nontrivial_metric
@@ -201,6 +202,11 @@ namespace nontrivial_metric
         //! inverse field metric
         std::unique_ptr<GiNaC::matrix> Ginv;
 
+        //! Christoffel symbols
+        std::unique_ptr<Christoffel> Crstfl;
+
+        //! Riemann tensor components
+        std::unique_ptr<Riemann_T> Rie_T;
 
         // AGENTS
 

@@ -195,7 +195,7 @@ ADD_EXECUTABLE(CppTransport
   translator/utilities/local_environment.cpp
   translator/utilities/argument_cache.cpp
   translator/version-policy/version_policy.cpp
-  )
+        translator/transport-objects/nontrivial_metric/curvature_classes.cpp)
 
 ADD_DEPENDENCIES(CppTransport DEPS)
 

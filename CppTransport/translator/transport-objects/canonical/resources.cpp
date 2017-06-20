@@ -46,15 +46,6 @@ namespace canonical
       {
         auto pot = p.model.get_potential();
         if(pot) V = **(pot.get()); else V = GiNaC::ex(0);
-
-        auto metric = p.model.get_metric();
-        if(metric)
-        {
-          populate GiNaC::matrix representing the metric
-          initialize the Christoffel class
-              initialize the Riemann class
-        }
-
         compute_timer.stop();
       }
 
