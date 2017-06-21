@@ -52,7 +52,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_parameter_symbols(const 
 
     const auto& resource = this->mgr.parameters();
     
-    const auto max_i = this->get_max_param_index();
+    const param_index max_i = this->get_max_param_index();
 
     if(resource)
       {
@@ -82,7 +82,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_field_symbols(const lang
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
     
-    const auto max_i = this->get_max_field_index(variance::none);
+    const field_index max_i = this->get_max_field_index(variance::none);
 
     if(resource && flatten)
       {
@@ -112,7 +112,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_deriv_symbols(const lang
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
     
-    const auto max_i = this->get_max_field_index(variance::none);
+    const field_index max_i = this->get_max_field_index(variance::none);
 
     if(resource && flatten)
       {

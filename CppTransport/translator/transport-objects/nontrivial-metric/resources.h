@@ -231,13 +231,7 @@ namespace nontrivial_metric
 
 
         // LOCAL COPIES OF MODEL DATA
-
-        //! number of parameters
-        param_index num_params;
-
-        //! number of field-space indices
-        field_index num_fields;
-
+    
         //! potential
         GiNaC::ex V;
 

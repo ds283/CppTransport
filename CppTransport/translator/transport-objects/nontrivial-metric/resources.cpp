@@ -41,8 +41,6 @@ namespace nontrivial_metric
         field_list(p.model.get_field_symbols()),
         deriv_list(p.model.get_deriv_symbols()),
         param_list(p.model.get_param_symbols()),
-        num_params(p.model.get_number_params()),
-        num_fields(p.model.get_number_fields()),
         fl(p.model.get_number_params(), p.model.get_number_fields())
       {
         boost::optional< contexted_value< std::shared_ptr<GiNaC::ex> > > pot = p.model.get_potential();
@@ -137,7 +135,7 @@ namespace nontrivial_metric
 
         if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, idx, *flatten, static_cast<unsigned int>(this->num_fields));
+        std::string variable = printer.array_subscript(resource.get().second, idx, *flatten, this->payload.model.get_number_fields());
         return this->sym_factory.get_symbol(variable);
       }
 
@@ -193,7 +191,8 @@ namespace nontrivial_metric
                 std::unique_ptr<symbol_list> p_list = this->share.generate_parameter_symbols(printer);
 
                 // copy parameter symbols into substitution list
-                for(param_index i = param_index(0); i < this->num_params; ++i)
+                const param_index max_i = this->share.get_max_param_index();
+                for(param_index i = param_index(0); i < max_i; ++i)
                   {
                     subs_map[this->param_list[this->fl.flatten(i)]] = (*p_list)[this->fl.flatten(i)];
                   }
@@ -204,7 +203,8 @@ namespace nontrivial_metric
                 std::unique_ptr<symbol_list> f_list = this->share.generate_field_symbols(printer);
 
                 // copy field-label symbols into substitution list
-                for(field_index i = field_index(0); i < this->num_fields; ++i)
+                const field_index max_i = this->share.get_max_field_index(variance::none);
+                for(field_index i = field_index(0); i < max_i; ++i)
                   {
                     subs_map[this->field_list[this->fl.flatten(i)]] = (*f_list)[this->fl.flatten(i)];
                   }
@@ -315,10 +315,12 @@ namespace nontrivial_metric
 
         const auto resource = this->mgr.dV();
         const auto& flatten = this->mgr.field_flatten();
+    
+        const field_index max_i = this->share.get_max_field_index(variance::none);
 
         if(resource && flatten)     // dV is available
           {
-            for(field_index i = field_index(0); i < this->num_fields; ++i)
+            for(field_index i = field_index(0); i < max_i; ++i)
               {
                 unsigned int index = this->fl.flatten(i);
 
@@ -337,7 +339,7 @@ namespace nontrivial_metric
             std::unique_ptr<symbol_list> f_list;
             bool cached = false;
 
-            for(field_index i = field_index(0); i < this->num_fields; ++i)
+            for(field_index i = field_index(0); i < max_i; ++i)
               {
                 GiNaC::ex dV;
                 unsigned int index = this->fl.flatten(i);
@@ -375,12 +377,15 @@ namespace nontrivial_metric
 
         const auto resource = this->mgr.ddV();
         const auto& flatten = this->mgr.field_flatten();
+    
+        const field_index max_i = this->share.get_max_field_index(variance::none);
+        const field_index max_j = this->share.get_max_field_index(variance::none);
 
         if(resource && flatten)     // ddV is available
           {
-            for(field_index i = field_index(0); i < this->num_fields; ++i)
+            for(field_index i = field_index(0); i < max_i; ++i)
               {
-                for(field_index j = field_index(0); j < this->num_fields; ++j)
+                for(field_index j = field_index(0); j < max_j; ++j)
                   {
                     unsigned int index = this->fl.flatten(i,j);
 
@@ -400,9 +405,9 @@ namespace nontrivial_metric
             std::unique_ptr<symbol_list> f_list;
             bool cached = false;
 
-            for(field_index i = field_index(0); i < this->num_fields; ++i)
+            for(field_index i = field_index(0); i < max_i; ++i)
               {
-                for(field_index j = field_index(0); j < this->num_fields; ++j)
+                for(field_index j = field_index(0); j < max_j; ++j)
                   {
                     GiNaC::ex ddV;
                     unsigned int index = this->fl.flatten(i,j);
@@ -443,13 +448,17 @@ namespace nontrivial_metric
         const auto resource = this->mgr.dddV();
         const auto& flatten = this->mgr.field_flatten();
 
+        const field_index max_i = this->share.get_max_field_index(variance::none);
+        const field_index max_j = this->share.get_max_field_index(variance::none);
+        const field_index max_k = this->share.get_max_field_index(variance::none);
+        
         if(resource && flatten)     // dddV is available
           {
-            for(field_index i = field_index(0); i < this->num_fields; ++i)
+            for(field_index i = field_index(0); i < max_i; ++i)
               {
-                for(field_index j = field_index(0); j < this->num_fields; ++j)
+                for(field_index j = field_index(0); j < max_j; ++j)
                   {
-                    for(field_index k = field_index(0); k < this->num_fields; ++k)
+                    for(field_index k = field_index(0); k < max_k; ++k)
                       {
                         unsigned int index = this->fl.flatten(i,j,k);
 
@@ -470,11 +479,11 @@ namespace nontrivial_metric
             std::unique_ptr<symbol_list> f_list;
             bool cached = false;
 
-            for(field_index i = field_index(0); i < this->num_fields; ++i)
+            for(field_index i = field_index(0); i < max_i; ++i)
               {
-                for(field_index j = field_index(0); j < this->num_fields; ++j)
+                for(field_index j = field_index(0); j < max_j; ++j)
                   {
-                    for(field_index k = field_index(0); k < this->num_fields; ++k)
+                    for(field_index k = field_index(0); k < max_k; ++k)
                       {
                         GiNaC::ex dddV;
                         unsigned int index = this->fl.flatten(i,j,k);
