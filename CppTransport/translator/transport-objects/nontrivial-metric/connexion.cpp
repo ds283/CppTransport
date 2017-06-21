@@ -30,10 +30,10 @@
 namespace nontrivial_metric
   {
     
-    nontrivial_metric_connexion::nontrivial_metric_connexion(language_printer& p, cse& cw, expression_cache& c,
-                                                             resources& r, shared_resources& s,
-                                                             boost::timer::cpu_timer& tm, index_flatten& f,
-                                                             index_traits& t)
+    connexion::connexion(language_printer& p, cse& cw, expression_cache& c,
+                         resources& r, shared_resources& s,
+                         boost::timer::cpu_timer& tm, index_flatten& f,
+                         index_traits& t)
       : ::connexion(),
         printer(p),
         cse_worker(cw),
@@ -49,27 +49,27 @@ namespace nontrivial_metric
     
     
     std::unique_ptr<flattened_tensor>
-    nontrivial_metric_connexion::compute(const index_literal_list& indices)
+    connexion::compute(const index_literal_list& indices)
       {
         return std::unique_ptr<flattened_tensor>();
       }
     
     
-    GiNaC::ex nontrivial_metric_connexion::compute_component(field_index i, field_index j, field_index k)
+    GiNaC::ex connexion::compute_component(field_index i, field_index j, field_index k)
       {
         return GiNaC::ex();
       }
     
     
     std::unique_ptr<atomic_lambda>
-    nontrivial_metric_connexion::compute_lambda(const index_literal& i, const index_literal& j,
-                                                                   const index_literal& k)
+    connexion::compute_lambda(const index_literal& i, const index_literal& j,
+                              const index_literal& k)
       {
         return std::unique_ptr<atomic_lambda>();
       }
     
     
-    unroll_behaviour nontrivial_metric_connexion::get_unroll()
+    unroll_behaviour connexion::get_unroll()
       {
         if(res.can_roll_connexion()) return unroll_behaviour::allow;
         
@@ -77,7 +77,7 @@ namespace nontrivial_metric
       }
     
     
-    void nontrivial_metric_connexion::pre_explicit(const index_literal_list& indices)
+    void connexion::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("connexion already cached");
     
@@ -87,13 +87,13 @@ namespace nontrivial_metric
       }
     
     
-    void nontrivial_metric_connexion::pre_lambda()
+    void connexion::pre_lambda()
       {
 
       }
     
     
-    void nontrivial_metric_connexion::post()
+    void connexion::post()
       {
         if(!this->cached) throw tensor_exception("connexion not cached");
     

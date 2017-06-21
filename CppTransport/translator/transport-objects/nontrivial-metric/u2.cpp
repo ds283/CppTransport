@@ -28,9 +28,9 @@
 
 namespace nontrivial_metric
   {
-
-    std::unique_ptr<flattened_tensor> nontrivial_metric_u2::compute(const index_literal_list& indices, GiNaC::symbol& k,
-                                                            GiNaC::symbol& a)
+    
+    std::unique_ptr<flattened_tensor> u2::compute(const index_literal_list& indices, GiNaC::symbol& k,
+                                                  GiNaC::symbol& a)
       {
         if(indices.size() != U2_TENSOR_INDICES) throw tensor_exception("U2 indices");
 
@@ -52,9 +52,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_u2::compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex u2::compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a)
       {
         if(!this->cached) throw tensor_exception("U2 cache not ready");
 
@@ -110,12 +110,12 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_u2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
-                                                GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                                                GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                                GiNaC::symbol& k, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex u2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
+                                      GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
+                                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
+                                      GiNaC::symbol& k, GiNaC::symbol& a)
       {
         GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
         GiNaC::ex result = delta_ij * ( -k*k / (a*a * Hsq) );
@@ -126,9 +126,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    unroll_behaviour nontrivial_metric_u2::get_unroll()
+    
+    
+    unroll_behaviour u2::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
@@ -136,7 +136,7 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<map_lambda>
-    nontrivial_metric_u2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k, GiNaC::symbol& a)
+    u2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U2");
         if(j.get_class() != index_class::full) throw tensor_exception("U2");
@@ -191,10 +191,10 @@ namespace nontrivial_metric
 
         return std::make_unique<map_lambda>(i, j, map, expression_item_types::U2_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    nontrivial_metric_u2::nontrivial_metric_u2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                               boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    u2::u2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+           boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::u2(),
         printer(p),
         cse_worker(cw),
@@ -208,9 +208,9 @@ namespace nontrivial_metric
       {
         Mp = this->shared.generate_Mp();
       }
-
-
-    void nontrivial_metric_u2::pre_explicit(const index_literal_list& indices)
+    
+    
+    void u2::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("U2 already cached");
 
@@ -221,16 +221,16 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_u2::pre_lambda()
+    
+    
+    void u2::pre_lambda()
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
       }
-
-
-    void nontrivial_metric_u2::post()
+    
+    
+    void u2::post()
       {
         if(!this->cached) throw tensor_exception("U2 not cached");
 

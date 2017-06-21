@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_connexion : public ::connexion
+    class connexion : public ::connexion
       {
     
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,11 +53,11 @@ namespace nontrivial_metric
       public:
     
         //! constructor
-        nontrivial_metric_connexion(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                                    boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        connexion(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                  boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
     
         //! destructor is default
-        virtual ~nontrivial_metric_connexion() = default;
+        virtual ~connexion() = default;
     
     
         // INTERFACE -- IMPLEMENTS A 'CONNEXION' TENSOR CONCEPT
@@ -138,7 +138,7 @@ namespace nontrivial_metric
         // WORKSPACE AND CACHE
     
         //! list of momentum symbols
-        std::unique_ptr<flattened_tensor> connexion;
+        std::unique_ptr<flattened_tensor> Gamma;
     
         //! cache status
         bool cached;

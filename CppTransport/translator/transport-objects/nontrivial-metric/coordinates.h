@@ -44,7 +44,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_coordinates : public ::coordinates
+    class coordinates : public ::coordinates
       {
       
         // CONSTRUCTOR, DESTRUCTOR
@@ -52,11 +52,11 @@ namespace nontrivial_metric
       public:
       
         //! constructor
-        nontrivial_metric_coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
-                              index_flatten& f, index_traits& t);
+        coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
+                    index_flatten& f, index_traits& t);
         
         //! destructor is default
-        virtual ~nontrivial_metric_coordinates() = default;
+        virtual ~coordinates() = default;
         
         
         // INTERFACE -- IMPLEMENTS A 'COORDINATES' TENSOR CONCEPT

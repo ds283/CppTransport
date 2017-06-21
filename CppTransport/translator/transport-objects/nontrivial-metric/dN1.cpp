@@ -28,8 +28,8 @@
 
 namespace nontrivial_metric
   {
-
-    std::unique_ptr<flattened_tensor> nontrivial_metric_dN1::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> dN1::compute(const index_literal_list& indices)
       {
         if(indices.size() != DN1_TENSOR_INDICES) throw tensor_exception("dN1 indices");
 
@@ -47,9 +47,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_dN1::compute_component(phase_index i)
+    
+    
+    GiNaC::ex dN1::compute_component(phase_index i)
       {
         if(!this->cached) throw tensor_exception("dN1 cache not ready");
 
@@ -70,15 +70,15 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    unroll_behaviour nontrivial_metric_dN1::get_unroll()
+    
+    
+    unroll_behaviour dN1::get_unroll()
       {
         return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
       }
-
-
-    void nontrivial_metric_dN1::pre_explicit(const index_literal_list& indices)
+    
+    
+    void dN1::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("dN1 already cached");
 
@@ -89,19 +89,19 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_dN1::post()
+    
+    
+    void dN1::post()
       {
         if(!this->cached) throw tensor_exception("dN1 not cached");
 
         // invalidate cache
         this->cached = false;
       }
-
-
-    nontrivial_metric_dN1::nontrivial_metric_dN1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                                 boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    dN1::dN1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+             boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::dN1(),
         printer(p),
         cse_worker(cw),

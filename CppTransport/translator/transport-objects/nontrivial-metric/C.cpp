@@ -30,8 +30,8 @@ namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor>
-    nontrivial_metric_C::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-                         GiNaC::symbol& a)
+    C::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
+               GiNaC::symbol& a)
       {
         if(indices.size() != C_TENSOR_INDICES) throw tensor_exception("C indices");
 
@@ -57,10 +57,10 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_C::compute_component(field_index i, field_index j, field_index k,
-                                             GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex C::compute_component(field_index i, field_index j, field_index k,
+                                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(!this->cached) throw tensor_exception("C cache not ready");
 
@@ -92,11 +92,11 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_C::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                                GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
-                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex C::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
+                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
+                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
         GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
@@ -116,9 +116,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    unroll_behaviour nontrivial_metric_C::get_unroll()
+    
+    
+    unroll_behaviour C::get_unroll()
       {
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't unroll
@@ -126,8 +126,8 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<atomic_lambda>
-    nontrivial_metric_C::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    C::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("C");
         if(j.get_class() != index_class::field_only) throw tensor_exception("C");
@@ -163,10 +163,10 @@ namespace nontrivial_metric
 
         return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::C_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    nontrivial_metric_C::nontrivial_metric_C(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                             boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    C::C(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+         boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::C(),
         printer(p),
         cse_worker(cw),
@@ -180,9 +180,9 @@ namespace nontrivial_metric
       {
         Mp = this->shared.generate_Mp();
       }
-
-
-    void nontrivial_metric_C::pre_explicit(const index_literal_list& indices)
+    
+    
+    void C::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("C already cached");
 
@@ -190,9 +190,9 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_C::post()
+    
+    
+    void C::post()
       {
         if(!this->cached) throw tensor_exception("C not cached");
 

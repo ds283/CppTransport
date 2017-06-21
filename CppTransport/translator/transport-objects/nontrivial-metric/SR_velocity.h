@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_SR_velocity : public ::SR_velocity
+    class SR_velocity : public ::SR_velocity
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,11 +53,11 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        nontrivial_metric_SR_velocity(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                              boost::timer::cpu_timer& tm, index_flatten& f);
+        SR_velocity(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                    boost::timer::cpu_timer& tm, index_flatten& f);
 
         //! destructor is default
-        virtual ~nontrivial_metric_SR_velocity() = default;
+        virtual ~SR_velocity() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'SR_velocity' TENSOR CONCEPT

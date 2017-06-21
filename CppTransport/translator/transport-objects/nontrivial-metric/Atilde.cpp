@@ -30,8 +30,8 @@ namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor>
-    nontrivial_metric_Atilde::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                              GiNaC::symbol& k3, GiNaC::symbol& a)
+    Atilde::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                    GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(indices.size() != A_TILDE_TENSOR_INDICES) throw tensor_exception("Atilde indices");
 
@@ -57,10 +57,10 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_Atilde::compute_component(field_index i, field_index j, field_index k,
-                                                  GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex Atilde::compute_component(field_index i, field_index j, field_index k,
+                                        GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(!this->cached) throw tensor_exception("Atilde cache not ready");
 
@@ -104,13 +104,13 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_Atilde::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                                     GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
-                                     GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
-                                     GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
-                                     GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex Atilde::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
+                           GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
+                           GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
+                           GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
+                           GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
         GiNaC::ex xi_j = -2*(3-eps) * deriv_j - 2 * Vj/Hsq;
@@ -138,9 +138,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    unroll_behaviour nontrivial_metric_Atilde::get_unroll()
+    
+    
+    unroll_behaviour Atilde::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV() &&
           this->res.can_roll_dddV()) return unroll_behaviour::allow;
@@ -150,8 +150,8 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<atomic_lambda>
-    nontrivial_metric_Atilde::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                                     GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    Atilde::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                           GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("Atilde");
         if(j.get_class() != index_class::field_only) throw tensor_exception("Atilde");
@@ -201,11 +201,11 @@ namespace nontrivial_metric
 
         return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::Atilde_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    nontrivial_metric_Atilde::nontrivial_metric_Atilde(language_printer& p, cse& cw, expression_cache& c, resources& r,
-                                       shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
-                                       index_traits& t)
+    
+    
+    Atilde::Atilde(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                   shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
+                   index_traits& t)
       : ::Atilde(),
         printer(p),
         cse_worker(cw),
@@ -219,9 +219,9 @@ namespace nontrivial_metric
       {
         Mp = this->shared.generate_Mp();
       }
-
-
-    void nontrivial_metric_Atilde::pre_explicit(const index_literal_list& indices)
+    
+    
+    void Atilde::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("Atilde already cached");
 
@@ -233,16 +233,16 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_Atilde::pre_lambda()
+    
+    
+    void Atilde::pre_lambda()
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
       }
-
-
-    void nontrivial_metric_Atilde::post()
+    
+    
+    void Atilde::post()
       {
         if(!this->cached) throw tensor_exception("Atilde not cached");
 

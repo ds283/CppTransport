@@ -50,7 +50,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_u3 : public ::u3
+    class u3 : public ::u3
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -58,11 +58,11 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        nontrivial_metric_u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+           boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~nontrivial_metric_u3() = default;
+        virtual ~u3() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'C' TENSOR CONCEPT
@@ -142,13 +142,13 @@ namespace nontrivial_metric
         // WORKSPACE
 
         //! delegate for computing A-tensor
-        nontrivial_metric_A A_agent;
+        A A_agent;
 
         //! delegate for computing B-tensor
-        nontrivial_metric_B B_agent;
+        B B_agent;
 
         //! delegate for computing C-tensor
-        nontrivial_metric_C C_agent;
+        C C_agent;
 
         //! Janitor object for A
         std::unique_ptr<TensorJanitor> A_Janitor;

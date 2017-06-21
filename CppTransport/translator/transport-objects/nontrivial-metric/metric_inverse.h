@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_metric_inverse : public ::metric_inverse
+    class metric_inverse : public ::metric_inverse
       {
     
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,11 +53,11 @@ namespace nontrivial_metric
       public:
     
         //! constructor
-        nontrivial_metric_metric_inverse(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                                         boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        metric_inverse(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                       boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
     
         //! destructor is default
-        virtual ~nontrivial_metric_metric_inverse() = default;
+        virtual ~metric_inverse() = default;
     
     
         // INTERFACE -- IMPLEMENTS A 'METRIC_INVERSE' TENSOR CONCEPT
@@ -138,7 +138,7 @@ namespace nontrivial_metric
         // WORKSPACE AND CACHE
     
         //! list of momentum symbols
-        std::unique_ptr<flattened_tensor> metric_inverse;
+        std::unique_ptr<flattened_tensor> Ginv;
     
         //! cache status
         bool cached;

@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_ddV : public ::ddV
+    class ddV : public ::ddV
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,10 +53,10 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        nontrivial_metric_ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f);
+        ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f);
 
         //! destructor is default
-        virtual ~nontrivial_metric_ddV() = default;
+        virtual ~ddV() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'dV' TENSOR CONCEPT

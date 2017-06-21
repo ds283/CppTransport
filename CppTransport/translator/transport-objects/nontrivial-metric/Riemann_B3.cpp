@@ -30,10 +30,10 @@
 namespace nontrivial_metric
   {
     
-    nontrivial_metric_Riemann_B3::nontrivial_metric_Riemann_B3(language_printer& p, cse& cw, expression_cache& c,
-                                                               resources& r, shared_resources& s,
-                                                               boost::timer::cpu_timer& tm, index_flatten& f,
-                                                               index_traits& t)
+    Riemann_B3::Riemann_B3(language_printer& p, cse& cw, expression_cache& c,
+                           resources& r, shared_resources& s,
+                           boost::timer::cpu_timer& tm, index_flatten& f,
+                           index_traits& t)
       : ::Riemann_B3(),
         printer(p),
         cse_worker(cw),
@@ -49,26 +49,26 @@ namespace nontrivial_metric
     
     
     std::unique_ptr<flattened_tensor>
-    nontrivial_metric_Riemann_B3::compute(const index_literal_list& indices)
+    Riemann_B3::compute(const index_literal_list& indices)
       {
         return std::unique_ptr<flattened_tensor>();
       }
     
     
-    GiNaC::ex nontrivial_metric_Riemann_B3::compute_component(field_index i, field_index j, field_index k)
+    GiNaC::ex Riemann_B3::compute_component(field_index i, field_index j, field_index k)
       {
         return GiNaC::ex();
       }
     
     
     std::unique_ptr<atomic_lambda>
-    nontrivial_metric_Riemann_B3::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k)
+    Riemann_B3::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k)
       {
         return std::unique_ptr<atomic_lambda>();
       }
     
     
-    unroll_behaviour nontrivial_metric_Riemann_B3::get_unroll()
+    unroll_behaviour Riemann_B3::get_unroll()
       {
         if(res.can_roll_Riemann_B3()) return unroll_behaviour::allow;
         
@@ -76,7 +76,7 @@ namespace nontrivial_metric
       }
     
     
-    void nontrivial_metric_Riemann_B3::pre_explicit(const index_literal_list& indices)
+    void Riemann_B3::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("Riemann_B3 already cached");
         
@@ -86,13 +86,13 @@ namespace nontrivial_metric
       }
     
     
-    void nontrivial_metric_Riemann_B3::pre_lambda()
+    void Riemann_B3::pre_lambda()
       {
         
       }
     
     
-    void nontrivial_metric_Riemann_B3::post()
+    void Riemann_B3::post()
       {
         if(!this->cached) throw tensor_exception("Riemann_B3 not cached");
         

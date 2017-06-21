@@ -28,8 +28,8 @@
 
 namespace nontrivial_metric
   {
-
-    std::unique_ptr<flattened_tensor> nontrivial_metric_dN2::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> dN2::compute(const index_literal_list& indices)
       {
         if(indices.size() != DN2_TENSOR_INDICES) throw tensor_exception("dN2 indices");
 
@@ -51,9 +51,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_dN2::compute_component(phase_index i, phase_index j)
+    
+    
+    GiNaC::ex dN2::compute_component(phase_index i, phase_index j)
       {
         if(!this->cached) throw tensor_exception("dN2 cache not ready");
 
@@ -79,16 +79,16 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    unroll_behaviour nontrivial_metric_dN2::get_unroll()
+    
+    
+    unroll_behaviour dN2::get_unroll()
       {
         return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
       }
-
-
-    nontrivial_metric_dN2::nontrivial_metric_dN2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                                 boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    dN2::dN2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+             boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::dN2(),
         printer(p),
         cse_worker(cw),
@@ -101,9 +101,9 @@ namespace nontrivial_metric
         cached(false)
       {
       }
-
-
-    void nontrivial_metric_dN2::pre_explicit(const index_literal_list& indices)
+    
+    
+    void dN2::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("dN2 already cached");
 
@@ -130,9 +130,9 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_dN2::post()
+    
+    
+    void dN2::post()
       {
         if(!this->cached) throw tensor_exception("dN2 not cached");
 

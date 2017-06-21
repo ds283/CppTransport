@@ -30,9 +30,9 @@
 namespace nontrivial_metric
   {
     
-    nontrivial_metric_metric::nontrivial_metric_metric(language_printer& p, cse& cw, expression_cache& c, resources& r,
-                                                       shared_resources& s, boost::timer::cpu_timer& tm,
-                                                       index_flatten& f, index_traits& t)
+    metric::metric(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                   shared_resources& s, boost::timer::cpu_timer& tm,
+                   index_flatten& f, index_traits& t)
       : ::metric(),
         printer(p),
         cse_worker(cw),
@@ -48,26 +48,26 @@ namespace nontrivial_metric
     
     
     std::unique_ptr<flattened_tensor>
-    nontrivial_metric_metric::compute(const index_literal_list& indices)
+    metric::compute(const index_literal_list& indices)
       {
         return std::unique_ptr<flattened_tensor>();
       }
     
     
-    GiNaC::ex nontrivial_metric_metric::compute_component(field_index i, field_index j)
+    GiNaC::ex metric::compute_component(field_index i, field_index j)
       {
         return GiNaC::ex();
       }
     
     
     std::unique_ptr<atomic_lambda>
-    nontrivial_metric_metric::compute_lambda(const index_literal& i, const index_literal& j)
+    metric::compute_lambda(const index_literal& i, const index_literal& j)
       {
         return std::unique_ptr<atomic_lambda>();
       }
     
     
-    unroll_behaviour nontrivial_metric_metric::get_unroll()
+    unroll_behaviour metric::get_unroll()
       {
         if(res.can_roll_metric()) return unroll_behaviour::allow;
         
@@ -75,7 +75,7 @@ namespace nontrivial_metric
       }
     
     
-    void nontrivial_metric_metric::pre_explicit(const index_literal_list& indices)
+    void metric::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("metric already cached");
         
@@ -85,13 +85,13 @@ namespace nontrivial_metric
       }
     
     
-    void nontrivial_metric_metric::pre_lambda()
+    void metric::pre_lambda()
       {
         
       }
     
     
-    void nontrivial_metric_metric::post()
+    void metric::post()
       {
         if(!this->cached) throw tensor_exception("metric not cached");
         

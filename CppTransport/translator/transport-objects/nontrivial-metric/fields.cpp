@@ -29,7 +29,7 @@
 namespace nontrivial_metric
   {
     
-    std::unique_ptr<flattened_tensor> nontrivial_metric_fields::compute(const index_literal_list& indices)
+    std::unique_ptr<flattened_tensor> fields::compute(const index_literal_list& indices)
       {
         if(indices.size() != FIELD_TENSOR_INDICES) throw tensor_exception("field indices");
     
@@ -49,19 +49,19 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex nontrivial_metric_fields::compute_component(field_index i)
+    GiNaC::ex fields::compute_component(field_index i)
       {
         if(!this->cached) throw tensor_exception("fields cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-    
-        GiNaC::ex result = (*this->fields)[index];
+        
+        GiNaC::ex result = (*this->f)[index];
     
         return result;
       }
     
     
-    std::unique_ptr<atomic_lambda> nontrivial_metric_fields::compute_lambda(const index_literal& i)
+    std::unique_ptr<atomic_lambda> fields::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("fields");
     
@@ -75,15 +75,15 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour nontrivial_metric_fields::get_unroll()
+    unroll_behaviour fields::get_unroll()
       {
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;
       }
-
-
-    nontrivial_metric_fields::nontrivial_metric_fields(language_printer& p, cse& cw, resources& r, shared_resources& s,
-                                       index_flatten& f, index_traits& t)
+    
+    
+    fields::fields(language_printer& p, cse& cw, resources& r, shared_resources& s,
+                   index_flatten& f, index_traits& t)
       : ::fields(),
         printer(p),
         cse_worker(cw),
@@ -94,19 +94,19 @@ namespace nontrivial_metric
         cached(false)
       {
       }
-
-
-    void nontrivial_metric_fields::pre_explicit(const index_literal_list& indices)
+    
+    
+    void fields::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("fields already cached");
-
-        fields = this->shared.generate_field_symbols(this->printer);
+        
+        f = this->shared.generate_field_symbols(this->printer);
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_fields::post()
+    
+    
+    void fields::post()
       {
         if(!this->cached) throw tensor_exception("fields not cached");
 

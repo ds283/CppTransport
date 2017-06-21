@@ -28,8 +28,8 @@
 
 namespace nontrivial_metric
   {
-
-    std::unique_ptr<flattened_tensor> nontrivial_metric_M::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> M::compute(const index_literal_list& indices)
       {
         if(indices.size() != M_TENSOR_INDICES) throw tensor_exception("M indices");
 
@@ -51,9 +51,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_M::compute_component(field_index i, field_index j)
+    
+    
+    GiNaC::ex M::compute_component(field_index i, field_index j)
       {
         if(!this->cached) throw tensor_exception("M cache not ready");
 
@@ -84,10 +84,10 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_M::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                                GiNaC::ex& deriv_i, GiNaC::ex& deriv_j)
+    
+    
+    GiNaC::ex M::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
+                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j)
       {
         GiNaC::ex u = -Vij/Hsq;
         u += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
@@ -97,16 +97,16 @@ namespace nontrivial_metric
 
         return delta_ij*eps + u/3;
       }
-
-
-    unroll_behaviour nontrivial_metric_M::get_unroll()
+    
+    
+    unroll_behaviour M::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
-
-
-    std::unique_ptr<atomic_lambda> nontrivial_metric_M::compute_lambda(const index_literal& i, const index_literal& j)
+    
+    
+    std::unique_ptr<atomic_lambda> M::compute_lambda(const index_literal& i, const index_literal& j)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("M");
         if(j.get_class() != index_class::field_only) throw tensor_exception("M");
@@ -141,9 +141,9 @@ namespace nontrivial_metric
 
         return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::M_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    void nontrivial_metric_M::pre_explicit(const index_literal_list& indices)
+    
+    
+    void M::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("M already cached");
 
@@ -154,26 +154,26 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_M::pre_lambda()
+    
+    
+    void M::pre_lambda()
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
       }
-
-
-    void nontrivial_metric_M::post()
+    
+    
+    void M::post()
       {
         if(!this->cached) throw tensor_exception("fields not cached");
 
         // invalidate cache
         this->cached = false;
       }
-
-
-    nontrivial_metric_M::nontrivial_metric_M(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                             boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    M::M(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+         boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::M(),
         printer(p),
         cse_worker(cw),

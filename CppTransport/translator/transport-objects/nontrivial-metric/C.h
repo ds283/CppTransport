@@ -46,7 +46,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_C : public ::C
+    class C : public ::C
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,11 +54,11 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        nontrivial_metric_C(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        C(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+          boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~nontrivial_metric_C() = default;
+        virtual ~C() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'C' TENSOR CONCEPT

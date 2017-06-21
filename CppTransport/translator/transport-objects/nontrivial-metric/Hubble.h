@@ -43,7 +43,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_Hubble : public ::Hubble
+    class Hubble : public ::Hubble
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -51,7 +51,7 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        nontrivial_metric_Hubble(language_printer& p, cse& cw, resources& r)
+        Hubble(language_printer& p, cse& cw, resources& r)
           : ::Hubble(),
             printer(p),
             cse_worker(cw),
@@ -60,7 +60,7 @@ namespace nontrivial_metric
           }
 
         //! destructor is default
-        virtual ~nontrivial_metric_Hubble() = default;
+        virtual ~Hubble() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'Hubble' TENSOR CONCEPT

@@ -28,8 +28,8 @@
 
 namespace nontrivial_metric
   {
-
-    std::unique_ptr<flattened_tensor> nontrivial_metric_SR_velocity::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> SR_velocity::compute(const index_literal_list& indices)
       {
         if(indices.size() != SR_VELOCITY_TENSOR_INDICES) throw tensor_exception("SRvelocity indices");
 
@@ -47,9 +47,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_SR_velocity::compute_component(field_index i)
+    
+    
+    GiNaC::ex SR_velocity::compute_component(field_index i)
       {
         if(!this->cached) throw tensor_exception("SR_velocity cache not ready");
 
@@ -70,22 +70,22 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_SR_velocity::expr(GiNaC::ex& Vi)
+    
+    
+    GiNaC::ex SR_velocity::expr(GiNaC::ex& Vi)
       {
         return -Vi * (Mp*Mp) / V;
       }
-
-
-    unroll_behaviour nontrivial_metric_SR_velocity::get_unroll()
+    
+    
+    unroll_behaviour SR_velocity::get_unroll()
       {
         if(this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
-
-
-    std::unique_ptr<atomic_lambda> nontrivial_metric_SR_velocity::compute_lambda(const index_literal& i)
+    
+    
+    std::unique_ptr<atomic_lambda> SR_velocity::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("SR_velocity");
 
@@ -111,10 +111,10 @@ namespace nontrivial_metric
 
         return std::make_unique<atomic_lambda>(i, result, expression_item_types::sr_U_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    nontrivial_metric_SR_velocity::nontrivial_metric_SR_velocity(language_printer& p, cse& cw, expression_cache& c, resources& r,
-                                                 shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f)
+    
+    
+    SR_velocity::SR_velocity(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                             shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f)
       : ::SR_velocity(),
         printer(p),
         cse_worker(cw),
@@ -126,9 +126,9 @@ namespace nontrivial_metric
         cached(false)
       {
       }
-
-
-    void nontrivial_metric_SR_velocity::pre_explicit(const index_literal_list& indices)
+    
+    
+    void SR_velocity::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("SR_velocity already cached");
 
@@ -137,16 +137,16 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_SR_velocity::pre_lambda()
+    
+    
+    void SR_velocity::pre_lambda()
       {
         V = this->res.V_resource(this->cse_worker, this->printer);
         Mp = this->shared.generate_Mp();
       }
-
-
-    void nontrivial_metric_SR_velocity::post()
+    
+    
+    void SR_velocity::post()
       {
         if(!this->cached) throw tensor_exception("SR_velocity not cached");
 

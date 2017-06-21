@@ -30,8 +30,8 @@ namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor>
-    nontrivial_metric_B::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-                         GiNaC::symbol& a)
+    B::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
+               GiNaC::symbol& a)
       {
         if(indices.size() != B_TENSOR_INDICES) throw tensor_exception("B indices");
 
@@ -57,10 +57,10 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_B::compute_component(field_index i, field_index j, field_index k,
-                                             GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex B::compute_component(field_index i, field_index j, field_index k,
+                                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(!this->cached) throw tensor_exception("B cache not ready");
 
@@ -97,12 +97,12 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_B::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                                GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
-                                GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
-                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex B::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
+                      GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
+                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
+                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
         GiNaC::ex xi_j = -2*(3-eps) * deriv_j - 2 * Vj/Hsq;
@@ -124,9 +124,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    unroll_behaviour nontrivial_metric_B::get_unroll()
+    
+    
+    unroll_behaviour B::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
@@ -134,8 +134,8 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<atomic_lambda>
-    nontrivial_metric_B::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    B::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("B");
         if(j.get_class() != index_class::field_only) throw tensor_exception("B");
@@ -177,10 +177,10 @@ namespace nontrivial_metric
 
         return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::B_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    nontrivial_metric_B::nontrivial_metric_B(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                             boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    B::B(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+         boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::B(),
         printer(p),
         cse_worker(cw),
@@ -194,16 +194,16 @@ namespace nontrivial_metric
       {
         Mp = this->shared.generate_Mp();
       }
-
-
-    void nontrivial_metric_B::pre_lambda()
+    
+    
+    void B::pre_lambda()
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
       }
-
-
-    void nontrivial_metric_B::pre_explicit(const index_literal_list& indices)
+    
+    
+    void B::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("B already cached");
 
@@ -213,9 +213,9 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_B::post()
+    
+    
+    void B::post()
       {
         if(!this->cached) throw tensor_exception("B not cached");
 

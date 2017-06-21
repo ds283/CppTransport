@@ -28,23 +28,23 @@
 
 namespace nontrivial_metric
   {
-
-    std::unique_ptr<flattened_tensor> nontrivial_metric_ddV::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> ddV::compute(const index_literal_list& indices)
       {
         if(indices.size() != DDV_TENSOR_INDICES) throw tensor_exception("ddV indices");
 
         return(this->res.ddV_resource(this->printer));
       }
-
-
-    unroll_behaviour nontrivial_metric_ddV::get_unroll()
+    
+    
+    unroll_behaviour ddV::get_unroll()
       {
         if(this->res.can_roll_ddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll
       }
-
-
-    std::unique_ptr<atomic_lambda> nontrivial_metric_ddV::compute_lambda(const index_literal& i, const index_literal& j)
+    
+    
+    std::unique_ptr<atomic_lambda> ddV::compute_lambda(const index_literal& i, const index_literal& j)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("ddV");
         if(j.get_class() != index_class::field_only) throw tensor_exception("ddV");
@@ -60,9 +60,9 @@ namespace nontrivial_metric
 
         return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::ddV_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    nontrivial_metric_ddV::nontrivial_metric_ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
+    
+    
+    ddV::ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
       : ::ddV(),
         printer(p),
         cse_worker(cw),
@@ -71,14 +71,14 @@ namespace nontrivial_metric
         fl(f)
       {
       }
-
-
-    void nontrivial_metric_ddV::pre_explicit(const index_literal_list& indices)
+    
+    
+    void ddV::pre_explicit(const index_literal_list& indices)
       {
       }
-
-
-    void nontrivial_metric_ddV::post()
+    
+    
+    void ddV::post()
       {
       }
 

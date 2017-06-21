@@ -28,8 +28,8 @@
 
 namespace nontrivial_metric
   {
-
-    std::unique_ptr<flattened_tensor> nontrivial_metric_zeta1::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> zeta1::compute(const index_literal_list& indices)
       {
         if(indices.size() != ZETA1_TENSOR_INDICES) throw tensor_exception("zeta1 indices");
 
@@ -47,9 +47,9 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_zeta1::compute_component(phase_index i)
+    
+    
+    GiNaC::ex zeta1::compute_component(phase_index i)
       {
         if(!this->cached) throw tensor_exception("zeta1 cache not ready");
 
@@ -82,32 +82,32 @@ namespace nontrivial_metric
 
         return(result);
       }
-
-
-    GiNaC::ex nontrivial_metric_zeta1::expr(GiNaC::ex& deriv_i)
+    
+    
+    GiNaC::ex zeta1::expr(GiNaC::ex& deriv_i)
       {
         return -deriv_i / (2*Mp*Mp*eps);
       }
-
-
-    void nontrivial_metric_zeta1::cache_symbols()
+    
+    
+    void zeta1::cache_symbols()
       {
       }
-
-
-    void nontrivial_metric_zeta1::populate_workspace()
+    
+    
+    void zeta1::populate_workspace()
       {
       }
-
-
-    unroll_behaviour nontrivial_metric_zeta1::get_unroll()
+    
+    
+    unroll_behaviour zeta1::get_unroll()
       {
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
-
-
-    std::unique_ptr<map_lambda> nontrivial_metric_zeta1::compute_lambda(const index_literal& i)
+    
+    
+    std::unique_ptr<map_lambda> zeta1::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
 
@@ -130,11 +130,11 @@ namespace nontrivial_metric
 
         return std::make_unique<map_lambda>(i, table, expression_item_types::zxfm1_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    nontrivial_metric_zeta1::nontrivial_metric_zeta1(language_printer& p, cse& cw, expression_cache& c, resources& r,
-                                     shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
-                                     index_traits& t)
+    
+    
+    zeta1::zeta1(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                 shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
+                 index_traits& t)
       : ::zeta1(),
         printer(p),
         cse_worker(cw),
@@ -148,9 +148,9 @@ namespace nontrivial_metric
       {
         Mp = this->shared.generate_Mp();
       }
-
-
-    void nontrivial_metric_zeta1::pre_explicit(const index_literal_list& indices)
+    
+    
+    void zeta1::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("zeta1 already cached");
 
@@ -159,15 +159,15 @@ namespace nontrivial_metric
 
         this->cached = true;
       }
-
-
-    void nontrivial_metric_zeta1::pre_lambda()
+    
+    
+    void zeta1::pre_lambda()
       {
         eps = this->res.eps_resource(this->cse_worker, this->printer);
       }
-
-
-    void nontrivial_metric_zeta1::post()
+    
+    
+    void zeta1::post()
       {
         if(!this->cached) throw tensor_exception("zeta1 not cached");
 

@@ -46,7 +46,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_zeta1 : public ::zeta1
+    class zeta1 : public ::zeta1
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,11 +54,11 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        nontrivial_metric_zeta1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                        boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        zeta1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+              boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~nontrivial_metric_zeta1() = default;
+        virtual ~zeta1() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'zeta1' TENSOR CONCEPT

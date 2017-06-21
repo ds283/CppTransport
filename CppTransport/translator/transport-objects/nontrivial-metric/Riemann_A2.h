@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_Riemann_A2 : public ::Riemann_A2
+    class Riemann_A2 : public ::Riemann_A2
       {
     
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,11 +53,11 @@ namespace nontrivial_metric
       public:
     
         //! constructor
-        nontrivial_metric_Riemann_A2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-        boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        Riemann_A2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                   boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
     
         //! destructor is default
-        virtual ~nontrivial_metric_Riemann_A2() = default;
+        virtual ~Riemann_A2() = default;
     
     
         // INTERFACE -- IMPLEMENTS A 'RIEMANN_A2' TENSOR CONCEPT
@@ -138,7 +138,7 @@ namespace nontrivial_metric
         // WORKSPACE AND CACHE
     
         //! list of momentum symbols
-        std::unique_ptr<flattened_tensor> Riemann_A2;
+        std::unique_ptr<flattened_tensor> A2;
     
         //! cache status
         bool cached;
