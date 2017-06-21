@@ -84,7 +84,7 @@ namespace canonical
 
     canonical_fields::canonical_fields(language_printer& p, cse& cw, resources& r, shared_resources& s,
                                        index_flatten& f, index_traits& t)
-      : fields(),
+      : ::fields(),
         printer(p),
         cse_worker(cw),
         res(r),

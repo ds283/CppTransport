@@ -113,7 +113,7 @@ namespace canonical
 
     canonical_coordinates::canonical_coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
                                                  index_flatten& f, index_traits& t)
-      : coordinates(),
+      : ::coordinates(),
         printer(p),
         cse_worker(cw),
         res(r),

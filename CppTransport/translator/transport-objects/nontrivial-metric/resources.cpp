@@ -552,7 +552,7 @@ namespace nontrivial_metric
 
     bool resources::can_roll_dV() const
       {
-        const auto resource = this->mgr.dV();
+        const auto resource = this->mgr.dV({variance::covariant}, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
 
@@ -562,7 +562,7 @@ namespace nontrivial_metric
 
     bool resources::can_roll_ddV() const
       {
-        const auto resource = this->mgr.ddV();
+        const auto resource = this->mgr.ddV({variance::covariant, variance::covariant}, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
 
@@ -572,10 +572,70 @@ namespace nontrivial_metric
 
     bool resources::can_roll_dddV() const
       {
-        const auto resource = this->mgr.dddV();
+        const auto resource = this->mgr.dddV({variance::covariant, variance::covariant, variance::covariant}, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
 
+        return(resource && flatten && working_type);
+      }
+    
+    
+    bool resources::can_roll_connexion() const
+      {
+        const auto resource = this->mgr.connexion();
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
+    
+        return(resource && flatten && working_type);
+      }
+    
+    
+    bool resources::can_roll_metric() const
+      {
+        const auto resource = this->mgr.metric();
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
+    
+        return(resource && flatten && working_type);
+      }
+    
+    
+    bool resources::can_roll_metric_inverse() const
+      {
+        const auto resource = this->mgr.metric_inverse();
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
+    
+        return(resource && flatten && working_type);
+      }
+    
+    
+    bool resources::can_roll_Riemann_A2() const
+      {
+        const auto resource = this->mgr.Riemann_A2({variance::covariant, variance::covariant}, false);
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
+    
+        return(resource && flatten && working_type);
+      }
+    
+    
+    bool resources::can_roll_Riemann_A3() const
+      {
+        const auto resource = this->mgr.Riemann_A3({variance::covariant, variance::covariant, variance::covariant}, false);
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
+    
+        return(resource && flatten && working_type);
+      }
+    
+    
+    bool resources::can_roll_Riemann_B3() const
+      {
+        const auto resource = this->mgr.Riemann_A3({variance::covariant, variance::covariant, variance::covariant}, false);
+        const auto& flatten = this->mgr.field_flatten();
+        const auto& working_type = this->mgr.working_type();
+    
         return(resource && flatten && working_type);
       }
 
@@ -624,7 +684,6 @@ namespace nontrivial_metric
         std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, *flatten);
         return this->sym_factory.get_symbol(variable);
       }
-
-
+    
+    
   }   // namespace nontrivial_metric
-

@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_METRIC_H
-#define CPPTRANSPORT_METRIC_H
+#ifndef CPPTRANSPORT_FIELD_METRIC_H
+#define CPPTRANSPORT_FIELD_METRIC_H
 
 
 #include <unordered_map>
@@ -214,4 +214,4 @@ class field_metric_binop : public field_metric
   };
 
 
-#endif //CPPTRANSPORT_METRIC_H
+#endif //CPPTRANSPORT_FIELD_METRIC_H

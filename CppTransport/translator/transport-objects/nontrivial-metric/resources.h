@@ -167,6 +167,24 @@ namespace nontrivial_metric
 
         //! query whether dddV can be rolled-up into loops
         bool can_roll_dddV() const;
+        
+        //! query whether connexion can be rolled-up into loops
+        bool can_roll_connexion() const;
+        
+        //! query whether metric can be rolled-up into loops
+        bool can_roll_metric() const;
+        
+        //! query whether inverse metric can be rolled-up into loops
+        bool can_roll_metric_inverse() const;
+        
+        //! query whether RiemannA2 can be rolled-up into loops
+        bool can_roll_Riemann_A2() const;
+    
+        //! query whether RiemannA3 can be rolled-up into loops
+        bool can_roll_Riemann_A3() const;
+    
+        //! query whether RiemannB3 can be rolled-up into loops
+        bool can_roll_Riemann_B3() const;
 
 
         // INTERNAL API

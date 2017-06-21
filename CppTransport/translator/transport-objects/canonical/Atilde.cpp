@@ -206,7 +206,7 @@ namespace canonical
     canonical_Atilde::canonical_Atilde(language_printer& p, cse& cw, expression_cache& c, resources& r,
                                        shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
                                        index_traits& t)
-      : Atilde(),
+      : ::Atilde(),
         printer(p),
         cse_worker(cw),
         cache(c),

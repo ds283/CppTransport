@@ -52,7 +52,7 @@ namespace nontrivial_metric
 
         //! constructor
         nontrivial_metric_Hubble(language_printer& p, cse& cw, resources& r)
-          : Hubble(),
+          : ::Hubble(),
             printer(p),
             cse_worker(cw),
             res(r)

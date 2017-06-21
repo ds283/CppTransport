@@ -167,7 +167,7 @@ namespace nontrivial_metric
 
     nontrivial_metric_C::nontrivial_metric_C(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                              boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-      : C(),
+      : ::C(),
         printer(p),
         cse_worker(cw),
         cache(c),

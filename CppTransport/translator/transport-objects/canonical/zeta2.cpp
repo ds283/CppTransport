@@ -273,7 +273,7 @@ namespace canonical
     canonical_zeta2::canonical_zeta2(language_printer& p, cse& cw, expression_cache& c, resources& r,
                                      shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
                                      index_traits& t)
-      : zeta2(),
+      : ::zeta2(),
         printer(p),
         cse_worker(cw),
         cache(c),

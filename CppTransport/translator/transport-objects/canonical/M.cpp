@@ -174,7 +174,7 @@ namespace canonical
 
     canonical_M::canonical_M(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                              boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-      : M(),
+      : ::M(),
         printer(p),
         cse_worker(cw),
         cache(c),

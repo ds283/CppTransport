@@ -26,25 +26,31 @@
 
 #include "tensor_factory.h"
 
-#include "Hubble.h"
-#include "fields.h"
-#include "coordinates.h"
-#include "dV.h"
-#include "ddV.h"
-#include "dddV.h"
-#include "SR_velocity.h"
 #include "A.h"
 #include "Atilde.h"
 #include "B.h"
 #include "C.h"
+#include "connexion.h"
+#include "coordinates.h"
+#include "dV.h"
+#include "ddV.h"
+#include "dddV.h"
+#include "dN1.h"
+#include "dN2.h"
+#include "fields.h"
+#include "Hubble.h"
 #include "M.h"
+#include "metric.h"
+#include "metric_inverse.h"
+#include "Riemann_A2.h"
+#include "Riemann_A3.h"
+#include "Riemann_B3.h"
+#include "SR_velocity.h"
 #include "u1.h"
 #include "u2.h"
 #include "u3.h"
 #include "zeta1.h"
 #include "zeta2.h"
-#include "dN1.h"
-#include "dN2.h"
 
 
 namespace nontrivial_metric
@@ -167,6 +173,42 @@ namespace nontrivial_metric
     std::unique_ptr<parameters> tensor_factory::make_parameters(language_printer& p, cse& cw)
       {
         return std::make_unique<parameters>(p, cw, this->shared, this->fl, this->traits);
+      }
+    
+    
+    std::unique_ptr<connexion> tensor_factory::make_connexion(language_printer& p, cse& cw)
+      {
+        return std::make_unique<nontrivial_metric_connexion>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+      }
+    
+    
+    std::unique_ptr<metric> tensor_factory::make_metric(language_printer& p, cse& cw)
+      {
+        return std::make_unique<nontrivial_metric_metric>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+      }
+    
+    
+    std::unique_ptr<metric_inverse> tensor_factory::make_metric_inverse(language_printer& p, cse& cw)
+      {
+        return std::make_unique<nontrivial_metric_metric_inverse>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+      }
+    
+    
+    std::unique_ptr<Riemann_A2> tensor_factory::make_Riemann_A2(language_printer& p, cse& cw)
+      {
+        return std::make_unique<nontrivial_metric_Riemann_A2>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+      }
+    
+    
+    std::unique_ptr<Riemann_A3> tensor_factory::make_Riemann_A3(language_printer& p, cse& cw)
+      {
+        return std::make_unique<nontrivial_metric_Riemann_A3>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
+      }
+    
+    
+    std::unique_ptr<Riemann_B3> tensor_factory::make_Riemann_B3(language_printer& p, cse& cw)
+      {
+        return std::make_unique<nontrivial_metric_Riemann_B3>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl, this->traits);
       }
     
   }

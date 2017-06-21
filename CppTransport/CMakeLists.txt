@@ -145,54 +145,60 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
   translator/parser/y_lexer.cpp
-  translator/transport-objects/canonical/resources.cpp
-  translator/transport-objects/canonical/Hubble.cpp
-  translator/transport-objects/canonical/coordinates.cpp
-  translator/transport-objects/canonical/fields.cpp
-  translator/transport-objects/canonical/dV.cpp
-  translator/transport-objects/canonical/ddV.cpp
-  translator/transport-objects/canonical/dddV.cpp
-  translator/transport-objects/canonical/SR_velocity.cpp
   translator/transport-objects/canonical/A.cpp
   translator/transport-objects/canonical/Atilde.cpp
   translator/transport-objects/canonical/B.cpp
   translator/transport-objects/canonical/C.cpp
+  translator/transport-objects/canonical/coordinates.cpp
+  translator/transport-objects/canonical/dV.cpp
+  translator/transport-objects/canonical/ddV.cpp
+  translator/transport-objects/canonical/dddV.cpp
+  translator/transport-objects/canonical/dN1.cpp
+  translator/transport-objects/canonical/dN2.cpp
+  translator/transport-objects/canonical/fields.cpp
+  translator/transport-objects/canonical/Hubble.cpp
+  translator/transport-objects/canonical/SR_velocity.cpp
   translator/transport-objects/canonical/M.cpp
   translator/transport-objects/canonical/u1.cpp
   translator/transport-objects/canonical/u2.cpp
   translator/transport-objects/canonical/u3.cpp
   translator/transport-objects/canonical/zeta1.cpp
   translator/transport-objects/canonical/zeta2.cpp
-  translator/transport-objects/canonical/dN1.cpp
-  translator/transport-objects/canonical/dN2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
+  translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/resource_manager.cpp
   translator/transport-objects/concepts/parameters.cpp
   translator/transport-objects/concepts/resource_manager.cpp
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
-  translator/transport-objects/nontrivial-metric/resources.cpp
-  translator/transport-objects/nontrivial-metric/Hubble.cpp
-  translator/transport-objects/nontrivial-metric/coordinates.cpp
-  translator/transport-objects/nontrivial-metric/fields.cpp
-  translator/transport-objects/nontrivial-metric/dV.cpp
-  translator/transport-objects/nontrivial-metric/ddV.cpp
-  translator/transport-objects/nontrivial-metric/dddV.cpp
-  translator/transport-objects/nontrivial-metric/SR_velocity.cpp
   translator/transport-objects/nontrivial-metric/A.cpp
   translator/transport-objects/nontrivial-metric/Atilde.cpp
   translator/transport-objects/nontrivial-metric/B.cpp
   translator/transport-objects/nontrivial-metric/C.cpp
+  translator/transport-objects/nontrivial-metric/connexion.cpp
+  translator/transport-objects/nontrivial-metric/coordinates.cpp
+  translator/transport-objects/nontrivial-metric/dV.cpp
+  translator/transport-objects/nontrivial-metric/ddV.cpp
+  translator/transport-objects/nontrivial-metric/dddV.cpp
+  translator/transport-objects/nontrivial-metric/dN1.cpp
+  translator/transport-objects/nontrivial-metric/dN2.cpp
+  translator/transport-objects/nontrivial-metric/fields.cpp
+  translator/transport-objects/nontrivial-metric/Hubble.cpp
   translator/transport-objects/nontrivial-metric/M.cpp
+  translator/transport-objects/nontrivial-metric/metric.cpp
+  translator/transport-objects/nontrivial-metric/metric_inverse.cpp
+  translator/transport-objects/nontrivial-metric/Riemann_A2.cpp
+  translator/transport-objects/nontrivial-metric/Riemann_A3.cpp
+  translator/transport-objects/nontrivial-metric/Riemann_B3.cpp
+  translator/transport-objects/nontrivial-metric/SR_velocity.cpp
   translator/transport-objects/nontrivial-metric/u1.cpp
   translator/transport-objects/nontrivial-metric/u2.cpp
   translator/transport-objects/nontrivial-metric/u3.cpp
   translator/transport-objects/nontrivial-metric/zeta1.cpp
   translator/transport-objects/nontrivial-metric/zeta2.cpp
-  translator/transport-objects/nontrivial-metric/dN1.cpp
-  translator/transport-objects/nontrivial-metric/dN2.cpp
   translator/transport-objects/nontrivial-metric/tensor_factory.cpp
+  translator/transport-objects/nontrivial-metric/resources.cpp
   translator/transport-objects/nontrivial-metric/resource_manager.cpp
   translator/transport-objects/utilities/symbol_factory.cpp
   translator/transport-objects/utilities/shared_resources.cpp
@@ -540,6 +546,8 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
   translator/transport-objects/canonical/B.h
   translator/transport-objects/canonical/C.cpp
   translator/transport-objects/canonical/C.h
+  translator/transport-objects/canonical/coordinates.cpp
+  translator/transport-objects/canonical/coordinates.h
   translator/transport-objects/canonical/dddV.cpp
   translator/transport-objects/canonical/dddV.h
   translator/transport-objects/canonical/ddV.cpp
@@ -550,10 +558,14 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
   translator/transport-objects/canonical/dN2.h
   translator/transport-objects/canonical/dV.cpp
   translator/transport-objects/canonical/dV.h
+  translator/transport-objects/canonical/fields.cpp
+  translator/transport-objects/canonical/fields.h
   translator/transport-objects/canonical/Hubble.cpp
   translator/transport-objects/canonical/Hubble.h
   translator/transport-objects/canonical/M.cpp
   translator/transport-objects/canonical/M.h
+  translator/transport-objects/canonical/resource_manager.cpp
+  translator/transport-objects/canonical/resource_manager.h
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/resources.h
   translator/transport-objects/canonical/SR_velocity.cpp
@@ -570,12 +582,6 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
   translator/transport-objects/canonical/zeta1.h
   translator/transport-objects/canonical/zeta2.cpp
   translator/transport-objects/canonical/zeta2.h
-  translator/transport-objects/canonical/coordinates.cpp
-  translator/transport-objects/canonical/coordinates.h
-  translator/transport-objects/canonical/fields.cpp
-  translator/transport-objects/canonical/fields.h
-  translator/transport-objects/canonical/resource_manager.cpp
-  translator/transport-objects/canonical/resource_manager.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
@@ -583,14 +589,26 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/Atilde.h
   translator/transport-objects/concepts/B.h
   translator/transport-objects/concepts/C.h
+  translator/transport-objects/concepts/connexion.h
+  translator/transport-objects/concepts/coordinates.h
   translator/transport-objects/concepts/dddV.h
   translator/transport-objects/concepts/ddV.h
   translator/transport-objects/concepts/dN1.h
   translator/transport-objects/concepts/dN2.h
   translator/transport-objects/concepts/dV.h
+  translator/transport-objects/concepts/fields.h
   translator/transport-objects/concepts/flattened_tensor.h
   translator/transport-objects/concepts/Hubble.h
   translator/transport-objects/concepts/M.h
+  translator/transport-objects/concepts/metric.h
+  translator/transport-objects/concepts/metric_inverse.h
+  translator/transport-objects/concepts/parameters.h
+  translator/transport-objects/concepts/parameters.cpp
+  translator/transport-objects/concepts/resource_manager.cpp
+  translator/transport-objects/concepts/resource_manager.h
+  translator/transport-objects/concepts/Riemann_A2.h
+  translator/transport-objects/concepts/Riemann_A3.h
+  translator/transport-objects/concepts/Riemann_B3.h
   translator/transport-objects/concepts/SR_velocity.h
   translator/transport-objects/concepts/tensor_factory.h
   translator/transport-objects/concepts/transport_tensor.h
@@ -599,12 +617,6 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/u3.h
   translator/transport-objects/concepts/zeta1.h
   translator/transport-objects/concepts/zeta2.h
-  translator/transport-objects/concepts/coordinates.h
-  translator/transport-objects/concepts/fields.h
-  translator/transport-objects/concepts/parameters.h
-  translator/transport-objects/concepts/parameters.cpp
-  translator/transport-objects/concepts/resource_manager.cpp
-  translator/transport-objects/concepts/resource_manager.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_FILES
@@ -621,6 +633,10 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
   translator/transport-objects/nontrivial-metric/B.h
   translator/transport-objects/nontrivial-metric/C.cpp
   translator/transport-objects/nontrivial-metric/C.h
+  translator/transport-objects/nontrivial-metric/connexion.cpp
+  translator/transport-objects/nontrivial-metric/connexion.h
+  translator/transport-objects/nontrivial-metric/coordinates.cpp
+  translator/transport-objects/nontrivial-metric/coordinates.h
   translator/transport-objects/nontrivial-metric/dddV.cpp
   translator/transport-objects/nontrivial-metric/dddV.h
   translator/transport-objects/nontrivial-metric/ddV.cpp
@@ -631,12 +647,26 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
   translator/transport-objects/nontrivial-metric/dN2.h
   translator/transport-objects/nontrivial-metric/dV.cpp
   translator/transport-objects/nontrivial-metric/dV.h
+  translator/transport-objects/nontrivial-metric/fields.cpp
+  translator/transport-objects/nontrivial-metric/fields.h
   translator/transport-objects/nontrivial-metric/Hubble.cpp
   translator/transport-objects/nontrivial-metric/Hubble.h
   translator/transport-objects/nontrivial-metric/M.cpp
   translator/transport-objects/nontrivial-metric/M.h
+  translator/transport-objects/nontrivial-metric/metric.cpp
+  translator/transport-objects/nontrivial-metric/metric.h
+  translator/transport-objects/nontrivial-metric/metric_inverse.cpp
+  translator/transport-objects/nontrivial-metric/metric_inverse.h
+  translator/transport-objects/nontrivial-metric/resource_manager.cpp
+  translator/transport-objects/nontrivial-metric/resource_manager.h
   translator/transport-objects/nontrivial-metric/resources.cpp
   translator/transport-objects/nontrivial-metric/resources.h
+  translator/transport-objects/nontrivial-metric/Riemann_A2.cpp
+  translator/transport-objects/nontrivial-metric/Riemann_A2.h
+  translator/transport-objects/nontrivial-metric/Riemann_A3.cpp
+  translator/transport-objects/nontrivial-metric/Riemann_A3.h
+  translator/transport-objects/nontrivial-metric/Riemann_B3.cpp
+  translator/transport-objects/nontrivial-metric/Riemann_B3.h
   translator/transport-objects/nontrivial-metric/SR_velocity.cpp
   translator/transport-objects/nontrivial-metric/SR_velocity.h
   translator/transport-objects/nontrivial-metric/tensor_factory.cpp
@@ -651,12 +681,6 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
   translator/transport-objects/nontrivial-metric/zeta1.h
   translator/transport-objects/nontrivial-metric/zeta2.cpp
   translator/transport-objects/nontrivial-metric/zeta2.h
-  translator/transport-objects/nontrivial-metric/coordinates.cpp
-  translator/transport-objects/nontrivial-metric/coordinates.h
-  translator/transport-objects/nontrivial-metric/fields.cpp
-  translator/transport-objects/nontrivial-metric/fields.h
-  translator/transport-objects/nontrivial-metric/resource_manager.cpp
-  translator/transport-objects/nontrivial-metric/resource_manager.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_FILES

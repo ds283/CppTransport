@@ -53,7 +53,7 @@ namespace canonical
         virtual ~tensor_factory() = default;
 
 
-        // INTERFACE
+        // GENERIC TENSOR CLASSES
 
       public:
 
@@ -123,7 +123,7 @@ namespace canonical
         std::unique_ptr<dN2> make_dN2(language_printer& p, cse& cw) override;
     
     
-        // INTERFACE -- PROVIDE ACCESS TO RESOURCE MANAGER
+        // PROVIDE ACCESS TO RESOURCE MANAGER
   
       public:
     

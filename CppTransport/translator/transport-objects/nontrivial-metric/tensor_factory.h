@@ -30,11 +30,18 @@
 #include "concepts/tensor_factory.h"
 #include "resources.h"
 
+#include "concepts/connexion.h"
+#include "concepts/metric.h"
+#include "concepts/metric_inverse.h"
+#include "concepts/Riemann_A2.h"
+#include "concepts/Riemann_A3.h"
+#include "concepts/Riemann_B3.h"
+
 
 namespace nontrivial_metric
   {
 
-    class tensor_factory: public ::tensor_factory
+    class tensor_factory: public ::curvature_tensor_factory
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -43,7 +50,7 @@ namespace nontrivial_metric
 
         //! constructor
         tensor_factory(translator_data& p, expression_cache& c)
-          : ::tensor_factory(p, c),
+          : ::curvature_tensor_factory(p, c),
             shared(p, mgr, c),
             res(p, mgr, c, shared, compute_timer)       // entitled to assume that mgr, shared, compute_timer have been constructed at this point
           {
@@ -53,7 +60,7 @@ namespace nontrivial_metric
         virtual ~tensor_factory() = default;
 
 
-        // INTERFACE
+        // GENERIC TENSOR CLASSES
 
       public:
 
@@ -121,9 +128,32 @@ namespace nontrivial_metric
 
         //! obtain a dN2-tensor object
         std::unique_ptr<dN2> make_dN2(language_printer& p, cse& cw) override;
+        
+        
+        // CURVATURE TENSOR CLASSES
+        
+      public:
+        
+        //! obtain a connexion-"tensor" object
+        std::unique_ptr<connexion> make_connexion(language_printer& p, cse& cw) override;
+        
+        //! obtain a metric tensor object
+        std::unique_ptr<metric> make_metric(language_printer& p, cse& cw) override;
+        
+        //! obtain an inverse metric tensor object
+        std::unique_ptr<metric_inverse> make_metric_inverse(language_printer& p, cse& cw) override;
+        
+        //! obtain a Riemann-A2 tensor object
+        std::unique_ptr<Riemann_A2> make_Riemann_A2(language_printer& p, cse& cw) override;
+        
+        //! obtain a Riemann-A3 tensor object
+        std::unique_ptr<Riemann_A3> make_Riemann_A3(language_printer& p, cse& cw) override;
+        
+        //! obtain a Riemann-B3 tensor object
+        std::unique_ptr<Riemann_B3> make_Riemann_B3(language_printer& p, cse& cw) override;
     
     
-        // INTERFACE -- PROVIDE ACCESS TO RESOURCE MANAGER
+        // PROVIDE ACCESS TO RESOURCE MANAGER
   
       public:
     
@@ -148,7 +178,7 @@ namespace nontrivial_metric
 
       };
 
-  }
+  }   // namespace nontrivial_metric
 
 
 #endif //CPPTRANSPORT_NONTRIVIAL_METRIC_FACTORY_H

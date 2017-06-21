@@ -63,7 +63,7 @@ namespace nontrivial_metric
 
 
     nontrivial_metric_ddV::nontrivial_metric_ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
-      : ddV(),
+      : ::ddV(),
         printer(p),
         cse_worker(cw),
         res(r),

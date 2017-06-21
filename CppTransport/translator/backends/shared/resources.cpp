@@ -324,7 +324,7 @@ namespace macro_packages
     
     std::string set_inverse_metric::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->mgr.assign_inverse_metric(args[RESOURCES::INVERSE_METRIC_KERNEL_ARGUMENT]);
+        this->mgr.assign_metric_inverse(args[RESOURCES::INVERSE_METRIC_KERNEL_ARGUMENT]);
     
         std::ostringstream msg;
         msg << RESOURCE_SET_INVERSE_METRIC << " '" << static_cast<std::string>(args[RESOURCES::INVERSE_METRIC_KERNEL_ARGUMENT]) << "'";

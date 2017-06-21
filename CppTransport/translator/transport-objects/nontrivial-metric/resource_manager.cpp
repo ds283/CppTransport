@@ -34,7 +34,7 @@ namespace nontrivial_metric
       {
         this->connexion_cache.reset();
         this->metric_cache.reset();
-        this->inverse_metric_cache.reset();
+        this->metric_inverse_cache.reset();
         this->Riemann_A2_cache.reset();
         this->Riemann_A3_cache.reset();
         this->Riemann_B3_cache.reset();

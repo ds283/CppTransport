@@ -78,8 +78,8 @@ namespace nontrivial_metric
     
         //! get inverse metric label
         const boost::optional< contexted_value<std::string> >&
-        inverse_metric()
-          { return this->inverse_metric_cache.find(); }
+        metric_inverse()
+          { return this->metric_inverse_cache.find(); }
     
         //! get Riemann A2 label
         boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES>, contexted_value<std::string> > >
@@ -110,8 +110,8 @@ namespace nontrivial_metric
           { this->metric_cache.assign(c); }
     
         //! assign inverse resource label
-        void assign_inverse_metric(const contexted_value<std::string>& c)
-          { this->inverse_metric_cache.assign(c); }
+        void assign_metric_inverse(const contexted_value<std::string>& c)
+          { this->metric_inverse_cache.assign(c); }
     
         //! assign Riemann A2 resource label
         void assign_Riemann_A2(const contexted_value<std::string>& R,
@@ -142,8 +142,8 @@ namespace nontrivial_metric
           { this->metric_cache.reset(); }
     
         //! release connexion resource
-        void release_inverse_metric()
-          { this->inverse_metric_cache.reset(); }
+        void release_metric_inverse()
+          { this->metric_inverse_cache.reset(); }
     
         //! release Riemann A2 resource
         void release_Riemann_A2()
@@ -181,7 +181,7 @@ namespace nontrivial_metric
         simple_resource<std::string> metric_cache;
         
         //! cache inverse metric resource label
-        simple_resource<std::string> inverse_metric_cache;
+        simple_resource<std::string> metric_inverse_cache;
     
         //! cache Riemann A2 resource labels
         indexed_resource<RESOURCE_INDICES::RIEMANN_A2_INDICES, std::string> Riemann_A2_cache;

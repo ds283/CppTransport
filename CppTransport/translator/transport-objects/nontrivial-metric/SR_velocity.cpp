@@ -115,7 +115,7 @@ namespace nontrivial_metric
 
     nontrivial_metric_SR_velocity::nontrivial_metric_SR_velocity(language_printer& p, cse& cw, expression_cache& c, resources& r,
                                                  shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f)
-      : SR_velocity(),
+      : ::SR_velocity(),
         printer(p),
         cse_worker(cw),
         cache(c),

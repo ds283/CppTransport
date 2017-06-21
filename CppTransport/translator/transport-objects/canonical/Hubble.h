@@ -52,7 +52,7 @@ namespace canonical
 
         //! constructor
         canonical_Hubble(language_printer& p, cse& cw, resources& r)
-          : Hubble(),
+          : ::Hubble(),
             printer(p),
             cse_worker(cw),
             res(r)

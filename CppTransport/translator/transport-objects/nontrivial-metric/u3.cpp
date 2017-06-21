@@ -192,7 +192,7 @@ namespace nontrivial_metric
 
     nontrivial_metric_u3::nontrivial_metric_u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                                boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-      : u3(),
+      : ::u3(),
         A_agent(p, cw, c, r, s, tm, f, t),
         B_agent(p, cw, c, r, s, tm, f, t),
         C_agent(p, cw, c, r, s, tm, f, t),

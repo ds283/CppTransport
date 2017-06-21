@@ -195,7 +195,7 @@ namespace canonical
 
     canonical_u2::canonical_u2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                                boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-      : u2(),
+      : ::u2(),
         printer(p),
         cse_worker(cw),
         cache(c),
