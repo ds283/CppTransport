@@ -158,7 +158,8 @@ namespace nontrivial_metric
       public:
     
         //! link to resource manager object
-        nontrivial_metric_resource_manager& get_resource_manager() override { return this->mgr; }
+        resource_manager& get_resource_manager() override
+          { return this->mgr; }
 
 
         // INTERNAL DATA
@@ -168,7 +169,7 @@ namespace nontrivial_metric
         // RESOURCES
     
         //! nontrivial_metric resource manager
-        nontrivial_metric_resource_manager mgr;
+        resource_manager mgr;
     
         //! shared resources
         shared_resources shared;

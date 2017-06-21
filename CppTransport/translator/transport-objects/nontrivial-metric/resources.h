@@ -64,7 +64,7 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        resources(translator_data& p, nontrivial_metric_resource_manager& m, expression_cache& c,
+        resources(translator_data& p, resource_manager& m, expression_cache& c,
                   shared_resources& s, boost::timer::cpu_timer& t);
 
         //! destructor is default
@@ -203,7 +203,7 @@ namespace nontrivial_metric
         // CACHES
 
         //! resource manager object
-        nontrivial_metric_resource_manager& mgr;
+        resource_manager& mgr;
 
         //! expression cache
         expression_cache& cache;

@@ -29,8 +29,8 @@
 
 namespace nontrivial_metric
   {
-
-    resources::resources(translator_data& p, nontrivial_metric_resource_manager& m, expression_cache& c,
+    
+    resources::resources(translator_data& p, resource_manager& m, expression_cache& c,
                          shared_resources& s, boost::timer::cpu_timer& t)
       : mgr(m),
         cache(c),

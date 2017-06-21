@@ -29,8 +29,8 @@
 
 namespace nontrivial_metric
   {
-
-    void nontrivial_metric_resource_manager::release()
+    
+    void resource_manager::release()
       {
         this->parameters_cache.reset();
         this->coordinates_cache.reset();
@@ -47,7 +47,7 @@ namespace nontrivial_metric
       }
     
     
-    void nontrivial_metric_resource_manager::release_flatteners()
+    void resource_manager::release_flatteners()
       {
         this->phase_flatten_cache.reset();
         this->field_flatten_cache.reset();

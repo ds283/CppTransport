@@ -33,7 +33,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_resource_manager: public ::curvature_resource_manager
+    class resource_manager : public ::curvature_resource_manager
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -41,10 +41,10 @@ namespace nontrivial_metric
       public:
         
         //! constructor is default
-        nontrivial_metric_resource_manager() = default;
+        resource_manager() = default;
         
         //! destructor is default
-        ~nontrivial_metric_resource_manager() = default;
+        ~resource_manager() = default;
     
     
         // QUERY FOR RESOURCE LABELS
