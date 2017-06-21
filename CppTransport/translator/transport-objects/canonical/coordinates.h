@@ -43,8 +43,8 @@
 
 namespace canonical
   {
-
-    class canonical_coordinates: public coordinates
+    
+    class coordinates : public ::coordinates
       {
       
         // CONSTRUCTOR, DESTRUCTOR
@@ -52,11 +52,11 @@ namespace canonical
       public:
       
         //! constructor
-        canonical_coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
-                              index_flatten& f, index_traits& t);
+        coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
+                    index_flatten& f, index_traits& t);
         
         //! destructor is default
-        virtual ~canonical_coordinates() = default;
+        virtual ~coordinates() = default;
         
         
         // INTERFACE -- IMPLEMENTS A 'COORDINATES' TENSOR CONCEPT

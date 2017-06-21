@@ -45,8 +45,8 @@
 
 namespace nontrivial_metric
   {
-
-    class nontrivial_metric_M: public M
+    
+    class nontrivial_metric_M : public ::M
       {
 
         // CONSTRUCTOR, DESTRUCTOR

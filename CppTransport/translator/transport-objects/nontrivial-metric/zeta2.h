@@ -45,8 +45,8 @@
 
 namespace nontrivial_metric
   {
-
-    class nontrivial_metric_zeta2: public zeta2
+    
+    class nontrivial_metric_zeta2 : public ::zeta2
       {
 
         // CONSTRUCTOR, DESTRUCTOR

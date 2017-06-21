@@ -45,8 +45,8 @@
 
 namespace canonical
   {
-
-    class canonical_u1: public u1
+    
+    class u1 : public ::u1
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,11 +54,11 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_u1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        u1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+           boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~canonical_u1() = default;
+        virtual ~u1() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'u1' TENSOR CONCEPT

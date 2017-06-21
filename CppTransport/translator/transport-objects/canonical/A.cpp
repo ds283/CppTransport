@@ -30,8 +30,8 @@ namespace canonical
   {
 
     std::unique_ptr<flattened_tensor>
-    canonical_A::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-                         GiNaC::symbol& a)
+    A::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
+               GiNaC::symbol& a)
       {
         if(indices.size() != A_TENSOR_INDICES) throw tensor_exception("A indices");
         
@@ -57,10 +57,10 @@ namespace canonical
 
         return(result);
       }
-
-
-    GiNaC::ex canonical_A::compute_component(field_index i, field_index j, field_index k,
-                                             GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex A::compute_component(field_index i, field_index j, field_index k,
+                                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(!this->cached) throw tensor_exception("A cache not ready");
 
@@ -104,13 +104,13 @@ namespace canonical
 
         return(result);
       }
-
-
-    GiNaC::ex canonical_A::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                                GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
-                                GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
-                                GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
-                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex A::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
+                      GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
+                      GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
+                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
+                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
         GiNaC::ex xi_j = -2*(3-eps) * deriv_j - 2 * Vj/Hsq;
@@ -146,9 +146,9 @@ namespace canonical
 
         return(result);
       }
-
-
-    unroll_behaviour canonical_A::get_unroll()
+    
+    
+    unroll_behaviour A::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV() &&
           this->res.can_roll_dddV()) return unroll_behaviour::allow;
@@ -158,8 +158,8 @@ namespace canonical
 
 
     std::unique_ptr<atomic_lambda>
-    canonical_A::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    A::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("A");
         if(j.get_class() != index_class::field_only) throw tensor_exception("A");
@@ -209,9 +209,9 @@ namespace canonical
         return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::A_lambda, *args,
                                                this->shared.generate_working_type());
       }
-
-
-    void canonical_A::pre_explicit(const index_literal_list& indices)
+    
+    
+    void A::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("A already cached");
 
@@ -223,26 +223,26 @@ namespace canonical
 
         this->cached = true;
       }
-
-
-    void canonical_A::pre_lambda()
+    
+    
+    void A::pre_lambda()
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
       }
-
-
-    void canonical_A::post()
+    
+    
+    void A::post()
       {
         if(!this->cached) throw tensor_exception("A not cached");
 
         // invalidate cache
         this->cached = false;
       }
-
-
-    canonical_A::canonical_A(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                             boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    A::A(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+         boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::A(),
         printer(p),
         cse_worker(cw),

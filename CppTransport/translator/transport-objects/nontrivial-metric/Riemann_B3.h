@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_Riemann_B3: public Riemann_B3
+    class nontrivial_metric_Riemann_B3 : public ::Riemann_B3
       {
     
         // CONSTRUCTOR, DESTRUCTOR

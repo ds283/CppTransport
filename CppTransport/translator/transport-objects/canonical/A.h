@@ -45,8 +45,8 @@
 
 namespace canonical
   {
-
-    class canonical_A: public A
+    
+    class A : public ::A
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,11 +54,11 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_A(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        A(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+          boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~canonical_A() = default;
+        virtual ~A() = default;
 
 
         // INTERFACE -- IMPLEMENTS AN 'A' TENSOR CONCEPT

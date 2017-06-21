@@ -44,7 +44,7 @@
 namespace canonical
   {
     
-    class canonical_fields: public fields
+    class fields : public ::fields
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -52,11 +52,11 @@ namespace canonical
       public:
         
         //! constructor
-        canonical_fields(language_printer& p, cse& cw, resources& r, shared_resources& s,
-                         index_flatten& f, index_traits& t);
+        fields(language_printer& p, cse& cw, resources& r, shared_resources& s,
+               index_flatten& f, index_traits& t);
         
         //! destructor is default
-        virtual ~canonical_fields() = default;
+        virtual ~fields() = default;
         
         
         // INTERFACE -- IMPLEMENTS A 'COORDINATES' TENSOR CONCEPT
@@ -130,7 +130,7 @@ namespace canonical
         // WORKSPACE AND CACHE
         
         //! field symbols
-        std::unique_ptr<symbol_list> fields;
+        std::unique_ptr<symbol_list> f;
         
         //! cache status
         bool cached;

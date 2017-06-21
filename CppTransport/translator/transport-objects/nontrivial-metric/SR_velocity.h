@@ -44,8 +44,8 @@
 
 namespace nontrivial_metric
   {
-
-    class nontrivial_metric_SR_velocity: public SR_velocity
+    
+    class nontrivial_metric_SR_velocity : public ::SR_velocity
       {
 
         // CONSTRUCTOR, DESTRUCTOR

@@ -28,16 +28,16 @@
 
 namespace canonical
   {
-
-    std::unique_ptr<flattened_tensor> canonical_dddV::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> dddV::compute(const index_literal_list& indices)
       {
         if(indices.size() != DDDV_TENSOR_INDICES) throw tensor_exception("dddV indices");
 
         return(this->res.dddV_resource(this->printer));
       }
-
-
-    unroll_behaviour canonical_dddV::get_unroll()
+    
+    
+    unroll_behaviour dddV::get_unroll()
       {
         if(this->res.can_roll_dddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll
@@ -45,7 +45,7 @@ namespace canonical
 
 
     std::unique_ptr<atomic_lambda>
-    canonical_dddV::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k)
+    dddV::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("dddV");
         if(j.get_class() != index_class::field_only) throw tensor_exception("dddV");
@@ -64,9 +64,9 @@ namespace canonical
 
         return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::dddV_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    canonical_dddV::canonical_dddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
+    
+    
+    dddV::dddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
       : ::dddV(),
         printer(p),
         cse_worker(cw),
@@ -75,14 +75,14 @@ namespace canonical
         fl(f)
       {
       }
-
-
-    void canonical_dddV::pre_explicit(const index_literal_list& indices)
+    
+    
+    void dddV::pre_explicit(const index_literal_list& indices)
       {
       }
-
-
-    void canonical_dddV::post()
+    
+    
+    void dddV::post()
       {
       }
 

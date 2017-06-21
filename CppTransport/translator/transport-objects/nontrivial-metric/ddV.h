@@ -44,8 +44,8 @@
 
 namespace nontrivial_metric
   {
-
-    class nontrivial_metric_ddV: public ddV
+    
+    class nontrivial_metric_ddV : public ::ddV
       {
 
         // CONSTRUCTOR, DESTRUCTOR

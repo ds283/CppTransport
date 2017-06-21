@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_connexion: public connexion
+    class nontrivial_metric_connexion : public ::connexion
       {
     
         // CONSTRUCTOR, DESTRUCTOR

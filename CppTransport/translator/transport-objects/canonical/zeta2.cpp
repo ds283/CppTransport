@@ -30,8 +30,8 @@ namespace canonical
   {
 
     std::unique_ptr<flattened_tensor>
-    canonical_zeta2::compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                             GiNaC::symbol& a)
+    zeta2::compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                   GiNaC::symbol& a)
       {
         if(indices.size() != ZETA2_TENSOR_INDICES) throw tensor_exception("zeta2 indices");
 
@@ -53,11 +53,11 @@ namespace canonical
 
         return(result);
       }
-
-
-    GiNaC::ex canonical_zeta2::compute_component(phase_index i, phase_index j,
-                                                 GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                                 GiNaC::symbol& a)
+    
+    
+    GiNaC::ex zeta2::compute_component(phase_index i, phase_index j,
+                                       GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                       GiNaC::symbol& a)
       {
         if(!this->cached) throw tensor_exception("zeta2 cache not ready");
 
@@ -109,9 +109,9 @@ namespace canonical
 
         return(result);
       }
-
-
-    void canonical_zeta2::pre_explicit(const index_literal_list& indices)
+    
+    
+    void zeta2::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("A already cached");
 
@@ -121,9 +121,9 @@ namespace canonical
 
         this->cached = true;
       }
-
-
-    void canonical_zeta2::pre_lambda()
+    
+    
+    void zeta2::pre_lambda()
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
@@ -148,30 +148,30 @@ namespace canonical
         p = p_sym;
         this->cse_worker.parse(p_ex, p_sym.get_name());
       }
-
-
-    void canonical_zeta2::post()
+    
+    
+    void zeta2::post()
       {
         if(!this->cached) throw tensor_exception("zeta2 not cached");
 
         // invalidate cache
         this->cached = false;
       }
-
-
-    GiNaC::ex canonical_zeta2::expr_field_field(GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                                GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                                GiNaC::symbol& a)
+    
+    
+    GiNaC::ex zeta2::expr_field_field(GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
+                                      GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                      GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
         GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * deriv_i * deriv_j / (Mp*Mp*Mp*Mp*eps);
         return(result);
       }
-
-
-    GiNaC::ex canonical_zeta2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                                   GiNaC::symbol& a)
+    
+    
+    GiNaC::ex zeta2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
+                                         GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                         GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
 
@@ -187,9 +187,9 @@ namespace canonical
 
         return(result);
       }
-
-
-    unroll_behaviour canonical_zeta2::get_unroll()
+    
+    
+    unroll_behaviour zeta2::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
@@ -197,8 +197,8 @@ namespace canonical
 
 
     std::unique_ptr<map_lambda>
-    canonical_zeta2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k,
-                                    GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
+    zeta2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k,
+                          GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
         if(j.get_class() != index_class::full) throw tensor_exception("U3");
@@ -268,11 +268,11 @@ namespace canonical
 
         return std::make_unique<map_lambda>(i, j, table, expression_item_types::zxfm2_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    canonical_zeta2::canonical_zeta2(language_printer& p, cse& cw, expression_cache& c, resources& r,
-                                     shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
-                                     index_traits& t)
+    
+    
+    zeta2::zeta2(language_printer& p, cse& cw, expression_cache& c, resources& r,
+                 shared_resources& s, boost::timer::cpu_timer& tm, index_flatten& f,
+                 index_traits& t)
       : ::zeta2(),
         printer(p),
         cse_worker(cw),

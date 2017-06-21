@@ -45,8 +45,8 @@
 
 namespace canonical
   {
-
-    class canonical_dN1: public dN1
+    
+    class dN1 : public ::dN1
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,11 +54,11 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_dN1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                      boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        dN1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+            boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~canonical_dN1() = default;
+        virtual ~dN1() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'zeta1' TENSOR CONCEPT

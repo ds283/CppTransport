@@ -43,8 +43,8 @@
 
 namespace nontrivial_metric
   {
-
-    class nontrivial_metric_coordinates: public coordinates
+    
+    class nontrivial_metric_coordinates : public ::coordinates
       {
       
         // CONSTRUCTOR, DESTRUCTOR

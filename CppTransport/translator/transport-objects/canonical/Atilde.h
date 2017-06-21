@@ -45,8 +45,8 @@
 
 namespace canonical
   {
-
-    class canonical_Atilde: public Atilde
+    
+    class Atilde : public ::Atilde
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,11 +54,11 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_Atilde(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                         boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        Atilde(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+               boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~canonical_Atilde() = default;
+        virtual ~Atilde() = default;
 
 
         // INTERFACE -- IMPLEMENTS AN 'ATILDE' TENSOR CONCEPT

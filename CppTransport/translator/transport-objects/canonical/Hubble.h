@@ -42,8 +42,8 @@
 
 namespace canonical
   {
-
-    class canonical_Hubble: public Hubble
+    
+    class Hubble : public ::Hubble
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -51,7 +51,7 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_Hubble(language_printer& p, cse& cw, resources& r)
+        Hubble(language_printer& p, cse& cw, resources& r)
           : ::Hubble(),
             printer(p),
             cse_worker(cw),
@@ -60,7 +60,7 @@ namespace canonical
           }
 
         //! destructor is default
-        virtual ~canonical_Hubble() = default;
+        virtual ~Hubble() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'Hubble' TENSOR CONCEPT

@@ -30,8 +30,8 @@ namespace canonical
   {
 
     std::unique_ptr<flattened_tensor>
-    canonical_u3::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-                          GiNaC::symbol& a)
+    u3::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
+                GiNaC::symbol& a)
       {
         if(indices.size() != U3_TENSOR_INDICES) throw tensor_exception("U3 indices");
 
@@ -57,10 +57,10 @@ namespace canonical
 
         return(result);
       }
-
-
-    GiNaC::ex canonical_u3::compute_component(phase_index i, phase_index j, phase_index k,
-                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    
+    
+    GiNaC::ex u3::compute_component(phase_index i, phase_index j, phase_index k,
+                                    GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(!this->cached) throw tensor_exception("U3 cache not ready");
 
@@ -127,9 +127,9 @@ namespace canonical
 
         return(result);
       }
-
-
-    unroll_behaviour canonical_u3::get_unroll()
+    
+    
+    unroll_behaviour u3::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV() &&
           this->res.can_roll_dddV()) return unroll_behaviour::allow;
@@ -138,8 +138,8 @@ namespace canonical
 
 
     std::unique_ptr<map_lambda>
-    canonical_u3::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                                 GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    u3::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
         if(j.get_class() != index_class::full) throw tensor_exception("U3");
@@ -188,10 +188,10 @@ namespace canonical
 
         return std::make_unique<map_lambda>(i, j, k, table, expression_item_types::U3_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    canonical_u3::canonical_u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                               boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    u3::u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+           boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::u3(),
         A_agent(p, cw, c, r, s, tm, f, t),
         B_agent(p, cw, c, r, s, tm, f, t),
@@ -207,9 +207,9 @@ namespace canonical
         cached(false)
       {
       }
-
-
-    void canonical_u3::pre_explicit(const index_literal_list& indices)
+    
+    
+    void u3::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("U3 already cached");
 
@@ -219,9 +219,9 @@ namespace canonical
 
         this->cached = true;
       }
-
-
-    void canonical_u3::post()
+    
+    
+    void u3::post()
       {
         if(!this->cached) throw tensor_exception("U3 not cached");
 

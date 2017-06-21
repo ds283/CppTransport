@@ -28,8 +28,8 @@
 
 namespace canonical
   {
-
-    std::unique_ptr<flattened_tensor> canonical_dN1::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> dN1::compute(const index_literal_list& indices)
       {
         if(indices.size() != DN1_TENSOR_INDICES) throw tensor_exception("dN1 indices");
 
@@ -47,9 +47,9 @@ namespace canonical
 
         return(result);
       }
-
-
-    GiNaC::ex canonical_dN1::compute_component(phase_index i)
+    
+    
+    GiNaC::ex dN1::compute_component(phase_index i)
       {
         if(!this->cached) throw tensor_exception("dN1 cache not ready");
 
@@ -70,15 +70,15 @@ namespace canonical
 
         return(result);
       }
-
-
-    unroll_behaviour canonical_dN1::get_unroll()
+    
+    
+    unroll_behaviour dN1::get_unroll()
       {
         return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
       }
-
-
-    void canonical_dN1::pre_explicit(const index_literal_list& indices)
+    
+    
+    void dN1::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("dN1 already cached");
 
@@ -89,19 +89,19 @@ namespace canonical
 
         this->cached = true;
       }
-
-
-    void canonical_dN1::post()
+    
+    
+    void dN1::post()
       {
         if(!this->cached) throw tensor_exception("dN1 not cached");
 
         // invalidate cache
         this->cached = false;
       }
-
-
-    canonical_dN1::canonical_dN1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                                 boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    dN1::dN1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+             boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::dN1(),
         printer(p),
         cse_worker(cw),

@@ -29,7 +29,7 @@
 namespace canonical
   {
     
-    std::unique_ptr<flattened_tensor> canonical_coordinates::compute(const index_literal_list& indices)
+    std::unique_ptr<flattened_tensor> coordinates::compute(const index_literal_list& indices)
       {
         if(indices.size() != COORDINATE_TENSOR_INDICES) throw tensor_exception("coordinate indices");
         
@@ -57,7 +57,7 @@ namespace canonical
       }
     
     
-    std::pair<GiNaC::ex, GiNaC::ex> canonical_coordinates::compute_component(field_index i)
+    std::pair<GiNaC::ex, GiNaC::ex> coordinates::compute_component(field_index i)
       {
         if(!this->cached) throw tensor_exception("coordinates cache not ready");
 
@@ -68,9 +68,9 @@ namespace canonical
         
         return std::make_pair(f, d);
       }
-
-
-    void canonical_coordinates::pre_explicit(const index_literal_list& indices)
+    
+    
+    void coordinates::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("coordinates already cached");
 
@@ -79,18 +79,18 @@ namespace canonical
 
         this->cached = true;
       }
-
-
-    void canonical_coordinates::post()
+    
+    
+    void coordinates::post()
       {
         if(!this->cached) throw tensor_exception("A not cached");
 
         // invalidate cache
         this->cached = false;
       }
-
-
-    std::unique_ptr<atomic_lambda> canonical_coordinates::compute_lambda(const index_literal& i)
+    
+    
+    std::unique_ptr<atomic_lambda> coordinates::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("coordinates");
         
@@ -104,15 +104,15 @@ namespace canonical
       }
     
     
-    unroll_behaviour canonical_coordinates::get_unroll()
+    unroll_behaviour coordinates::get_unroll()
       {
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;
       }
-
-
-    canonical_coordinates::canonical_coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
-                                                 index_flatten& f, index_traits& t)
+    
+    
+    coordinates::coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
+                             index_flatten& f, index_traits& t)
       : ::coordinates(),
         printer(p),
         cse_worker(cw),

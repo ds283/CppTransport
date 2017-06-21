@@ -44,8 +44,8 @@
 
 namespace canonical
   {
-
-    class canonical_ddV: public ddV
+    
+    class ddV : public ::ddV
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,10 +53,10 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f);
+        ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f);
 
         //! destructor is default
-        virtual ~canonical_ddV() = default;
+        virtual ~ddV() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'dV' TENSOR CONCEPT

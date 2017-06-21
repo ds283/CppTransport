@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_metric_inverse: public metric_inverse
+    class nontrivial_metric_metric_inverse : public ::metric_inverse
       {
     
         // CONSTRUCTOR, DESTRUCTOR

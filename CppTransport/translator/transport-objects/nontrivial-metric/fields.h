@@ -44,7 +44,7 @@
 namespace nontrivial_metric
   {
     
-    class nontrivial_metric_fields: public fields
+    class nontrivial_metric_fields : public ::fields
       {
         
         // CONSTRUCTOR, DESTRUCTOR

@@ -42,8 +42,8 @@
 
 namespace nontrivial_metric
   {
-
-    class nontrivial_metric_Hubble: public Hubble
+    
+    class nontrivial_metric_Hubble : public ::Hubble
       {
 
         // CONSTRUCTOR, DESTRUCTOR

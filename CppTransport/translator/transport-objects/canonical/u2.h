@@ -45,8 +45,8 @@
 
 namespace canonical
   {
-
-    class canonical_u2: public u2
+    
+    class u2 : public ::u2
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,11 +54,11 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_u2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        u2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+           boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~canonical_u2() = default;
+        virtual ~u2() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'u2' TENSOR CONCEPT

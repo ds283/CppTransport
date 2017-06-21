@@ -49,8 +49,8 @@
 
 namespace canonical
   {
-
-    class canonical_u3: public u3
+    
+    class u3 : public ::u3
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -58,11 +58,11 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+           boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
 
         //! destructor is default
-        virtual ~canonical_u3() = default;
+        virtual ~u3() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'C' TENSOR CONCEPT
@@ -142,13 +142,13 @@ namespace canonical
         // WORKSPACE
 
         //! delegate for computing A-tensor
-        canonical_A A_agent;
+        A A_agent;
 
         //! delegate for computing B-tensor
-        canonical_B B_agent;
+        B B_agent;
 
         //! delegate for computing C-tensor
-        canonical_C C_agent;
+        C C_agent;
 
         //! Janitor object for A
         std::unique_ptr<TensorJanitor> A_Janitor;

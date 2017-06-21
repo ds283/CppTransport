@@ -28,8 +28,8 @@
 
 namespace canonical
   {
-
-    std::unique_ptr<flattened_tensor> canonical_u1::compute(const index_literal_list& indices)
+    
+    std::unique_ptr<flattened_tensor> u1::compute(const index_literal_list& indices)
       {
         if(indices.size() != U1_TENSOR_INDICES) throw tensor_exception("U1 indices");
 
@@ -47,9 +47,9 @@ namespace canonical
 
         return(result);
       }
-
-
-    GiNaC::ex canonical_u1::compute_component(phase_index i)
+    
+    
+    GiNaC::ex u1::compute_component(phase_index i)
       {
         if(!this->cached) throw tensor_exception("U1 cache not ready");
 
@@ -86,22 +86,22 @@ namespace canonical
 
         return(result);
       }
-
-
-    GiNaC::ex canonical_u1::expr_momentum(GiNaC::ex& Vi, GiNaC::ex& deriv_i)
+    
+    
+    GiNaC::ex u1::expr_momentum(GiNaC::ex& Vi, GiNaC::ex& deriv_i)
       {
         return -(3-eps) * deriv_i - Vi/Hsq;
       }
-
-
-    unroll_behaviour canonical_u1::get_unroll()
+    
+    
+    unroll_behaviour u1::get_unroll()
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
-
-
-    std::unique_ptr<map_lambda> canonical_u1::compute_lambda(const index_literal& i)
+    
+    
+    std::unique_ptr<map_lambda> u1::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U1");
 
@@ -136,10 +136,10 @@ namespace canonical
 
         return std::make_unique<map_lambda>(i, map, expression_item_types::U1_lambda, *args, this->shared.generate_working_type());
       }
-
-
-    canonical_u1::canonical_u1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                               boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+    
+    
+    u1::u1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+           boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
       : ::u1(),
         printer(p),
         cse_worker(cw),
@@ -152,9 +152,9 @@ namespace canonical
         cached(false)
       {
       }
-
-
-    void canonical_u1::pre_explicit(const index_literal_list& indices)
+    
+    
+    void u1::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("U1 already cached");
 
@@ -164,16 +164,16 @@ namespace canonical
 
         this->cached = true;
       }
-
-
-    void canonical_u1::pre_lambda()
+    
+    
+    void u1::pre_lambda()
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
       }
-
-
-    void canonical_u1::post()
+    
+    
+    void u1::post()
       {
         if(!this->cached) throw tensor_exception("U1 not cached");
 

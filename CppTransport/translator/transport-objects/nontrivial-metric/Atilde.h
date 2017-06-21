@@ -45,8 +45,8 @@
 
 namespace nontrivial_metric
   {
-
-    class nontrivial_metric_Atilde: public Atilde
+    
+    class nontrivial_metric_Atilde : public ::Atilde
       {
 
         // CONSTRUCTOR, DESTRUCTOR
