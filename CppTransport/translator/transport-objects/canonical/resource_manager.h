@@ -45,7 +45,19 @@ namespace canonical
         
         //! destructor is default
         ~canonical_resource_manager() = default;
-        
+    
+    
+        // INTERFACE - GLOBAL RELEASE OF RESOURCE LABELS
+  
+      public:
+    
+        //! release all resources, but not flatteners (this is the most common use case;
+        //! we wish to release resource labels at the end of a function, but not the flattener labels)
+        void release();
+    
+        //! release flatteners
+        void release_flatteners();
+    
       };
     
   }   // namespace canonical

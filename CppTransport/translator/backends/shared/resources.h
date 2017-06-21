@@ -29,6 +29,7 @@
 
 #include "directive_package.h"
 #include "concepts/resource_manager.h"
+#include "nontrivial-metric/resource_manager.h"
 
 
 namespace macro_packages
@@ -368,8 +369,11 @@ namespace macro_packages
         resource_manager& mgr;
 
       };
-
-
+    
+    
+    //! field-space connexion
+    //! dynamic cast to nontrivial_metric::nontrivial_metric_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
     class set_connexion : public directive_index
       {
 
@@ -381,19 +385,12 @@ namespace macro_packages
         set_connexion(std::string n, resource_manager& m, translator_data& p)
           : directive_index(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS, p,
                             define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
-            mgr(m)
+            mgr(dynamic_cast<nontrivial_metric::nontrivial_metric_resource_manager&>(m))
           {
           }
 
         //! destructor
         virtual ~set_connexion() = default;
-
-
-        // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
-
-      public:
-
-        bool enable_if(model_type t) const override { return t == model_type::nontrivial_metric; }
 
 
         // INTERNAL API
@@ -413,15 +410,17 @@ namespace macro_packages
         // INTERNAL DATA
 
       private:
-
+        
         //! resource manager
-        resource_manager& mgr;
+        nontrivial_metric::nontrivial_metric_resource_manager& mgr;
 
       };
 
 
     //! Riemann 'A2' is the 2-index combination of the Riemann tensor appearing in the A-tensor
     //! (it also appears in the M-tensor)
+    //! dynamic cast to nontrivial_metric::nontrivial_metric_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
     class set_Riemann_A2 : public directive_index
       {
 
@@ -433,19 +432,12 @@ namespace macro_packages
         set_Riemann_A2(std::string n, resource_manager& m, translator_data& p)
           : directive_index(std::move(n), RESOURCES::RIEMANN_A2_TOTAL_ARGUMENTS, p,
                             define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
-            mgr(m)
+            mgr(dynamic_cast<nontrivial_metric::nontrivial_metric_resource_manager&>(m))
           {
           }
 
         //! destructor
         virtual ~set_Riemann_A2() = default;
-
-
-        // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
-
-      public:
-
-        bool enable_if(model_type t) const override { return t == model_type::nontrivial_metric; }
 
 
         // INTERNAL API
@@ -467,12 +459,14 @@ namespace macro_packages
       private:
 
         //! resource manager
-        resource_manager& mgr;
+        nontrivial_metric::nontrivial_metric_resource_manager& mgr;
 
       };
     
     
     //! Riemann 'A3' is the 3-index combination of the Riemann tensor appearing in the A-tensor
+    //! dynamic cast to nontrivial_metric::nontrivial_metric_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
     class set_Riemann_A3 : public directive_index
       {
         
@@ -484,19 +478,12 @@ namespace macro_packages
         set_Riemann_A3(std::string n, resource_manager& m, translator_data& p)
           : directive_index(std::move(n), RESOURCES::RIEMANN_A3_TOTAL_ARGUMENTS, p,
                             define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
-            mgr(m)
+            mgr(dynamic_cast<nontrivial_metric::nontrivial_metric_resource_manager&>(m))
           {
           }
         
         //! destructor
         virtual ~set_Riemann_A3() = default;
-        
-        
-        // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
-      
-      public:
-        
-        bool enable_if(model_type t) const override { return t == model_type::nontrivial_metric; }
         
         
         // INTERNAL API
@@ -518,12 +505,14 @@ namespace macro_packages
       private:
         
         //! resource manager
-        resource_manager& mgr;
+        nontrivial_metric::nontrivial_metric_resource_manager& mgr;
         
       };
     
     
     //! Riemann 'B3' is the 2-index combination of the Riemann tensor appearing in the B-tensor
+    //! dynamic cast to nontrivial_metric::nontrivial_metric_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
     class set_Riemann_B3 : public directive_index
       {
         
@@ -535,19 +524,12 @@ namespace macro_packages
         set_Riemann_B3(std::string n, resource_manager& m, translator_data& p)
           : directive_index(std::move(n), RESOURCES::RIEMANN_B3_TOTAL_ARGUMENTS, p,
                             define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
-            mgr(m)
+            mgr(dynamic_cast<nontrivial_metric::nontrivial_metric_resource_manager&>(m))
           {
           }
         
         //! destructor
         virtual ~set_Riemann_B3() = default;
-        
-        
-        // ENABLE ONLY FOR NONTRIVIAL-METRIC MODELS
-      
-      public:
-        
-        bool enable_if(model_type t) const override { return t == model_type::nontrivial_metric; }
         
         
         // INTERNAL API
@@ -569,7 +551,7 @@ namespace macro_packages
       private:
         
         //! resource manager
-        resource_manager& mgr;
+        nontrivial_metric::nontrivial_metric_resource_manager& mgr;
         
       };
 

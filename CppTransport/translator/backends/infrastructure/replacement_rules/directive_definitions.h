@@ -78,10 +78,6 @@ namespace macro_packages
         //! get name associated with this directive
         const std::string& get_name() const { return this->name; }
 
-        //! determine whether this directive is enabled for a particular model type
-        //! defaults to true, but can be overridden if required
-        virtual bool enable_if(model_type t) const { return true; }
-
 
         // INTERNAL API
         
@@ -177,10 +173,6 @@ namespace macro_packages
         
         //! get name associated with this directive
         const std::string& get_name() const { return this->name; }
-
-        //! determine whether this directive is enabled for a particular model type
-        //! defaults to true, but can be overridden if required
-        virtual bool enable_if(model_type t) const { return true; }
 
 
         // INTERNAL API

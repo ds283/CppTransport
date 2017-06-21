@@ -64,7 +64,7 @@ class resource_manager
     resource_manager() = default;
 
     //! destructor
-    ~resource_manager() = default;
+    virtual ~resource_manager() = default;
 
 
     // INTERFACE - QUERY FOR RESOURCE LABELS
@@ -96,26 +96,6 @@ class resource_manager
     boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDDV_INDICES>, contexted_value<std::string> > >
     dddV(std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v = { variance::none, variance::none, variance::none }, bool exact=true)
       { return this->dddV_cache.find(v, exact); }
-
-    //! get connexion label
-    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES>, contexted_value<std::string> > >
-    connexion(std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v, bool exact=true)
-      { return this->connexion_cache.find(v, exact); }
-
-    //! get Riemann A2 label
-    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES>, contexted_value<std::string> > >
-    Riemann_A2(std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v, bool exact=true)
-      { return this->Riemann_A2_cache.find(v, exact); }
-    
-    //! get Riemann A3 label
-    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES>, contexted_value<std::string> > >
-    Riemann_A3(std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v, bool exact=true)
-      { return this->Riemann_A3_cache.find(v, exact); }
-    
-    //! get Riemann B3 label
-    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES>, contexted_value<std::string> > >
-    Riemann_B3(std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v, bool exact=true)
-      { return this->Riemann_B3_cache.find(v, exact); }
 
 
     //! get phase-space flattening function
@@ -163,26 +143,6 @@ class resource_manager
                      std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v)
       { this->dddV_cache.assign(d, v); }
     
-    //! assign connexion resource label
-    void assign_connexion(const contexted_value<std::string>& c,
-                          std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v)
-      { this->connexion_cache.assign(c, v); }
-    
-    //! assign Riemann A2 resource label
-    void assign_Riemann_A2(const contexted_value<std::string>& R,
-                           std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v)
-      { this->Riemann_A2_cache.assign(R, v); }
-    
-    //! assign Riemann A3 resource label
-    void assign_Riemann_A3(const contexted_value<std::string>& R,
-                           std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v)
-      { this->Riemann_A3_cache.assign(R, v); }
-    
-    //! assign Riemann B3 resource label
-    void assign_Riemann_B3(const contexted_value<std::string>& R,
-                           std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v)
-      { this->Riemann_B3_cache.assign(R, v); }
-    
     
     //! assign phase-space flattening function
     void assign_phase_flatten(const contexted_value<std::string>& f)
@@ -208,7 +168,7 @@ class resource_manager
 
     //! release phase-space coordinate resource
     void release_coordinates()
-      { this->connexion_cache.reset(); }
+      { this->coordinates_cache.reset(); }
 
     //! release V,i resource
     void release_dV()
@@ -221,22 +181,6 @@ class resource_manager
     //! release V,ijk resource
     void release_dddV()
       { this->dddV_cache.reset(); }
-
-    //! release connexion resource
-    void release_connexion()
-      { this->connexion_cache.reset(); }
-
-    //! release Riemann A2 resource
-    void release_Riemann_A2()
-      { this->Riemann_A2_cache.reset(); }
-    
-    //! release Riemann A3 resource
-    void release_Riemann_A3()
-      { this->Riemann_A3_cache.reset(); }
-    
-    //! release Riemann B3 resource
-    void release_Riemann_B3()
-      { this->Riemann_B3_cache.reset(); }
 
 
     //! release phase-space flattening function
@@ -283,18 +227,6 @@ class resource_manager
 
     //! cache V,ijk resource labels
     indexed_resource<RESOURCE_INDICES::DDDV_INDICES, std::string> dddV_cache;
-
-    //! cache connexion resource labels
-    indexed_resource<RESOURCE_INDICES::CONNEXION_INDICES, std::string> connexion_cache;
-
-    //! cache Riemann A2 resource labels
-    indexed_resource<RESOURCE_INDICES::RIEMANN_A2_INDICES, std::string> Riemann_A2_cache;
-    
-    //! cache Riemann A3 resource labels
-    indexed_resource<RESOURCE_INDICES::RIEMANN_A3_INDICES, std::string> Riemann_A3_cache;
-    
-    //! cache Riemann B3 resource labels
-    indexed_resource<RESOURCE_INDICES::RIEMANN_B3_INDICES, std::string> Riemann_B3_cache;
 
 
     //! cache flattening function - full phase-space coordinates

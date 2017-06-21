@@ -30,7 +30,8 @@
 namespace canonical
   {
 
-    resources::resources(translator_data& p, resource_manager& m, expression_cache& c, shared_resources& s, boost::timer::cpu_timer& t)
+    resources::resources(translator_data& p, canonical_resource_manager& m, expression_cache& c,
+                         shared_resources& s, boost::timer::cpu_timer& t)
       : mgr(m),
         cache(c),
         payload(p),

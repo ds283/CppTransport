@@ -32,6 +32,7 @@
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, lm, prn))
 #define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, lm, p.get_symbol_factory(), prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -40,10 +41,10 @@ namespace macro_packages
     gauge_xfm::gauge_xfm(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        emplace_rule(index_package, BIND(replace_zeta1, "ZETA_XFM_1"));
-        emplace_rule(index_package, BIND_SYMBOL(replace_zeta2, "ZETA_XFM_2"));
-        emplace_rule(index_package, BIND(replace_dN1, "DELTAN_XFM_1"));
-        emplace_rule(index_package, BIND(replace_dN2, "DELTAN_XFM_2"));
+        EMPLACE(index_package, BIND(replace_zeta1, "ZETA_XFM_1"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_zeta2, "ZETA_XFM_2"));
+        EMPLACE(index_package, BIND(replace_dN1, "DELTAN_XFM_1"));
+        EMPLACE(index_package, BIND(replace_dN2, "DELTAN_XFM_2"));
       }
 
 

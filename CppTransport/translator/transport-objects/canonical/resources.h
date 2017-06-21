@@ -64,7 +64,8 @@ namespace canonical
       public:
 
         //! constructor
-        resources(translator_data& p, resource_manager& m, expression_cache& c, shared_resources& s, boost::timer::cpu_timer& t);
+        resources(translator_data& p, canonical_resource_manager& m, expression_cache& c,
+                  shared_resources& s, boost::timer::cpu_timer& t);
 
         //! destructor is default
         ~resources() = default;
@@ -184,7 +185,7 @@ namespace canonical
         // CACHES
 
         //! resource manager object
-        resource_manager& mgr;
+        canonical_resource_manager& mgr;
 
         //! expression cache
         expression_cache& cache;

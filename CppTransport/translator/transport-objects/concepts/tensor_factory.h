@@ -75,7 +75,6 @@ class tensor_factory
     tensor_factory(translator_data& p, expression_cache& c)
       : payload(p),
         cache(c),
-        shared(p, mgr, c),
         fl(p.model.get_number_params(), p.model.get_number_fields()),
         traits(p.model.get_number_fields())
       {
@@ -101,10 +100,7 @@ class tensor_factory
     virtual std::unique_ptr<Hubble> make_Hubble(language_printer& p, cse& cw) = 0;
 
     //! obtain a parameter object
-    virtual std::unique_ptr<parameters> make_parameters(language_printer& p, cse& cw)
-      {
-        return std::make_unique<parameters>(p, cw, this->shared, this->fl, this->traits);
-      }
+    virtual std::unique_ptr<parameters> make_parameters(language_printer& p, cse& cw) = 0;
     
     //! obtain a fields object
     virtual std::unique_ptr<fields> make_fields(language_printer& p, cse& cw) = 0;
@@ -161,12 +157,12 @@ class tensor_factory
     virtual std::unique_ptr<dN2> make_dN2(language_printer& p, cse& cw) = 0;
 
 
-    // INTERFACE -- PROVIDE ACCESS TO AGENTS
+    // INTERFACE -- PROVIDE ACCESS TO RESOURCE MANAGER
 
   public:
 
     //! link to resource manager object
-    resource_manager& get_resource_manager() { return(this->mgr); }
+    virtual resource_manager& get_resource_manager() = 0;
     
     
     // INTERFACE -- QUERY FOR PERFORMANCE
@@ -189,14 +185,8 @@ class tensor_factory
     //! GiNaC expression cache
     expression_cache& cache;
 
-    //! resource manager
-    resource_manager mgr;
-
 
     // RESOURCES
-
-    //! shared resources; must be constructed *after* resource_manager
-    shared_resources shared;
 
 
     // AGENTS

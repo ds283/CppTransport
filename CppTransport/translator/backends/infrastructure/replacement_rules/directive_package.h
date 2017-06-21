@@ -109,11 +109,7 @@ namespace macro_packages
     template <typename RulePackage>
     void directive_package::emplace_directive(RulePackage& pkg, typename RulePackage::value_type rule)
       {
-        // determine whether this directive is enabled for this model type
-        if(rule->enable_if(this->data_payload.model.get_lagrangian_type()))
-          {
-            pkg.emplace_back(std::move(rule));
-          }
+        pkg.emplace_back(std::move(rule));
       }
 
   }   // namespace macro_packages;

@@ -23,4 +23,22 @@
 // --@@
 //
 
+
 #include "resource_manager.h"
+
+
+namespace canonical
+  {
+    
+    void canonical_resource_manager::release()
+      {
+        this->resource_manager::release();
+      }
+    
+    
+    void canonical_resource_manager::release_flatteners()
+      {
+        this->resource_manager::release_flatteners();
+      }
+    
+  }   // namespace canonical

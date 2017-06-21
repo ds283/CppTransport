@@ -33,6 +33,7 @@
 
 #define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, p))
 #define BIND_IF_SYMBOL(X, N) std::move(std::make_unique<X>(N, p, istack))
+#define EMPLACE(pkg, obj) try { emplace_directive(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -41,11 +42,11 @@ namespace macro_packages
     directives::directives(translator_data& p)
       : directive_package(p)
       {
-        emplace_directive(simple_package, BIND_IF_SYMBOL(if_directive, "IF"));
-        emplace_directive(simple_package, BIND_IF_SYMBOL(else_directive, "ELSE"));
-        emplace_directive(simple_package, BIND_IF_SYMBOL(endif_directive, "ENDIF"));
+        EMPLACE(simple_package, BIND_IF_SYMBOL(if_directive, "IF"));
+        EMPLACE(simple_package, BIND_IF_SYMBOL(else_directive, "ELSE"));
+        EMPLACE(simple_package, BIND_IF_SYMBOL(endif_directive, "ENDIF"));
 
-        emplace_directive(index_package, BIND_SYMBOL(set_directive, "SET"));
+        EMPLACE(index_package, BIND_SYMBOL(set_directive, "SET"));
       }
 
 

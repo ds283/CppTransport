@@ -163,4 +163,10 @@ namespace nontrivial_metric
         return std::make_unique<nontrivial_metric_coordinates>(p, cw, this->res, this->shared, this->fl, this->traits);
       }
     
+    
+    std::unique_ptr<parameters> tensor_factory::make_parameters(language_printer& p, cse& cw)
+      {
+        return std::make_unique<parameters>(p, cw, this->shared, this->fl, this->traits);
+      }
+    
   }

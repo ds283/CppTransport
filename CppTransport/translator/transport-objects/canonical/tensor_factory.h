@@ -44,6 +44,7 @@ namespace canonical
         //! constructor
         tensor_factory(translator_data& p, expression_cache& c)
           : ::tensor_factory(p, c),
+            shared(p, mgr, c),
             res(p, mgr, c, shared, compute_timer)       // entitled to assume that mgr, shared, compute_timer have been constructed at this point
           {
           }
@@ -62,72 +63,88 @@ namespace canonical
         // expect ::u1, ::u2, etc.
 
         //! obtain a Hubble-object
-        virtual std::unique_ptr<Hubble> make_Hubble(language_printer& p, cse& cw) override;
+        std::unique_ptr<Hubble> make_Hubble(language_printer& p, cse& cw) override;
+    
+        //! obtain a parameter object
+        std::unique_ptr<parameters> make_parameters(language_printer& p, cse& cw) override;
     
         //! obtain a fields object
-        virtual std::unique_ptr<fields> make_fields(language_printer& p, cse& cw) override;
+        std::unique_ptr<fields> make_fields(language_printer& p, cse& cw) override;
     
         //! obtain a coordinates object
-        virtual std::unique_ptr<coordinates> make_coordinates(language_printer& p, cse& cw) override;
+        std::unique_ptr<coordinates> make_coordinates(language_printer& p, cse& cw) override;
 
         //! obtain a dV-tensor
-        virtual std::unique_ptr<dV> make_dV(language_printer& p, cse& cw) override;
+        std::unique_ptr<dV> make_dV(language_printer& p, cse& cw) override;
 
         //! obtain a ddV-tensor
-        virtual std::unique_ptr<ddV> make_ddV(language_printer& p, cse& cw) override;
+        std::unique_ptr<ddV> make_ddV(language_printer& p, cse& cw) override;
 
         //! obtain a dddV-tensor
-        virtual std::unique_ptr<dddV> make_dddV(language_printer& p, cse& cw) override;
+        std::unique_ptr<dddV> make_dddV(language_printer& p, cse& cw) override;
 
         //! obtain an SR_velocity tensor
-        virtual std::unique_ptr<SR_velocity> make_SR_velocity(language_printer& p, cse& cw) override;
+        std::unique_ptr<SR_velocity> make_SR_velocity(language_printer& p, cse& cw) override;
 
         //! obtain an A-tensor
-        virtual std::unique_ptr<A> make_A(language_printer& p, cse& cw) override;
+        std::unique_ptr<A> make_A(language_printer& p, cse& cw) override;
     
         //! obtain an Atilde-tensor
-        virtual std::unique_ptr<Atilde> make_Atilde(language_printer& p, cse& cw) override;
+        std::unique_ptr<Atilde> make_Atilde(language_printer& p, cse& cw) override;
 
         //! obtain a B-tensor
-        virtual std::unique_ptr<B> make_B(language_printer& p, cse& cw) override;
+        std::unique_ptr<B> make_B(language_printer& p, cse& cw) override;
 
         //! obtain a C-tensor
-        virtual std::unique_ptr<C> make_C(language_printer& p, cse& cw) override;
+        std::unique_ptr<C> make_C(language_printer& p, cse& cw) override;
 
         //! obtain an M-tensor
-        virtual std::unique_ptr<M> make_M(language_printer& p, cse& cw) override;
+        std::unique_ptr<M> make_M(language_printer& p, cse& cw) override;
 
         //! obtain a u1-tensor object
-        virtual std::unique_ptr<u1> make_u1(language_printer& p, cse& cw) override;
+        std::unique_ptr<u1> make_u1(language_printer& p, cse& cw) override;
 
         //! obtain a u2-tensor object
-        virtual std::unique_ptr<u2> make_u2(language_printer& p, cse& cw) override;
+        std::unique_ptr<u2> make_u2(language_printer& p, cse& cw) override;
 
         //! obtain a u3-tensor object
-        virtual std::unique_ptr<u3> make_u3(language_printer& p, cse& cw) override;
+        std::unique_ptr<u3> make_u3(language_printer& p, cse& cw) override;
 
         //! obtain a zeta1-tensor object
-        virtual std::unique_ptr<zeta1> make_zeta1(language_printer& p, cse& cw) override;
+        std::unique_ptr<zeta1> make_zeta1(language_printer& p, cse& cw) override;
 
         //! obtain a zeta2-tensor object
-        virtual std::unique_ptr<zeta2> make_zeta2(language_printer& p, cse& cw) override;
+        std::unique_ptr<zeta2> make_zeta2(language_printer& p, cse& cw) override;
 
         //! obtain a dN1-tensor object
-        virtual std::unique_ptr<dN1> make_dN1(language_printer& p, cse& cw) override;
+        std::unique_ptr<dN1> make_dN1(language_printer& p, cse& cw) override;
 
         //! obtain a dN2-tensor object
-        virtual std::unique_ptr<dN2> make_dN2(language_printer& p, cse& cw) override;
+        std::unique_ptr<dN2> make_dN2(language_printer& p, cse& cw) override;
+    
+    
+        // INTERFACE -- PROVIDE ACCESS TO RESOURCE MANAGER
+  
+      public:
+    
+        //! link to resource manager object
+        canonical_resource_manager& get_resource_manager() override { return this->mgr; }
 
 
         // INTERNAL DATA
 
       private:
-
-
+        
         // RESOURCES
+    
+        //! canonical resource manager
+        canonical_resource_manager mgr;
+    
+        //! shared resources
+        shared_resources shared;
 
         //! canonical resources
-        resources res;     // must be constructed after compute_timer
+        resources res;
 
       };
 

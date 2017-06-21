@@ -31,6 +31,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, lm, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -39,17 +40,17 @@ namespace macro_packages
     flow_tensors::flow_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        emplace_rule(pre_package, BIND(replace_V, "POTENTIAL"));
-        emplace_rule(pre_package, BIND(replace_Hsq, "HUBBLE_SQ"));
-        emplace_rule(pre_package, BIND(replace_eps, "EPSILON"));
+        EMPLACE(pre_package, BIND(replace_V, "POTENTIAL"));
+        EMPLACE(pre_package, BIND(replace_Hsq, "HUBBLE_SQ"));
+        EMPLACE(pre_package, BIND(replace_eps, "EPSILON"));
 
-        emplace_rule(index_package, BIND(replace_parameter, "PARAMETER"));
-        emplace_rule(index_package, BIND(replace_field, "FIELD"));
-        emplace_rule(index_package, BIND(replace_coordinate, "COORDINATE"));
-        emplace_rule(index_package, BIND(replace_SR_velocity, "SR_VELOCITY"));
-        emplace_rule(index_package, BIND(replace_dV, "DV"));
-        emplace_rule(index_package, BIND(replace_ddV, "DDV"));
-        emplace_rule(index_package, BIND(replace_dddV, "DDDV"));
+        EMPLACE(index_package, BIND(replace_parameter, "PARAMETER"));
+        EMPLACE(index_package, BIND(replace_field, "FIELD"));
+        EMPLACE(index_package, BIND(replace_coordinate, "COORDINATE"));
+        EMPLACE(index_package, BIND(replace_SR_velocity, "SR_VELOCITY"));
+        EMPLACE(index_package, BIND(replace_dV, "DV"));
+        EMPLACE(index_package, BIND(replace_ddV, "DDV"));
+        EMPLACE(index_package, BIND(replace_dddV, "DDDV"));
       }
 
 

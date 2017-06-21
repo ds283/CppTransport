@@ -32,6 +32,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, m, p))
+#define EMPLACE(pkg, obj) try { emplace_directive(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -40,22 +41,22 @@ namespace macro_packages
     resources::resources(translator_data& p, resource_manager& m)
       : directive_package(p)
       {
-        emplace_directive(simple_package, BIND(set_params, "RESOURCE_PARAMETERS"));
-        emplace_directive(simple_package, BIND(set_phase_flatten, "PHASE_FLATTEN"));
-        emplace_directive(simple_package, BIND(set_field_flatten, "FIELD_FLATTEN"));
-        emplace_directive(simple_package, BIND(release_flatteners, "RELEASE_FLATTENERS"));
-        emplace_directive(simple_package, BIND(release, "RESOURCE_RELEASE"));
-        emplace_directive(simple_package, BIND(set_working_type, "WORKING_TYPE"));
-        emplace_directive(simple_package, BIND(release_working_type, "RELEASE_WORKING_TYPE"));
+        EMPLACE(simple_package, BIND(set_params, "RESOURCE_PARAMETERS"));
+        EMPLACE(simple_package, BIND(set_phase_flatten, "PHASE_FLATTEN"));
+        EMPLACE(simple_package, BIND(set_field_flatten, "FIELD_FLATTEN"));
+        EMPLACE(simple_package, BIND(release_flatteners, "RELEASE_FLATTENERS"));
+        EMPLACE(simple_package, BIND(release, "RESOURCE_RELEASE"));
+        EMPLACE(simple_package, BIND(set_working_type, "WORKING_TYPE"));
+        EMPLACE(simple_package, BIND(release_working_type, "RELEASE_WORKING_TYPE"));
 
-        emplace_directive(index_package, BIND(set_coordinates, "RESOURCE_COORDINATES"));
-        emplace_directive(index_package, BIND(set_dV, "RESOURCE_DV"));
-        emplace_directive(index_package, BIND(set_ddV, "RESOURCE_DDV"));
-        emplace_directive(index_package, BIND(set_dddV, "RESOURCE_DDDV"));
-        emplace_directive(index_package, BIND(set_connexion, "RESOURCE_CONNECTION"));
-        emplace_directive(index_package, BIND(set_Riemann_A2, "RESOURCE_RIEMANN_A2"));
-        emplace_directive(index_package, BIND(set_Riemann_A3, "RESOURCE_RIEMANN_A3"));
-        emplace_directive(index_package, BIND(set_Riemann_B3, "RESOURCE_RIEMANN_B3"));
+        EMPLACE(index_package, BIND(set_coordinates, "RESOURCE_COORDINATES"));
+        EMPLACE(index_package, BIND(set_dV, "RESOURCE_DV"));
+        EMPLACE(index_package, BIND(set_ddV, "RESOURCE_DDV"));
+        EMPLACE(index_package, BIND(set_dddV, "RESOURCE_DDDV"));
+        EMPLACE(index_package, BIND(set_connexion, "RESOURCE_CONNECTION"));
+        EMPLACE(index_package, BIND(set_Riemann_A2, "RESOURCE_RIEMANN_A2"));
+        EMPLACE(index_package, BIND(set_Riemann_A3, "RESOURCE_RIEMANN_A3"));
+        EMPLACE(index_package, BIND(set_Riemann_B3, "RESOURCE_RIEMANN_B3"));
       }
 
 

@@ -38,6 +38,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace vexcl
@@ -46,7 +47,7 @@ namespace vexcl
     vexcl_kernels::vexcl_kernels(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        emplace_rule(pre_package, BIND(import_kernel, "IMPORT_KERNEL"));
+        EMPLACE(pre_package, BIND(import_kernel, "IMPORT_KERNEL"));
       }
 
 

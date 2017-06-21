@@ -31,6 +31,7 @@
 
 
 #define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, lm, p.get_symbol_factory(), prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -39,11 +40,11 @@ namespace macro_packages
     lagrangian_tensors::lagrangian_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        emplace_rule(index_package, BIND_SYMBOL(replace_A, "A_TENSOR"));
-        emplace_rule(index_package, BIND_SYMBOL(replace_Atilde, "ATILDE_TENSOR"));
-        emplace_rule(index_package, BIND_SYMBOL(replace_B, "B_TENSOR"));
-        emplace_rule(index_package, BIND_SYMBOL(replace_C, "C_TENSOR"));
-        emplace_rule(index_package, BIND_SYMBOL(replace_M, "M_TENSOR"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_A, "A_TENSOR"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_Atilde, "ATILDE_TENSOR"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_B, "B_TENSOR"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_C, "C_TENSOR"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_M, "M_TENSOR"));
       }
 
 

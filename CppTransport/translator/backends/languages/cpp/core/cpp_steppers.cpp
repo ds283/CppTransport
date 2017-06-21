@@ -34,6 +34,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace cpp
@@ -45,8 +46,8 @@ namespace cpp
     cpp_steppers::cpp_steppers(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        emplace_rule(pre_package, BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
-        emplace_rule(pre_package, BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
       }
 
 

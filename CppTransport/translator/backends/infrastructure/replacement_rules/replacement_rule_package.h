@@ -163,11 +163,7 @@ namespace macro_packages
     template <typename RulePackage>
     void replacement_rule_package::emplace_rule(RulePackage& pkg, typename RulePackage::value_type rule)
       {
-        // determine whether this rule is enabled for this model type
-        if(rule->enable_if(this->data_payload.model.get_lagrangian_type()))
-          {
-            pkg.emplace_back(std::move(rule));
-          }
+        pkg.emplace_back(std::move(rule));
       }
 
   }

@@ -43,6 +43,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -52,41 +53,41 @@ namespace macro_packages
     fundamental::fundamental(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        emplace_rule(pre_package, BIND(replace_tool, "TOOL"));
-        emplace_rule(pre_package, BIND(replace_version, "VERSION"));
-        emplace_rule(pre_package, BIND(replace_numeric_version, "NUMERIC_VERSION"));
-        emplace_rule(pre_package, BIND(replace_guard, "GUARD"));
-        emplace_rule(pre_package, BIND(replace_date, "DATE"));
-        emplace_rule(pre_package, BIND(replace_source, "SOURCE"));
-        emplace_rule(pre_package, BIND(replace_model, "MODEL"));
-        emplace_rule(pre_package, BIND(replace_name, "NAME"));
-        emplace_rule(pre_package, BIND(replace_author, "AUTHORS"));
-        emplace_rule(pre_package, BIND(replace_citeguide, "CITEGUIDE"));
-        emplace_rule(pre_package, BIND(replace_description, "DESCRIPTION"));
-        emplace_rule(pre_package, BIND(replace_license, "LICENSE"));
-        emplace_rule(pre_package, BIND(replace_revision, "REVISION"));
-        emplace_rule(pre_package, BIND(replace_references, "REFERENCES"));
-        emplace_rule(pre_package, BIND(replace_urls, "URLS"));
-        emplace_rule(pre_package, BIND(replace_uid, "UNIQUE_ID"));
-        emplace_rule(pre_package, BIND(replace_header, "HEADER"));
-        emplace_rule(pre_package, BIND(replace_core, "CORE"));
-        emplace_rule(pre_package, BIND(replace_number_fields, "NUMBER_FIELDS"));
-        emplace_rule(pre_package, BIND(replace_number_params, "NUMBER_PARAMS"));
-        emplace_rule(pre_package, BIND(replace_field_list, "FIELD_NAME_LIST"));
-        emplace_rule(pre_package, BIND(replace_latex_list, "LATEX_NAME_LIST"));
-        emplace_rule(pre_package, BIND(replace_param_list, "PARAM_NAME_LIST"));
-        emplace_rule(pre_package, BIND(replace_platx_list, "PLATX_NAME_LIST"));
-        emplace_rule(pre_package, BIND(replace_state_list, "STATE_NAME_LIST"));
-        emplace_rule(pre_package, BIND(replace_b_abs_err, "BACKG_ABS_ERR"));
-        emplace_rule(pre_package, BIND(replace_b_rel_err, "BACKG_REL_ERR"));
-        emplace_rule(pre_package, BIND(replace_b_step, "BACKG_STEP_SIZE"));
-        emplace_rule(pre_package, BIND(replace_b_stepper, "BACKG_STEPPER"));
-        emplace_rule(pre_package, BIND(replace_p_abs_err, "PERT_ABS_ERR"));
-        emplace_rule(pre_package, BIND(replace_p_rel_err, "PERT_REL_ERR"));
-        emplace_rule(pre_package, BIND(replace_p_step, "PERT_STEP_SIZE"));
-        emplace_rule(pre_package, BIND(replace_p_stepper, "PERT_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_tool, "TOOL"));
+        EMPLACE(pre_package, BIND(replace_version, "VERSION"));
+        EMPLACE(pre_package, BIND(replace_numeric_version, "NUMERIC_VERSION"));
+        EMPLACE(pre_package, BIND(replace_guard, "GUARD"));
+        EMPLACE(pre_package, BIND(replace_date, "DATE"));
+        EMPLACE(pre_package, BIND(replace_source, "SOURCE"));
+        EMPLACE(pre_package, BIND(replace_model, "MODEL"));
+        EMPLACE(pre_package, BIND(replace_name, "NAME"));
+        EMPLACE(pre_package, BIND(replace_author, "AUTHORS"));
+        EMPLACE(pre_package, BIND(replace_citeguide, "CITEGUIDE"));
+        EMPLACE(pre_package, BIND(replace_description, "DESCRIPTION"));
+        EMPLACE(pre_package, BIND(replace_license, "LICENSE"));
+        EMPLACE(pre_package, BIND(replace_revision, "REVISION"));
+        EMPLACE(pre_package, BIND(replace_references, "REFERENCES"));
+        EMPLACE(pre_package, BIND(replace_urls, "URLS"));
+        EMPLACE(pre_package, BIND(replace_uid, "UNIQUE_ID"));
+        EMPLACE(pre_package, BIND(replace_header, "HEADER"));
+        EMPLACE(pre_package, BIND(replace_core, "CORE"));
+        EMPLACE(pre_package, BIND(replace_number_fields, "NUMBER_FIELDS"));
+        EMPLACE(pre_package, BIND(replace_number_params, "NUMBER_PARAMS"));
+        EMPLACE(pre_package, BIND(replace_field_list, "FIELD_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_latex_list, "LATEX_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_param_list, "PARAM_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_platx_list, "PLATX_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_state_list, "STATE_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_b_abs_err, "BACKG_ABS_ERR"));
+        EMPLACE(pre_package, BIND(replace_b_rel_err, "BACKG_REL_ERR"));
+        EMPLACE(pre_package, BIND(replace_b_step, "BACKG_STEP_SIZE"));
+        EMPLACE(pre_package, BIND(replace_b_stepper, "BACKG_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_p_abs_err, "PERT_ABS_ERR"));
+        EMPLACE(pre_package, BIND(replace_p_rel_err, "PERT_REL_ERR"));
+        EMPLACE(pre_package, BIND(replace_p_step, "PERT_STEP_SIZE"));
+        EMPLACE(pre_package, BIND(replace_p_stepper, "PERT_STEPPER"));
 
-        emplace_rule(post_package, BIND(replace_unique, "UNIQUE"));
+        EMPLACE(post_package, BIND(replace_unique, "UNIQUE"));
       }
 
 

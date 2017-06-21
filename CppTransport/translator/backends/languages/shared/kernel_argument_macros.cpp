@@ -37,6 +37,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace shared
@@ -46,12 +47,12 @@ namespace shared
     kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        emplace_rule(pre_package, BIND(args_params, "PARAM_ARGS"));
-        emplace_rule(pre_package, BIND(args_1index, "COORD_ARGS"));
-        emplace_rule(pre_package, BIND(args_2index, "U2_ARGS"));
-        emplace_rule(pre_package, BIND(args_2index, "TWOPF_ARGS"));
-        emplace_rule(pre_package, BIND(args_3index, "U3_ARGS"));
-        emplace_rule(pre_package, BIND(args_3index, "THREEPF_ARGS"));
+        EMPLACE(pre_package, BIND(args_params, "PARAM_ARGS"));
+        EMPLACE(pre_package, BIND(args_1index, "COORD_ARGS"));
+        EMPLACE(pre_package, BIND(args_2index, "U2_ARGS"));
+        EMPLACE(pre_package, BIND(args_2index, "TWOPF_ARGS"));
+        EMPLACE(pre_package, BIND(args_3index, "U3_ARGS"));
+        EMPLACE(pre_package, BIND(args_3index, "THREEPF_ARGS"));
       }
 
 

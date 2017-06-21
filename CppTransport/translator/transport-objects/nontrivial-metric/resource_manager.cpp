@@ -23,4 +23,26 @@
 // --@@
 //
 
+
 #include "resource_manager.h"
+
+
+namespace nontrivial_metric
+  {
+
+    void nontrivial_metric_resource_manager::release()
+      {
+        this->connexion_cache.reset();
+        this->Riemann_A2_cache.reset();
+        this->Riemann_A3_cache.reset();
+        this->Riemann_B3_cache.reset();
+        this->canonical_resource_manager::release();
+      }
+    
+    
+    void nontrivial_metric_resource_manager::release_flatteners()
+      {
+        this->canonical_resource_manager::release_flatteners();
+      }
+    
+  }   // namespace nontrivial_metric

@@ -32,6 +32,7 @@
 
 
 #define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, lm, p.get_symbol_factory(), prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -40,9 +41,9 @@ namespace macro_packages
     utensors::utensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        emplace_rule(index_package, BIND_SYMBOL(replace_U1, "U1_TENSOR"));
-        emplace_rule(index_package, BIND_SYMBOL(replace_U2, "U2_TENSOR"));
-        emplace_rule(index_package, BIND_SYMBOL(replace_U3, "U3_TENSOR"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_U1, "U1_TENSOR"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_U2, "U2_TENSOR"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_U3, "U3_TENSOR"));
       }
 
 
