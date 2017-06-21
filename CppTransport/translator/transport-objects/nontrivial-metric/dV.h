@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/dV.h"
+#include "concepts/tensors/dV.h"
 #include "utilities/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 

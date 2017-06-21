@@ -1,7 +1,7 @@
 //
-// Created by David Seery on 20/12/2015.
+// Created by David Seery on 16/06/2017.
 // --@@
-// Copyright (c) 2016 University of Sussex. All rights reserved.
+// Copyright (c) 2017 University of Sussex. All rights reserved.
 //
 // This file is part of the CppTransport platform.
 //
@@ -23,48 +23,54 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_DN2_H
-#define CPPTRANSPORT_DN2_H
+#ifndef CPPTRANSPORT_COORDINATES_H
+#define CPPTRANSPORT_COORDINATES_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include <tuple>
+
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
+#include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto DN2_TENSOR_INDICES = 2;
+constexpr auto COORDINATE_TENSOR_INDICES = 1;
 
 
-class dN2: public transport_tensor
+class coordinates: public transport_tensor
   {
-
+    
     // CONSTRUCTOR, DESTRUCTOR
-
+    
   public:
-
+    
     //! constructor is default
-    dN2() = default;
-
+    coordinates() = default;
+    
     //! destructor is default
-    virtual ~dN2() = default;
-
-
+    virtual ~coordinates() = default;
+    
+    
     // INTERFACE
-
+    
   public:
-
+    
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
     compute(const index_literal_list& indices) = 0;
-
+    
     //! evaluate component of tensor
-    virtual GiNaC::ex
-    compute_component(phase_index i, phase_index j) = 0;
-
+    virtual std::pair<GiNaC::ex, GiNaC::ex>
+    compute_component(field_index i) = 0;
+    
+    //! evaluate lambda for tensor
+    virtual std::unique_ptr<atomic_lambda>
+    compute_lambda(const index_literal& i) = 0;
+    
   };
 
 
-
-#endif //CPPTRANSPORT_DN2_H
+#endif //CPPTRANSPORT_COORDINATES_H

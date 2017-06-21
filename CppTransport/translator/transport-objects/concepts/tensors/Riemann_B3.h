@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_C_H
-#define CPPTRANSPORT_C_H
+#ifndef CPPTRANSPORT_RIEMANN_B3_H
+#define CPPTRANSPORT_RIEMANN_B3_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "transport-objects/concepts/transport_tensor.h"
+#include "transport-objects/concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto C_TENSOR_INDICES = 3;
+constexpr auto RIEMANN_B3_TENSOR_INDICES = 3;
 
 
-class C: public transport_tensor
+class Riemann_B3: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class C: public transport_tensor
   public:
 
     //! constructor is default
-    C() = default;
+    Riemann_B3() = default;
 
     //! destructor is default
-    virtual ~C() = default;
+    virtual ~Riemann_B3() = default;
 
 
     // INTERFACE
@@ -58,21 +58,18 @@ class C: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-            GiNaC::symbol& a) = 0;
+    compute(const index_literal_list& indices) = 0;
 
     //! evaluate component of tensor
     virtual GiNaC::ex
-    compute_component(field_index i, field_index j, field_index k,
-                                        GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+    compute_component(field_index i, field_index j, field_index k) = 0;
 
     //! evaluate lambda for tensor
     virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_C_H
+#endif //CPPTRANSPORT_RIEMANN_B3_H

@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/Riemann_B3.h"
+#include "concepts/tensors/Riemann_B3.h"
 #include "utilities/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 

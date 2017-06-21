@@ -30,13 +30,6 @@
 #include "concepts/tensor_factory.h"
 #include "resources.h"
 
-#include "concepts/connexion.h"
-#include "concepts/metric.h"
-#include "concepts/metric_inverse.h"
-#include "concepts/Riemann_A2.h"
-#include "concepts/Riemann_A3.h"
-#include "concepts/Riemann_B3.h"
-
 
 namespace nontrivial_metric
   {

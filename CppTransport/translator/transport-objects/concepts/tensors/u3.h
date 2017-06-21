@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 19/12/2015.
+// Created by David Seery on 20/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_DDDV_H
-#define CPPTRANSPORT_DDDV_H
+#ifndef CPPTRANSPORT_U3_H
+#define CPPTRANSPORT_U3_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "transport-objects/concepts/transport_tensor.h"
+#include "transport-objects/concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto DDDV_TENSOR_INDICES = 3;
+constexpr auto U3_TENSOR_INDICES = 3;
 
 
-class dddV: public transport_tensor
+class u3: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class dddV: public transport_tensor
   public:
 
     //! constructor is default
-    dddV() = default;
+    u3() = default;
 
     //! destructor is default
-    virtual ~dddV() = default;
+    virtual ~u3() = default;
 
 
     // INTERFACE
@@ -58,14 +58,21 @@ class dddV: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices) = 0;
+    compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
+            GiNaC::symbol& a) = 0;
+
+    //! evaluate component of tensor
+    virtual GiNaC::ex
+    compute_component(phase_index i, phase_index j, phase_index k,
+                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
 
     //! evaluate lambda for tensor
-    virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k) = 0;
+    virtual std::unique_ptr<map_lambda>
+    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_DDDV_H
+#endif //CPPTRANSPORT_U3_H

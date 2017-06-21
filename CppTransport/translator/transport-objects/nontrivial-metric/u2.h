@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/u2.h"
+#include "concepts/tensors/u2.h"
 #include "utilities/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 
@@ -40,7 +40,6 @@
 
 #include "language_printer.h"
 #include "expression_cache.h"
-
 
 
 namespace nontrivial_metric

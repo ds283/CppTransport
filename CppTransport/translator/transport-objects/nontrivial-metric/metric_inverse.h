@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/metric_inverse.h"
+#include "concepts/tensors/metric_inverse.h"
 #include "utilities/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 

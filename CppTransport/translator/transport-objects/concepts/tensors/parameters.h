@@ -29,12 +29,11 @@
 
 #include <memory>
 
-#include "concepts/fields.h"
 #include "utilities/shared_resources.h"
 #include "canonical/resources.h"
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 #include "indices.h"
 
 #include "lambdas.h"

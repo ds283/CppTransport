@@ -23,22 +23,16 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_METRIC_H
-#define CPPTRANSPORT_METRIC_H
+#ifndef CPPTRANSPORT_HUBBLE_H
+#define CPPTRANSPORT_HUBBLE_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
-
-#include "indices.h"
-#include "lambdas.h"
-#include "index_literal.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 
-constexpr auto METRIC_TENSOR_INDICES = 2;
-
-
-class metric: public transport_tensor
+// not Hubble does not inherit from transport_tensor
+class Hubble
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,30 +40,26 @@ class metric: public transport_tensor
   public:
 
     //! constructor is default
-    metric() = default;
+    Hubble() = default;
 
     //! destructor is default
-    virtual ~metric() = default;
+    virtual ~Hubble() = default;
 
 
     // INTERFACE
 
   public:
 
-    //! evaluate full tensor, returning a flattened list
-    virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices) = 0;
+    //! evaluate potential
+    virtual GiNaC::ex compute_V() = 0;
 
-    //! evaluate component of tensor
-    virtual GiNaC::ex
-    compute_component(field_index i, field_index j) = 0;
+    //! evaluate Hubble parameter
+    virtual GiNaC::ex compute_Hsq() = 0;
 
-    //! evaluate lambda for tensor
-    virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j) = 0;
+    //! evaluate epsilon parameter
+    virtual GiNaC::ex compute_eps() = 0;
 
   };
 
 
-
-#endif //CPPTRANSPORT_METRIC_H
+#endif //CPPTRANSPORT_HUBBLE_H

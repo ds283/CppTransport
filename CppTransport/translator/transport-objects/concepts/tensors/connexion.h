@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_RIEMANN_B3_H
-#define CPPTRANSPORT_RIEMANN_B3_H
+#ifndef CPPTRANSPORT_CONNEXION_H
+#define CPPTRANSPORT_CONNEXION_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto RIEMANN_B3_TENSOR_INDICES = 3;
+constexpr auto CONNEXION_TENSOR_INDICES = 3;
 
 
-class Riemann_B3: public transport_tensor
+class connexion: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class Riemann_B3: public transport_tensor
   public:
 
     //! constructor is default
-    Riemann_B3() = default;
+    connexion() = default;
 
     //! destructor is default
-    virtual ~Riemann_B3() = default;
+    virtual ~connexion() = default;
 
 
     // INTERFACE
@@ -72,4 +72,4 @@ class Riemann_B3: public transport_tensor
 
 
 
-#endif //CPPTRANSPORT_RIEMANN_B3_H
+#endif //CPPTRANSPORT_CONNEXION_H

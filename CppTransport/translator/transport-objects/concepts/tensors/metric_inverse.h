@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 20/12/2015.
+// Created by David Seery on 19/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_ZETA2_H
-#define CPPTRANSPORT_ZETA2_H
+#ifndef CPPTRANSPORT_METRIC_INVERSE_H
+#define CPPTRANSPORT_METRIC_INVERSE_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto ZETA2_TENSOR_INDICES = 2;
+constexpr auto METRIC_INVERSE_TENSOR_INDICES = 2;
 
 
-class zeta2: public transport_tensor
+class metric_inverse: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class zeta2: public transport_tensor
   public:
 
     //! constructor is default
-    zeta2() = default;
+    metric_inverse() = default;
 
     //! destructor is default
-    virtual ~zeta2() = default;
+    virtual ~metric_inverse() = default;
 
 
     // INTERFACE
@@ -58,20 +58,18 @@ class zeta2: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a) = 0;
+    compute(const index_literal_list& indices) = 0;
 
     //! evaluate component of tensor
     virtual GiNaC::ex
-    compute_component(phase_index i, phase_index j,
-                      GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a) = 0;
+    compute_component(field_index i, field_index j) = 0;
 
     //! evaluate lambda for tensor
-    virtual std::unique_ptr<map_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j,
-                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a) = 0;
+    virtual std::unique_ptr<atomic_lambda>
+    compute_lambda(const index_literal& i, const index_literal& j) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_ZETA2_H
+#endif //CPPTRANSPORT_METRIC_INVERSE_H

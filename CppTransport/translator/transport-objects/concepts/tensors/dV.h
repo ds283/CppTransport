@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 20/12/2015.
+// Created by David Seery on 19/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_ZETA1_H
-#define CPPTRANSPORT_ZETA1_H
+#ifndef CPPTRANSPORT_DV_H
+#define CPPTRANSPORT_DV_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto ZETA1_TENSOR_INDICES = 1;
+constexpr auto DV_TENSOR_INDICES = 1;
 
 
-class zeta1: public transport_tensor
+class dV: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class zeta1: public transport_tensor
   public:
 
     //! constructor is default
-    zeta1() = default;
+    dV() = default;
 
     //! destructor is default
-    virtual ~zeta1() = default;
+    virtual ~dV() = default;
 
 
     // INTERFACE
@@ -60,16 +60,12 @@ class zeta1: public transport_tensor
     virtual std::unique_ptr<flattened_tensor>
     compute(const index_literal_list& indices) = 0;
 
-    //! evaluate component of tensor
-    virtual GiNaC::ex
-    compute_component(phase_index i) = 0;
-
     //! evaluate lambda for tensor
-    virtual std::unique_ptr<map_lambda>
+    virtual std::unique_ptr<atomic_lambda>
     compute_lambda(const index_literal& i) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_ZETA1_H
+#endif //CPPTRANSPORT_DV_H

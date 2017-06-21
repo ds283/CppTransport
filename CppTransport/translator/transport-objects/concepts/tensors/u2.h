@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_A_H
-#define CPPTRANSPORT_A_H
+#ifndef CPPTRANSPORT_U2_H
+#define CPPTRANSPORT_U2_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "transport-objects/concepts/transport_tensor.h"
+#include "transport-objects/concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto A_TENSOR_INDICES = 3;
+constexpr auto U2_TENSOR_INDICES = 2;
 
 
-class A: public transport_tensor
+class u2: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class A: public transport_tensor
   public:
 
     //! constructor is default
-    A() = default;
+    u2() = default;
 
     //! destructor is default
-    virtual ~A() = default;
+    virtual ~u2() = default;
 
 
     // INTERFACE
@@ -58,21 +58,18 @@ class A: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-            GiNaC::symbol& a) = 0;
+    compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& a) = 0;
 
     //! evaluate component of tensor
     virtual GiNaC::ex
-    compute_component(field_index i, field_index j, field_index k,
-                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+    compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a) = 0;
 
     //! evaluate lambda for tensor
-    virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+    virtual std::unique_ptr<map_lambda>
+    compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k, GiNaC::symbol& a) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_A_H
+#endif //CPPTRANSPORT_U2_H

@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/fields.h"
+#include "concepts/tensors/fields.h"
 #include "utilities/shared_resources.h"
 #include "canonical/resources.h"
 

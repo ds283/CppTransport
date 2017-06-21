@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/SR_velocity.h"
+#include "concepts/tensors/SR_velocity.h"
 #include "utilities/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 

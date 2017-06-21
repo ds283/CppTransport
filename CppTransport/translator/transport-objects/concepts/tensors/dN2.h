@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 07/08/2016.
+// Created by David Seery on 20/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,22 +23,21 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_ATILDE_H
-#define CPPTRANSPORT_ATILDE_H
+#ifndef CPPTRANSPORT_DN2_H
+#define CPPTRANSPORT_DN2_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
-#include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto A_TILDE_TENSOR_INDICES = 3;
+constexpr auto DN2_TENSOR_INDICES = 2;
 
 
-class Atilde: public transport_tensor
+class dN2: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +45,10 @@ class Atilde: public transport_tensor
   public:
 
     //! constructor is default
-    Atilde() = default;
+    dN2() = default;
 
     //! destructor is default
-    virtual ~Atilde() = default;
+    virtual ~dN2() = default;
 
 
     // INTERFACE
@@ -58,21 +57,14 @@ class Atilde: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-            GiNaC::symbol& a) = 0;
+    compute(const index_literal_list& indices) = 0;
 
     //! evaluate component of tensor
     virtual GiNaC::ex
-    compute_component(field_index i, field_index j, field_index k,
-                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
-
-    //! evaluate lambda for tensor
-    virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+    compute_component(phase_index i, phase_index j) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_ATILDE_H
+#endif //CPPTRANSPORT_DN2_H

@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_RIEMANN_A2_H
-#define CPPTRANSPORT_RIEMANN_A2_H
+#ifndef CPPTRANSPORT_DDV_H
+#define CPPTRANSPORT_DDV_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto RIEMANN_A2_TENSOR_INDICES = 2;
+constexpr auto DDV_TENSOR_INDICES = 2;
 
 
-class Riemann_A2: public transport_tensor
+class ddV: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class Riemann_A2: public transport_tensor
   public:
 
     //! constructor is default
-    Riemann_A2() = default;
+    ddV() = default;
 
     //! destructor is default
-    virtual ~Riemann_A2() = default;
+    virtual ~ddV() = default;
 
 
     // INTERFACE
@@ -60,10 +60,6 @@ class Riemann_A2: public transport_tensor
     virtual std::unique_ptr<flattened_tensor>
     compute(const index_literal_list& indices) = 0;
 
-    //! evaluate component of tensor
-    virtual GiNaC::ex
-    compute_component(field_index i, field_index j) = 0;
-
     //! evaluate lambda for tensor
     virtual std::unique_ptr<atomic_lambda>
     compute_lambda(const index_literal& i, const index_literal& j) = 0;
@@ -72,4 +68,4 @@ class Riemann_A2: public transport_tensor
 
 
 
-#endif //CPPTRANSPORT_RIEMANN_A2_H
+#endif //CPPTRANSPORT_DDV_H

@@ -27,7 +27,7 @@
 #define CPPTRANSPORT_CANONICAL_HUBBLE_H
 
 
-#include "concepts/Hubble.h"
+#include "concepts/tensors/Hubble.h"
 #include "utilities/shared_resources.h"
 #include "canonical/resources.h"
 

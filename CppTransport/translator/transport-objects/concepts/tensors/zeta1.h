@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 19/12/2015.
+// Created by David Seery on 20/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,16 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_HUBBLE_H
-#define CPPTRANSPORT_HUBBLE_H
+#ifndef CPPTRANSPORT_ZETA1_H
+#define CPPTRANSPORT_ZETA1_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "transport-objects/concepts/transport_tensor.h"
+#include "transport-objects/concepts/flattened_tensor.h"
+
+#include "indices.h"
+#include "lambdas.h"
+#include "index_literal.h"
 
 
-// not Hubble does not inherit from transport_tensor
-class Hubble
+constexpr auto ZETA1_TENSOR_INDICES = 1;
+
+
+class zeta1: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -40,26 +46,30 @@ class Hubble
   public:
 
     //! constructor is default
-    Hubble() = default;
+    zeta1() = default;
 
     //! destructor is default
-    virtual ~Hubble() = default;
+    virtual ~zeta1() = default;
 
 
     // INTERFACE
 
   public:
 
-    //! evaluate potential
-    virtual GiNaC::ex compute_V() = 0;
+    //! evaluate full tensor, returning a flattened list
+    virtual std::unique_ptr<flattened_tensor>
+    compute(const index_literal_list& indices) = 0;
 
-    //! evaluate Hubble parameter
-    virtual GiNaC::ex compute_Hsq() = 0;
+    //! evaluate component of tensor
+    virtual GiNaC::ex
+    compute_component(phase_index i) = 0;
 
-    //! evaluate epsilon parameter
-    virtual GiNaC::ex compute_eps() = 0;
+    //! evaluate lambda for tensor
+    virtual std::unique_ptr<map_lambda>
+    compute_lambda(const index_literal& i) = 0;
 
   };
 
 
-#endif //CPPTRANSPORT_HUBBLE_H
+
+#endif //CPPTRANSPORT_ZETA1_H

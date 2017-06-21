@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/ddV.h"
+#include "concepts/tensors/ddV.h"
 #include "utilities/shared_resources.h"
 #include "canonical/resources.h"
 

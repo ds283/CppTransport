@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/zeta2.h"
+#include "concepts/tensors/zeta2.h"
 #include "utilities/shared_resources.h"
 #include "canonical/resources.h"
 

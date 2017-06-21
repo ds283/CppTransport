@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 20/12/2015.
+// Created by David Seery on 19/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,21 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_DN1_H
-#define CPPTRANSPORT_DN1_H
+#ifndef CPPTRANSPORT_DDDV_H
+#define CPPTRANSPORT_DDDV_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
+#include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto DN1_TENSOR_INDICES = 1;
+constexpr auto DDDV_TENSOR_INDICES = 3;
 
 
-class dN1: public transport_tensor
+class dddV: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -45,10 +46,10 @@ class dN1: public transport_tensor
   public:
 
     //! constructor is default
-    dN1() = default;
+    dddV() = default;
 
     //! destructor is default
-    virtual ~dN1() = default;
+    virtual ~dddV() = default;
 
 
     // INTERFACE
@@ -59,12 +60,12 @@ class dN1: public transport_tensor
     virtual std::unique_ptr<flattened_tensor>
     compute(const index_literal_list& indices) = 0;
 
-    //! evaluate component of tensor
-    virtual GiNaC::ex
-    compute_component(phase_index i) = 0;
+    //! evaluate lambda for tensor
+    virtual std::unique_ptr<atomic_lambda>
+    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_DN1_H
+#endif //CPPTRANSPORT_DDDV_H

@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/B.h"
+#include "concepts/tensors/B.h"
 #include "utilities/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 
@@ -40,7 +40,6 @@
 
 #include "language_printer.h"
 #include "expression_cache.h"
-
 
 
 namespace nontrivial_metric

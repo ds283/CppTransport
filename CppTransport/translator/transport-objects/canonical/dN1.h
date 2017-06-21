@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/dN1.h"
+#include "concepts/tensors/dN1.h"
 #include "utilities/shared_resources.h"
 #include "canonical/resources.h"
 

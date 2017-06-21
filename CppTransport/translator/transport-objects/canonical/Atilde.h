@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/Atilde.h"
+#include "concepts/tensors/Atilde.h"
 #include "utilities/shared_resources.h"
 #include "canonical/resources.h"
 

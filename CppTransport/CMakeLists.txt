@@ -167,7 +167,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/tensor_factory.cpp
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/resource_manager.cpp
-  translator/transport-objects/concepts/parameters.cpp
+  translator/transport-objects/concepts/tensors/parameters.cpp
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
@@ -583,38 +583,41 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
   translator/transport-objects/canonical/zeta2.h
   )
 
+set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_TENSORS_FILES
+  translator/transport-objects/concepts/tensors/A.h
+  translator/transport-objects/concepts/tensors/Atilde.h
+  translator/transport-objects/concepts/tensors/B.h
+  translator/transport-objects/concepts/tensors/C.h
+  translator/transport-objects/concepts/tensors/connexion.h
+  translator/transport-objects/concepts/tensors/coordinates.h
+  translator/transport-objects/concepts/tensors/dddV.h
+  translator/transport-objects/concepts/tensors/ddV.h
+  translator/transport-objects/concepts/tensors/dN1.h
+  translator/transport-objects/concepts/tensors/dN2.h
+  translator/transport-objects/concepts/tensors/dV.h
+  translator/transport-objects/concepts/tensors/fields.h
+  translator/transport-objects/concepts/tensors/Hubble.h
+  translator/transport-objects/concepts/tensors/M.h
+  translator/transport-objects/concepts/tensors/metric.h
+  translator/transport-objects/concepts/tensors/metric_inverse.h
+  translator/transport-objects/concepts/tensors/parameters.h
+  translator/transport-objects/concepts/tensors/parameters.cpp
+  translator/transport-objects/concepts/tensors/Riemann_A2.h
+  translator/transport-objects/concepts/tensors/Riemann_A3.h
+  translator/transport-objects/concepts/tensors/Riemann_B3.h
+  translator/transport-objects/concepts/tensors/SR_velocity.h
+  translator/transport-objects/concepts/tensors/u1.h
+  translator/transport-objects/concepts/tensors/u2.h
+  translator/transport-objects/concepts/tensors/u3.h
+  translator/transport-objects/concepts/tensors/zeta1.h
+  translator/transport-objects/concepts/tensors/zeta2.h
+  )
+
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
-  translator/transport-objects/concepts/A.h
-  translator/transport-objects/concepts/Atilde.h
-  translator/transport-objects/concepts/B.h
-  translator/transport-objects/concepts/C.h
-  translator/transport-objects/concepts/connexion.h
-  translator/transport-objects/concepts/coordinates.h
-  translator/transport-objects/concepts/dddV.h
-  translator/transport-objects/concepts/ddV.h
-  translator/transport-objects/concepts/dN1.h
-  translator/transport-objects/concepts/dN2.h
-  translator/transport-objects/concepts/dV.h
-  translator/transport-objects/concepts/fields.h
   translator/transport-objects/concepts/flattened_tensor.h
-  translator/transport-objects/concepts/Hubble.h
-  translator/transport-objects/concepts/M.h
-  translator/transport-objects/concepts/metric.h
-  translator/transport-objects/concepts/metric_inverse.h
-  translator/transport-objects/concepts/parameters.h
-  translator/transport-objects/concepts/parameters.cpp
   translator/transport-objects/concepts/resource_manager.h
-  translator/transport-objects/concepts/Riemann_A2.h
-  translator/transport-objects/concepts/Riemann_A3.h
-  translator/transport-objects/concepts/Riemann_B3.h
-  translator/transport-objects/concepts/SR_velocity.h
   translator/transport-objects/concepts/tensor_factory.h
   translator/transport-objects/concepts/transport_tensor.h
-  translator/transport-objects/concepts/u1.h
-  translator/transport-objects/concepts/u2.h
-  translator/transport-objects/concepts/u3.h
-  translator/transport-objects/concepts/zeta1.h
-  translator/transport-objects/concepts/zeta2.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_FILES
@@ -1218,11 +1221,12 @@ set(SOURCE_FILES
   ${TRANSLATOR_PARSER_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_TENSORS_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
   ${TRANSLATOR_UTILITIES_FILES}
   ${TRANSLATOR_VERSION_POLICY_FILES}
   ${TRANSPORT_RUNTIME_CONCEPTS_FILES}

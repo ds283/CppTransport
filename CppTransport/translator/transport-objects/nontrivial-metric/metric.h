@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "concepts/metric.h"
+#include "concepts/tensors/metric.h"
 #include "utilities/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 

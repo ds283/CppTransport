@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_CONNEXION_H
-#define CPPTRANSPORT_CONNEXION_H
+#ifndef CPPTRANSPORT_SR_VELOCITY_H
+#define CPPTRANSPORT_SR_VELOCITY_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "transport-objects/concepts/transport_tensor.h"
+#include "transport-objects/concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto CONNEXION_TENSOR_INDICES = 3;
+constexpr auto SR_VELOCITY_TENSOR_INDICES = 1;
 
 
-class connexion: public transport_tensor
+class SR_velocity: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class connexion: public transport_tensor
   public:
 
     //! constructor is default
-    connexion() = default;
+    SR_velocity() = default;
 
     //! destructor is default
-    virtual ~connexion() = default;
+    virtual ~SR_velocity() = default;
 
 
     // INTERFACE
@@ -62,14 +62,14 @@ class connexion: public transport_tensor
 
     //! evaluate component of tensor
     virtual GiNaC::ex
-    compute_component(field_index i, field_index j, field_index k) = 0;
+    compute_component(field_index i) = 0;
 
     //! evaluate lambda for tensor
     virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k) = 0;
+    compute_lambda(const index_literal& i) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_CONNEXION_H
+#endif //CPPTRANSPORT_SR_VELOCITY_H

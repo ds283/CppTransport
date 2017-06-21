@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_METRIC_INVERSE_H
-#define CPPTRANSPORT_METRIC_INVERSE_H
+#ifndef CPPTRANSPORT_A_H
+#define CPPTRANSPORT_A_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto METRIC_INVERSE_TENSOR_INDICES = 2;
+constexpr auto A_TENSOR_INDICES = 3;
 
 
-class metric_inverse: public transport_tensor
+class A: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class metric_inverse: public transport_tensor
   public:
 
     //! constructor is default
-    metric_inverse() = default;
+    A() = default;
 
     //! destructor is default
-    virtual ~metric_inverse() = default;
+    virtual ~A() = default;
 
 
     // INTERFACE
@@ -58,18 +58,21 @@ class metric_inverse: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices) = 0;
+    compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
+            GiNaC::symbol& a) = 0;
 
     //! evaluate component of tensor
     virtual GiNaC::ex
-    compute_component(field_index i, field_index j) = 0;
+    compute_component(field_index i, field_index j, field_index k,
+                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
 
     //! evaluate lambda for tensor
     virtual std::unique_ptr<atomic_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j) = 0;
+    compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
+                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_METRIC_INVERSE_H
+#endif //CPPTRANSPORT_A_H

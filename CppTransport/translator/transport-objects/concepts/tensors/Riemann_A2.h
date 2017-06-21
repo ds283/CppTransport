@@ -23,22 +23,22 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_U2_H
-#define CPPTRANSPORT_U2_H
+#ifndef CPPTRANSPORT_RIEMANN_A2_H
+#define CPPTRANSPORT_RIEMANN_A2_H
 
 
-#include "transport_tensor.h"
-#include "flattened_tensor.h"
+#include "concepts/transport_tensor.h"
+#include "concepts/flattened_tensor.h"
 
 #include "indices.h"
 #include "lambdas.h"
 #include "index_literal.h"
 
 
-constexpr auto U2_TENSOR_INDICES = 2;
+constexpr auto RIEMANN_A2_TENSOR_INDICES = 2;
 
 
-class u2: public transport_tensor
+class Riemann_A2: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -46,10 +46,10 @@ class u2: public transport_tensor
   public:
 
     //! constructor is default
-    u2() = default;
+    Riemann_A2() = default;
 
     //! destructor is default
-    virtual ~u2() = default;
+    virtual ~Riemann_A2() = default;
 
 
     // INTERFACE
@@ -58,18 +58,18 @@ class u2: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& a) = 0;
+    compute(const index_literal_list& indices) = 0;
 
     //! evaluate component of tensor
     virtual GiNaC::ex
-    compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a) = 0;
+    compute_component(field_index i, field_index j) = 0;
 
     //! evaluate lambda for tensor
-    virtual std::unique_ptr<map_lambda>
-    compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k, GiNaC::symbol& a) = 0;
+    virtual std::unique_ptr<atomic_lambda>
+    compute_lambda(const index_literal& i, const index_literal& j) = 0;
 
   };
 
 
 
-#endif //CPPTRANSPORT_U2_H
+#endif //CPPTRANSPORT_RIEMANN_A2_H
