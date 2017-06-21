@@ -100,7 +100,7 @@ namespace nontrivial_metric
 
         auto X = std::make_unique<flattened_tensor>();
 
-        const auto Y = this->share.generate_field_symbols(printer);
+        const auto Y = this->share.generate_deriv_symbols(printer);
         for(const auto& label : *Y)
           {
             X->push_back(label);
