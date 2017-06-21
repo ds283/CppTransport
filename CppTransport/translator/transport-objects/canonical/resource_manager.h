@@ -33,7 +33,7 @@
 namespace canonical
   {
     
-    class canonical_resource_manager: public ::resource_manager
+    class resource_manager : public ::resource_manager
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -41,10 +41,10 @@ namespace canonical
       public:
         
         //! constructor is default
-        canonical_resource_manager() = default;
+        resource_manager() = default;
         
         //! destructor is default
-        ~canonical_resource_manager() = default;
+        ~resource_manager() = default;
     
     
         // QUERY FOR RESOURCE LABELS

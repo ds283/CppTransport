@@ -128,7 +128,8 @@ namespace canonical
       public:
     
         //! link to resource manager object
-        canonical_resource_manager& get_resource_manager() override { return this->mgr; }
+        resource_manager& get_resource_manager() override
+          { return this->mgr; }
 
 
         // INTERNAL DATA
@@ -138,7 +139,7 @@ namespace canonical
         // RESOURCES
     
         //! canonical resource manager
-        canonical_resource_manager mgr;
+        resource_manager mgr;
     
         //! shared resources
         shared_resources shared;
