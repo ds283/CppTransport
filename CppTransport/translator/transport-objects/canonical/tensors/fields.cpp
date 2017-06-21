@@ -100,7 +100,7 @@ namespace canonical
       {
         if(cached) throw tensor_exception("fields already cached");
         
-        f = this->shared.generate_field_symbols(this->printer);
+        f = this->res.generate_field_vector(this->printer);
 
         this->cached = true;
       }

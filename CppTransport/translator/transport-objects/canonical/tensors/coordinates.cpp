@@ -74,8 +74,8 @@ namespace canonical
       {
         if(cached) throw tensor_exception("coordinates already cached");
 
-        fields = this->shared.generate_field_symbols(this->printer);
-        derivs = this->shared.generate_deriv_symbols(this->printer);
+        fields = this->res.generate_field_vector(this->printer);
+        derivs = this->res.generate_deriv_vector(this->printer);
 
         this->cached = true;
       }

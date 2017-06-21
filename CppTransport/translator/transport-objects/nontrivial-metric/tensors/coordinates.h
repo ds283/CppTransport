@@ -130,10 +130,10 @@ namespace nontrivial_metric
         // WORKSPACE AND CACHE
         
         //! field symbols
-        std::unique_ptr<symbol_list> fields;
+        std::unique_ptr<flattened_tensor> fields;
         
         //! derivative symbols
-        std::unique_ptr<symbol_list> derivs;
+        std::unique_ptr<flattened_tensor> derivs;
     
         //! cache status
         bool cached;

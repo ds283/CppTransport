@@ -130,7 +130,7 @@ namespace canonical
         // WORKSPACE AND CACHE
         
         //! field symbols
-        std::unique_ptr<symbol_list> f;
+        std::unique_ptr<flattened_tensor> f;
         
         //! cache status
         bool cached;
