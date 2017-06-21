@@ -30,6 +30,19 @@
 #include "canonical/resource_manager.h"
 
 
+namespace RESOURCE_INDICES
+  {
+    
+    constexpr auto CONNEXION_INDICES = 3;
+    constexpr auto METRIC_INDICES = 2;
+    constexpr auto INVERSE_METRIC_INDICES = 2;
+    constexpr auto RIEMANN_A2_INDICES = 2;
+    constexpr auto RIEMANN_A3_INDICES = 3;
+    constexpr auto RIEMANN_B3_INDICES = 3;
+    
+  }   // namespace RESOURCE_INDICES
+
+
 namespace nontrivial_metric
   {
     
@@ -54,9 +67,19 @@ namespace nontrivial_metric
       public:
     
         //! get connexion label
-        boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES>, contexted_value<std::string> > >
-        connexion(std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v, bool exact=true)
-          { return this->connexion_cache.find(v, exact); }
+        const boost::optional< contexted_value<std::string> >&
+        connexion()
+          { return this->connexion_cache.find(); }
+    
+        //! get metric label
+        const boost::optional< contexted_value<std::string> >&
+        metric()
+          { return this->metric_cache.find(); }
+    
+        //! get inverse metric label
+        const boost::optional< contexted_value<std::string> >&
+        inverse_metric()
+          { return this->inverse_metric_cache.find(); }
     
         //! get Riemann A2 label
         boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES>, contexted_value<std::string> > >
@@ -79,9 +102,16 @@ namespace nontrivial_metric
       public:
     
         //! assign connexion resource label
-        void assign_connexion(const contexted_value<std::string>& c,
-                              std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v)
-          { this->connexion_cache.assign(c, v); }
+        void assign_connexion(const contexted_value<std::string>& c)
+          { this->connexion_cache.assign(c); }
+    
+        //! assign metric resource label
+        void assign_metric(const contexted_value<std::string>& c)
+          { this->metric_cache.assign(c); }
+    
+        //! assign inverse resource label
+        void assign_inverse_metric(const contexted_value<std::string>& c)
+          { this->inverse_metric_cache.assign(c); }
     
         //! assign Riemann A2 resource label
         void assign_Riemann_A2(const contexted_value<std::string>& R,
@@ -106,6 +136,14 @@ namespace nontrivial_metric
         //! release connexion resource
         void release_connexion()
           { this->connexion_cache.reset(); }
+    
+        //! release metric resource
+        void release_metricn()
+          { this->metric_cache.reset(); }
+    
+        //! release connexion resource
+        void release_inverse_metric()
+          { this->inverse_metric_cache.reset(); }
     
         //! release Riemann A2 resource
         void release_Riemann_A2()
@@ -137,7 +175,13 @@ namespace nontrivial_metric
       protected:
     
         //! cache connexion resource labels
-        indexed_resource<RESOURCE_INDICES::CONNEXION_INDICES, std::string> connexion_cache;
+        simple_resource<std::string> connexion_cache;
+        
+        //! cache metric resource label
+        simple_resource<std::string> metric_cache;
+        
+        //! cache inverse metric resource label
+        simple_resource<std::string> inverse_metric_cache;
     
         //! cache Riemann A2 resource labels
         indexed_resource<RESOURCE_INDICES::RIEMANN_A2_INDICES, std::string> Riemann_A2_cache;

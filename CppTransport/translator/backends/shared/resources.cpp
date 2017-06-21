@@ -28,6 +28,9 @@
 #include <functional>
 
 #include "resources.h"
+#include "concepts/resource_manager.h"
+#include "nontrivial-metric/resource_manager.h"
+
 #include "flow_tensors.h"
 
 
@@ -50,6 +53,8 @@ namespace macro_packages
         EMPLACE(simple_package, BIND(release_working_type, "RELEASE_WORKING_TYPE"));
 
         EMPLACE(index_package, BIND(set_coordinates, "RESOURCE_COORDINATES"));
+        EMPLACE(index_package, BIND(set_metric, "RESOURCE_G"));
+        EMPLACE(index_package, BIND(set_inverse_metric, "RESOURCE_GINV"));
         EMPLACE(index_package, BIND(set_dV, "RESOURCE_DV"));
         EMPLACE(index_package, BIND(set_ddV, "RESOURCE_DDV"));
         EMPLACE(index_package, BIND(set_dddV, "RESOURCE_DDDV"));
@@ -257,14 +262,7 @@ namespace macro_packages
 
     std::string set_connexion::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        // build list of index variances
-        std::array<variance, RESOURCE_INDICES::CONNEXION_INDICES> v = { variance::none, variance::none, variance::none };
-        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
-          {
-            v[i] = indices[i].get()->get_variance();
-          }
-
-        this->mgr.assign_connexion(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT], v);
+        this->mgr.assign_connexion(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_CONNEXION << " '" << static_cast<std::string>(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]) << "'";
@@ -278,7 +276,7 @@ namespace macro_packages
         switch(t)
           {
             case model_type::canonical: return 0;
-            case model_type::nontrivial_metric: return RESOURCES::CONNEXION_TOTAL_INDICES;
+            case model_type::nontrivial_metric: return 0;
           }
       }
 
@@ -288,8 +286,69 @@ namespace macro_packages
         switch(t)
           {
             case model_type::canonical: return boost::none;
-            case model_type::nontrivial_metric:
-              return std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only });
+            case model_type::nontrivial_metric: return boost::none;
+          }
+      }
+    
+    
+    std::string set_metric::apply(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        this->mgr.assign_metric(args[RESOURCES::METRIC_KERNEL_ARGUMENT]);
+    
+        std::ostringstream msg;
+        msg << RESOURCE_SET_METRIC << " '" << static_cast<std::string>(args[RESOURCES::METRIC_KERNEL_ARGUMENT]) << "'";
+    
+        return msg.str();
+      }
+    
+    
+    boost::optional<unsigned int> set_metric::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return 0;
+          }
+      }
+    
+    
+    boost::optional<std::vector<index_class> > set_metric::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric: return boost::none;
+          }
+      }
+    
+    
+    std::string set_inverse_metric::apply(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        this->mgr.assign_inverse_metric(args[RESOURCES::INVERSE_METRIC_KERNEL_ARGUMENT]);
+    
+        std::ostringstream msg;
+        msg << RESOURCE_SET_INVERSE_METRIC << " '" << static_cast<std::string>(args[RESOURCES::INVERSE_METRIC_KERNEL_ARGUMENT]) << "'";
+    
+        return msg.str();
+      }
+    
+    
+    boost::optional<unsigned int> set_inverse_metric::define_indices(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return 0;
+            case model_type::nontrivial_metric: return 0;
+          }
+      }
+    
+    
+    boost::optional<std::vector<index_class> > set_inverse_metric::define_classes(model_type t)
+      {
+        switch(t)
+          {
+            case model_type::canonical: return boost::none;
+            case model_type::nontrivial_metric: return boost::none;
           }
       }
 
@@ -436,4 +495,5 @@ namespace macro_packages
 
         return RESOURCE_RELEASE_WORKING_TYPE;
       }
+
   }

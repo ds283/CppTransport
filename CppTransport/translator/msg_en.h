@@ -251,6 +251,8 @@ constexpr auto RESOURCE_SET_DV                       = "V,i resource set to";
 constexpr auto RESOURCE_SET_DDV                      = "V,ij resource set to";
 constexpr auto RESOURCE_SET_DDDV                     = "V,ijk resource set to";
 constexpr auto RESOURCE_SET_CONNEXION                = "connexion resource set to";
+constexpr auto RESOURCE_SET_METRIC                   = "metric resource set to";
+constexpr auto RESOURCE_SET_INVERSE_METRIC           = "inverse metric resource set to";
 constexpr auto RESOURCE_SET_RIEMANN                  = "Riemann resource set to";
 
 constexpr auto RESOURCE_SET_PHASE_FLATTEN            = "phase-space flattener set to";
