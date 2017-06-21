@@ -145,25 +145,25 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
   translator/parser/y_lexer.cpp
-  translator/transport-objects/canonical/A.cpp
-  translator/transport-objects/canonical/Atilde.cpp
-  translator/transport-objects/canonical/B.cpp
-  translator/transport-objects/canonical/C.cpp
-  translator/transport-objects/canonical/coordinates.cpp
-  translator/transport-objects/canonical/dV.cpp
-  translator/transport-objects/canonical/ddV.cpp
-  translator/transport-objects/canonical/dddV.cpp
-  translator/transport-objects/canonical/dN1.cpp
-  translator/transport-objects/canonical/dN2.cpp
-  translator/transport-objects/canonical/fields.cpp
-  translator/transport-objects/canonical/Hubble.cpp
-  translator/transport-objects/canonical/SR_velocity.cpp
-  translator/transport-objects/canonical/M.cpp
-  translator/transport-objects/canonical/u1.cpp
-  translator/transport-objects/canonical/u2.cpp
-  translator/transport-objects/canonical/u3.cpp
-  translator/transport-objects/canonical/zeta1.cpp
-  translator/transport-objects/canonical/zeta2.cpp
+  translator/transport-objects/canonical/tensors/A.cpp
+  translator/transport-objects/canonical/tensors/Atilde.cpp
+  translator/transport-objects/canonical/tensors/B.cpp
+  translator/transport-objects/canonical/tensors/C.cpp
+  translator/transport-objects/canonical/tensors/coordinates.cpp
+  translator/transport-objects/canonical/tensors/dV.cpp
+  translator/transport-objects/canonical/tensors/ddV.cpp
+  translator/transport-objects/canonical/tensors/dddV.cpp
+  translator/transport-objects/canonical/tensors/dN1.cpp
+  translator/transport-objects/canonical/tensors/dN2.cpp
+  translator/transport-objects/canonical/tensors/fields.cpp
+  translator/transport-objects/canonical/tensors/Hubble.cpp
+  translator/transport-objects/canonical/tensors/SR_velocity.cpp
+  translator/transport-objects/canonical/tensors/M.cpp
+  translator/transport-objects/canonical/tensors/u1.cpp
+  translator/transport-objects/canonical/tensors/u2.cpp
+  translator/transport-objects/canonical/tensors/u3.cpp
+  translator/transport-objects/canonical/tensors/zeta1.cpp
+  translator/transport-objects/canonical/tensors/zeta2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/resource_manager.cpp
@@ -536,51 +536,54 @@ set(TRANSLATOR_PARSER_FILES
   translator/parser/y_lexer.h
   )
 
+set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_TENSORS_FILES
+  translator/transport-objects/canonical/tensors/A.cpp
+  translator/transport-objects/canonical/tensors/A.h
+  translator/transport-objects/canonical/tensors/Atilde.cpp
+  translator/transport-objects/canonical/tensors/Atilde.h
+  translator/transport-objects/canonical/tensors/B.cpp
+  translator/transport-objects/canonical/tensors/B.h
+  translator/transport-objects/canonical/tensors/C.cpp
+  translator/transport-objects/canonical/tensors/C.h
+  translator/transport-objects/canonical/tensors/coordinates.cpp
+  translator/transport-objects/canonical/tensors/coordinates.h
+  translator/transport-objects/canonical/tensors/dddV.cpp
+  translator/transport-objects/canonical/tensors/dddV.h
+  translator/transport-objects/canonical/tensors/ddV.cpp
+  translator/transport-objects/canonical/tensors/ddV.h
+  translator/transport-objects/canonical/tensors/dN1.cpp
+  translator/transport-objects/canonical/tensors/dN1.h
+  translator/transport-objects/canonical/tensors/dN2.cpp
+  translator/transport-objects/canonical/tensors/dN2.h
+  translator/transport-objects/canonical/tensors/dV.cpp
+  translator/transport-objects/canonical/tensors/dV.h
+  translator/transport-objects/canonical/tensors/fields.cpp
+  translator/transport-objects/canonical/tensors/fields.h
+  translator/transport-objects/canonical/tensors/Hubble.cpp
+  translator/transport-objects/canonical/tensors/Hubble.h
+  translator/transport-objects/canonical/tensors/M.cpp
+  translator/transport-objects/canonical/tensors/M.h
+  translator/transport-objects/canonical/tensors/SR_velocity.cpp
+  translator/transport-objects/canonical/tensors/SR_velocity.h
+  translator/transport-objects/canonical/tensors/u1.cpp
+  translator/transport-objects/canonical/tensors/u1.h
+  translator/transport-objects/canonical/tensors/u2.cpp
+  translator/transport-objects/canonical/tensors/u2.h
+  translator/transport-objects/canonical/tensors/u3.cpp
+  translator/transport-objects/canonical/tensors/u3.h
+  translator/transport-objects/canonical/tensors/zeta1.cpp
+  translator/transport-objects/canonical/tensors/zeta1.h
+  translator/transport-objects/canonical/tensors/zeta2.cpp
+  translator/transport-objects/canonical/tensors/zeta2.h
+  )
+
 set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
-  translator/transport-objects/canonical/A.cpp
-  translator/transport-objects/canonical/A.h
-  translator/transport-objects/canonical/Atilde.cpp
-  translator/transport-objects/canonical/Atilde.h
-  translator/transport-objects/canonical/B.cpp
-  translator/transport-objects/canonical/B.h
-  translator/transport-objects/canonical/C.cpp
-  translator/transport-objects/canonical/C.h
-  translator/transport-objects/canonical/coordinates.cpp
-  translator/transport-objects/canonical/coordinates.h
-  translator/transport-objects/canonical/dddV.cpp
-  translator/transport-objects/canonical/dddV.h
-  translator/transport-objects/canonical/ddV.cpp
-  translator/transport-objects/canonical/ddV.h
-  translator/transport-objects/canonical/dN1.cpp
-  translator/transport-objects/canonical/dN1.h
-  translator/transport-objects/canonical/dN2.cpp
-  translator/transport-objects/canonical/dN2.h
-  translator/transport-objects/canonical/dV.cpp
-  translator/transport-objects/canonical/dV.h
-  translator/transport-objects/canonical/fields.cpp
-  translator/transport-objects/canonical/fields.h
-  translator/transport-objects/canonical/Hubble.cpp
-  translator/transport-objects/canonical/Hubble.h
-  translator/transport-objects/canonical/M.cpp
-  translator/transport-objects/canonical/M.h
   translator/transport-objects/canonical/resource_manager.cpp
   translator/transport-objects/canonical/resource_manager.h
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/resources.h
-  translator/transport-objects/canonical/SR_velocity.cpp
-  translator/transport-objects/canonical/SR_velocity.h
   translator/transport-objects/canonical/tensor_factory.cpp
   translator/transport-objects/canonical/tensor_factory.h
-  translator/transport-objects/canonical/u1.cpp
-  translator/transport-objects/canonical/u1.h
-  translator/transport-objects/canonical/u2.cpp
-  translator/transport-objects/canonical/u2.h
-  translator/transport-objects/canonical/u3.cpp
-  translator/transport-objects/canonical/u3.h
-  translator/transport-objects/canonical/zeta1.cpp
-  translator/transport-objects/canonical/zeta1.h
-  translator/transport-objects/canonical/zeta2.cpp
-  translator/transport-objects/canonical/zeta2.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_TENSORS_FILES
@@ -1219,6 +1222,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_PARSER_DRIVER_FILES}
   ${TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES}
   ${TRANSLATOR_PARSER_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_FILES}
