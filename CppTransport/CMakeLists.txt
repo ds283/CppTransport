@@ -168,7 +168,6 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/resource_manager.cpp
   translator/transport-objects/concepts/parameters.cpp
-  translator/transport-objects/concepts/resource_manager.cpp
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
@@ -604,7 +603,6 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/metric_inverse.h
   translator/transport-objects/concepts/parameters.h
   translator/transport-objects/concepts/parameters.cpp
-  translator/transport-objects/concepts/resource_manager.cpp
   translator/transport-objects/concepts/resource_manager.h
   translator/transport-objects/concepts/Riemann_A2.h
   translator/transport-objects/concepts/Riemann_A3.h

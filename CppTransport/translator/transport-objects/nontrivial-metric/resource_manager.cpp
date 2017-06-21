@@ -32,19 +32,25 @@ namespace nontrivial_metric
 
     void nontrivial_metric_resource_manager::release()
       {
+        this->parameters_cache.reset();
+        this->coordinates_cache.reset();
+        this->dV_cache.reset();
+        this->ddV_cache.reset();
+        this->dddV_cache.reset();
+
         this->connexion_cache.reset();
         this->metric_cache.reset();
         this->metric_inverse_cache.reset();
         this->Riemann_A2_cache.reset();
         this->Riemann_A3_cache.reset();
         this->Riemann_B3_cache.reset();
-        this->canonical_resource_manager::release();
       }
     
     
     void nontrivial_metric_resource_manager::release_flatteners()
       {
-        this->canonical_resource_manager::release_flatteners();
+        this->phase_flatten_cache.reset();
+        this->field_flatten_cache.reset();
       }
     
   }   // namespace nontrivial_metric

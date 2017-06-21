@@ -39,6 +39,13 @@ namespace RESOURCE_INDICES
     constexpr auto DDV_INDICES = 2;
     constexpr auto DDDV_INDICES = 3;
     
+    constexpr auto CONNEXION_INDICES = 3;
+    constexpr auto METRIC_INDICES = 2;
+    constexpr auto INVERSE_METRIC_INDICES = 2;
+    constexpr auto RIEMANN_A2_INDICES = 2;
+    constexpr auto RIEMANN_A3_INDICES = 3;
+    constexpr auto RIEMANN_B3_INDICES = 3;
+    
   }   // namespace RESOURCE_INDICES
 
 
@@ -63,178 +70,217 @@ class resource_manager
     virtual ~resource_manager() = default;
 
 
-    // INTERFACE - QUERY FOR RESOURCE LABELS
+    // QUERY FOR RESOURCE LABELS
 
   public:
 
     //! get parameters label
-    const boost::optional< contexted_value<std::string> >&
-    parameters()
-      { return this->parameters_cache.find(); }
+    virtual const boost::optional< contexted_value<std::string> >&
+    parameters() = 0;
 
     //! get phase-space coordinates label
     //! if exact is false then the closest possible match is returned, if one is found
-    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES>, contexted_value<std::string> > >
-    coordinates(std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none }, bool exact=true)
-      { return this->coordinates_cache.find(v, exact); }
+    virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES>, contexted_value<std::string> > >
+    coordinates(std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none }, bool exact=true) = 0;
 
     //! get V,i label
-    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DV_INDICES>, contexted_value<std::string> > >
-    dV(std::array<variance, RESOURCE_INDICES::DV_INDICES> v = { variance::none }, bool exact=true)
-      { return this->dV_cache.find(v, exact); }
+    virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DV_INDICES>, contexted_value<std::string> > >
+    dV(std::array<variance, RESOURCE_INDICES::DV_INDICES> v = { variance::none }, bool exact=true) = 0;
 
     //! get V,ij label
-    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDV_INDICES>, contexted_value<std::string> > >
-    ddV(std::array<variance, RESOURCE_INDICES::DDV_INDICES> v = { variance::none, variance::none }, bool exact=true)
-      { return this->ddV_cache.find(v, exact); }
+    virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDV_INDICES>, contexted_value<std::string> > >
+    ddV(std::array<variance, RESOURCE_INDICES::DDV_INDICES> v = { variance::none, variance::none }, bool exact=true) = 0;
 
     //! get V,ijk label
-    boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDDV_INDICES>, contexted_value<std::string> > >
-    dddV(std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v = { variance::none, variance::none, variance::none }, bool exact=true)
-      { return this->dddV_cache.find(v, exact); }
-
-
+    virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DDDV_INDICES>, contexted_value<std::string> > >
+    dddV(std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v = { variance::none, variance::none, variance::none }, bool exact=true) = 0;
+    
+    
     //! get phase-space flattening function
-    const boost::optional< contexted_value<std::string> >&
-    phase_flatten()
-      { return this->phase_flatten_cache.find(); }
+    virtual const boost::optional< contexted_value<std::string> >&
+    phase_flatten() = 0;
 
     //! get field-space flattening function
-    const boost::optional< contexted_value<std::string> >&
-    field_flatten()
-      { return this->field_flatten_cache.find(); }
+    virtual const boost::optional< contexted_value<std::string> >&
+    field_flatten() = 0;
 
 
     //! get working type
-    const boost::optional< contexted_value<std::string> >&
-    working_type()
-      { return this->working_type_cache.find(); }
+    virtual const boost::optional< contexted_value<std::string> >&
+    working_type() = 0;
 
 
-    // INTERFACE - ASSIGN RESOURCE LABELS
+    // ASSIGN RESOURCE LABELS
 
   public:
 
     //! assign parameter resource label
-    void assign_parameters(const contexted_value<std::string>& p)
-      { this->parameters_cache.assign(p); }
+    virtual void assign_parameters(const contexted_value<std::string>& p) = 0;
 
     //! assign phase-space coordinate resource label
-    void assign_coordinates(const contexted_value<std::string>& c,
-                            std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v)
-      { this->coordinates_cache.assign(c, v); }
+    virtual void assign_coordinates(const contexted_value<std::string>& c,
+                            std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v) = 0;
     
     //! assign V,i resource label
-    void assign_dV(const contexted_value<std::string>& d,
-                   std::array<variance, RESOURCE_INDICES::DV_INDICES> v)
-      { this->dV_cache.assign(d, v); }
+    virtual void assign_dV(const contexted_value<std::string>& d,
+                   std::array<variance, RESOURCE_INDICES::DV_INDICES> v) = 0;
     
     //! assign V,ij resource label
-    void assign_ddV(const contexted_value<std::string>& d,
-                    std::array<variance, RESOURCE_INDICES::DDV_INDICES> v)
-      { this->ddV_cache.assign(d, v); }
+    virtual void assign_ddV(const contexted_value<std::string>& d,
+                    std::array<variance, RESOURCE_INDICES::DDV_INDICES> v) = 0;
     
     //! assign V,ijk resource label
-    void assign_dddV(const contexted_value<std::string>& d,
-                     std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v)
-      { this->dddV_cache.assign(d, v); }
+    virtual void assign_dddV(const contexted_value<std::string>& d,
+                     std::array<variance, RESOURCE_INDICES::DDDV_INDICES> v) = 0;
     
     
     //! assign phase-space flattening function
-    void assign_phase_flatten(const contexted_value<std::string>& f)
-      { this->phase_flatten_cache.assign(f); }
+    virtual void assign_phase_flatten(const contexted_value<std::string>& f) = 0;
 
     //! assign field-space flattening function
-    void assign_field_flatten(const contexted_value<std::string>& f)
-      { this->field_flatten_cache.assign(f); }
+    virtual void assign_field_flatten(const contexted_value<std::string>& f) = 0;
 
 
     //! assign working type
-    void assign_working_type(const contexted_value<std::string>& t)
-      { this->working_type_cache.assign(t); }
+    virtual void assign_working_type(const contexted_value<std::string>& t) = 0;
 
 
-    // INTERFACE - RELEASE INDIVIDUAL RESOURCE LABELS
+    // RELEASE INDIVIDUAL RESOURCE LABELS
 
   public:
 
     //! release parameter resource
-    void release_parameter()
-      { this->parameters_cache.reset(); }
+    virtual void release_parameter() = 0;
 
     //! release phase-space coordinate resource
-    void release_coordinates()
-      { this->coordinates_cache.reset(); }
+    virtual void release_coordinates() = 0;
 
     //! release V,i resource
-    void release_dV()
-      { this->dV_cache.reset(); }
+    virtual void release_dV() = 0;
 
     //! release V,ij resource
-    void release_ddV()
-      { this->ddV_cache.reset(); }
+    virtual void release_ddV() = 0;
 
     //! release V,ijk resource
-    void release_dddV()
-      { this->dddV_cache.reset(); }
+    virtual void release_dddV() = 0;
 
 
     //! release phase-space flattening function
-    void release_phase_flatten()
-      { this->phase_flatten_cache.reset(); }
+    virtual void release_phase_flatten() = 0;
 
     //! release field-space flattening function
-    void release_field_flatten()
-      { this->field_flatten_cache.reset(); }
+    virtual void release_field_flatten() = 0;
 
 
     //! release working type
-    void release_working_type()
-      { this->working_type_cache.reset(); }
+    virtual void release_working_type() = 0;
 
 
-    // INTERFACE - GLOBAL RELEASE OF RESOURCE LABELS
+    // GLOBAL RELEASE OF RESOURCE LABELS
 
   public:
 
     //! release all resources, but not flatteners (this is the most common use case;
     //! we wish to release resource labels at the end of a function, but not the flattener labels)
-    void release();
+    virtual void release() = 0;
 
     //! release flatteners
-    void release_flatteners();
+    virtual void release_flatteners() = 0;
+
+  };
 
 
-    // INTERNAL DATA
-
-  protected:
-
-    //! cache parameters resource label
-    simple_resource<std::string> parameters_cache;
-
-    //! cache parameters resource labels
-    indexed_resource<RESOURCE_INDICES::COORDINATES_INDICES, std::string> coordinates_cache;
-
-    //! cache V, resource labels
-    indexed_resource<RESOURCE_INDICES::DV_INDICES, std::string> dV_cache;
-
-    //! cache V,ij resource labels
-    indexed_resource<RESOURCE_INDICES::DDV_INDICES, std::string> ddV_cache;
-
-    //! cache V,ijk resource labels
-    indexed_resource<RESOURCE_INDICES::DDDV_INDICES, std::string> dddV_cache;
-
-
-    //! cache flattening function - full phase-space coordinates
-    simple_resource<std::string> phase_flatten_cache;
-
-    //! cache flattening function - field space coordinates
-    simple_resource<std::string> field_flatten_cache;
-
-
-    //! cache working type
-    simple_resource<std::string> working_type_cache;
-
+class curvature_resource_manager: public resource_manager
+  {
+    
+    // CONSTRUCTOR, DESTRUCTOR
+    
+  public:
+    
+    //! constructor
+    curvature_resource_manager() = default;
+    
+    //! destructor
+    ~curvature_resource_manager() = default;
+    
+    
+    // QUERY FOR RESOURCE LABELS
+  
+  public:
+    
+    //! get connexion label
+    virtual const boost::optional< contexted_value<std::string> >&
+    connexion() = 0;
+    
+    //! get metric label
+    virtual const boost::optional< contexted_value<std::string> >&
+    metric() = 0;
+    
+    //! get inverse metric label
+    virtual const boost::optional< contexted_value<std::string> >&
+    metric_inverse() = 0;
+    
+    //! get Riemann A2 label
+    virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES>, contexted_value<std::string> > >
+    Riemann_A2(std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v, bool exact=true) = 0;
+    
+    //! get Riemann A3 label
+    virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES>, contexted_value<std::string> > >
+    Riemann_A3(std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v, bool exact=true) = 0;
+    
+    //! get Riemann B3 label
+    virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES>, contexted_value<std::string> > >
+    Riemann_B3(std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v, bool exact=true) = 0;
+    
+    
+    // ASSIGN RESOURCE LABELS
+  
+  public:
+    
+    //! assign connexion resource label
+    virtual void assign_connexion(const contexted_value<std::string>& c) = 0;
+    
+    //! assign metric resource label
+    virtual void assign_metric(const contexted_value<std::string>& c) = 0;
+    
+    //! assign inverse resource label
+    virtual void assign_metric_inverse(const contexted_value<std::string>& c) = 0;
+    
+    //! assign Riemann A2 resource label
+    virtual void assign_Riemann_A2(const contexted_value<std::string>& R,
+                                   std::array<variance, RESOURCE_INDICES::RIEMANN_A2_INDICES> v) = 0;
+    
+    //! assign Riemann A3 resource label
+    virtual void assign_Riemann_A3(const contexted_value<std::string>& R,
+                                   std::array<variance, RESOURCE_INDICES::RIEMANN_A3_INDICES> v) = 0;
+    
+    //! assign Riemann B3 resource label
+    virtual void assign_Riemann_B3(const contexted_value<std::string>& R,
+                                   std::array<variance, RESOURCE_INDICES::RIEMANN_B3_INDICES> v) = 0;
+    
+    
+    // RELEASE INDIVIDUAL RESOURCE LABELS
+  
+  public:
+    
+    //! release connexion resource
+    virtual void release_connexion() = 0;
+    
+    //! release metric resource
+    virtual void release_metricn() = 0;
+    
+    //! release connexion resource
+    virtual void release_metric_inverse() = 0;
+    
+    //! release Riemann A2 resource
+    virtual void release_Riemann_A2() = 0;
+    
+    //! release Riemann A3 resource
+    virtual void release_Riemann_A3() = 0;
+    
+    //! release Riemann B3 resource
+    virtual void release_Riemann_B3() = 0;
+    
   };
 
 
