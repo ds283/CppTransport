@@ -160,25 +160,25 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/dN1.cpp
   translator/transport-objects/canonical/dN2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
-  translator/transport-objects/nontrivial_metric/resources.cpp
-  translator/transport-objects/nontrivial_metric/Hubble.cpp
-  translator/transport-objects/nontrivial_metric/dV.cpp
-  translator/transport-objects/nontrivial_metric/ddV.cpp
-  translator/transport-objects/nontrivial_metric/dddV.cpp
-  translator/transport-objects/nontrivial_metric/SR_velocity.cpp
-  translator/transport-objects/nontrivial_metric/A.cpp
-  translator/transport-objects/nontrivial_metric/Atilde.cpp
-  translator/transport-objects/nontrivial_metric/B.cpp
-  translator/transport-objects/nontrivial_metric/C.cpp
-  translator/transport-objects/nontrivial_metric/M.cpp
-  translator/transport-objects/nontrivial_metric/u1.cpp
-  translator/transport-objects/nontrivial_metric/u2.cpp
-  translator/transport-objects/nontrivial_metric/u3.cpp
-  translator/transport-objects/nontrivial_metric/zeta1.cpp
-  translator/transport-objects/nontrivial_metric/zeta2.cpp
-  translator/transport-objects/nontrivial_metric/dN1.cpp
-  translator/transport-objects/nontrivial_metric/dN2.cpp
-  translator/transport-objects/nontrivial_metric/tensor_factory.cpp
+  translator/transport-objects/nontrivial-metric/resources.cpp
+  translator/transport-objects/nontrivial-metric/Hubble.cpp
+  translator/transport-objects/nontrivial-metric/dV.cpp
+  translator/transport-objects/nontrivial-metric/ddV.cpp
+  translator/transport-objects/nontrivial-metric/dddV.cpp
+  translator/transport-objects/nontrivial-metric/SR_velocity.cpp
+  translator/transport-objects/nontrivial-metric/A.cpp
+  translator/transport-objects/nontrivial-metric/Atilde.cpp
+  translator/transport-objects/nontrivial-metric/B.cpp
+  translator/transport-objects/nontrivial-metric/C.cpp
+  translator/transport-objects/nontrivial-metric/M.cpp
+  translator/transport-objects/nontrivial-metric/u1.cpp
+  translator/transport-objects/nontrivial-metric/u2.cpp
+  translator/transport-objects/nontrivial-metric/u3.cpp
+  translator/transport-objects/nontrivial-metric/zeta1.cpp
+  translator/transport-objects/nontrivial-metric/zeta2.cpp
+  translator/transport-objects/nontrivial-metric/dN1.cpp
+  translator/transport-objects/nontrivial-metric/dN2.cpp
+  translator/transport-objects/nontrivial-metric/tensor_factory.cpp
   translator/transport-objects/resource_manager.cpp
   translator/transport-objects/concepts/transport_tensor.cpp
   translator/transport-objects/indices/indices.cpp
@@ -195,7 +195,7 @@ ADD_EXECUTABLE(CppTransport
   translator/utilities/local_environment.cpp
   translator/utilities/argument_cache.cpp
   translator/version-policy/version_policy.cpp
-        translator/transport-objects/nontrivial_metric/curvature_classes.cpp)
+  translator/transport-objects/nontrivial-metric/curvature_classes.cpp)
 
 ADD_DEPENDENCIES(CppTransport DEPS)
 
