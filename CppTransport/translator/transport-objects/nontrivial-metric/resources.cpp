@@ -156,10 +156,8 @@ namespace nontrivial_metric
             // return symbol
             return V;
           }
-        else
-          {
-            return this->raw_V_resource(printer);
-          }
+    
+        return this->raw_V_resource(printer);
       }
 
 
@@ -232,10 +230,8 @@ namespace nontrivial_metric
             // return symbol
             return eps;
           }
-        else
-          {
-            return this->raw_eps_resource(printer);
-          }
+    
+        return this->raw_eps_resource(printer);
       }
 
 
@@ -279,10 +275,8 @@ namespace nontrivial_metric
             // return symbol (no deposition into temporary pool yet guaranteed -- needs to be explicitly printed)
             return Hsq;
           }
-        else
-          {
-            return this->raw_Hsq_resource(printer);
-          }
+    
+        return this->raw_Hsq_resource(printer);
       }
 
 
