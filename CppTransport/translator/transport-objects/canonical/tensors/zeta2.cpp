@@ -62,7 +62,7 @@ namespace canonical
         if(!this->cached) throw tensor_exception("zeta2 cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
         args->push_back(k);
         args->push_back(k1);
         args->push_back(k2);
@@ -228,7 +228,7 @@ namespace canonical
 
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = 0;
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
         args->push_back(k);
         args->push_back(k1);
         args->push_back(k2);

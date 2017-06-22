@@ -54,7 +54,7 @@ namespace canonical
         if(!this->cached) throw tensor_exception("U1 cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
 
         GiNaC::ex result;
 
@@ -120,7 +120,7 @@ namespace canonical
 
         map[lambda_flatten(LAMBDA_FIELD)] = deriv_a_i;
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
         if(!this->cache.query(expression_item_types::U1_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM)]))

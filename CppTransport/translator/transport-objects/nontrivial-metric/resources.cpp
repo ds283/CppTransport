@@ -45,7 +45,10 @@ namespace nontrivial_metric
         param_list(p.model.get_param_symbols()),
         fl(p.model.get_number_params(), p.model.get_number_fields())
       {
+        // get potential stored by the model descriptor, if one is available
         auto pot = p.model.get_potential();
+        
+        // if no potential was set, fail gracefully; errors should have been emitted before this point
         if(pot) V = **(pot.get()); else V = GiNaC::ex(0);
 
         // get number of fields in the current model
@@ -61,7 +64,7 @@ namespace nontrivial_metric
         if(metric)    // expected case that a metric has been provided
           {
             // we now need to copy the user-defined metric into a GiNaC::matrix that will
-            // represent it during analytic calcuations
+            // represent it during analytic calculations
             auto& G = **(metric.get());
 
             // GiNaC matrices are indexed by numbers; here, the row/column numbering order
@@ -76,7 +79,7 @@ namespace nontrivial_metric
               }
 
             // construct inverse metric
-            *this->Ginv = GiNaC::ex_to<GiNaC::matrix>(this -> G->inverse());
+            *this->Ginv = GiNaC::ex_to<GiNaC::matrix>(this->G->inverse());
           }
         else    // unexpected case that no metric has been provided; attempt to recover gracefully (errors should have been emitted before this stage)
           {
@@ -103,19 +106,21 @@ namespace nontrivial_metric
         const auto coord_resource = this->mgr.coordinates();
         const auto& flatten = this->mgr.phase_flatten();
 
+        // push all parameter labels onto argument list
         if(param_resource)
           {
             GiNaC::symbol sym = this->sym_factory.get_symbol(*param_resource);
             args->push_back(sym);
           }
 
+        // if a coordinate resource is being used, push its label onto the argument list
         if(coord_resource && flatten)
           {
             GiNaC::symbol sym = this->sym_factory.get_symbol(coord_resource.get().second);
             args->push_back(sym);
           }
 
-        return(args);
+        return args;
       }
 
 
@@ -563,7 +568,7 @@ namespace nontrivial_metric
         auto args = this->generate_cache_arguments(printer);
         const auto& flatten = this->mgr.field_flatten();
 
-        if(flatten && (flags & use_dV_argument))
+        if(flatten && (flags & use_dV))
           {
             const auto dV_resource = this->mgr.dV();
             if(dV_resource)   // no need to push arguments if no resource available
@@ -573,7 +578,7 @@ namespace nontrivial_metric
               }
           }
 
-        if(flatten && (flags & use_ddV_argument))
+        if(flatten && (flags & use_ddV))
           {
             const auto ddV_resource = this->mgr.ddV();
             if(ddV_resource)
@@ -583,7 +588,7 @@ namespace nontrivial_metric
               }
           }
 
-        if(flatten && (flags & use_dddV_argument))
+        if(flatten && (flags & use_dddV))
           {
             const auto dddV_resource = this->mgr.dddV();
             if(dddV_resource)

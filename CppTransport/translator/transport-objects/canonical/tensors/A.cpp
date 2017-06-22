@@ -65,7 +65,7 @@ namespace canonical
         if(!this->cached) throw tensor_exception("A cache not ready");
 
         unsigned int index = this->fl.flatten(i, j, k);
-        auto args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument,
+        auto args = this->res.generate_cache_arguments(use_dV | use_ddV | use_dddV,
                                                        this->printer);
         args->push_back(k1);
         args->push_back(k2);
@@ -169,7 +169,7 @@ namespace canonical
         auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
         auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
 
-        auto args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        auto args = this->res.generate_cache_arguments(use_dV | use_ddV | use_dddV, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);

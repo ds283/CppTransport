@@ -142,7 +142,7 @@ class ginac_cache
 		//! get number of misses
 		unsigned int get_misses() const { return(this->misses); }
 
-		//! get time spend performing queries
+		//! get time spent performing queries
 		boost::timer::nanosecond_type get_query_time() const { return(this->query_timer.elapsed().wall); }
 
 

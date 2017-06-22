@@ -66,7 +66,7 @@ namespace nontrivial_metric
 
         unsigned int index = this->fl.flatten(i, j, k);
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(
-          use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+          use_dV | use_ddV | use_dddV, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -162,7 +162,7 @@ namespace nontrivial_metric
         auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
 
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(
-          use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+          use_dV | use_ddV | use_dddV, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);

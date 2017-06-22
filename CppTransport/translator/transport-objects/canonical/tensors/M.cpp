@@ -58,7 +58,7 @@ namespace canonical
         if(!this->cached) throw tensor_exception("M cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument,
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV | use_ddV,
                                                                                     this->printer);
 
         GiNaC::ex result;

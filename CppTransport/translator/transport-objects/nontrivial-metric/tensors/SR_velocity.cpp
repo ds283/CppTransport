@@ -54,7 +54,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("SR_velocity cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
 
         GiNaC::ex result;
 
@@ -91,7 +91,7 @@ namespace nontrivial_metric
 
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
         this->pre_lambda();

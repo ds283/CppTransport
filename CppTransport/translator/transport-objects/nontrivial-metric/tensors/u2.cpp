@@ -59,7 +59,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("U2 cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument,
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV | use_ddV,
                                                                                     this->printer);
         args->push_back(k);
         args->push_back(a);
@@ -168,7 +168,7 @@ namespace nontrivial_metric
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument, this->printer);
+        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV | use_ddV, this->printer);
         args->push_back(k);
         args->push_back(a);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
