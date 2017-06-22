@@ -119,7 +119,8 @@ std::unique_ptr<symbol_list> shared_resources::generate_deriv_symbols(const lang
         for(field_index i = field_index(0); i < max_i; ++i)
           {
             // TODO: explicit offset by this->num_fields is a bit ugly; would be nice to find a better approach
-            std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten, static_cast<unsigned int>(this->num_fields));
+            std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten,
+                                                           this->num_fields);
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
