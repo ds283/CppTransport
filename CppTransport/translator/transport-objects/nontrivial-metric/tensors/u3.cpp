@@ -145,9 +145,9 @@ namespace nontrivial_metric
         if(j.get_class() != index_class::full) throw tensor_exception("U3");
         if(k.get_class() != index_class::full) throw tensor_exception("U3");
 
-        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
-        auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
-        auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
+        auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
 
         std::unique_ptr<cache_tags> args =
           this->res.generate_cache_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);

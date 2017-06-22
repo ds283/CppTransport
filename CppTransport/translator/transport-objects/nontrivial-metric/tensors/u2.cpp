@@ -73,8 +73,8 @@ namespace nontrivial_metric
             field_index species_i = this->traits.to_species(i);
             field_index species_j = this->traits.to_species(j);
 
-            auto idx_i = this->shared.generate_index<GiNaC::idx>(species_i);
-            auto idx_j = this->shared.generate_index<GiNaC::idx>(species_j);
+            auto idx_i = this->shared.generate_index<GiNaC::varidx>(species_i);
+            auto idx_j = this->shared.generate_index<GiNaC::varidx>(species_j);
 
             if(this->traits.is_species(i) && this->traits.is_species(j))
               {
@@ -112,7 +112,7 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex u2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
+    GiNaC::ex u2::expr_field_momentum(GiNaC::varidx& i, GiNaC::varidx& j,
                                       GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
                                       GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
                                       GiNaC::symbol& k, GiNaC::symbol& a)
@@ -141,8 +141,8 @@ namespace nontrivial_metric
         if(i.get_class() != index_class::full) throw tensor_exception("U2");
         if(j.get_class() != index_class::full) throw tensor_exception("U2");
 
-        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
-        auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
 
         // convert these indices to species-only indices
         const auto i_field_a = this->traits.species_to_species(i);
@@ -155,10 +155,10 @@ namespace nontrivial_metric
         auto deriv_a_j = this->res.generate_deriv_vector(*j_field_a.second, this->printer);
         auto deriv_b_j = this->res.generate_deriv_vector(*j_field_b.second, this->printer);
 
-        auto idx_a_i = this->shared.generate_index<GiNaC::idx>(*i_field_a.second);
-        auto idx_b_i = this->shared.generate_index<GiNaC::idx>(*i_field_b.second);
-        auto idx_a_j = this->shared.generate_index<GiNaC::idx>(*j_field_a.second);
-        auto idx_b_j = this->shared.generate_index<GiNaC::idx>(*j_field_b.second);
+        auto idx_a_i = this->shared.generate_index<GiNaC::varidx>(*i_field_a.second);
+        auto idx_b_i = this->shared.generate_index<GiNaC::varidx>(*i_field_b.second);
+        auto idx_a_j = this->shared.generate_index<GiNaC::varidx>(*j_field_a.second);
+        auto idx_b_j = this->shared.generate_index<GiNaC::varidx>(*j_field_b.second);
 
         this->pre_lambda();
 

@@ -81,7 +81,8 @@ std::unique_ptr<symbol_list> shared_resources::generate_field_symbols(const lang
 
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
-    
+
+    // get max field index; variance assignment doesn't matter here
     const field_index max_i = this->get_max_field_index(variance::none);
 
     if(resource && flatten)
@@ -111,7 +112,8 @@ std::unique_ptr<symbol_list> shared_resources::generate_deriv_symbols(const lang
 
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
-    
+
+    // get max field index; variance assignment doesn't matter here
     const field_index max_i = this->get_max_field_index(variance::none);
 
     if(resource && flatten)
@@ -183,9 +185,25 @@ GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const field_index& i)
 
 
 template <>
+GiNaC::varidx shared_resources::generate_index<GiNaC::varidx>(const field_index& i)
+  {
+    if(i.get_variance() == variance::none) throw tensor_index_error(ERROR_VARIDX_WITHOUT_VARIANCE);
+    return GiNaC::varidx(static_cast<unsigned int>(i), this->num_fields, i.get_variance() == variance::covariant);
+  }
+
+
+template <>
 GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const phase_index& i)
   {
     return GiNaC::idx(static_cast<unsigned int>(i), 2*this->num_fields);
+  }
+
+
+template <>
+GiNaC::varidx shared_resources::generate_index<GiNaC::varidx>(const phase_index& i)
+  {
+    if(i.get_variance() == variance::none) throw tensor_index_error(ERROR_VARIDX_WITHOUT_VARIANCE);
+    return GiNaC::varidx(static_cast<unsigned int>(i), 2*this->num_fields, i.get_variance() == variance::covariant);
   }
 
 
@@ -222,4 +240,38 @@ GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const index_literal& i)
       }
 
     return GiNaC::idx(sym, size);
+  }
+
+
+template <>
+GiNaC::varidx shared_resources::generate_index<GiNaC::varidx>(const index_literal& i)
+  {
+    const abstract_index& idx = i;
+
+    std::string name = idx.get_loop_variable();
+    GiNaC::symbol sym = this->sym_factory.get_symbol(name);
+
+    unsigned int size = 0;
+    switch(idx.get_class())
+      {
+        case index_class::parameter:
+          {
+            size = this->num_params;
+            break;
+          }
+
+        case index_class::field_only:
+          {
+            size = this->num_fields;
+            break;
+          }
+
+        case index_class::full:
+          {
+            size = this->num_phase;
+            break;
+          }
+      }
+
+    return GiNaC::varidx(sym, size, i.get_variance() == variance::covariant);
   }

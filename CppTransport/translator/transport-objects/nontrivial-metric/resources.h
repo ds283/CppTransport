@@ -51,9 +51,9 @@
 namespace nontrivial_metric
   {
 
-    constexpr unsigned int use_dV_argument = 1;
-    constexpr unsigned int use_ddV_argument = 2;
-    constexpr unsigned int use_dddV_argument = 4;
+    constexpr unsigned int use_dV_argument = 1 << 0;
+    constexpr unsigned int use_ddV_argument = 1 << 1;
+    constexpr unsigned int use_dddV_argument = 1 << 2;
 
     //! implements resources for nontrivial_metric models, ie. trivial kinetic terms and just a potential
     class resources

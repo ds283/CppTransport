@@ -94,7 +94,7 @@ namespace nontrivial_metric
       {
         if(i.get_class() != index_class::full) throw tensor_exception("coordinates");
         
-        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         
         auto args = std::make_unique<cache_tags>();
         

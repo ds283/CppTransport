@@ -111,7 +111,7 @@ namespace nontrivial_metric
         //! compute field-momentum or momentum-field entry;
         //! field index is i, momentum index is j
         //! likewise, corresponding momenta are k1, k2 respectively
-        GiNaC::ex expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
+        GiNaC::ex expr_field_momentum(GiNaC::varidx& i, GiNaC::varidx& j,
                                       GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
                                       GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
 

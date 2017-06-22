@@ -74,8 +74,8 @@ namespace nontrivial_metric
             auto& deriv_i = (*derivs)[this->fl.flatten(i)];
             auto& deriv_j = (*derivs)[this->fl.flatten(j)];
 
-            auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
-            auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
+            auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+            auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
 
             result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
 
@@ -86,7 +86,7 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex M::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
+    GiNaC::ex M::expr(GiNaC::varidx& i, GiNaC::varidx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
                       GiNaC::ex& deriv_i, GiNaC::ex& deriv_j)
       {
         GiNaC::ex u = -Vij/Hsq;
@@ -111,8 +111,8 @@ namespace nontrivial_metric
         if(i.get_class() != index_class::field_only) throw tensor_exception("M");
         if(j.get_class() != index_class::field_only) throw tensor_exception("M");
 
-        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
-        auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
 
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));

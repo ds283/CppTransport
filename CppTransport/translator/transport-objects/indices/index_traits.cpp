@@ -47,7 +47,7 @@ bool index_traits::is_momentum(const phase_index& index)
 phase_index index_traits::to_momentum(const field_index& index)
   {
     auto raw = static_cast<unsigned int>(index);
-    return {raw + this->num_fields};
+    return {raw + this->num_fields, index.get_variance()};
   }
 
 
@@ -55,7 +55,7 @@ phase_index index_traits::to_momentum(const phase_index& index)
   {
     auto raw = static_cast<unsigned int>(index);
     if(raw < this->num_fields) raw += this->num_fields;
-    return {raw};
+    return {raw, index.get_variance()};
   }
 
 
@@ -63,7 +63,7 @@ field_index index_traits::to_species(const phase_index& index)
   {
     auto raw = static_cast<unsigned int>(index);
     if(raw >= this->num_fields) raw -= this->num_fields;
-    return {raw};
+    return {raw, index.get_variance()};
   }
 
 

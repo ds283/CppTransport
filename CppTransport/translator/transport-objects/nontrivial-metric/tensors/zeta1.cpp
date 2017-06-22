@@ -111,7 +111,7 @@ namespace nontrivial_metric
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
 
-        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
 
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));

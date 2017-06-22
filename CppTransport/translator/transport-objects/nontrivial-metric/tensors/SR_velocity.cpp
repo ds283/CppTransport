@@ -89,7 +89,7 @@ namespace nontrivial_metric
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("SR_velocity");
 
-        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
 
         std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));

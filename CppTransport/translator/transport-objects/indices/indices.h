@@ -105,6 +105,12 @@ namespace tensor_index_impl
         //! allow explicit cast to unsigned int
         explicit constexpr operator unsigned int() const { return(this->index_value); }
 
+        //! get value
+        unsigned int get() const { return this->index_value; }
+
+        //! get variance
+        variance get_variance() const { return this->index_variance; }
+
 
         // INCREMENT, DECREMENT
 

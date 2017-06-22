@@ -105,7 +105,7 @@ namespace nontrivial_metric
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U1");
 
-        auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
 
         // convert this index to species-only indices
         const auto i_field_a = this->traits.species_to_species(i);

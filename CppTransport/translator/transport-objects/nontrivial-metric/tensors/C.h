@@ -103,7 +103,7 @@ namespace nontrivial_metric
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
+        GiNaC::ex expr(GiNaC::varidx& i, GiNaC::varidx& j, GiNaC::varidx& k,
                        GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
                        GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
 
