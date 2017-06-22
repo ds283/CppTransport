@@ -25,6 +25,8 @@
 
 
 #include "resources.h"
+#include "ginac/ginac.h"
+#include "curvature_classes.h"
 
 
 namespace nontrivial_metric
@@ -43,8 +45,40 @@ namespace nontrivial_metric
         param_list(p.model.get_param_symbols()),
         fl(p.model.get_number_params(), p.model.get_number_fields())
       {
-        boost::optional< contexted_value< std::shared_ptr<GiNaC::ex> > > pot = p.model.get_potential();
+        auto pot = p.model.get_potential();
         if(pot) V = **(pot.get()); else V = GiNaC::ex(0);
+
+        // get number of fields in the current model
+        auto N = payload.model.get_number_fields();
+
+        auto metric = p.model.get_metric();
+        this -> G = std::make_unique<GiNaC::matrix>(N, N);
+        this -> Ginv = std::make_unique<GiNaC::matrix>(N, N);
+        this -> Crstfl = std::make_unique<Christoffel>();
+        this -> Rie_T = std::make_unique<Riemann_T>();
+
+        if(metric)
+        {
+          auto& G = **(metric.get());
+
+          for (int i = 0; i < N; ++i) {
+            for (int j = 0; j < N; ++j) {
+              field_metric::index_type idx = std::make_pair(field_list[i].get_name(), field_list[j].get_name());
+              GiNaC::ex comp = G(idx);
+              this->G->set(i, j, comp);
+            }
+          }
+
+          *this->Ginv = GiNaC::ex_to<GiNaC::matrix>(this -> G->inverse());
+
+          Crstfl -> setGamma(N, *this -> G, *this -> Ginv, field_list);
+          Rie_T -> setRieT(N, *this -> G, field_list, *this -> Crstfl);
+
+        } else {
+          *(this -> G) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
+          *(this -> Ginv) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
+          // I should set curvature terms to zero here.
+        }
         compute_timer.stop();
       }
 

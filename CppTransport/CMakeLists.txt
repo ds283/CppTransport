@@ -199,6 +199,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/nontrivial-metric/tensor_factory.cpp
   translator/transport-objects/nontrivial-metric/resources.cpp
   translator/transport-objects/nontrivial-metric/resource_manager.cpp
+  translator/transport-objects/nontrivial-metric/curvature_classes.cpp
   translator/transport-objects/utilities/symbol_factory.cpp
   translator/transport-objects/utilities/shared_resources.cpp
   translator/utilities/error.cpp
@@ -688,6 +689,8 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
   translator/transport-objects/nontrivial-metric/resources.h
   translator/transport-objects/nontrivial-metric/tensor_factory.cpp
   translator/transport-objects/nontrivial-metric/tensor_factory.h
+  translator/transport-objects/nontrivial-metric/curvature_classes.h
+  translator/transport-objects/nontrivial-metric/curvature_classes.cpp
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_FILES

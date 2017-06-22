@@ -37,6 +37,7 @@
 #include "index_flatten.h"
 
 #include "shared_resources.h"
+#include "curvature_classes.h"
 #include "cse.h"
 #include "language_printer.h"
 
@@ -235,6 +236,17 @@ namespace nontrivial_metric
         //! potential
         GiNaC::ex V;
 
+        //! field metric
+        std::unique_ptr<GiNaC::matrix> G;
+
+        //! inverse field metric
+        std::unique_ptr<GiNaC::matrix> Ginv;
+
+        //! Christoffel symbols
+        std::unique_ptr<Christoffel> Crstfl;
+
+        //! Riemann tensor components
+        std::unique_ptr<Riemann_T> Rie_T;
 
         // AGENTS
 
