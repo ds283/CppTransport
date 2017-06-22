@@ -30,7 +30,7 @@
 #include "backend_data.h"
 
 #include "canonical/tensor_factory.h"
-#include "nontrivial_metric/tensor_factory.h"
+#include "nontrivial-metric/tensor_factory.h"
 
 // generate an appropriate tensor_factory instance
 inline std::unique_ptr<tensor_factory> make_tensor_factory(translator_data& p, expression_cache& cache)

@@ -31,7 +31,7 @@
 
 #include "concepts/A.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 

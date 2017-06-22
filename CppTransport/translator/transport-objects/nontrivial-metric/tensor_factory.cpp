@@ -23,25 +23,25 @@
 // --@@
 //
 
-#include "nontrivial_metric/tensor_factory.h"
+#include "tensor_factory.h"
 
-#include "nontrivial_metric/Hubble.h"
-#include "nontrivial_metric/dV.h"
-#include "nontrivial_metric/ddV.h"
-#include "nontrivial_metric/dddV.h"
-#include "nontrivial_metric/SR_velocity.h"
-#include "nontrivial_metric/A.h"
-#include "nontrivial_metric/Atilde.h"
-#include "nontrivial_metric/B.h"
-#include "nontrivial_metric/C.h"
-#include "nontrivial_metric/M.h"
-#include "nontrivial_metric/u1.h"
-#include "nontrivial_metric/u2.h"
-#include "nontrivial_metric/u3.h"
-#include "nontrivial_metric/zeta1.h"
-#include "nontrivial_metric/zeta2.h"
-#include "nontrivial_metric/dN1.h"
-#include "nontrivial_metric/dN2.h"
+#include "tensors/Hubble.h"
+#include "tensors/dV.h"
+#include "tensors/ddV.h"
+#include "tensors/dddV.h"
+#include "tensors/SR_velocity.h"
+#include "tensors/A.h"
+#include "tensors/Atilde.h"
+#include "tensors/B.h"
+#include "tensors/C.h"
+#include "tensors/M.h"
+#include "tensors/u1.h"
+#include "tensors/u2.h"
+#include "tensors/u3.h"
+#include "tensors/zeta1.h"
+#include "tensors/zeta2.h"
+#include "tensors/dN1.h"
+#include "tensors/dN2.h"
 
 
 namespace nontrivial_metric

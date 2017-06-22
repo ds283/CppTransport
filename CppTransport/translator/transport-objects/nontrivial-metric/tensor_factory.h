@@ -28,7 +28,7 @@
 
 
 #include "concepts/tensor_factory.h"
-#include "nontrivial_metric/resources.h"
+#include "nontrivial-metric/resources.h"
 
 
 namespace nontrivial_metric

@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_M_H
-#define CPPTRANSPORT_NONCANONICAL_M_H
+#ifndef CPPTRANSPORT_NONCANONICAL_C_H
+#define CPPTRANSPORT_NONCANONICAL_C_H
 
 
 #include <memory>
 
-#include "concepts/M.h"
+#include "concepts/C.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -46,7 +46,7 @@
 namespace nontrivial_metric
   {
 
-    class canonical_M: public M
+    class canonical_C: public C
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,9 +54,9 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_M(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+        canonical_C(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                      boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : M(),
+          : C(),
             printer(p),
             cse_worker(cw),
             cache(c),
@@ -69,21 +69,23 @@ namespace nontrivial_metric
           }
 
         //! destructor is default
-        virtual ~canonical_M() = default;
+        virtual ~canonical_C() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'M' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS A 'C' TENSOR CONCEPT
 
       public:
 
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor> compute() override;
+        virtual std::unique_ptr<flattened_tensor> compute(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(field_index i, field_index j) override;
+        virtual GiNaC::ex compute_component(field_index i, field_index j, field_index k,
+                                            GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j) override;
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
+                                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
@@ -108,8 +110,9 @@ namespace nontrivial_metric
         void populate_workspace();
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                       GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j);
+        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
+                       GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
+                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
 
 
         // INTERNAL DATA
@@ -155,18 +158,6 @@ namespace nontrivial_metric
         //! list of momentum symbols
         std::unique_ptr<symbol_list> derivs;
 
-        //! flattened dV tensor
-        std::unique_ptr<flattened_tensor> dV;
-
-        //! flattened ddV tensor
-        std::unique_ptr<flattened_tensor> ddV;
-
-        //! Hubble parameter
-        GiNaC::ex Hsq;
-
-        //! epsilon
-        GiNaC::ex eps;
-
         //! Planck mass
         GiNaC::symbol Mp;
 
@@ -178,4 +169,4 @@ namespace nontrivial_metric
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_CANONICAL_M_H
+#endif //CPPTRANSPORT_CANONICAL_C_H

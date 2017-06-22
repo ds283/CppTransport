@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 20/12/2015.
+// Created by David Seery on 19/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_ZETA1_H
-#define CPPTRANSPORT_NONCANONICAL_ZETA1_H
+#ifndef CPPTRANSPORT_NONCANONICAL_DDV_H
+#define CPPTRANSPORT_NONCANONICAL_DDV_H
 
 
 #include <memory>
 
-#include "concepts/zeta1.h"
+#include "concepts/ddV.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -42,11 +42,10 @@
 #include "expression_cache.h"
 
 
-
 namespace nontrivial_metric
   {
 
-    class canonical_zeta1: public zeta1
+    class canonical_ddV: public ddV
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,39 +53,29 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_zeta1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                        boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : zeta1(),
+        canonical_ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
+          : ddV(),
             printer(p),
             cse_worker(cw),
-            cache(c),
             res(r),
             shared(s),
-            fl(f),
-            traits(t),
-            compute_timer(tm)
+            fl(f)
           {
           }
 
         //! destructor is default
-        virtual ~canonical_zeta1() = default;
+        virtual ~canonical_ddV() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'zeta1' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS A 'dV' TENSOR CONCEPT
 
       public:
 
         //! evaluate full tensor, returning a flattened list
         virtual std::unique_ptr<flattened_tensor> compute() override;
 
-        //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(phase_index i) override;
-
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<map_lambda> compute_lambda(const abstract_index& i) override;
-
-        //! invalidate cache
-        virtual void reset_cache() override { this->cached = false; }
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j) override;
 
 
         // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
@@ -95,20 +84,6 @@ namespace nontrivial_metric
 
         //! determine whether this tensor can be unrolled with the current resources
         virtual unroll_behaviour get_unroll() override;
-
-
-        // INTERNAL API
-
-      private:
-
-        //! cache symbols
-        void cache_symbols();
-
-        //! populate workspace
-        void populate_workspace();
-
-        //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::symbol& deriv_i);
 
 
         // INTERNAL DATA
@@ -124,14 +99,11 @@ namespace nontrivial_metric
         //! reference to supplied CSE worker
         cse& cse_worker;
 
-        //! reference to expression cache
-        expression_cache& cache;
+        //! reference to shared resource object
+        shared_resources& shared;
 
         //! reference to resource object
         resources& res;
-
-        //! reference to shared resource object
-        shared_resources& shared;
 
 
         // AGENTS
@@ -139,33 +111,10 @@ namespace nontrivial_metric
         //! index flattener
         index_flatten& fl;
 
-        //! index introspection
-        index_traits& traits;
-
-
-        // TIMER
-
-        //! compute timer
-        boost::timer::cpu_timer& compute_timer;
-
-
-        // WORKSPACE AND CACHE
-
-        //! list of momentum symbols
-        std::unique_ptr<symbol_list> derivs;
-
-        //! epsilon
-        GiNaC::ex eps;
-
-        //! Planck mass
-        GiNaC::symbol Mp;
-
-        //! cache status
-        bool cached;
-
       };
 
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_CANONICAL_ZETA1_H
+
+#endif //CPPTRANSPORT_CANONICAL_DDV_H

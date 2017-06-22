@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_C_H
-#define CPPTRANSPORT_NONCANONICAL_C_H
+#ifndef CPPTRANSPORT_NONCANONICAL_U3_H
+#define CPPTRANSPORT_NONCANONICAL_U3_H
 
 
 #include <memory>
 
-#include "concepts/C.h"
+#include "concepts/u3.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -41,12 +41,16 @@
 #include "language_printer.h"
 #include "expression_cache.h"
 
+#include "A.h"
+#include "B.h"
+#include "C.h"
+
 
 
 namespace nontrivial_metric
   {
 
-    class canonical_C: public C
+    class canonical_u3: public u3
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,14 +58,17 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_C(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+        canonical_u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                      boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : C(),
+          : u3(),
+            A_agent(p, cw, c, r, s, tm, f, t),
+            B_agent(p, cw, c, r, s, tm, f, t),
+            C_agent(p, cw, c, r, s, tm, f, t),
             printer(p),
             cse_worker(cw),
             cache(c),
-            res(r),
             shared(s),
+            res(r),
             fl(f),
             traits(t),
             compute_timer(tm)
@@ -69,7 +76,7 @@ namespace nontrivial_metric
           }
 
         //! destructor is default
-        virtual ~canonical_C() = default;
+        virtual ~canonical_u3() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'C' TENSOR CONCEPT
@@ -80,15 +87,15 @@ namespace nontrivial_metric
         virtual std::unique_ptr<flattened_tensor> compute(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(field_index i, field_index j, field_index k,
+        virtual GiNaC::ex compute_component(phase_index i, phase_index j, phase_index k,
                                             GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
-                                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+        virtual std::unique_ptr<map_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
+                                                           GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
-        //! invalidate cache
-        virtual void reset_cache() override { this->cached = false; }
+        //! invalidate cache; a no-op here
+        virtual void reset_cache() override { return; }
 
 
         // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
@@ -99,30 +106,13 @@ namespace nontrivial_metric
         virtual unroll_behaviour get_unroll() override;
 
 
-        // INTERNAL API
-
-      private:
-
-        //! cache symbols
-        void cache_symbols();
-
-        //! populate workspace
-        void populate_workspace();
-
-        //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                       GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
-                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
-
-
         // INTERNAL DATA
 
       private:
 
-
         // CACHES
 
-        //! reference to supplied language printer
+        //! reference to language printer
         language_printer& printer;
 
         //! reference to supplied CSE worker
@@ -134,7 +124,7 @@ namespace nontrivial_metric
         //! reference to resource object
         resources& res;
 
-        //! reference to shared resource object
+        //! reference to shared resources
         shared_resources& shared;
 
 
@@ -153,20 +143,20 @@ namespace nontrivial_metric
         boost::timer::cpu_timer& compute_timer;
 
 
-        // WORKSPACE AND CACHE
+        // WORKSPACE
 
-        //! list of momentum symbols
-        std::unique_ptr<symbol_list> derivs;
+        //! delegate for computing A-tensor
+        canonical_A A_agent;
 
-        //! Planck mass
-        GiNaC::symbol Mp;
+        //! delegate for computing B-tensor
+        canonical_B B_agent;
 
-        //! cache status
-        bool cached;
+        //! delegate for computing C-tensor
+        canonical_C C_agent;
 
       };
 
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_CANONICAL_C_H
+#endif //CPPTRANSPORT_CANONICAL_U3_H

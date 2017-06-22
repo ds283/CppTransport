@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 19/12/2015.
+// Created by David Seery on 20/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_SR_VELOCITY_H
-#define CPPTRANSPORT_NONCANONICAL_SR_VELOCITY_H
+#ifndef CPPTRANSPORT_NONCANONICAL_U2_H
+#define CPPTRANSPORT_NONCANONICAL_U2_H
 
 
 #include <memory>
 
-#include "concepts/SR_velocity.h"
+#include "concepts/u2.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -42,10 +42,11 @@
 #include "expression_cache.h"
 
 
+
 namespace nontrivial_metric
   {
 
-    class canonical_SR_velocity: public SR_velocity
+    class canonical_u2: public u2
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,35 +54,37 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_SR_velocity(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                    boost::timer::cpu_timer& tm, index_flatten& f)
-          : SR_velocity(),
+        canonical_u2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+          : u2(),
             printer(p),
             cse_worker(cw),
             cache(c),
             res(r),
             shared(s),
             fl(f),
+            traits(t),
             compute_timer(tm)
           {
           }
 
         //! destructor is default
-        virtual ~canonical_SR_velocity() = default;
+        virtual ~canonical_u2() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'SR_velocity' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS A 'u2' TENSOR CONCEPT
 
       public:
 
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor> compute() override;
+        virtual std::unique_ptr<flattened_tensor> compute(GiNaC::symbol& k, GiNaC::symbol& a) override;
 
-        //! evaluate a component of the tensor
-        virtual GiNaC::ex compute_component(field_index i) override;
+        //! evaluate component of tensor
+        virtual GiNaC::ex compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i) override;
+        virtual std::unique_ptr<map_lambda> compute_lambda(const abstract_index& i, const abstract_index& j,
+                                                           GiNaC::symbol& k, GiNaC::symbol& a) override;
 
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
@@ -102,12 +105,12 @@ namespace nontrivial_metric
         //! cache symbols
         void cache_symbols();
 
-        //! populate workspace
+        //! populate workspcae
         void populate_workspace();
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::ex& Vi);
-
+        GiNaC::ex expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
+                                      GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& k, GiNaC::symbol& a);
 
 
         // INTERNAL DATA
@@ -138,6 +141,9 @@ namespace nontrivial_metric
         //! index flattener
         index_flatten& fl;
 
+        //! index introspection
+        index_traits& traits;
+
 
         // TIMER
 
@@ -147,14 +153,20 @@ namespace nontrivial_metric
 
         // WORKSPACE AND CACHE
 
-        //! potential
-        GiNaC::ex V;
+        //! list of momentum symbols
+        std::unique_ptr<symbol_list> derivs;
 
         //! flattened dV tensor
         std::unique_ptr<flattened_tensor> dV;
 
         //! flattened ddV tensor
         std::unique_ptr<flattened_tensor> ddV;
+
+        //! Hubble parameter
+        GiNaC::ex Hsq;
+
+        //! epsilon
+        GiNaC::ex eps;
 
         //! Planck mass
         GiNaC::symbol Mp;
@@ -167,5 +179,4 @@ namespace nontrivial_metric
   }   // namespace nontrivial_metric
 
 
-
-#endif //CPPTRANSPORT_CANONICAL_SR_VELOCITY_H
+#endif //CPPTRANSPORT_CANONICAL_U2_H

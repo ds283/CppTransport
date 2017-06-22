@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_U2_H
-#define CPPTRANSPORT_NONCANONICAL_U2_H
+#ifndef CPPTRANSPORT_NONCANONICAL_M_H
+#define CPPTRANSPORT_NONCANONICAL_M_H
 
 
 #include <memory>
 
-#include "concepts/u2.h"
+#include "concepts/M.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -46,7 +46,7 @@
 namespace nontrivial_metric
   {
 
-    class canonical_u2: public u2
+    class canonical_M: public M
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,9 +54,9 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_u2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+        canonical_M(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                      boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : u2(),
+          : M(),
             printer(p),
             cse_worker(cw),
             cache(c),
@@ -69,22 +69,21 @@ namespace nontrivial_metric
           }
 
         //! destructor is default
-        virtual ~canonical_u2() = default;
+        virtual ~canonical_M() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'u2' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS A 'M' TENSOR CONCEPT
 
       public:
 
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor> compute(GiNaC::symbol& k, GiNaC::symbol& a) override;
+        virtual std::unique_ptr<flattened_tensor> compute() override;
 
         //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a) override;
+        virtual GiNaC::ex compute_component(field_index i, field_index j) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<map_lambda> compute_lambda(const abstract_index& i, const abstract_index& j,
-                                                           GiNaC::symbol& k, GiNaC::symbol& a) override;
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j) override;
 
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
@@ -105,12 +104,12 @@ namespace nontrivial_metric
         //! cache symbols
         void cache_symbols();
 
-        //! populate workspcae
+        //! populate workspace
         void populate_workspace();
 
         //! underlying symbolic expression
-        GiNaC::ex expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                                      GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& k, GiNaC::symbol& a);
+        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
+                       GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j);
 
 
         // INTERNAL DATA
@@ -179,4 +178,4 @@ namespace nontrivial_metric
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_CANONICAL_U2_H
+#endif //CPPTRANSPORT_CANONICAL_M_H

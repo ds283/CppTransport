@@ -2,7 +2,7 @@
 // Created by Sean Butchers on 16/06/2017.
 //
 
-#include "nontrivial_metric/curvature_classes.h"
+#include "curvature_classes.h"
 using namespace GiNaC;
 
 // Class member function definitions

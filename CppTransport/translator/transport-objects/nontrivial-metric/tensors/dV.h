@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_DDV_H
-#define CPPTRANSPORT_NONCANONICAL_DDV_H
+#ifndef CPPTRANSPORT_NONCANONICAL_DV_H
+#define CPPTRANSPORT_NONCANONICAL_DV_H
 
 
 #include <memory>
 
-#include "concepts/ddV.h"
+#include "concepts/dV.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -45,7 +45,7 @@
 namespace nontrivial_metric
   {
 
-    class canonical_ddV: public ddV
+    class canonical_dV: public dV
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,8 +53,8 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_ddV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
-          : ddV(),
+        canonical_dV(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
+          : dV(),
             printer(p),
             cse_worker(cw),
             res(r),
@@ -64,7 +64,7 @@ namespace nontrivial_metric
           }
 
         //! destructor is default
-        virtual ~canonical_ddV() = default;
+        virtual ~canonical_dV() = default;
 
 
         // INTERFACE -- IMPLEMENTS A 'dV' TENSOR CONCEPT
@@ -75,7 +75,7 @@ namespace nontrivial_metric
         virtual std::unique_ptr<flattened_tensor> compute() override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j) override;
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i) override;
 
 
         // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
@@ -99,7 +99,7 @@ namespace nontrivial_metric
         //! reference to supplied CSE worker
         cse& cse_worker;
 
-        //! reference to shared resource object
+        //! reference to shaed resource object
         shared_resources& shared;
 
         //! reference to resource object
@@ -117,4 +117,4 @@ namespace nontrivial_metric
 
 
 
-#endif //CPPTRANSPORT_CANONICAL_DDV_H
+#endif //CPPTRANSPORT_CANONICAL_DV_H

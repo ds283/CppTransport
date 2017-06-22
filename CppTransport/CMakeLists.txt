@@ -161,23 +161,23 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/dN2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
   translator/transport-objects/nontrivial-metric/resources.cpp
-  translator/transport-objects/nontrivial-metric/Hubble.cpp
-  translator/transport-objects/nontrivial-metric/dV.cpp
-  translator/transport-objects/nontrivial-metric/ddV.cpp
-  translator/transport-objects/nontrivial-metric/dddV.cpp
-  translator/transport-objects/nontrivial-metric/SR_velocity.cpp
-  translator/transport-objects/nontrivial-metric/A.cpp
-  translator/transport-objects/nontrivial-metric/Atilde.cpp
-  translator/transport-objects/nontrivial-metric/B.cpp
-  translator/transport-objects/nontrivial-metric/C.cpp
-  translator/transport-objects/nontrivial-metric/M.cpp
-  translator/transport-objects/nontrivial-metric/u1.cpp
-  translator/transport-objects/nontrivial-metric/u2.cpp
-  translator/transport-objects/nontrivial-metric/u3.cpp
-  translator/transport-objects/nontrivial-metric/zeta1.cpp
-  translator/transport-objects/nontrivial-metric/zeta2.cpp
-  translator/transport-objects/nontrivial-metric/dN1.cpp
-  translator/transport-objects/nontrivial-metric/dN2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Hubble.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/ddV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dddV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/SR_velocity.cpp
+  translator/transport-objects/nontrivial-metric/tensors/A.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Atilde.cpp
+  translator/transport-objects/nontrivial-metric/tensors/B.cpp
+  translator/transport-objects/nontrivial-metric/tensors/C.cpp
+  translator/transport-objects/nontrivial-metric/tensors/M.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/zeta1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/zeta2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dN1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dN2.cpp
   translator/transport-objects/nontrivial-metric/tensor_factory.cpp
   translator/transport-objects/resource_manager.cpp
   translator/transport-objects/concepts/transport_tensor.cpp

@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 07/08/2016.
+// Created by David Seery on 20/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_ATILDE_H
-#define CPPTRANSPORT_NONCANONICAL_ATILDE_H
+#ifndef CPPTRANSPORT_NONCANONICAL_ZETA2_H
+#define CPPTRANSPORT_NONCANONICAL_ZETA2_H
 
 
 #include <memory>
 
-#include "concepts/Atilde.h"
+#include "concepts/zeta2.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -46,7 +46,7 @@
 namespace nontrivial_metric
   {
 
-    class canonical_Atilde: public Atilde
+    class canonical_zeta2: public zeta2
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,9 +54,9 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_Atilde(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                         boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : Atilde(),
+        canonical_zeta2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                        boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+          : zeta2(),
             printer(p),
             cse_worker(cw),
             cache(c),
@@ -69,23 +69,24 @@ namespace nontrivial_metric
           }
 
         //! destructor is default
-        virtual ~canonical_Atilde() = default;
+        virtual ~canonical_zeta2() = default;
 
 
-        // INTERFACE -- IMPLEMENTS AN 'ATILDE' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS A 'zeta2' TENSOR CONCEPT
 
       public:
 
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor> compute(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+        virtual std::unique_ptr<flattened_tensor> compute(GiNaC::symbol& k, GiNaC::symbol& k1,
+                                                          GiNaC::symbol& k2, GiNaC::symbol& a) override;
 
         //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(field_index i, field_index j, field_index k,
-                                            GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+        virtual GiNaC::ex compute_component(phase_index i, phase_index j,
+                                            GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
-                                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+        virtual std::unique_ptr<map_lambda> compute_lambda(const abstract_index& i, const abstract_index& j,
+                                                           GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a) override;
 
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
@@ -103,18 +104,22 @@ namespace nontrivial_metric
 
       private:
 
-        //! cache Mp etc. symbols
+        //! cache symbols
         void cache_symbols();
 
         //! populate workspace
         void populate_workspace();
 
-        //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                       GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
-                       GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
-                       GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
-                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
+        //! compute field-field entry
+        GiNaC::ex expr_field_field(GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
+
+        //! compute field-momentum or momentum-field entry;
+        //! field index is i, momentum index is j
+        //! likewise, corresponding momenta are k1, k2 respectively
+        GiNaC::ex expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
+                                      GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+                                      GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
 
 
         // INTERNAL DATA
@@ -163,12 +168,6 @@ namespace nontrivial_metric
         //! flattened dV tensor
         std::unique_ptr<flattened_tensor> dV;
 
-        //! flattened ddV tensor
-        std::unique_ptr<flattened_tensor> ddV;
-
-        //! flattened dddV tensor
-        std::unique_ptr<flattened_tensor> dddV;
-
         //! Hubble parameter
         GiNaC::ex Hsq;
 
@@ -178,6 +177,9 @@ namespace nontrivial_metric
         //! Planck mass
         GiNaC::symbol Mp;
 
+        //! quantity p
+        GiNaC::ex p;
+
         //! cache status
         bool cached;
 
@@ -186,4 +188,4 @@ namespace nontrivial_metric
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_CANONICAL_ATILDE_H
+#endif //CPPTRANSPORT_CANONICAL_ZETA2_H

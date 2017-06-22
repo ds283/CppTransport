@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 20/12/2015.
+// Created by David Seery on 19/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_DN1_H
-#define CPPTRANSPORT_NONCANONICAL_DN1_H
+#ifndef CPPTRANSPORT_NONCANONICAL_SR_VELOCITY_H
+#define CPPTRANSPORT_NONCANONICAL_SR_VELOCITY_H
 
 
 #include <memory>
 
-#include "concepts/dN1.h"
+#include "concepts/SR_velocity.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -42,11 +42,10 @@
 #include "expression_cache.h"
 
 
-
 namespace nontrivial_metric
   {
 
-    class canonical_dN1: public dN1
+    class canonical_SR_velocity: public SR_velocity
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,33 +53,35 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_dN1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                      boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : dN1(),
+        canonical_SR_velocity(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                    boost::timer::cpu_timer& tm, index_flatten& f)
+          : SR_velocity(),
             printer(p),
             cse_worker(cw),
             cache(c),
             res(r),
             shared(s),
             fl(f),
-            traits(t),
             compute_timer(tm)
           {
           }
 
         //! destructor is default
-        virtual ~canonical_dN1() = default;
+        virtual ~canonical_SR_velocity() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'zeta1' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS A 'SR_velocity' TENSOR CONCEPT
 
       public:
 
         //! evaluate full tensor, returning a flattened list
         virtual std::unique_ptr<flattened_tensor> compute() override;
 
-        //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(phase_index i) override;
+        //! evaluate a component of the tensor
+        virtual GiNaC::ex compute_component(field_index i) override;
+
+        //! evaluate lambda for tensor
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i) override;
 
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
@@ -103,6 +104,10 @@ namespace nontrivial_metric
 
         //! populate workspace
         void populate_workspace();
+
+        //! underlying symbolic expression
+        GiNaC::ex expr(GiNaC::ex& Vi);
+
 
 
         // INTERNAL DATA
@@ -133,9 +138,6 @@ namespace nontrivial_metric
         //! index flattener
         index_flatten& fl;
 
-        //! index introspection
-        index_traits& traits;
-
 
         // TIMER
 
@@ -145,17 +147,17 @@ namespace nontrivial_metric
 
         // WORKSPACE AND CACHE
 
-        //! list of field symbols
-        std::unique_ptr<symbol_list> fields;
+        //! potential
+        GiNaC::ex V;
 
-        //! Hubble parameter
-        GiNaC::ex Hsq;
+        //! flattened dV tensor
+        std::unique_ptr<flattened_tensor> dV;
 
-        //! epsilon
-        GiNaC::ex eps;
+        //! flattened ddV tensor
+        std::unique_ptr<flattened_tensor> ddV;
 
-        //! dot(H) = -eps*Hsq
-        GiNaC::ex dotH;
+        //! Planck mass
+        GiNaC::symbol Mp;
 
         //! cache status
         bool cached;
@@ -165,4 +167,5 @@ namespace nontrivial_metric
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_CANONICAL_DN1_H
+
+#endif //CPPTRANSPORT_CANONICAL_SR_VELOCITY_H

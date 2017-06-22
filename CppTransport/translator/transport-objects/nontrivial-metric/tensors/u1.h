@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 20/12/2015.
+// Created by David Seery on 19/12/2015.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_B_H
-#define CPPTRANSPORT_NONCANONICAL_B_H
+#ifndef CPPTRANSPORT_NONCANONICAL_U1_H
+#define CPPTRANSPORT_NONCANONICAL_U1_H
 
 
 #include <memory>
 
-#include "concepts/B.h"
+#include "concepts/u1.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -46,7 +46,7 @@
 namespace nontrivial_metric
   {
 
-    class canonical_B: public B
+    class canonical_u1: public u1
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,9 +54,9 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_B(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+        canonical_u1(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                      boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : B(),
+          : u1(),
             printer(p),
             cse_worker(cw),
             cache(c),
@@ -69,23 +69,21 @@ namespace nontrivial_metric
           }
 
         //! destructor is default
-        virtual ~canonical_B() = default;
+        virtual ~canonical_u1() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'B' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS A 'u1' TENSOR CONCEPT
 
       public:
 
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor> compute(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+        virtual std::unique_ptr<flattened_tensor> compute() override;
 
         //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(field_index i, field_index j, field_index k,
-                                            GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+        virtual GiNaC::ex compute_component(phase_index i) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
-                                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+        virtual std::unique_ptr<map_lambda> compute_lambda(const abstract_index& i) override;
 
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
@@ -110,10 +108,7 @@ namespace nontrivial_metric
         void populate_workspace();
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                       GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
-                       GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
-                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
+        GiNaC::ex expr_momentum(GiNaC::ex& Vi, GiNaC::symbol& deriv_i);
 
 
         // INTERNAL DATA
@@ -168,15 +163,13 @@ namespace nontrivial_metric
         //! epsilon
         GiNaC::ex eps;
 
-        //! Planck mass
-        GiNaC::symbol Mp;
-
         //! cache status
         bool cached;
+
 
       };
 
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_CANONICAL_B_H
+#endif //CPPTRANSPORT_CANONICAL_U1_H

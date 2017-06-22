@@ -24,9 +24,9 @@
 //
 
 
-#include "nontrivial_metric/resources.h"
+#include "resources.h"
 #include "ginac/ginac.h"
-#include "nontrivial_metric/curvature_classes.h"
+#include "curvature_classes.h"
 
 
 namespace nontrivial_metric

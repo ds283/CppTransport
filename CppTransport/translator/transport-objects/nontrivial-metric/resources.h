@@ -37,6 +37,7 @@
 #include "index_flatten.h"
 
 #include "shared_resources.h"
+#include "curvature_classes.h"
 #include "cse.h"
 #include "language_printer.h"
 
@@ -46,7 +47,6 @@
 
 #include "disable_warnings.h"
 #include "ginac/ginac.h"
-#include "nontrivial_metric/curvature_classes.h"
 
 
 namespace nontrivial_metric

@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 20/12/2015.
+// Created by David Seery on 07/08/2016.
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
@@ -23,15 +23,15 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONCANONICAL_DN2_H
-#define CPPTRANSPORT_NONCANONICAL_DN2_H
+#ifndef CPPTRANSPORT_NONCANONICAL_ATILDE_H
+#define CPPTRANSPORT_NONCANONICAL_ATILDE_H
 
 
 #include <memory>
 
-#include "concepts/dN2.h"
+#include "concepts/Atilde.h"
 #include "utilities/shared_resources.h"
-#include "nontrivial_metric/resources.h"
+#include "transport-objects/nontrivial-metric/resources.h"
 
 #include "indices.h"
 
@@ -46,7 +46,7 @@
 namespace nontrivial_metric
   {
 
-    class canonical_dN2: public dN2
+    class canonical_Atilde: public Atilde
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -54,9 +54,9 @@ namespace nontrivial_metric
       public:
 
         //! constructor
-        canonical_dN2(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                     boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
-          : dN2(),
+        canonical_Atilde(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
+                         boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
+          : Atilde(),
             printer(p),
             cse_worker(cw),
             cache(c),
@@ -69,18 +69,23 @@ namespace nontrivial_metric
           }
 
         //! destructor is default
-        virtual ~canonical_dN2() = default;
+        virtual ~canonical_Atilde() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'u2' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS AN 'ATILDE' TENSOR CONCEPT
 
       public:
 
         //! evaluate full tensor, returning a flattened list
-        virtual std::unique_ptr<flattened_tensor> compute() override;
+        virtual std::unique_ptr<flattened_tensor> compute(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! evaluate component of tensor
-        virtual GiNaC::ex compute_component(phase_index i, phase_index j) override;
+        virtual GiNaC::ex compute_component(field_index i, field_index j, field_index k,
+                                            GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+
+        //! evaluate lambda for tensor
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
+                                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
@@ -98,11 +103,18 @@ namespace nontrivial_metric
 
       private:
 
-        //! cache symbols
+        //! cache Mp etc. symbols
         void cache_symbols();
 
         //! populate workspace
         void populate_workspace();
+
+        //! underlying symbolic expression
+        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
+                       GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
+                       GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
+                       GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
+                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
 
 
         // INTERNAL DATA
@@ -145,14 +157,17 @@ namespace nontrivial_metric
 
         // WORKSPACE AND CACHE
 
-        //! list of field symbols
-        std::unique_ptr<symbol_list> fields;
-
         //! list of momentum symbols
         std::unique_ptr<symbol_list> derivs;
 
         //! flattened dV tensor
         std::unique_ptr<flattened_tensor> dV;
+
+        //! flattened ddV tensor
+        std::unique_ptr<flattened_tensor> ddV;
+
+        //! flattened dddV tensor
+        std::unique_ptr<flattened_tensor> dddV;
 
         //! Hubble parameter
         GiNaC::ex Hsq;
@@ -160,11 +175,8 @@ namespace nontrivial_metric
         //! epsilon
         GiNaC::ex eps;
 
-        //! dot(H) = -eps*Hsq
-        GiNaC::ex dotH;
-
-        //! p quantity
-        GiNaC::ex p;
+        //! Planck mass
+        GiNaC::symbol Mp;
 
         //! cache status
         bool cached;
@@ -174,4 +186,4 @@ namespace nontrivial_metric
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_CANONICAL_DN2_H
+#endif //CPPTRANSPORT_CANONICAL_ATILDE_H
