@@ -45,6 +45,8 @@ namespace canonical
       {
         auto pot = p.model.get_potential();
         if(pot) V = **(pot.get()); else V = GiNaC::ex(0);
+
+        // switch off compute timer (it will be restarted if needed during subsequent computations)
         compute_timer.stop();
       }
 

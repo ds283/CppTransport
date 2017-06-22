@@ -26,36 +26,114 @@
 #ifndef CPPTRANSPORT_NONCANONICAL_CURVATURE_CLASSES_H
 #define CPPTRANSPORT_NONCANONICAL_CURVATURE_CLASSES_H
 
+
 #include <iostream>
-#include <ginac/ginac.h>
-#include <vector>
 
-using namespace GiNaC;
+#include "symbol_list.h"
+#include "concepts/flattened_tensor.h"
 
-class Christoffel {
-private:
-    std::vector<ex> gamma;
-public:
-    ex temp;
+#include "ginac/ginac.h"
 
-    void setGamma (int N, GiNaC::matrix G, GiNaC::matrix Ginv, std::vector<GiNaC::symbol> coords);
 
-    ex getGamma (int i, int j, int k, int N);
+class Christoffel
+  {
 
-    long getLength ();
-};
+    // CONSTRUCTOR, DESTRUCTOR
 
-class Riemann_T {
-private:
-    std::vector<ex> rie_t;
-public:
-    ex temp;
+  public:
 
-    void setRieT (int N, GiNaC::matrix G, std::vector<GiNaC::symbol> coords, Christoffel crstfl);
+    //! constructor accepts a GiNaC matrix and its inverse, and a list of symbols representing the fields of
+    //! the model
+    Christoffel(const GiNaC::matrix& G_, const GiNaC::matrix& Ginv_, const symbol_list& c_);
 
-    ex get_RieT (int i, int j, int k, int l, int N);
+    //! destructor is default
+    ~Christoffel() = default;
 
-    long getLength ();
-};
+
+    // EXTRACT COMPONENTS
+
+  public:
+
+    //! extract a component; i = top index, (j,k) = symmetric lower indices
+    const GiNaC::ex& operator()(unsigned int i, unsigned int j, unsigned int k) const;
+
+    //! get number of fields
+    unsigned int get_number_fields() const { return this->N; }
+
+    //! get metric
+    const GiNaC::matrix& get_G() const { return this->G; }
+
+    //! get inverse metric
+    const GiNaC::matrix& get_Ginv() const { return this->Ginv; }
+
+    //! get list of field labels
+    const symbol_list& get_coords() const { return this->coords; }
+
+    //! get size
+    size_t size() const;
+
+
+    // INTERNAL DATA
+
+  private:
+
+    //! cache number of fields
+    const unsigned int N;
+
+    //! flattened tensor representing the components of the connexion
+    flattened_tensor gamma;
+
+    //! reference to matrix used to construct connexion
+    const GiNaC::matrix& G;
+
+    //! reference to inverse matrix used to construct connexion
+    const GiNaC::matrix& Ginv;
+
+    //! copy of list of field labels
+    const symbol_list& coords;
+
+  };
+
+
+class Riemann_T
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor takes a reference to a Christoffel object and uses it to compute the corresponding
+    //! components of the Riemann tensor
+    Riemann_T(const Christoffel& Gamma_);
+
+    //! destructor is default
+    ~Riemann_T() = default;
+
+
+    // EXTRACT COMPONENTS
+
+  public:
+
+    //! extract a component in the fully-covariant index position R_{ijkl}
+    GiNaC::ex operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int l) const;
+
+    //! get size
+    size_t size() const;
+
+
+    // INTERNAL DATA
+
+  private:
+
+    //! cache number of fields
+    const unsigned int N;
+
+    //! flattened tensor representing the components of the Riemann tenosr
+    flattened_tensor rie_t;
+
+    //! reference to Christoffel object from which the Riemann tensor is built
+    const Christoffel& Gamma;
+
+  };
 
 #endif //CPPTRANSPORT_NONCANONICAL_CURVATURE_CLASSES_H

@@ -325,6 +325,9 @@ constexpr auto ERROR_BAD_INDEX_LABEL                 = "Unknown field-space metr
 constexpr auto ERROR_MISMATCHED_TENSOR_INDICES       = "Internal error: comparison of tensor indices with different variance";
 constexpr auto ERROR_VARIDX_WITHOUT_VARIANCE         = "Internal error: construction of GiNaC::varidx without variance information";
 
+constexpr auto ERROR_METRIC_NOT_SQUARE               = "Internal error: field-space metric is not a square matrix";
+constexpr auto ERROR_METRIC_DIMENSION                = "Internal error: field-space metric/inverse has inconsistent dimension";
+
 constexpr auto NOTIFY_PARSE_TERMINATED               = "Translation terminated";
 constexpr auto NOTIFY_TOO_MANY_ERRORS                = "encountered too many errors";
 

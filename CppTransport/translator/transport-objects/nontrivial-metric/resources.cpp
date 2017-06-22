@@ -51,34 +51,44 @@ namespace nontrivial_metric
         // get number of fields in the current model
         auto N = payload.model.get_number_fields();
 
+        // populate GiNaC matrices representing the field-space metric and its inverse
+        this->G = std::make_unique<GiNaC::matrix>(N, N);
+        this->Ginv = std::make_unique<GiNaC::matrix>(N, N);
+
+        // get metric stored by model descriptor, if one exists
         auto metric = p.model.get_metric();
-        this -> G = std::make_unique<GiNaC::matrix>(N, N);
-        this -> Ginv = std::make_unique<GiNaC::matrix>(N, N);
-        this -> Crstfl = std::make_unique<Christoffel>();
-        this -> Rie_T = std::make_unique<Riemann_T>();
 
-        if(metric)
-        {
-          auto& G = **(metric.get());
+        if(metric)    // expected case that a metric has been provided
+          {
+            // we now need to copy the user-defined metric into a GiNaC::matrix that will
+            // represent it during analytic calcuations
+            auto& G = **(metric.get());
 
-          for (int i = 0; i < N; ++i) {
-            for (int j = 0; j < N; ++j) {
-              field_metric::index_type idx = std::make_pair(field_list[i].get_name(), field_list[j].get_name());
-              GiNaC::ex comp = G(idx);
-              this->G->set(i, j, comp);
-            }
+            // GiNaC matrices are indexed by numbers; here, the row/column numbering order
+            // matches the declaration order of the fields
+            for(int i = 0; i < N; ++i)
+              {
+                for(int j = 0; j < N; ++j)
+                  {
+                    field_metric::index_type idx = std::make_pair(field_list[i].get_name(), field_list[j].get_name());
+                    this->G->set(i, j, G(idx));
+                  }
+              }
+
+            // construct inverse metric
+            *this->Ginv = GiNaC::ex_to<GiNaC::matrix>(this -> G->inverse());
+          }
+        else    // unexpected case that no metric has been provided; attempt to recover gracefully (errors should have been emitted before this stage)
+          {
+            *(this->G) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
+            *(this->Ginv) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
           }
 
-          *this->Ginv = GiNaC::ex_to<GiNaC::matrix>(this -> G->inverse());
+        // construct curvature tensors based on this metric
+        this->Crstfl = std::make_unique<Christoffel>(*this->G, *this->Ginv, field_list);
+        this->Rie_T = std::make_unique<Riemann_T>(*this->Crstfl);
 
-          Crstfl -> setGamma(N, *this -> G, *this -> Ginv, field_list);
-          Rie_T -> setRieT(N, *this -> G, field_list, *this -> Crstfl);
-
-        } else {
-          *(this -> G) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
-          *(this -> Ginv) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
-          // I should set curvature terms to zero here.
-        }
+        // switch off compute timer (it will be restarted if needed during subsequent computations)
         compute_timer.stop();
       }
 
