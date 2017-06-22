@@ -49,9 +49,12 @@ namespace nontrivial_metric
         auto pot = p.model.get_potential();
         if(pot) V = **(pot.get()); else V = GiNaC::ex(0);
 
+        // get number of fields in the current model
+        auto N = payload.model.get_number_fields();
+
         auto metric = p.model.get_metric();
-        this -> G = std::make_unique<GiNaC::matrix>(num_fields, num_fields);
-        this -> Ginv = std::make_unique<GiNaC::matrix>(num_fields, num_fields);
+        this -> G = std::make_unique<GiNaC::matrix>(N, N);
+        this -> Ginv = std::make_unique<GiNaC::matrix>(N, N);
         this -> Crstfl = std::make_unique<Christoffel>();
         this -> Rie_T = std::make_unique<Riemann_T>();
 
@@ -59,25 +62,22 @@ namespace nontrivial_metric
         {
           auto& G = **(metric.get());
 
-          field_index i(0);
-          field_index j(0);
-
-          for (i = 0; i < num_fields; ++i) {
-            for (j = 0; j < num_fields; ++j) {
+          for (int i = 0; i < N; ++i) {
+            for (int j = 0; j < N; ++j) {
               field_metric::index_type idx = std::make_pair(field_list[i].get_name(), field_list[j].get_name());
               GiNaC::ex comp = G(idx);
               this->G->set(i, j, comp);
             }
           }
 
-          *this->Ginv = this -> G->inverse();
+          *this->Ginv = GiNaC::ex_to<GiNaC::matrix>(this -> G->inverse());
 
-          Crstfl -> setGamma(num_fields, *this -> G, *this -> Ginv, field_list);
-          Rie_T -> setRieT(num_fields, *this -> G, field_list, *this -> Crstfl);
+          Crstfl -> setGamma(N, *this -> G, *this -> Ginv, field_list);
+          Rie_T -> setRieT(N, *this -> G, field_list, *this -> Crstfl);
 
         } else {
-          *this -> G = GiNaC::unit_matrix(num_fields);
-          *this -> Ginv = GiNaC::unit_matrix(num_fields);
+          *(this -> G) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
+          *(this -> Ginv) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
           // I should set curvature terms to zero here.
         }
         compute_timer.stop();

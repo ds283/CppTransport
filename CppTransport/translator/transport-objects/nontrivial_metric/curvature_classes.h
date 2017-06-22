@@ -1,3 +1,5 @@
+#ifndef CPPTRANSPORT_NONCANONICAL_CURVATURE_CLASSES_H
+#define CPPTRANSPORT_NONCANONICAL_CURVATURE_CLASSES_H
 #include <iostream>
 #include <ginac/ginac.h>
 #include <vector>
@@ -25,3 +27,5 @@ public:
     ex get_RieT (int i, int j, int k, int l, int N);
     long getLength ();
 };
+
+#endif //CPPTRANSPORT_NONCANONICAL_CURVATURE_CLASSES_H

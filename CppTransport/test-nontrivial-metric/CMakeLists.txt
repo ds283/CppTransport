@@ -41,6 +41,7 @@ ADD_CUSTOM_COMMAND(
   DEPENDS gelaton.model
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/nontrivial_metric_mpi.h
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/nontrivial_metric_core.h
+  DEPENDS CppTransport
 )
 
 
