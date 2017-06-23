@@ -623,6 +623,7 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/resource_manager.h
   translator/transport-objects/concepts/tensor_factory.h
   translator/transport-objects/concepts/transport_tensor.h
+  translator/transport-objects/concepts/tensor_exception.h
   )
 
 SET(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_DETAIL_FILES
@@ -710,7 +711,8 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES
 SET(TRANSLATOR_TRANSPORT_OBJECTS_SHARED_CACHE_DETAIL_FILES
   translator/transport-objects/shared/cache_detail/cache_tags.cpp
   translator/transport-objects/shared/cache_detail/cache_tags.h
-  translator/transport-objects/shared/cache_detail/cache_key.h)
+  translator/transport-objects/shared/cache_detail/cache_key.h
+  )
 
 SET(TRANSLATOR_TRANSPORT_OBJECTS_SHARED_FILES
   translator/transport-objects/shared/expression_cache.h

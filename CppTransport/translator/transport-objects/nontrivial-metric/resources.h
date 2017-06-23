@@ -186,6 +186,11 @@ namespace nontrivial_metric
     
         //! query whether RiemannB3 can be rolled-up into loops
         bool can_roll_Riemann_B3(const index_literal_list& idx_list) const;
+        
+        
+        //! determine whether metric resources are available to perform index raising and lowering as needed
+        template <unsigned long Indices>
+        bool get_roll_metric_requirements(const std::array< variance, Indices >& avail, const std::array< variance, Indices >& reqd) const;
 
 
         // INTERNAL API

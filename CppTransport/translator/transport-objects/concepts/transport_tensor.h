@@ -32,6 +32,8 @@
 #include "macro_types.h"
 #include "index_literal.h"
 
+#include "tensor_exception.h"
+
 
 // forward-declare TensorJanitor class
 class TensorJanitor;
@@ -118,26 +120,6 @@ class TensorJanitor
 
     //! tensor object we are managing
     transport_tensor& tensor;
-
-  };
-
-
-//! exception class thrown when errors occur during tensor evaluation
-class tensor_exception: std::runtime_error
-  {
-
-    // CONSTRUCTOR, DESTRUCTOR
-
-  public:
-
-    //! constructor
-    tensor_exception(std::string x)
-      : std::runtime_error(std::move(x))
-      {
-      }
-
-    //! destructor is default
-    ~tensor_exception() = default;
 
   };
 

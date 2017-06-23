@@ -25,8 +25,10 @@
 
 
 #include "resources.h"
-#include "ginac/ginac.h"
 #include "curvature_classes.h"
+#include "concepts/tensor_exception.h"
+
+#include "ginac/ginac.h"
 
 
 namespace nontrivial_metric
@@ -713,31 +715,51 @@ namespace nontrivial_metric
 
     bool resources::can_roll_dV(const index_literal_list& idx_list) const
       {
-        const auto resource = this->mgr.dV({variance::covariant}, false);
+        if(idx_list.size() != RESOURCE_INDICES::DV_INDICES) throw tensor_exception("can_roll_dV");
+        
+        std::array< variance, RESOURCE_INDICES::DV_INDICES > vars = { idx_list[0]->get_variance() };
+        
+        const auto resource = this->mgr.dV(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
+        
+        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
 
-        return(resource && flatten && working_type);
+        return(resource && G && flatten && working_type);
       }
 
 
     bool resources::can_roll_ddV(const index_literal_list& idx_list) const
       {
-        const auto resource = this->mgr.ddV({variance::covariant, variance::covariant}, false);
+        if(idx_list.size() != RESOURCE_INDICES::DDV_INDICES) throw tensor_exception("can_roll_ddV");
+    
+        std::array< variance, RESOURCE_INDICES::DDV_INDICES > vars
+          = { idx_list[0]->get_variance(), idx_list[1]->get_variance() };
+
+        const auto resource = this->mgr.ddV(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
+    
+        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
 
-        return(resource && flatten && working_type);
+        return(resource && G && flatten && working_type);
       }
 
 
     bool resources::can_roll_dddV(const index_literal_list& idx_list) const
       {
+        if(idx_list.size() != RESOURCE_INDICES::DDDV_INDICES) throw tensor_exception("can_roll_dddV");
+    
+        std::array< variance, RESOURCE_INDICES::DDDV_INDICES > vars
+          = { idx_list[0]->get_variance(), idx_list[1]->get_variance(), idx_list[2]->get_variance() };
+
         const auto resource = this->mgr.dddV({variance::covariant, variance::covariant, variance::covariant}, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
+    
+        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
 
-        return(resource && flatten && working_type);
+        return(resource && G && flatten && working_type);
       }
     
     
@@ -747,7 +769,7 @@ namespace nontrivial_metric
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
-        return(resource && flatten && working_type);
+        return(resource && G && flatten && working_type);
       }
     
     
@@ -773,34 +795,89 @@ namespace nontrivial_metric
     
     bool resources::can_roll_Riemann_A2(const index_literal_list& idx_list) const
       {
+        if(idx_list.size() != RESOURCE_INDICES::RIEMANN_A2_INDICES) throw tensor_exception("can_roll_Riemann_A2");
+    
+        std::array< variance, RESOURCE_INDICES::RIEMANN_A2_INDICES > vars
+          = { idx_list[0]->get_variance(), idx_list[1]->get_variance() };
+    
         const auto resource = this->mgr.Riemann_A2({variance::covariant, variance::covariant}, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
+    
+        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
         
-        return(resource && flatten && working_type);
+        return(resource && G && flatten && working_type);
       }
     
     
     bool resources::can_roll_Riemann_A3(const index_literal_list& idx_list) const
       {
+        if(idx_list.size() != RESOURCE_INDICES::RIEMANN_A3_INDICES) throw tensor_exception("can_roll_Riemann_A3");
+    
+        std::array< variance, RESOURCE_INDICES::RIEMANN_A3_INDICES > vars
+          = { idx_list[0]->get_variance(), idx_list[1]->get_variance(), idx_list[2]->get_variance() };
+    
         const auto resource = this->mgr.Riemann_A3({variance::covariant, variance::covariant, variance::covariant}, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
-        return(resource && flatten && working_type);
+        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
+    
+        return(resource && G && flatten && working_type);
       }
     
     
     bool resources::can_roll_Riemann_B3(const index_literal_list& idx_list) const
       {
+        if(idx_list.size() != RESOURCE_INDICES::RIEMANN_B3_INDICES) throw tensor_exception("can_roll_Riemann_B3");
+    
+        std::array< variance, RESOURCE_INDICES::RIEMANN_B3_INDICES > vars
+          = { idx_list[0]->get_variance(), idx_list[1]->get_variance(), idx_list[2]->get_variance() };
+    
         const auto resource = this->mgr.Riemann_A3({variance::covariant, variance::covariant, variance::covariant}, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
-        return(resource && flatten && working_type);
+        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
+    
+        return(resource && G && flatten && working_type);
       }
+    
+    
+    template <unsigned long Indices>
+    bool resources::get_roll_metric_requirements(const std::array<variance, Indices>& avail,
+                                                 const std::array<variance, Indices>& reqd) const
+      {
+        bool require_G = false;
+        bool require_Ginv = false;
+        
+        for(unsigned long i = 0; i < Indices; ++i)
+          {
+            variance r = reqd[i];
+            variance a = avail[i];
+            
+            if(r == variance::covariant && a == variance::contravariant) require_G = true;
+            if(r == variance::contravariant && a == variance::covariant) require_Ginv = true;
+          }
+        
+        bool ok = true;
 
-
+        if(require_G)
+          {
+            auto resource = this->mgr.metric();
+            if(!resource) ok = false;
+          }
+        
+        if(require_Ginv)
+          {
+            auto resource = this->mgr.metric_inverse();
+            if(!resource) ok  = false;
+          }
+        
+        return ok;
+      }
+    
+    
     GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer)
       {
         const auto resource = this->mgr.dV();
