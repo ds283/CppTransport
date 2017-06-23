@@ -196,6 +196,36 @@ namespace nontrivial_metric
         //! used internally and as the first step in generating an external argument list
         cache_tags generate_cache_arguments(const language_printer& printer) const;
 
+        //! generate substitution map for parameter and coordinate labels
+        GiNaC::exmap make_substitution_map(const language_printer& printer) const;
+
+
+        //! generate concrete dV resource using labels
+        void dV_resource_label(const language_printer& printer, flattened_tensor& list,
+                               const contexted_value<std::string>& resource,
+                               const contexted_value<std::string>& flatten);
+
+        //! generate concrete dV resource using literal expressions
+        void dV_resource_expr(const language_printer& printer, flattened_tensor& list);
+
+
+        //! generate concrete ddV resource using labels
+        void ddV_resource_label(const language_printer& printer, flattened_tensor& list,
+                                const contexted_value<std::string>& resource,
+                                const contexted_value<std::string>& flatten);
+
+        //! generate concrete ddV resource using literal expressions
+        void ddV_resource_expr(const language_printer& printer, flattened_tensor& list);
+
+
+        //! generate concrete dddV resource using labels
+        void dddV_resource_label(const language_printer& printer, flattened_tensor& list,
+                                 const contexted_value<std::string>& resource,
+                                 const contexted_value<std::string>& flatten);
+
+        //! generate concrete dddV resource using literal expressions
+        void dddV_resource_expr(const language_printer& printer, flattened_tensor& list);
+
 
         // INTERNAL DATA
 

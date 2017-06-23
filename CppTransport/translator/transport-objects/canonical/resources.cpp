@@ -29,7 +29,74 @@
 
 namespace canonical
   {
-    
+
+    class ResourceCache
+      {
+
+        // TYPE
+
+      public:
+
+        using value_type = std::pair< std::reference_wrapper<const GiNaC::ex>, std::reference_wrapper<const symbol_list> >;
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor captures resource manager and shared resource manager
+        ResourceCache(resources& r, shared_resources& s, const language_printer& p)
+          : res(r),
+            share(s),
+            printer(p)
+          {
+          }
+
+        //! destructor is default
+        ~ResourceCache() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        value_type get()
+          {
+            // acquire resources if we do not already have them
+            if(!this->subs_V) this->subs_V = this->res.raw_V_resource(printer);
+            if(!this->f_list) this->f_list = this->share.generate_field_symbols(printer);
+
+            // return references
+            return std::make_pair(std::cref(*subs_V), std::cref(**f_list));
+          }
+
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resources& res;
+
+        //! shared resources
+        shared_resources& share;
+
+        //! language printer
+        const language_printer& printer;
+
+
+        // CACHE
+
+        //! raw V expressions, after substitution with the current resource labels
+        boost::optional< GiNaC::ex > subs_V;
+
+        //! symbol list
+        boost::optional< std::unique_ptr<symbol_list> > f_list;
+
+
+      };
+
+
     resources::resources(translator_data& p, resource_manager& m, expression_cache& c,
                          shared_resources& s, boost::timer::cpu_timer& t)
       : mgr(m),
@@ -183,37 +250,9 @@ namespace canonical
             timing_instrument timer(this->compute_timer);
 
             // we didn't find an expression for V with this set of substitutions in the cache, so
-            // query resource manager for parameter and coordinate labels, then build a substitution map
-            const auto& param_resource = this->mgr.parameters();
-            const auto coord_resource = this->mgr.coordinates();
-            const auto& flatten = this->mgr.phase_flatten();
-
-            // build substitution map
-            GiNaC::exmap subs_map;
-
-            if(param_resource)
-              {
-                std::unique_ptr<symbol_list> p_list = this->share.generate_parameter_symbols(printer);
-
-                // copy parameter symbols into substitution list
-                const param_index max_i = this->share.get_max_param_index();
-                for(param_index i = param_index(0); i < max_i; ++i)
-                  {
-                    subs_map[this->param_list[this->fl.flatten(i)]] = (*p_list)[this->fl.flatten(i)];
-                  }
-              }
-
-            if(coord_resource && flatten)
-              {
-                std::unique_ptr<symbol_list> f_list = this->share.generate_field_symbols(printer);
-
-                // copy field-label symbols into substitution list
-                const field_index max_i = this->share.get_max_field_index(variance::none);
-                for(field_index i = field_index(0); i < max_i; ++i)
-                  {
-                    subs_map[this->field_list[this->fl.flatten(i)]] = (*f_list)[this->fl.flatten(i)];
-                  }
-              }
+            // we need to construct one by hand. First, generate a substitution map given the
+            // currently available set of resources
+            GiNaC::exmap subs_map = make_substitution_map(printer);
 
             // apply substitution and cache the result
             subs_V = this->V.subs(subs_map, GiNaC::subs_options::no_pattern);
@@ -221,6 +260,43 @@ namespace canonical
           }
 
         return(subs_V);
+      }
+
+
+    GiNaC::exmap resources::make_substitution_map(const language_printer& printer) const
+      {
+        const auto& param_resource = mgr.parameters();
+        const auto coord_resource = mgr.coordinates();
+        const auto& flatten = mgr.phase_flatten();
+
+        // build substitution map
+        GiNaC::exmap subs_map;
+
+        if(param_resource)
+          {
+            auto p_list = share.generate_parameter_symbols(printer);
+
+            // copy parameter symbols into substitution list
+            const param_index max_i = share.get_max_param_index();
+            for(param_index i = param_index(0); i < max_i; ++i)
+              {
+                subs_map[param_list[fl.flatten(i)]] = (*p_list)[fl.flatten(i)];
+              }
+          }
+
+        if(coord_resource && flatten)
+          {
+            auto f_list = share.generate_field_symbols(printer);
+
+            // copy field-label symbols into substitution list
+            const field_index max_i = share.get_max_field_index(variance::none);
+            for(field_index i = field_index(0); i < max_i; ++i)
+              {
+                subs_map[field_list[fl.flatten(i)]] = (*f_list)[fl.flatten(i)];
+              }
+          }
+
+        return subs_map;
       }
 
 
@@ -316,58 +392,68 @@ namespace canonical
 
         const auto resource = this->mgr.dV();
         const auto& flatten = this->mgr.field_flatten();
-    
-        const field_index max_i = this->share.get_max_field_index(variance::none);
 
         if(resource && flatten)     // dV is available
           {
-            for(field_index i = field_index(0); i < max_i; ++i)
-              {
-                unsigned int index = this->fl.flatten(i);
-
-                std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten);
-
-                (*list)[index] = this->sym_factory.get_symbol(variable);
-              }
+            this->dV_resource_label(printer, *list, resource.get().second, *flatten);
           }
         else                        // have to construct dV ourselves
           {
-            // build argument list
-            auto args = this->generate_cache_arguments(printer);
-
-            // don't generate other objects unless we need them
-            GiNaC::ex subs_V;
-            std::unique_ptr<symbol_list> f_list;
-            bool cached = false;
-
-            for(field_index i = field_index(0); i < max_i; ++i)
-              {
-                GiNaC::ex dV;
-                unsigned int index = this->fl.flatten(i);
-
-                if(!this->cache.query(expression_item_types::dV_item, index, args, dV))
-                  {
-                    timing_instrument timer(this->compute_timer);
-
-                    // generate necessary items if they have not been done
-                    if(!cached)
-                      {
-                        subs_V = this->raw_V_resource(printer);
-                        f_list = this->share.generate_field_symbols(printer);
-                        cached = true;
-                      }
-
-                    GiNaC::symbol x1 = (*f_list)[this->fl.flatten(i)];
-                    dV = GiNaC::diff(subs_V, x1);
-
-                    this->cache.store(expression_item_types::dV_item, index, args, dV);
-                  }
-
-                (*list)[index] = dV;
-              }
+            this->dV_resource_expr(printer, *list);
           }
 
         return(list);
+      }
+
+
+    void resources::dV_resource_label(const language_printer& printer, flattened_tensor& list,
+                                      const contexted_value<std::string>& resource,
+                                      const contexted_value<std::string>& flatten)
+      {
+        const field_index max_i = this->share.get_max_field_index(variance::none);
+
+        for(field_index i = field_index(0); i < max_i; ++i)
+          {
+            unsigned int index = this->fl.flatten(i);
+
+            std::string variable = printer.array_subscript(resource, this->fl.flatten(i), flatten);
+
+            list[index] = this->sym_factory.get_symbol(variable);
+          }
+      }
+
+
+    void resources::dV_resource_expr(const language_printer& printer, flattened_tensor& list)
+      {
+        const field_index max_i = this->share.get_max_field_index(variance::none);
+
+        // build argument list
+        auto args = this->generate_cache_arguments(printer);
+
+        // obtain a resource cache
+        ResourceCache cache(*this, this->share, printer);
+
+        for(field_index i = field_index(0); i < max_i; ++i)
+          {
+            GiNaC::ex dV;
+            unsigned int index = this->fl.flatten(i);
+
+            if(!this->cache.query(expression_item_types::dV_item, index, args, dV))
+              {
+                timing_instrument timer(this->compute_timer);
+
+                auto data = cache.get();
+                const GiNaC::ex& V = data.first.get();
+                const symbol_list& f_list = data.second.get();
+
+                GiNaC::symbol x1 = f_list[this->fl.flatten(i)];
+                dV = GiNaC::diff(V, x1);
+
+                this->cache.store(expression_item_types::dV_item, index, args, dV);
+              }
+
+            list[index] = dV;
+          }
       }
 
 
@@ -378,66 +464,77 @@ namespace canonical
 
         const auto resource = this->mgr.ddV();
         const auto& flatten = this->mgr.field_flatten();
-    
-        const field_index max_i = this->share.get_max_field_index(variance::none);
-        const field_index max_j = this->share.get_max_field_index(variance::none);
 
         if(resource && flatten)     // ddV is available
           {
-            for(field_index i = field_index(0); i < max_i; ++i)
-              {
-                for(field_index j = field_index(0); j < max_j; ++j)
-                  {
-                    unsigned int index = this->fl.flatten(i,j);
-
-                    std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), this->fl.flatten(j), *flatten);
-
-                    (*list)[index] = this->sym_factory.get_symbol(variable);
-                  }
-              }
+            this->ddV_resource_label(printer, *list, resource.get().second, *flatten);
           }
         else                        // have to construct ddV ourselves
           {
-            // build argument list
-            auto args = this->generate_cache_arguments(printer);
-
-            // don't generate other objects unless we need them
-            GiNaC::ex subs_V;
-            std::unique_ptr<symbol_list> f_list;
-            bool cached = false;
-
-            for(field_index i = field_index(0); i < max_i; ++i)
-              {
-                for(field_index j = field_index(0); j < max_j; ++j)
-                  {
-                    GiNaC::ex ddV;
-                    unsigned int index = this->fl.flatten(i,j);
-
-                    if(!this->cache.query(expression_item_types::ddV_item, index, args, ddV))
-                      {
-                        timing_instrument timer(this->compute_timer);
-
-                        // generate necessary items if they have not been done
-                        if(!cached)
-                          {
-                            subs_V = this->raw_V_resource(printer);
-                            f_list = this->share.generate_field_symbols(printer);
-                            cached = true;
-                          }
-
-                        GiNaC::symbol x1 = (*f_list)[this->fl.flatten(i)];
-                        GiNaC::symbol x2 = (*f_list)[this->fl.flatten(j)];
-                        ddV = GiNaC::diff(GiNaC::diff(subs_V, x1), x2);
-
-                        this->cache.store(expression_item_types::ddV_item, index, args, ddV);
-                      }
-
-                    (*list)[index] = ddV;
-                  }
-              }
+            this->ddV_resource_expr(printer, *list);
           }
 
         return(list);
+      }
+
+
+    void resources::ddV_resource_label(const language_printer& printer, flattened_tensor& list,
+                                       const contexted_value<std::string>& resource,
+                                       const contexted_value<std::string>& flatten)
+      {
+        const field_index max_i = this->share.get_max_field_index(variance::none);
+        const field_index max_j = this->share.get_max_field_index(variance::none);
+
+        for(field_index i = field_index(0); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0); j < max_j; ++j)
+              {
+                unsigned int index = this->fl.flatten(i,j);
+
+                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), flatten);
+
+                list[index] = this->sym_factory.get_symbol(variable);
+              }
+          }
+    }
+
+
+    void resources::ddV_resource_expr(const language_printer& printer, flattened_tensor& list)
+      {
+        const field_index max_i = this->share.get_max_field_index(variance::none);
+        const field_index max_j = this->share.get_max_field_index(variance::none);
+
+        // build argument list
+        auto args = this->generate_cache_arguments(printer);
+
+        // obtain a resource cache
+        ResourceCache cache(*this, this->share, printer);
+
+        for(field_index i = field_index(0); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0); j < max_j; ++j)
+              {
+                GiNaC::ex ddV;
+                unsigned int index = this->fl.flatten(i,j);
+
+                if(!this->cache.query(expression_item_types::ddV_item, index, args, ddV))
+                  {
+                    timing_instrument timer(this->compute_timer);
+
+                    auto data = cache.get();
+                    const GiNaC::ex& V = data.first.get();
+                    const symbol_list& f_list = data.second.get();
+
+                    GiNaC::symbol x1 = f_list[this->fl.flatten(i)];
+                    GiNaC::symbol x2 = f_list[this->fl.flatten(j)];
+                    ddV = GiNaC::diff(GiNaC::diff(V, x1), x2);
+
+                    this->cache.store(expression_item_types::ddV_item, index, args, ddV);
+                  }
+
+                list[index] = ddV;
+              }
+          }
       }
 
 
@@ -449,73 +546,85 @@ namespace canonical
         const auto resource = this->mgr.dddV();
         const auto& flatten = this->mgr.field_flatten();
 
-        const field_index max_i = this->share.get_max_field_index(variance::none);
-        const field_index max_j = this->share.get_max_field_index(variance::none);
-        const field_index max_k = this->share.get_max_field_index(variance::none);
-        
         if(resource && flatten)     // dddV is available
           {
-            for(field_index i = field_index(0); i < max_i; ++i)
-              {
-                for(field_index j = field_index(0); j < max_j; ++j)
-                  {
-                    for(field_index k = field_index(0); k < max_k; ++k)
-                      {
-                        unsigned int index = this->fl.flatten(i,j,k);
-
-                        std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k), *flatten);
-
-                        (*list)[index] = this->sym_factory.get_symbol(variable);
-                      }
-                  }
-              }
+            this->dddV_resource_label(printer, *list, resource.get().second, *flatten);
           }
         else                        // have to construct dddV ourselves
           {
-            // build argument list
-            auto args = this->generate_cache_arguments(printer);
-
-            // don't generate other objects unless we need them
-            GiNaC::ex subs_V;
-            std::unique_ptr<symbol_list> f_list;
-            bool cached = false;
-
-            for(field_index i = field_index(0); i < max_i; ++i)
-              {
-                for(field_index j = field_index(0); j < max_j; ++j)
-                  {
-                    for(field_index k = field_index(0); k < max_k; ++k)
-                      {
-                        GiNaC::ex dddV;
-                        unsigned int index = this->fl.flatten(i,j,k);
-
-                        if(!this->cache.query(expression_item_types::dddV_item, index, args, dddV))
-                          {
-                            timing_instrument timer(this->compute_timer);
-
-                            // generate necessary items if they have not been done
-                            if(!cached)
-                              {
-                                subs_V = this->raw_V_resource(printer);
-                                f_list = this->share.generate_field_symbols(printer);
-                                cached = true;
-                              }
-
-                            GiNaC::symbol x1 = (*f_list)[this->fl.flatten(i)];
-                            GiNaC::symbol x2 = (*f_list)[this->fl.flatten(j)];
-                            GiNaC::symbol x3 = (*f_list)[this->fl.flatten(k)];
-                            dddV = GiNaC::diff(GiNaC::diff(GiNaC::diff(subs_V, x1), x2), x3);
-
-                            this->cache.store(expression_item_types::dddV_item, index, args, dddV);
-                          }
-
-                        (*list)[index] = dddV;
-                      }
-                  }
-              }
+            this->dddV_resource_expr(printer, *list);
           }
 
         return(list);
+      }
+
+
+    void resources::dddV_resource_label(const language_printer& printer, flattened_tensor& list,
+                                        const contexted_value<std::string>& resource,
+                                        const contexted_value<std::string>& flatten)
+      {
+        const field_index max_i = this->share.get_max_field_index(variance::none);
+        const field_index max_j = this->share.get_max_field_index(variance::none);
+        const field_index max_k = this->share.get_max_field_index(variance::none);
+
+        for(field_index i = field_index(0); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0); j < max_j; ++j)
+              {
+                for(field_index k = field_index(0); k < max_k; ++k)
+                  {
+                    unsigned int index = this->fl.flatten(i,j,k);
+
+                    std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k), flatten);
+
+                    list[index] = this->sym_factory.get_symbol(variable);
+                  }
+              }
+          }
+      }
+
+
+    void resources::dddV_resource_expr(const language_printer& printer, flattened_tensor& list)
+      {
+        const field_index max_i = this->share.get_max_field_index(variance::none);
+        const field_index max_j = this->share.get_max_field_index(variance::none);
+        const field_index max_k = this->share.get_max_field_index(variance::none);
+
+        // build argument list
+        auto args = this->generate_cache_arguments(printer);
+
+        // obtain a resource cache
+        ResourceCache cache(*this, this->share, printer);
+
+        for(field_index i = field_index(0); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0); j < max_j; ++j)
+              {
+                for(field_index k = field_index(0); k < max_k; ++k)
+                  {
+                    GiNaC::ex dddV;
+                    unsigned int index = this->fl.flatten(i,j,k);
+
+                    if(!this->cache.query(expression_item_types::dddV_item, index, args, dddV))
+                      {
+                        timing_instrument timer(this->compute_timer);
+
+                        auto data = cache.get();
+                        const GiNaC::ex& V = data.first.get();
+                        const symbol_list& f_list = data.second.get();
+
+                        GiNaC::symbol x1 = f_list[this->fl.flatten(i)];
+                        GiNaC::symbol x2 = f_list[this->fl.flatten(j)];
+                        GiNaC::symbol x3 = f_list[this->fl.flatten(k)];
+                        dddV = GiNaC::diff(GiNaC::diff(GiNaC::diff(V, x1), x2), x3);
+
+                        this->cache.store(expression_item_types::dddV_item, index, args, dddV);
+                      }
+
+                    list[index] = dddV;
+                  }
+              }
+          }
       }
 
 
@@ -526,7 +635,7 @@ namespace canonical
         auto args = this->generate_cache_arguments(printer);
         const auto& flatten = this->mgr.field_flatten();
 
-        if(flatten && (flags & use_dV))
+        if(flatten && ((flags & use_dV) != 0))
           {
             const auto dV_resource = this->mgr.dV();
             if(dV_resource)   // no need to push arguments if no resource available
@@ -536,7 +645,7 @@ namespace canonical
               }
           }
 
-        if(flatten && (flags & use_ddV))
+        if(flatten && ((flags &  use_ddV) != 0))
           {
             const auto ddV_resource = this->mgr.ddV();
             if(ddV_resource)
@@ -546,7 +655,7 @@ namespace canonical
               }
           }
 
-        if(flatten && (flags & use_dddV))
+        if(flatten && ((flags & use_dddV) != 0))
           {
             const auto dddV_resource = this->mgr.dddV();
             if(dddV_resource)
