@@ -224,7 +224,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll() const override { return this->parameter_tensor->get_unroll(); }
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->parameter_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -296,7 +296,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll() const override { return this->field_tensor->get_unroll(); }
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->field_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -355,7 +355,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll() const override { return this->coordinate_tensor->get_unroll(); }
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->coordinate_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -414,7 +414,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll() const override { return this->SR_velocity_tensor->get_unroll(); }
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->SR_velocity_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -473,7 +473,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll() const override { return this->dV_tensor->get_unroll(); }
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->dV_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -532,7 +532,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll() const override { return this->ddV_tensor->get_unroll(); }
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->ddV_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -591,7 +591,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll() const override { return this->dddV_tensor->get_unroll(); }
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->dddV_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API

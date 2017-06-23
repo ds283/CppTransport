@@ -100,7 +100,7 @@ namespace canonical
       }
     
     
-    unroll_behaviour zeta1::get_unroll()
+    unroll_behaviour zeta1::get_unroll(const index_literal_list& idx_list)
       {
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up

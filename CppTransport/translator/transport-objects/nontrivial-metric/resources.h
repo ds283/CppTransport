@@ -161,31 +161,31 @@ namespace nontrivial_metric
       public:
 
         //! query whether dV can be rolled-up into loops
-        bool can_roll_dV() const;
+        bool can_roll_dV(const index_literal_list& idx_list) const;
 
         //! query whether ddV can be rolled-up into loops
-        bool can_roll_ddV() const;
+        bool can_roll_ddV(const index_literal_list& idx_list) const;
 
         //! query whether dddV can be rolled-up into loops
-        bool can_roll_dddV() const;
+        bool can_roll_dddV(const index_literal_list& idx_list) const;
         
         //! query whether connexion can be rolled-up into loops
-        bool can_roll_connexion() const;
+        bool can_roll_connexion(const index_literal_list& idx_list) const;
         
         //! query whether metric can be rolled-up into loops
-        bool can_roll_metric() const;
+        bool can_roll_metric(const index_literal_list& idx_list) const;
         
         //! query whether inverse metric can be rolled-up into loops
-        bool can_roll_metric_inverse() const;
+        bool can_roll_metric_inverse(const index_literal_list& idx_list) const;
         
         //! query whether RiemannA2 can be rolled-up into loops
-        bool can_roll_Riemann_A2() const;
+        bool can_roll_Riemann_A2(const index_literal_list& idx_list) const;
     
         //! query whether RiemannA3 can be rolled-up into loops
-        bool can_roll_Riemann_A3() const;
+        bool can_roll_Riemann_A3(const index_literal_list& idx_list) const;
     
         //! query whether RiemannB3 can be rolled-up into loops
-        bool can_roll_Riemann_B3() const;
+        bool can_roll_Riemann_B3(const index_literal_list& idx_list) const;
 
 
         // INTERNAL API

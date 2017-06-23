@@ -98,9 +98,9 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour M::get_unroll()
+    unroll_behaviour M::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV()) return unroll_behaviour::allow;
+        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV(idx_list) && this->res.can_roll_ddV(idx_list)) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
     

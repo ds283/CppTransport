@@ -129,7 +129,7 @@ namespace canonical
       }
     
     
-    unroll_behaviour u3::get_unroll()
+    unroll_behaviour u3::get_unroll(const index_literal_list& idx_list)
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV() &&
           this->res.can_roll_dddV()) return unroll_behaviour::allow;

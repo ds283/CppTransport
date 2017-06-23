@@ -61,7 +61,7 @@ class transport_tensor
   public:
 
     //! determine whether this tensor can be unrolled with the current resources
-    virtual unroll_behaviour get_unroll() = 0;
+    virtual unroll_behaviour get_unroll(const index_literal_list& idx_list) = 0;
 
     // typical transport tensors will also define compute(), compute_component() and compute_lambda()
     // methods, but since these carry a variable number of arguments depending on the requirements of

@@ -671,11 +671,12 @@ token_list::make_index_macro(const std::string& macro, const size_t position, co
       std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, true, make_context);
 
     // determine unroll status flags, either inherited from the macro or by allowing a suffix to the argument list
-    if(rule.get_unroll() == unroll_behaviour::force)
+    auto status = rule.get_unroll(idx_list);
+    if(status == unroll_behaviour::force)
       {
         this->force_unroll.push_back(macro);
       }
-    else if(rule.get_unroll() == unroll_behaviour::prevent)
+    else if(status == unroll_behaviour::prevent)
       {
         this->prevent_unroll.push_back(macro);
       }

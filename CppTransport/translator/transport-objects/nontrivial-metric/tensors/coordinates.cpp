@@ -104,7 +104,7 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour coordinates::get_unroll()
+    unroll_behaviour coordinates::get_unroll(const index_literal_list& idx_list)
       {
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
         return unroll_behaviour::force;

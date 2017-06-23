@@ -78,7 +78,7 @@ namespace macro_packages
           public:
 
             //! determined unroll status, which is inherited from the unroll status of the token list we contain
-            unroll_behaviour get_unroll() const override { return this->tokens->unroll_status(); }
+            unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->tokens->unroll_status(); }
 
             //! get declaration point
             const error_context& get_declaration_point() const { return(this->declaration_point); }

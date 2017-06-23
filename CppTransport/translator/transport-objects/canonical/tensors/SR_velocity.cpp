@@ -78,7 +78,7 @@ namespace canonical
       }
     
     
-    unroll_behaviour SR_velocity::get_unroll()
+    unroll_behaviour SR_velocity::get_unroll(const index_literal_list& idx_list)
       {
         if(this->res.can_roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up

@@ -68,9 +68,9 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour Riemann_B3::get_unroll()
+    unroll_behaviour Riemann_B3::get_unroll(const index_literal_list& idx_list)
       {
-        if(res.can_roll_Riemann_B3()) return unroll_behaviour::allow;
+        if(res.can_roll_Riemann_B3(idx_list)) return unroll_behaviour::allow;
         
         return unroll_behaviour::force;   // can't roll-up
       }

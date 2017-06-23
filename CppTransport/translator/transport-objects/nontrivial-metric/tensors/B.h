@@ -85,7 +85,7 @@ namespace nontrivial_metric
       public:
 
         //! determine whether this tensor can be unrolled with the current resources
-        unroll_behaviour get_unroll() override;
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) override;
 
 
         // INTERFACE -- JANITORIAL API

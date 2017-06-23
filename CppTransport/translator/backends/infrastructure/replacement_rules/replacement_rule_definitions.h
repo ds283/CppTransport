@@ -185,7 +185,7 @@ namespace macro_packages
         const std::string& get_name() const { return this->name; }
 
         //! get unroll status for this macro -- must be handled by implementation
-        virtual unroll_behaviour get_unroll() const = 0;
+        virtual unroll_behaviour get_unroll(const index_literal_list& idx_list) const = 0;
 
 
         // INTERNAL API
