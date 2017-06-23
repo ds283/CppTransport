@@ -59,14 +59,12 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("U2 cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV | use_ddV,
-                                                                                    this->printer);
-        args->push_back(k);
-        args->push_back(a);
+        auto args = this->res.generate_cache_arguments(use_dV | use_ddV, this->printer);
+        args += { k, a };
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::U2_item, index, *args, result))
+        if(!this->cache.query(expression_item_types::U2_item, index, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -105,7 +103,7 @@ namespace nontrivial_metric
                 assert(false);
               }
 
-            this->cache.store(expression_item_types::U2_item, index, *args, result);
+            this->cache.store(expression_item_types::U2_item, index, args, result);
           }
 
         return(result);
@@ -168,13 +166,11 @@ namespace nontrivial_metric
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV | use_ddV, this->printer);
-        args->push_back(k);
-        args->push_back(a);
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
+        auto args = this->res.generate_cache_arguments(use_dV | use_ddV, this->printer);
+        args += { k, a };
+        args += { idx_i, idx_j };
 
-        if(!this->cache.query(expression_item_types::U2_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]))
+        if(!this->cache.query(expression_item_types::U2_lambda, 0, args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -186,10 +182,10 @@ namespace nontrivial_metric
             map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
               this->expr_field_momentum(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);
 
-            this->cache.store(expression_item_types::U2_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
+            this->cache.store(expression_item_types::U2_lambda, 0, args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
 
-        return std::make_unique<map_lambda>(i, j, map, expression_item_types::U2_lambda, *args, this->shared.generate_working_type());
+        return std::make_unique<map_lambda>(i, j, map, expression_item_types::U2_lambda, args, this->shared.generate_working_type());
       }
     
     

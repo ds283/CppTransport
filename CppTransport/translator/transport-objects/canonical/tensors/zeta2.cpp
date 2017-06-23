@@ -62,14 +62,11 @@ namespace canonical
         if(!this->cached) throw tensor_exception("zeta2 cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
-        args->push_back(k);
-        args->push_back(k1);
-        args->push_back(k2);
-        args->push_back(a);
+        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
+        args += { k, k1, k2, a };
 
         GiNaC::ex result;
-        if(!this->cache.query(expression_item_types::zxfm2_item, index, *args, result))
+        if(!this->cache.query(expression_item_types::zxfm2_item, index, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -104,7 +101,7 @@ namespace canonical
                 assert(false);
               }
 
-            this->cache.store(expression_item_types::zxfm2_item, index, *args, result);
+            this->cache.store(expression_item_types::zxfm2_item, index, args, result);
           }
 
         return(result);
@@ -228,45 +225,41 @@ namespace canonical
 
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = 0;
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
-        args->push_back(k);
-        args->push_back(k1);
-        args->push_back(k2);
-        args->push_back(a);
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
+        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
+        args += { k, k1, k2, a };
+        args += { idx_i, idx_j };
 
-        if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]))
+        if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]))
           {
             timing_instrument timer(this->compute_timer);
 
             table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] =
               this->expr_field_field(deriv_a_i, deriv_a_j, k, k1, k2, a);
 
-            this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]);
+            this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]);
           }
 
-        if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM), *args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)]))
+        if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)]))
           {
             timing_instrument timer(this->compute_timer);
 
             table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] =
               this->expr_field_momentum(idx_a_i, idx_b_j, deriv_a_i, deriv_b_j, k, k1, k2, a);
 
-            this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM), *args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)]);
+            this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)]);
           }
 
-        if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]))
+        if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]))
           {
             timing_instrument timer(this->compute_timer);
 
             table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
               this->expr_field_momentum(idx_a_j, idx_b_i, deriv_a_j, deriv_b_i, k, k2, k1, a);
 
-            this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
+            this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
 
-        return std::make_unique<map_lambda>(i, j, table, expression_item_types::zxfm2_lambda, *args, this->shared.generate_working_type());
+        return std::make_unique<map_lambda>(i, j, table, expression_item_types::zxfm2_lambda, args, this->shared.generate_working_type());
       }
     
     

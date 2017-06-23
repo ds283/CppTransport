@@ -54,11 +54,11 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("zeta1 cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
+        auto args = this->res.generate_cache_arguments(0, this->printer);
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::zxfm1_item, index, *args, result))
+        if(!this->cache.query(expression_item_types::zxfm1_item, index, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -77,7 +77,7 @@ namespace nontrivial_metric
                 assert(false);
               }
 
-            this->cache.store(expression_item_types::zxfm1_item, index, *args, result);
+            this->cache.store(expression_item_types::zxfm1_item, index, args, result);
           }
 
         return(result);
@@ -113,8 +113,8 @@ namespace nontrivial_metric
 
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+        auto args = this->res.generate_cache_arguments(0, this->printer);
+        args += idx_i;
 
         // convert these indices to species-only indices
         const auto i_field_a = this->traits.species_to_species(i);
@@ -128,7 +128,7 @@ namespace nontrivial_metric
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;
 
-        return std::make_unique<map_lambda>(i, table, expression_item_types::zxfm1_lambda, *args, this->shared.generate_working_type());
+        return std::make_unique<map_lambda>(i, table, expression_item_types::zxfm1_lambda, args, this->shared.generate_working_type());
       }
     
     

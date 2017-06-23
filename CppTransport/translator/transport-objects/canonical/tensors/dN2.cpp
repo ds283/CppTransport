@@ -58,11 +58,11 @@ namespace canonical
         if(!this->cached) throw tensor_exception("dN2 cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
+        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::dN2_item, index, *args, result))
+        if(!this->cache.query(expression_item_types::dN2_item, index, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -74,7 +74,7 @@ namespace canonical
                      - diff(1/(2*dotH), coord_j) * diff(Hsq, coord_i)
                      - 1/(2*dotH) * p * diff(Hsq, coord_i) * diff(Hsq, coord_j);
 
-            this->cache.store(expression_item_types::dN2_item, index, *args, result);
+            this->cache.store(expression_item_types::dN2_item, index, args, result);
           }
 
         return(result);

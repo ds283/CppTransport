@@ -152,7 +152,7 @@ namespace canonical
       public:
 
         //! generate argument list
-        std::unique_ptr<cache_tags> generate_cache_arguments(unsigned int flags, const language_printer& printer) const;
+        cache_tags generate_cache_arguments(unsigned int flags, const language_printer& printer) const;
 
 
         // QUERY ROLL/UNROLL AVAILABILITY
@@ -175,7 +175,7 @@ namespace canonical
 
         //! generate argument list for param/field combinations;
         //! used internally and as the first step in generating an external argument list
-        std::unique_ptr<cache_tags> generate_cache_arguments(const language_printer& printer) const;
+        cache_tags generate_cache_arguments(const language_printer& printer) const;
 
 
         // INTERNAL DATA

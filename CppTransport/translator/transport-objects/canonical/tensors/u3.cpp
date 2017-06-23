@@ -149,15 +149,9 @@ namespace canonical
         auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
         auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
 
-        std::unique_ptr<cache_tags> args =
-          this->res.generate_cache_arguments(use_dV | use_ddV | use_dddV, this->printer);
-        args->push_back(k1);
-        args->push_back(k2);
-        args->push_back(k3);
-        args->push_back(a);
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
+        auto args = this->res.generate_cache_arguments(use_dV | use_ddV | use_dddV, this->printer);
+        args += { k1, k2, k3, a };
+        args += { idx_i, idx_j, idx_k };
 
         // convert these indices to species-only indices
         const auto i_field_a = this->traits.species_to_species(i);
@@ -186,7 +180,7 @@ namespace canonical
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM, LAMBDA_FIELD)] = **mmf;
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = **mmm;
 
-        return std::make_unique<map_lambda>(i, j, k, table, expression_item_types::U3_lambda, *args, this->shared.generate_working_type());
+        return std::make_unique<map_lambda>(i, j, k, table, expression_item_types::U3_lambda, args, this->shared.generate_working_type());
       }
     
     

@@ -63,12 +63,10 @@ std::unique_ptr<atomic_lambda> parameters::compute_lambda(const index_literal& i
     if(i.get_class() != index_class::parameter) throw tensor_exception("parameters");
     
     auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
-    
-    auto args = std::make_unique<cache_tags>();
-    
+
     GiNaC::ex result = this->shared.generate_parameter_vector(i, this->printer);
     
-    return std::make_unique<atomic_lambda>(i, result, expression_item_types::parameters_lambda, *args, this->shared.generate_working_type());
+    return std::make_unique<atomic_lambda>(i, result, expression_item_types::parameters_lambda, cache_tags(), this->shared.generate_working_type());
   }
 
 

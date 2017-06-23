@@ -58,12 +58,11 @@ namespace canonical
         if(!this->cached) throw tensor_exception("M cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV | use_ddV,
-                                                                                    this->printer);
+        auto args = this->res.generate_cache_arguments(use_dV | use_ddV, this->printer);
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::M_item, index, *args, result))
+        if(!this->cache.query(expression_item_types::M_item, index, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -79,7 +78,7 @@ namespace canonical
 
             result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
 
-            this->cache.store(expression_item_types::M_item, index, *args, result);
+            this->cache.store(expression_item_types::M_item, index, args, result);
           }
 
         return(result);
@@ -114,15 +113,14 @@ namespace canonical
         auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
         auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
+        auto args = this->res.generate_cache_arguments(0, this->printer);
+        args += { idx_i, idx_j };
 
         this->pre_lambda();
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::M_lambda, 0, *args, result))
+        if(!this->cache.query(expression_item_types::M_lambda, 0, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -136,10 +134,10 @@ namespace canonical
 
             result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
 
-            this->cache.store(expression_item_types::M_lambda, 0, *args, result);
+            this->cache.store(expression_item_types::M_lambda, 0, args, result);
           }
 
-        return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::M_lambda, *args, this->shared.generate_working_type());
+        return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::M_lambda, args, this->shared.generate_working_type());
       }
     
     

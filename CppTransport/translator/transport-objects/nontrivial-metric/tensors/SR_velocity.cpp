@@ -54,18 +54,18 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("SR_velocity cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
+        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::sr_U_item, index, *args, result))
+        if(!this->cache.query(expression_item_types::sr_U_item, index, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
             GiNaC::ex& Vi = (*dV)[this->fl.flatten(i)];
             result = this->expr(Vi);
 
-            this->cache.store(expression_item_types::sr_U_item, index, *args, result);
+            this->cache.store(expression_item_types::sr_U_item, index, args, result);
           }
 
         return(result);
@@ -91,14 +91,14 @@ namespace nontrivial_metric
 
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dV, this->printer);
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
+        args += idx_i;
 
         this->pre_lambda();
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::sr_U_lambda, 0, *args, result))
+        if(!this->cache.query(expression_item_types::sr_U_lambda, 0, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -106,10 +106,10 @@ namespace nontrivial_metric
 
             result = this->expr(Vi);
 
-            this->cache.store(expression_item_types::sr_U_lambda, 0, *args, result);
+            this->cache.store(expression_item_types::sr_U_lambda, 0, args, result);
           }
 
-        return std::make_unique<atomic_lambda>(i, result, expression_item_types::sr_U_lambda, *args, this->shared.generate_working_type());
+        return std::make_unique<atomic_lambda>(i, result, expression_item_types::sr_U_lambda, args, this->shared.generate_working_type());
       }
     
     

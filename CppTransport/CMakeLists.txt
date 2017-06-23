@@ -200,6 +200,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/nontrivial-metric/resources.cpp
   translator/transport-objects/nontrivial-metric/resource_manager.cpp
   translator/transport-objects/nontrivial-metric/curvature_classes.cpp
+  translator/transport-objects/shared/cache_detail/cache_tags.cpp
   translator/transport-objects/shared/symbol_factory.cpp
   translator/transport-objects/shared/shared_resources.cpp
   translator/utilities/error.cpp
@@ -706,7 +707,12 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES
   translator/transport-objects/indices/indices.h
   )
 
-set(TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES
+SET(TRANSLATOR_TRANSPORT_OBJECTS_SHARED_CACHE_DETAIL_FILES
+  translator/transport-objects/shared/cache_detail/cache_tags.cpp
+  translator/transport-objects/shared/cache_detail/cache_tags.h
+  translator/transport-objects/shared/cache_detail/cache_key.h)
+
+SET(TRANSLATOR_TRANSPORT_OBJECTS_SHARED_FILES
   translator/transport-objects/shared/expression_cache.h
   translator/transport-objects/shared/ginac_cache.h
   translator/transport-objects/shared/shared_resources.cpp
@@ -1236,7 +1242,8 @@ set(SOURCE_FILES
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_SHARED_CACHE_DETAIL_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_SHARED_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
   ${TRANSLATOR_UTILITIES_FILES}
   ${TRANSLATOR_VERSION_POLICY_FILES}

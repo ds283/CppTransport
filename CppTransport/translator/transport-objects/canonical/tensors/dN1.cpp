@@ -54,18 +54,18 @@ namespace canonical
         if(!this->cached) throw tensor_exception("dN1 cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(0, this->printer);
+        auto args = this->res.generate_cache_arguments(0, this->printer);
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::dN1_item, index, *args, result))
+        if(!this->cache.query(expression_item_types::dN1_item, index, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
             field_index i_species = this->traits.to_species(i);
             result = -(1/(2*dotH)) * diff(Hsq, (*fields)[this->fl.flatten(i_species)]);
 
-            this->cache.store(expression_item_types::dN1_item, index, *args, result);
+            this->cache.store(expression_item_types::dN1_item, index, args, result);
           }
 
         return(result);

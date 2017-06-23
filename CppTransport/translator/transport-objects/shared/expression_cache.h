@@ -55,7 +55,7 @@ enum class expression_item_types
   };
 
 
-typedef ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE> expression_cache;
+typedef ginac_cache<expression_item_types> expression_cache;
 
 
 #endif //CPPTRANSPORT_EXPRESSION_CACHE_H

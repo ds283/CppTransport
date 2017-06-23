@@ -55,14 +55,12 @@ namespace canonical
         auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
         auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
 
-        std::unique_ptr<cache_tags> args = this->res.generate_cache_arguments(use_dddV, this->printer);
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
+        auto args = this->res.generate_cache_arguments(use_dddV, this->printer);
+        args += { idx_i, idx_j, idx_k };
 
         GiNaC::ex result = this->res.dddV_resource(i, j, k, this->printer);
 
-        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::dddV_lambda, *args, this->shared.generate_working_type());
+        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::dddV_lambda, args, this->shared.generate_working_type());
       }
     
     

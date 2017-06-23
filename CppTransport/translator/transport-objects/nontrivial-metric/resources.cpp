@@ -96,10 +96,10 @@ namespace nontrivial_metric
       }
 
 
-    std::unique_ptr<cache_tags>
+    cache_tags
     resources::generate_cache_arguments(const language_printer& printer) const
       {
-        std::unique_ptr<cache_tags> args = std::make_unique<cache_tags>();
+        cache_tags args;
 
         // query resource manager for parameter and coordinate labels
         const auto& param_resource = this->mgr.parameters();
@@ -110,14 +110,14 @@ namespace nontrivial_metric
         if(param_resource)
           {
             GiNaC::symbol sym = this->sym_factory.get_symbol(*param_resource);
-            args->push_back(sym);
+            args += sym;
           }
 
         // if a coordinate resource is being used, push its label onto the argument list
         if(coord_resource && flatten)
           {
             GiNaC::symbol sym = this->sym_factory.get_symbol(coord_resource.get().second);
-            args->push_back(sym);
+            args += sym;
           }
 
         return args;
@@ -215,12 +215,12 @@ namespace nontrivial_metric
         auto args = this->generate_cache_arguments(printer);
 
         // if no substitutions, then nothing to do, so exit immediately
-        if(args->size() == 0) return(this->V);
+        if(args.size() == 0) return(this->V);
 
         GiNaC::ex subs_V;
 
         // check whether this set of substitutions has already been done; if so, there is no need to do any work
-        if(!this->cache.query(expression_item_types::V_item, 0, *args, subs_V))
+        if(!this->cache.query(expression_item_types::V_item, 0, args, subs_V))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -259,7 +259,7 @@ namespace nontrivial_metric
 
             // apply substitution and cache the result
             subs_V = this->V.subs(subs_map, GiNaC::subs_options::no_pattern);
-            this->cache.store(expression_item_types::V_item, 0, *args, subs_V);
+            this->cache.store(expression_item_types::V_item, 0, args, subs_V);
           }
 
         return(subs_V);
@@ -290,7 +290,7 @@ namespace nontrivial_metric
 
         GiNaC::ex eps;
 
-        if(!this->cache.query(expression_item_types::epsilon_item, 0, *args, eps))
+        if(!this->cache.query(expression_item_types::epsilon_item, 0, args, eps))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -304,7 +304,7 @@ namespace nontrivial_metric
               }
 
             eps = eps/(2*Mp*Mp);
-            this->cache.store(expression_item_types::epsilon_item, 0, *args, eps);
+            this->cache.store(expression_item_types::epsilon_item, 0, args, eps);
           }
 
         return(eps);
@@ -335,7 +335,7 @@ namespace nontrivial_metric
 
         GiNaC::ex Hsq;
 
-        if(!this->cache.query(expression_item_types::Hubble2_item, 0, *args, Hsq))
+        if(!this->cache.query(expression_item_types::Hubble2_item, 0, args, Hsq))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -344,7 +344,7 @@ namespace nontrivial_metric
             GiNaC::symbol Mp = this->share.generate_Mp();
 
             Hsq = V / ((3-eps)*Mp*Mp);
-            this->cache.store(expression_item_types::Hubble2_item, 0, *args, Hsq);
+            this->cache.store(expression_item_types::Hubble2_item, 0, args, Hsq);
           }
 
         return(Hsq);
@@ -375,7 +375,7 @@ namespace nontrivial_metric
         else                        // have to construct dV ourselves
           {
             // build argument list
-            std::unique_ptr<cache_tags> args = this->generate_cache_arguments(printer);
+            auto args = this->generate_cache_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -387,7 +387,7 @@ namespace nontrivial_metric
                 GiNaC::ex dV;
                 unsigned int index = this->fl.flatten(i);
 
-                if(!this->cache.query(expression_item_types::dV_item, index, *args, dV))
+                if(!this->cache.query(expression_item_types::dV_item, index, args, dV))
                   {
                     timing_instrument timer(this->compute_timer);
 
@@ -402,7 +402,7 @@ namespace nontrivial_metric
                     GiNaC::symbol x1 = (*f_list)[this->fl.flatten(i)];
                     dV = GiNaC::diff(subs_V, x1);
 
-                    this->cache.store(expression_item_types::dV_item, index, *args, dV);
+                    this->cache.store(expression_item_types::dV_item, index, args, dV);
                   }
 
                 (*list)[index] = dV;
@@ -441,7 +441,7 @@ namespace nontrivial_metric
         else                        // have to construct ddV ourselves
           {
             // build argument list
-            std::unique_ptr<cache_tags> args = this->generate_cache_arguments(printer);
+            auto args = this->generate_cache_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -455,7 +455,7 @@ namespace nontrivial_metric
                     GiNaC::ex ddV;
                     unsigned int index = this->fl.flatten(i,j);
 
-                    if(!this->cache.query(expression_item_types::ddV_item, index, *args, ddV))
+                    if(!this->cache.query(expression_item_types::ddV_item, index, args, ddV))
                       {
                         timing_instrument timer(this->compute_timer);
 
@@ -471,7 +471,7 @@ namespace nontrivial_metric
                         GiNaC::symbol x2 = (*f_list)[this->fl.flatten(j)];
                         ddV = GiNaC::diff(GiNaC::diff(subs_V, x1), x2);
 
-                        this->cache.store(expression_item_types::ddV_item, index, *args, ddV);
+                        this->cache.store(expression_item_types::ddV_item, index, args, ddV);
                       }
 
                     (*list)[index] = ddV;
@@ -515,7 +515,7 @@ namespace nontrivial_metric
         else                        // have to construct dddV ourselves
           {
             // build argument list
-            std::unique_ptr<cache_tags> args = this->generate_cache_arguments(printer);
+            auto args = this->generate_cache_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -531,7 +531,7 @@ namespace nontrivial_metric
                         GiNaC::ex dddV;
                         unsigned int index = this->fl.flatten(i,j,k);
 
-                        if(!this->cache.query(expression_item_types::dddV_item, index, *args, dddV))
+                        if(!this->cache.query(expression_item_types::dddV_item, index, args, dddV))
                           {
                             timing_instrument timer(this->compute_timer);
 
@@ -548,7 +548,7 @@ namespace nontrivial_metric
                             GiNaC::symbol x3 = (*f_list)[this->fl.flatten(k)];
                             dddV = GiNaC::diff(GiNaC::diff(GiNaC::diff(subs_V, x1), x2), x3);
 
-                            this->cache.store(expression_item_types::dddV_item, index, *args, dddV);
+                            this->cache.store(expression_item_types::dddV_item, index, args, dddV);
                           }
 
                         (*list)[index] = dddV;
@@ -561,7 +561,7 @@ namespace nontrivial_metric
       }
 
 
-    std::unique_ptr<cache_tags>
+    cache_tags
     resources::generate_cache_arguments(unsigned int flags, const language_printer& printer) const
       {
         // first, generate arguments from param/coordinates if they exist
@@ -574,7 +574,7 @@ namespace nontrivial_metric
             if(dV_resource)   // no need to push arguments if no resource available
               {
                 GiNaC::symbol sym = this->sym_factory.get_symbol(dV_resource.get().second);
-                args->push_back(sym);
+                args += sym;
               }
           }
 
@@ -584,7 +584,7 @@ namespace nontrivial_metric
             if(ddV_resource)
               {
                 GiNaC::symbol sym = this->sym_factory.get_symbol(ddV_resource.get().second);
-                args->push_back(sym);
+                args += sym;
               }
           }
 
@@ -594,11 +594,11 @@ namespace nontrivial_metric
             if(dddV_resource)
               {
                 GiNaC::symbol sym = this->sym_factory.get_symbol(dddV_resource.get().second);
-                args->push_back(sym);
+                args += sym;
               }
           }
 
-        return(args);
+        return args;
       }
 
 

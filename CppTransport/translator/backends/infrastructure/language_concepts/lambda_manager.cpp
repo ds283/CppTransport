@@ -132,17 +132,7 @@ namespace lambda_manager_impl
             auto lhs_tags = lhs.get_tags();
             auto rhs_tags = rhs.get_tags();
 
-            if(lhs_tags.size() != rhs_tags.size()) return false;
-
-            auto lhs_it = lhs_tags.begin();
-            auto rhs_it = rhs_tags.begin();
-
-            while(lhs_it != lhs_tags.end() && rhs_it != rhs_tags.end())
-              {
-                if(*lhs_it != *rhs_it) return false;
-                ++lhs_it;
-                ++rhs_it;
-              }
+            if(lhs_tags != rhs_tags) return false;
 
             // otherwise, expression type agrees and tags agree, so lambda must also agree
             return(true);

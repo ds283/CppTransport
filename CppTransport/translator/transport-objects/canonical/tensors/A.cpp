@@ -65,16 +65,12 @@ namespace canonical
         if(!this->cached) throw tensor_exception("A cache not ready");
 
         unsigned int index = this->fl.flatten(i, j, k);
-        auto args = this->res.generate_cache_arguments(use_dV | use_ddV | use_dddV,
-                                                       this->printer);
-        args->push_back(k1);
-        args->push_back(k2);
-        args->push_back(k3);
-        args->push_back(a);
+        auto args = this->res.generate_cache_arguments(use_dV | use_ddV | use_dddV, this->printer);
+        args += { k1, k2, k3, a };
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::A_item, index, *args, result))
+        if(!this->cache.query(expression_item_types::A_item, index, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -99,7 +95,7 @@ namespace canonical
             result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
                                 deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
-            this->cache.store(expression_item_types::A_item, index, *args, result);
+            this->cache.store(expression_item_types::A_item, index, args, result);
           }
 
         return(result);
@@ -170,19 +166,14 @@ namespace canonical
         auto idx_k = this->shared.generate_index<GiNaC::idx>(k);
 
         auto args = this->res.generate_cache_arguments(use_dV | use_ddV | use_dddV, this->printer);
-        args->push_back(k1);
-        args->push_back(k2);
-        args->push_back(k3);
-        args->push_back(a);
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
-        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
+        args += { k1, k2, k3,a };
+        args += { idx_i, idx_j, idx_k };
 
         this->pre_lambda();
 
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::A_lambda, 0, *args, result))
+        if(!this->cache.query(expression_item_types::A_lambda, 0, args, result))
           {
             timing_instrument timer(this->compute_timer);
 
@@ -203,10 +194,10 @@ namespace canonical
             result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
                                 deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
-            this->cache.store(expression_item_types::A_lambda, 0, *args, result);
+            this->cache.store(expression_item_types::A_lambda, 0, args, result);
           }
     
-        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::A_lambda, *args,
+        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::A_lambda, args,
                                                this->shared.generate_working_type());
       }
     
