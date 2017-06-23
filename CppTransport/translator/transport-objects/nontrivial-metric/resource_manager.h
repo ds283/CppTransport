@@ -41,7 +41,23 @@ namespace nontrivial_metric
       public:
         
         //! constructor is default
-        resource_manager() = default;
+        resource_manager(bool dev_warn)
+          : parameters_cache(dev_warn),
+            coordinates_cache(dev_warn),
+            dV_cache(dev_warn),
+            ddV_cache(dev_warn),
+            dddV_cache(dev_warn),
+            phase_flatten_cache(dev_warn),
+            field_flatten_cache(dev_warn),
+            working_type_cache(dev_warn),
+            connexion_cache(dev_warn),
+            metric_cache(dev_warn),
+            metric_inverse_cache(dev_warn),
+            Riemann_A2_cache(dev_warn),
+            Riemann_A3_cache(dev_warn),
+            Riemann_B3_cache(dev_warn)
+          {
+          }
         
         //! destructor is default
         ~resource_manager() = default;

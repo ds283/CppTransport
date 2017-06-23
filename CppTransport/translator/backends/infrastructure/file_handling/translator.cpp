@@ -103,12 +103,16 @@ translator::translator(translator_data& payload)
 
 translator::~translator()
 	{
-    std::ostringstream msg;
-    msg << this->cache->get_hits() << " " << MESSAGE_EXPRESSION_CACHE_HITS
-		    << ", " << this->cache->get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES
-		    << " (" << MESSAGE_EXPRESSION_CACHE_QUERY_TIME << " " << format_time(this->cache->get_query_time()) << ")";
+	  if(!this->data_payload.get_argument_cache().show_profiling()) return;
 
-    this->print_advisory(msg.str());
+    std::ostringstream expr_cache_msg;
+    expr_cache_msg << this->cache->get_hits() << " " << MESSAGE_EXPRESSION_CACHE_HITS
+                   << ", " << this->cache->get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES
+                   << " (" << MESSAGE_EXPRESSION_CACHE_QUERY_TIME << " " << format_time(this->cache->get_query_time())
+                   << ", " << MESSAGE_EXPRESSION_CACHE_INSERT_TIME << " " << format_time(this->cache->get_insert_time())
+                   << ")";
+
+    this->print_advisory(expr_cache_msg.str());
 	}
 
 

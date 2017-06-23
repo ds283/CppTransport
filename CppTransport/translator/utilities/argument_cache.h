@@ -101,6 +101,17 @@ class argument_cache
     bool fast() const { return(this->fast_flag); }
 
 
+    // WARNINGS
+
+  public:
+
+    //! display profiling data?
+    bool show_profiling() const { return this->profile_flag; }
+
+    //! display developer warnings?
+    bool show_developer_warnings() const { return this->develop_warnings; }
+
+
     // INPUT FILES
 
   public:
@@ -160,6 +171,15 @@ class argument_cache
 
     //! fast setting
     bool fast_flag;
+
+
+    // WARNINGS
+
+    //! display profiling information
+    bool profile_flag;
+
+    //! display general developer warnings?
+    bool develop_warnings;
 
 
     // INPUT FILES

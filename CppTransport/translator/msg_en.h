@@ -295,6 +295,7 @@ constexpr auto WARNING_UNKNOWN_SWITCH                = "Ignored unknown command-
 constexpr auto MESSAGE_EXPRESSION_CACHE_HITS         = "expression cache hits";
 constexpr auto MESSAGE_EXPRESSION_CACHE_MISSES       = "misses";
 constexpr auto MESSAGE_EXPRESSION_CACHE_QUERY_TIME   = "time spent performing queries";
+constexpr auto MESSAGE_EXPRESSION_CACHE_INSERT_TIME  = "inserts";
 
 constexpr auto MESSAGE_SYMBOLIC_COMPUTE_TIME         = "symbolic computation";
 constexpr auto MESSAGE_CSE_TIME                      = "common sub-expression elimination";

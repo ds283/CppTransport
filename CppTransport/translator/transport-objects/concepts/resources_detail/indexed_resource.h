@@ -112,8 +112,11 @@ class indexed_resource
     
   public:
     
-    //! constructor is default
-    indexed_resource() = default;
+    //! constructor
+    indexed_resource(bool dw)
+      : dev_warn(dw)
+      {
+      }
     
     //! destructor checks whether any labels are unused
     ~indexed_resource();
@@ -152,6 +155,9 @@ class indexed_resource
 
     //! distance metric agent -- measures distance between two variance lists
     DistanceMetric metric;
+
+    //! show developer warnings?
+    bool dev_warn;
     
   };
 
@@ -189,19 +195,23 @@ indexed_resource<Indices, DataType, DistanceMetric>::assign(const contexted_valu
         this->labels.emplace(std::make_pair(std::move(v), std::move(std::make_pair(false, std::move(dp)))));
         return *this;
       }
-    
+
     // otherwise, issue a warning that we are overwriting an unreleased value
-    const error_context& ctx = d.get_declaration_point();
-    ctx.warn(NOTIFY_RESOURCE_REDECLARATION);
-    
-    const error_context& p_ctx = t->second.second->get_declaration_point();
-    p_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
+    if(this->dev_warn)
+      {
+        const error_context& ctx = d.get_declaration_point();
+        ctx.warn(NOTIFY_RESOURCE_REDECLARATION);
+
+        const error_context& p_ctx = t->second.second->get_declaration_point();
+        p_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
+      }
 
     // check whether label is already in use by an assignment with different variance,
     // and issue an error if it is
     auto u = this->find(d);
     if(u != this->labels.end() && t->first != v)
       {
+        const error_context& ctx = d.get_declaration_point();
         ctx.error(ERROR_RESOURCE_LABEL_IN_USE);
 
         const error_context& u_ctx = u->second.second->get_declaration_point();
@@ -219,6 +229,8 @@ indexed_resource<Indices, DataType, DistanceMetric>::assign(const contexted_valu
 template <unsigned int Indices, typename DataType, typename DistanceMetric>
 void indexed_resource<Indices, DataType, DistanceMetric>::warn_unused() const
   {
+    if(!this->dev_warn) return;
+
     for(const auto& r : this->labels)
       {
         const label_record& rec = r.second;

@@ -46,10 +46,8 @@ class simple_resource
   public:
     
     //! constructor should set useage flag
-    simple_resource();
-    
-    simple_resource(bool used);
-    
+    simple_resource(bool dw);
+
     //! destructor checks whether label is unused
     ~simple_resource();
     
@@ -83,13 +81,17 @@ class simple_resource
     //! usage flag -- to track whether unused resources are being declared
     //! (if so then they are presumably also being computed, so should be eliminated)
     bool used;
+
+    //! show developer warnings?
+    bool dev_warn;
     
   };
 
 
 template <typename DataType>
-simple_resource<DataType>::simple_resource()
-  : used(false)
+simple_resource<DataType>::simple_resource(bool dw)
+  : used(false),
+    dev_warn(dw)
   {
   }
 
@@ -112,12 +114,15 @@ simple_resource<DataType>& simple_resource<DataType>::assign(const contexted_val
       }
     
     // otherwise, issue a warning that we are overwriting an unreleased value
-    const error_context& ctx = d.get_declaration_point();
-    ctx.warn(NOTIFY_RESOURCE_REDECLARATION);
-    
-    const error_context& p_ctx = this->label.get().get_declaration_point();
-    p_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
-    
+    if(this->dev_warn)
+      {
+        const error_context& ctx = d.get_declaration_point();
+        ctx.warn(NOTIFY_RESOURCE_REDECLARATION);
+
+        const error_context& p_ctx = this->label.get().get_declaration_point();
+        p_ctx.warn(NOTIFY_RESOURCE_DECLARATION_WAS);
+      }
+
     this->label = d;
     
     return *this;
@@ -144,7 +149,7 @@ simple_resource<DataType>& simple_resource<DataType>::reset()
 template <typename DataType>
 void simple_resource<DataType>::warn_unused() const
   {
-    if(!this->used && this->label)
+    if(this->dev_warn && !this->used && this->label)
       {
         const error_context& ctx = this->label->get_declaration_point();
         ctx.warn(NOTIFY_RESOURCE_DECLARED_NOT_USED);

@@ -31,7 +31,7 @@
 
 package_group::~package_group()
   {
-		if(this->statistics_reported)
+		if(this->statistics_reported && this->data_payload.get_argument_cache().show_profiling())
 			{
 		    std::ostringstream msg;
 

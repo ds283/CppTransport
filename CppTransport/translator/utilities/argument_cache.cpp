@@ -94,7 +94,9 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     no_search_environment(false),
     annotate_flag(false),
     unroll_policy_size(DEFAULT_UNROLL_MAX),
-    fast_flag(false)
+    fast_flag(false),
+    profile_flag(false),
+    develop_warnings(false)
   {
     // set up Boost::program_options descriptors for command-line arguments
     boost::program_options::options_description generic(MISC_OPTIONS);
@@ -119,6 +121,11 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
       (UNROLL_POLICY_SWITCH, boost::program_options::value< unsigned int >()->default_value(DEFAULT_UNROLL_MAX), UNROLL_POLICY_HELP)
       (FAST_SWITCH,                                                                                              FAST_HELP);
 
+    boost::program_options::options_description warnings(WARNING_OPTIONS);
+    warnings.add_options()
+      (PROFILING_SWITCH, PROFILING_HELP)
+      (DEVELOP_WARNINGS, DEVELOP_WARN_HELP);
+
     boost::program_options::options_description hidden(HIDDEN_OPTIONS);
     hidden.add_options()
       (INPUT_FILE_SWITCH, boost::program_options::value< std::vector<std::string> >(), INPUT_FILE_HELP)
@@ -129,13 +136,13 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     positional_options.add(INPUT_FILE_SWITCH, -1);
 
     boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic).add(configuration).add(hidden).add(generation);
+    cmdline_options.add(generic).add(configuration).add(hidden).add(generation).add(warnings);
 
     boost::program_options::options_description config_file_options;
-    config_file_options.add(configuration).add(generation);
+    config_file_options.add(configuration).add(generation).add(warnings);
 
     boost::program_options::options_description visible;
-    visible.add(generic).add(configuration).add(generation);
+    visible.add(generic).add(configuration).add(generation).add(warnings);
 
     boost::program_options::variables_map option_map;
 
@@ -153,7 +160,7 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
             for(const std::string& option : unrecognized_cmdline_options)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                msg << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'";
                 this->err_msgs.push_back(std::make_pair(false, msg.str()));
               }
           }
@@ -287,4 +294,8 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
         std::vector<std::string> input_files = option_map[INPUT_FILE_SWITCH].as< std::vector<std::string> >();
         std::copy(input_files.cbegin(), input_files.cend(), std::back_inserter(this->input_file_list));
       }
+
+    // WARNING OPTIONS
+    if(option_map.count(PROFILING_SWITCH)) this->profile_flag = true;
+    if(option_map.count(DEVELOP_WARNINGS)) this->develop_warnings = true;
   }
