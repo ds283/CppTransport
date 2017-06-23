@@ -28,7 +28,7 @@
 
 
 #include "concepts/tensors/Hubble.h"
-#include "utilities/shared_resources.h"
+#include "shared/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 
 #include "indices.h"

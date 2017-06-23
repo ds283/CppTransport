@@ -29,7 +29,7 @@
 
 #include <memory>
 
-#include "utilities/shared_resources.h"
+#include "shared/shared_resources.h"
 #include "canonical/resources.h"
 
 #include "concepts/transport_tensor.h"

@@ -200,8 +200,8 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/nontrivial-metric/resources.cpp
   translator/transport-objects/nontrivial-metric/resource_manager.cpp
   translator/transport-objects/nontrivial-metric/curvature_classes.cpp
-  translator/transport-objects/utilities/symbol_factory.cpp
-  translator/transport-objects/utilities/shared_resources.cpp
+  translator/transport-objects/shared/symbol_factory.cpp
+  translator/transport-objects/shared/shared_resources.cpp
   translator/utilities/error.cpp
   translator/utilities/error_context.cpp
   translator/utilities/finder.cpp
@@ -244,7 +244,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/transport-objects
   translator/transport-objects/indices
   translator/transport-objects/concepts/resources_detail
-  translator/transport-objects/utilities
+  translator/transport-objects/shared
   translator/utilities
   translator/version-policy
   ${Boost_INCLUDE_DIRS}
@@ -707,12 +707,12 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES
-  translator/transport-objects/utilities/expression_cache.h
-  translator/transport-objects/utilities/ginac_cache.h
-  translator/transport-objects/utilities/shared_resources.cpp
-  translator/transport-objects/utilities/shared_resources.h
-  translator/transport-objects/utilities/symbol_factory.cpp
-  translator/transport-objects/utilities/symbol_factory.h
+  translator/transport-objects/shared/expression_cache.h
+  translator/transport-objects/shared/ginac_cache.h
+  translator/transport-objects/shared/shared_resources.cpp
+  translator/transport-objects/shared/shared_resources.h
+  translator/transport-objects/shared/symbol_factory.cpp
+  translator/transport-objects/shared/symbol_factory.h
   )
 
 set(TRANSLATOR_VERSION_POLICY_FILES

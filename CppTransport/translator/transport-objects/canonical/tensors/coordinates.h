@@ -30,7 +30,7 @@
 #include <memory>
 
 #include "concepts/tensors/coordinates.h"
-#include "utilities/shared_resources.h"
+#include "shared/shared_resources.h"
 #include "canonical/resources.h"
 
 #include "indices.h"

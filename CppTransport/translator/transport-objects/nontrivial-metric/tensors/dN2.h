@@ -30,7 +30,7 @@
 #include <memory>
 
 #include "concepts/tensors/dN2.h"
-#include "utilities/shared_resources.h"
+#include "shared/shared_resources.h"
 #include "nontrivial-metric/resources.h"
 
 #include "indices.h"
