@@ -252,6 +252,10 @@ translator::build_agents(const boost::filesystem::path& in)
     try
       {
         package = package_group_factory(in, *backend, this->data_payload, *factory);
+        // the package group owns the lambda_manager, which performs much the same job for lambdas
+        // as the expression_cache for concrete expressions.
+        // However, they're treated differently because the lambda_manager needs a specific language
+        // printer to do its job, so it has to be placed within the package group
       }
     catch(std::runtime_error& xe)
       {

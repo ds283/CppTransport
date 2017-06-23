@@ -31,7 +31,9 @@
 
 package_group::~package_group()
   {
-		if(this->statistics_reported && this->data_payload.get_argument_cache().show_profiling())
+    if(!this->data_payload.get_argument_cache().show_profiling()) return;
+
+		if(this->statistics_reported)
 			{
 		    std::ostringstream msg;
 
@@ -42,6 +44,20 @@ package_group::~package_group()
 
 		    this->data_payload.message(msg.str());
 			}
+
+    unsigned int lambda_hits = this->lambda_mgr->get_hits();
+    unsigned int lambda_misses = this->lambda_mgr->get_misses();
+
+    if(lambda_hits + lambda_misses > 0)
+      {
+        std::ostringstream lambda_msg;
+        lambda_msg << lambda_hits << " " << MESSAGE_LAMBDA_CACHE_HITS
+                   << ", " << lambda_misses << " " << MESSAGE_LAMBDA_CACHE_MISSES
+                   << " (" << MESSAGE_LAMBDA_CACHE_QUERY_TIME << " " << format_time(this->lambda_mgr->get_query_time())
+                   << ", " << MESSAGE_LAMBDA_CACHE_INSERT_TIME << " " << format_time(this->lambda_mgr->get_insert_time())
+                   << ")";
+        this->data_payload.message(lambda_msg.str());
+      }
   }
 
 

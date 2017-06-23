@@ -149,6 +149,16 @@ typedef lambda_record<map_lambda> map_lambda_record;
 class lambda_manager
   {
 
+    // TYPES
+
+  protected:
+
+    //! cache for atomic-type lambda records
+    using atomic_cache_type = std::list< std::unique_ptr<atomic_lambda_record> >;
+
+    //! cache for map-type lambda records
+    using map_cache_type = std::list< std::unique_ptr<map_lambda_record> >;
+
     // CONSTRUCTOR, DESTRUCTOR
 
   public:
@@ -182,16 +192,34 @@ class lambda_manager
     void clear();
 
 
+    // STATISTICS
+
+  public:
+
+    //! get number of hits
+    unsigned int get_hits() const { return(this->hits); }
+
+    //! get number of misses
+    unsigned int get_misses() const { return(this->misses); }
+
+    //! get time spent performing queries
+    boost::timer::nanosecond_type get_query_time() const { return(this->query_timer.elapsed().wall); }
+
+    //! get time spent performing insertions
+    boost::timer::nanosecond_type get_insert_time() const { return(this->insert_timer.elapsed().wall); }
+
+
     // INTERNAL API
 
   protected:
 
     //! search for a lambda record
     template <typename Iterator>
-    Iterator find(Iterator begin, Iterator end, const typename Iterator::value_type::element_type::lambda_type& lambda) const;
+    Iterator find(Iterator begin, Iterator end, const typename Iterator::value_type::element_type::lambda_type& lambda);
 
     //! make a lambda name
     std::string make_name();
+
 
     // INTERNAL DATA
 
@@ -213,14 +241,23 @@ class lambda_manager
     //! kernel of lambda identifiers
     std::string temporary_name_kernel;
 
-    // timer
-    boost::timer::cpu_timer timer;
+
+    // STATISTICS
+
+    //! record number of cache hits
+    unsigned int hits;
+
+    //! record number of cache misses
+    unsigned int misses;
+
+    // query timer
+    boost::timer::cpu_timer query_timer;
+
+    // insert timer
+    boost::timer::cpu_timer insert_timer;
 
 
     // CACHES
-
-    typedef std::list< std::unique_ptr<atomic_lambda_record> > atomic_cache_type;
-    typedef std::list< std::unique_ptr<map_lambda_record> > map_cache_type;
 
     //! atomic lambda cache
     atomic_cache_type atomic_cache;

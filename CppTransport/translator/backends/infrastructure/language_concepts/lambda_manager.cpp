@@ -36,9 +36,13 @@ lambda_manager::lambda_manager(unsigned int s, language_printer& p, translator_d
     temporary_name_kernel(k),
     printer(p),
     data_payload(pd),
-    cse_worker(std::move(cw))
+    cse_worker(std::move(cw)),
+    hits(0),
+    misses(0)
   {
-    timer.stop();
+    // stop timers
+    query_timer.stop();
+    insert_timer.stop();
 
     cse_worker->set_temporary_kernel(lt);
   }
@@ -46,8 +50,6 @@ lambda_manager::lambda_manager(unsigned int s, language_printer& p, translator_d
 
 std::string lambda_manager::cache(std::unique_ptr<atomic_lambda> lambda)
   {
-    timing_instrument mgr(this->timer);
-    
     auto t = this->find(this->atomic_cache.cbegin(), this->atomic_cache.cend(), *lambda);
     
     // make a copy of the lambda index list before it is (potentially) moved
@@ -55,10 +57,18 @@ std::string lambda_manager::cache(std::unique_ptr<atomic_lambda> lambda)
 
     if(t == this->atomic_cache.end())
       {
+        timing_instrument mgr(this->insert_timer);
+
         this->atomic_cache.emplace_front(
           std::make_unique<atomic_lambda_record>(this->make_name(), std::move(lambda),
                                                  this->data_payload.model.get_number_fields()));
         t = this->atomic_cache.begin();
+
+        ++misses;
+      }
+    else
+      {
+        ++hits;
       }
 
     // format an invokation of this lambda, remembering that the index set being used here
@@ -70,8 +80,6 @@ std::string lambda_manager::cache(std::unique_ptr<atomic_lambda> lambda)
 
 std::string lambda_manager::cache(std::unique_ptr<map_lambda> lambda)
   {
-    timing_instrument mgr(this->timer);
-    
     auto t = this->find(this->map_cache.cbegin(), this->map_cache.cend(), *lambda);
 
     // make a copy of the lambda index list before it is (potentially) moved
@@ -79,10 +87,18 @@ std::string lambda_manager::cache(std::unique_ptr<map_lambda> lambda)
     
     if(t == this->map_cache.end())
       {
+        timing_instrument mgr(this->insert_timer);
+
         this->map_cache.emplace_front(
           std::make_unique<map_lambda_record>(this->make_name(), std::move(lambda),
                                               this->data_payload.model.get_number_fields()));
         t = this->map_cache.begin();
+
+        ++misses;
+      }
+    else
+      {
+        ++hits;
       }
 
     // format an invokation of this lambda, remembering that the index string being used here
@@ -152,8 +168,10 @@ namespace lambda_manager_impl
 
 
 template <typename Iterator>
-Iterator lambda_manager::find(Iterator begin, Iterator end, const typename Iterator::value_type::element_type::lambda_type& lambda) const
+Iterator lambda_manager::find(Iterator begin, Iterator end, const typename Iterator::value_type::element_type::lambda_type& lambda)
   {
+    timing_instrument mgr(this->query_timer);
+
     using RecordType = typename Iterator::value_type::element_type;
 
     return std::find_if(begin, end, lambda_manager_impl::LambdaRecordComparator<RecordType>(lambda));
