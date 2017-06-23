@@ -243,7 +243,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/parser/semantic-values
   translator/transport-objects
   translator/transport-objects/indices
-  translator/transport-objects/concepts/resources
+  translator/transport-objects/concepts/resources_detail
   translator/transport-objects/utilities
   translator/utilities
   translator/version-policy
@@ -624,9 +624,9 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
   translator/transport-objects/concepts/transport_tensor.h
   )
 
-set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_FILES
-  translator/transport-objects/concepts/resources/indexed_resource.h
-  translator/transport-objects/concepts/resources/simple_resource.h
+SET(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_DETAIL_FILES
+  translator/transport-objects/concepts/resources_detail/indexed_resource.h
+  translator/transport-objects/concepts/resources_detail/simple_resource.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_TENSORS_FILES
@@ -1232,7 +1232,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_DETAIL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
