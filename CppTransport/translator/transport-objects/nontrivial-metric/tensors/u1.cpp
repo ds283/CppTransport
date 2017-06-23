@@ -96,7 +96,11 @@ namespace nontrivial_metric
     
     unroll_behaviour u1::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV(idx_list)) return unroll_behaviour::allow;
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
+    
+        if(this->shared.can_roll_coordinates()
+           && this->res.can_roll_dV(i)) return unroll_behaviour::allow;
+        
         return unroll_behaviour::force;   // can't roll-up
       }
     
@@ -159,7 +163,7 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("U1 already cached");
 
         this->pre_lambda();
-        derivs = this->res.generate_deriv_vector(this->printer);
+        derivs = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
         dV = this->res.dV_resource(this->printer);
 
         this->cached = true;

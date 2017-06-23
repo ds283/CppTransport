@@ -80,7 +80,10 @@ namespace nontrivial_metric
     
     unroll_behaviour SR_velocity::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->res.can_roll_dV(idx_list)) return unroll_behaviour::allow;
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
+    
+        if(this->res.can_roll_dV(i)) return unroll_behaviour::allow;
+
         return unroll_behaviour::force;   // can't roll-up
       }
     

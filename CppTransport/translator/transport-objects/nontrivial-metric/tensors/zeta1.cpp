@@ -155,7 +155,7 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("zeta1 already cached");
 
         this->pre_lambda();
-        derivs = this->res.generate_deriv_vector(this->printer);
+        derivs = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
 
         this->cached = true;
       }

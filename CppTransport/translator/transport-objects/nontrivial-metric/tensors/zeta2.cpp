@@ -70,8 +70,8 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            auto& deriv_i = (*derivs)[this->fl.flatten(this->traits.to_species(i))];
-            auto& deriv_j = (*derivs)[this->fl.flatten(this->traits.to_species(j))];
+            auto& deriv_i = (*derivs_i)[this->fl.flatten(this->traits.to_species(i))];
+            auto& deriv_j = (*derivs_j)[this->fl.flatten(this->traits.to_species(j))];
 
             field_index species_i = this->traits.to_species(i);
             field_index species_j = this->traits.to_species(j);
@@ -113,7 +113,10 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("A already cached");
 
         this->pre_lambda();
-        derivs = this->res.generate_deriv_vector(this->printer);
+    
+        derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
+        derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
+
         dV = this->res.dV_resource(this->printer);
 
         this->cached = true;
@@ -128,7 +131,7 @@ namespace nontrivial_metric
 
         // formulae from DS calculation 28 May 2014
 
-        std::unique_ptr<symbol_list> ds = this->shared.generate_deriv_symbols(this->printer);
+        std::unique_ptr<flattened_tensor> ds = this->res.generate_deriv_vector(variance::contravariant, this->printer);
         std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
 
         GiNaC::ex p_ex = 0;
@@ -188,7 +191,13 @@ namespace nontrivial_metric
     
     unroll_behaviour zeta2::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV(idx_list)) return unroll_behaviour::allow;
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > j = { idx_list[1]->get_variance() };
+
+        if(this->shared.can_roll_coordinates()
+           && this->res.can_roll_dV(i)
+           && this->res.can_roll_dV(j)) return unroll_behaviour::allow;
+        
         return unroll_behaviour::force;   // can't roll-up
       }
 

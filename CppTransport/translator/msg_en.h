@@ -207,6 +207,9 @@ constexpr auto NOTIFY_PARAMETER_VARIANCE_IGNORED     = "Note: variance specifier
 
 constexpr auto ERROR_INDEX_LITERAL_REASSIGN          = "Internal error: missing database entry during index literal reassignment, for index";
 
+constexpr auto ERROR_FIELD_INDICES_ARE_CONTRAVARIANT = "Field indices must be contravariant";
+constexpr auto ERROR_COORD_INDICES_ARE_CONTRAVARIANT = "Coordinate indices must be contravariant";
+
 constexpr auto ERROR_MISSING_LHS                     = "Missing left-hand side in temporary template ";
 constexpr auto ERROR_MISSING_RHS                     = "Missing right-hand side in temporary template ";
 

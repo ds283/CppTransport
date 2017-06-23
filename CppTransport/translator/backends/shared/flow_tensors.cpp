@@ -98,6 +98,8 @@ namespace macro_packages
     
     void replace_field::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
+        if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_FIELD_INDICES_ARE_CONTRAVARIANT);
+        
         std::unique_ptr<flattened_tensor> container = this->field_tensor->compute(indices);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -105,6 +107,8 @@ namespace macro_packages
     
     void replace_coordinate::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
+        if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_COORD_INDICES_ARE_CONTRAVARIANT);
+    
         std::unique_ptr<flattened_tensor> container = this->coordinate_tensor->compute(indices);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -174,6 +178,8 @@ namespace macro_packages
     
     std::string replace_field::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
+        if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_FIELD_INDICES_ARE_CONTRAVARIANT);
+    
         std::unique_ptr<atomic_lambda> lambda = this->field_tensor->compute_lambda(*indices[0]);
     
         // assume that the result will always be just a single symbol, so can be safely inlined
@@ -183,6 +189,8 @@ namespace macro_packages
 
     std::string replace_coordinate::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
+        if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_COORD_INDICES_ARE_CONTRAVARIANT);
+    
         std::unique_ptr<atomic_lambda> lambda = this->coordinate_tensor->compute_lambda(*indices[0]);
     
         // assume that the result will always be just a single symbol, so can be safely inlined

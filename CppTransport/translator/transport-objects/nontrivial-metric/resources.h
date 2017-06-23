@@ -112,7 +112,7 @@ namespace nontrivial_metric
         std::unique_ptr<flattened_tensor> generate_field_vector(const language_printer& printer) const;
 
         //! generate concrete field-space deriative label resource
-        std::unique_ptr<flattened_tensor> generate_deriv_vector(const language_printer& printer) const;
+        std::unique_ptr<flattened_tensor> generate_deriv_vector(variance var, const language_printer& printer) const;
 
         //! generate abstract field-space coordinate label resource
         GiNaC::ex generate_field_vector(const abstract_index& idx, const language_printer& printer) const;
@@ -161,31 +161,31 @@ namespace nontrivial_metric
       public:
 
         //! query whether dV can be rolled-up into loops
-        bool can_roll_dV(const index_literal_list& idx_list) const;
+        bool can_roll_dV(const std::array< variance, RESOURCE_INDICES::DV_INDICES >& vars) const;
 
         //! query whether ddV can be rolled-up into loops
-        bool can_roll_ddV(const index_literal_list& idx_list) const;
+        bool can_roll_ddV(const std::array< variance, RESOURCE_INDICES::DDV_INDICES >& vars) const;
 
         //! query whether dddV can be rolled-up into loops
-        bool can_roll_dddV(const index_literal_list& idx_list) const;
+        bool can_roll_dddV(const std::array< variance, RESOURCE_INDICES::DDDV_INDICES >& vars) const;
         
         //! query whether connexion can be rolled-up into loops
-        bool can_roll_connexion(const index_literal_list& idx_list) const;
+        bool can_roll_connexion() const;
         
         //! query whether metric can be rolled-up into loops
-        bool can_roll_metric(const index_literal_list& idx_list) const;
+        bool can_roll_metric() const;
         
         //! query whether inverse metric can be rolled-up into loops
-        bool can_roll_metric_inverse(const index_literal_list& idx_list) const;
+        bool can_roll_metric_inverse() const;
         
         //! query whether RiemannA2 can be rolled-up into loops
-        bool can_roll_Riemann_A2(const index_literal_list& idx_list) const;
+        bool can_roll_Riemann_A2(const std::array< variance, RESOURCE_INDICES::RIEMANN_A2_INDICES >& vars) const;
     
         //! query whether RiemannA3 can be rolled-up into loops
-        bool can_roll_Riemann_A3(const index_literal_list& idx_list) const;
+        bool can_roll_Riemann_A3(const std::array< variance, RESOURCE_INDICES::RIEMANN_A3_INDICES >& vars) const;
     
         //! query whether RiemannB3 can be rolled-up into loops
-        bool can_roll_Riemann_B3(const index_literal_list& idx_list) const;
+        bool can_roll_Riemann_B3(const std::array< variance, RESOURCE_INDICES::RIEMANN_B3_INDICES >& vars) const;
         
         
         //! determine whether metric resources are available to perform index raising and lowering as needed

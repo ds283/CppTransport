@@ -70,7 +70,9 @@ namespace nontrivial_metric
     
     unroll_behaviour Riemann_B3::get_unroll(const index_literal_list& idx_list)
       {
-        if(res.can_roll_Riemann_B3(idx_list)) return unroll_behaviour::allow;
+        const std::array< variance, RESOURCE_INDICES::RIEMANN_B3_INDICES > ijk = { idx_list[0]->get_variance(), idx_list[1]->get_variance(), idx_list[2]->get_variance() };
+    
+        if(res.can_roll_Riemann_B3(ijk)) return unroll_behaviour::allow;
         
         return unroll_behaviour::force;   // can't roll-up
       }

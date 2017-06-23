@@ -147,9 +147,18 @@ namespace nontrivial_metric
 
 
         // WORKSPACE AND CACHE
-
-        //! list of momentum symbols
-        std::unique_ptr<flattened_tensor> derivs;
+    
+        // need one copy of the derivative vector per index, in order to account for
+        // index variance
+    
+        //! list of momenta -- i index
+        std::unique_ptr<flattened_tensor> derivs_i;
+    
+        //! list of momenta -- j index
+        std::unique_ptr<flattened_tensor> derivs_j;
+    
+        //! list of momenta-- k index
+        std::unique_ptr<flattened_tensor> derivs_k;
 
         //! Planck mass
         GiNaC::symbol Mp;

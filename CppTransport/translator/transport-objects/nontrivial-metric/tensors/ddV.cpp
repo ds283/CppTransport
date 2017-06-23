@@ -39,7 +39,9 @@ namespace nontrivial_metric
     
     unroll_behaviour ddV::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->res.can_roll_ddV(idx_list)) return unroll_behaviour::allow;
+        const std::array< variance, RESOURCE_INDICES::DDV_INDICES > ij = { idx_list[0]->get_variance(), idx_list[1]->get_variance() };
+        
+        if(this->res.can_roll_ddV(ij)) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll
       }
     

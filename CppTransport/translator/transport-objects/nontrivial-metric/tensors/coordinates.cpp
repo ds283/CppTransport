@@ -32,6 +32,7 @@ namespace nontrivial_metric
     std::unique_ptr<flattened_tensor> coordinates::compute(const index_literal_list& indices)
       {
         if(indices.size() != COORDINATE_TENSOR_INDICES) throw tensor_exception("coordinate indices");
+        if(indices[0]->get_variance() != variance::contravariant) throw tensor_exception(ERROR_COORD_INDICES_ARE_CONTRAVARIANT);
         
         auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(COORDINATE_TENSOR_INDICES));
         
@@ -60,6 +61,7 @@ namespace nontrivial_metric
     std::pair<GiNaC::ex, GiNaC::ex> coordinates::compute_component(field_index i)
       {
         if(!this->cached) throw tensor_exception("coordinates cache not ready");
+        if(i.get_variance() != variance::contravariant) throw tensor_exception(ERROR_COORD_INDICES_ARE_CONTRAVARIANT);
 
         unsigned int index = this->fl.flatten(i);
 
@@ -75,7 +77,7 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("coordinates already cached");
 
         fields = this->res.generate_field_vector(this->printer);
-        derivs = this->res.generate_deriv_vector(this->printer);
+        derivs = this->res.generate_deriv_vector(variance::contravariant, this->printer);
 
         this->cached = true;
       }
@@ -93,6 +95,7 @@ namespace nontrivial_metric
     std::unique_ptr<atomic_lambda> coordinates::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("coordinates");
+        if(i.get_variance() != variance::contravariant) throw tensor_exception(ERROR_COORD_INDICES_ARE_CONTRAVARIANT);
         
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         

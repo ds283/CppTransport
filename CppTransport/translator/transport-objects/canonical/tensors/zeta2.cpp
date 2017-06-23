@@ -128,7 +128,7 @@ namespace canonical
 
         // formulae from DS calculation 28 May 2014
 
-        std::unique_ptr<symbol_list> ds = this->shared.generate_deriv_symbols(this->printer);
+        std::unique_ptr<flattened_tensor> ds = this->res.generate_deriv_vector(this->printer);
         std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
 
         GiNaC::ex p_ex = 0;

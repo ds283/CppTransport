@@ -131,8 +131,36 @@ namespace nontrivial_metric
     
     unroll_behaviour u3::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV(idx_list) && this->res.can_roll_ddV(idx_list) &&
-          this->res.can_roll_dddV(idx_list)) return unroll_behaviour::allow;
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > j = { idx_list[1]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > k = { idx_list[2]->get_variance() };
+    
+        const std::array< variance, RESOURCE_INDICES::DDV_INDICES > ij = { idx_list[0]->get_variance(), idx_list[1]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DDV_INDICES > jk = { idx_list[1]->get_variance(), idx_list[2]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DDV_INDICES > ik = { idx_list[0]->get_variance(), idx_list[2]->get_variance() };
+        
+        const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > ijk = { idx_list[0]->get_variance(), idx_list[1]->get_variance(), idx_list[2]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > ikj = { idx_list[0]->get_variance(), idx_list[2]->get_variance(), idx_list[1]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > jik = { idx_list[1]->get_variance(), idx_list[0]->get_variance(), idx_list[2]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > jki = { idx_list[1]->get_variance(), idx_list[2]->get_variance(), idx_list[0]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > kij = { idx_list[2]->get_variance(), idx_list[0]->get_variance(), idx_list[1]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > kji = { idx_list[2]->get_variance(), idx_list[1]->get_variance(), idx_list[0]->get_variance() };
+    
+        if(this->shared.can_roll_coordinates()
+           && this->res.can_roll_dV(i)
+           && this->res.can_roll_dV(j)
+           && this->res.can_roll_dV(k)
+           && this->res.can_roll_ddV(ij)
+           && this->res.can_roll_ddV(ik)
+           && this->res.can_roll_ddV(jk)
+           && this->res.can_roll_dddV(ijk)
+           && this->res.can_roll_dddV(ikj)
+           && this->res.can_roll_dddV(jik)
+           && this->res.can_roll_dddV(jki)
+           && this->res.can_roll_dddV(kij)
+           && this->res.can_roll_dddV(kji))
+          return unroll_behaviour::allow;
+
         return unroll_behaviour::force;   // can't roll-up
       }
 

@@ -74,9 +74,9 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            auto& deriv_i = (*derivs)[this->fl.flatten(i)];
-            auto& deriv_j = (*derivs)[this->fl.flatten(j)];
-            auto& deriv_k = (*derivs)[this->fl.flatten(k)];
+            auto& deriv_i = (*derivs_i)[this->fl.flatten(i)];
+            auto& deriv_j = (*derivs_j)[this->fl.flatten(j)];
+            auto& deriv_k = (*derivs_k)[this->fl.flatten(k)];
 
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
             auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
@@ -177,8 +177,10 @@ namespace nontrivial_metric
     void C::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("C already cached");
-
-        derivs = this->res.generate_deriv_vector(this->printer);
+        
+        derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
+        derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
+        derivs_k = this->res.generate_deriv_vector(indices[2]->get_variance(), this->printer);
 
         this->cached = true;
       }

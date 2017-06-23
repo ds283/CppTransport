@@ -32,15 +32,16 @@ namespace nontrivial_metric
     std::unique_ptr<flattened_tensor> fields::compute(const index_literal_list& indices)
       {
         if(indices.size() != FIELD_TENSOR_INDICES) throw tensor_exception("field indices");
+        if(indices[0]->get_variance() != variance::contravariant) throw tensor_exception(ERROR_FIELD_INDICES_ARE_CONTRAVARIANT);
     
         auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(FIELD_TENSOR_INDICES));
     
-        const field_index max_i = this->shared.get_max_field_index(indices[0]->get_variance());
+        const field_index max_i = this->shared.get_max_field_index(variance::contravariant);
 
         // set up a TensorJanitor to manage use of cache
         TensorJanitor J(*this, indices);
     
-        for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
+        for(field_index i = field_index(0, variance::contravariant); i < max_i; ++i)
           {
             (*result)[this->fl.flatten(i)] = this->compute_component(i);
           }
@@ -52,6 +53,7 @@ namespace nontrivial_metric
     GiNaC::ex fields::compute_component(field_index i)
       {
         if(!this->cached) throw tensor_exception("fields cache not ready");
+        if(i.get_variance() != variance::contravariant) throw tensor_exception(ERROR_FIELD_INDICES_ARE_CONTRAVARIANT);
 
         unsigned int index = this->fl.flatten(i);
         
@@ -64,6 +66,7 @@ namespace nontrivial_metric
     std::unique_ptr<atomic_lambda> fields::compute_lambda(const index_literal& i)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("fields");
+        if(i.get_variance() != variance::contravariant) throw tensor_exception(ERROR_FIELD_INDICES_ARE_CONTRAVARIANT);
     
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
     
@@ -100,6 +103,10 @@ namespace nontrivial_metric
       {
         if(cached) throw tensor_exception("fields already cached");
         
+        // res.generate_field_vector() gives us the labels for the fields
+        // for these, there is no notion of co- or contravariant indices; the field labels are just scalar fields
+        // on the manifold. Conventionally we place their indices in a contravariant position.
+        // So, no index raising or lowering is required.
         f = this->res.generate_field_vector(this->printer);
 
         this->cached = true;

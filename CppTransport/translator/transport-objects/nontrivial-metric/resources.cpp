@@ -196,8 +196,9 @@ namespace nontrivial_metric
     std::unique_ptr<flattened_tensor>
     resources::generate_field_vector(const language_printer& printer) const
       {
-        // no distinction between co- and contravariant indices in a flat model, so we can always return the
-        // raw variable labels (which notionally are the contravariant components)
+        // for the coordinates themselves, there is no notion of co- or contravariant components;
+        // the coordinate labels are just scalar fields on the manifold.
+        // share.generate_field_symbols() gives us these labels directly, so all we need do is return them.
 
         auto X = std::make_unique<flattened_tensor>();
 
@@ -211,10 +212,11 @@ namespace nontrivial_metric
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::generate_deriv_vector(const language_printer& printer) const
+    std::unique_ptr<flattened_tensor>
+    resources::generate_deriv_vector(variance var, const language_printer& printer) const
       {
-        // no distinction between co- and contravariant indices in a flat model, so we can always return the
-        // raw variable labels (which notionally are the contravariant components)
+        // the derivatives are field-space *vectors* and therefore *do* have a notion of co- or contravariance.
+        // what we get back from share.generate_deriv_symbols() are the contravariant components.
 
         auto X = std::make_unique<flattened_tensor>();
 
@@ -223,6 +225,29 @@ namespace nontrivial_metric
           {
             X->push_back(label);
           }
+        
+        if(var == variance::covariant)
+          {
+            // need to substitute for any parameters or fields that appear in G
+            GiNaC::exmap subs_map = this->make_substitution_map(printer);
+
+            auto X_cov = std::make_unique<flattened_tensor>();
+            unsigned int max = this->payload.model.get_number_fields();
+            
+            for(unsigned int i = 0; i < max; ++i)
+              {
+                GiNaC::ex cmp = 0;
+                for(unsigned int j = 0; j < max; ++j)
+                  {
+                    cmp += (*this->G)(i,j) * (*X)[j];
+                  }
+                auto cmp_subs = cmp.subs(subs_map, GiNaC::subs_options::no_pattern);
+                X_cov->push_back(cmp_subs);
+              }
+            
+            // replace original contravariant vector by the covariant one
+            X.swap(X_cov);
+          }
 
         return X;
       }
@@ -230,8 +255,9 @@ namespace nontrivial_metric
 
     GiNaC::ex resources::generate_field_vector(const abstract_index& idx, const language_printer& printer) const
       {
-        // no distinction between co- and contravariant indices in a flat model, so we can always return the
-        // raw variable labels (which notionally are the contravariant components)
+        // for the coordinates themselves, there is no notion of co- or contravariant components;
+        // the coordinate labels are just scalar fields on the manifold.
+        // share.generate_field_symbols() gives us these labels directly, so all we need do is return them.
 
         const auto resource = this->mgr.coordinates();
         const auto& flatten = this->mgr.phase_flatten();
@@ -296,7 +322,7 @@ namespace nontrivial_metric
             // we didn't find an expression for V with this set of substitutions in the cache, so
             // we need to construct one by hand. First, generate a substitution map given the
             // currently available set of resources
-            GiNaC::exmap subs_map = make_substitution_map(printer);
+            GiNaC::exmap subs_map = this->make_substitution_map(printer);
 
             // apply substitution and cache the result
             subs_V = this->V.subs(subs_map, GiNaC::subs_options::no_pattern);
@@ -376,12 +402,28 @@ namespace nontrivial_metric
             GiNaC::symbol Mp = this->share.generate_Mp();
 
             eps = 0;
-            for(GiNaC::symbol& dv: *derivs)
+            
+            if(derivs->size() != this->G->rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+            if(derivs->size() != this->G->cols()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+            const unsigned int max = derivs->size();
+            
+            for(unsigned int i = 0; i < max; ++i)
               {
-                eps += dv*dv;
+                for(unsigned int j = 0; j < max; ++j)
+                  {
+                    eps += (*this->G)(i,j) * (*derivs)[i] * (*derivs)[j];
+                  }
               }
-
+            
             eps = eps/(2*Mp*Mp);
+            
+            // potentially need to replace raw parameters in the metric components
+            GiNaC::exmap subs_map = this->make_substitution_map(printer);
+    
+            // apply substitution and cache the result
+            auto subs_eps = eps.subs(subs_map, GiNaC::subs_options::no_pattern);
+            eps.swap(subs_eps);
+            
             this->cache.store(expression_item_types::epsilon_item, 0, args, eps);
           }
 
@@ -421,7 +463,10 @@ namespace nontrivial_metric
             GiNaC::ex eps = this->raw_eps_resource(printer);
             GiNaC::symbol Mp = this->share.generate_Mp();
 
+            // no need to perform parameter/coordinate substitution here, since V and eps will already have been
+            // substituted individually
             Hsq = V / ((3-eps)*Mp*Mp);
+            
             this->cache.store(expression_item_types::Hubble2_item, 0, args, Hsq);
           }
 
@@ -713,57 +758,43 @@ namespace nontrivial_metric
       }
 
 
-    bool resources::can_roll_dV(const index_literal_list& idx_list) const
+    bool resources::can_roll_dV(const std::array< variance, RESOURCE_INDICES::DV_INDICES >& vars) const
       {
-        if(idx_list.size() != RESOURCE_INDICES::DV_INDICES) throw tensor_exception("can_roll_dV");
-        
-        std::array< variance, RESOURCE_INDICES::DV_INDICES > vars = { idx_list[0]->get_variance() };
-        
         const auto resource = this->mgr.dV(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
         
-        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
+        bool G = resource ? this->get_roll_metric_requirements(resource.get().first, vars) : false;
 
         return(resource && G && flatten && working_type);
       }
 
 
-    bool resources::can_roll_ddV(const index_literal_list& idx_list) const
+    bool resources::can_roll_ddV(const std::array< variance, RESOURCE_INDICES::DDV_INDICES >& vars) const
       {
-        if(idx_list.size() != RESOURCE_INDICES::DDV_INDICES) throw tensor_exception("can_roll_ddV");
-    
-        std::array< variance, RESOURCE_INDICES::DDV_INDICES > vars
-          = { idx_list[0]->get_variance(), idx_list[1]->get_variance() };
-
         const auto resource = this->mgr.ddV(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
-        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
+        bool G = resource ? this->get_roll_metric_requirements(resource.get().first, vars) : false;
 
         return(resource && G && flatten && working_type);
       }
 
 
-    bool resources::can_roll_dddV(const index_literal_list& idx_list) const
+    bool resources::can_roll_dddV(const std::array< variance, RESOURCE_INDICES::DDDV_INDICES >& vars) const
       {
-        if(idx_list.size() != RESOURCE_INDICES::DDDV_INDICES) throw tensor_exception("can_roll_dddV");
-    
-        std::array< variance, RESOURCE_INDICES::DDDV_INDICES > vars
-          = { idx_list[0]->get_variance(), idx_list[1]->get_variance(), idx_list[2]->get_variance() };
-
-        const auto resource = this->mgr.dddV({variance::covariant, variance::covariant, variance::covariant}, false);
+        const auto resource = this->mgr.dddV(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
-        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
+        bool G = resource ? this->get_roll_metric_requirements(resource.get().first, vars) : false;
 
         return(resource && G && flatten && working_type);
       }
     
     
-    bool resources::can_roll_connexion(const index_literal_list& idx_list) const
+    bool resources::can_roll_connexion() const
       {
         const auto resource = this->mgr.connexion();
         const auto& flatten = this->mgr.field_flatten();
@@ -773,7 +804,7 @@ namespace nontrivial_metric
       }
     
     
-    bool resources::can_roll_metric(const index_literal_list& idx_list) const
+    bool resources::can_roll_metric() const
       {
         const auto resource = this->mgr.metric();
         const auto& flatten = this->mgr.field_flatten();
@@ -783,7 +814,7 @@ namespace nontrivial_metric
       }
     
     
-    bool resources::can_roll_metric_inverse(const index_literal_list& idx_list) const
+    bool resources::can_roll_metric_inverse() const
       {
         const auto resource = this->mgr.metric_inverse();
         const auto& flatten = this->mgr.field_flatten();
@@ -793,52 +824,37 @@ namespace nontrivial_metric
       }
     
     
-    bool resources::can_roll_Riemann_A2(const index_literal_list& idx_list) const
+    bool resources::can_roll_Riemann_A2(const std::array< variance, RESOURCE_INDICES::RIEMANN_A2_INDICES >& vars) const
       {
-        if(idx_list.size() != RESOURCE_INDICES::RIEMANN_A2_INDICES) throw tensor_exception("can_roll_Riemann_A2");
-    
-        std::array< variance, RESOURCE_INDICES::RIEMANN_A2_INDICES > vars
-          = { idx_list[0]->get_variance(), idx_list[1]->get_variance() };
-    
-        const auto resource = this->mgr.Riemann_A2({variance::covariant, variance::covariant}, false);
+        const auto resource = this->mgr.Riemann_A2(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
-        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
+        bool G = resource ? this->get_roll_metric_requirements(resource.get().first, vars) : false;
         
         return(resource && G && flatten && working_type);
       }
     
     
-    bool resources::can_roll_Riemann_A3(const index_literal_list& idx_list) const
+    bool resources::can_roll_Riemann_A3(const std::array< variance, RESOURCE_INDICES::RIEMANN_A3_INDICES >& vars) const
       {
-        if(idx_list.size() != RESOURCE_INDICES::RIEMANN_A3_INDICES) throw tensor_exception("can_roll_Riemann_A3");
-    
-        std::array< variance, RESOURCE_INDICES::RIEMANN_A3_INDICES > vars
-          = { idx_list[0]->get_variance(), idx_list[1]->get_variance(), idx_list[2]->get_variance() };
-    
-        const auto resource = this->mgr.Riemann_A3({variance::covariant, variance::covariant, variance::covariant}, false);
+        const auto resource = this->mgr.Riemann_A3(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
-        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
+        bool G = resource ? this->get_roll_metric_requirements(resource.get().first, vars) : false;
     
         return(resource && G && flatten && working_type);
       }
     
     
-    bool resources::can_roll_Riemann_B3(const index_literal_list& idx_list) const
+    bool resources::can_roll_Riemann_B3(const std::array< variance, RESOURCE_INDICES::RIEMANN_B3_INDICES >& vars) const
       {
-        if(idx_list.size() != RESOURCE_INDICES::RIEMANN_B3_INDICES) throw tensor_exception("can_roll_Riemann_B3");
-    
-        std::array< variance, RESOURCE_INDICES::RIEMANN_B3_INDICES > vars
-          = { idx_list[0]->get_variance(), idx_list[1]->get_variance(), idx_list[2]->get_variance() };
-    
-        const auto resource = this->mgr.Riemann_A3({variance::covariant, variance::covariant, variance::covariant}, false);
+        const auto resource = this->mgr.Riemann_A3(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
-        bool G = this->get_roll_metric_requirements(resource.get().first, vars);
+        bool G = resource ? this->get_roll_metric_requirements(resource.get().first, vars) : false;
     
         return(resource && G && flatten && working_type);
       }

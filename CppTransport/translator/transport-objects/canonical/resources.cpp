@@ -252,7 +252,7 @@ namespace canonical
             // we didn't find an expression for V with this set of substitutions in the cache, so
             // we need to construct one by hand. First, generate a substitution map given the
             // currently available set of resources
-            GiNaC::exmap subs_map = make_substitution_map(printer);
+            GiNaC::exmap subs_map = this->make_substitution_map(printer);
 
             // apply substitution and cache the result
             subs_V = this->V.subs(subs_map, GiNaC::subs_options::no_pattern);

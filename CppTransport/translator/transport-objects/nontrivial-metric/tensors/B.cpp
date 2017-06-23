@@ -78,9 +78,9 @@ namespace nontrivial_metric
             auto& Vj   = (*dV)[this->fl.flatten(j)];
             auto& Vk   = (*dV)[this->fl.flatten(k)];
 
-            auto& deriv_i = (*derivs)[this->fl.flatten(i)];
-            auto& deriv_j = (*derivs)[this->fl.flatten(j)];
-            auto& deriv_k = (*derivs)[this->fl.flatten(k)];
+            auto& deriv_i = (*derivs_i)[this->fl.flatten(i)];
+            auto& deriv_j = (*derivs_j)[this->fl.flatten(j)];
+            auto& deriv_k = (*derivs_k)[this->fl.flatten(k)];
 
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
             auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
@@ -125,7 +125,15 @@ namespace nontrivial_metric
     
     unroll_behaviour B::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->shared.can_roll_coordinates() && this->res.can_roll_dV(idx_list)) return unroll_behaviour::allow;
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > j = { idx_list[1]->get_variance() };
+        const std::array< variance, RESOURCE_INDICES::DV_INDICES > k = { idx_list[2]->get_variance() };
+        
+        if(this->shared.can_roll_coordinates()
+           && this->res.can_roll_dV(i)
+           && this->res.can_roll_dV(j)
+           && this->res.can_roll_dV(k)) return unroll_behaviour::allow;
+
         return unroll_behaviour::force;   // can't roll-up
       }
 
@@ -200,7 +208,11 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("B already cached");
 
         this->pre_lambda();
-        derivs = this->res.generate_deriv_vector(this->printer);
+    
+        derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
+        derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
+        derivs_k = this->res.generate_deriv_vector(indices[2]->get_variance(), this->printer);
+
         dV = this->res.dV_resource(this->printer);
 
         this->cached = true;
