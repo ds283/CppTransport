@@ -672,28 +672,33 @@ token_list::make_index_macro(const std::string& macro, const size_t position, co
 
     // determine unroll status flags, either inherited from the macro or by allowing a suffix to the argument list
     auto status = rule.get_unroll(idx_list);
+    bool push_force = false;
+    bool push_prevent = false;
     if(status == unroll_behaviour::force)
       {
-        this->force_unroll.push_back(macro);
+        push_force = true;
       }
     else if(status == unroll_behaviour::prevent)
       {
-        this->prevent_unroll.push_back(macro);
+        push_prevent = true;
       }
     else if(current_position < input.length() && input[current_position] == '|')
       // check for 'force unroll' suffix if macro is neutral; ignore suffixes otherwise
       {
         ++current_position;
-        this->force_unroll.push_back(macro);
+        push_force = true;
       }
     else if(position < input.length() && input[position] == '@')
       // check for 'prevent unroll' suffix if macro is neutral
       {
         ++current_position;
-        this->prevent_unroll.push_back(macro);
+        push_prevent = true;
       }
-
+    
     error_context ctx = make_context(position, current_position);
+    
+    if(push_force) this->force_unroll.emplace_back(macro, ctx);
+    if(push_prevent) this->prevent_unroll.emplace_back(macro,ctx);
 
     if(!this->force_unroll.empty() && !this->prevent_unroll.empty())
       {

@@ -44,7 +44,7 @@ namespace canonical
         //! constructor
         tensor_factory(translator_data& p, expression_cache& c)
           : ::tensor_factory(p, c),
-            mgr(p.get_argument_cache().show_profiling()),
+            mgr(p.get_argument_cache().report_developer_warnings()),
             shared(p, mgr, c),
             res(p, mgr, c, shared, compute_timer)       // entitled to assume that mgr, shared, compute_timer have been constructed at this point
           {

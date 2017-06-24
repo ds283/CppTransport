@@ -196,6 +196,14 @@ class macro_agent
 
     //! construct error_context associated with split point
     error_context make_split_point_context(const std::string& line, const macro_impl::split_string& split_result);
+    
+    //! determine whether the current unroll policy mandates unrolling or roll-up of the given assignment set
+    bool apply_unroll_policy(const token_list& left_tokens, const token_list& right_tokens,
+                             const assignment_set& LHS_assignments, const assignment_set& RHS_assignments,
+                             const error_context& ctx) const;
+    
+    //! report on replacement rules that influenced the application of the unroll policy
+    void notify_unroll_outcome(const token_list& left_tokens, const token_list& right_tokens) const;
 
 
     // INTERNAL API -- VALIDATION

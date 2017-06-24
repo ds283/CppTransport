@@ -96,7 +96,8 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     unroll_policy_size(DEFAULT_UNROLL_MAX),
     fast_flag(false),
     profile_flag(false),
-    develop_warnings(false)
+    develop_warnings(false),
+    unroll_warnings(false)
   {
     // set up Boost::program_options descriptors for command-line arguments
     boost::program_options::options_description generic(MISC_OPTIONS);
@@ -124,7 +125,8 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     boost::program_options::options_description warnings(WARNING_OPTIONS);
     warnings.add_options()
       (PROFILING_SWITCH, PROFILING_HELP)
-      (DEVELOP_WARNINGS, DEVELOP_WARN_HELP);
+      (DEVELOP_WARNINGS, DEVELOP_WARN_HELP)
+      (UNROLL_WARNINGS,  UNROLL_WARN_HELP);
 
     boost::program_options::options_description hidden(HIDDEN_OPTIONS);
     hidden.add_options()
@@ -298,4 +300,5 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     // WARNING OPTIONS
     if(option_map.count(PROFILING_SWITCH)) this->profile_flag = true;
     if(option_map.count(DEVELOP_WARNINGS)) this->develop_warnings = true;
+    if(option_map.count(UNROLL_WARNINGS)) this->unroll_warnings = true;
   }

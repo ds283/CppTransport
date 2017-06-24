@@ -82,8 +82,10 @@ class token_list
   public:
 
     //! get number of tokens
-    unsigned int size() const { return (this->tokens.size()); }
-
+    unsigned int size() const { return this->tokens.size(); }
+    
+    //! is this token list empty?
+    bool empty() const { return this->tokens.empty(); }
 
     //! reset token list to pristine state, as if no evaluations had taken place
     //! principally used to force call to post-hooks and reset pre-hooks
@@ -130,6 +132,12 @@ class token_list
 
     //! does this token set prevent, force or allow unrolling?
     unroll_behaviour unroll_status() const;
+    
+    //! get list of replacement rules that are forcing unrolling
+    const std::list< contexted_value<std::string> > get_force_rules() const { return this->force_unroll; }
+    
+    //! get list of replacement rules that are preventing unrolling
+    const std::list< contexted_value<std::string> > get_prevent_rules() const { return this->prevent_unroll; }
     
     
     // INTERFACE -- DIRECTIVES
@@ -281,10 +289,10 @@ class token_list
     // MACRO DATA
 
     //! list of macro names preventing loop unroll
-    std::list<std::string> prevent_unroll;
+    std::list< contexted_value<std::string> > prevent_unroll;
 
     //! list of macro names forcing loop unroll
-    std::list<std::string> force_unroll;
+    std::list< contexted_value<std::string> > force_unroll;
     
 
     // INDEX DATA (maintains information about indices encountered in this entire line)

@@ -168,6 +168,14 @@ constexpr auto ERROR_NO_PRE_MAP                      = "Internal error: Data to 
 constexpr auto ERROR_INCOMPATIBLE_UNROLL             = "Unrolling requirements are incompatible with earlier macros for";
 constexpr auto ERROR_LHS_RHS_INCOMPATIBLE_UNROLL     = "Left-hand side and right-hand side have incompatible unrolling requirements";
 constexpr auto ERROR_PREVENT_INCOMPATIBLE_FAST       = "Macro preventing unroll is incompatible with --fast switch";
+constexpr auto NOTIFY_LHS_RULE_FORCES_UNROLL         = "Note: left-hand side replacement rule prevents roll-up";
+constexpr auto NOTIFY_RHS_RULE_FORCES_UNROLL         = "Note: right-hand side replacement rule prevents roll-up";
+constexpr auto NOTIFY_RULE_FORCES_UNROLL             = "Note: replacement rule prevents roll-up";
+constexpr auto NOTIFY_LHS_RULE_PREVENTS_UNROLL       = "Note: left-hand side replacement rule forces roll-up";
+constexpr auto NOTIFY_RHS_RULE_PREVENTS_UNROLL       = "Note: right-hand side replacement rule forces roll-up";
+constexpr auto NOTIFY_RULE_PREVENTS_UNROLL           = "Note: replacement rule forces roll-up";
+constexpr auto NOTIFY_POLICY_WOULD_UNROLL            = "Note: unroll/roll-up policy violation; policy would unroll, but roll-up forced";
+constexpr auto NOTIFY_POLICY_WOULD_ROLLUP            = "Note: unroll/roll-up policy violation; policy would roll-up, but unroll forced";
 
 constexpr auto ERROR_MISSING_INDEX_ASSIGNMENT        = "Internal error: missing index assignment";
 

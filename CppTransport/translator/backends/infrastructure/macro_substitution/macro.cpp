@@ -164,33 +164,9 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
       }
 
     assignment_set RHS_assignments(RHS_indices);
-
-    // decide on total size of assignment set and apply policy for unrolling
-    unsigned int total_assignment_size = LHS_assignments.size() * RHS_assignments.size();
-    bool unroll_by_policy = total_assignment_size <= this->data_payload.unroll_policy();
-    bool unroll = unroll_by_policy;
-
-    unsigned int prevent = 0;
-    unsigned int force = 0;
-    if(left_tokens->unroll_status() == unroll_behaviour::prevent) ++prevent;
-    if(right_tokens->unroll_status() == unroll_behaviour::prevent) ++prevent;
-    if(left_tokens->unroll_status() == unroll_behaviour::force) ++force;
-    if(right_tokens->unroll_status() == unroll_behaviour::force) ++force;
-
-    if(total_assignment_size > 1 && force > 0 && prevent > 0)
-      {
-        ctx.error(ERROR_LHS_RHS_INCOMPATIBLE_UNROLL);
-      }
-    else if(total_assignment_size > 1 && this->data_payload.fast() && prevent > 0)
-      {
-        ctx.error(ERROR_PREVENT_INCOMPATIBLE_FAST);
-      }
-    else
-      {
-        if(force > 0 || ((unroll_by_policy || this->data_payload.fast()) && prevent == 0)) unroll = true;
-        else unroll = false;
-      }
-
+    
+    bool unroll = this->apply_unroll_policy(*left_tokens, *right_tokens, LHS_assignments, RHS_assignments, ctx);
+    
     if(unroll)
       {
         this->unroll_index_assignment(*left_tokens, *right_tokens, LHS_assignments, RHS_assignments, counter,
@@ -205,6 +181,102 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     replacements = counter;
 
     return(r_list);
+  }
+
+
+bool macro_agent::apply_unroll_policy(const token_list& left_tokens, const token_list& right_tokens,
+                                      const assignment_set& LHS_assignments, const assignment_set& RHS_assignments,
+                                      const error_context& ctx) const
+  {
+    // determine total size of assignment set and apply policy for unrolling
+    unsigned int total_assignment_size = LHS_assignments.size() * RHS_assignments.size();
+
+    // if the total assignment size is smaller than the unroll policy size, then we would typically unroll
+    // unless it is prevented
+    bool unroll_by_policy = total_assignment_size <= data_payload.unroll_policy();
+    
+    // determine whether the LHS and RHS force or prevent unrolling
+    unsigned int prevent = 0;
+    unsigned int force = 0;
+
+    if(left_tokens.unroll_status() == unroll_behaviour::prevent) ++prevent;
+    if(right_tokens.unroll_status() == unroll_behaviour::prevent) ++prevent;
+    if(left_tokens.unroll_status() == unroll_behaviour::force) ++force;
+    if(right_tokens.unroll_status() == unroll_behaviour::force) ++force;
+    
+    // if the assignment set is nonempty and we have both force and prevent conditions, then we cannot
+    // resolve the situation
+    if(total_assignment_size > 1 && force > 0 && prevent > 0)
+      {
+        ctx.error(ERROR_LHS_RHS_INCOMPATIBLE_UNROLL);
+        this->notify_unroll_outcome(left_tokens, right_tokens);
+    
+        return false;
+      }
+
+    // if the assignment set is nonempty, '--fast' is in effect and a rule is trying to prevent unrolling
+    // then we have an error
+    if(total_assignment_size > 1 && data_payload.fast() && prevent > 0)
+      {
+        ctx.error(ERROR_PREVENT_INCOMPATIBLE_FAST);
+        this->notify_unroll_outcome(left_tokens, right_tokens);
+        
+        return false;
+      }
+    
+    bool emit = false;
+    if(unroll_by_policy && prevent > 0)
+      {
+        // issue notification that unrolling has been prevented, if we have been asked to do so
+        ctx.warn(NOTIFY_POLICY_WOULD_UNROLL);
+        emit = true;
+      }
+    if(!unroll_by_policy && force > 0)
+      {
+        ctx.warn(NOTIFY_POLICY_WOULD_ROLLUP);
+        emit = true;
+      }
+    if(emit) this->notify_unroll_outcome(left_tokens, right_tokens);
+    
+    if(force > 0 || ((unroll_by_policy || data_payload.fast()) && prevent == 0)) return true;
+    
+    return false;
+  }
+
+
+void macro_agent::notify_unroll_outcome(const token_list& left_tokens, const token_list& right_tokens) const
+  {
+    if(!this->data_payload.get_argument_cache().report_unroll_warnings()) return;
+    
+    const bool RHS_only = left_tokens.empty();
+    
+    const auto LHS_force = left_tokens.get_force_rules();
+    for(const auto& rule : LHS_force)
+      {
+        const error_context& pctx = rule.get_declaration_point();
+        pctx.warn(NOTIFY_LHS_RULE_FORCES_UNROLL);
+      }
+    
+    const auto RHS_force = right_tokens.get_force_rules();
+    for(const auto& rule : RHS_force)
+      {
+        const error_context& pctx = rule.get_declaration_point();
+        pctx.warn(RHS_only ? NOTIFY_RULE_FORCES_UNROLL : NOTIFY_RHS_RULE_FORCES_UNROLL);
+      }
+    
+    const auto LHS_prevent = left_tokens.get_prevent_rules();
+    for(const auto& rule : LHS_prevent)
+      {
+        const error_context& pctx = rule.get_declaration_point();
+        pctx.warn(NOTIFY_LHS_RULE_PREVENTS_UNROLL);
+      }
+    
+    const auto RHS_prevent = right_tokens.get_prevent_rules();
+    for(const auto& rule : RHS_prevent)
+      {
+        const error_context& pctx = rule.get_declaration_point();
+        pctx.warn(RHS_only ? NOTIFY_RULE_PREVENTS_UNROLL : NOTIFY_RHS_RULE_PREVENTS_UNROLL);
+      }
   }
 
 

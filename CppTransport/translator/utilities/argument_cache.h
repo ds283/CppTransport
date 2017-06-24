@@ -109,7 +109,10 @@ class argument_cache
     bool show_profiling() const { return this->profile_flag; }
 
     //! display developer warnings?
-    bool show_developer_warnings() const { return this->develop_warnings; }
+    bool report_developer_warnings() const { return this->develop_warnings; }
+    
+    //! report unroll policy violations?
+    bool report_unroll_warnings() const { return this->unroll_warnings; }
 
 
     // INPUT FILES
@@ -180,6 +183,9 @@ class argument_cache
 
     //! display general developer warnings?
     bool develop_warnings;
+    
+    //! report violations of the unrolling policy
+    bool unroll_warnings;
 
 
     // INPUT FILES

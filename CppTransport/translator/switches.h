@@ -87,6 +87,9 @@
 #define DEVELOP_WARNINGS              "Wdevelop"
 #define DEVELOP_WARN_HELP             "display developer warnings"
 
+#define UNROLL_WARNINGS               "Wunroll"
+#define UNROLL_WARN_HELP              "report violations of the unroll policy"
+
 // HEADERS
 
 #define MISC_OPTIONS                  "Miscellaneous options"
