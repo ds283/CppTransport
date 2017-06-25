@@ -85,8 +85,8 @@ namespace nontrivial_metric
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
                 auto& Vij = (*ddV)[this->fl.flatten(species_i, species_j)];
-                auto& Vi  = (*dV)[this->fl.flatten(species_i)];
-                auto& Vj  = (*dV)[this->fl.flatten(species_j)];
+                auto& Vi  = (*dV_i)[this->fl.flatten(species_i)];
+                auto& Vj  = (*dV_j)[this->fl.flatten(species_j)];
 
                 auto& deriv_i = (*derivs_i)[this->fl.flatten(species_i)];
                 auto& deriv_j = (*derivs_j)[this->fl.flatten(species_j)];
@@ -223,8 +223,10 @@ namespace nontrivial_metric
     
         derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
         derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
+    
+        dV_i = this->res.dV_resource(indices[0]->get_variance(), this->printer);
+        dV_j = this->res.dV_resource(indices[1]->get_variance(), this->printer);
 
-        dV = this->res.dV_resource(this->printer);
         ddV = this->res.ddV_resource(this->printer);
 
         this->cached = true;

@@ -109,7 +109,8 @@ namespace nontrivial_metric
 
         fields = this->shared.generate_field_symbols(this->printer);
         derivs = this->shared.generate_deriv_symbols(this->printer);
-        dV = this->res.dV_resource(this->printer);
+    
+        dV = this->res.dV_resource(variance::covariant, this->printer);
 
         Hsq = this->res.raw_Hsq_resource(this->printer);
         eps = this->res.raw_eps_resource(this->printer);
@@ -123,6 +124,7 @@ namespace nontrivial_metric
           {
             this->p += diff(1 / (2 * dotH), (*fields)[this->fl.flatten(i)]) * (*derivs)[this->fl.flatten(i)];
 
+            // derivs is contravariance, dV is covariant
             GiNaC::ex dXdN = (eps - 3) * (*derivs)[this->fl.flatten(i)] - (*dV)[this->fl.flatten(i)] / Hsq;
 
             this->p += diff(1 / (2 * dotH), (*derivs)[this->fl.flatten(i)]) * dXdN;

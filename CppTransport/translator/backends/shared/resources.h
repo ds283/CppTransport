@@ -135,7 +135,7 @@ namespace macro_packages
       };
 
 
-    class set_coordinates : public directive_index
+    class set_coordinates : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -144,8 +144,7 @@ namespace macro_packages
 
         //! constructor
         set_coordinates(std::string n, resource_manager& m, translator_data& p)
-          : directive_index(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS, p,
-                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+          : directive_simple(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS, p),
             mgr(m)
           {
           }
@@ -159,13 +158,7 @@ namespace macro_packages
       protected:
 
         //! apply
-        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
-
-        //! determine how many indices should be expected
-        boost::optional<unsigned int> define_indices(model_type t);
-
-        //! determine which index classes should be expected
-        boost::optional< std::vector<index_class> > define_classes(model_type t);
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA

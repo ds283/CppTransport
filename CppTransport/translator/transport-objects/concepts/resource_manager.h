@@ -80,8 +80,8 @@ class resource_manager
 
     //! get phase-space coordinates label
     //! if exact is false then the closest possible match is returned, if one is found
-    virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES>, contexted_value<std::string> > >
-    coordinates(std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none }, bool exact=true) = 0;
+    virtual const boost::optional< contexted_value<std::string> >&
+    coordinates() = 0;
 
     //! get V,i label
     virtual boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DV_INDICES>, contexted_value<std::string> > >
@@ -118,8 +118,7 @@ class resource_manager
     virtual void assign_parameters(const contexted_value<std::string>& p) = 0;
 
     //! assign phase-space coordinate resource label
-    virtual void assign_coordinates(const contexted_value<std::string>& c,
-                            std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v) = 0;
+    virtual void assign_coordinates(const contexted_value<std::string>& c) = 0;
     
     //! assign V,i resource label
     virtual void assign_dV(const contexted_value<std::string>& d,

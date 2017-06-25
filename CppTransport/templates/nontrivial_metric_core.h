@@ -494,7 +494,7 @@ namespace transport
             const flattened_tensor<number>& __param_vector = __params.get_vector();
 
             $RESOURCE_PARAMETERS{__param_vector}
-            $RESOURCE_COORDINATES[^A]{__coords}
+            $RESOURCE_COORDINATES{__coords}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -519,7 +519,7 @@ namespace transport
             $RESOURCE_RELEASE
             const auto __Mp = __params.get_Mp();
 
-            $RESOURCE_COORDINATES[^A]{__coords}
+            $RESOURCE_COORDINATES{__coords}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -546,7 +546,7 @@ namespace transport
             const flattened_tensor<number>& __param_vector = __params.get_vector();
 
             $RESOURCE_PARAMETERS{__param_vector}
-            $RESOURCE_COORDINATES[^A]{__coords}
+            $RESOURCE_COORDINATES{__coords}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -568,7 +568,7 @@ namespace transport
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{raw_params}
-          $RESOURCE_COORDINATES[^A]{__x}
+          $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -582,7 +582,7 @@ namespace transport
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{raw_params}
-          $RESOURCE_COORDINATES[^A]{__x}
+          $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -596,7 +596,7 @@ namespace transport
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{raw_params}
-          $RESOURCE_COORDINATES[^A]{__x}
+          $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -623,7 +623,7 @@ namespace transport
             const auto __Mp = __params.get_Mp();
 
             $RESOURCE_PARAMETERS{__params.get_vector()}
-            $RESOURCE_COORDINATES[^A]{__input}
+            $RESOURCE_COORDINATES{__input}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -687,7 +687,7 @@ namespace transport
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -774,7 +774,7 @@ namespace transport
       const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
       $RESOURCE_PARAMETERS{__raw_params}
-      $RESOURCE_COORDINATES[^A]{__fields}
+      $RESOURCE_COORDINATES{__fields}
 
       $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -825,7 +825,7 @@ namespace transport
         $TEMP_POOL{"const auto $1 = $2;"}
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
@@ -882,7 +882,7 @@ namespace transport
         $TEMP_POOL{"const auto $1 = $2;"}
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
@@ -1145,7 +1145,7 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__state}
+        $RESOURCE_COORDINATES{__state}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1169,7 +1169,7 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__state}
+        $RESOURCE_COORDINATES{__state}
         $IF{!fast}
           $RESOURCE_DV[_a]{__dV}
         $ENDIF
@@ -1199,7 +1199,7 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
@@ -1228,7 +1228,7 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
@@ -1258,7 +1258,7 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
@@ -1286,7 +1286,7 @@ namespace transport
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $RESOURCE_DV[_a]{__dV}
         $ENDIF
@@ -1308,7 +1308,7 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1325,7 +1325,7 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__fields}
+        $RESOURCE_COORDINATES{__fields}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1379,7 +1379,7 @@ namespace transport
                 $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
 
-                $RESOURCE_COORDINATES[^A]{__x.first}
+                $RESOURCE_COORDINATES{__x.first}
 
                 const auto __eps = $EPSILON;
 
@@ -1471,7 +1471,7 @@ namespace transport
                 $TEMP_POOL{"const auto $1 = $2;"}
 
                 $RESOURCE_PARAMETERS{param_vector}
-                $RESOURCE_COORDINATES[^A]{__x.first}
+                $RESOURCE_COORDINATES{__x.first}
 
                 const auto __Hsq = $HUBBLE_SQ;
                 const auto __H   = std::sqrt(__Hsq);
@@ -1594,7 +1594,7 @@ namespace transport
         $RESOURCE_RELEASE
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__x}
+        $RESOURCE_COORDINATES{__x}
 
         $IF{!fast}
           $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);

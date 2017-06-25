@@ -136,7 +136,7 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("SR_velocity already cached");
 
         this->pre_lambda();
-        dV = this->res.dV_resource(this->printer);
+        dV = this->res.dV_resource(indices[0]->get_variance(), this->printer);
 
         this->cached = true;
       }

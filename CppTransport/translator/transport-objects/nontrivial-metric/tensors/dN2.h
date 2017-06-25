@@ -141,8 +141,8 @@ namespace nontrivial_metric
 
         //! list of momentum symbols
         std::unique_ptr<symbol_list> derivs;
-
-        //! flattened dV tensor
+    
+        //! flattened dV tensor -- i index
         std::unique_ptr<flattened_tensor> dV;
 
         //! Hubble parameter

@@ -947,7 +947,7 @@ namespace transport
         const auto __a = std::exp(__t - this->__N_horizon_exit + this->__astar_normalization);
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__x}
+        $RESOURCE_COORDINATES{__x}
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
@@ -1051,7 +1051,7 @@ namespace transport
         const auto __a = std::exp(__t - this->__N_horizon_exit + this->__astar_normalization);
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES[^A]{__x}
+        $RESOURCE_COORDINATES{__x}
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}

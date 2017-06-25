@@ -165,9 +165,6 @@ namespace nontrivial_metric
         //! list of momenta -- j index
         std::unique_ptr<flattened_tensor> derivs_j;
 
-        //! flattened dV tensor
-        std::unique_ptr<flattened_tensor> dV;
-
         //! Hubble parameter
         GiNaC::ex Hsq;
 

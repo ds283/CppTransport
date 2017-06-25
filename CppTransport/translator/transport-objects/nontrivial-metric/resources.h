@@ -115,10 +115,10 @@ namespace nontrivial_metric
         std::unique_ptr<flattened_tensor> generate_deriv_vector(variance var, const language_printer& printer) const;
 
         //! generate abstract field-space coordinate label resource
-        GiNaC::ex generate_field_vector(const abstract_index& idx, const language_printer& printer) const;
+        GiNaC::ex generate_field_vector(const index_literal& idx, const language_printer& printer) const;
 
         //! generate abstract fields-space derivative label resource
-        GiNaC::ex generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const;
+        GiNaC::ex generate_deriv_vector(const index_literal& idx, const language_printer& printer) const;
 
 
         // TENSOR RESOURCES -- DERIVATIVES OF THE POTENTIAL
@@ -126,7 +126,7 @@ namespace nontrivial_metric
       public:
 
         //! generate concrete dV resource labels
-        std::unique_ptr<flattened_tensor> dV_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor> dV_resource(variance v, const language_printer& printer);
 
         //! generate concrete ddV resource labels
         std::unique_ptr<flattened_tensor> ddV_resource(const language_printer& printer);
@@ -206,12 +206,12 @@ namespace nontrivial_metric
 
 
         //! generate concrete dV resource using labels
-        void dV_resource_label(const language_printer& printer, flattened_tensor& list,
-                               const contexted_value<std::string>& resource,
-                               const contexted_value<std::string>& flatten);
+        void dV_resource_label(variance v, flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DV_INDICES>& avail,
+                                       const contexted_value<std::string>& resource, const contexted_value<std::string>& flatten,
+                                       const language_printer& printer);
 
         //! generate concrete dV resource using literal expressions
-        void dV_resource_expr(const language_printer& printer, flattened_tensor& list);
+        void dV_resource_expr(variance v, flattened_tensor& list, const language_printer& printer);
 
 
         //! generate concrete ddV resource using labels
@@ -230,6 +230,24 @@ namespace nontrivial_metric
 
         //! generate concrete dddV resource using literal expressions
         void dddV_resource_expr(const language_printer& printer, flattened_tensor& list);
+        
+        
+        //! dress an abstract resource label with given variance assignment 'avail' to give the required variance
+        //! assignment 'reqd'.
+        //! Returns a GiNaC expression representing the abstract resource with correct variance assignment
+        template <size_t Indices, typename IndexType>
+        GiNaC::ex
+        position_indices(const std::array<variance, Indices> avail,
+                         const std::array<std::reference_wrapper<const IndexType>, Indices> reqd,
+                         const contexted_value<std::string>& label, const std::string& flatten,
+                         const language_printer& printer) const;
+
+        //! expand an array of index labels into a call to printer.array_subscript()
+        template <size_t Indices, size_t... Is>
+        std::string
+        position_indices_label(const std::string& kernel, const std::array<std::string, Indices>& indices,
+                               std::index_sequence<Is...>, const std::string& flatten,
+                               const language_printer& printer) const;
 
 
         // INTERNAL DATA

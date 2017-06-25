@@ -117,8 +117,6 @@ namespace nontrivial_metric
         derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
         derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
 
-        dV = this->res.dV_resource(this->printer);
-
         this->cached = true;
       }
     
@@ -132,7 +130,7 @@ namespace nontrivial_metric
         // formulae from DS calculation 28 May 2014
 
         std::unique_ptr<flattened_tensor> ds = this->res.generate_deriv_vector(variance::contravariant, this->printer);
-        std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
+        std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(variance::covariant, this->printer);
 
         GiNaC::ex p_ex = 0;
 
@@ -140,6 +138,7 @@ namespace nontrivial_metric
 
         for(field_index i = field_index(0, variance::none); i < num_field; ++i)
           {
+            // ds is contravariant, Vi is covariant
             p_ex += (*Vi)[this->fl.flatten(i)] * (*ds)[this->fl.flatten(i)];
           }
         p_ex = p_ex / (Mp*Mp*Hsq);

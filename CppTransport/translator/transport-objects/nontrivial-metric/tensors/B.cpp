@@ -74,9 +74,9 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            auto& Vi   = (*dV)[this->fl.flatten(i)];
-            auto& Vj   = (*dV)[this->fl.flatten(j)];
-            auto& Vk   = (*dV)[this->fl.flatten(k)];
+            auto& Vi   = (*dV_i)[this->fl.flatten(i)];
+            auto& Vj   = (*dV_j)[this->fl.flatten(j)];
+            auto& Vk   = (*dV_k)[this->fl.flatten(k)];
 
             auto& deriv_i = (*derivs_i)[this->fl.flatten(i)];
             auto& deriv_j = (*derivs_j)[this->fl.flatten(j)];
@@ -212,8 +212,10 @@ namespace nontrivial_metric
         derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
         derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
         derivs_k = this->res.generate_deriv_vector(indices[2]->get_variance(), this->printer);
-
-        dV = this->res.dV_resource(this->printer);
+    
+        dV_i = this->res.dV_resource(indices[0]->get_variance(), this->printer);
+        dV_j = this->res.dV_resource(indices[1]->get_variance(), this->printer);
+        dV_k = this->res.dV_resource(indices[2]->get_variance(), this->printer);
 
         this->cached = true;
       }

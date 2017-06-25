@@ -45,6 +45,7 @@ namespace macro_packages
       : directive_package(p)
       {
         EMPLACE(simple_package, BIND(set_params, "RESOURCE_PARAMETERS"));
+        EMPLACE(simple_package, BIND(set_coordinates, "RESOURCE_COORDINATES"));
         EMPLACE(simple_package, BIND(set_phase_flatten, "PHASE_FLATTEN"));
         EMPLACE(simple_package, BIND(set_field_flatten, "FIELD_FLATTEN"));
         EMPLACE(simple_package, BIND(release_flatteners, "RELEASE_FLATTENERS"));
@@ -52,7 +53,6 @@ namespace macro_packages
         EMPLACE(simple_package, BIND(set_working_type, "WORKING_TYPE"));
         EMPLACE(simple_package, BIND(release_working_type, "RELEASE_WORKING_TYPE"));
 
-        EMPLACE(index_package, BIND(set_coordinates, "RESOURCE_COORDINATES"));
         EMPLACE(index_package, BIND(set_metric, "RESOURCE_G"));
         EMPLACE(index_package, BIND(set_inverse_metric, "RESOURCE_GINV"));
         EMPLACE(index_package, BIND(set_dV, "RESOURCE_DV"));
@@ -76,41 +76,14 @@ namespace macro_packages
       }
 
 
-    std::string set_coordinates::apply(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_coordinates::apply(const macro_argument_list& args)
       {
-        // build list of index variances
-        std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none };
-        for(unsigned int i = 0; i < v.size() && i < indices.size(); ++i)
-          {
-            v[i] = indices[i].get()->get_variance();
-          }
-        
-        this->mgr.assign_coordinates(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT], v);
+        this->mgr.assign_coordinates(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_COORDINATES << " '" << static_cast<std::string>(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]) << "'";
 
         return msg.str();
-      }
-
-
-    boost::optional<unsigned int> set_coordinates::define_indices(model_type t)
-      {
-        switch(t)
-          {
-            case model_type::canonical: return 0;
-            case model_type::nontrivial_metric: return RESOURCES::COORDINATES_TOTAL_INDICES;
-          }
-      }
-
-
-    boost::optional< std::vector<index_class> > set_coordinates::define_classes(model_type t)
-      {
-        switch(t)
-          {
-            case model_type::canonical: return boost::none;
-            case model_type::nontrivial_metric: return std::vector<index_class>({ index_class::full });
-          }
       }
 
 

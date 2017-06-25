@@ -185,7 +185,7 @@ namespace nontrivial_metric
         // if a coordinate resource is being used, push its label onto the argument list
         if(coord_resource && flatten)
           {
-            GiNaC::symbol sym = this->sym_factory.get_symbol(coord_resource.get().second);
+            GiNaC::symbol sym = this->sym_factory.get_symbol(*coord_resource);
             args += sym;
           }
 
@@ -226,6 +226,7 @@ namespace nontrivial_metric
             X->push_back(label);
           }
         
+        // if the covariant form is required, pull down the index
         if(var == variance::covariant)
           {
             // need to substitute for any parameters or fields that appear in G
@@ -253,7 +254,7 @@ namespace nontrivial_metric
       }
 
 
-    GiNaC::ex resources::generate_field_vector(const abstract_index& idx, const language_printer& printer) const
+    GiNaC::ex resources::generate_field_vector(const index_literal& idx, const language_printer& printer) const
       {
         // for the coordinates themselves, there is no notion of co- or contravariant components;
         // the coordinate labels are just scalar fields on the manifold.
@@ -262,26 +263,143 @@ namespace nontrivial_metric
         const auto resource = this->mgr.coordinates();
         const auto& flatten = this->mgr.phase_flatten();
 
-        if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure(idx.get().get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, idx, **flatten);
+        std::string variable = printer.array_subscript(*resource, idx, **flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
 
-    GiNaC::ex resources::generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const
+    GiNaC::ex resources::generate_deriv_vector(const index_literal& idx, const language_printer& printer) const
       {
-        // no distinction between co- and contravariant indices in a flat model, so we can always return the
-        // raw variable labels (which notionally are the contravariant components)
+        // the field derivatives transform tensorially and so here there is a notion of co- and contravariant
+        // components.
+        // Depending what resources are available we may need to perform index raising or lowering, which is handled
+        // by position_indices()
 
         const auto resource = this->mgr.coordinates();
         const auto& flatten = this->mgr.phase_flatten();
 
-        if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure(idx.get().get_loop_variable());
+        
+        abstract_index idx_abstract_offset = idx;
+        std::ostringstream modifier;
+        modifier << "-" << this->payload.model.get_number_fields();
+        idx_abstract_offset.push_post_modifier(modifier.str());
+        
+        index_literal idx_offset = idx;
+        idx_offset.reassign(idx_abstract_offset);
 
-        std::string variable = printer.array_subscript(resource.get().second, idx, **flatten, this->payload.model.get_number_fields());
-        return this->sym_factory.get_symbol(variable);
+        return this->position_indices<1, index_literal>({ variance::contravariant }, { std::cref(idx_offset) }, *resource, **flatten, printer);
       }
+    
+    
+    template <size_t Indices, typename IndexType>
+    GiNaC::ex
+    resources::position_indices(const std::array<variance, Indices> avail,
+                                const std::array<std::reference_wrapper<const IndexType>, Indices> reqd,
+                                const contexted_value<std::string>& label, const std::string& flatten,
+                                const language_printer& printer) const
+      {
+        const unsigned int N = this->payload.model.get_number_fields();
+        
+        const auto G = this->mgr.metric();
+        const auto Ginv = this->mgr.metric_inverse();
+        
+        // compute size of sum involving all factors of the metric or inverse metric
+        unsigned int size = 1;
+        unsigned int repositioned = 0;
+        
+        for(unsigned int i = 0; i < Indices; ++i)
+          {
+            variance a = avail[i];
+            variance r = reqd[i].get().get_variance();
+            
+            // if required and available indices don't match, we need a sum over N fields
+            if(r != a)
+              {
+                size *= N;
+                ++repositioned;
+              }
+          }
+        
+        if(size > 1 && this->payload.get_argument_cache().report_developer_warnings())
+          {
+            const error_context& ctx = label.get_declaration_point();
+            std::ostringstream msg;
+            
+            msg << NOTIFY_REPOSITIONING_INDICES_A << " " << repositioned << " "
+                << (repositioned > 1 ? NOTIFY_REPOSITIONING_INDICES_B1 : NOTIFY_REPOSITIONING_INDICES_B2)
+                << " '" << *label << "'";
+            ctx.warn(msg.str());
+          }
+        
+        GiNaC::ex res = 0;
+
+        // loop through all terms in the sum, constructing them appropriately
+        for(unsigned int i = 0; i < size; ++i)
+          {
+            std::array< std::string, Indices > index_values;
+            unsigned int index_pos = i;
+            GiNaC::ex term = 1;
+            
+            // construct the metric/inverse metric combinations needed for this term
+            for(unsigned int j = 0; j < Indices; ++j)
+              {
+                variance a = avail[i];
+                variance r = reqd[j].get().get_variance();
+                
+                if(r != a)
+                  {
+                    unsigned int v = index_pos % N;
+                    index_pos = index_pos / N;
+                    
+                    if(r == variance::contravariant)
+                      {
+                        if(!Ginv) throw resource_failure(to_index_string(reqd[j].get()));
+                        auto factor = printer.array_subscript(*Ginv, reqd[j].get(), v, flatten);
+                        auto sym = this->sym_factory.get_symbol(factor);
+                        index_values[j] = to_index_string(v);
+                        term *= sym;
+                      }
+                    else if(r == variance::covariant)
+                      {
+                        if(!G) throw resource_failure(to_index_string(reqd[j].get()));
+                        auto factor = printer.array_subscript(*G, reqd[j].get(), v, flatten);
+                        index_values[j] = to_index_string(v);
+                        auto sym = this->sym_factory.get_symbol(factor);
+                        term *= sym;
+                      }
+                    else
+                      {
+                        throw tensor_exception(ERROR_INDEX_MISSING_VARIANCE_DATA);
+                      }
+                  }
+                else
+                  {
+                    index_values[j] = to_index_string(reqd[j].get());
+                  }
+    
+                auto factor = this->position_indices_label(label, index_values, std::make_index_sequence<Indices>{}, flatten, printer);
+                auto sym = this->sym_factory.get_symbol(factor);
+                term *= sym;
+              }
+            
+            res += term;
+          }
+        
+        return res;
+      }
+    
+    
+    template <size_t Indices, size_t... Is>
+    std::string
+    resources::position_indices_label(const std::string& kernel, const std::array<std::string, Indices>& indices,
+                                      std::index_sequence<Is...>, const std::string& flatten,
+                                      const language_printer& printer) const
+      {
+        return printer.array_subscript(kernel, indices[Is]..., flatten);
+      };
 
 
     GiNaC::ex resources::V_resource(cse& cse_worker, const language_printer& printer)
@@ -475,44 +593,52 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<flattened_tensor>
-    resources::dV_resource(const language_printer& printer)
+    resources::dV_resource(variance v, const language_printer& printer)
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(1));
 
-        const auto resource = this->mgr.dV();
+        const auto resource = this->mgr.dV({ v }, false);
         const auto& flatten = this->mgr.field_flatten();
 
-        if(resource && flatten)     // dV is available
+        if(resource && flatten)     // resources appear to be available
           {
-            this->dV_resource_label(printer, *list, resource.get().second, *flatten);
+            try
+              {
+                this->dV_resource_label(v, *list, resource.get().first, resource.get().second, *flatten, printer);
+                return list;
+              }
+            catch(resource_failure& xe)
+              {
+                const error_context& ctx = resource.get().second.get_declaration_point();
+                ctx.warn(WARNING_INDEX_POSITIONING_FAILURE);
+              }
           }
-        else                        // have to construct dV ourselves
-          {
-            this->dV_resource_expr(printer, *list);
-          }
+        
+        // either resources were not available, or a resource failure occurred when raising and lowering indices
+        this->dV_resource_expr(v, *list, printer);
 
         return(list);
       }
-
-
-    void resources::dV_resource_label(const language_printer& printer, flattened_tensor& list,
+    
+    
+    void resources::dV_resource_label(variance v, flattened_tensor& list,
+                                      const std::array<variance, RESOURCE_INDICES::DV_INDICES>& avail,
                                       const contexted_value<std::string>& resource,
-                                      const contexted_value<std::string>& flatten)
+                                      const contexted_value<std::string>& flatten,
+                                      const language_printer& printer)
       {
-        const field_index max_i = this->share.get_max_field_index(variance::none);
+        const field_index max_i = this->share.get_max_field_index(v);
 
-        for(field_index i = field_index(0); i < max_i; ++i)
+        for(field_index i = field_index(0, v); i < max_i; ++i)
           {
             unsigned int index = this->fl.flatten(i);
 
-            std::string variable = printer.array_subscript(resource, this->fl.flatten(i), *flatten);
-
-            list[index] = this->sym_factory.get_symbol(variable);
+            list[index] = this->position_indices<1, field_index>(avail, { i }, resource, *flatten, printer);
           }
       }
 
 
-    void resources::dV_resource_expr(const language_printer& printer, flattened_tensor& list)
+    void resources::dV_resource_expr(variance v, flattened_tensor& list, const language_printer& printer)
       {
         const field_index max_i = this->share.get_max_field_index(variance::none);
 

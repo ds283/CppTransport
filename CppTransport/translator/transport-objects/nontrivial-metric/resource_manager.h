@@ -74,9 +74,9 @@ namespace nontrivial_metric
     
         //! get phase-space coordinates label
         //! if exact is false then the closest possible match is returned, if one is found
-        boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES>, contexted_value<std::string> > >
-        coordinates(std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v = { variance::none }, bool exact=true) override
-          { return this->coordinates_cache.find(v, exact); }
+        const boost::optional< contexted_value<std::string> >&
+        coordinates() override
+          { return this->coordinates_cache.find(); }
     
         //! get V,i label
         boost::optional< std::pair< std::array<variance, RESOURCE_INDICES::DV_INDICES>, contexted_value<std::string> > >
@@ -151,9 +151,8 @@ namespace nontrivial_metric
           { this->parameters_cache.assign(p); }
     
         //! assign phase-space coordinate resource label
-        void assign_coordinates(const contexted_value<std::string>& c,
-                                std::array<variance, RESOURCE_INDICES::COORDINATES_INDICES> v) override
-          { this->coordinates_cache.assign(c, v); }
+        void assign_coordinates(const contexted_value<std::string>& c) override
+          { this->coordinates_cache.assign(c); }
     
         //! assign V,i resource label
         void assign_dV(const contexted_value<std::string>& d,
@@ -297,7 +296,7 @@ namespace nontrivial_metric
         simple_resource<std::string> parameters_cache;
     
         //! cache parameters resource labels
-        indexed_resource<RESOURCE_INDICES::COORDINATES_INDICES, std::string> coordinates_cache;
+        simple_resource<std::string> coordinates_cache;
     
         //! cache V, resource labels
         indexed_resource<RESOURCE_INDICES::DV_INDICES, std::string> dV_cache;

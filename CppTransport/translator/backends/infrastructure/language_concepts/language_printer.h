@@ -32,6 +32,8 @@
 #include <string>
 
 #include "abstract_index.h"
+#include "index_literal.h"
+#include "indices.h"
 #include "lambdas.h"
 
 #include "disable_warnings.h"
@@ -174,6 +176,19 @@ class language_printer
 inline std::string to_index_string(const abstract_index& idx)
   {
     return idx.get_loop_variable();
+  }
+
+
+inline std::string to_index_string(const index_literal& idx)
+  {
+    return to_index_string(idx.get());
+  }
+
+
+template <typename ClassTag>
+inline std::string to_index_string(const tensor_index_impl::tensor_index<ClassTag>& idx)
+  {
+    return std::to_string(idx.get());
   }
 
 

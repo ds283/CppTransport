@@ -141,7 +141,7 @@ namespace canonical
         // if a coordinate resource is being used, push its label onto the argument list
         if(coord_resource && flatten)
           {
-            GiNaC::symbol sym = this->sym_factory.get_symbol(coord_resource.get().second);
+            GiNaC::symbol sym = this->sym_factory.get_symbol(*coord_resource);
             args += sym;
           }
 
@@ -194,7 +194,7 @@ namespace canonical
 
         if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, idx, **flatten);
+        std::string variable = printer.array_subscript(*resource, idx, **flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
@@ -209,7 +209,7 @@ namespace canonical
 
         if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, idx, **flatten, this->payload.model.get_number_fields());
+        std::string variable = printer.array_subscript(*resource, idx, **flatten, this->payload.model.get_number_fields());
         return this->sym_factory.get_symbol(variable);
       }
 

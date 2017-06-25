@@ -154,9 +154,12 @@ namespace nontrivial_metric
     
         //! list of momenta -- j index
         std::unique_ptr<flattened_tensor> derivs_j;
-
-        //! flattened dV tensor
-        std::unique_ptr<flattened_tensor> dV;
+    
+        //! flattened dV tensor -- i index
+        std::unique_ptr<flattened_tensor> dV_i;
+    
+        //! flattened dV tensor -- j index
+        std::unique_ptr<flattened_tensor> dV_j;
 
         //! flattened ddV tensor
         std::unique_ptr<flattened_tensor> ddV;
