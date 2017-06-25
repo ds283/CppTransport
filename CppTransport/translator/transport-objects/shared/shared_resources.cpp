@@ -58,7 +58,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_parameter_symbols(const 
       {
         for(param_index i = param_index(0); i < max_i; ++i)
           {
-            std::string variable = printer.array_subscript(*resource, this->fl.flatten(i));
+            std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), boost::none);
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
@@ -89,7 +89,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_field_symbols(const lang
       {
         for(field_index i = field_index(0); i < max_i; ++i)
           {
-            std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten);
+            std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), **flatten);
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
@@ -121,8 +121,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_deriv_symbols(const lang
         for(field_index i = field_index(0); i < max_i; ++i)
           {
             // TODO: explicit offset by this->num_fields is a bit ugly; would be nice to find a better approach
-            std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), *flatten,
-                                                           this->num_fields);
+            std::string variable = printer.array_subscript(resource.get().second, this->fl.flatten(i), **flatten, this->num_fields);
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
@@ -162,7 +161,7 @@ GiNaC::symbol shared_resources::generate_parameter_vector(const abstract_index& 
 
     if(!resource) throw resource_failure(idx.get_loop_variable());
 
-    std::string variable = printer.array_subscript(*resource, idx);
+    std::string variable = printer.array_subscript(*resource, idx, boost::optional<std::string>(), 0);
     return this->sym_factory.get_symbol(variable);
   }
 

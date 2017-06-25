@@ -81,94 +81,6 @@ std::string C_style_printer::for_loop(const std::string& loop_variable, unsigned
   }
 
 
-template <typename ItemType>
-std::string C_style_printer::make_array_subscript(const std::string& kernel, const ItemType& a, unsigned int offset) const
-  {
-    std::ostringstream stmt;
-    stmt << kernel << this->array_open << a;
-    if(offset != 0) stmt << "+" << offset;
-    stmt << this->array_close;
-    return(stmt.str());
-  }
-
-
-template <typename ItemType>
-std::string C_style_printer::make_array_subscript(const std::string& kernel, const ItemType& a, const std::string& flatten, unsigned int offset) const
-  {
-    std::ostringstream stmt;
-    stmt << kernel << this->array_open << flatten << this->function_open << a;
-    if(offset != 0) stmt << "+" << offset;
-    stmt << this->function_close << this->array_close;
-    return(stmt.str());
-  }
-
-
-template <typename ItemType>
-std::string C_style_printer::make_array_subscript(const std::string& kernel, const ItemType& a, const ItemType& b, const std::string& flatten) const
-  {
-    std::ostringstream stmt;
-    stmt << kernel << this->array_open << flatten << this->function_open << a << "," << b << this->function_close << this->array_close;
-    return(stmt.str());
-  }
-
-
-template <typename ItemType>
-std::string C_style_printer::make_array_subscript(const std::string& kernel, const ItemType& a, const ItemType& b, const ItemType& c, const std::string& flatten) const
-  {
-    std::ostringstream stmt;
-    stmt << kernel << this->array_open << flatten << this->function_open << a << "," << b << "," << c << this->function_close << this->array_close;
-    return(stmt.str());
-  }
-
-
-std::string C_style_printer::array_subscript(const std::string& kernel, unsigned int a, unsigned int offset) const
-  {
-    return this->make_array_subscript(kernel, a, offset);
-  }
-
-
-std::string C_style_printer::array_subscript(const std::string& kernel, unsigned int a, const std::string& flatten, unsigned int offset) const
-  {
-    return this->make_array_subscript(kernel, a, flatten, offset);
-  }
-
-
-std::string C_style_printer::array_subscript(const std::string& kernel, unsigned int a, unsigned int b, const std::string& flatten) const
-  {
-    return this->make_array_subscript(kernel, a, b, flatten);
-  }
-
-
-std::string C_style_printer::array_subscript(const std::string& kernel, unsigned int a, unsigned int b, unsigned int c, const std::string& flatten) const
-  {
-    return this->make_array_subscript(kernel, a, b, c, flatten);
-  }
-
-
-std::string C_style_printer::array_subscript(const std::string& kernel, const abstract_index& a, unsigned int offset) const
-  {
-    return this->make_array_subscript(kernel, a.get_loop_variable(), offset);
-  }
-
-
-std::string C_style_printer::array_subscript(const std::string& kernel, const abstract_index& a, const std::string& flatten, unsigned int offset) const
-  {
-    return this->make_array_subscript(kernel, a.get_loop_variable(), flatten, offset);
-  }
-
-
-std::string C_style_printer::array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const std::string& flatten) const
-  {
-    return this->make_array_subscript(kernel, a.get_loop_variable(), b.get_loop_variable(), flatten);
-  }
-
-
-std::string C_style_printer::array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const abstract_index& c, const std::string& flatten) const
-  {
-    return this->make_array_subscript(kernel, a.get_loop_variable(), b.get_loop_variable(), c.get_loop_variable(), flatten);
-  }
-
-
 std::string C_style_printer::initialization_list(const std::vector<std::string>& list, bool quote) const
   {
     std::ostringstream stmt;
@@ -298,5 +210,40 @@ std::string C_style_printer::format_if_stmt(const std::string& kw, const std::li
 
     stmt << ")";
 
+    return stmt.str();
+  }
+
+
+std::string
+C_style_printer::format_array_subscript(const std::string& kernel, const std::initializer_list<std::string> args,
+                                        const boost::optional<std::string>& flatten, unsigned int offset) const
+  {
+    std::ostringstream stmt;
+    stmt << kernel << this->array_open;
+    if(flatten)
+      {
+        stmt << *flatten << this->function_open;
+      }
+
+    unsigned int count = 0;
+    for(const std::string& arg : args)
+      {
+        if(count > 0) stmt << ",";
+
+        stmt << arg;
+        if(offset != 0)
+          {
+            stmt << "+" << offset;
+          }
+
+        ++count;
+      }
+    
+    if(flatten)
+      {
+        stmt << this->function_close;
+      }
+    stmt << this->array_close;
+    
     return stmt.str();
   }

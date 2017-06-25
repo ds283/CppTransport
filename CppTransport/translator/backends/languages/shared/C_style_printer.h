@@ -167,53 +167,13 @@ class C_style_printer: public language_printer
 
 
     // INTERFACE -- ARRAY SUBSCRIPTING
-
-  public:
-
-    //! generate 1D array subscript without flattening
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int offset) const override;
-
-    //! generate 1D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, const std::string& flatten, unsigned int offset) const override;
-
-    //! generate 2D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int b, const std::string& flatten) const override;
-
-    //! generate 3D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int b, unsigned int c, const std::string& flatten) const override;
-
-    //! generate 1D array subscript without flattening
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, unsigned int offset=0) const override;
-
-    //! generate 1D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const std::string& flatten, unsigned int offset=0) const override;
-
-    //! generate 2D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const std::string& flatten) const override;
-
-    //! generate 3D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const abstract_index& c, const std::string& flatten) const override;
-
-
-    // INTERNAL
-
+  
   protected:
-
-    //! generate 1D array subscript without flattening
-    template <typename ItemType>
-    std::string make_array_subscript(const std::string& kernel, const ItemType& a, unsigned int offset) const;
-
-    //! generate 1D array subscript
-    template <typename ItemType>
-    std::string make_array_subscript(const std::string& kernel, const ItemType& a, const std::string& flatten, unsigned int offset) const;
-
-    //! generate 2D array subscript
-    template <typename ItemType>
-    std::string make_array_subscript(const std::string& kernel, const ItemType& a, const ItemType& b, const std::string& flatten) const;
-
-    //! generate 3D array subscript
-    template <typename ItemType>
-    std::string make_array_subscript(const std::string& kernel, const ItemType& a, const ItemType& b, const ItemType& c, const std::string& flatten) const;
+    
+    //! format a 1D array subscript
+    std::string
+    format_array_subscript(const std::string& kernel, const std::initializer_list<std::string> args,
+                           const boost::optional<std::string>& flatten, unsigned int offset) const override;
 
 
     // INTERFACE -- INITIALIZATION LISTS

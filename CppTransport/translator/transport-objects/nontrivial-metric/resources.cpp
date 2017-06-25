@@ -264,7 +264,7 @@ namespace nontrivial_metric
 
         if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, idx, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, idx, **flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
@@ -279,7 +279,7 @@ namespace nontrivial_metric
 
         if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, idx, *flatten, this->payload.model.get_number_fields());
+        std::string variable = printer.array_subscript(resource.get().second, idx, **flatten, this->payload.model.get_number_fields());
         return this->sym_factory.get_symbol(variable);
       }
 
@@ -505,7 +505,7 @@ namespace nontrivial_metric
           {
             unsigned int index = this->fl.flatten(i);
 
-            std::string variable = printer.array_subscript(resource, this->fl.flatten(i), flatten);
+            std::string variable = printer.array_subscript(resource, this->fl.flatten(i), *flatten);
 
             list[index] = this->sym_factory.get_symbol(variable);
           }
@@ -580,7 +580,7 @@ namespace nontrivial_metric
               {
                 unsigned int index = this->fl.flatten(i,j);
 
-                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), flatten);
+                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
 
                 list[index] = this->sym_factory.get_symbol(variable);
               }
@@ -664,7 +664,7 @@ namespace nontrivial_metric
                   {
                     unsigned int index = this->fl.flatten(i,j,k);
 
-                    std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k), flatten);
+                    std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k), *flatten);
 
                     list[index] = this->sym_factory.get_symbol(variable);
                   }
@@ -903,7 +903,7 @@ namespace nontrivial_metric
 
         if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, a_idx, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, **flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
@@ -918,7 +918,7 @@ namespace nontrivial_metric
     
         if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, **flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
@@ -935,7 +935,7 @@ namespace nontrivial_metric
 
         if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable() + ", " + c_idx.get_loop_variable());
 
-        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, *flatten);
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, **flatten);
         return this->sym_factory.get_symbol(variable);
       }
     

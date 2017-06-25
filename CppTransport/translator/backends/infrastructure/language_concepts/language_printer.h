@@ -101,30 +101,28 @@ class language_printer
     // INTERFACE -- ARRAY SUBSCRIPTING
 
   public:
-
-    //! generate 1D array subscript without flattening
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int offset=0) const = 0;
-
+    
     //! generate 1D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, const std::string& flatten, unsigned int offset=0) const = 0;
-
+    template <typename A>
+    std::string
+    array_subscript(const std::string& kernel, A a, boost::optional<std::string> flatten, unsigned int offset=0) const;
+    
     //! generate 2D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int b, const std::string& flatten) const = 0;
-
+    template <typename A, typename B>
+    std::string
+    array_subscript(const std::string& kernel, A a, B b, boost::optional<std::string> flatten, unsigned int offset=0) const;
+    
     //! generate 3D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int b, unsigned int c, const std::string& flatten) const = 0;
-
-    //! generate 1D array subscript without flattening
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, unsigned int offset=0) const = 0;
-
-    //! generate 1D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const std::string& flatten, unsigned int offset=0) const = 0;
-
-    //! generate 2D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const std::string& flatten) const = 0;
-
-    //! generate 3D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const abstract_index& c, const std::string& flatten) const = 0;
+    template <typename A, typename B, typename C>
+    std::string
+    array_subscript(const std::string& kernel, A a, B b, C c, boost::optional<std::string> flatten, unsigned int offset=0) const;
+    
+  protected:
+    
+    //! format array subscripts
+    virtual std::string
+    format_array_subscript(const std::string& kernel, const std::initializer_list<std::string> args,
+                           const boost::optional<std::string>& flatten, unsigned int offset) const = 0;
 
 
     // INTERFACE -- INITIALIZATION LISTS
@@ -171,6 +169,57 @@ class language_printer
     bool debug;
 
   };
+
+
+inline std::string to_index_string(const abstract_index& idx)
+  {
+    return idx.get_loop_variable();
+  }
+
+
+inline std::string to_index_string(unsigned int i)
+  {
+    return std::to_string(i);
+  }
+
+
+inline std::string to_index_string(const std::string& str)
+  {
+    return str;
+  }
+
+
+template <typename A>
+std::string language_printer::array_subscript(const std::string& kernel, A a, boost::optional<std::string> flatten,
+                                              unsigned int offset) const
+  {
+    std::string arg = to_index_string(a);
+    return this->format_array_subscript(kernel, { arg }, flatten, offset);
+  }
+
+
+template <typename A, typename B>
+std::string language_printer::array_subscript(const std::string& kernel, A a, B b, boost::optional<std::string> flatten,
+                                              unsigned int offset) const
+  {
+    std::string arg1 = to_index_string(a);
+    std::string arg2 = to_index_string(b);
+
+    return this->format_array_subscript(kernel, { arg1, arg2 }, flatten, offset);
+  }
+
+
+template <typename A, typename B, typename C>
+std::string
+language_printer::array_subscript(const std::string& kernel, A a, B b, C c, boost::optional<std::string> flatten,
+                                  unsigned int offset) const
+  {
+    std::string arg1 = to_index_string(a);
+    std::string arg2 = to_index_string(b);
+    std::string arg3 = to_index_string(c);
+    
+    return this->format_array_subscript(kernel, { arg1, arg2, arg3 }, flatten, offset);
+  }
 
 
 #endif //CPPTRANSPORT_LANGUAGE_PRINTER_H
