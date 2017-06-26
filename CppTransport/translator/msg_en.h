@@ -263,7 +263,7 @@ constexpr auto RESOURCE_SET_DDV                      = "V,ij resource set to";
 constexpr auto RESOURCE_SET_DDDV                     = "V,ijk resource set to";
 constexpr auto RESOURCE_SET_CONNEXION                = "connexion resource set to";
 constexpr auto RESOURCE_SET_METRIC                   = "metric resource set to";
-constexpr auto RESOURCE_SET_INVERSE_METRIC           = "inverse metric resource set to";
+constexpr auto RESOURCE_SET_METRIC_INVERSE           = "inverse metric resource set to";
 constexpr auto RESOURCE_SET_RIEMANN                  = "Riemann resource set to";
 
 constexpr auto RESOURCE_SET_PHASE_FLATTEN            = "phase-space flattener set to";
@@ -350,6 +350,8 @@ constexpr auto WARNING_INDEX_POSITIONING_FAILURE     = "Index reposition failed;
 
 constexpr auto ERROR_METRIC_NOT_SQUARE               = "Internal error: field-space metric is not a square matrix";
 constexpr auto ERROR_METRIC_DIMENSION                = "Internal error: field-space metric/inverse has inconsistent dimension";
+
+constexpr auto ERROR_METRIC_RESOURCE_MIXED_INDICES   = "Metric resource should not have mixed indices";
 
 constexpr auto NOTIFY_PARSE_TERMINATED               = "Translation terminated";
 constexpr auto NOTIFY_TOO_MANY_ERRORS                = "encountered too many errors";

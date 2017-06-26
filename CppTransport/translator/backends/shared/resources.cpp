@@ -54,7 +54,6 @@ namespace macro_packages
         EMPLACE(simple_package, BIND(release_working_type, "RELEASE_WORKING_TYPE"));
 
         EMPLACE(index_package, BIND(set_metric, "RESOURCE_G"));
-        EMPLACE(index_package, BIND(set_inverse_metric, "RESOURCE_GINV"));
         EMPLACE(index_package, BIND(set_dV, "RESOURCE_DV"));
         EMPLACE(index_package, BIND(set_ddV, "RESOURCE_DDV"));
         EMPLACE(index_package, BIND(set_dddV, "RESOURCE_DDDV"));
@@ -150,7 +149,7 @@ namespace macro_packages
         switch(t)
           {
             case model_type::canonical: return boost::none;
-            case model_type::nontrivial_metric: return std::vector<index_class>({ index_class::field_only });
+            case model_type::nontrivial_metric: return std::vector<index_class>{ index_class::field_only };
           }
       }
 
@@ -189,7 +188,7 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>({ index_class::field_only, index_class::field_only });
+              return std::vector<index_class>{ index_class::field_only, index_class::field_only };
           }
       }
 
@@ -228,7 +227,7 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only });
+              return std::vector<index_class>{ index_class::field_only, index_class::field_only, index_class::field_only };
           }
       }
 
@@ -266,11 +265,24 @@ namespace macro_packages
     
     std::string set_metric::apply(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->mgr.assign_metric(args[RESOURCES::METRIC_KERNEL_ARGUMENT]);
+        if(indices[0]->get_variance() != indices[1]->get_variance())
+          {
+            throw rule_apply_fail(ERROR_METRIC_RESOURCE_MIXED_INDICES);
+          }
     
         std::ostringstream msg;
-        msg << RESOURCE_SET_METRIC << " '" << static_cast<std::string>(args[RESOURCES::METRIC_KERNEL_ARGUMENT]) << "'";
-    
+
+        if(indices[0]->get_variance() == variance::contravariant)
+          {
+            this->mgr.assign_metric(args[RESOURCES::METRIC_KERNEL_ARGUMENT]);
+            msg << RESOURCE_SET_METRIC << " '" << static_cast<std::string>(args[RESOURCES::METRIC_KERNEL_ARGUMENT]) << "'";
+          }
+        else
+          {
+            this->mgr.assign_metric_inverse(args[RESOURCES::METRIC_KERNEL_ARGUMENT]);
+            msg << RESOURCE_SET_METRIC_INVERSE << " '" << static_cast<std::string>(args[RESOURCES::METRIC_KERNEL_ARGUMENT]) << "'";
+          }
+        
         return msg.str();
       }
     
@@ -280,7 +292,7 @@ namespace macro_packages
         switch(t)
           {
             case model_type::canonical: return 0;
-            case model_type::nontrivial_metric: return 0;
+            case model_type::nontrivial_metric: return RESOURCE_INDICES::METRIC_INDICES;
           }
       }
     
@@ -290,38 +302,8 @@ namespace macro_packages
         switch(t)
           {
             case model_type::canonical: return boost::none;
-            case model_type::nontrivial_metric: return boost::none;
-          }
-      }
-    
-    
-    std::string set_inverse_metric::apply(const macro_argument_list& args, const index_literal_list& indices)
-      {
-        this->mgr.assign_metric_inverse(args[RESOURCES::INVERSE_METRIC_KERNEL_ARGUMENT]);
-    
-        std::ostringstream msg;
-        msg << RESOURCE_SET_INVERSE_METRIC << " '" << static_cast<std::string>(args[RESOURCES::INVERSE_METRIC_KERNEL_ARGUMENT]) << "'";
-    
-        return msg.str();
-      }
-    
-    
-    boost::optional<unsigned int> set_inverse_metric::define_indices(model_type t)
-      {
-        switch(t)
-          {
-            case model_type::canonical: return 0;
-            case model_type::nontrivial_metric: return 0;
-          }
-      }
-    
-    
-    boost::optional<std::vector<index_class> > set_inverse_metric::define_classes(model_type t)
-      {
-        switch(t)
-          {
-            case model_type::canonical: return boost::none;
-            case model_type::nontrivial_metric: return boost::none;
+            case model_type::nontrivial_metric:
+              return std::vector<index_class>{ index_class::field_only, index_class::field_only};
           }
       }
 
@@ -360,7 +342,7 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>({ index_class::field_only, index_class::field_only });
+              return std::vector<index_class>{ index_class::field_only, index_class::field_only };
           }
       }
     
@@ -399,7 +381,7 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only });
+              return std::vector<index_class>{ index_class::field_only, index_class::field_only, index_class::field_only };
           }
       }
     
@@ -438,7 +420,7 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
-              return std::vector<index_class>({ index_class::field_only, index_class::field_only, index_class::field_only });
+              return std::vector<index_class>{ index_class::field_only, index_class::field_only, index_class::field_only };
           }
       }
 

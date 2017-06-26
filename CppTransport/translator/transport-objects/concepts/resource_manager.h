@@ -34,14 +34,12 @@
 namespace RESOURCE_INDICES
   {
     
-    constexpr auto COORDINATES_INDICES = 1;
     constexpr auto DV_INDICES = 1;
     constexpr auto DDV_INDICES = 2;
     constexpr auto DDDV_INDICES = 3;
     
     constexpr auto CONNEXION_INDICES = 3;
     constexpr auto METRIC_INDICES = 2;
-    constexpr auto INVERSE_METRIC_INDICES = 2;
     constexpr auto RIEMANN_A2_INDICES = 2;
     constexpr auto RIEMANN_A3_INDICES = 3;
     constexpr auto RIEMANN_B3_INDICES = 3;

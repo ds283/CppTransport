@@ -462,52 +462,6 @@ namespace macro_packages
         curvature_resource_manager& mgr;
         
       };
-    
-    
-    //! field-space inverse metric
-    //! dynamic cast to curvature_resource_manager& will fail if the model is not
-    //! appropriate for this directive, disabling it
-    class set_inverse_metric : public directive_index
-      {
-        
-        // CONSTRUCTOR, DESTRUCTOR
-      
-      public:
-        
-        //! constructor
-        set_inverse_metric(std::string n, resource_manager& m, translator_data& p)
-          : directive_index(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS, p,
-                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
-            mgr(dynamic_cast<curvature_resource_manager&>(m))
-          {
-          }
-        
-        //! destructor
-        virtual ~set_inverse_metric() = default;
-        
-        
-        // INTERNAL API
-      
-      protected:
-        
-        //! apply
-        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
-        
-        //! determine how many indices should be expected
-        boost::optional<unsigned int> define_indices(model_type t);
-        
-        //! determine which index classes should be expected
-        boost::optional< std::vector<index_class> > define_classes(model_type t);
-        
-        
-        // INTERNAL DATA
-      
-      private:
-        
-        //! resource manager
-        curvature_resource_manager& mgr;
-        
-      };
 
 
     //! Riemann 'A2' is the 2-index combination of the Riemann tensor appearing in the A-tensor
