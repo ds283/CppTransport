@@ -551,44 +551,44 @@ namespace transport
 
     $IF{!fast}
       template <typename number>
-      void $MODEL_compute_dV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* dV)
+      void $MODEL_compute_dV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dV)
         {
           $RESOURCE_RELEASE
 
-          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_PARAMETERS{__raw_params}
           $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          dV[FIELDS_FLATTEN($a)] = $DV[a];
+          __dV[FIELDS_FLATTEN($a)] = $DV[a];
         }
 
 
       template <typename number>
-      void $MODEL_compute_ddV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* ddV)
+      void $MODEL_compute_ddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __ddV)
         {
           $RESOURCE_RELEASE
 
-          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_PARAMETERS{__raw_params}
           $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
+          __ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
         }
 
 
       template <typename number>
-      void $MODEL_compute_dddV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* dddV)
+      void $MODEL_compute_dddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dddV)
         {
           $RESOURCE_RELEASE
 
-          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_PARAMETERS{__raw_params}
           $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc];
+          __dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc];
         }
     $ENDIF
 

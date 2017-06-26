@@ -229,8 +229,8 @@ namespace transport
 
         // Over-ride functions inherited from 'nontrivial_metric_model'
         number V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
-        void G_covariant(const parameters<number>& __params, const flattened_tensor<number>& __coords, flattened_tensor<number>& G) const override;
-        void G_contravariant(const parameters<number>& __params, const flattened_tensor<number>& __coords, flattened_tensor<number>& Ginv) const override;
+        void G_covariant(const parameters<number>& __params, const flattened_tensor<number>& __coords, flattened_tensor<number>& __G) const override;
+        void G_contravariant(const parameters<number>& __params, const flattened_tensor<number>& __coords, flattened_tensor<number>& __Ginv) const override;
 
 
         // INITIAL CONDITIONS HANDLING -- implements a 'model' interface
@@ -324,6 +324,7 @@ namespace transport
           number* __dV;
           number* __ddV;
           number* __dddV;
+          number* __Ginv;
         $ENDIF
 
         number* __raw_params;
@@ -349,6 +350,7 @@ namespace transport
             $IF{!fast}
               $RESOURCE_RELEASE
               __dV = new number[$NUMBER_FIELDS];
+              __Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
             __raw_params = new number[$NUMBER_PARAMS];
@@ -360,6 +362,7 @@ namespace transport
           {
             $IF{!fast}
               delete[] __dV;
+              delete[] __Ginv;
             $ENDIF
 
             delete[] __raw_params;
@@ -373,6 +376,7 @@ namespace transport
 
         $IF{!fast}
           number* __dV;
+          number* __Ginv;
         $ENDIF
 
         number* __raw_params;
@@ -441,6 +445,7 @@ namespace transport
           __dV = new number[$NUMBER_FIELDS];
           __ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
           __dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
         $ENDIF
 
         __raw_params = new number[$NUMBER_PARAMS];
@@ -475,6 +480,7 @@ namespace transport
           delete[] __dV;
           delete[] __ddV;
           delete[] __dddV;
+          delete[] __Ginv;
         $ENDIF
 
         delete[] __raw_params;
@@ -556,7 +562,7 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::G_covariant(const parameters<number>& __params, const flattened_tensor<number>& __coords,
-                                     flattened_tensor<number>& G) const
+                                     flattened_tensor<number>& __G) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
         if(__coords.size() != 2*$NUMBER_FIELDS)
@@ -575,13 +581,13 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        G[FIELDS_FLATTEN($_a,$_b)] = $METRIC[_ab];
+        __G[FIELDS_FLATTEN($_a,$_b)] = $METRIC[_ab];
       }
 
 
     template <typename number>
     void $MODEL<number>::G_contravariant(const parameters<number>& __params, const flattened_tensor<number>& __coords,
-                                         flattened_tensor<number>& Ginv) const
+                                         flattened_tensor<number>& __Ginv) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
         if(__coords.size() != 2*$NUMBER_FIELDS)
@@ -600,50 +606,78 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
+        __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
       }
 
 
     $IF{!fast}
       template <typename number>
-      void $MODEL_compute_dV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* dV)
+      void $MODEL_compute_dV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dV)
         {
           $RESOURCE_RELEASE
 
-          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_PARAMETERS{__raw_params}
           $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          dV[FIELDS_FLATTEN($_a)] = $DV[_a];
+          __dV[FIELDS_FLATTEN($_a)] = $DV[_a];
         }
 
 
       template <typename number>
-      void $MODEL_compute_ddV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* ddV)
+      void $MODEL_compute_ddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __ddV)
         {
           $RESOURCE_RELEASE
 
-          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_PARAMETERS{__raw_params}
           $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          ddV[FIELDS_FLATTEN($_a,$_b)] = $DDV[_ab];
+          __ddV[FIELDS_FLATTEN($_a,$_b)] = $DDV[_ab];
         }
 
 
       template <typename number>
-      void $MODEL_compute_dddV(const number* raw_params, const flattened_tensor<number>& __x, number __Mp, number* dddV)
+      void $MODEL_compute_dddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dddV)
         {
           $RESOURCE_RELEASE
 
-          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_PARAMETERS{__raw_params}
           $RESOURCE_COORDINATES{__x}
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          dddV[FIELDS_FLATTEN($_a,$_b,$_c)] = $DDDV[_abc];
+          __dddV[FIELDS_FLATTEN($_a,$_b,$_c)] = $DDDV[_abc];
+        }
+
+
+      template <typename number>
+      void $MODEL_compute_G(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __G)
+        {
+          $RESOURCE_RELEASE
+
+          $RESOURCE_PARAMETERS{__raw_params}
+          $RESOURCE_COORDINATES{__x}
+
+          $TEMP_POOL{"const auto $1 = $2;"}
+
+          __G[FIELDS_FLATTEN($_a,$_b)] = $METRIC[_ab]
+        }
+
+
+      template <typename number>
+      void $MODEL_compute_Ginv(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __Ginv)
+        {
+          $RESOURCE_RELEASE
+
+          $RESOURCE_PARAMETERS{__raw_params}
+          $RESOURCE_COORDINATES{__x}
+
+          $TEMP_POOL{"const auto $1 = $2;"}
+
+          __Ginv[FIELDS_FLATEN($^a,$^b)] = $METRIC[^ab]
         }
     $ENDIF
 
@@ -917,6 +951,7 @@ namespace transport
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
+          $MODEL_compute_Ginv(__Ginv, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
@@ -927,6 +962,7 @@ namespace transport
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
@@ -1237,6 +1273,7 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
         $ENDIF
@@ -1244,6 +1281,7 @@ namespace transport
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
         $ENDIF
@@ -1265,6 +1303,7 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
@@ -1273,6 +1312,7 @@ namespace transport
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
@@ -1295,6 +1335,7 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
@@ -1303,6 +1344,7 @@ namespace transport
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
@@ -1325,12 +1367,14 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
         $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
         $ENDIF
 
@@ -1640,7 +1684,9 @@ namespace transport
         $RESOURCE_COORDINATES{__x}
 
         $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params, __x, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
         $ENDIF
 

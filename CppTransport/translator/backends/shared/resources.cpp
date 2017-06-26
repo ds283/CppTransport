@@ -272,7 +272,7 @@ namespace macro_packages
     
         std::ostringstream msg;
 
-        if(indices[0]->get_variance() == variance::contravariant)
+        if(indices[0]->get_variance() == variance::covariant)
           {
             this->mgr.assign_metric(args[RESOURCES::METRIC_KERNEL_ARGUMENT]);
             msg << RESOURCE_SET_METRIC << " '" << static_cast<std::string>(args[RESOURCES::METRIC_KERNEL_ARGUMENT]) << "'";

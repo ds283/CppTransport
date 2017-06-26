@@ -307,6 +307,7 @@ namespace transport
 
             $IF{!fast}
               __u2(nullptr),
+              __Ginv(nullptr),
               __dV(nullptr),
               __ddV(nullptr),
             $ENDIF
@@ -330,6 +331,8 @@ namespace transport
 
               this->__dV = new number[$NUMBER_FIELDS];
               this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+
+              this->__Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
             this->__raw_params = new number[$NUMBER_PARAMS];
@@ -344,6 +347,8 @@ namespace transport
 
               delete[] this->__dV;
               delete[] this->__ddV;
+
+              delete[] this->__Ginv;
             $ENDIF
 
             delete[] this->__raw_params;
@@ -379,6 +384,8 @@ namespace transport
 
           number* __dV;
           number* __ddV;
+
+          number* __Ginv;
         $ENDIF
 
         number* __raw_params;
@@ -445,6 +452,7 @@ namespace transport
               __u3_k1k2k3(nullptr),
               __u3_k2k1k3(nullptr),
               __u3_k3k1k2(nullptr),
+              __Ginv(nullptr),
               __dV(nullptr),
               __ddV(nullptr),
               __dddV(nullptr),
@@ -476,6 +484,8 @@ namespace transport
               this->__dV = new number[$NUMBER_FIELDS];
               this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+
+              this->__Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
             this->__raw_params = new number[$NUMBER_PARAMS];
@@ -497,6 +507,8 @@ namespace transport
               delete[] this->__dV;
               delete[] this->__ddV;
               delete[] this->__dddV;
+
+              delete[] this->__Ginv;
             $ENDIF
 
             delete[] this->__raw_params;
@@ -538,6 +550,8 @@ namespace transport
           number* __dV;
           number* __ddV;
           number* __dddV;
+
+          number* __Ginv;
         $ENDIF
 
         number* __raw_params;
@@ -951,10 +965,12 @@ namespace transport
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params,__x, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __x, __Mp, __ddV);
 
           // capture resources for transport tensors
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
         $ENDIF
@@ -1055,11 +1071,13 @@ namespace transport
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params, __x, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __x, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __x, __Mp, __dddV);
 
           // capture resources for transport tensors
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
