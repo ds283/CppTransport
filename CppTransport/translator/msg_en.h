@@ -353,6 +353,7 @@ constexpr auto ERROR_METRIC_DIMENSION                = "Internal error: field-sp
 
 constexpr auto ERROR_METRIC_RESOURCE_MIXED_INDICES   = "Metric resource should not have mixed indices";
 constexpr auto ERROR_METRIC_RULE_MIXED_INDICES       = "$METRIC should not be used with mixed indices";
+constexpr auto ERROR_CONNEXION_INDICES               = "$CONNECTION has incorrect index placement (should be first=up, second,third=down)";
 
 constexpr auto NOTIFY_PARSE_TERMINATED               = "Translation terminated";
 constexpr auto NOTIFY_TOO_MANY_ERRORS                = "encountered too many errors";

@@ -49,11 +49,11 @@ Christoffel::Christoffel(const GiNaC::matrix& G_, const GiNaC::matrix& Ginv_, co
           {
             for(unsigned int k = 0; k <= j; ++k)
               {
-                GiNaC::ex temp = 0.0;
+                GiNaC::ex temp = 0;
 
                 for(unsigned int m = 0; m < N; ++m)
                   {
-                    temp += 0.5 * Ginv(i, m) * (diff(G(m, j), coords[k]) + diff(G(m, k), coords[j]) - diff(G(j, k), coords[m]));
+                    temp += Ginv(i, m) * (diff(G(m, j), coords[k]) + diff(G(m, k), coords[j]) - diff(G(j, k), coords[m])) / 2;
                   }
 
                 gamma.push_back(temp);
@@ -102,7 +102,7 @@ Riemann_T::Riemann_T(const Christoffel& Gamma_)
 
                     if(s > r) continue;
 
-                    GiNaC::ex temp = 0.0;
+                    GiNaC::ex temp = 0;
 
                     for(int n = 0; n < N; ++n)
                       {

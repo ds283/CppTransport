@@ -38,6 +38,7 @@ namespace macro_packages
       : replacement_rule_package(f, cw, lm, p, prn)
       {
         EMPLACE(index_package, BIND_SYMBOL(replace_metric, "METRIC"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_connexion, "CONNECTION"));
       }
 
 
@@ -90,6 +91,38 @@ namespace macro_packages
             lambda = this->Ginv->compute_lambda(*indices[0], *indices[1]);
           }
 
+        return this->lambda_mgr.cache(std::move(lambda));
+      }
+
+
+    unroll_behaviour replace_connexion::get_unroll(const index_literal_list& idx_list) const
+      {
+        if(idx_list[0]->get_variance() != variance::contravariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+        if(idx_list[1]->get_variance() != variance::covariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+        if(idx_list[2]->get_variance() != variance::covariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+
+        return this->Gamma->get_unroll(idx_list);
+      }
+
+
+    void replace_connexion::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        if(indices[0]->get_variance() != variance::contravariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+        if(indices[1]->get_variance() != variance::covariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+        if(indices[2]->get_variance() != variance::covariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+
+        std::unique_ptr<flattened_tensor> container = this->Gamma->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    std::string replace_connexion::roll(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        if(indices[0]->get_variance() != variance::contravariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+        if(indices[1]->get_variance() != variance::covariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+        if(indices[2]->get_variance() != variance::covariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
+
+        std::unique_ptr<atomic_lambda> lambda = this->Gamma->compute_lambda(*indices[0], *indices[1], *indices[2]);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 

@@ -109,6 +109,70 @@ namespace macro_packages
       };
 
 
+    class replace_connexion : public cse_map_field3
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_connexion(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
+          : cse_map_field3(std::move(n), CONNEXION_TOTAL_ARGUMENTS, f.make_flatten()),
+            printer(prn),
+            cse_worker(cw),
+            lambda_mgr(lm),
+            sym_factory(s)
+          {
+            auto& cf = dynamic_cast<curvature_tensor_factory&>(f);
+            Gamma = cf.make_connexion(prn, cw);
+          }
+
+        //! destructor
+        virtual ~replace_connexion() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! determine unroll status
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! evaluate
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
+        //! language printer
+        language_printer& printer;
+
+        //! symbol factory
+        symbol_factory& sym_factory;
+
+        //! connexion object
+        std::unique_ptr<connexion> Gamma;
+
+      };
+
+
     class curvature_tensors: public replacement_rule_package
       {
 

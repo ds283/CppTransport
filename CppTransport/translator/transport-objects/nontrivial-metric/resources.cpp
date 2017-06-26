@@ -763,14 +763,14 @@ namespace nontrivial_metric
           {
             for(field_index j = field_index(0, variance::covariant); j < max_jk; ++j)
               {
-                for(field_index k = field_index(0, variance::covariant); k <= j; ++j)
+                for(field_index k = field_index(0, variance::covariant); k <= j; ++k)
                   {
                     unsigned int index_ijk = this->fl.flatten(i,j,k);
 
                     // if no substitutions to be done, avoid checking cache
                     if(args.empty())
                       {
-                        (*Gamma)[index_ijk] =  (*this->Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(j));
+                        (*Gamma)[index_ijk] =  (*this->Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(k));
                       }
                     else
                       {
@@ -784,7 +784,7 @@ namespace nontrivial_metric
                             GiNaC::exmap& subs_map = subs_cache.get();
 
                             //! apply substitution to connexion component and cache the result
-                            subs_Gamma = (*this->Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(j)).subs(subs_map, GiNaC::subs_options::no_pattern);
+                            subs_Gamma = (*this->Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(k)).subs(subs_map, GiNaC::subs_options::no_pattern);
                             this->cache.store(expression_item_types::connexion_item, index_ijk, args, subs_Gamma);
                           }
 
