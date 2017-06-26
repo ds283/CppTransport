@@ -25,7 +25,6 @@
 
 
 #include "resources.h"
-#include "curvature_classes.h"
 #include "concepts/tensor_exception.h"
 
 #include "ginac/ginac.h"
@@ -552,7 +551,7 @@ namespace nontrivial_metric
     resources::warn_resource_index_reposition(const contexted_value<std::string>& label, unsigned int size,
                                               unsigned int repositioned) const
       {
-        if(size > 1 && payload.get_argument_cache().report_reposition_warnings())
+        if(size > 1 && this->payload.get_argument_cache().report_reposition_warnings())
           {
             const error_context& ctx = label.get_declaration_point();
             std::__1::ostringstream msg;
@@ -970,7 +969,7 @@ namespace nontrivial_metric
 
     std::unique_ptr<flattened_tensor> resources::raw_connexion_resource(const language_printer& printer)
       {
-        auto args = this->generate_cache_arguments(printer);
+        auto args = this->generate_cache_arguments(use_Gamma, printer);
 
         auto Gamma = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
 
@@ -1455,9 +1454,7 @@ namespace nontrivial_metric
         const auto resource = this->mgr.connexion();
         const auto& flatten = this->mgr.field_flatten();
 
-        if(!resource || !flatten)
-          throw resource_failure(
-            a.get().get_loop_variable() + ", " + b.get().get_loop_variable() + ", " + c.get().get_loop_variable());
+        if(!resource || !flatten) throw resource_failure("connexion");
 
         std::string variable = printer.array_subscript(*resource, a, b, c, **flatten);
         return this->sym_factory.get_symbol(variable);
@@ -1487,6 +1484,30 @@ namespace nontrivial_metric
               }
           }
       }
+    
+    
+    // template selected when ResourceType is returned from a simple resource
+    template <>
+    void resources::push_resource_tag(cache_tags& args, const boost::optional< contexted_value<std::string> >& resource) const
+      {
+        if(resource)   // no need to push arguments if no resource available
+          {
+            GiNaC::symbol sym = sym_factory.get_symbol(resource.get());
+            args += sym;
+          }
+      }
+    
+    
+    // template selected when ResourceType is returned from an indexed resource
+    template <typename ResourceType>
+    void resources::push_resource_tag(cache_tags& args, const ResourceType& resource) const
+      {
+        if(resource)   // no need to push arguments if no resource available
+          {
+            GiNaC::symbol sym = sym_factory.get_symbol(resource.get().second);
+            args += sym;
+          }
+      }
 
 
     cache_tags
@@ -1495,41 +1516,27 @@ namespace nontrivial_metric
         // first, generate arguments from param/coordinates if they exist
         auto args = this->generate_cache_arguments(printer);
         const auto& flatten = this->mgr.field_flatten();
-
-        if(flatten && ((flags & use_dV) != 0))
+        
+        // push G and G inverse tags, since it's difficult to keep track of where they are used
+        // this might lead to some inefficiencies, since we might push them when they're not needed
+        // but we'd rather do a small amount of extra calculation than risk a difficult-to-diagnose
+        // cache aliasing issue
+        if(flatten)
           {
-            const auto dV_resource = this->mgr.dV();
-            if(dV_resource)   // no need to push arguments if no resource available
-              {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(dV_resource.get().second);
-                args += sym;
-              }
+            this->push_resource_tag(args, this->mgr.metric());
+            this->push_resource_tag(args, this->mgr.metric_inverse());
+            
           }
 
-        if(flatten && ((flags &  use_ddV) != 0))
-          {
-            const auto ddV_resource = this->mgr.ddV();
-            if(ddV_resource)
-              {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(ddV_resource.get().second);
-                args += sym;
-              }
-          }
-
-        if(flatten && ((flags & use_dddV) != 0))
-          {
-            const auto dddV_resource = this->mgr.dddV();
-            if(dddV_resource)
-              {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(dddV_resource.get().second);
-                args += sym;
-              }
-          }
+        if(flatten && ((flags & use_dV) != 0)) this->push_resource_tag(args, this->mgr.dV());
+        if(flatten && ((flags & use_ddV) != 0)) this->push_resource_tag(args, this->mgr.ddV());
+        if(flatten && ((flags & use_dddV) != 0)) this->push_resource_tag(args, this->mgr.dddV());
+        if(flatten && ((flags & use_Gamma) != 0)) this->push_resource_tag(args, this->mgr.connexion());
 
         return args;
       }
-
-
+    
+    
     bool resources::can_roll_dV(const std::array< variance, RESOURCE_INDICES::DV_INDICES >& vars) const
       {
         const auto resource = this->mgr.dV(vars, false);

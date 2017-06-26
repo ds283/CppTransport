@@ -55,15 +55,13 @@ namespace nontrivial_metric
     constexpr unsigned int use_dV = 1 << 0;
     constexpr unsigned int use_ddV = 1 << 1;
     constexpr unsigned int use_dddV = 1 << 2;
+    constexpr unsigned int use_Gamma = 1 << 3;
 
 
     class PotentialResourceCache;
     class SubstitutionMapCache;
-
     class CovariantdVCache;
-
     class CovariantddVCache;
-
     class CovariantdddVCache;
 
 
@@ -212,6 +210,11 @@ namespace nontrivial_metric
 
         //! generate argument list
         cache_tags generate_cache_arguments(unsigned int flags, const language_printer& printer) const;
+        
+      protected:
+    
+        template <typename ResourceType>
+        void push_resource_tag(cache_tags& args, const ResourceType& resource) const;
 
 
         // QUERY ROLL/UNROLL AVAILABILITY
@@ -326,6 +329,10 @@ namespace nontrivial_metric
                          const std::array<std::reference_wrapper<const IndexType>, Indices> reqd,
                          const contexted_value<std::string>& label, const std::string& flatten,
                          const language_printer& printer) const;
+    
+        void
+        warn_resource_index_reposition(const contexted_value<std::string>& label, unsigned int size,
+                                       unsigned int repositioned) const;
 
         //! dress a concrete resource with given variance asignment 'avail' to produce the required variance
         //! assignment 'reqd'
@@ -335,6 +342,7 @@ namespace nontrivial_metric
                          const std::array<field_index, Indices> indices, const flattened_tensor& tensor,
                          const language_printer& printer);
 
+        
         // INTERNAL DATA
 
       private:
@@ -397,9 +405,6 @@ namespace nontrivial_metric
         //! compute timer
         boost::timer::cpu_timer& compute_timer;
 
-        void
-        warn_resource_index_reposition(const contexted_value<std::string>& label, unsigned int size,
-                                       unsigned int repositioned) const;
       };
 
   }   // namespace nontrivial_metric
