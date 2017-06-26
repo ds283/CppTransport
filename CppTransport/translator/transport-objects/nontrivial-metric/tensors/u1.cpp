@@ -98,7 +98,14 @@ namespace nontrivial_metric
       {
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
     
-        if(this->shared.can_roll_coordinates()
+        // if the index is covariant then we need the metric to pull down an index on the coordinate vector
+        bool has_G = true;
+        if(idx_list[0]->get_variance() == variance::covariant)
+          {
+            has_G = this->res.can_roll_metric();
+          }
+    
+        if(this->shared.can_roll_coordinates() && has_G
            && this->res.can_roll_dV(i)) return unroll_behaviour::allow;
         
         return unroll_behaviour::force;   // can't roll-up

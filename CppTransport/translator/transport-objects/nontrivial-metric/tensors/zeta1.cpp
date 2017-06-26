@@ -102,7 +102,14 @@ namespace nontrivial_metric
     
     unroll_behaviour zeta1::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
+        // if our index is covariant then we need the metric to pull down an index on the coordinate vector
+        bool has_G = true;
+        if(idx_list[0]->get_variance() == variance::covariant)
+          {
+            has_G = this->res.can_roll_metric();
+          }
+
+        if(this->shared.can_roll_coordinates() && has_G) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
     
