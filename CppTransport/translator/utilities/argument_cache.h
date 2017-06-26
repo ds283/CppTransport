@@ -114,6 +114,9 @@ class argument_cache
     //! report unroll policy violations?
     bool report_unroll_warnings() const { return this->unroll_warnings; }
 
+    //! report on-the-fly index repositioning?
+    bool report_reposition_warnings() const { return this->reposition_warnings; }
+
 
     // INPUT FILES
 
@@ -186,6 +189,9 @@ class argument_cache
     
     //! report violations of the unrolling policy
     bool unroll_warnings;
+
+    //! report on-the-fly index repositioning
+    bool reposition_warnings;
 
 
     // INPUT FILES

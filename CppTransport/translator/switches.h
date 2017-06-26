@@ -90,6 +90,9 @@
 #define UNROLL_WARNINGS               "Wunroll"
 #define UNROLL_WARN_HELP              "report violations of the unroll policy"
 
+#define REPOSITION_WARNINGS           "Wreposition"
+#define REPOSITION_WARN_HELP          "report on-the-fly index repositioning"
+
 // HEADERS
 
 #define MISC_OPTIONS                  "Miscellaneous options"

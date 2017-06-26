@@ -97,7 +97,8 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     fast_flag(false),
     profile_flag(false),
     develop_warnings(false),
-    unroll_warnings(false)
+    unroll_warnings(false),
+    reposition_warnings(false)
   {
     // set up Boost::program_options descriptors for command-line arguments
     boost::program_options::options_description generic(MISC_OPTIONS);
@@ -124,9 +125,10 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
 
     boost::program_options::options_description warnings(WARNING_OPTIONS);
     warnings.add_options()
-      (PROFILING_SWITCH, PROFILING_HELP)
-      (DEVELOP_WARNINGS, DEVELOP_WARN_HELP)
-      (UNROLL_WARNINGS,  UNROLL_WARN_HELP);
+      (PROFILING_SWITCH,    PROFILING_HELP)
+      (DEVELOP_WARNINGS,    DEVELOP_WARN_HELP)
+      (UNROLL_WARNINGS,     UNROLL_WARN_HELP)
+      (REPOSITION_WARNINGS, REPOSITION_WARN_HELP);
 
     boost::program_options::options_description hidden(HIDDEN_OPTIONS);
     hidden.add_options()

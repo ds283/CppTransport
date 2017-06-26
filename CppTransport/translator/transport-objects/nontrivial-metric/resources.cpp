@@ -375,7 +375,7 @@ namespace nontrivial_metric
               }
           }
         
-        if(size > 1 && this->payload.get_argument_cache().report_developer_warnings())
+        if(size > 1 && this->payload.get_argument_cache().report_reposition_warnings())
           {
             const error_context& ctx = label.get_declaration_point();
             std::ostringstream msg;
