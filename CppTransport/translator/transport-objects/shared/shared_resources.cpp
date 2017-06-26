@@ -159,7 +159,7 @@ GiNaC::symbol shared_resources::generate_parameter_vector(const abstract_index& 
   {
     const auto& resource = this->mgr.parameters();
 
-    if(!resource) throw resource_failure(idx.get_loop_variable());
+    if(!resource) throw resource_failure("parameter vector");
 
     std::string variable = printer.array_subscript(*resource, idx, boost::optional<std::string>(), 0);
     return this->sym_factory.get_symbol(variable);
@@ -170,7 +170,7 @@ std::string shared_resources::generate_working_type() const
   {
     const auto& working_type = this->mgr.working_type();
 
-    if(!working_type) throw resource_failure("WORKING TYPE");
+    if(!working_type) throw resource_failure("working type");
 
     return *working_type;
   }

@@ -57,8 +57,14 @@ namespace nontrivial_metric
     constexpr unsigned int use_dddV = 1 << 2;
 
 
-    class ResourceCache;
+    class PotentialResourceCache;
     class SubstitutionMapCache;
+
+    class CovariantdVCache;
+
+    class CovariantddVCache;
+
+    class CovariantdddVCache;
 
 
     //! implements resources for nontrivial_metric models, ie. trivial kinetic terms and just a potential
@@ -67,8 +73,12 @@ namespace nontrivial_metric
 
         // FRIENDSHIP
 
-        friend class ResourceCache;
+        friend class PotentialResourceCache;
         friend class SubstitutionMapCache;
+
+        friend class CovariantdVCache;
+        friend class CovariantddVCache;
+        friend class CovariantdddVCache;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -317,13 +327,13 @@ namespace nontrivial_metric
                          const contexted_value<std::string>& label, const std::string& flatten,
                          const language_printer& printer) const;
 
-        //! expand an array of index labels into a call to printer.array_subscript()
-        template <size_t Indices, size_t... Is>
-        std::string
-        position_indices_label(const std::string& kernel, const std::array<std::string, Indices>& indices,
-                               std::index_sequence<Is...>, const std::string& flatten,
-                               const language_printer& printer) const;
-
+        //! dress a concrete resource with given variance asignment 'avail' to produce the required variance
+        //! assignment 'reqd'
+        template <size_t Indices>
+        GiNaC::ex
+        position_indices(const std::array<variance, Indices> avail, const std::array<variance, Indices> reqd,
+                         const std::array<field_index, Indices> indices, const flattened_tensor& tensor,
+                         const language_printer& printer);
 
         // INTERNAL DATA
 
@@ -387,6 +397,9 @@ namespace nontrivial_metric
         //! compute timer
         boost::timer::cpu_timer& compute_timer;
 
+        void
+        warn_resource_index_reposition(const contexted_value<std::string>& label, unsigned int size,
+                                       unsigned int repositioned) const;
       };
 
   }   // namespace nontrivial_metric

@@ -1149,13 +1149,10 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __state, __Mp, __dV);
-        $ENDIF
-
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__state}
         $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __state, __Mp, __dV);
           $RESOURCE_DV{__dV}
         $ENDIF
 
@@ -1178,14 +1175,11 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
-          $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
-        $ENDIF
-
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $RESOURCE_DV{__dV}
           $RESOURCE_DDV{__ddV}
         $ENDIF
@@ -1206,15 +1200,12 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
-        $ENDIF
-
-        $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
-        $IF{!fast}
           $RESOURCE_DV{__dV}
           $RESOURCE_DDV{__ddV}
           $RESOURCE_DDDV{__dddV}
@@ -1236,15 +1227,12 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
-        $ENDIF
-
-        $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__fields}
-        $IF{!fast}
           $RESOURCE_DV{__dV}
           $RESOURCE_DDV{__ddV}
           $RESOURCE_DDDV{__dddV}
@@ -1266,13 +1254,10 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $IF{!fast}
-          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
-        $ENDIF
-
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $RESOURCE_DV{__dV}
         $ENDIF
 

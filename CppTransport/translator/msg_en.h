@@ -292,6 +292,7 @@ constexpr auto ERROR_SET_INDEX_DUPLICATE             = "Index list declared to $
 constexpr auto ERROR_SET_REDEFINITION                = "Redefinition of macro";
 constexpr auto WARN_PRIOR_REDEFINITION               = "Earlier definition of this macro was here";
 constexpr auto ERROR_INDEX_SUBSTITUTION              = "Missing substitution for index";
+constexpr auto ERROR_RESOURCE_FAILURE                = "Could not evaluate roll-up due to missing resource";
 
 constexpr auto ERROR_LHS_INDEX_DUPLICATE             = "Left-hand side contains duplicated index";
 constexpr auto NOTIFY_RHS_INDEX_SINGLE_OCCURRENCE    = "Note: index occurs only once on right-hand side";

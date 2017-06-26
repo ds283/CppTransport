@@ -30,7 +30,7 @@
 namespace canonical
   {
 
-    class ResourceCache
+    class PotentialResourceCache
       {
 
         // TYPE
@@ -44,7 +44,7 @@ namespace canonical
       public:
 
         //! constructor captures resource manager and shared resource manager
-        ResourceCache(resources& r, shared_resources& s, const language_printer& p)
+        PotentialResourceCache(resources& r, shared_resources& s, const language_printer& p)
           : res(r),
             share(s),
             printer(p)
@@ -52,7 +52,7 @@ namespace canonical
           }
 
         //! destructor is default
-        ~ResourceCache() = default;
+        ~PotentialResourceCache() = default;
 
 
         // INTERFACE
@@ -192,7 +192,7 @@ namespace canonical
         const auto resource = this->mgr.coordinates();
         const auto& flatten = this->mgr.phase_flatten();
 
-        if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure("coordinate vector");
 
         std::string variable = printer.array_subscript(*resource, idx, **flatten);
         return this->sym_factory.get_symbol(variable);
@@ -207,7 +207,7 @@ namespace canonical
         const auto resource = this->mgr.coordinates();
         const auto& flatten = this->mgr.phase_flatten();
 
-        if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure("coordinate vector");
 
         std::string variable = printer.array_subscript(*resource, idx, **flatten, this->payload.model.get_number_fields());
         return this->sym_factory.get_symbol(variable);
@@ -431,7 +431,7 @@ namespace canonical
         auto args = this->generate_cache_arguments(printer);
 
         // obtain a resource cache
-        ResourceCache cache(*this, this->share, printer);
+        PotentialResourceCache cache(*this, this->share, printer);
 
         for(field_index i = field_index(0); i < max_i; ++i)
           {
@@ -508,7 +508,7 @@ namespace canonical
         auto args = this->generate_cache_arguments(printer);
 
         // obtain a resource cache
-        ResourceCache cache(*this, this->share, printer);
+        PotentialResourceCache cache(*this, this->share, printer);
 
         for(field_index i = field_index(0); i < max_i; ++i)
           {
@@ -594,7 +594,7 @@ namespace canonical
         auto args = this->generate_cache_arguments(printer);
 
         // obtain a resource cache
-        ResourceCache cache(*this, this->share, printer);
+        PotentialResourceCache cache(*this, this->share, printer);
 
         for(field_index i = field_index(0); i < max_i; ++i)
           {
@@ -706,7 +706,7 @@ namespace canonical
         
         const auto& a_idx = a.get();
 
-        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure("dV");
 
         std::string variable = printer.array_subscript(resource.get().second, a_idx, **flatten);
         return this->sym_factory.get_symbol(variable);
@@ -721,7 +721,7 @@ namespace canonical
         const auto& a_idx = a.get();
         const auto& b_idx = b.get();
     
-        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure("ddV");
 
         std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, **flatten);
         return this->sym_factory.get_symbol(variable);
@@ -738,7 +738,7 @@ namespace canonical
         const auto& b_idx = b.get();
         const auto& c_idx = c.get();
 
-        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable() + ", " + c_idx.get_loop_variable());
+        if(!resource || !flatten) throw resource_failure("dddV");
 
         std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, **flatten);
         return this->sym_factory.get_symbol(variable);

@@ -37,6 +37,7 @@
 #include "indices.h"
 #include "index_flatten.h"
 #include "abstract_index.h"
+#include "resource_failure.h"
 
 #include "language_printer.h"
 
@@ -217,25 +218,6 @@ class shared_resources
 
     //! index flattener
     index_flatten fl;
-
-  };
-
-
-class resource_failure: public std::runtime_error
-  {
-
-    // CONSTRUCTOR, DESTRUCTOR
-
-  public:
-
-    //! constructor
-    resource_failure(std::string x)
-      : std::runtime_error(std::move(x))
-      {
-      }
-
-    //! destructor
-    ~resource_failure() = default;
 
   };
 

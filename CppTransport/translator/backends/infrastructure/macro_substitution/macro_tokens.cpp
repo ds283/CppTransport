@@ -26,6 +26,8 @@
 
 #include "macro_tokens.h"
 
+#include "shared/resource_failure.h"
+
 #include "msg_en.h"
 
 
@@ -252,6 +254,12 @@ namespace token_list_impl
           {
             this->error(xe.what());
           }
+        catch(resource_failure& xe)
+          {
+            std::ostringstream msg;
+            msg << ERROR_RESOURCE_FAILURE << " '" << xe.what() << "'";
+            this->error(msg.str());
+          }
       }
 
 
@@ -285,6 +293,12 @@ namespace token_list_impl
         catch(macro_packages::rule_apply_fail& xe)
           {
             this->error(xe.what());
+          }
+        catch(resource_failure& xe)
+          {
+            std::ostringstream msg;
+            msg << ERROR_RESOURCE_FAILURE << " '" << xe.what() << "'";
+            this->error(msg.str());
           }
       }
 

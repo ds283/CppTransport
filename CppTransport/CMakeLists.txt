@@ -724,6 +724,7 @@ SET(TRANSLATOR_TRANSPORT_OBJECTS_SHARED_FILES
   translator/transport-objects/shared/shared_resources.h
   translator/transport-objects/shared/symbol_factory.cpp
   translator/transport-objects/shared/symbol_factory.h
+  translator/transport-objects/shared/resource_failure.h
   )
 
 set(TRANSLATOR_VERSION_POLICY_FILES
