@@ -228,12 +228,12 @@ bool macro_agent::apply_unroll_policy(const token_list& left_tokens, const token
     if(unroll_by_policy && prevent > 0)
       {
         // issue notification that unrolling has been prevented, if we have been asked to do so
-        ctx.warn(NOTIFY_POLICY_WOULD_UNROLL);
+        ctx.warn(WARN_POLICY_WOULD_UNROLL);
         emit = true;
       }
     if(!unroll_by_policy && force > 0)
       {
-        ctx.warn(NOTIFY_POLICY_WOULD_ROLLUP);
+        ctx.warn(WARN_POLICY_WOULD_ROLLUP);
         emit = true;
       }
     if(emit) this->notify_unroll_outcome(left_tokens, right_tokens);

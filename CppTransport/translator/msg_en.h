@@ -174,8 +174,8 @@ constexpr auto NOTIFY_RULE_FORCES_UNROLL             = "Note: replacement rule p
 constexpr auto NOTIFY_LHS_RULE_PREVENTS_UNROLL       = "Note: left-hand side replacement rule forces roll-up";
 constexpr auto NOTIFY_RHS_RULE_PREVENTS_UNROLL       = "Note: right-hand side replacement rule forces roll-up";
 constexpr auto NOTIFY_RULE_PREVENTS_UNROLL           = "Note: replacement rule forces roll-up";
-constexpr auto NOTIFY_POLICY_WOULD_UNROLL            = "Note: unroll/roll-up policy violation; policy would unroll, but roll-up forced";
-constexpr auto NOTIFY_POLICY_WOULD_ROLLUP            = "Note: unroll/roll-up policy violation; policy would roll-up, but unroll forced";
+constexpr auto WARN_POLICY_WOULD_UNROLL              = "Unroll/roll-up policy violation; policy would unroll, but roll-up forced";
+constexpr auto WARN_POLICY_WOULD_ROLLUP              = "Unroll/roll-up policy violation; policy would roll-up, but unroll forced";
 
 constexpr auto ERROR_MISSING_INDEX_ASSIGNMENT        = "Internal error: missing index assignment";
 
