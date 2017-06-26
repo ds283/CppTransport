@@ -1069,17 +1069,6 @@ namespace nontrivial_metric
       }
 
 
-    GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer)
-      {
-        const auto resource = this->mgr.dV();
-        const auto& flatten = this->mgr.field_flatten();
-
-        if(!resource || !flatten) throw resource_failure("dV");
-
-        return this->position_indices<1, index_literal>(resource.get().first, { a }, resource.get().second, *flatten, printer);
-      }
-
-
     void resources::dV_resource_expr(variance v, flattened_tensor& list, const language_printer& printer)
       {
         const field_index max = this->share.get_max_field_index(v);
@@ -1114,6 +1103,17 @@ namespace nontrivial_metric
             list[index] = dV;
           }
       }
+    
+    
+    GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer)
+      {
+        const auto resource = this->mgr.dV();
+        const auto& flatten = this->mgr.field_flatten();
+        
+        if(!resource || !flatten) throw resource_failure("dV");
+        
+        return this->position_indices<1, index_literal>(resource.get().first, { a }, resource.get().second, *flatten, printer);
+      }
 
 
     std::unique_ptr<flattened_tensor>
@@ -1134,21 +1134,6 @@ namespace nontrivial_metric
           }
 
         return(list);
-      }
-
-
-    GiNaC::ex resources::ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
-      {
-        const auto resource = this->mgr.ddV();
-        const auto& flatten = this->mgr.field_flatten();
-
-        const auto& a_idx = a.get();
-        const auto& b_idx = b.get();
-
-        if(!resource || !flatten) throw resource_failure("ddV");
-
-        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
       }
 
 
@@ -1210,6 +1195,21 @@ namespace nontrivial_metric
               }
           }
       }
+    
+    
+    GiNaC::ex resources::ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
+      {
+        const auto resource = this->mgr.ddV();
+        const auto& flatten = this->mgr.field_flatten();
+        
+        const auto& a_idx = a.get();
+        const auto& b_idx = b.get();
+        
+        if(!resource || !flatten) throw resource_failure("ddV");
+        
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, **flatten);
+        return this->sym_factory.get_symbol(variable);
+      }
 
 
     std::unique_ptr<flattened_tensor>
@@ -1230,23 +1230,6 @@ namespace nontrivial_metric
           }
 
         return(list);
-      }
-
-
-    GiNaC::ex resources::dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
-                                       const language_printer& printer)
-      {
-        const auto resource = this->mgr.dddV();
-        const auto& flatten = this->mgr.field_flatten();
-
-        const auto& a_idx = a.get();
-        const auto& b_idx = b.get();
-        const auto& c_idx = c.get();
-
-        if(!resource || !flatten) throw resource_failure("dddV");
-
-        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
       }
 
 
@@ -1316,6 +1299,23 @@ namespace nontrivial_metric
                   }
               }
           }
+      }
+    
+    
+    GiNaC::ex resources::dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
+                                       const language_printer& printer)
+      {
+        const auto resource = this->mgr.dddV();
+        const auto& flatten = this->mgr.field_flatten();
+        
+        const auto& a_idx = a.get();
+        const auto& b_idx = b.get();
+        const auto& c_idx = c.get();
+        
+        if(!resource || !flatten) throw resource_failure("dddV");
+        
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, **flatten);
+        return this->sym_factory.get_symbol(variable);
       }
 
 
