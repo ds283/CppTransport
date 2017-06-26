@@ -83,7 +83,7 @@ namespace canonical
     
     void coordinates::post()
       {
-        if(!this->cached) throw tensor_exception("A not cached");
+        if(!this->cached) throw tensor_exception("coordinartes not cached");
 
         // invalidate cache
         this->cached = false;

@@ -92,6 +92,9 @@ class cache_tags
     //! get number of items
     size_t size() const { return this->symbols.size() + this->indices.size() + this->var_indices.size(); }
 
+    //! determine whether empty
+    bool empty() const { return this->symbols.empty() && this->indices.empty() && this->var_indices.empty(); }
+
 
     // INTERNAL DATA
 

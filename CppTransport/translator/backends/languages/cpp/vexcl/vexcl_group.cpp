@@ -36,6 +36,7 @@
 #include "vexcl_steppers.h"
 #include "vexcl_kernels.h"
 #include "resources.h"
+#include "curvature_tensors.h"
 
 #include "cpp_cse.h"
 #include "cpp_printer.h"
@@ -51,6 +52,7 @@ vexcl_group::vexcl_group(translator_data& p, tensor_factory& fctry)
     this->add_rule_package<macro_packages::fundamental>(p, *l_printer);
     this->add_rule_package<macro_packages::flow_tensors>(p, *l_printer);
     this->add_rule_package<macro_packages::lagrangian_tensors>(p, *l_printer);
+    this->add_rule_package<macro_packages::curvature_tensors>(p, *l_printer);
     this->add_rule_package<macro_packages::utensors>(p, *l_printer);
     this->add_rule_package<macro_packages::gauge_xfm>(p, *l_printer);
     this->add_rule_package<macro_packages::temporary_pool>(p, *l_printer);

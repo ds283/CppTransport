@@ -32,6 +32,7 @@ namespace nontrivial_metric
     std::unique_ptr<flattened_tensor> coordinates::compute(const index_literal_list& indices)
       {
         if(indices.size() != COORDINATE_TENSOR_INDICES) throw tensor_exception("coordinate indices");
+        if(indices[0]->get_class() != index_class::full) throw tensor_exception("coordinates");
         if(indices[0]->get_variance() != variance::contravariant) throw tensor_exception(ERROR_COORD_INDICES_ARE_CONTRAVARIANT);
         
         auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(COORDINATE_TENSOR_INDICES));
@@ -85,7 +86,7 @@ namespace nontrivial_metric
     
     void coordinates::post()
       {
-        if(!this->cached) throw tensor_exception("A not cached");
+        if(!this->cached) throw tensor_exception("coordinates not cached");
 
         // invalidate cache
         this->cached = false;

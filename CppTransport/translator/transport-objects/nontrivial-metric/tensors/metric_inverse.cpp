@@ -30,20 +30,13 @@
 namespace nontrivial_metric
   {
     
-    metric_inverse::metric_inverse(language_printer& p, cse& cw,
-                                   expression_cache& c, resources& r,
-                                   shared_resources& s, boost::timer::cpu_timer& tm,
-                                   index_flatten& f, index_traits& t)
+    metric_inverse::metric_inverse(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
       : ::metric_inverse(),
         printer(p),
         cse_worker(cw),
-        cache(c),
         res(r),
         shared(s),
-        fl(f),
-        traits(t),
-        compute_timer(tm),
-        cached(false)
+        fl(f)
       {
       }
     
@@ -51,20 +44,33 @@ namespace nontrivial_metric
     std::unique_ptr<flattened_tensor>
     metric_inverse::compute(const index_literal_list& indices)
       {
-        return std::unique_ptr<flattened_tensor>();
+        if(indices.size() != METRIC_INVERSE_TENSOR_INDICES) throw tensor_exception("metric_inverse indices");
+        if(indices[0]->get_class() != index_class::field_only) throw tensor_exception("metric_inverse");
+        if(indices[1]->get_class() != index_class::field_only) throw tensor_exception("metric_inverse");
+        if(indices[0]->get_variance() != variance::contravariant) throw tensor_exception("metric_inverse");
+        if(indices[1]->get_variance() != variance::contravariant) throw tensor_exception("metric_inverse");
+
+        return this->res.metric_inverse_resource(this->printer);
       }
-    
-    
-    GiNaC::ex metric_inverse::compute_component(field_index i, field_index j)
-      {
-        return GiNaC::ex();
-      }
-    
+
     
     std::unique_ptr<atomic_lambda>
     metric_inverse::compute_lambda(const index_literal& i, const index_literal& j)
       {
-        return std::unique_ptr<atomic_lambda>();
+        if(i.get_class() != index_class::field_only) throw tensor_exception("metric_inverse");
+        if(j.get_class() != index_class::field_only) throw tensor_exception("metric_inverse");
+        if(i.get_variance() != variance::contravariant) throw tensor_exception("metric_inverse");
+        if(j.get_variance() != variance::contravariant) throw tensor_exception("metric_inverse");
+
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
+
+        auto args = this->res.generate_cache_arguments(0, this->printer);
+        args += { idx_i, idx_j };
+
+        GiNaC::ex result = this->res.metric_inverse_resource(i, j, this->printer);
+
+        return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::metric_inverse_lambda, args, this->shared.generate_working_type());
       }
     
     
@@ -78,26 +84,11 @@ namespace nontrivial_metric
     
     void metric_inverse::pre_explicit(const index_literal_list& indices)
       {
-        if(cached) throw tensor_exception("metric inverse already cached");
-        
-        this->pre_lambda();
-        
-        this->cached = false;
       }
-    
-    
-    void metric_inverse::pre_lambda()
-      {
-        
-      }
-    
-    
+
+
     void metric_inverse::post()
       {
-        if(!this->cached) throw tensor_exception("metric inverse not cached");
-        
-        // invalidate cache
-        this->cached = false;
       }
     
   }   // namespace nontrivial_metric

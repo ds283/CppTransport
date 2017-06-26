@@ -191,22 +191,19 @@ namespace nontrivial_metric
     
     std::unique_ptr<::connexion> tensor_factory::make_connexion(language_printer& p, cse& cw)
       {
-        return std::make_unique<connexion>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl,
-                                           this->traits);
+        return std::make_unique<connexion>(p, cw, this->res, this->shared, this->fl);
       }
     
     
     std::unique_ptr<::metric> tensor_factory::make_metric(language_printer& p, cse& cw)
       {
-        return std::make_unique<metric>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl,
-                                        this->traits);
+        return std::make_unique<metric>(p, cw, this->res, this->shared, this->fl);
       }
     
     
     std::unique_ptr<::metric_inverse> tensor_factory::make_metric_inverse(language_printer& p, cse& cw)
       {
-        return std::make_unique<metric_inverse>(p, cw, this->cache, this->res, this->shared, this->compute_timer,
-                                                this->fl, this->traits);
+        return std::make_unique<metric_inverse>(p, cw, this->res, this->shared, this->fl);
       }
     
     

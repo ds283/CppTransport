@@ -64,7 +64,7 @@ namespace transport
       public:
 
         // calculate potential, given a field configuration. Pure virtual, so must be overridden by derived class
-        virtual number V(const parameters<number>& p, const std::vector<number>& coords) const = 0;
+        virtual number V(const parameters<number>& p, const flattened_tensor<number>& coords) const = 0;
 
       };
 

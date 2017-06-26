@@ -38,8 +38,8 @@
 namespace transport
   {
 
-    // a model with nontrivial field-space metric: allows an arbitrary number of fields and an arbitrary kinetic metric
-    // the potential can be arbitrary
+    // a model with nontrivial field-space metric: allows an arbitrary number of fields and an arbitrary kinetic metric;
+    // the potential can also be arbitrary
 
     template <typename number>
     class nontrivial_metric_model : public model<number>
@@ -64,13 +64,13 @@ namespace transport
       public:
 
         // calculate potential, given a field configuration. Pure virtual, so must be overridden by derived class
-        virtual number V(const parameters<number>& p, const std::vector<number>& coords) const = 0;
+        virtual number V(const parameters<number>& p, const flattened_tensor& coords) const = 0;
         
         // calculate covariant form metric
-        virtual void G_covariant(const parameters<number>& p, const std::vector<number>& coords, std::vector<number>& G) = 0;
+        virtual void G_covariant(const parameters<number>& p, const flattened_tensor& coords, flattened_tensor& G) const = 0;
         
         // calculate contravariant (inverse) form metric
-        virtual void G_contravariant(const parameters<number>& p, const std::vector<number>& coords, std::vector<number>& G) = 0;
+        virtual void G_contravariant(const parameters<number>& p, const flattened_tensor& coords, flattened_tensor& Ginv) const = 0;
 
       };
 

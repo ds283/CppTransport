@@ -115,6 +115,7 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/languages/opencl/opencl_printer.cpp
   translator/backends/languages/shared/C_style_printer.cpp
   translator/backends/languages/shared/kernel_argument_macros.cpp
+  translator/backends/shared/curvature_tensors.cpp
   translator/backends/shared/directives.cpp
   translator/backends/shared/flow_tensors.cpp
   translator/backends/shared/fundamental.cpp
@@ -430,6 +431,8 @@ set(TRANSLATOR_BACKENDS_LANGUAGES_SHARED_FILES
   )
 
 set(TRANSLATOR_BACKENDS_SHARED_FILES
+  translator/backends/shared/curvature_tensors.cpp
+  translator/backends/shared/curvature_tensors.h
   translator/backends/shared/directives.cpp
   translator/backends/shared/directives.h
   translator/backends/shared/flow_tensors.cpp

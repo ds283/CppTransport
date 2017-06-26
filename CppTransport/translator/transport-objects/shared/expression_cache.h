@@ -51,6 +51,9 @@ enum class expression_item_types
     dddV_item, dddV_lambda,
     Hubble2_item,
     epsilon_item,
+    metric_item, metric_lambda,
+    metric_inverse_item, metric_inverse_lambda,
+    connexion_item, connexion_lambda,
     parameters_lambda, coordinates_lambda, fields_lambda
   };
 

@@ -219,7 +219,7 @@ namespace transport
         unsigned int is_momentum(unsigned int a)                                     const override { return(a >= $NUMBER_FIELDS && a <= 2*$NUMBER_FIELDS); }
 
 
-        // COMPUTE BASIC PHYSICAL QUANTITIES -- implements a 'model'/'canonical_model' interface
+        // COMPUTE BASIC PHYSICAL QUANTITIES -- implements a 'model'/'nontrivial_metric_model' interface
 
       public:
 
@@ -227,8 +227,10 @@ namespace transport
         number H(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
         number epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
 
-        // Over-ride functions inherited from 'canonical_model'
+        // Over-ride functions inherited from 'nontrivial_metric_model'
         number V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
+        void G_covariant(const parameters<number>& __params, const flattened_tensor<number>& __coords, flattened_tensor<number>& G) const override;
+        void G_contravariant(const parameters<number>& __params, const flattened_tensor<number>& __coords, flattened_tensor<number>& Ginv) const override;
 
 
         // INITIAL CONDITIONS HANDLING -- implements a 'model' interface
@@ -486,26 +488,23 @@ namespace transport
     number $MODEL<number>::H(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
-
-        if(__coords.size() == 2*$NUMBER_FIELDS)
-          {
-            $RESOURCE_RELEASE
-            const auto __Mp = __params.get_Mp();
-            const flattened_tensor<number>& __param_vector = __params.get_vector();
-
-            $RESOURCE_PARAMETERS{__param_vector}
-            $RESOURCE_COORDINATES{__coords}
-
-            $TEMP_POOL{"const auto $1 = $2;"}
-
-            return std::sqrt($HUBBLE_SQ);
-          }
-        else
+        if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
+
+        $RESOURCE_RELEASE
+        const auto __Mp = __params.get_Mp();
+        const flattened_tensor<number>& __param_vector = __params.get_vector();
+
+        $RESOURCE_PARAMETERS{__param_vector}
+        $RESOURCE_COORDINATES{__coords}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+
+        return std::sqrt($HUBBLE_SQ);
       }
 
 
@@ -513,24 +512,21 @@ namespace transport
     number $MODEL<number>::epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
-
-        if(__coords.size() == 2*$NUMBER_FIELDS)
-          {
-            $RESOURCE_RELEASE
-            const auto __Mp = __params.get_Mp();
-
-            $RESOURCE_COORDINATES{__coords}
-
-            $TEMP_POOL{"const auto $1 = $2;"}
-
-            return $EPSILON;
-          }
-        else
+        if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
+
+        $RESOURCE_RELEASE
+        const auto __Mp = __params.get_Mp();
+
+        $RESOURCE_COORDINATES{__coords}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+
+        return $EPSILON;
       }
 
 
@@ -538,26 +534,73 @@ namespace transport
     number $MODEL<number>::V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
-
-        if(__coords.size() == 2*$NUMBER_FIELDS)
-          {
-            $RESOURCE_RELEASE
-            const auto __Mp = __params.get_Mp();
-            const flattened_tensor<number>& __param_vector = __params.get_vector();
-
-            $RESOURCE_PARAMETERS{__param_vector}
-            $RESOURCE_COORDINATES{__coords}
-
-            $TEMP_POOL{"const auto $1 = $2;"}
-
-            return $POTENTIAL;
-          }
-        else
+        if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
+
+        $RESOURCE_RELEASE
+        const auto __Mp = __params.get_Mp();
+        const flattened_tensor<number>& __param_vector = __params.get_vector();
+
+        $RESOURCE_PARAMETERS{__param_vector}
+        $RESOURCE_COORDINATES{__coords}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+
+        return $POTENTIAL;
+      }
+
+
+    template <typename number>
+    void $MODEL<number>::G_covariant(const parameters<number>& __params, const flattened_tensor<number>& __coords,
+                                     flattened_tensor<number>& G) const
+      {
+        assert(__coords.size() == 2*$NUMBER_FIELDS);
+        if(__coords.size() != 2*$NUMBER_FIELDS)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            throw std::out_of_range(msg.str());
+          }
+
+        $RESOURCE_RELEASE
+        const auto __Mp = __params.get_Mp();
+        const flattened_tensor<number>& __param_vector = __params.get_vector();
+
+        $RESOURCE_PARAMETERS{__param_vector}
+        $RESOURCE_COORDINATES{__coords}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+
+        G[FIELDS_FLATTEN($_a,$_b)] = $METRIC[_ab];
+      }
+
+
+    template <typename number>
+    void $MODEL<number>::G_contravariant(const parameters<number>& __params, const flattened_tensor<number>& __coords,
+                                         flattened_tensor<number>& Ginv) const
+      {
+        assert(__coords.size() == 2*$NUMBER_FIELDS);
+        if(__coords.size() != 2*$NUMBER_FIELDS)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            throw std::out_of_range(msg.str());
+          }
+
+        $RESOURCE_RELEASE
+        const auto __Mp = __params.get_Mp();
+        const flattened_tensor<number>& __param_vector = __params.get_vector();
+
+        $RESOURCE_PARAMETERS{__param_vector}
+        $RESOURCE_COORDINATES{__coords}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+
+        Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
       }
 
 

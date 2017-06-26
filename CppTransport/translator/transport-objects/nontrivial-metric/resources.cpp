@@ -65,14 +65,16 @@ namespace nontrivial_metric
 
         value_type get()
           {
-            // acquire resources if we do not already have them
+            // acquire resources if we do not already have them;
+            // these resources are provided with all necessary substitutions applied, so there is no need
+            // to do further substitutions in the resource manager
+
             if(!this->subs_V) this->subs_V = this->res.raw_V_resource(printer);
             if(!this->f_list) this->f_list = this->share.generate_field_symbols(printer);
 
             // return references
             return std::make_pair(std::cref(*subs_V), std::cref(**f_list));
           }
-
 
 
         // INTERNAL DATA
@@ -97,6 +99,56 @@ namespace nontrivial_metric
         //! symbol list
         boost::optional< std::unique_ptr<symbol_list> > f_list;
 
+
+      };
+
+
+    class SubstitutionMapCache
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor captures resource manager
+        SubstitutionMapCache(resources& r, const language_printer& p)
+          : res(r),
+            printer(p)
+          {
+          }
+
+        //! destructor is default
+        ~SubstitutionMapCache() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        GiNaC::exmap& get()
+          {
+            // acquire substitution map if we don't already have it
+            if(!this->map) this->map = this->res.make_substitution_map(printer);
+
+            return *map;
+          }
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resources& res;
+
+        //! language printer
+        const language_printer& printer;
+
+
+        // CACHE
+
+        //! substitition map
+        boost::optional< GiNaC::exmap > map;
 
       };
 
@@ -428,7 +480,7 @@ namespace nontrivial_metric
         auto args = this->generate_cache_arguments(printer);
 
         // if no substitutions, then nothing to do, so exit immediately
-        if(args.size() == 0) return(this->V);
+        if(args.empty()) return(this->V);
 
         GiNaC::ex subs_V;
 
@@ -592,6 +644,166 @@ namespace nontrivial_metric
       }
 
 
+    std::unique_ptr<flattened_tensor> resources::raw_G_resource(const language_printer& printer)
+      {
+        auto args = this->generate_cache_arguments(printer);
+
+        auto G = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
+
+        const auto max = this->share.get_max_field_index(variance::covariant);
+
+        SubstitutionMapCache subs_cache(*this, printer);
+
+        for(field_index i = field_index(0, variance::covariant); i < max; ++i)
+          {
+            for(field_index j = field_index(0, variance::covariant); j <= i; ++j)
+              {
+                unsigned int index_ij = this->fl.flatten(i,j);
+
+                // if no substitutions to be done, avoid checking cache
+                if(args.empty())
+                  {
+                    (*G)[index_ij] =  (*this->G)(static_cast<unsigned int>(i), static_cast<unsigned int>(j));
+                  }
+                else
+                  {
+                    GiNaC::ex subs_G;
+
+                    if(!this->cache.query(expression_item_types::metric_item, index_ij, args, subs_G))
+                      {
+                        timing_instrument timer(this->compute_timer);
+
+                        // get substitution map
+                        GiNaC::exmap& subs_map = subs_cache.get();
+
+                        //! apply substitution to G component and cache the result
+                        subs_G = (*this->G)(static_cast<unsigned int>(i), static_cast<unsigned int>(j)).subs(subs_map, GiNaC::subs_options::no_pattern);
+                        this->cache.store(expression_item_types::metric_item, index_ij, args, subs_G);
+                      }
+
+                    (*G)[index_ij] = subs_G;
+                  }
+
+                if(i != j)
+                  {
+                    unsigned int index_ji = this->fl.flatten(j,i);
+                    (*G)[index_ji] = (*G)[index_ij];
+                  }
+              }
+          }
+
+        return G;
+      }
+
+
+    std::unique_ptr<flattened_tensor> resources::raw_Ginv_resource(const language_printer& printer)
+      {
+        auto args = this->generate_cache_arguments(printer);
+
+        auto Ginv = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
+
+        const auto max = this->share.get_max_field_index(variance::contravariant);
+
+        SubstitutionMapCache subs_cache(*this, printer);
+
+        for(field_index i = field_index(0, variance::contravariant); i < max; ++i)
+          {
+            for(field_index j = field_index(0, variance::contravariant); j <= i; ++j)
+              {
+                unsigned int index_ij = this->fl.flatten(i,j);
+
+                // if no substitutions to be done, avoid checking cache
+                if(args.empty())
+                  {
+                    (*Ginv)[index_ij] =  (*this->Ginv)(static_cast<unsigned int>(i), static_cast<unsigned int>(j));
+                  }
+                else
+                  {
+                    GiNaC::ex subs_Ginv;
+
+                    if(!this->cache.query(expression_item_types::metric_inverse_item, index_ij, args, subs_Ginv))
+                      {
+                        timing_instrument timer(this->compute_timer);
+
+                        // get substitution map
+                        GiNaC::exmap& subs_map = subs_cache.get();
+
+                        //! apply substitution to G-inverse component and cache the result
+                        subs_Ginv = (*this->Ginv)(static_cast<unsigned int>(i), static_cast<unsigned int>(j)).subs(subs_map, GiNaC::subs_options::no_pattern);
+                        this->cache.store(expression_item_types::metric_inverse_item, index_ij, args, subs_Ginv);
+                      }
+
+                    (*Ginv)[index_ij] = subs_Ginv;
+                  }
+
+                if(i != j)
+                  {
+                    unsigned int index_ji = this->fl.flatten(j,i);
+                    (*Ginv)[index_ji] = (*Ginv)[index_ij];
+                  }
+              }
+          }
+
+        return Ginv;
+      }
+
+
+    std::unique_ptr<flattened_tensor> resources::raw_connexion_resource(const language_printer& printer)
+      {
+        auto args = this->generate_cache_arguments(printer);
+
+        auto Gamma = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
+
+        const auto max_i = this->share.get_max_field_index(variance::contravariant);
+        const auto max_jk = this->share.get_max_field_index(variance::covariant);
+
+        SubstitutionMapCache subs_cache(*this, printer);
+
+        for(field_index i = field_index(0, variance::contravariant); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0, variance::covariant); j < max_jk; ++j)
+              {
+                for(field_index k = field_index(0, variance::covariant); k <= j; ++j)
+                  {
+                    unsigned int index_ijk = this->fl.flatten(i,j,k);
+
+                    // if no substitutions to be done, avoid checking cache
+                    if(args.empty())
+                      {
+                        (*Gamma)[index_ijk] =  (*this->Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(j));
+                      }
+                    else
+                      {
+                        GiNaC::ex subs_Gamma;
+
+                        if(!this->cache.query(expression_item_types::connexion_item, index_ijk, args, subs_Gamma))
+                          {
+                            timing_instrument timer(this->compute_timer);
+
+                            // get substitution map
+                            GiNaC::exmap& subs_map = subs_cache.get();
+
+                            //! apply substitution to connexion component and cache the result
+                            subs_Gamma = (*this->Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(j)).subs(subs_map, GiNaC::subs_options::no_pattern);
+                            this->cache.store(expression_item_types::connexion_item, index_ijk, args, subs_Gamma);
+                          }
+
+                        (*Gamma)[index_ijk] = subs_Gamma;
+                      }
+
+                    if(j != k)
+                      {
+                        unsigned int index_ikj = this->fl.flatten(i,k,j);
+                        (*Gamma)[index_ikj] = (*Gamma)[index_ijk];
+                      }
+                  }
+              }
+          }
+
+        return Gamma;
+      }
+
+
     std::unique_ptr<flattened_tensor>
     resources::dV_resource(variance v, const language_printer& printer)
       {
@@ -638,9 +850,20 @@ namespace nontrivial_metric
       }
 
 
+    GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer)
+      {
+        const auto resource = this->mgr.dV();
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten) throw resource_failure(a.get().get_loop_variable());
+
+        return this->position_indices<1, index_literal>(resource.get().first, { a }, resource.get().second, *flatten, printer);
+      }
+
+
     void resources::dV_resource_expr(variance v, flattened_tensor& list, const language_printer& printer)
       {
-        const field_index max_i = this->share.get_max_field_index(variance::none);
+        const field_index max = this->share.get_max_field_index(v);
 
         // build argument list
         auto args = this->generate_cache_arguments(printer);
@@ -648,7 +871,7 @@ namespace nontrivial_metric
         // obtain a resource cache
         ResourceCache cache(*this, this->share, printer);
 
-        for(field_index i = field_index(0); i < max_i; ++i)
+        for(field_index i = field_index(0, v); i < max; ++i)
           {
             GiNaC::ex dV;
             unsigned int index = this->fl.flatten(i);
@@ -669,6 +892,8 @@ namespace nontrivial_metric
 
             list[index] = dV;
           }
+
+        // TODO: reposition indices if contravariant form is required
       }
 
 
@@ -690,6 +915,21 @@ namespace nontrivial_metric
           }
 
         return(list);
+      }
+
+
+    GiNaC::ex resources::ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
+      {
+        const auto resource = this->mgr.ddV();
+        const auto& flatten = this->mgr.field_flatten();
+
+        const auto& a_idx = a.get();
+        const auto& b_idx = b.get();
+
+        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable());
+
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, **flatten);
+        return this->sym_factory.get_symbol(variable);
       }
 
 
@@ -774,6 +1014,23 @@ namespace nontrivial_metric
       }
 
 
+    GiNaC::ex resources::dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
+                                       const language_printer& printer)
+      {
+        const auto resource = this->mgr.dddV();
+        const auto& flatten = this->mgr.field_flatten();
+
+        const auto& a_idx = a.get();
+        const auto& b_idx = b.get();
+        const auto& c_idx = c.get();
+
+        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable() + ", " + c_idx.get_loop_variable());
+
+        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, **flatten);
+        return this->sym_factory.get_symbol(variable);
+      }
+
+
     void resources::dddV_resource_label(const language_printer& printer, flattened_tensor& list,
                                         const contexted_value<std::string>& resource,
                                         const contexted_value<std::string>& flatten)
@@ -837,6 +1094,177 @@ namespace nontrivial_metric
                       }
 
                     list[index] = dddV;
+                  }
+              }
+          }
+      }
+
+
+    std::unique_ptr<flattened_tensor> resources::metric_resource(const language_printer& printer)
+      {
+        std::unique_ptr<flattened_tensor> list;
+
+        const auto resource = this->mgr.metric();
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(resource && flatten)
+          {
+            list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
+            this->metric_resource_label(printer, *list, *resource, *flatten);
+          }
+        else
+          {
+            list = this->raw_G_resource(printer);
+          }
+
+        return list;
+      }
+
+
+    GiNaC::ex
+    resources::metric_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
+      {
+        const auto resource = this->mgr.metric();
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten)
+          throw resource_failure(a.get().get_loop_variable() + ", " + b.get().get_loop_variable());
+
+        std::string variable = printer.array_subscript(*resource, a, b, **flatten);
+        return this->sym_factory.get_symbol(variable);
+      }
+
+
+    void resources::metric_resource_label(const language_printer& printer, flattened_tensor& list,
+                                          const contexted_value<std::string>& resource,
+                                          const contexted_value<std::string>& flatten)
+      {
+        const field_index max = this->share.get_max_field_index(variance::covariant);
+
+        for(field_index i = field_index(0, variance::covariant); i < max; ++i)
+          {
+            for(field_index j = field_index(0, variance::covariant); j < max; ++j)
+              {
+                unsigned int index = this->fl.flatten(i,j);
+
+                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
+
+                list[index] = this->sym_factory.get_symbol(variable);
+              }
+          }
+      }
+
+
+    std::unique_ptr<flattened_tensor> resources::metric_inverse_resource(const language_printer& printer)
+      {
+        std::unique_ptr<flattened_tensor> list;
+
+        const auto resource = this->mgr.metric_inverse();
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(resource && flatten)
+          {
+            list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
+            this->metric_inverse_resource_label(printer, *list, *resource, *flatten);
+          }
+        else
+          {
+            list = this->raw_Ginv_resource(printer);
+          }
+
+        return list;
+      }
+
+
+    GiNaC::ex
+    resources::metric_inverse_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
+      {
+        const auto resource = this->mgr.metric_inverse();
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten)
+          throw resource_failure(a.get().get_loop_variable() + ", " + b.get().get_loop_variable());
+
+        std::string variable = printer.array_subscript(*resource, a, b, **flatten);
+        return this->sym_factory.get_symbol(variable);
+      }
+
+
+    void resources::metric_inverse_resource_label(const language_printer& printer, flattened_tensor& list,
+                                                  const contexted_value<std::string>& resource,
+                                                  const contexted_value<std::string>& flatten)
+      {
+        const field_index max = this->share.get_max_field_index(variance::contravariant);
+
+        for(field_index i = field_index(0, variance::contravariant); i < max; ++i)
+          {
+            for(field_index j = field_index(0, variance::contravariant); j < max; ++j)
+              {
+                unsigned int index = this->fl.flatten(i,j);
+
+                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
+
+                list[index] = this->sym_factory.get_symbol(variable);
+              }
+          }
+      }
+
+
+    std::unique_ptr<flattened_tensor> resources::connexion_resource(const language_printer& printer)
+      {
+        std::unique_ptr<flattened_tensor> list;
+
+        const auto resource = this->mgr.connexion();
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(resource && flatten)
+          {
+            list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
+            this->connexion_resource_label(printer, *list, *resource, *flatten);
+          }
+        else
+          {
+            list = this->raw_connexion_resource(printer);
+          }
+
+        return list;
+      }
+
+
+    GiNaC::ex resources::connexion_resource(const index_literal& a, const index_literal& b, const index_literal& c,
+                                            const language_printer& printer)
+      {
+        const auto resource = this->mgr.connexion();
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten)
+          throw resource_failure(
+            a.get().get_loop_variable() + ", " + b.get().get_loop_variable() + ", " + c.get().get_loop_variable());
+
+        std::string variable = printer.array_subscript(*resource, a, b, c, **flatten);
+        return this->sym_factory.get_symbol(variable);
+      }
+
+
+    void resources::connexion_resource_label(const language_printer& printer, flattened_tensor& list,
+                                             const contexted_value<std::string>& resource,
+                                             const contexted_value<std::string>& flatten)
+      {
+        const field_index max_i = this->share.get_max_field_index(variance::contravariant);
+        const field_index max_jk  = this->share.get_max_field_index(variance::covariant);
+
+        for(field_index i = field_index(0, variance::contravariant); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0, variance::covariant); j < max_jk; ++j)
+              {
+                for(field_index k = field_index(0, variance::covariant); k < max_jk; ++k)
+                  {
+                    unsigned int index = this->fl.flatten(i,j,k);
+
+                    std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
+                                                                   this->fl.flatten(k), *flatten);
+
+                    list[index] = this->sym_factory.get_symbol(variable);
                   }
               }
           }
@@ -1018,52 +1446,6 @@ namespace nontrivial_metric
         
         return ok;
       }
-    
-    
-    GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer)
-      {
-        const auto resource = this->mgr.dV();
-        const auto& flatten = this->mgr.field_flatten();
-        
-        const auto& a_idx = a.get();
-
-        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable());
-
-        std::string variable = printer.array_subscript(resource.get().second, a_idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
-      }
 
 
-    GiNaC::ex resources::ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
-      {
-        const auto resource = this->mgr.ddV();
-        const auto& flatten = this->mgr.field_flatten();
-    
-        const auto& a_idx = a.get();
-        const auto& b_idx = b.get();
-    
-        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable());
-
-        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
-      }
-
-
-    GiNaC::ex resources::dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
-                                       const language_printer& printer)
-      {
-        const auto resource = this->mgr.dddV();
-        const auto& flatten = this->mgr.field_flatten();
-    
-        const auto& a_idx = a.get();
-        const auto& b_idx = b.get();
-        const auto& c_idx = c.get();
-
-        if(!resource || !flatten) throw resource_failure(a_idx.get_loop_variable() + ", " + b_idx.get_loop_variable() + ", " + c_idx.get_loop_variable());
-
-        std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
-      }
-    
-    
   }   // namespace nontrivial_metric

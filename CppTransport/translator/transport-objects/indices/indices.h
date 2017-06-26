@@ -80,6 +80,10 @@ namespace tensor_index_impl
     template <typename IndexType>
     constexpr bool operator==(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r);
 
+    //! allow inequality comparison between two different indices of the same class
+    template <typename IndexType>
+    constexpr bool operator!=(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r);
+
 
     template <typename IndexType>
     class tensor_index
@@ -178,7 +182,7 @@ namespace tensor_index_impl
     constexpr bool operator<(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
       {
         if(l.index_variance != r.index_variance) throw tensor_index_error(ERROR_MISMATCHED_TENSOR_INDICES);
-        return(l.index_value < r.index_value);
+        return l.index_value < r.index_value;
       }
 
 
@@ -186,7 +190,7 @@ namespace tensor_index_impl
     constexpr bool operator<=(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
       {
         if(l.index_variance != r.index_variance) throw tensor_index_error(ERROR_MISMATCHED_TENSOR_INDICES);
-        return(l.index_value <= r.index_value);
+        return l.index_value <= r.index_value;
       }
 
 
@@ -194,7 +198,14 @@ namespace tensor_index_impl
     constexpr bool operator==(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
       {
         if(l.index_variance != r.index_variance) throw tensor_index_error(ERROR_MISMATCHED_TENSOR_INDICES);
-        return(l.index_value == r.index_value);
+        return l.index_value == r.index_value;
+      }
+
+
+    template <typename IndexType>
+    constexpr bool operator!=(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
+      {
+        return !(l==r);
       }
 
 

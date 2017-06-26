@@ -30,42 +30,52 @@
 namespace nontrivial_metric
   {
     
-    connexion::connexion(language_printer& p, cse& cw, expression_cache& c,
-                         resources& r, shared_resources& s,
-                         boost::timer::cpu_timer& tm, index_flatten& f,
-                         index_traits& t)
+    connexion::connexion(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
       : ::connexion(),
         printer(p),
         cse_worker(cw),
-        cache(c),
         res(r),
         shared(s),
-        fl(f),
-        traits(t),
-        compute_timer(tm),
-        cached(false)
+        fl(f)
       {
       }
-    
-    
+
+
     std::unique_ptr<flattened_tensor>
     connexion::compute(const index_literal_list& indices)
       {
-        return std::unique_ptr<flattened_tensor>();
+        if(indices.size() != CONNEXION_TENSOR_INDICES) throw tensor_exception("connexion indices");
+        if(indices[0]->get_class() != index_class::field_only) throw tensor_exception("connexion");
+        if(indices[1]->get_class() != index_class::field_only) throw tensor_exception("connexion");
+        if(indices[2]->get_class() != index_class::field_only) throw tensor_exception("connexion");
+        if(indices[0]->get_variance() != variance::contravariant) throw tensor_exception("connexion");
+        if(indices[1]->get_variance() != variance::covariant) throw tensor_exception("connexion");
+        if(indices[2]->get_variance() != variance::covariant) throw tensor_exception("connexion");
+
+        return this->res.connexion_resource(this->printer);
       }
-    
-    
-    GiNaC::ex connexion::compute_component(field_index i, field_index j, field_index k)
-      {
-        return GiNaC::ex();
-      }
-    
-    
+
+
     std::unique_ptr<atomic_lambda>
-    connexion::compute_lambda(const index_literal& i, const index_literal& j,
-                              const index_literal& k)
+    connexion::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k)
       {
-        return std::unique_ptr<atomic_lambda>();
+        if(i.get_class() != index_class::field_only) throw tensor_exception("metric_inverse");
+        if(j.get_class() != index_class::field_only) throw tensor_exception("metric_inverse");
+        if(k.get_class() != index_class::field_only) throw tensor_exception("metric_inverse");
+        if(i.get_variance() != variance::contravariant) throw tensor_exception("metric_inverse");
+        if(j.get_variance() != variance::covariant) throw tensor_exception("metric_inverse");
+        if(k.get_variance() != variance::covariant) throw tensor_exception("metric_inverse");
+
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
+        auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
+
+        auto args = this->res.generate_cache_arguments(0, this->printer);
+        args += { idx_i, idx_j, idx_k };
+
+        GiNaC::ex result = this->res.connexion_resource(i, j, k, this->printer);
+
+        return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::connexion_lambda, args, this->shared.generate_working_type());
       }
     
     
@@ -79,26 +89,11 @@ namespace nontrivial_metric
     
     void connexion::pre_explicit(const index_literal_list& indices)
       {
-        if(cached) throw tensor_exception("connexion already cached");
-    
-        this->pre_lambda();
-    
-        this->cached = false;
       }
-    
-    
-    void connexion::pre_lambda()
-      {
 
-      }
-    
-    
+
     void connexion::post()
       {
-        if(!this->cached) throw tensor_exception("connexion not cached");
-    
-        // invalidate cache
-        this->cached = false;
       }
     
   }   // namespace nontrivial_metric

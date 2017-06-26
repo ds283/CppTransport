@@ -30,19 +30,13 @@
 namespace nontrivial_metric
   {
     
-    metric::metric(language_printer& p, cse& cw, expression_cache& c, resources& r,
-                   shared_resources& s, boost::timer::cpu_timer& tm,
-                   index_flatten& f, index_traits& t)
+    metric::metric(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
       : ::metric(),
         printer(p),
         cse_worker(cw),
-        cache(c),
         res(r),
         shared(s),
-        fl(f),
-        traits(t),
-        compute_timer(tm),
-        cached(false)
+        fl(f)
       {
       }
     
@@ -50,20 +44,33 @@ namespace nontrivial_metric
     std::unique_ptr<flattened_tensor>
     metric::compute(const index_literal_list& indices)
       {
-        return std::unique_ptr<flattened_tensor>();
+        if(indices.size() != METRIC_TENSOR_INDICES) throw tensor_exception("metric indices");
+        if(indices[0]->get_class() != index_class::field_only) throw tensor_exception("metric");
+        if(indices[1]->get_class() != index_class::field_only) throw tensor_exception("metric");
+        if(indices[0]->get_variance() != variance::covariant) throw tensor_exception("metric");
+        if(indices[1]->get_variance() != variance::covariant) throw tensor_exception("metric");
+
+        return this->res.metric_resource(this->printer);
       }
-    
-    
-    GiNaC::ex metric::compute_component(field_index i, field_index j)
-      {
-        return GiNaC::ex();
-      }
-    
+
     
     std::unique_ptr<atomic_lambda>
     metric::compute_lambda(const index_literal& i, const index_literal& j)
       {
-        return std::unique_ptr<atomic_lambda>();
+        if(i.get_class() != index_class::field_only) throw tensor_exception("metric");
+        if(j.get_class() != index_class::field_only) throw tensor_exception("metric");
+        if(i.get_variance() != variance::covariant) throw tensor_exception("metric");
+        if(j.get_variance() != variance::covariant) throw tensor_exception("metric");
+
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
+
+        auto args = this->res.generate_cache_arguments(0, this->printer);
+        args += { idx_i, idx_j };
+
+        GiNaC::ex result = this->res.metric_resource(i, j, this->printer);
+
+        return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::metric_lambda, args, this->shared.generate_working_type());
       }
     
     
@@ -77,26 +84,11 @@ namespace nontrivial_metric
     
     void metric::pre_explicit(const index_literal_list& indices)
       {
-        if(cached) throw tensor_exception("metric already cached");
-        
-        this->pre_lambda();
-        
-        this->cached = false;
       }
-    
-    
-    void metric::pre_lambda()
-      {
-        
-      }
-    
-    
+
+
     void metric::post()
       {
-        if(!this->cached) throw tensor_exception("metric not cached");
-        
-        // invalidate cache
-        this->cached = false;
       }
     
   }   // namespace nontrivial_metric

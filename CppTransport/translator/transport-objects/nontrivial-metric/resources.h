@@ -56,9 +56,20 @@ namespace nontrivial_metric
     constexpr unsigned int use_ddV = 1 << 1;
     constexpr unsigned int use_dddV = 1 << 2;
 
+
+    class ResourceCache;
+    class SubstitutionMapCache;
+
+
     //! implements resources for nontrivial_metric models, ie. trivial kinetic terms and just a potential
     class resources
       {
+
+        // FRIENDSHIP
+
+        friend class ResourceCache;
+        friend class SubstitutionMapCache;
+
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -87,6 +98,18 @@ namespace nontrivial_metric
         //! generate Hubble-squared resource
         //! returns raw expression, without applying any CSE
         GiNaC::ex raw_Hsq_resource(const language_printer& printer);
+
+        //! generate metric resource, including any necessary substitutions for parameters/coordinates
+        //! returns raw expression, without applying any CSE
+        std::unique_ptr<flattened_tensor> raw_G_resource(const language_printer& printer);
+
+        //! generate inverse metric resource, including any necessary substitutions for parameters/coordinates
+        //! returns raw expression, without applying any CSE
+        std::unique_ptr<flattened_tensor> raw_Ginv_resource(const language_printer& printer);
+
+        //! generate connexion resource, including any necessary substitutions for parameters/coordinates
+        //! returns raw expression, without applying any CSE
+        std::unique_ptr<flattened_tensor> raw_connexion_resource(const language_printer& printer);
 
 
         // SCALAR RESOURCES
@@ -145,6 +168,31 @@ namespace nontrivial_metric
         GiNaC::ex dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
                                 const language_printer& printer);
 
+
+        // TENSOR RESOURCES -- CURVATURE QUANTITIES
+
+      public:
+
+        //! generate concrete metric resource labels
+        std::unique_ptr<flattened_tensor> metric_resource(const language_printer& printer);
+
+        //! generate concrete inverse metric resource labels
+        std::unique_ptr<flattened_tensor> metric_inverse_resource(const language_printer& printer);
+
+        //! generate concrete connexion resource labels
+        std::unique_ptr<flattened_tensor> connexion_resource(const language_printer& printer);
+
+
+        //! generate abstract metric resource label
+        GiNaC::ex metric_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
+
+        //! generate abstract inverse metric resource label
+        GiNaC::ex metric_inverse_resource(const index_literal& a, const index_literal& b,
+                                          const language_printer& printer);
+
+        //! generate abstract connexion resource labels
+        GiNaC::ex connexion_resource(const index_literal& a, const index_literal& b, const index_literal& c,
+                                     const language_printer& printer);
 
 
         // BUILD ARGUMENT LISTS
@@ -205,10 +253,17 @@ namespace nontrivial_metric
         GiNaC::exmap make_substitution_map(const language_printer& printer) const;
 
 
+
+        // INTERNAL API -- TENSOR RESOURCES, DERIVATIVES OF THE POTENTIAL
+
+      private:
+
         //! generate concrete dV resource using labels
-        void dV_resource_label(variance v, flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DV_INDICES>& avail,
-                                       const contexted_value<std::string>& resource, const contexted_value<std::string>& flatten,
-                                       const language_printer& printer);
+        void dV_resource_label(variance v, flattened_tensor& list,
+                               const std::array<variance, RESOURCE_INDICES::DV_INDICES>& avail,
+                               const contexted_value<std::string>& resource,
+                               const contexted_value<std::string>& flatten,
+                               const language_printer& printer);
 
         //! generate concrete dV resource using literal expressions
         void dV_resource_expr(variance v, flattened_tensor& list, const language_printer& printer);
@@ -230,8 +285,28 @@ namespace nontrivial_metric
 
         //! generate concrete dddV resource using literal expressions
         void dddV_resource_expr(const language_printer& printer, flattened_tensor& list);
-        
-        
+
+
+        // INTERNAL API -- TENSOR RESOURCES, CURVATURE QUANTITIES
+
+      private:
+
+        //! generate concrete metric resource using labels
+        void metric_resource_label(const language_printer& printer, flattened_tensor& list,
+                                   const contexted_value<std::string>& resource,
+                                   const contexted_value<std::string>& flatten);
+
+        //! generate concrete inverse metric resource using labels
+        void metric_inverse_resource_label(const language_printer& printer, flattened_tensor& list,
+                                           const contexted_value<std::string>& resource,
+                                           const contexted_value<std::string>& flatten);
+
+        //! generate concrete connexion resource using labels
+        void connexion_resource_label(const language_printer& printer, flattened_tensor& list,
+                                      const contexted_value<std::string>& resource,
+                                      const contexted_value<std::string>& flatten);
+
+
         //! dress an abstract resource label with given variance assignment 'avail' to give the required variance
         //! assignment 'reqd'.
         //! Returns a GiNaC expression representing the abstract resource with correct variance assignment
