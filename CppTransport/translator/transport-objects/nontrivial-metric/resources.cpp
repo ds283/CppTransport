@@ -699,7 +699,7 @@ namespace nontrivial_metric
                 if(!res.cache.query(expression_item_types::Riemann_A2_item, index_ij, args, subs_expr))
                   {
                     timing_instrument timer(res.compute_timer);
-
+                    
                     auto& deriv_syms = deriv_cache.get();
                     GiNaC::ex expr = 0;
 

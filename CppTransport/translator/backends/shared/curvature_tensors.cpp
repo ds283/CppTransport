@@ -39,6 +39,9 @@ namespace macro_packages
       {
         EMPLACE(index_package, BIND_SYMBOL(replace_metric, "METRIC"));
         EMPLACE(index_package, BIND_SYMBOL(replace_connexion, "CONNECTION"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_Riemann_A2, "RIEMANN_A2"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_Riemann_A3, "RIEMANN_A3"));
+        EMPLACE(index_package, BIND_SYMBOL(replace_Riemann_B3, "RIEMANN_B3"));
       }
 
 
@@ -123,6 +126,48 @@ namespace macro_packages
         if(indices[2]->get_variance() != variance::covariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
 
         std::unique_ptr<atomic_lambda> lambda = this->Gamma->compute_lambda(*indices[0], *indices[1], *indices[2]);
+        return this->lambda_mgr.cache(std::move(lambda));
+      }
+    
+    
+    void replace_Riemann_A2::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<flattened_tensor> container = this->A2->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    std::string replace_Riemann_A2::roll(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->A2->compute_lambda(*indices[0], *indices[1]);
+        return this->lambda_mgr.cache(std::move(lambda));
+      }
+    
+    
+    void replace_Riemann_A3::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<flattened_tensor> container = this->A3->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    std::string replace_Riemann_A3::roll(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->A3->compute_lambda(*indices[0], *indices[1], *indices[2]);
+        return this->lambda_mgr.cache(std::move(lambda));
+      }
+    
+    
+    void replace_Riemann_B3::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<flattened_tensor> container = this->B3->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    std::string replace_Riemann_B3::roll(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->B3->compute_lambda(*indices[0], *indices[1], *indices[2]);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 

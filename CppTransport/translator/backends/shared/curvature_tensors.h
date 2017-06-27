@@ -39,6 +39,15 @@ namespace macro_packages
 
     constexpr unsigned int CONNEXION_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int CONNEXION_TOTAL_INDICES = 2;
+    
+    constexpr unsigned int RIEMANN_A2_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int RIEMANN_A2_TOTAL_INDICES = 2;
+    
+    constexpr unsigned int RIEMANN_A3_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int RIEMANN_A3_TOTAL_INDICES = 3;
+    
+    constexpr unsigned int RIEMANN_B3_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int RIEMANN_B3_TOTAL_INDICES = 3;
 
 
     class replace_metric : public cse_map_field2
@@ -170,6 +179,198 @@ namespace macro_packages
         //! connexion object
         std::unique_ptr<connexion> Gamma;
 
+      };
+    
+    
+    class replace_Riemann_A2 : public cse_map_field2
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        replace_Riemann_A2(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
+          : cse_map_field2(std::move(n), RIEMANN_A2_TOTAL_ARGUMENTS, f.make_flatten()),
+            printer(prn),
+            cse_worker(cw),
+            lambda_mgr(lm),
+            sym_factory(s)
+          {
+            auto& cf = dynamic_cast<curvature_tensor_factory&>(f);
+            A2 = cf.make_Riemann_A2(prn, cw);
+          }
+        
+        //! destructor
+        virtual ~replace_Riemann_A2() = default;
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! determine unroll status
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->A2->get_unroll(idx_list); }
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! evaluate
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! evaluate
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! CSE worker
+        cse& cse_worker;
+        
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+        
+        //! language printer
+        language_printer& printer;
+        
+        //! symbol factory
+        symbol_factory& sym_factory;
+        
+        //! connexion object
+        std::unique_ptr<Riemann_A2> A2;
+        
+      };
+    
+    
+    class replace_Riemann_A3 : public cse_map_field3
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        replace_Riemann_A3(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
+          : cse_map_field3(std::move(n), RIEMANN_A3_TOTAL_ARGUMENTS, f.make_flatten()),
+            printer(prn),
+            cse_worker(cw),
+            lambda_mgr(lm),
+            sym_factory(s)
+          {
+            auto& cf = dynamic_cast<curvature_tensor_factory&>(f);
+            A3 = cf.make_Riemann_A3(prn, cw);
+          }
+        
+        //! destructor
+        virtual ~replace_Riemann_A3() = default;
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! determine unroll status
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->A3->get_unroll(idx_list); }
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! evaluate
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! evaluate
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! CSE worker
+        cse& cse_worker;
+        
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+        
+        //! language printer
+        language_printer& printer;
+        
+        //! symbol factory
+        symbol_factory& sym_factory;
+        
+        //! connexion object
+        std::unique_ptr<Riemann_A3> A3;
+        
+      };
+    
+    
+    class replace_Riemann_B3 : public cse_map_field3
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        replace_Riemann_B3(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
+          : cse_map_field3(std::move(n), RIEMANN_B3_TOTAL_ARGUMENTS, f.make_flatten()),
+            printer(prn),
+            cse_worker(cw),
+            lambda_mgr(lm),
+            sym_factory(s)
+          {
+            auto& cf = dynamic_cast<curvature_tensor_factory&>(f);
+            B3 = cf.make_Riemann_B3(prn, cw);
+          }
+        
+        //! destructor
+        virtual ~replace_Riemann_B3() = default;
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! determine unroll status
+        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->B3->get_unroll(idx_list); }
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! evaluate
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! evaluate
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! CSE worker
+        cse& cse_worker;
+        
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+        
+        //! language printer
+        language_printer& printer;
+        
+        //! symbol factory
+        symbol_factory& sym_factory;
+        
+        //! connexion object
+        std::unique_ptr<Riemann_B3> B3;
+        
       };
 
 

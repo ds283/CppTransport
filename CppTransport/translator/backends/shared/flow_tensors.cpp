@@ -171,7 +171,8 @@ namespace macro_packages
       {
         std::unique_ptr<atomic_lambda> lambda = this->parameter_tensor->compute_lambda(*indices[0]);
     
-        // assume that the result will always be just a single symbol, so can be safely inlined
+        // assume that the result will always be just a single symbol (indices aren't raised or lowered
+        // on parameters, so there are no sums), so can be safely inlined
         return this->printer.ginac(**lambda);
       }
     
@@ -182,7 +183,8 @@ namespace macro_packages
     
         std::unique_ptr<atomic_lambda> lambda = this->field_tensor->compute_lambda(*indices[0]);
     
-        // assume that the result will always be just a single symbol, so can be safely inlined
+        // assume that the result will always be just a single symbol (it won't have its indices repositioned,
+        // because only contravariant indices are allowed), so can be safely inlined
         return this->printer.ginac(**lambda);
       }
 
@@ -193,7 +195,8 @@ namespace macro_packages
     
         std::unique_ptr<atomic_lambda> lambda = this->coordinate_tensor->compute_lambda(*indices[0]);
     
-        // assume that the result will always be just a single symbol, so can be safely inlined
+        // assume that the result will always be just a single symbol (it won't have its indices repositioned,
+        // because only contravariant indices are allowed), so can be safely inlined
         return this->printer.ginac(**lambda);
       }
 
@@ -208,27 +211,21 @@ namespace macro_packages
     std::string replace_dV::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->dV_tensor->compute_lambda(*indices[0]);
-
-        // assume that the result will always be just a single symbol, so can be safely inlined
-        return this->printer.ginac(**lambda);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
     std::string replace_ddV::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->ddV_tensor->compute_lambda(*indices[0], *indices[1]);
-
-        // assume that the result will always be just a single symbol, so can be safely inlined
-        return this->printer.ginac(**lambda);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
     std::string replace_dddV::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->dddV_tensor->compute_lambda(*indices[0], *indices[1], *indices[2]);
-
-        // assume that the result will always be just a single symbol, so can be safely inlined
-        return this->printer.ginac(**lambda);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
   } // namespace macro_packages
