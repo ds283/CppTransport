@@ -60,6 +60,8 @@ namespace nontrivial_metric
 
     class PotentialResourceCache;
     class SubstitutionMapCache;
+    class ConnexionCache;
+
     class CovariantdVCache;
     class CovariantddVCache;
     class CovariantdddVCache;
@@ -73,6 +75,7 @@ namespace nontrivial_metric
 
         friend class PotentialResourceCache;
         friend class SubstitutionMapCache;
+        friend class ConnexionCache;
 
         friend class CovariantdVCache;
         friend class CovariantddVCache;
@@ -278,23 +281,26 @@ namespace nontrivial_metric
       private:
 
         //! generate concrete dV resource using labels
-        void dV_resource_label(variance v, flattened_tensor& list,
-                               const std::array<variance, RESOURCE_INDICES::DV_INDICES>& avail,
+        void dV_resource_label(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DV_INDICES>& avail,
+                               const std::array<variance, RESOURCE_INDICES::DV_INDICES> reqd,
                                const contexted_value<std::string>& resource,
                                const contexted_value<std::string>& flatten,
                                const language_printer& printer);
 
         //! generate concrete dV resource using literal expressions
-        void dV_resource_expr(variance v, flattened_tensor& list, const language_printer& printer);
+        void dV_resource_expr(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DV_INDICES> reqd,
+                              const language_printer& printer);
 
 
         //! generate concrete ddV resource using labels
-        void ddV_resource_label(const language_printer& printer, flattened_tensor& list,
-                                const contexted_value<std::string>& resource,
-                                const contexted_value<std::string>& flatten);
+        void ddV_resource_label(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDV_INDICES>& avail,
+                                const std::array<variance, RESOURCE_INDICES::DDV_INDICES> reqd,
+                                const contexted_value<std::string>& resource, const contexted_value<std::string>& flatten,
+                                const language_printer& printer);
 
         //! generate concrete ddV resource using literal expressions
-        void ddV_resource_expr(const language_printer& printer, flattened_tensor& list);
+        void ddV_resource_expr(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDV_INDICES> reqd,
+                               const language_printer& printer);
 
 
         //! generate concrete dddV resource using labels
