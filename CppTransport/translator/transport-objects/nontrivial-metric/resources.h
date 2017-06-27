@@ -304,12 +304,14 @@ namespace nontrivial_metric
 
 
         //! generate concrete dddV resource using labels
-        void dddV_resource_label(const language_printer& printer, flattened_tensor& list,
-                                 const contexted_value<std::string>& resource,
-                                 const contexted_value<std::string>& flatten);
+        void dddV_resource_label(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDDV_INDICES>& avail,
+                                 const std::array<variance, RESOURCE_INDICES::DDDV_INDICES> reqd,
+                                 const contexted_value<std::string>& resource, const contexted_value<std::string>& flatten,
+                                 const language_printer& printer);
 
         //! generate concrete dddV resource using literal expressions
-        void dddV_resource_expr(const language_printer& printer, flattened_tensor& list);
+        void dddV_resource_expr(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDDV_INDICES> reqd,
+                                const language_printer& printer);
 
 
         // INTERNAL API -- TENSOR RESOURCES, CURVATURE QUANTITIES
