@@ -167,6 +167,59 @@ namespace nontrivial_metric
       };
 
 
+    class DerivativeSymbolsCache
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        DerivativeSymbolsCache(resources& r, shared_resources& s, const language_printer& p)
+          : res(r),
+            share(s),
+            printer(p)
+          {
+          }
+
+        //! destructor is default
+        ~DerivativeSymbolsCache() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! get contravariant components of derivative vector
+        const symbol_list& get()
+          {
+            if(!this->derivs) this->derivs = this->share.generate_deriv_symbols(printer);
+            return *this->derivs;
+          }
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resources& res;
+
+        //! shared resource manager
+        shared_resources& share;
+
+        //! language printer
+        const language_printer& printer;
+
+
+        // CACHE
+
+        //! derivative vector
+        std::unique_ptr<symbol_list> derivs;
+
+      };
+
+
     class ConnexionCache
       {
 
@@ -190,12 +243,7 @@ namespace nontrivial_metric
       public:
 
         //! get Christoffel symbols
-        const flattened_tensor& get()
-          {
-            if(!this->Gamma) this->Gamma = res.raw_connexion_resource(printer);
-
-            return *this->Gamma;
-          }
+        const flattened_tensor& get();
 
 
         // INTERNAL DATA
@@ -215,6 +263,65 @@ namespace nontrivial_metric
         std::unique_ptr<flattened_tensor> Gamma;
 
       };
+
+
+    const flattened_tensor& ConnexionCache::get()
+      {
+        if(this->Gamma) return *this->Gamma;
+
+        this->Gamma = std::make_unique<flattened_tensor>(res.fl.get_flattened_size<field_index>(RESOURCE_INDICES::CONNEXION_INDICES));
+
+        auto args = res.generate_cache_arguments(printer);
+        // no need to tag with indices, since only one index arrangement is possible
+
+        const auto max_i = res.share.get_max_field_index(variance::contravariant);
+        const auto max_jk = res.share.get_max_field_index(variance::covariant);
+
+        SubstitutionMapCache subs_cache(res, printer);
+
+        for(field_index i = field_index(0, variance::contravariant); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0, variance::covariant); j < max_jk; ++j)
+              {
+                for(field_index k = field_index(0, variance::covariant); k <= j; ++k)
+                  {
+                    unsigned int index_ijk = res.fl.flatten(i,j,k);
+
+                    // if no substitutions to be done, avoid checking cache
+                    if(args.empty())
+                      {
+                        (*Gamma)[index_ijk] =  (*res.Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(k));
+                      }
+                    else
+                      {
+                        GiNaC::ex subs_Gamma = 0;
+
+                        if(!res.cache.query(expression_item_types::connexion_item, index_ijk, args, subs_Gamma))
+                          {
+                            timing_instrument timer(res.compute_timer);
+
+                            // get substitution map
+                            GiNaC::exmap& subs_map = subs_cache.get();
+
+                            //! apply substitution to connexion component and cache the result
+                            subs_Gamma = (*res.Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(k)).subs(subs_map, GiNaC::subs_options::no_pattern);
+                            res.cache.store(expression_item_types::connexion_item, index_ijk, args, subs_Gamma);
+                          }
+
+                        (*Gamma)[index_ijk] = subs_Gamma;
+                      }
+
+                    if(j != k)
+                      {
+                        unsigned int index_ikj = res.fl.flatten(i,k,j);
+                        (*Gamma)[index_ikj] = (*Gamma)[index_ijk];
+                      }
+                  }
+              }
+          }
+
+        return *this->Gamma;
+      }
 
 
     class CovariantdVCache
@@ -522,6 +629,223 @@ namespace nontrivial_metric
       }
 
 
+    class CovariantRiemannA2Cache
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        CovariantRiemannA2Cache(resources& r, const language_printer& p)
+          : res(r),
+            printer(p)
+          {
+          }
+
+        //! destructor is default
+        ~CovariantRiemannA2Cache() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! compute flattened, covariant tensor
+        const flattened_tensor& get();
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resources& res;
+
+        //! language printer
+        const language_printer& printer;
+
+
+        // CACHE
+
+        //! flattened tensor representing the components of Riemann_A2
+        std::unique_ptr<flattened_tensor> A2;
+
+      };
+
+
+    const flattened_tensor& CovariantRiemannA2Cache::get()
+      {
+        if(this->A2) return *this->A2;
+
+        auto args = res.generate_cache_arguments(printer);
+
+        this->A2 = std::make_unique<flattened_tensor>(res.fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_A2_INDICES));
+
+        const auto max = res.share.get_max_field_index(variance::covariant);
+        const auto max_lm = res.share.get_max_field_index(variance::contravariant);
+
+        SubstitutionMapCache subs_cache(res, printer);
+        DerivativeSymbolsCache deriv_cache(res, res.share, printer);
+
+        for(field_index i = field_index(0, variance::covariant); i < max; ++i)
+          {
+            for(field_index j = field_index(0, variance::covariant); j <= i; ++j)
+              {
+                unsigned int index_ij = res.fl.flatten(i,j);
+
+                GiNaC::ex subs_expr = 0;
+
+                if(!res.cache.query(expression_item_types::Riemann_A2_item, index_ij, args, subs_expr))
+                  {
+                    timing_instrument timer(res.compute_timer);
+
+                    auto& deriv_syms = deriv_cache.get();
+                    GiNaC::ex expr = 0;
+
+                    for(field_index l = field_index(0, variance::contravariant); l < max_lm; ++l)
+                      {
+                        for(field_index m = field_index(0, variance::contravariant); m < max_lm; ++m)
+                          {
+                            auto Rie_ij = (*res.Rie_T)(static_cast<unsigned int>(l), static_cast<unsigned int>(i),
+                                                       static_cast<unsigned int>(j), static_cast<unsigned int>(m));
+                            auto Rie_ji = (*res.Rie_T)(static_cast<unsigned int>(l), static_cast<unsigned int>(j),
+                                                       static_cast<unsigned int>(i), static_cast<unsigned int>(m));
+                            auto Rie_sym = (Rie_ij + Rie_ji) / 2;
+
+                            expr += Rie_sym * deriv_syms[res.fl.flatten(l)] * deriv_syms[res.fl.flatten(m)];
+                          }
+                      }
+
+                    // get substitution map
+                    GiNaC::exmap& subs_map = subs_cache.get();
+                    subs_expr = expr.subs(subs_map, GiNaC::subs_options::no_pattern);
+                  }
+
+                (*this->A2)[index_ij] = subs_expr;
+
+                if(i != j)
+                  {
+                    unsigned int index_ji = res.fl.flatten(j,i);
+                    (*this->A2)[index_ji] = subs_expr;
+                  }
+              }
+          }
+
+        return *this->A2;
+      }
+
+
+    class CovariantRiemannA3Cache
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        CovariantRiemannA3Cache(resources& r, const language_printer& p)
+          : res(r),
+          printer(p)
+          {
+          }
+
+        //! destructor is default
+        ~CovariantRiemannA3Cache() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! compute flattened, covariant tensor
+        const flattened_tensor& get();
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resources& res;
+
+        //! language printer
+        const language_printer& printer;
+
+
+        // CACHE
+
+        //! flattened tensor representing the components of Riemann_A3
+        std::unique_ptr<flattened_tensor> A3;
+
+      };
+
+
+    const flattened_tensor& CovariantRiemannA3Cache::get()
+      {
+        if(this->A3) return *this->A3;
+
+        this->A3 = std::make_unique<flattened_tensor>(res.fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_A3_INDICES));
+
+        return *this->A3;
+      }
+
+
+    class CovariantRiemannB3Cache
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        CovariantRiemannB3Cache(resources& r, const language_printer& p)
+          : res(r),
+            printer(p)
+          {
+          }
+
+        //! destructor is default
+        ~CovariantRiemannB3Cache() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! compute flattened, covariant tensor
+        const flattened_tensor& get();
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resources& res;
+
+        //! language printer
+        const language_printer& printer;
+
+
+        // CACHE
+
+        //! flattened tensor representing the components of Riemann_B3
+        std::unique_ptr<flattened_tensor> B3;
+
+      };
+
+
+    const flattened_tensor& CovariantRiemannB3Cache::get()
+      {
+        if(this->B3) return *this->B3;
+
+        this->B3 = std::make_unique<flattened_tensor>(res.fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_B3_INDICES));
+
+        return *this->B3;
+      }
+
+
     resources::resources(translator_data& p, resource_manager& m, expression_cache& c,
                          shared_resources& s, boost::timer::cpu_timer& t)
       : mgr(m),
@@ -583,34 +907,6 @@ namespace nontrivial_metric
 
         // switch off compute timer (it will be restarted if needed during subsequent computations)
         compute_timer.stop();
-      }
-
-
-    cache_tags
-    resources::generate_cache_arguments(const language_printer& printer) const
-      {
-        cache_tags args;
-
-        // query resource manager for parameter and coordinate labels
-        const auto& param_resource = this->mgr.parameters();
-        const auto coord_resource = this->mgr.coordinates();
-        const auto& flatten = this->mgr.phase_flatten();
-
-        // push all parameter labels onto argument list
-        if(param_resource)
-          {
-            GiNaC::symbol sym = this->sym_factory.get_symbol(*param_resource);
-            args += sym;
-          }
-
-        // if a coordinate resource is being used, push its label onto the argument list
-        if(coord_resource && flatten)
-          {
-            GiNaC::symbol sym = this->sym_factory.get_symbol(*coord_resource);
-            args += sym;
-          }
-
-        return args;
       }
 
 
@@ -1236,62 +1532,6 @@ namespace nontrivial_metric
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::raw_connexion_resource(const language_printer& printer)
-      {
-        auto args = this->generate_cache_arguments(use_Gamma, printer);
-
-        auto Gamma = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
-
-        const auto max_i = this->share.get_max_field_index(variance::contravariant);
-        const auto max_jk = this->share.get_max_field_index(variance::covariant);
-
-        SubstitutionMapCache subs_cache(*this, printer);
-
-        for(field_index i = field_index(0, variance::contravariant); i < max_i; ++i)
-          {
-            for(field_index j = field_index(0, variance::covariant); j < max_jk; ++j)
-              {
-                for(field_index k = field_index(0, variance::covariant); k <= j; ++k)
-                  {
-                    unsigned int index_ijk = this->fl.flatten(i,j,k);
-
-                    // if no substitutions to be done, avoid checking cache
-                    if(args.empty())
-                      {
-                        (*Gamma)[index_ijk] =  (*this->Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(k));
-                      }
-                    else
-                      {
-                        GiNaC::ex subs_Gamma;
-
-                        if(!this->cache.query(expression_item_types::connexion_item, index_ijk, args, subs_Gamma))
-                          {
-                            timing_instrument timer(this->compute_timer);
-
-                            // get substitution map
-                            GiNaC::exmap& subs_map = subs_cache.get();
-
-                            //! apply substitution to connexion component and cache the result
-                            subs_Gamma = (*this->Crstfl)(static_cast<unsigned int>(i), static_cast<unsigned int>(j), static_cast<unsigned int>(k)).subs(subs_map, GiNaC::subs_options::no_pattern);
-                            this->cache.store(expression_item_types::connexion_item, index_ijk, args, subs_Gamma);
-                          }
-
-                        (*Gamma)[index_ijk] = subs_Gamma;
-                      }
-
-                    if(j != k)
-                      {
-                        unsigned int index_ikj = this->fl.flatten(i,k,j);
-                        (*Gamma)[index_ikj] = (*Gamma)[index_ijk];
-                      }
-                  }
-              }
-          }
-
-        return Gamma;
-      }
-
-
     std::unique_ptr<flattened_tensor>
     resources::dV_resource(variance v, const language_printer& printer)
       {
@@ -1304,7 +1544,7 @@ namespace nontrivial_metric
           {
             try
               {
-                this->dV_resource_label(*list, resource.get().first, {v}, resource.get().second, *flatten, printer);
+                this->tensor_resource_label(*list, resource.get().first, {v}, resource.get().second, *flatten, printer);
                 return list;
               }
             catch(resource_failure& xe)
@@ -1315,67 +1555,12 @@ namespace nontrivial_metric
           }
         
         // either resources were not available, or a resource failure occurred when raising and lowering indices
-        this->dV_resource_expr(*list, {v}, printer);
+        CovariantdVCache cache{*this, printer};
+        this->tensor_resource_expr(*list, std::array<variance,1 >{v}, expression_item_types::dV_item, printer, cache);
 
         return list;
       }
 
-
-    void resources::dV_resource_label(flattened_tensor& list,
-                                      const std::array<variance, RESOURCE_INDICES::DV_INDICES>& avail,
-                                      const std::array<variance, RESOURCE_INDICES::DV_INDICES> reqd,
-                                      const contexted_value<std::string>& resource,
-                                      const contexted_value<std::string>& flatten,
-                                      const language_printer& printer)
-      {
-        const field_index max_i = this->share.get_max_field_index(reqd[0]);
-
-        for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
-          {
-            unsigned int index = this->fl.flatten(i);
-
-            list[index] = this->position_indices<1, field_index>(avail, { i }, resource, *flatten, printer);
-          }
-      }
-
-
-    void
-    resources::dV_resource_expr(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DV_INDICES> reqd,
-                                const language_printer& printer)
-      {
-        const field_index max = this->share.get_max_field_index(reqd[0]);
-
-        // build argument list and tag with index variance information
-        auto args = this->generate_cache_arguments(printer);
-
-        GiNaC::varidx idx_i(this->sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max), reqd[0] == variance::covariant);
-        args += idx_i;
-
-        // obtain a cache for the covariant components of dV
-        CovariantdVCache cache(*this, printer);
-
-        for(field_index i = field_index(0, reqd[0]); i < max; ++i)
-          {
-            GiNaC::ex dV;
-            unsigned int index = this->fl.flatten(i);
-
-            if(!this->cache.query(expression_item_types::dV_item, index, args, dV))
-              {
-                timing_instrument timer(this->compute_timer);
-
-                // get covariant components from covariant cache
-                const auto& covariant_dV = cache.get();
-
-                // reposition indices if needed
-                dV = this->position_indices<1>({variance::covariant}, reqd, {i}, covariant_dV, printer);
-
-                this->cache.store(expression_item_types::dV_item, index, args, dV);
-              }
-
-            list[index] = dV;
-          }
-      }
-    
     
     GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer)
       {
@@ -1400,7 +1585,7 @@ namespace nontrivial_metric
           {
             try
               {
-                this->ddV_resource_label(*list, resource.get().first, { vi, vj }, resource.get().second, *flatten, printer);
+                this->tensor_resource_label(*list, resource.get().first, { vi, vj }, resource.get().second, *flatten, printer);
                 return list;
               }
             catch(resource_failure& xe)
@@ -1411,78 +1596,12 @@ namespace nontrivial_metric
           }
 
         // either resources were not available, or a resource failure occurred when raising and lowering indices
-        this->ddV_resource_expr(*list, { vi, vj }, printer);
+        CovariantddVCache cache{*this, printer};
+        this->tensor_resource_expr(*list, std::array<variance, 2>{ vi, vj }, expression_item_types::ddV_item, printer, cache);
 
         return list;
       }
 
-
-    void
-    resources::ddV_resource_label(flattened_tensor& list,
-                                  const std::array<variance, RESOURCE_INDICES::DDV_INDICES>& avail,
-                                  const std::array<variance, RESOURCE_INDICES::DDV_INDICES> reqd,
-                                  const contexted_value<std::string>& resource,
-                                  const contexted_value<std::string>& flatten,
-                                  const language_printer& printer)
-      {
-        const field_index max_i = this->share.get_max_field_index(reqd[0]);
-        const field_index max_j = this->share.get_max_field_index(reqd[1]);
-
-        for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
-          {
-            for(field_index j = field_index(0, reqd[1]); j < max_j; ++j)
-              {
-                unsigned int index = this->fl.flatten(i,j);
-
-                list[index] = this->position_indices<2, field_index>(avail, { i, j }, resource, *flatten, printer);
-              }
-          }
-    }
-
-
-    void
-    resources::ddV_resource_expr(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDV_INDICES> reqd,
-                                 const language_printer& printer)
-      {
-        const field_index max_i = this->share.get_max_field_index(reqd[0]);
-        const field_index max_j = this->share.get_max_field_index(reqd[1]);
-
-        // build argument list and tag with index variance information
-        auto args = this->generate_cache_arguments(printer);
-
-        GiNaC::varidx idx_i(this->sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max_i), reqd[0] == variance::covariant);
-        GiNaC::varidx idx_j(this->sym_factory.get_symbol(J_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[1] == variance::covariant);
-        args += { idx_i, idx_j };
-
-        // obtain a cache for the covariant components of dV
-        CovariantddVCache cache(*this, printer);
-
-        for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
-          {
-            for(field_index j = field_index(0, reqd[1]); j < max_j; ++j)
-              {
-                GiNaC::ex ddV;
-                unsigned int index = this->fl.flatten(i,j);
-
-                if(!this->cache.query(expression_item_types::dV_item, index, args, ddV))
-                  {
-                    timing_instrument timer(this->compute_timer);
-
-                    // get covariant components from covariant cache
-                    const auto& covariant_ddV = cache.get();
-
-                    // reposition indices if needed
-                    ddV = this->position_indices<2>({variance::covariant, variance::covariant},
-                                                    reqd, {i, j}, covariant_ddV, printer);
-
-                    this->cache.store(expression_item_types::dV_item, index, args, ddV);
-                  }
-
-                list[index] = ddV;
-              }
-          }
-      }
-    
     
     GiNaC::ex resources::ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
       {
@@ -1507,7 +1626,7 @@ namespace nontrivial_metric
           {
             try
               {
-                this->dddV_resource_label(*list, resource.get().first, { vi, vj, vj }, resource.get().second, *flatten, printer);
+                this->tensor_resource_label(*list, resource.get().first, { vi, vj, vj }, resource.get().second, *flatten, printer);
               }
             catch(resource_failure& xe)
               {
@@ -1517,19 +1636,196 @@ namespace nontrivial_metric
           }
 
         // either resources were not available, or a resource failure occurred when raising and lowering indices
-        this->dddV_resource_expr(*list, { vi, vj, vk }, printer);
+        CovariantdddVCache cache{*this, printer};
+        this->tensor_resource_expr(*list, std::array<variance, 3>{ vi, vj, vk }, expression_item_types::dddV_item, printer, cache);
 
         return(list);
       }
 
 
-    void
-    resources::dddV_resource_label(flattened_tensor& list,
-                                   const std::array<variance, RESOURCE_INDICES::DDDV_INDICES>& avail,
-                                   const std::array<variance, RESOURCE_INDICES::DDDV_INDICES> reqd,
-                                   const contexted_value<std::string>& resource,
-                                   const contexted_value<std::string>& flatten,
-                                   const language_printer& printer)
+    GiNaC::ex resources::dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
+                                       const language_printer& printer)
+      {
+        const auto resource = this->mgr.dddV({ a.get_variance(), b.get_variance(), c.get_variance() }, false);
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten) throw resource_failure("dddV");
+
+        return this->position_indices<3, index_literal>(resource.get().first, { a, b, c }, resource.get().second, *flatten, printer);
+      }
+
+
+    std::unique_ptr<flattened_tensor>
+    resources::Riemann_A2_resource(variance vi, variance vj, const language_printer& printer)
+      {
+        auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_A2_INDICES));
+
+        const auto resource = this->mgr.Riemann_A2({ vi, vj }, false);
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(resource && flatten)      // label is apparently available, but may require index repositioning ...
+          {
+            try
+              {
+                this->tensor_resource_label(*list, resource.get().first, { vi, vj }, resource.get().second, *flatten, printer);
+                return list;
+              }
+            catch(resource_failure& xe)
+              {
+                const error_context& ctx = resource.get().second.get_declaration_point();
+                ctx.warn(WARNING_INDEX_POSITIONING_FAILURE);
+              }
+          }
+
+        // either resources were not available, or a resource failure occurred when raising and lowering indices
+        CovariantRiemannA2Cache cache{*this, printer};
+        this->tensor_resource_expr(*list, std::array<variance, 2>{ vi, vj }, expression_item_types::Riemann_A2_item, printer, cache);
+
+        return list;
+      }
+
+
+    GiNaC::ex
+    resources::Riemann_A2_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
+      {
+        const auto resource = this->mgr.Riemann_A2({ a.get_variance(), b.get_variance() }, false);
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten) throw resource_failure("Riemann_A2");
+
+        return this->position_indices<2, index_literal>(resource.get().first, { a, b }, resource.get().second, *flatten, printer);
+      }
+
+
+    std::unique_ptr<flattened_tensor>
+    resources::Riemann_A3_resource(variance vi, variance vj, variance vk, const language_printer& printer)
+      {
+        auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_A3_INDICES));
+
+        const auto resource = this->mgr.Riemann_A3({ vi, vj, vk }, false);
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(resource && flatten)      // label is apparently available, but may require index repositioning ...
+          {
+            try
+              {
+                this->tensor_resource_label(*list, resource.get().first, { vi, vj, vk }, resource.get().second, *flatten, printer);
+                return list;
+              }
+            catch(resource_failure& xe)
+              {
+                const error_context& ctx = resource.get().second.get_declaration_point();
+                ctx.warn(WARNING_INDEX_POSITIONING_FAILURE);
+              }
+          }
+
+        // either resources were not available, or a resource failure occurred when raising and lowering indices
+        CovariantRiemannA3Cache cache{*this, printer};
+        this->tensor_resource_expr(*list, std::array<variance, 3>{ vi, vj, vk }, expression_item_types::Riemann_A3_item, printer, cache);
+
+        return list;
+      }
+
+
+    GiNaC::ex resources::Riemann_A3_resource(const index_literal& a, const index_literal& b, const index_literal& c,
+                                             const language_printer& printer)
+      {
+        const auto resource = this->mgr.Riemann_A3({ a.get_variance(), b.get_variance(), c.get_variance() }, false);
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten) throw resource_failure("Riemann_A3");
+
+        return this->position_indices<3, index_literal>(resource.get().first, { a, b, c }, resource.get().second, *flatten, printer);
+      }
+
+
+    std::unique_ptr<flattened_tensor>
+    resources::Riemann_B3_resource(variance vi, variance vj, variance vk, const language_printer& printer)
+      {
+        auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_B3_INDICES));
+
+        const auto resource = this->mgr.Riemann_B3({ vi, vj, vk }, false);
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(resource && flatten)      // label is apparently available, but may require index repositioning ...
+          {
+            try
+              {
+                this->tensor_resource_label(*list, resource.get().first, { vi, vj, vk }, resource.get().second, *flatten, printer);
+                return list;
+              }
+            catch(resource_failure& xe)
+              {
+                const error_context& ctx = resource.get().second.get_declaration_point();
+                ctx.warn(WARNING_INDEX_POSITIONING_FAILURE);
+              }
+          }
+
+        // either resources were not available, or a resource failure occurred when raising and lowering indices
+        CovariantRiemannB3Cache cache{*this, printer};
+        this->tensor_resource_expr(*list, { vi, vj, vk }, expression_item_types::Riemann_B3_item, printer, cache);
+
+        return list;
+      }
+
+
+    GiNaC::ex resources::Riemann_B3_resource(const index_literal& a, const index_literal& b, const index_literal& c,
+                                             const language_printer& printer)
+      {
+        const auto resource = this->mgr.Riemann_B3({ a.get_variance(), b.get_variance(), c.get_variance() }, false);
+        const auto& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten) throw resource_failure("Riemann_B3");
+
+        return this->position_indices<3, index_literal>(resource.get().first, { a, b, c }, resource.get().second, *flatten, printer);
+      }
+
+
+    void resources::tensor_resource_label(flattened_tensor& list,
+                                          const std::array<variance, 1>& avail,
+                                          const std::array<variance, 1> reqd,
+                                          const contexted_value<std::string>& resource,
+                                          const contexted_value<std::string>& flatten,
+                                          const language_printer& printer)
+      {
+        const field_index max_i = this->share.get_max_field_index(reqd[0]);
+
+        for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
+          {
+            unsigned int index = this->fl.flatten(i);
+
+            list[index] = this->position_indices<1, field_index>(avail, {i}, resource, *flatten, printer);
+          }
+      }
+
+
+    void resources::tensor_resource_label(flattened_tensor& list,
+                                          const std::array<variance, 2>& avail,
+                                          const std::array<variance, 2> reqd,
+                                          const contexted_value<std::string>& resource,
+                                          const contexted_value<std::string>& flatten,
+                                          const language_printer& printer)
+      {
+        const field_index max_i = this->share.get_max_field_index(reqd[0]);
+        const field_index max_j = this->share.get_max_field_index(reqd[1]);
+
+        for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0, reqd[1]); j < max_j; ++j)
+              {
+                unsigned int index = this->fl.flatten(i,j);
+
+                list[index] = this->position_indices<2, field_index>(avail, { i, j }, resource, *flatten, printer);
+              }
+          }
+      }
+
+
+    void resources::tensor_resource_label(flattened_tensor& list,
+                                          const std::array<variance, 3>& avail,
+                                          const std::array<variance, 3> reqd,
+                                          const contexted_value<std::string>& resource,
+                                          const contexted_value<std::string>& flatten, const language_printer& printer)
       {
         const field_index max_i = this->share.get_max_field_index(reqd[0]);
         const field_index max_j = this->share.get_max_field_index(reqd[1]);
@@ -1550,10 +1846,87 @@ namespace nontrivial_metric
       }
 
 
+    template <typename CacheObject>
     void
-    resources::dddV_resource_expr(flattened_tensor& list,
-                                  const std::array<variance, RESOURCE_INDICES::DDDV_INDICES> reqd,
-                                  const language_printer& printer)
+    resources::tensor_resource_expr(flattened_tensor& list, const std::array<variance, 1> reqd,
+                                    expression_item_types type, const language_printer& printer, CacheObject& cache)
+      {
+        const field_index max = this->share.get_max_field_index(reqd[0]);
+
+        // build argument list and tag with index variance information
+        auto args = this->generate_cache_arguments(printer);
+
+        GiNaC::varidx idx_i(this->sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max), reqd[0] == variance::covariant);
+        args += idx_i;
+
+        for(field_index i = field_index(0, reqd[0]); i < max; ++i)
+          {
+            GiNaC::ex expr;
+            unsigned int index = this->fl.flatten(i);
+
+            if(!this->cache.query(type, index, args, expr))
+              {
+                timing_instrument timer(this->compute_timer);
+
+                // get covariant components from covariant cache
+                const auto& covariant_expr = cache.get();
+
+                // reposition indices if needed
+                expr = this->position_indices<1>({variance::covariant}, reqd, {i}, covariant_expr, printer);
+
+                this->cache.store(type, index, args, expr);
+              }
+
+            list[index] = expr;
+          }
+      }
+
+
+    template <typename CacheObject>
+    void
+    resources::tensor_resource_expr(flattened_tensor& list, const std::array<variance, 2> reqd,
+                                    expression_item_types type, const language_printer& printer, CacheObject& cache)
+      {
+        const field_index max_i = this->share.get_max_field_index(reqd[0]);
+        const field_index max_j = this->share.get_max_field_index(reqd[1]);
+
+        // build argument list and tag with index variance information
+        auto args = this->generate_cache_arguments(printer);
+
+        GiNaC::varidx idx_i(this->sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max_i), reqd[0] == variance::covariant);
+        GiNaC::varidx idx_j(this->sym_factory.get_symbol(J_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[1] == variance::covariant);
+        args += { idx_i, idx_j };
+
+        for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0, reqd[1]); j < max_j; ++j)
+              {
+                GiNaC::ex expr;
+                unsigned int index = this->fl.flatten(i,j);
+
+                if(!this->cache.query(type, index, args, expr))
+                  {
+                    timing_instrument timer(this->compute_timer);
+
+                    // get covariant components from covariant cache
+                    const auto& covariant_expr = cache.get();
+
+                    // reposition indices if needed
+                    expr = this->position_indices<2>({variance::covariant, variance::covariant}, reqd, {i, j}, covariant_expr, printer);
+
+                    this->cache.store(type, index, args, expr);
+                  }
+
+                list[index] = expr;
+              }
+          }
+      }
+
+
+    template <typename CacheObject>
+    void
+    resources::tensor_resource_expr(flattened_tensor& list, const std::array<variance, 3> reqd,
+                                    expression_item_types type, const language_printer& printer, CacheObject& cache)
       {
         const field_index max_i = this->share.get_max_field_index(reqd[0]);
         const field_index max_j = this->share.get_max_field_index(reqd[1]);
@@ -1567,49 +1940,34 @@ namespace nontrivial_metric
         GiNaC::varidx idx_k(this->sym_factory.get_symbol(K_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[2] == variance::covariant);
         args += { idx_i, idx_j, idx_k };
 
-        // obtain a resource cache
-        CovariantdddVCache cache(*this, printer);
-
         for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
           {
             for(field_index j = field_index(0, reqd[1]); j < max_j; ++j)
               {
                 for(field_index k = field_index(0, reqd[2]); k < max_k; ++k)
                   {
-                    GiNaC::ex dddV;
+                    GiNaC::ex expr;
                     unsigned int index = this->fl.flatten(i,j,k);
 
-                    if(!this->cache.query(expression_item_types::dddV_item, index, args, dddV))
+                    if(!this->cache.query(type, index, args, expr))
                       {
                         timing_instrument timer(this->compute_timer);
 
                         // get covariant components from covariant cache
-                        const auto& covariant_dddV = cache.get();
+                        const auto& covariant_expr = cache.get();
 
                         // reposition indices if needed
-                        dddV = this->position_indices<3>(
+                        expr = this->position_indices<3>(
                           {variance::covariant, variance::covariant, variance::covariant}, reqd, {i, j, k},
-                          covariant_dddV, printer);
+                          covariant_expr, printer);
 
-                        this->cache.store(expression_item_types::dddV_item, index, args, dddV);
+                        this->cache.store(type, index, args, expr);
                       }
 
-                    list[index] = dddV;
+                    list[index] = expr;
                   }
               }
           }
-      }
-    
-    
-    GiNaC::ex resources::dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
-                                       const language_printer& printer)
-      {
-        const auto resource = this->mgr.dddV({ a.get_variance(), b.get_variance(), c.get_variance() }, false);
-        const auto& flatten = this->mgr.field_flatten();
-
-        if(!resource || !flatten) throw resource_failure("dddV");
-
-        return this->position_indices<3, index_literal>(resource.get().first, { a, b, c }, resource.get().second, *flatten, printer);
       }
 
 
@@ -1623,7 +1981,8 @@ namespace nontrivial_metric
         if(resource && flatten)
           {
             list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
-            this->metric_resource_label(printer, *list, *resource, *flatten);
+            this->tensor_resource_label(*list, std::array<variance, 2>{variance::covariant, variance::covariant},
+                                        *resource, *flatten, printer);
           }
         else
           {
@@ -1647,26 +2006,6 @@ namespace nontrivial_metric
       }
 
 
-    void resources::metric_resource_label(const language_printer& printer, flattened_tensor& list,
-                                          const contexted_value<std::string>& resource,
-                                          const contexted_value<std::string>& flatten)
-      {
-        const field_index max = this->share.get_max_field_index(variance::covariant);
-
-        for(field_index i = field_index(0, variance::covariant); i < max; ++i)
-          {
-            for(field_index j = field_index(0, variance::covariant); j < max; ++j)
-              {
-                unsigned int index = this->fl.flatten(i,j);
-
-                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
-
-                list[index] = this->sym_factory.get_symbol(variable);
-              }
-          }
-      }
-
-
     std::unique_ptr<flattened_tensor> resources::metric_inverse_resource(const language_printer& printer)
       {
         std::unique_ptr<flattened_tensor> list;
@@ -1677,7 +2016,8 @@ namespace nontrivial_metric
         if(resource && flatten)
           {
             list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
-            this->metric_inverse_resource_label(printer, *list, *resource, *flatten);
+            this->tensor_resource_label(*list, std::array<variance, 2>{variance::contravariant, variance::contravariant},
+                                        *resource, *flatten, printer);
           }
         else
           {
@@ -1701,26 +2041,6 @@ namespace nontrivial_metric
       }
 
 
-    void resources::metric_inverse_resource_label(const language_printer& printer, flattened_tensor& list,
-                                                  const contexted_value<std::string>& resource,
-                                                  const contexted_value<std::string>& flatten)
-      {
-        const field_index max = this->share.get_max_field_index(variance::contravariant);
-
-        for(field_index i = field_index(0, variance::contravariant); i < max; ++i)
-          {
-            for(field_index j = field_index(0, variance::contravariant); j < max; ++j)
-              {
-                unsigned int index = this->fl.flatten(i,j);
-
-                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
-
-                list[index] = this->sym_factory.get_symbol(variable);
-              }
-          }
-      }
-
-
     std::unique_ptr<flattened_tensor> resources::connexion_resource(const language_printer& printer)
       {
         std::unique_ptr<flattened_tensor> list;
@@ -1731,11 +2051,13 @@ namespace nontrivial_metric
         if(resource && flatten)
           {
             list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
-            this->connexion_resource_label(printer, *list, *resource, *flatten);
+            this->tensor_resource_label(*list, std::array<variance, 3>{variance::contravariant, variance::covariant, variance::covariant},
+                                        *resource, *flatten, printer);
           }
         else
           {
-            list = this->raw_connexion_resource(printer);
+            ConnexionCache cache(*this, printer);
+            list = std::make_unique<flattened_tensor>(cache.get());
           }
 
         return list;
@@ -1755,31 +2077,49 @@ namespace nontrivial_metric
       }
 
 
-    void resources::connexion_resource_label(const language_printer& printer, flattened_tensor& list,
-                                             const contexted_value<std::string>& resource,
-                                             const contexted_value<std::string>& flatten)
+    void resources::tensor_resource_label(flattened_tensor& list, const std::array<variance, 2> reqd,
+                                          const contexted_value<std::string>& resource,
+                                          const contexted_value<std::string>& flatten, const language_printer& printer)
       {
-        const field_index max_i = this->share.get_max_field_index(variance::contravariant);
-        const field_index max_jk  = this->share.get_max_field_index(variance::covariant);
+        const field_index max_i = this->share.get_max_field_index(reqd[0]);
+        const field_index max_j = this->share.get_max_field_index(reqd[1]);
+
+        for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
+          {
+            for(field_index j = field_index(0, reqd[1]); j < max_j; ++j)
+              {
+                unsigned int index = this->fl.flatten(i,j);
+                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
+                list[index] = this->sym_factory.get_symbol(variable);
+              }
+          }
+      }
+
+
+    void resources::tensor_resource_label(flattened_tensor& list, const std::array<variance, 3> reqd,
+                                          const contexted_value<std::string>& resource,
+                                          const contexted_value<std::string>& flatten, const language_printer& printer)
+      {
+        const field_index max_i = this->share.get_max_field_index(reqd[0]);
+        const field_index max_j = this->share.get_max_field_index(reqd[1]);
+        const field_index max_k = this->share.get_max_field_index(reqd[2]);
 
         for(field_index i = field_index(0, variance::contravariant); i < max_i; ++i)
           {
-            for(field_index j = field_index(0, variance::covariant); j < max_jk; ++j)
+            for(field_index j = field_index(0, variance::covariant); j < max_j; ++j)
               {
-                for(field_index k = field_index(0, variance::covariant); k < max_jk; ++k)
+                for(field_index k = field_index(0, variance::covariant); k < max_k; ++k)
                   {
                     unsigned int index = this->fl.flatten(i,j,k);
-
                     std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
                                                                    this->fl.flatten(k), *flatten);
-
                     list[index] = this->sym_factory.get_symbol(variable);
                   }
               }
           }
       }
-    
-    
+
+
     // template selected when ResourceType is returned from a simple resource
     template <>
     void resources::push_resource_tag(cache_tags& args, const boost::optional< contexted_value<std::string> >& resource) const
@@ -1829,8 +2169,24 @@ namespace nontrivial_metric
 
         return args;
       }
-    
-    
+
+
+    cache_tags
+    resources::generate_cache_arguments(const language_printer& printer) const
+      {
+        cache_tags args;
+        const auto& flatten = this->mgr.phase_flatten();
+
+        // push all parameter labels onto argument list
+        this->push_resource_tag(args, this->mgr.parameters());
+
+        // if a coordinate resource is being used, push its label onto the argument list
+        if(flatten) this->push_resource_tag(args, this->mgr.coordinates());
+
+        return args;
+      }
+
+
     bool resources::can_roll_dV(const std::array< variance, RESOURCE_INDICES::DV_INDICES >& vars) const
       {
         const auto resource = this->mgr.dV(vars, false);

@@ -61,10 +61,15 @@ namespace nontrivial_metric
     class PotentialResourceCache;
     class SubstitutionMapCache;
     class ConnexionCache;
+    class DerivativeSymbolCache;
 
     class CovariantdVCache;
     class CovariantddVCache;
     class CovariantdddVCache;
+
+    class CovariantRiemannA2Cache;
+    class CovariantRiemannA3Cache;
+    class CovariantRiemannB3Cache;
 
 
     //! implements resources for nontrivial_metric models, ie. trivial kinetic terms and just a potential
@@ -76,10 +81,15 @@ namespace nontrivial_metric
         friend class PotentialResourceCache;
         friend class SubstitutionMapCache;
         friend class ConnexionCache;
+        friend class DerivativeSymbolCache;
 
         friend class CovariantdVCache;
         friend class CovariantddVCache;
         friend class CovariantdddVCache;
+
+        friend class CovariantRiemannA2Cache;
+        friend class CovariantRiemannA3Cache;
+        friend class CovariantRiemannB3Cache;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -110,6 +120,8 @@ namespace nontrivial_metric
         //! returns raw expression, without applying any CSE
         GiNaC::ex raw_Hsq_resource(const language_printer& printer);
 
+      protected:
+
         //! generate metric resource, including any necessary substitutions for parameters/coordinates
         //! returns raw expression, without applying any CSE
         std::unique_ptr<flattened_tensor> raw_G_resource(const language_printer& printer);
@@ -117,11 +129,6 @@ namespace nontrivial_metric
         //! generate inverse metric resource, including any necessary substitutions for parameters/coordinates
         //! returns raw expression, without applying any CSE
         std::unique_ptr<flattened_tensor> raw_Ginv_resource(const language_printer& printer);
-
-        //! generate connexion resource, including any necessary substitutions for parameters/coordinates
-        //! returns raw expression, without applying any CSE
-        std::unique_ptr<flattened_tensor> raw_connexion_resource(const language_printer& printer);
-
 
         // SCALAR RESOURCES
 
@@ -159,15 +166,15 @@ namespace nontrivial_metric
 
       public:
 
-        //! generate concrete dV resource labels
+        //! generate concrete dV resource
         std::unique_ptr<flattened_tensor>
         dV_resource(variance v, const language_printer& printer);
 
-        //! generate concrete ddV resource labels
+        //! generate concrete ddV resource
         std::unique_ptr<flattened_tensor>
         ddV_resource(variance vi, variance vj, const language_printer& printer);
 
-        //! generate concrete dddV resource labels
+        //! generate concrete dddV resource
         std::unique_ptr<flattened_tensor>
         dddV_resource(variance vi, variance vj, variance vk, const language_printer& printer);
 
@@ -186,17 +193,17 @@ namespace nontrivial_metric
                       const language_printer& printer);
 
 
-        // TENSOR RESOURCES -- CURVATURE QUANTITIES
+        // TENSOR RESOURCES -- METRIC AND CONNEXION
 
       public:
 
-        //! generate concrete metric resource labels
+        //! generate concrete metric resource
         std::unique_ptr<flattened_tensor> metric_resource(const language_printer& printer);
 
-        //! generate concrete inverse metric resource labels
+        //! generate concrete inverse metric resource
         std::unique_ptr<flattened_tensor> metric_inverse_resource(const language_printer& printer);
 
-        //! generate concrete connexion resource labels
+        //! generate concrete connexion resource
         std::unique_ptr<flattened_tensor> connexion_resource(const language_printer& printer);
 
 
@@ -212,7 +219,31 @@ namespace nontrivial_metric
                                      const language_printer& printer);
 
 
-        // BUILD ARGUMENT LISTS
+        // TENSOR RESOURCES -- CURVATURE QUANTITIES
+
+      public:
+
+        //! generate concrete Riemann A2 resource
+        std::unique_ptr<flattened_tensor> Riemann_A2_resource(variance vi, variance vj, const language_printer& printer);
+
+        //! generate concrete Riemann A3 resource
+        std::unique_ptr<flattened_tensor> Riemann_A3_resource(variance vi, variance vj, variance vk, const language_printer& printer);
+
+        //! generate concrete Riemann B3 resource
+        std::unique_ptr<flattened_tensor> Riemann_B3_resource(variance vi, variance vj, variance vk, const language_printer& printer);
+
+
+        //! generate abstract Riemann A2 resource label
+        GiNaC::ex Riemann_A2_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
+
+        //! generate abstract Riemann A3 resource label
+        GiNaC::ex Riemann_A3_resource(const index_literal& a, const index_literal& b, const index_literal& c, const language_printer& printer);
+
+        //! generate abstract Riemann B3 resource label
+        GiNaC::ex Riemann_B3_resource(const index_literal& a, const index_literal& b, const index_literal& c, const language_printer& printer);
+
+
+        // BUILD CACHE TAG LISTS
         // used to interact with expression and lambda caches
 
       public:
@@ -263,7 +294,7 @@ namespace nontrivial_metric
         bool get_roll_metric_requirements(const std::array< variance, Indices >& avail, const std::array< variance, Indices >& reqd) const;
 
 
-        // INTERNAL API
+        // INTERNAL API -- UTILITY FUNCTIONS
 
       private:
 
@@ -275,64 +306,9 @@ namespace nontrivial_metric
         GiNaC::exmap make_substitution_map(const language_printer& printer) const;
 
 
-
-        // INTERNAL API -- TENSOR RESOURCES, DERIVATIVES OF THE POTENTIAL
-
-      private:
-
-        //! generate concrete dV resource using labels
-        void dV_resource_label(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DV_INDICES>& avail,
-                               const std::array<variance, RESOURCE_INDICES::DV_INDICES> reqd,
-                               const contexted_value<std::string>& resource,
-                               const contexted_value<std::string>& flatten,
-                               const language_printer& printer);
-
-        //! generate concrete dV resource using literal expressions
-        void dV_resource_expr(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DV_INDICES> reqd,
-                              const language_printer& printer);
-
-
-        //! generate concrete ddV resource using labels
-        void ddV_resource_label(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDV_INDICES>& avail,
-                                const std::array<variance, RESOURCE_INDICES::DDV_INDICES> reqd,
-                                const contexted_value<std::string>& resource, const contexted_value<std::string>& flatten,
-                                const language_printer& printer);
-
-        //! generate concrete ddV resource using literal expressions
-        void ddV_resource_expr(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDV_INDICES> reqd,
-                               const language_printer& printer);
-
-
-        //! generate concrete dddV resource using labels
-        void dddV_resource_label(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDDV_INDICES>& avail,
-                                 const std::array<variance, RESOURCE_INDICES::DDDV_INDICES> reqd,
-                                 const contexted_value<std::string>& resource, const contexted_value<std::string>& flatten,
-                                 const language_printer& printer);
-
-        //! generate concrete dddV resource using literal expressions
-        void dddV_resource_expr(flattened_tensor& list, const std::array<variance, RESOURCE_INDICES::DDDV_INDICES> reqd,
-                                const language_printer& printer);
-
-
-        // INTERNAL API -- TENSOR RESOURCES, CURVATURE QUANTITIES
+        // INTERNAL API -- RAISE AND LOWER INDICES
 
       private:
-
-        //! generate concrete metric resource using labels
-        void metric_resource_label(const language_printer& printer, flattened_tensor& list,
-                                   const contexted_value<std::string>& resource,
-                                   const contexted_value<std::string>& flatten);
-
-        //! generate concrete inverse metric resource using labels
-        void metric_inverse_resource_label(const language_printer& printer, flattened_tensor& list,
-                                           const contexted_value<std::string>& resource,
-                                           const contexted_value<std::string>& flatten);
-
-        //! generate concrete connexion resource using labels
-        void connexion_resource_label(const language_printer& printer, flattened_tensor& list,
-                                      const contexted_value<std::string>& resource,
-                                      const contexted_value<std::string>& flatten);
-
 
         //! dress an abstract resource label with given variance assignment 'avail' to give the required variance
         //! assignment 'reqd'.
@@ -355,6 +331,56 @@ namespace nontrivial_metric
         position_indices(const std::array<variance, Indices> avail, const std::array<variance, Indices> reqd,
                          const std::array<field_index, Indices> indices, const flattened_tensor& tensor,
                          const language_printer& printer);
+
+
+        // INTERNAL API -- GENERATE FLATTENED VECTOR OF RESOURCE LABELS
+
+      private:
+
+        //! generate 1-index labels
+        void tensor_resource_label(flattened_tensor& list, const std::array<variance, 1>& avail,
+                                   const std::array<variance, 1> reqd, const contexted_value<std::string>& resource,
+                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+
+        //! generate 2-index labels
+        void tensor_resource_label(flattened_tensor& list, const std::array<variance, 2>& avail,
+                                   const std::array<variance, 2> reqd, const contexted_value<std::string>& resource,
+                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+
+        //! generate 3-index labels
+        void tensor_resource_label(flattened_tensor& list, const std::array<variance, 3>& avail,
+                                   const std::array<variance, 3> reqd, const contexted_value<std::string>& resource,
+                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+
+        //! generate 2-index labels, no index repositioning
+        void tensor_resource_label(flattened_tensor& list, const std::array<variance, 2> reqd,
+                                   const contexted_value<std::string>& resource,
+                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+
+        //! generate 3-index labels, no index repositioning
+        void tensor_resource_label(flattened_tensor& list, const std::array<variance, 3> reqd,
+                                   const contexted_value<std::string>& resource,
+                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+
+
+        // INTERNAL API -- GENERATE FLATTENED VECTOR OF GINAC EXPRESSIONS FROM COMPUTE CACHE
+
+      private:
+
+        //! generate 1-index
+        template <typename CacheObject>
+        void tensor_resource_expr(flattened_tensor& list, const std::array<variance, 1> reqd,
+                                  expression_item_types type, const language_printer& printer, CacheObject& cache);
+
+        //! generate 2-index
+        template <typename CacheObject>
+        void tensor_resource_expr(flattened_tensor& list, const std::array<variance, 2> reqd,
+                                  expression_item_types type, const language_printer& printer, CacheObject& cache);
+
+        //! generate 3-index
+        template <typename CacheObject>
+        void tensor_resource_expr(flattened_tensor& list, const std::array<variance, 3> reqd,
+                                  expression_item_types type, const language_printer& printer, CacheObject& cache);
 
         
         // INTERNAL DATA

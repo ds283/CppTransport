@@ -54,7 +54,10 @@ enum class expression_item_types
     metric_item, metric_lambda,
     metric_inverse_item, metric_inverse_lambda,
     connexion_item, connexion_lambda,
-    parameters_lambda, coordinates_lambda, fields_lambda
+    parameters_lambda, coordinates_lambda, fields_lambda,
+    Riemann_A2_item, Riemann_A2_lambda,
+    Riemann_A3_item, Riemann_A3_lambda,
+    Riemann_B3_item, Riemann_B3_lambda
   };
 
 
