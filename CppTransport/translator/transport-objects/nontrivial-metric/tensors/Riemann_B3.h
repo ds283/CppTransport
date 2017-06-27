@@ -53,8 +53,7 @@ namespace nontrivial_metric
       public:
     
         //! constructor
-        Riemann_B3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
-                   boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t);
+        Riemann_B3(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f);
     
         //! destructor is default
         virtual ~Riemann_B3() = default;
@@ -67,10 +66,6 @@ namespace nontrivial_metric
         //! evaluate full tensor, returning a flattened list
         std::unique_ptr<flattened_tensor>
         compute(const index_literal_list& indices) override;
-    
-        //! evaluate component of tensor
-        GiNaC::ex
-        compute_component(field_index i, field_index j, field_index k) override;
     
         //! evaluate lambda for tensor
         std::unique_ptr<atomic_lambda>
@@ -90,9 +85,6 @@ namespace nontrivial_metric
         //! cache resources required for evaluation on an explicit index assignment
         void pre_explicit(const index_literal_list& indices) override;
     
-        //! cache resources required for evaluation on a lambda
-        void pre_lambda();
-    
         //! release resources
         void post() override;
     
@@ -110,9 +102,6 @@ namespace nontrivial_metric
         //! reference to supplied CSE worker
         cse& cse_worker;
     
-        //! reference to expression cache
-        expression_cache& cache;
-    
         //! reference to resource object
         resources& res;
     
@@ -124,25 +113,7 @@ namespace nontrivial_metric
     
         //! index flattener
         index_flatten& fl;
-    
-        //! index introspection
-        index_traits& traits;
-    
-    
-        // TIMER
-    
-        //! compute timer
-        boost::timer::cpu_timer& compute_timer;
-    
-    
-        // WORKSPACE AND CACHE
-    
-        //! list of momentum symbols
-        std::unique_ptr<flattened_tensor> B3;
-    
-        //! cache status
-        bool cached;
-    
+        
       };
     
   }   // namespace nontrivial_metric

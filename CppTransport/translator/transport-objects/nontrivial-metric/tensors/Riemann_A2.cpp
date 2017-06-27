@@ -30,20 +30,13 @@
 namespace nontrivial_metric
   {
     
-    Riemann_A2::Riemann_A2(language_printer& p, cse& cw, expression_cache& c,
-                           resources& r, shared_resources& s,
-                           boost::timer::cpu_timer& tm, index_flatten& f,
-                           index_traits& t)
+    Riemann_A2::Riemann_A2(language_printer& p, cse& cw, resources& r, shared_resources& s, index_flatten& f)
       : ::Riemann_A2(),
         printer(p),
         cse_worker(cw),
-        cache(c),
         res(r),
         shared(s),
-        fl(f),
-        traits(t),
-        compute_timer(tm),
-        cached(false)
+        fl(f)
       {
       }
     
@@ -51,20 +44,29 @@ namespace nontrivial_metric
     std::unique_ptr<flattened_tensor>
     Riemann_A2::compute(const index_literal_list& indices)
       {
-        return std::unique_ptr<flattened_tensor>();
-      }
-    
-    
-    GiNaC::ex Riemann_A2::compute_component(field_index i, field_index j)
-      {
-        return GiNaC::ex();
+        if(indices.size() != RIEMANN_A2_TENSOR_INDICES) throw tensor_exception("Riemann_A2 indices");
+        if(indices[0]->get_class() != index_class::field_only) throw tensor_exception("Riemann_A2");
+        if(indices[1]->get_class() != index_class::field_only) throw tensor_exception("Riemann_A2");
+
+        return this->res.Riemann_A2_resource(indices[0]->get_variance(), indices[1]->get_variance(), printer);
       }
     
     
     std::unique_ptr<atomic_lambda>
     Riemann_A2::compute_lambda(const index_literal& i, const index_literal& j)
       {
-        return std::unique_ptr<atomic_lambda>();
+        if(i.get_class() != index_class::field_only) throw tensor_exception("Riemann_A2");
+        if(j.get_class() != index_class::field_only) throw tensor_exception("Riemann_A2");
+    
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
+    
+        auto args = this->res.generate_cache_arguments(0, this->printer);
+        args += { idx_i, idx_j };
+    
+        GiNaC::ex result = this->res.Riemann_A2_resource(i, j, this->printer);
+    
+        return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::Riemann_A2_lambda, args, this->shared.generate_working_type());
       }
     
     
@@ -80,26 +82,11 @@ namespace nontrivial_metric
     
     void Riemann_A2::pre_explicit(const index_literal_list& indices)
       {
-        if(cached) throw tensor_exception("Riemann_A2 already cached");
-        
-        this->pre_lambda();
-        
-        this->cached = false;
-      }
-    
-    
-    void Riemann_A2::pre_lambda()
-      {
-        
       }
     
     
     void Riemann_A2::post()
       {
-        if(!this->cached) throw tensor_exception("Riemann_A2 not cached");
-        
-        // invalidate cache
-        this->cached = false;
       }
     
   }   // namespace nontrivial_metric

@@ -209,22 +209,19 @@ namespace nontrivial_metric
     
     std::unique_ptr<::Riemann_A2> tensor_factory::make_Riemann_A2(language_printer& p, cse& cw)
       {
-        return std::make_unique<Riemann_A2>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl,
-                                            this->traits);
+        return std::make_unique<Riemann_A2>(p, cw, this->res, this->shared, this->fl);
       }
     
     
     std::unique_ptr<::Riemann_A3> tensor_factory::make_Riemann_A3(language_printer& p, cse& cw)
       {
-        return std::make_unique<Riemann_A3>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl,
-                                            this->traits);
+        return std::make_unique<Riemann_A3>(p, cw, this->res, this->shared, this->fl);
       }
     
     
     std::unique_ptr<::Riemann_B3> tensor_factory::make_Riemann_B3(language_printer& p, cse& cw)
       {
-        return std::make_unique<Riemann_B3>(p, cw, this->cache, this->res, this->shared, this->compute_timer, this->fl,
-                                            this->traits);
+        return std::make_unique<Riemann_B3>(p, cw, this->res, this->shared, this->fl);
       }
     
   }
