@@ -64,13 +64,13 @@ namespace transport
       public:
 
         // calculate potential, given a field configuration. Pure virtual, so must be overridden by derived class
-        virtual number V(const parameters<number>& __params, const flattened_tensor& __coords) const = 0;
+        virtual number V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const = 0;
         
         // calculate covariant form metric
-        virtual void G_covariant(const parameters<number>& __params, const flattened_tensor& __coords, flattened_tensor& __G) const = 0;
+        virtual void G_covariant(const parameters<number>& __params, const flattened_tensor<number>& __coords, flattened_tensor<number>& __G) const = 0;
         
         // calculate contravariant (inverse) form metric
-        virtual void G_contravariant(const parameters<number>& __params, const flattened_tensor& __coords, flattened_tensor& __Ginv) const = 0;
+        virtual void G_contravariant(const parameters<number>& __params, const flattened_tensor<number>& __coords, flattened_tensor<number>& __Ginv) const = 0;
 
       };
 

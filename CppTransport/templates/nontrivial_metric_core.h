@@ -666,7 +666,7 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __G[FIELDS_FLATTEN($_a,$_b)] = $METRIC[_ab]
+          __G[FIELDS_FLATTEN($_a,$_b)] = $METRIC[_ab];
         }
 
 
@@ -680,7 +680,7 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __Ginv[FIELDS_FLATEN($^a,$^b)] = $METRIC[^ab]
+          __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
         }
     $ENDIF
 
@@ -1228,9 +1228,9 @@ namespace transport
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__state}
-        
+
         $IF{!fast}
-          __$MODEL_compute_G(__raw_params, __state, __Mp, __G);
+          $MODEL_compute_G(__raw_params, __state, __Mp, __G);
           $RESOURCE_G[_ab]{__G};
         $ENDIF;
 
