@@ -65,7 +65,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("C cache not ready");
 
         unsigned int index = this->fl.flatten(i, j, k);
-        auto args = this->res.generate_cache_arguments(0, this->printer);
+        auto args = this->res.generate_cache_arguments<field_index>(0, {i,j,k}, this->printer);
         args += { k1, k2, k3, a };
 
         GiNaC::ex result;
@@ -144,7 +144,7 @@ namespace nontrivial_metric
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
         auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
 
-        auto args = this->res.generate_cache_arguments(0, this->printer);
+        auto args = this->res.generate_cache_arguments<index_literal>(0, {i,j,k}, this->printer);
         args += { k1, k2, k3, a };
         args += { idx_i, idx_j, idx_k };
 

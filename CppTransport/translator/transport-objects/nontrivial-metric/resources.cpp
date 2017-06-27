@@ -2120,57 +2120,6 @@ namespace nontrivial_metric
       }
 
 
-    // template selected when ResourceType is returned from a simple resource
-    template <>
-    void resources::push_resource_tag(cache_tags& args, const boost::optional< contexted_value<std::string> >& resource) const
-      {
-        if(resource)   // no need to push arguments if no resource available
-          {
-            GiNaC::symbol sym = sym_factory.get_symbol(resource.get());
-            args += sym;
-          }
-      }
-    
-    
-    // template selected when ResourceType is returned from an indexed resource
-    template <typename ResourceType>
-    void resources::push_resource_tag(cache_tags& args, const ResourceType& resource) const
-      {
-        if(resource)   // no need to push arguments if no resource available
-          {
-            GiNaC::symbol sym = sym_factory.get_symbol(resource.get().second);
-            args += sym;
-          }
-      }
-
-
-    cache_tags
-    resources::generate_cache_arguments(unsigned int flags, const language_printer& printer) const
-      {
-        // first, generate arguments from param/coordinates if they exist
-        auto args = this->generate_cache_arguments(printer);
-        const auto& flatten = this->mgr.field_flatten();
-        
-        // push G and G inverse tags, since it's difficult to keep track of where they are used
-        // this might lead to some inefficiencies, since we might push them when they're not needed
-        // but we'd rather do a small amount of extra calculation than risk a difficult-to-diagnose
-        // cache aliasing issue
-        if(flatten)
-          {
-            this->push_resource_tag(args, this->mgr.metric());
-            this->push_resource_tag(args, this->mgr.metric_inverse());
-            
-          }
-
-        if(flatten && ((flags & use_dV) != 0)) this->push_resource_tag(args, this->mgr.dV());
-        if(flatten && ((flags & use_ddV) != 0)) this->push_resource_tag(args, this->mgr.ddV());
-        if(flatten && ((flags & use_dddV) != 0)) this->push_resource_tag(args, this->mgr.dddV());
-        if(flatten && ((flags & use_Gamma) != 0)) this->push_resource_tag(args, this->mgr.connexion());
-
-        return args;
-      }
-
-
     cache_tags
     resources::generate_cache_arguments(const language_printer& printer) const
       {

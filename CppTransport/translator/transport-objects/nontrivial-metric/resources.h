@@ -56,6 +56,9 @@ namespace nontrivial_metric
     constexpr unsigned int use_ddV = 1 << 1;
     constexpr unsigned int use_dddV = 1 << 2;
     constexpr unsigned int use_Gamma = 1 << 3;
+    constexpr unsigned int use_Riemann_A2 = 1 << 4;
+    constexpr unsigned int use_Riemann_A3 = 1 << 5;
+    constexpr unsigned int use_Riemann_B3 = 1 << 6;
 
 
     class PotentialResourceCache;
@@ -247,9 +250,18 @@ namespace nontrivial_metric
         // used to interact with expression and lambda caches
 
       public:
+    
+        //! generate argument list -- 1 index
+        template <typename IndexType>
+        cache_tags generate_cache_arguments(unsigned int flags, std::array<IndexType, 1> idxs, const language_printer& printer) const;
 
-        //! generate argument list
-        cache_tags generate_cache_arguments(unsigned int flags, const language_printer& printer) const;
+        //! generate argument list -- 2 index
+        template <typename IndexType>
+        cache_tags generate_cache_arguments(unsigned int flags, std::array<IndexType, 2> idxs, const language_printer& printer) const;
+    
+        //! generate argument list -- 3 index
+        template <typename IndexType>
+        cache_tags generate_cache_arguments(unsigned int flags, std::array<IndexType, 3> idxs, const language_printer& printer) const;
         
       protected:
     
@@ -446,6 +458,123 @@ namespace nontrivial_metric
         boost::timer::cpu_timer& compute_timer;
 
       };
+    
+    
+    // template selected when ResourceType is returned from a simple resource
+    template <>
+    inline void resources::push_resource_tag(cache_tags& args, const boost::optional< contexted_value<std::string> >& resource) const
+      {
+        if(resource)   // no need to push arguments if no resource available
+          {
+            GiNaC::symbol sym = sym_factory.get_symbol(resource.get());
+            args += sym;
+          }
+      }
+    
+    
+    // template selected when ResourceType is returned from an indexed resource
+    template <typename ResourceType>
+    void resources::push_resource_tag(cache_tags& args, const ResourceType& resource) const
+      {
+        if(resource)   // no need to push arguments if no resource available
+          {
+            GiNaC::symbol sym = sym_factory.get_symbol(resource.get().second);
+            args += sym;
+          }
+      }
+    
+    
+    template <typename IndexType>
+    cache_tags
+    resources::generate_cache_arguments(unsigned int flags, std::array<IndexType, 1> idxs, const language_printer& printer) const
+      {
+        // first, generate arguments from param/coordinates if they exist
+        auto args = this->generate_cache_arguments(printer);
+        const auto& flatten = this->mgr.field_flatten();
+        
+        // push G and G inverse tags, since it's difficult to keep track of where they are used
+        // this might lead to some inefficiencies, since we might push them when they're not needed
+        // but we'd rather do a small amount of extra calculation than risk a difficult-to-diagnose
+        // cache aliasing issue
+        if(flatten)
+          {
+            this->push_resource_tag(args, this->mgr.metric());
+            this->push_resource_tag(args, this->mgr.metric_inverse());
+            
+          }
+        
+        std::array<variance, 1> v{ idxs[0].get_variance() };
+
+        if(flatten && ((flags & use_dV) != 0)) this->push_resource_tag(args, this->mgr.dV(v));
+        
+        return args;
+      }
+    
+    
+    template <typename IndexType>
+    cache_tags
+    resources::generate_cache_arguments(unsigned int flags, std::array<IndexType, 2> idxs, const language_printer& printer) const
+      {
+        // first, generate arguments from param/coordinates if they exist
+        auto args = this->generate_cache_arguments(printer);
+        const auto& flatten = this->mgr.field_flatten();
+        
+        // push G and G inverse tags, since it's difficult to keep track of where they are used
+        // this might lead to some inefficiencies, since we might push them when they're not needed
+        // but we'd rather do a small amount of extra calculation than risk a difficult-to-diagnose
+        // cache aliasing issue
+        if(flatten)
+          {
+            this->push_resource_tag(args, this->mgr.metric());
+            this->push_resource_tag(args, this->mgr.metric_inverse());
+            
+          }
+    
+        std::array<variance, 2> v{ idxs[0].get_variance(), idxs[1].get_variance() };
+
+        if(flatten && ((flags & use_ddV) != 0)) this->push_resource_tag(args, this->mgr.ddV(v));
+        
+        // Riemann tensor resources are more ambiguous, since whether they are used or not depends on the index assignments that
+        // are available, and the availability of the metric tensor and its inverse.
+        // As for G, we opt for the conservative option of pushing
+        if(flatten && ((flags & use_Riemann_A2) != 0)) this->push_resource_tag(args, this->mgr.Riemann_A2(v, false));
+        
+        return args;
+      }
+    
+    
+    template <typename IndexType>
+    cache_tags
+    resources::generate_cache_arguments(unsigned int flags, std::array<IndexType, 3> idxs, const language_printer& printer) const
+      {
+        // first, generate arguments from param/coordinates if they exist
+        auto args = this->generate_cache_arguments(printer);
+        const auto& flatten = this->mgr.field_flatten();
+        
+        // push G and G inverse tags, since it's difficult to keep track of where they are used
+        // this might lead to some inefficiencies, since we might push them when they're not needed
+        // but we'd rather do a small amount of extra calculation than risk a difficult-to-diagnose
+        // cache aliasing issue
+        if(flatten)
+          {
+            this->push_resource_tag(args, this->mgr.metric());
+            this->push_resource_tag(args, this->mgr.metric_inverse());
+            
+          }
+    
+        std::array<variance, 3> v{ idxs[0].get_variance(), idxs[1].get_variance(), idxs[2].get_variance() };
+    
+        if(flatten && ((flags & use_dddV) != 0)) this->push_resource_tag(args, this->mgr.dddV(v, false));
+        if(flatten && ((flags & use_Gamma) != 0)) this->push_resource_tag(args, this->mgr.connexion());
+        
+        // Riemann tensor resources are more ambiguous, since whether they are used or not depends on the index assignments that
+        // are available, and the availability of the metric tensor and its inverse.
+        // As for G, we opt for the conservative option of pushing
+        if(flatten && ((flags & use_Riemann_A3) != 0)) this->push_resource_tag(args, this->mgr.Riemann_A3(v, false));
+        if(flatten && ((flags & use_Riemann_B3) != 0)) this->push_resource_tag(args, this->mgr.Riemann_B3(v, false));
+        
+        return args;
+      }
 
   }   // namespace nontrivial_metric
 

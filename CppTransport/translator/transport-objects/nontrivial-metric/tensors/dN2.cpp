@@ -58,7 +58,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("dN2 cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
+        auto args = this->res.generate_cache_arguments<phase_index>(use_dV, {i,j}, this->printer);
 
         GiNaC::ex result;
 

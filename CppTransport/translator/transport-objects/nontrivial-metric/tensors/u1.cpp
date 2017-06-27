@@ -54,7 +54,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("U1 cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
+        auto args = this->res.generate_cache_arguments<phase_index>(use_dV, {i}, this->printer);
 
         GiNaC::ex result;
 
@@ -132,7 +132,7 @@ namespace nontrivial_metric
 
         map[lambda_flatten(LAMBDA_FIELD)] = deriv_a_i;
 
-        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
+        auto args = this->res.generate_cache_arguments<index_literal>(use_dV, {i}, this->printer);
         args += idx_i;
 
         if(!this->cache.query(expression_item_types::U1_lambda, 0, args, map[lambda_flatten(LAMBDA_MOMENTUM)]))

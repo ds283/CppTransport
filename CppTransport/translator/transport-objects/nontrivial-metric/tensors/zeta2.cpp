@@ -62,7 +62,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("zeta2 cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
+        auto args = this->res.generate_cache_arguments<phase_index>(use_dV, {i,j}, this->printer);
         args += { k, k1, k2, a };
 
         GiNaC::ex result;
@@ -238,7 +238,7 @@ namespace nontrivial_metric
 
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = 0;
 
-        auto args = this->res.generate_cache_arguments(use_dV, this->printer);
+        auto args = this->res.generate_cache_arguments<index_literal>(use_dV, {i,j}, this->printer);
         args += { k, k1, k2, a };
         args += { idx_i, idx_j };
 

@@ -54,7 +54,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("zeta1 cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-        auto args = this->res.generate_cache_arguments(0, this->printer);
+        auto args = this->res.generate_cache_arguments<phase_index>(0, {i}, this->printer);
 
         GiNaC::ex result;
 
@@ -107,7 +107,7 @@ namespace nontrivial_metric
 
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
 
-        auto args = this->res.generate_cache_arguments(0, this->printer);
+        auto args = this->res.generate_cache_arguments<index_literal>(0, {i}, this->printer);
         args += idx_i;
 
         // convert these indices to species-only indices
