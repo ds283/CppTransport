@@ -31,6 +31,7 @@
 
 #include "concepts/tensors/zeta2.h"
 #include "shared/shared_resources.h"
+#include "shared/variance_tensor_cache.h"
 #include "nontrivial-metric/resources.h"
 
 #include "indices.h"
@@ -105,15 +106,17 @@ namespace nontrivial_metric
       private:
 
         //! compute field-field entry
-        GiNaC::ex expr_field_field(GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
+        GiNaC::ex expr_field_field(const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
+                                   const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                                   const GiNaC::symbol& a);
 
         //! compute field-momentum or momentum-field entry;
         //! field index is i, momentum index is j
         //! likewise, corresponding momenta are k1, k2 respectively
-        GiNaC::ex expr_field_momentum(GiNaC::varidx& i, GiNaC::varidx& j,
-                                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                      GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
+        GiNaC::ex expr_field_momentum(const GiNaC::varidx& i, const GiNaC::varidx& j,
+                                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
+                                      const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                                      const GiNaC::symbol& a);
 
 
         // INTERNAL DATA
@@ -155,15 +158,9 @@ namespace nontrivial_metric
 
 
         // WORKSPACE AND CACHE
-    
-        // need one copy of the derivative vector per index, in order to account for
-        // index variance
-    
-        //! list of momenta -- i index
-        std::unique_ptr<flattened_tensor> derivs_i;
-    
-        //! list of momenta -- j index
-        std::unique_ptr<flattened_tensor> derivs_j;
+
+        //! list of momenta
+        deriv_cache derivs;
 
         //! Hubble parameter
         GiNaC::ex Hsq;

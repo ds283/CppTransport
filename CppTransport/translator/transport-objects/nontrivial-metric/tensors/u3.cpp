@@ -145,17 +145,26 @@ namespace nontrivial_metric
         const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > jki = { idx_list[1]->get_variance(), idx_list[2]->get_variance(), idx_list[0]->get_variance() };
         const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > kij = { idx_list[2]->get_variance(), idx_list[0]->get_variance(), idx_list[1]->get_variance() };
         const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > kji = { idx_list[2]->get_variance(), idx_list[1]->get_variance(), idx_list[0]->get_variance() };
-    
+
         // if any index is covariant then we need the metric to pull down an index on the coordinate vector
+        // if any index is contravariant then we need the inverse metric to push up an index on the potential derivatives
         bool has_G = true;
+        bool has_Ginv = true;
         if(idx_list[0]->get_variance() == variance::covariant
            || idx_list[1]->get_variance() == variance::covariant
            || idx_list[2]->get_variance() == variance::covariant)
           {
             has_G = this->res.can_roll_metric();
           }
+
+        if(idx_list[0]->get_variance() == variance::contravariant
+           || idx_list[1]->get_variance() == variance::contravariant
+           || idx_list[2]->get_variance() == variance::contravariant)
+          {
+            has_Ginv = this->res.can_roll_metric_inverse();
+          }
     
-        if(this->shared.can_roll_coordinates() && has_G
+        if(this->shared.can_roll_coordinates() && has_G && has_Ginv
            && this->res.can_roll_dV(i)
            && this->res.can_roll_dV(j)
            && this->res.can_roll_dV(k)

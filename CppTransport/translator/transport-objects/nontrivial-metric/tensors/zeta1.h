@@ -31,6 +31,7 @@
 
 #include "concepts/tensors/zeta1.h"
 #include "shared/shared_resources.h"
+#include "shared/variance_tensor_cache.h"
 #include "nontrivial-metric/resources.h"
 
 #include "indices.h"
@@ -101,14 +102,8 @@ namespace nontrivial_metric
 
       private:
 
-        //! cache symbols
-        void cache_symbols();
-
-        //! populate workspace
-        void populate_workspace();
-
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::ex& deriv_i);
+        GiNaC::ex expr(const GiNaC::ex& deriv_i);
 
 
         // INTERNAL DATA
@@ -151,8 +146,8 @@ namespace nontrivial_metric
 
         // WORKSPACE AND CACHE
 
-        //! list of momentum symbols
-        std::unique_ptr<flattened_tensor> derivs;
+        //! list of momenta
+        deriv_cache derivs;
 
         //! epsilon
         GiNaC::ex eps;

@@ -74,9 +74,9 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            auto& deriv_i = (*derivs_i)[this->fl.flatten(i)];
-            auto& deriv_j = (*derivs_j)[this->fl.flatten(j)];
-            auto& deriv_k = (*derivs_k)[this->fl.flatten(k)];
+            auto& deriv_i = this->derivs(i)[this->fl.flatten(i)];
+            auto& deriv_j = this->derivs(j)[this->fl.flatten(j)];
+            auto& deriv_k = this->derivs(k)[this->fl.flatten(k)];
 
             auto& Vijk = (*dddV)[this->fl.flatten(i,j,k)];
 
@@ -84,9 +84,9 @@ namespace nontrivial_metric
             auto& Vjk  = (*ddV)[this->fl.flatten(j,k)];
             auto& Vik  = (*ddV)[this->fl.flatten(i,k)];
 
-            auto& Vi   = (*dV_i)[this->fl.flatten(i)];
-            auto& Vj   = (*dV_j)[this->fl.flatten(j)];
-            auto& Vk   = (*dV_k)[this->fl.flatten(k)];
+            auto& Vi = this->dV(i)[this->fl.flatten(i)];
+            auto& Vj = this->dV(j)[this->fl.flatten(j)];
+            auto& Vk = this->dV(k)[this->fl.flatten(k)];
 
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
             auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
@@ -102,11 +102,12 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex Atilde::expr(GiNaC::varidx& i, GiNaC::varidx& j, GiNaC::varidx& k,
-                           GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
-                           GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
-                           GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
-                           GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    GiNaC::ex Atilde::expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::varidx& k,
+                           const GiNaC::ex& Vijk, const GiNaC::ex& Vij, const GiNaC::ex& Vjk, const GiNaC::ex& Vik,
+                           const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& Vk,
+                           const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
+                           const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3,
+                           const GiNaC::symbol& a)
       {
         GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
         GiNaC::ex xi_j = -2*(3-eps) * deriv_j - 2 * Vj/Hsq;
@@ -152,17 +153,26 @@ namespace nontrivial_metric
         const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > jki = { idx_list[1]->get_variance(), idx_list[2]->get_variance(), idx_list[0]->get_variance() };
         const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > kij = { idx_list[2]->get_variance(), idx_list[0]->get_variance(), idx_list[1]->get_variance() };
         const std::array< variance, RESOURCE_INDICES::DDDV_INDICES > kji = { idx_list[2]->get_variance(), idx_list[1]->get_variance(), idx_list[0]->get_variance() };
-    
+
         // if any index is covariant then we need the metric to pull down an index on the coordinate vector
+        // if any index is contravariant then we need the inverse metric to push up an index on the potential derivatives
         bool has_G = true;
+        bool has_Ginv = true;
         if(idx_list[0]->get_variance() == variance::covariant
            || idx_list[1]->get_variance() == variance::covariant
            || idx_list[2]->get_variance() == variance::covariant)
           {
             has_G = this->res.can_roll_metric();
           }
+
+        if(idx_list[0]->get_variance() == variance::contravariant
+           || idx_list[1]->get_variance() == variance::contravariant
+           || idx_list[2]->get_variance() == variance::contravariant)
+          {
+            has_Ginv = this->res.can_roll_metric_inverse();
+          }
     
-        if(this->shared.can_roll_coordinates() && has_G
+        if(this->shared.can_roll_coordinates() && has_G && has_Ginv
            && this->res.can_roll_dV(i)
            && this->res.can_roll_dV(j)
            && this->res.can_roll_dV(k)
@@ -241,7 +251,9 @@ namespace nontrivial_metric
         fl(f),
         traits(t),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
+        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); })
       {
         Mp = this->shared.generate_Mp();
       }
@@ -252,15 +264,7 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("Atilde already cached");
 
         this->pre_lambda();
-    
-        derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
-        derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
-        derivs_k = this->res.generate_deriv_vector(indices[2]->get_variance(), this->printer);
-    
-        dV_i = this->res.dV_resource(indices[0]->get_variance(), this->printer);
-        dV_j = this->res.dV_resource(indices[1]->get_variance(), this->printer);
-        dV_k = this->res.dV_resource(indices[2]->get_variance(), this->printer);
-        
+
         ddV = this->res.ddV_resource(this->printer);
         dddV = this->res.dddV_resource(this->printer);
 
@@ -278,6 +282,9 @@ namespace nontrivial_metric
     void Atilde::post()
       {
         if(!this->cached) throw tensor_exception("Atilde not cached");
+
+        this->derivs.clear();
+        this->dV.clear();
 
         // invalidate cache
         this->cached = false;

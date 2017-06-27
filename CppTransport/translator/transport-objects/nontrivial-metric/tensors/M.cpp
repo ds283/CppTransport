@@ -66,13 +66,13 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
+            auto& deriv_i = this->derivs(i)[this->fl.flatten(i)];
+            auto& deriv_j = this->derivs(j)[this->fl.flatten(j)];
+
             auto& Vij = (*ddV)[this->fl.flatten(i,j)];
 
-            auto& Vi  = (*dV_i)[this->fl.flatten(i)];
-            auto& Vj  = (*dV_j)[this->fl.flatten(j)];
-
-            auto& deriv_i = (*derivs_i)[this->fl.flatten(i)];
-            auto& deriv_j = (*derivs_j)[this->fl.flatten(j)];
+            auto& Vi = this->dV(i)[this->fl.flatten(i)];
+            auto& Vj = this->dV(j)[this->fl.flatten(j)];
 
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
             auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
@@ -86,8 +86,9 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex M::expr(GiNaC::varidx& i, GiNaC::varidx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j)
+    GiNaC::ex M::expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::ex& Vij, const GiNaC::ex& Vi,
+                      const GiNaC::ex& Vj,
+                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j)
       {
         GiNaC::ex u = -Vij/Hsq;
         u += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
@@ -156,12 +157,6 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("M already cached");
 
         this->pre_lambda();
-    
-        derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
-        derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
-    
-        dV_i = this->res.dV_resource(indices[0]->get_variance(), this->printer);
-        dV_j = this->res.dV_resource(indices[1]->get_variance(), this->printer);
 
         ddV = this->res.ddV_resource(this->printer);
 
@@ -180,6 +175,9 @@ namespace nontrivial_metric
       {
         if(!this->cached) throw tensor_exception("fields not cached");
 
+        this->derivs.clear();
+        this->dV.clear();
+
         // invalidate cache
         this->cached = false;
       }
@@ -196,7 +194,9 @@ namespace nontrivial_metric
         fl(f),
         traits(t),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
+        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); })
       {
         Mp = this->shared.generate_Mp();
       }

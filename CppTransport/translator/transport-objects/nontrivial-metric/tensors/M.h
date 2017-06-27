@@ -31,6 +31,7 @@
 
 #include "concepts/tensors/M.h"
 #include "shared/shared_resources.h"
+#include "shared/variance_tensor_cache.h"
 #include "nontrivial-metric/resources.h"
 
 #include "indices.h"
@@ -102,8 +103,8 @@ namespace nontrivial_metric
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::varidx& i, GiNaC::varidx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                       GiNaC::ex& deriv_i, GiNaC::ex& deriv_j);
+        GiNaC::ex expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::ex& Vij, const GiNaC::ex& Vi,
+                       const GiNaC::ex& Vj, const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j);
 
 
         // INTERNAL DATA
@@ -145,21 +146,12 @@ namespace nontrivial_metric
 
 
         // WORKSPACE AND CACHE
-    
-        // need one copy of the derivative vector per index, in order to account for
-        // index variance
-    
-        //! list of momenta -- i index
-        std::unique_ptr<flattened_tensor> derivs_i;
-    
-        //! list of momenta -- j index
-        std::unique_ptr<flattened_tensor> derivs_j;
-    
-        //! flattened dV tensor -- i index
-        std::unique_ptr<flattened_tensor> dV_i;
-    
-        //! flattened dV tensor -- j index
-        std::unique_ptr<flattened_tensor> dV_j;
+
+        //! list of momenta
+        deriv_cache derivs;
+
+        //! flattened dV tensor
+        dV_cache dV;
 
         //! flattened ddV tensor
         std::unique_ptr<flattened_tensor> ddV;

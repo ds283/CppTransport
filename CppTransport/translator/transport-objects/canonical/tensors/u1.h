@@ -102,7 +102,7 @@ namespace canonical
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr_momentum(GiNaC::ex& Vi, GiNaC::ex& deriv_i);
+        GiNaC::ex expr_momentum(const GiNaC::ex& Vi, const GiNaC::ex& deriv_i);
 
 
         // INTERNAL DATA

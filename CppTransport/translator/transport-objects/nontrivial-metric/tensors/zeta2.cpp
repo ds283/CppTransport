@@ -70,11 +70,11 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            auto& deriv_i = (*derivs_i)[this->fl.flatten(this->traits.to_species(i))];
-            auto& deriv_j = (*derivs_j)[this->fl.flatten(this->traits.to_species(j))];
+            auto species_i = this->traits.to_species(i);
+            auto species_j = this->traits.to_species(j);
 
-            field_index species_i = this->traits.to_species(i);
-            field_index species_j = this->traits.to_species(j);
+            auto& deriv_i = this->derivs(species_i)[this->fl.flatten(species_i)];
+            auto& deriv_j = this->derivs(species_j)[this->fl.flatten(species_j)];
 
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(species_i);
             auto idx_j = this->shared.generate_index<GiNaC::varidx>(species_j);
@@ -95,11 +95,7 @@ namespace nontrivial_metric
               {
                 result = 0;
               }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
+            else throw tensor_exception("u2 indices");
 
             this->cache.store(expression_item_types::zxfm2_item, index, args, result);
           }
@@ -113,9 +109,6 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("A already cached");
 
         this->pre_lambda();
-    
-        derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
-        derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
 
         this->cached = true;
       }
@@ -129,8 +122,8 @@ namespace nontrivial_metric
 
         // formulae from DS calculation 28 May 2014
 
-        std::unique_ptr<flattened_tensor> ds = this->res.generate_deriv_vector(variance::contravariant, this->printer);
-        std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(variance::covariant, this->printer);
+        auto ds = this->res.generate_deriv_vector(variance::contravariant, this->printer);
+        auto Vi = this->res.dV_resource(variance::covariant, this->printer);
 
         GiNaC::ex p_ex = 0;
 
@@ -153,14 +146,16 @@ namespace nontrivial_metric
       {
         if(!this->cached) throw tensor_exception("zeta2 not cached");
 
+        this->derivs.clear();
+
         // invalidate cache
         this->cached = false;
       }
     
     
-    GiNaC::ex zeta2::expr_field_field(GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                      GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                      GiNaC::symbol& a)
+    GiNaC::ex zeta2::expr_field_field(const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
+                                      const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                                      const GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
         GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * deriv_i * deriv_j / (Mp*Mp*Mp*Mp*eps);
@@ -168,9 +163,10 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex zeta2::expr_field_momentum(GiNaC::varidx& i, GiNaC::varidx& j, GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                         GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                         GiNaC::symbol& a)
+    GiNaC::ex zeta2::expr_field_momentum(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::ex& deriv_i,
+                                         const GiNaC::ex& deriv_j,
+                                         const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                                         const GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
 
@@ -194,6 +190,7 @@ namespace nontrivial_metric
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > j = { idx_list[1]->get_variance() };
     
         // if any index is covariant then we need the metric to pull down an index on the coordinate vector
+        // there are no occurrences of the potential so we don't need the inverse metric to push their indices up
         bool has_G = true;
         if(idx_list[0]->get_variance() == variance::covariant
            || idx_list[1]->get_variance() == variance::covariant)
@@ -291,7 +288,8 @@ namespace nontrivial_metric
         fl(f),
         traits(t),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); })
       {
       }
 

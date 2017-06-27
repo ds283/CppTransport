@@ -103,8 +103,9 @@ namespace canonical
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                       GiNaC::ex& deriv_i, GiNaC::ex& deriv_j);
+        GiNaC::ex expr(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::ex& Vij, const GiNaC::ex& Vi,
+                       const GiNaC::ex& Vj,
+                       const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j);
 
 
         // INTERNAL DATA

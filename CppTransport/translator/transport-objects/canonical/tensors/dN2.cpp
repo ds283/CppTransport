@@ -109,7 +109,8 @@ namespace canonical
 
         fields = this->shared.generate_field_symbols(this->printer);
         derivs = this->shared.generate_deriv_symbols(this->printer);
-        dV = this->res.dV_resource(this->printer);
+
+        auto dV = this->res.dV_resource(this->printer);
 
         Hsq = this->res.raw_Hsq_resource(this->printer);
         eps = this->res.raw_eps_resource(this->printer);

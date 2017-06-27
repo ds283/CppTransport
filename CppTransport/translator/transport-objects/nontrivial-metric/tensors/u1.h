@@ -31,6 +31,7 @@
 
 #include "concepts/tensors/u1.h"
 #include "shared/shared_resources.h"
+#include "shared/variance_tensor_cache.h"
 #include "nontrivial-metric/resources.h"
 
 #include "indices.h"
@@ -101,7 +102,7 @@ namespace nontrivial_metric
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr_momentum(GiNaC::ex& Vi, GiNaC::ex& deriv_i);
+        GiNaC::ex expr_momentum(const GiNaC::ex& Vi, const GiNaC::ex& deriv_i);
 
 
         // INTERNAL DATA
@@ -144,11 +145,11 @@ namespace nontrivial_metric
 
         // WORKSPACE AND CACHE
 
-        //! list of momentum symbols
-        std::unique_ptr<flattened_tensor> derivs;
+        //! list of momenta
+        deriv_cache derivs;
 
         //! flattened dV tensor
-        std::unique_ptr<flattened_tensor> dV;
+        dV_cache dV;
 
         //! Hubble parameter
         GiNaC::ex Hsq;

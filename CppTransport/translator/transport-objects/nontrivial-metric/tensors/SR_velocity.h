@@ -31,6 +31,7 @@
 
 #include "concepts/tensors/SR_velocity.h"
 #include "shared/shared_resources.h"
+#include "shared/variance_tensor_cache.h"
 #include "nontrivial-metric/resources.h"
 
 #include "indices.h"
@@ -102,7 +103,7 @@ namespace nontrivial_metric
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::ex& Vi);
+        GiNaC::ex expr(const GiNaC::ex& Vi);
 
 
 
@@ -147,10 +148,7 @@ namespace nontrivial_metric
         GiNaC::ex V;
 
         //! flattened dV tensor
-        std::unique_ptr<flattened_tensor> dV;
-
-        //! flattened ddV tensor
-        std::unique_ptr<flattened_tensor> ddV;
+        dV_cache dV;
 
         //! Planck mass
         GiNaC::symbol Mp;

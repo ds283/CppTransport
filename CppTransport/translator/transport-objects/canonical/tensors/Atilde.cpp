@@ -102,11 +102,12 @@ namespace canonical
       }
     
     
-    GiNaC::ex Atilde::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                           GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
-                           GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
-                           GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
-                           GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    GiNaC::ex Atilde::expr(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::idx& k,
+                           const GiNaC::ex& Vijk, const GiNaC::ex& Vij, const GiNaC::ex& Vjk, const GiNaC::ex& Vik,
+                           const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& Vk,
+                           const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
+                           const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3,
+                           const GiNaC::symbol& a)
       {
         GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
         GiNaC::ex xi_j = -2*(3-eps) * deriv_j - 2 * Vj/Hsq;

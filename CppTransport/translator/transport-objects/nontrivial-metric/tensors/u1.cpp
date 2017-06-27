@@ -63,8 +63,7 @@ namespace nontrivial_metric
             timing_instrument timer(this->compute_timer);
 
             field_index species_i = this->traits.to_species(i);
-
-            auto& deriv_i = (*derivs)[this->fl.flatten(species_i)];
+            auto& deriv_i = this->derivs(species_i)[this->fl.flatten(species_i)];
 
             if(this->traits.is_species(i))
               {
@@ -72,14 +71,10 @@ namespace nontrivial_metric
               }
             else if(this->traits.is_momentum(i))
               {
-                GiNaC::ex& Vi = (*dV)[this->fl.flatten(species_i)];
+                auto& Vi = this->dV(species_i)[this->fl.flatten(species_i)];
                 result = this->expr_momentum(Vi, deriv_i);
               }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
+            else throw tensor_exception("U1 index");
 
             this->cache.store(expression_item_types::U1_item, index, args, result);
           }
@@ -88,7 +83,7 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex u1::expr_momentum(GiNaC::ex& Vi, GiNaC::ex& deriv_i)
+    GiNaC::ex u1::expr_momentum(const GiNaC::ex& Vi, const GiNaC::ex& deriv_i)
       {
         return -(3-eps) * deriv_i - Vi/Hsq;
       }
@@ -99,13 +94,19 @@ namespace nontrivial_metric
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
     
         // if the index is covariant then we need the metric to pull down an index on the coordinate vector
+        // if it is contravariant then we need the inverse metric to push up an index on dV
         bool has_G = true;
+        bool has_Ginv = true;
         if(idx_list[0]->get_variance() == variance::covariant)
           {
             has_G = this->res.can_roll_metric();
           }
+        if(idx_list[0]->get_variance() == variance::contravariant)
+          {
+            has_Ginv = this->res.can_roll_metric_inverse();
+          }
     
-        if(this->shared.can_roll_coordinates() && has_G
+        if(this->shared.can_roll_coordinates() && has_G && has_Ginv
            && this->res.can_roll_dV(i)) return unroll_behaviour::allow;
         
         return unroll_behaviour::force;   // can't roll-up
@@ -160,7 +161,9 @@ namespace nontrivial_metric
         fl(f),
         traits(t),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
+        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); })
       {
       }
     
@@ -170,8 +173,6 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("U1 already cached");
 
         this->pre_lambda();
-        derivs = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
-        dV = this->res.dV_resource(indices[0]->get_variance(), this->printer);
 
         this->cached = true;
       }
@@ -187,6 +188,9 @@ namespace nontrivial_metric
     void u1::post()
       {
         if(!this->cached) throw tensor_exception("U1 not cached");
+
+        this->derivs.clear();
+        this->dV.clear();
 
         // invalidate cache
         this->cached = false;

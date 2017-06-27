@@ -97,11 +97,7 @@ namespace canonical
               {
                 result = GiNaC::delta_tensor(idx_i, idx_j) * (eps-3);
               }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
+            else throw tensor_exception("U2 index");
 
             this->cache.store(expression_item_types::U2_item, index, args, result);
           }
@@ -110,10 +106,10 @@ namespace canonical
       }
     
     
-    GiNaC::ex u2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
-                                      GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                      GiNaC::symbol& k, GiNaC::symbol& a)
+    GiNaC::ex u2::expr_field_momentum(const GiNaC::idx& i, const GiNaC::idx& j,
+                                      const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
+                                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
+                                      const GiNaC::symbol& k, const GiNaC::symbol& a)
       {
         GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
         GiNaC::ex result = delta_ij * ( -k*k / (a*a * Hsq) );

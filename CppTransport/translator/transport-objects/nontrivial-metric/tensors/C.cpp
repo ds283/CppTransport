@@ -74,9 +74,9 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            auto& deriv_i = (*derivs_i)[this->fl.flatten(i)];
-            auto& deriv_j = (*derivs_j)[this->fl.flatten(j)];
-            auto& deriv_k = (*derivs_k)[this->fl.flatten(k)];
+            auto& deriv_i = this->derivs(i)[this->fl.flatten(i)];
+            auto& deriv_j = this->derivs(j)[this->fl.flatten(j)];
+            auto& deriv_k = this->derivs(k)[this->fl.flatten(k)];
 
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
             auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
@@ -91,9 +91,9 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex C::expr(GiNaC::varidx& i, GiNaC::varidx& j, GiNaC::varidx& k,
-                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
-                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    GiNaC::ex C::expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::varidx& k,
+                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
+                      const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3, const GiNaC::symbol& a)
       {
         GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
         GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
@@ -118,6 +118,7 @@ namespace nontrivial_metric
     unroll_behaviour C::get_unroll(const index_literal_list& idx_list)
       {
         // if any index is covariant then we need the metric to pull down an index on the coordinate vector
+        // there are no occurrences of the potential derivative, though, so we don't need the inverse metric
         bool has_G = true;
         if(idx_list[0]->get_variance() == variance::covariant
            || idx_list[1]->get_variance() == variance::covariant
@@ -177,7 +178,8 @@ namespace nontrivial_metric
         fl(f),
         traits(t),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); })
       {
         Mp = this->shared.generate_Mp();
       }
@@ -186,10 +188,6 @@ namespace nontrivial_metric
     void C::pre_explicit(const index_literal_list& indices)
       {
         if(cached) throw tensor_exception("C already cached");
-        
-        derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
-        derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
-        derivs_k = this->res.generate_deriv_vector(indices[2]->get_variance(), this->printer);
 
         this->cached = true;
       }
@@ -198,6 +196,8 @@ namespace nontrivial_metric
     void C::post()
       {
         if(!this->cached) throw tensor_exception("C not cached");
+
+        this->derivs.clear();
 
         // invalidate cache
         this->cached = false;

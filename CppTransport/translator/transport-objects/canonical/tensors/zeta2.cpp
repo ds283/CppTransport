@@ -70,11 +70,11 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            auto& deriv_i = (*derivs)[this->fl.flatten(this->traits.to_species(i))];
-            auto& deriv_j = (*derivs)[this->fl.flatten(this->traits.to_species(j))];
+            auto species_i = this->traits.to_species(i);
+            auto species_j = this->traits.to_species(j);
 
-            field_index species_i = this->traits.to_species(i);
-            field_index species_j = this->traits.to_species(j);
+            auto& deriv_i = (*derivs)[this->fl.flatten(species_i)];
+            auto& deriv_j = (*derivs)[this->fl.flatten(species_j)];
 
             auto idx_i = this->shared.generate_index<GiNaC::idx>(species_i);
             auto idx_j = this->shared.generate_index<GiNaC::idx>(species_j);
@@ -95,11 +95,7 @@ namespace canonical
               {
                 result = 0;
               }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
+            else throw tensor_exception("u2 indices");
 
             this->cache.store(expression_item_types::zxfm2_item, index, args, result);
           }
@@ -156,9 +152,9 @@ namespace canonical
       }
     
     
-    GiNaC::ex zeta2::expr_field_field(GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                      GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                      GiNaC::symbol& a)
+    GiNaC::ex zeta2::expr_field_field(const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
+                                      const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                                      const GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
         GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * deriv_i * deriv_j / (Mp*Mp*Mp*Mp*eps);
@@ -166,9 +162,10 @@ namespace canonical
       }
     
     
-    GiNaC::ex zeta2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                         GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                         GiNaC::symbol& a)
+    GiNaC::ex zeta2::expr_field_momentum(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::ex& deriv_i,
+                                         const GiNaC::ex& deriv_j,
+                                         const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                                         const GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
 

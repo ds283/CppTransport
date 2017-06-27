@@ -34,6 +34,7 @@
 namespace RESOURCE_INDICES
   {
     
+    constexpr auto COORDINATE_INDICES = 1;
     constexpr auto DV_INDICES = 1;
     constexpr auto DDV_INDICES = 2;
     constexpr auto DDDV_INDICES = 3;

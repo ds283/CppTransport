@@ -75,11 +75,7 @@ namespace canonical
                 GiNaC::ex& Vi = (*dV)[this->fl.flatten(species_i)];
                 result = this->expr_momentum(Vi, deriv_i);
               }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
+            else throw tensor_exception("U1 index");
 
             this->cache.store(expression_item_types::U1_item, index, args, result);
           }
@@ -88,7 +84,7 @@ namespace canonical
       }
     
     
-    GiNaC::ex u1::expr_momentum(GiNaC::ex& Vi, GiNaC::ex& deriv_i)
+    GiNaC::ex u1::expr_momentum(const GiNaC::ex& Vi, const GiNaC::ex& deriv_i)
       {
         return -(3-eps) * deriv_i - Vi/Hsq;
       }

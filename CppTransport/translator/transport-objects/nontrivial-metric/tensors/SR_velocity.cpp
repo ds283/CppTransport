@@ -62,7 +62,7 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex& Vi = (*dV)[this->fl.flatten(i)];
+            auto& Vi = this->dV(i)[this->fl.flatten(i)];
             result = this->expr(Vi);
 
             this->cache.store(expression_item_types::sr_U_item, index, args, result);
@@ -72,7 +72,7 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex SR_velocity::expr(GiNaC::ex& Vi)
+    GiNaC::ex SR_velocity::expr(const GiNaC::ex& Vi)
       {
         return -Vi * (Mp*Mp) / V;
       }
@@ -126,7 +126,8 @@ namespace nontrivial_metric
         shared(s),
         fl(f),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); })
       {
       }
     
@@ -136,7 +137,6 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("SR_velocity already cached");
 
         this->pre_lambda();
-        dV = this->res.dV_resource(indices[0]->get_variance(), this->printer);
 
         this->cached = true;
       }
@@ -152,6 +152,8 @@ namespace nontrivial_metric
     void SR_velocity::post()
       {
         if(!this->cached) throw tensor_exception("SR_velocity not cached");
+
+        this->dV.clear();
 
         // invalidate cache
         this->cached = false;

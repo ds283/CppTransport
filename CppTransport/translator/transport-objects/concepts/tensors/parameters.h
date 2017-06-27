@@ -98,20 +98,15 @@ class parameters: public transport_tensor
   protected:
 
     //! cache resources required for evaluation on an explicit index assignment (here, nothing to do)
-    void pre_explicit(const index_literal_list& indices) override { return; };
+    void pre_explicit(const index_literal_list& indices) override;;
 
     //! release resources (here, nothing to do)
-    void post() override { return; };
+    void post() override;;
 
 
     // INTERNAL API
-    
-  protected:
-    
-    //! populate workspace
-    void populate_workspace();
-    
-    
+
+
     // INTERNAL DATA
   
   private:

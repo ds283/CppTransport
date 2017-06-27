@@ -102,14 +102,8 @@ namespace canonical
 
       private:
 
-        //! cache symbols
-        void cache_symbols();
-
-        //! populate workspace
-        void populate_workspace();
-
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::ex& deriv_i);
+        GiNaC::ex expr(const GiNaC::ex& deriv_i);
 
 
         // INTERNAL DATA

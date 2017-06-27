@@ -48,10 +48,10 @@ std::unique_ptr<flattened_tensor> parameters::compute(const index_literal_list& 
 
 GiNaC::ex parameters::compute_component(param_index i)
   {
+    if(!this->cached) throw tensor_exception("parameters cache not ready");
+
     unsigned int index = this->fl.flatten(i);
-    
-    if(!cached) { this->populate_workspace(); this->cached = true; }
-    
+
     GiNaC::ex result = (*this->param_symbols)[index];
     
     return result;
@@ -77,7 +77,20 @@ unroll_behaviour parameters::get_unroll(const index_literal_list& idx_list)
   }
 
 
-void parameters::populate_workspace()
+void parameters::pre_explicit(const index_literal_list& indices)
   {
+    if(cached) throw tensor_exception("parameters already cached");
+
     param_symbols = this->shared.generate_parameter_symbols(this->printer);
+
+    this->cached = true;
+  }
+
+
+void parameters::post()
+  {
+    if(!this->cached) throw tensor_exception("parameters not cached");
+
+    // invalidate cache
+    this->cached = false;
   }

@@ -91,9 +91,9 @@ namespace canonical
       }
     
     
-    GiNaC::ex C::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
-                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j, GiNaC::ex& deriv_k,
-                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    GiNaC::ex C::expr(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::idx& k,
+                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
+                      const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3, const GiNaC::symbol& a)
       {
         GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
         GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;

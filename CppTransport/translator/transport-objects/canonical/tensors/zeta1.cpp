@@ -71,11 +71,7 @@ namespace canonical
               {
                 result = 0;
               }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
+            else throw tensor_exception("zeta1 index");
 
             this->cache.store(expression_item_types::zxfm1_item, index, args, result);
           }
@@ -84,22 +80,12 @@ namespace canonical
       }
     
     
-    GiNaC::ex zeta1::expr(GiNaC::ex& deriv_i)
+    GiNaC::ex zeta1::expr(const GiNaC::ex& deriv_i)
       {
         return -deriv_i / (2*Mp*Mp*eps);
       }
-    
-    
-    void zeta1::cache_symbols()
-      {
-      }
-    
-    
-    void zeta1::populate_workspace()
-      {
-      }
-    
-    
+
+
     unroll_behaviour zeta1::get_unroll(const index_literal_list& idx_list)
       {
         if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;

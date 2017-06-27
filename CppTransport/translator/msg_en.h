@@ -359,6 +359,8 @@ constexpr auto ERROR_CONNEXION_INDICES               = "$CONNECTION has incorrec
 constexpr auto NOTIFY_PARSE_TERMINATED               = "Translation terminated";
 constexpr auto NOTIFY_TOO_MANY_ERRORS                = "encountered too many errors";
 
+constexpr auto ERROR_VARIANCE_TENSOR_CACHE_EMPLACE = "Internal error: failed to emplace tensor in variance_tensor_cache";
+
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";
 constexpr auto MESSAGE_SECOND_LABEL                  = "s";

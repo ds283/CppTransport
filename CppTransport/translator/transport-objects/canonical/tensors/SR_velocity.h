@@ -102,7 +102,7 @@ namespace canonical
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr(GiNaC::ex& Vi);
+        GiNaC::ex expr(const GiNaC::ex& Vi);
 
 
 
@@ -148,9 +148,6 @@ namespace canonical
 
         //! flattened dV tensor
         std::unique_ptr<flattened_tensor> dV;
-
-        //! flattened ddV tensor
-        std::unique_ptr<flattened_tensor> ddV;
 
         //! Planck mass
         GiNaC::symbol Mp;

@@ -72,7 +72,7 @@ namespace canonical
       }
     
     
-    GiNaC::ex SR_velocity::expr(GiNaC::ex& Vi)
+    GiNaC::ex SR_velocity::expr(const GiNaC::ex& Vi)
       {
         return -Vi * (Mp*Mp) / V;
       }

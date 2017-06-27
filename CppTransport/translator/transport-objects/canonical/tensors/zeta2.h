@@ -106,15 +106,17 @@ namespace canonical
       private:
 
         //! compute field-field entry
-        GiNaC::ex expr_field_field(GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
+        GiNaC::ex expr_field_field(const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
+                                   const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                                   const GiNaC::symbol& a);
 
         //! compute field-momentum or momentum-field entry;
         //! field index is i, momentum index is j
         //! likewise, corresponding momenta are k1, k2 respectively
-        GiNaC::ex expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
-                                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                      GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a);
+        GiNaC::ex expr_field_momentum(const GiNaC::idx& i, const GiNaC::idx& j,
+                                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
+                                      const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                                      const GiNaC::symbol& a);
 
 
         // INTERNAL DATA

@@ -64,18 +64,14 @@ namespace nontrivial_metric
 
             if(this->traits.is_species(i))
               {
-                auto& deriv_i = (*derivs)[this->fl.flatten(i)];
+                auto& deriv_i = this->derivs(i)[this->fl.flatten(i)];
                 result = this->expr(deriv_i);
               }
             else if(this->traits.is_momentum(i))
               {
                 result = 0;
               }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
+            else throw tensor_exception("zeta1 index");
 
             this->cache.store(expression_item_types::zxfm1_item, index, args, result);
           }
@@ -84,25 +80,16 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex zeta1::expr(GiNaC::ex& deriv_i)
+    GiNaC::ex zeta1::expr(const GiNaC::ex& deriv_i)
       {
         return -deriv_i / (2*Mp*Mp*eps);
       }
-    
-    
-    void zeta1::cache_symbols()
-      {
-      }
-    
-    
-    void zeta1::populate_workspace()
-      {
-      }
-    
-    
+
+
     unroll_behaviour zeta1::get_unroll(const index_literal_list& idx_list)
       {
         // if our index is covariant then we need the metric to pull down an index on the coordinate vector
+        // there are no occurrence of the potential, so we don't need the inverse metric to push their indices up
         bool has_G = true;
         if(idx_list[0]->get_variance() == variance::covariant)
           {
@@ -151,7 +138,8 @@ namespace nontrivial_metric
         fl(f),
         traits(t),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); })
       {
         Mp = this->shared.generate_Mp();
       }
@@ -162,7 +150,6 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("zeta1 already cached");
 
         this->pre_lambda();
-        derivs = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
 
         this->cached = true;
       }
@@ -177,6 +164,8 @@ namespace nontrivial_metric
     void zeta1::post()
       {
         if(!this->cached) throw tensor_exception("zeta1 not cached");
+
+        this->derivs.clear();
 
         // invalidate cache
         this->cached = false;

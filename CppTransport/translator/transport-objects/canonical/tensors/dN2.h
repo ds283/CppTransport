@@ -143,9 +143,6 @@ namespace canonical
         //! list of momentum symbols
         std::unique_ptr<symbol_list> derivs;
 
-        //! flattened dV tensor
-        std::unique_ptr<flattened_tensor> dV;
-
         //! Hubble parameter
         GiNaC::ex Hsq;
 

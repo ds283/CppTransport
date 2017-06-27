@@ -85,11 +85,11 @@ namespace nontrivial_metric
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
                 auto& Vij = (*ddV)[this->fl.flatten(species_i, species_j)];
-                auto& Vi  = (*dV_i)[this->fl.flatten(species_i)];
-                auto& Vj  = (*dV_j)[this->fl.flatten(species_j)];
+                auto& Vi  = this->dV(species_i)[this->fl.flatten(species_i)];
+                auto& Vj  = this->dV(species_j)[this->fl.flatten(species_j)];
 
-                auto& deriv_i = (*derivs_i)[this->fl.flatten(species_i)];
-                auto& deriv_j = (*derivs_j)[this->fl.flatten(species_j)];
+                auto& deriv_i = this->derivs(species_i)[this->fl.flatten(species_i)];
+                auto& deriv_j = this->derivs(species_j)[this->fl.flatten(species_j)];
 
                 result = this->expr_field_momentum(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j, k, a);
               }
@@ -97,11 +97,7 @@ namespace nontrivial_metric
               {
                 result = GiNaC::delta_tensor(idx_i, idx_j) * (eps-3);
               }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
+            else throw tensor_exception("U2 index");
 
             this->cache.store(expression_item_types::U2_item, index, args, result);
           }
@@ -110,10 +106,10 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex u2::expr_field_momentum(GiNaC::varidx& i, GiNaC::varidx& j,
-                                      GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
-                                      GiNaC::ex& deriv_i, GiNaC::ex& deriv_j,
-                                      GiNaC::symbol& k, GiNaC::symbol& a)
+    GiNaC::ex u2::expr_field_momentum(const GiNaC::varidx& i, const GiNaC::varidx& j,
+                                      const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
+                                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
+                                      const GiNaC::symbol& k, const GiNaC::symbol& a)
       {
         GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
         GiNaC::ex result = delta_ij * ( -k*k / (a*a * Hsq) );
@@ -134,14 +130,21 @@ namespace nontrivial_metric
         const std::array< variance, RESOURCE_INDICES::DDV_INDICES > ij = { idx_list[0]->get_variance(), idx_list[1]->get_variance() };
     
         // if any index is covariant then we need the metric to pull down an index on the coordinate vector
+        // if any index is contravariant then we need the inverser metric to push up indices on the potential derivatives
         bool has_G = true;
+        bool has_Ginv = true;
         if(idx_list[0]->get_variance() == variance::covariant
            || idx_list[1]->get_variance() == variance::covariant)
           {
             has_G = this->res.can_roll_metric();
           }
+        if(idx_list[0]->get_variance() == variance::contravariant
+           || idx_list[1]->get_variance() == variance::contravariant)
+          {
+            has_Ginv = this->res.can_roll_metric_inverse();
+          }
 
-        if(this->shared.can_roll_coordinates() && has_G
+        if(this->shared.can_roll_coordinates() && has_G && has_G
            && this->res.can_roll_dV(i)
            && this->res.can_roll_dV(j)
            && this->res.can_roll_ddV(ij)) return unroll_behaviour::allow;
@@ -217,7 +220,9 @@ namespace nontrivial_metric
         fl(f),
         traits(t),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
+        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); })
       {
         Mp = this->shared.generate_Mp();
       }
@@ -228,12 +233,6 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("U2 already cached");
 
         this->pre_lambda();
-    
-        derivs_i = this->res.generate_deriv_vector(indices[0]->get_variance(), this->printer);
-        derivs_j = this->res.generate_deriv_vector(indices[1]->get_variance(), this->printer);
-    
-        dV_i = this->res.dV_resource(indices[0]->get_variance(), this->printer);
-        dV_j = this->res.dV_resource(indices[1]->get_variance(), this->printer);
 
         ddV = this->res.ddV_resource(this->printer);
 
@@ -251,6 +250,9 @@ namespace nontrivial_metric
     void u2::post()
       {
         if(!this->cached) throw tensor_exception("U2 not cached");
+
+        this->derivs.clear();
+        this->dV.clear();
 
         // invalidate cache
         this->cached = false;
