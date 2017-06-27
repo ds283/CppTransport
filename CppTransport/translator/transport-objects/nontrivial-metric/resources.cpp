@@ -1117,7 +1117,7 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<flattened_tensor>
-    resources::ddV_resource(const language_printer& printer)
+    resources::ddV_resource(variance vi, variance vj, const language_printer& printer)
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
 
@@ -1213,7 +1213,7 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<flattened_tensor>
-    resources::dddV_resource(const language_printer& printer)
+    resources::dddV_resource(variance vi, variance vj, variance vk, const language_printer& printer)
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
 

@@ -69,7 +69,8 @@ namespace nontrivial_metric
             auto& deriv_i = this->derivs(i)[this->fl.flatten(i)];
             auto& deriv_j = this->derivs(j)[this->fl.flatten(j)];
 
-            auto& Vij = (*ddV)[this->fl.flatten(i,j)];
+            // don't need to symmetrize; will be symmetric with a Levi-Civita connexion
+            auto& Vij  = this->ddV(i,j)[this->fl.flatten(i,j)];
 
             auto& Vi = this->dV(i)[this->fl.flatten(i)];
             auto& Vj = this->dV(j)[this->fl.flatten(j)];
@@ -138,6 +139,7 @@ namespace nontrivial_metric
             auto deriv_i = this->res.generate_deriv_vector(i, this->printer);
             auto deriv_j = this->res.generate_deriv_vector(j, this->printer);
 
+            // no need to symmetrize; is symmetric with Levi-Civita connexion
             auto Vij  = this->res.ddV_resource(i, j, this->printer);
 
             auto Vi   = this->res.dV_resource(i, this->printer);
@@ -158,8 +160,6 @@ namespace nontrivial_metric
 
         this->pre_lambda();
 
-        ddV = this->res.ddV_resource(this->printer);
-
         this->cached = true;
       }
     
@@ -177,6 +177,7 @@ namespace nontrivial_metric
 
         this->derivs.clear();
         this->dV.clear();
+        this->ddV.clear();
 
         // invalidate cache
         this->cached = false;
@@ -196,7 +197,8 @@ namespace nontrivial_metric
         compute_timer(tm),
         cached(false),
         derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
-        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); })
+        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); }),
+        ddV([&](auto k) -> auto { return res.ddV_resource(k[0], k[1], printer); })
       {
         Mp = this->shared.generate_Mp();
       }

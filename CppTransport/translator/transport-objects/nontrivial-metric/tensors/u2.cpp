@@ -84,7 +84,9 @@ namespace nontrivial_metric
               }
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
-                auto& Vij = (*ddV)[this->fl.flatten(species_i, species_j)];
+                // don't need to symmetrize; will be symmetric with a Levi-Civita connexion
+                auto& Vij = this->ddV(species_i, species_j)[this->fl.flatten(species_i, species_j)];
+
                 auto& Vi  = this->dV(species_i)[this->fl.flatten(species_i)];
                 auto& Vj  = this->dV(species_j)[this->fl.flatten(species_j)];
 
@@ -194,6 +196,7 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
+            // don't need to symmetrize; will be symmetric with a Levi-Civita connexion
             auto V_ba_ij = this->res.ddV_resource(*i_field_b.second, *j_field_a.second, this->printer);
 
             auto V_b_i = this->res.dV_resource(*i_field_b.second, this->printer);
@@ -222,7 +225,8 @@ namespace nontrivial_metric
         compute_timer(tm),
         cached(false),
         derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
-        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); })
+        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); }),
+        ddV([&](auto k) -> auto { return res.ddV_resource(k[0], k[1], printer); })
       {
         Mp = this->shared.generate_Mp();
       }
@@ -233,8 +237,6 @@ namespace nontrivial_metric
         if(cached) throw tensor_exception("U2 already cached");
 
         this->pre_lambda();
-
-        ddV = this->res.ddV_resource(this->printer);
 
         this->cached = true;
       }
@@ -253,6 +255,7 @@ namespace nontrivial_metric
 
         this->derivs.clear();
         this->dV.clear();
+        this->ddV.clear();
 
         // invalidate cache
         this->cached = false;

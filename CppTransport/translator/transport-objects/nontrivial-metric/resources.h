@@ -157,24 +157,30 @@ namespace nontrivial_metric
       public:
 
         //! generate concrete dV resource labels
-        std::unique_ptr<flattened_tensor> dV_resource(variance v, const language_printer& printer);
+        std::unique_ptr<flattened_tensor>
+        dV_resource(variance v, const language_printer& printer);
 
         //! generate concrete ddV resource labels
-        std::unique_ptr<flattened_tensor> ddV_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor>
+        ddV_resource(variance vi, variance vj, const language_printer& printer);
 
         //! generate concrete dddV resource labels
-        std::unique_ptr<flattened_tensor> dddV_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor>
+        dddV_resource(variance vi, variance vj, variance vk, const language_printer& printer);
 
 
         //! generate abstract dV resource label
-        GiNaC::ex dV_resource(const index_literal& a, const language_printer& printer);
+        GiNaC::ex
+        dV_resource(const index_literal& a, const language_printer& printer);
 
         //! generate abstract ddV resource label
-        GiNaC::ex ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
+        GiNaC::ex
+        ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
 
         //! generate abstract dddV resource label
-        GiNaC::ex dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
-                                const language_printer& printer);
+        GiNaC::ex
+        dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
+                      const language_printer& printer);
 
 
         // TENSOR RESOURCES -- CURVATURE QUANTITIES

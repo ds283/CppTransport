@@ -162,10 +162,10 @@ namespace nontrivial_metric
         dV_cache dV;
 
         //! flattened ddV tensor
-        std::unique_ptr<flattened_tensor> ddV;
+        ddV_cache ddV;
 
         //! flattened dddV tensor
-        std::unique_ptr<flattened_tensor> dddV;
+        dddV_cache dddV;
 
         //! Hubble parameter
         GiNaC::ex Hsq;

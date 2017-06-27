@@ -33,7 +33,7 @@ namespace nontrivial_metric
       {
         if(indices.size() != DDV_TENSOR_INDICES) throw tensor_exception("ddV indices");
 
-        return(this->res.ddV_resource(this->printer));
+        return(this->res.ddV_resource(indices[0]->get_variance(), indices[1]->get_variance(), this->printer));
       }
     
     
