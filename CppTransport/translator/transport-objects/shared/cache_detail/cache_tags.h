@@ -27,6 +27,7 @@
 #define CPPTRANSPORT_CACHE_TAGS_H
 
 
+#include <iostream>
 #include <vector>
 #include <initializer_list>
 
@@ -41,6 +42,9 @@ bool operator==(const cache_tags& A, const cache_tags& B);
 
 //! inequality operator
 bool operator!=(const cache_tags& A, const cache_tags& B);
+
+//! stream insertion operator
+std::ostream& operator<<(std::ostream& out, const cache_tags& tags);
 
 
 class cache_tags
@@ -83,8 +87,10 @@ class cache_tags
     friend bool operator==(const cache_tags& A, const cache_tags& B);
 
     friend bool operator!=(const cache_tags& A, const cache_tags& B);
-
-
+    
+    friend std::ostream& operator<<(std::ostream& out, const cache_tags& tags);
+    
+    
     // SERVICES
 
   public:

@@ -109,3 +109,34 @@ bool operator!=(const cache_tags& A, const cache_tags& B)
   {
     return !(A == B);
   }
+
+
+std::ostream& operator<<(std::ostream& out, const cache_tags& tags)
+  {
+    if(!tags.symbols.empty())
+      {
+        out << "Symbol tags:" << '\n';
+        for(const auto& tag : tags.symbols)
+          {
+            out << "  " << *tag << '\n';
+          }
+      }
+    if(!tags.indices.empty())
+      {
+        out << "Index tags:" << '\n';
+        for(const auto& tag : tags.indices)
+          {
+            out << "  " << *tag << '\n';
+          }
+      }
+    if(!tags.var_indices.empty())
+      {
+        out << "Index tags with variance assignments:" << '\n';
+        for(const auto& tag : tags.var_indices)
+          {
+            out << "  " << *tag << '\n';
+          }
+      }
+    
+    return out;
+  }
