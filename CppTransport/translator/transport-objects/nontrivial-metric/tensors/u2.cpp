@@ -125,7 +125,7 @@ namespace nontrivial_metric
 
         result += -Vij/Hsq;
         result += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
-        result += -1/(Mp*Mp*Hsq) * ( deriv_i*Vj + deriv_j*Vi );
+        result += -( deriv_i*Vj + deriv_j*Vi ) / (Mp*Mp*Hsq);
         result += A2_ij;
 
         return(result);
@@ -157,7 +157,8 @@ namespace nontrivial_metric
         if(this->shared.can_roll_coordinates() && has_G && has_Ginv
            && this->res.can_roll_dV(i)
            && this->res.can_roll_dV(j)
-           && this->res.can_roll_ddV(ij)) return unroll_state::allow;
+           && this->res.can_roll_ddV(ij)
+           && this->res.can_roll_Riemann_A2(ij)) return unroll_state::allow;
         
         return unroll_state::force;   // can't roll-up
       }
@@ -196,8 +197,7 @@ namespace nontrivial_metric
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
 
-        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV | use_Riemann_A2, {i, j},
-                                                                      this->printer);
+        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV | use_Riemann_A2, {i, j}, this->printer);
         args += { k, a };
         args += { idx_i, idx_j };
 

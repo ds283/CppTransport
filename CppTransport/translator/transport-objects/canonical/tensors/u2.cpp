@@ -116,7 +116,7 @@ namespace canonical
 
         result += -Vij/Hsq;
         result += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
-        result += -1/(Mp*Mp*Hsq) * ( deriv_i*Vj + deriv_j*Vi );
+        result += -( deriv_i*Vj + deriv_j*Vi ) / (Mp*Mp*Hsq);
 
         return(result);
       }
