@@ -133,6 +133,9 @@ using deriv_cache = variance_tensor_cache<1>;
 using dV_cache = variance_tensor_cache<1>;
 using ddV_cache = variance_tensor_cache<2>;
 using dddV_cache = variance_tensor_cache<3>;
+using Riemann_A2_cache = variance_tensor_cache<2>;
+using Riemann_A3_cache = variance_tensor_cache<3>;
+using Riemann_B3_cache = variance_tensor_cache<3>;
 
 
 #endif //CPPTRANSPORT_VARIANCE_TENSOR_CACHE_H

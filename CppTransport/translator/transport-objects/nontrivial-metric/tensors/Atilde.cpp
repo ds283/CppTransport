@@ -65,7 +65,8 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("Atilde cache not ready");
 
         unsigned int index = this->fl.flatten(i, j, k);
-        auto args = this->res.generate_cache_arguments<field_index>(use_dV | use_ddV | use_dddV, {i,j,k}, this->printer);
+        auto args = this->res.generate_cache_arguments<field_index>(
+          use_dV | use_ddV | use_dddV | use_Riemann_A2 | use_Riemann_A3, { i, j, k }, this->printer);
         args += { k1, k2, k3, a };
 
         GiNaC::ex result;
@@ -95,13 +96,16 @@ namespace nontrivial_metric
             auto& Vi = this->dV(i)[this->fl.flatten(i)];
             auto& Vj = this->dV(j)[this->fl.flatten(j)];
             auto& Vk = this->dV(k)[this->fl.flatten(k)];
-
-            auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
-            auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
-            auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
-
-            result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
-                                deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+    
+            // construct Riemann A2, A3 combinations; both are symmetric
+            auto& A2_ij = this->A2(i,j)[this->fl.flatten(i,j)];
+            auto& A2_jk = this->A2(j,k)[this->fl.flatten(j,k)];
+            auto& A2_ik = this->A2(i,k)[this->fl.flatten(i,k)];
+    
+            auto& A3_ijk = this->A3(i,j,k)[this->fl.flatten(i,j,k)];
+    
+            result = this->expr(Vijk, Vij, Vjk, Vik, Vi, Vj, Vk, A2_ij, A2_jk, A2_ik, A3_ijk, deriv_i, deriv_j, deriv_k,
+                                k1, k2, k3, a);
 
             this->cache.store(expression_item_types::Atilde_item, index, args, result);
           }
@@ -110,12 +114,12 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex Atilde::expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::varidx& k,
-                           const GiNaC::ex& Vijk, const GiNaC::ex& Vij, const GiNaC::ex& Vjk, const GiNaC::ex& Vik,
-                           const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& Vk,
-                           const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
-                           const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3,
-                           const GiNaC::symbol& a)
+    GiNaC::ex
+    Atilde::expr(const GiNaC::ex& Vijk, const GiNaC::ex& Vij, const GiNaC::ex& Vjk, const GiNaC::ex& Vik,
+                 const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& Vk, const GiNaC::ex& A2_ij,
+                 const GiNaC::ex& A2_jk, const GiNaC::ex& A2_ik, const GiNaC::ex& A3_ijk, const GiNaC::ex& deriv_i,
+                 const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+                 const GiNaC::symbol& k3, const GiNaC::symbol& a)
       {
         GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
         GiNaC::ex xi_j = -2*(3-eps) * deriv_j - 2 * Vj/Hsq;
@@ -139,7 +143,14 @@ namespace nontrivial_metric
                   + (deriv_j * xi_i * xi_k) / (32*Mp*Mp*Mp*Mp) * (1 - k1dotk3*k1dotk3 / (k1*k1 * k3*k3)) / 3
                   + (deriv_k * xi_i * xi_j) / (32*Mp*Mp*Mp*Mp) * (1 - k1dotk2*k1dotk2 / (k1*k1 * k2*k2)) / 3;
 
-        result +=( deriv_i * deriv_j * deriv_k ) / (8 * Mp*Mp*Mp*Mp) * (6 - 2*eps);
+        result += ( deriv_i * deriv_j * deriv_k ) / (8 * Mp*Mp*Mp*Mp) * (6 - 2*eps);
+        
+        result += - (deriv_k * A2_ij) / (2 * 3 * Mp*Mp)
+                  - (deriv_j * A2_ik) / (2 * 3 * Mp*Mp)
+                  - (deriv_i * A2_jk) / (2 * 3 * Mp*Mp);
+        
+        // assumes A3_ijk is symmetric on ijk
+        result += A3_ijk / 3;
 
         return(result);
       }
@@ -192,7 +203,11 @@ namespace nontrivial_metric
            && this->res.can_roll_dddV(jik)
            && this->res.can_roll_dddV(jki)
            && this->res.can_roll_dddV(kij)
-           && this->res.can_roll_dddV(kji))
+           && this->res.can_roll_dddV(kji)
+           && this->res.can_roll_Riemann_A2(ij)
+           && this->res.can_roll_Riemann_A2(jk)
+           && this->res.can_roll_Riemann_A2(ik)
+           && this->res.can_roll_Riemann_A3(ijk))
           return unroll_behaviour::allow;
 
         return unroll_behaviour::force;   // can't roll-up
@@ -210,8 +225,9 @@ namespace nontrivial_metric
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
         auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
-
-        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV | use_dddV, {i,j,k}, this->printer);
+    
+        auto args = this->res.generate_cache_arguments<index_literal>(
+          use_dV | use_ddV | use_dddV | use_Riemann_A2 | use_Riemann_A3, { i, j, k }, this->printer);
         args += { k1, k2, k3, a };
         args += { idx_i, idx_j, idx_k };
 
@@ -237,16 +253,23 @@ namespace nontrivial_metric
 
             // don't need to symmetrize these, since they will be already symmetric with
             // a Levi-Civita connexion
-            auto Vij  = this->res.ddV_resource(i, j, this->printer);
-            auto Vjk  = this->res.ddV_resource(j, k, this->printer);
-            auto Vik  = this->res.ddV_resource(i, k, this->printer);
-
-            auto Vi   = this->res.dV_resource(i, this->printer);
-            auto Vj   = this->res.dV_resource(j, this->printer);
-            auto Vk   = this->res.dV_resource(k, this->printer);
-
-            result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
-                                deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+            auto Vij = this->res.ddV_resource(i, j, this->printer);
+            auto Vjk = this->res.ddV_resource(j, k, this->printer);
+            auto Vik = this->res.ddV_resource(i, k, this->printer);
+    
+            auto Vi = this->res.dV_resource(i, this->printer);
+            auto Vj = this->res.dV_resource(j, this->printer);
+            auto Vk = this->res.dV_resource(k, this->printer);
+            
+            // A2 and A3 are symmetryc
+            auto A2_ij = this->res.Riemann_A2_resource(i, j, this->printer);
+            auto A2_jk = this->res.Riemann_A2_resource(j, k, this->printer);
+            auto A2_ik = this->res.Riemann_A2_resource(i, k, this->printer);
+    
+            auto A3_ijk = this->res.Riemann_A3_resource(i, j, k, this->printer);
+    
+            result = this->expr(Vijk, Vij, Vjk, Vik, Vi, Vj, Vk, A2_ij, A2_jk, A2_ik, A3_ijk, deriv_i, deriv_j, deriv_k,
+                                k1, k2, k3, a);
 
             this->cache.store(expression_item_types::Atilde_lambda, 0, args, result);
           }
@@ -271,7 +294,9 @@ namespace nontrivial_metric
         derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
         dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); }),
         ddV([&](auto k) -> auto { return res.ddV_resource(k[0], k[1], printer); }),
-        dddV([&](auto k) -> auto { return res.dddV_resource(k[0], k[1], k[2], printer); })
+        dddV([&](auto k) -> auto { return res.dddV_resource(k[0], k[1], k[2], printer); }),
+        A2([&](auto k) -> auto { return res.Riemann_A2_resource(k[0], k[1], printer); }),
+        A3([&](auto k) -> auto { return res.Riemann_A3_resource(k[0], k[1], k[2], printer); })
       {
         Mp = this->shared.generate_Mp();
       }
@@ -302,6 +327,8 @@ namespace nontrivial_metric
         this->dV.clear();
         this->ddV.clear();
         this->dddV.clear();
+        this->A2.clear();
+        this->A3.clear();
 
         // invalidate cache
         this->cached = false;

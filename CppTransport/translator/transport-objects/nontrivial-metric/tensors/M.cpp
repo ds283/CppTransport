@@ -58,7 +58,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("M cache not ready");
 
         unsigned int index = this->fl.flatten(i, j);
-        auto args = this->res.generate_cache_arguments<field_index>(use_dV | use_ddV, {i,j}, this->printer);
+        auto args = this->res.generate_cache_arguments<field_index>(use_dV | use_ddV | use_Riemann_A2, {i,j}, this->printer);
 
         GiNaC::ex result;
 
@@ -74,11 +74,13 @@ namespace nontrivial_metric
 
             auto& Vi = this->dV(i)[this->fl.flatten(i)];
             auto& Vj = this->dV(j)[this->fl.flatten(j)];
+            
+            auto& A2_ij = this->A2(i,j)[this->fl.flatten(i,j)];
 
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
             auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
 
-            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
+            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, A2_ij, deriv_i, deriv_j);
 
             this->cache.store(expression_item_types::M_item, index, args, result);
           }
@@ -88,8 +90,7 @@ namespace nontrivial_metric
     
     
     GiNaC::ex M::expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::ex& Vij, const GiNaC::ex& Vi,
-                      const GiNaC::ex& Vj,
-                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j)
+                      const GiNaC::ex& Vj, const GiNaC::ex& A2_ij, const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j)
       {
         GiNaC::ex u = -Vij/Hsq;
         u += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
@@ -111,7 +112,8 @@ namespace nontrivial_metric
         if(this->shared.can_roll_coordinates()
            && this->res.can_roll_dV(i)
            && this->res.can_roll_dV(j)
-           && this->res.can_roll_ddV(ij)) return unroll_behaviour::allow;
+           && this->res.can_roll_ddV(ij)
+           && this->res.can_roll_Riemann_A2(ij)) return unroll_behaviour::allow;
         
         return unroll_behaviour::force;   // can't roll-up
       }
@@ -125,7 +127,7 @@ namespace nontrivial_metric
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
 
-        auto args = this->res.generate_cache_arguments<index_literal>(0, {i,j}, this->printer);
+        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV | use_Riemann_A2, {i,j}, this->printer);
         args += { idx_i, idx_j };
 
         this->pre_lambda();
@@ -140,12 +142,14 @@ namespace nontrivial_metric
             auto deriv_j = this->res.generate_deriv_vector(j, this->printer);
 
             // no need to symmetrize; is symmetric with Levi-Civita connexion
-            auto Vij  = this->res.ddV_resource(i, j, this->printer);
+            auto Vij = this->res.ddV_resource(i, j, this->printer);
+    
+            auto Vi = this->res.dV_resource(i, this->printer);
+            auto Vj = this->res.dV_resource(j, this->printer);
+            
+            auto A2_ij = this->res.Riemann_A2_resource(i, j, this->printer);
 
-            auto Vi   = this->res.dV_resource(i, this->printer);
-            auto Vj   = this->res.dV_resource(j, this->printer);
-
-            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
+            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, A2_ij, deriv_i, deriv_j);
 
             this->cache.store(expression_item_types::M_lambda, 0, args, result);
           }
@@ -178,6 +182,7 @@ namespace nontrivial_metric
         this->derivs.clear();
         this->dV.clear();
         this->ddV.clear();
+        this->A2.clear();
 
         // invalidate cache
         this->cached = false;
@@ -198,7 +203,8 @@ namespace nontrivial_metric
         cached(false),
         derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
         dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); }),
-        ddV([&](auto k) -> auto { return res.ddV_resource(k[0], k[1], printer); })
+        ddV([&](auto k) -> auto { return res.ddV_resource(k[0], k[1], printer); }),
+        A2([&](auto k) -> auto { return res.Riemann_A2_resource(k[0], k[1], printer); })
       {
         Mp = this->shared.generate_Mp();
       }
