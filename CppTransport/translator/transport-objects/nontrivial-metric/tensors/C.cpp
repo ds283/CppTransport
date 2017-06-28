@@ -65,8 +65,15 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("C cache not ready");
 
         unsigned int index = this->fl.flatten(i, j, k);
+    
+        // tag with variance information -- need to keep results of different variance distinct
+        auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
+        auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
+        auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
+    
         auto args = this->res.generate_cache_arguments<field_index>(0, {i,j,k}, this->printer);
         args += { k1, k2, k3, a };
+        args += { idx_i, idx_j, idx_k };
 
         GiNaC::ex result;
 
