@@ -76,7 +76,7 @@ namespace canonical
             auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
             auto idx_j = this->shared.generate_index<GiNaC::idx>(j);
 
-            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
+            result = this->expr(Vij, Vi, Vj, deriv_i, deriv_j);
 
             this->cache.store(expression_item_types::M_item, index, args, result);
           }
@@ -85,17 +85,14 @@ namespace canonical
       }
     
     
-    GiNaC::ex M::expr(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::ex& Vij, const GiNaC::ex& Vi,
-                      const GiNaC::ex& Vj,
-                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j)
+    GiNaC::ex M::expr(const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& deriv_i,
+                      const GiNaC::ex& deriv_j)
       {
-        GiNaC::ex u = -Vij/Hsq;
-        u += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
-        u += -1/(Mp*Mp*Hsq) * ( deriv_i*Vj + deriv_j*Vi );
+        GiNaC::ex u = Vij/Hsq;
+        u += (3-eps) * deriv_i * deriv_j / (Mp*Mp);
+        u += ( deriv_i*Vj + deriv_j*Vi ) / (Mp*Mp*Hsq);
 
-        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
-
-        return delta_ij*eps + u/3;
+        return u;
       }
     
     
@@ -133,7 +130,7 @@ namespace canonical
             auto Vi   = this->res.dV_resource(i, this->printer);
             auto Vj   = this->res.dV_resource(j, this->printer);
 
-            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
+            result = this->expr(Vij, Vi, Vj, deriv_i, deriv_j);
 
             this->cache.store(expression_item_types::M_lambda, 0, args, result);
           }

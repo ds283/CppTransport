@@ -86,7 +86,7 @@ namespace nontrivial_metric
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
             auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
 
-            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, A2_ij, deriv_i, deriv_j);
+            result = this->expr(Vij, Vi, Vj, A2_ij, deriv_i, deriv_j);
 
             this->cache.store(expression_item_types::M_item, index, args, result);
           }
@@ -95,16 +95,15 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex M::expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::ex& Vij, const GiNaC::ex& Vi,
-                      const GiNaC::ex& Vj, const GiNaC::ex& A2_ij, const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j)
+    GiNaC::ex M::expr(const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& A2_ij,
+                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j)
       {
-        GiNaC::ex u = -Vij/Hsq;
-        u += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
-        u += -1/(Mp*Mp*Hsq) * ( deriv_i*Vj + deriv_j*Vi );
-
-        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
-
-        return delta_ij*eps + u/3;
+        GiNaC::ex u = Vij/Hsq;
+        u += (3-eps) * deriv_i * deriv_j / (Mp*Mp);
+        u += ( deriv_i*Vj + deriv_j*Vi ) / (Mp*Mp*Hsq);
+        u += -A2_ij;
+        
+        return u;
       }
     
     
@@ -155,7 +154,7 @@ namespace nontrivial_metric
             
             auto A2_ij = this->res.Riemann_A2_resource(i, j, this->printer);
 
-            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, A2_ij, deriv_i, deriv_j);
+            result = this->expr(Vij, Vi, Vj, A2_ij, deriv_i, deriv_j);
 
             this->cache.store(expression_item_types::M_lambda, 0, args, result);
           }
