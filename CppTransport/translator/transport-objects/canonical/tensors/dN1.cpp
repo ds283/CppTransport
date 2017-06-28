@@ -72,9 +72,9 @@ namespace canonical
       }
     
     
-    unroll_behaviour dN1::get_unroll(const index_literal_list& idx_list)
+    unroll_state dN1::get_unroll(const index_literal_list& idx_list)
       {
-        return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
+        return unroll_state::force;   // currently can't roll-up delta-N expressions
       }
     
     

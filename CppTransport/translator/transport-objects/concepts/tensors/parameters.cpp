@@ -70,10 +70,10 @@ std::unique_ptr<atomic_lambda> parameters::compute_lambda(const index_literal& i
   }
 
 
-unroll_behaviour parameters::get_unroll(const index_literal_list& idx_list)
+unroll_state parameters::get_unroll(const index_literal_list& idx_list)
   {
-    if(this->shared.can_roll_parameters()) return unroll_behaviour::allow;
-    return unroll_behaviour::force;
+    if(this->shared.can_roll_parameters()) return unroll_state::allow;
+    return unroll_state::force;
   }
 
 

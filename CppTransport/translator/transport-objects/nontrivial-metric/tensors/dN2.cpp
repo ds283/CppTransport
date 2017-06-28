@@ -87,9 +87,9 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour dN2::get_unroll(const index_literal_list& idx_list)
+    unroll_state dN2::get_unroll(const index_literal_list& idx_list)
       {
-        return unroll_behaviour::force;   // currently can't roll-up delta-N expressions
+        return unroll_state::force;   // currently can't roll-up delta-N expressions
       }
     
     

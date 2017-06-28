@@ -79,7 +79,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override;
+        unroll_state get_unroll(const index_literal_list& idx_list) const override;
 
 
         // INTERNAL API
@@ -146,7 +146,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override;
+        unroll_state get_unroll(const index_literal_list& idx_list) const override;
 
 
         // INTERNAL API
@@ -210,7 +210,7 @@ namespace macro_packages
       public:
         
         //! determine unroll status
-        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->A2->get_unroll(idx_list); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->A2->get_unroll(idx_list); }
         
         
         // INTERNAL API
@@ -274,7 +274,7 @@ namespace macro_packages
       public:
         
         //! determine unroll status
-        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->A3->get_unroll(idx_list); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->A3->get_unroll(idx_list); }
         
         
         // INTERNAL API
@@ -338,7 +338,7 @@ namespace macro_packages
       public:
         
         //! determine unroll status
-        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->B3->get_unroll(idx_list); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->B3->get_unroll(idx_list); }
         
         
         // INTERNAL API

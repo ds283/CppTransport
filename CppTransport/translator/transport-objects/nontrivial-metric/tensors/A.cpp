@@ -171,7 +171,7 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour A::get_unroll(const index_literal_list& idx_list)
+    unroll_state A::get_unroll(const index_literal_list& idx_list)
       {
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > j = { idx_list[1]->get_variance() };
@@ -223,9 +223,9 @@ namespace nontrivial_metric
            && this->res.can_roll_Riemann_A2(jk)
            && this->res.can_roll_Riemann_A2(ik)
            && this->res.can_roll_Riemann_A3(ijk))
-          return unroll_behaviour::allow;
+          return unroll_state::allow;
 
-        return unroll_behaviour::force;   // can't roll-up
+        return unroll_state::force;   // can't roll-up
       }
 
 

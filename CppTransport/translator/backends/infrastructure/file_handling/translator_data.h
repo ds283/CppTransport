@@ -71,10 +71,10 @@ class translator_data
       { return error_context(this->outstack, std::move(l), s, e, this->err, this->wrn); }
     
     //! get error handler
-    error_context::error_handler get_error_handler() const { return this->err; }
+    const error_context::error_handler& get_error_handler() const { return this->err; }
     
     //! get warning handler
-    error_context::warning_handler get_warning_handler() const { return this->wrn; }
+    const error_context::warning_handler& get_warning_handler() const { return this->wrn; }
     
     
     // SET CORE, IMPLEMENTATION DATA

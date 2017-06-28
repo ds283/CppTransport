@@ -78,7 +78,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->u1_tensor->get_unroll(idx_list); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->u1_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -141,7 +141,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->u2_tensor->get_unroll(idx_list); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->u2_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -204,7 +204,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        unroll_behaviour get_unroll(const index_literal_list& idx_list) const override { return this->u3_tensor->get_unroll(idx_list); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->u3_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API

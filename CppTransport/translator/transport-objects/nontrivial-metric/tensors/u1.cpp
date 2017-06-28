@@ -94,7 +94,7 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour u1::get_unroll(const index_literal_list& idx_list)
+    unroll_state u1::get_unroll(const index_literal_list& idx_list)
       {
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
     
@@ -112,9 +112,9 @@ namespace nontrivial_metric
           }
     
         if(this->shared.can_roll_coordinates() && has_G && has_Ginv
-           && this->res.can_roll_dV(i)) return unroll_behaviour::allow;
+           && this->res.can_roll_dV(i)) return unroll_state::allow;
         
-        return unroll_behaviour::force;   // can't roll-up
+        return unroll_state::force;   // can't roll-up
       }
     
     

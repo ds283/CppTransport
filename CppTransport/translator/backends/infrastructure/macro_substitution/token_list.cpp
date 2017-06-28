@@ -431,6 +431,25 @@ token_list::token_list(const std::string& in, const std::string& pfx, unsigned i
         // if a token was recognized, push it onto token list
         if(tok) this->tokens.push_back(std::move(tok));
 			}
+
+    // check that unroll/roll-up status is consistent
+    if(!this->force_unroll.empty() && !this->prevent_unroll.empty())
+      {
+        error_context ctx = this->data_payload.make_error_context(input_string, 0, input_string->length());
+        ctx.error(ERROR_INCOMPATIBLE_UNROLL);
+
+        for(const auto& rule : this->force_unroll)
+          {
+            const error_context& pctx = rule.get_declaration_point();
+            pctx.warn(NOTIFY_CONFLICT_RULE_FORCES_UNROLL);
+          }
+
+        for(const auto& rule : this->prevent_unroll)
+          {
+            const error_context& pctx = rule.get_declaration_point();
+            pctx.warn(NOTIFY_CONFLICT_RULE_PREVENTS_UNROLL);
+          }
+      }
 	}
 
 
@@ -671,47 +690,122 @@ token_list::make_index_macro(const std::string& macro, const size_t position, co
       std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, true, make_context);
 
     // determine unroll status flags, either inherited from the macro or by allowing a suffix to the argument list
-    auto status = rule.get_unroll(idx_list);
-    bool push_force = false;
-    bool push_prevent = false;
-    if(status == unroll_behaviour::force)
-      {
-        push_force = true;
-      }
-    else if(status == unroll_behaviour::prevent)
-      {
-        push_prevent = true;
-      }
-    else if(current_position < input.length() && input[current_position] == '|')
-      // check for 'force unroll' suffix if macro is neutral; ignore suffixes otherwise
-      {
-        ++current_position;
-        push_force = true;
-      }
-    else if(position < input.length() && input[position] == '@')
-      // check for 'prevent unroll' suffix if macro is neutral
-      {
-        ++current_position;
-        push_prevent = true;
-      }
-    
+    current_position = this->find_unroll_policy(macro, rule.get_unroll(idx_list), position, current_position, make_context);
+
     error_context ctx = make_context(position, current_position);
-    
-    if(push_force) this->force_unroll.emplace_back(macro, ctx);
-    if(push_prevent) this->prevent_unroll.emplace_back(macro,ctx);
-
-    if(!this->force_unroll.empty() && !this->prevent_unroll.empty())
-      {
-        std::ostringstream msg;
-        msg << ERROR_INCOMPATIBLE_UNROLL << " '" << macro << "'";
-        ctx.error(msg.str());
-      }
-
     auto tok = std::make_unique<token_list_impl::index_macro_token>(macro, idx_list, arg_list, rule, ctx);
 
     this->index_macro_tokens.push_back(std::ref(*tok));
 
     return std::make_pair(std::move(tok), current_position);
+  }
+
+
+template <typename ContextFactory>
+size_t token_list::find_unroll_policy(const std::string& macro, unroll_state status,
+                                      const size_t position, size_t current_position, ContextFactory make_context)
+  {
+    const std::string& input = *this->input_string;
+
+    bool push_force = false;    // push macro to 'force' list?
+    bool push_prevent = false;  // push macro to 'prevent' list?
+
+    // check whether replacement rule has a force or prevent status flag
+    if(status == unroll_state::force)
+      {
+        push_force = true;
+      }
+    else if(status == unroll_state::prevent)
+      {
+        push_prevent = true;
+      }
+
+    // check whether the rule is followed by an unroll modifier
+    // '|' means force unroll, '@' means force roll-up
+    bool explicit_force = false;
+    bool explicit_prevent = false;
+
+    if(current_position < input.length())
+      {
+        if(input[current_position] == '|') { ++current_position; explicit_force = true; }
+        else if(input[current_position] == '@') { ++current_position; explicit_prevent = true; }
+      }
+
+    // can now safely build error context, since current_position points past end of replacement rule
+    error_context ctx = make_context(position, current_position);
+
+    if(explicit_force)
+      {
+        if(push_prevent)
+          {
+            ctx.warn(WARN_EXPLICIT_FORCE_IGNORED);
+          }
+        else
+          {
+            if(this->explicit_prevent)
+              {
+                ctx.warn(WARN_EXPLICIT_FORCE_FOLLOWS_PREVENT);
+
+                const error_context& pctx = this->explicit_prevent.get().get_declaration_point();
+                pctx.warn(NOTIFY_ORIGINAL_EXPLICIT_WAS);
+              }
+            else if(this->explicit_force)
+              {
+                if(this->data_payload.get_argument_cache().report_developer_warnings())
+                  {
+                    ctx.warn(WARN_EXPLICIT_FORCE_FOLLOWS_FORCE);
+
+                    const error_context& pctx = this->explicit_force.get().get_declaration_point();
+                    pctx.warn(NOTIFY_ORIGINAL_EXPLICIT_WAS);
+                  }
+                push_force = true;
+              }
+            else
+              {
+                this->explicit_force = contexted_value<std::string>{macro, ctx};
+                push_force = true;
+              }
+          }
+      }
+
+    if(explicit_prevent)
+      {
+        if(push_force)
+          {
+            ctx.warn(WARN_EXPLICIT_PREVENT_IGNORED);
+          }
+        else
+          {
+            if(this->explicit_prevent)
+              {
+                ctx.warn(WARN_EXPLICIT_PREVENT_FOLLOWS_PREVENT);
+
+                const error_context& pctx = this->explicit_prevent.get().get_declaration_point();
+                pctx.warn(NOTIFY_ORIGINAL_EXPLICIT_WAS);
+              }
+            else if(this->explicit_force)
+              {
+                if(this->data_payload.get_argument_cache().report_developer_warnings())
+                  {
+                    ctx.warn(WARN_EXPLICIT_PREVENT_FOLLOWS_FORCE);
+
+                    const error_context& pctx = this->explicit_force.get().get_declaration_point();
+                    pctx.warn(NOTIFY_ORIGINAL_EXPLICIT_WAS);
+                  }
+                push_prevent = true;
+              }
+            else
+              {
+                this->explicit_prevent = contexted_value<std::string>{macro, ctx};
+                push_prevent = true;
+              }
+          }
+      }
+
+    if(push_force) this->force_unroll.emplace_back(macro, ctx);
+    if(push_prevent) this->prevent_unroll.emplace_back(macro,ctx);
+
+    return current_position;
   }
 
 
@@ -949,13 +1043,13 @@ std::string token_list::to_string()
 	}
 
 
-unroll_behaviour token_list::unroll_status() const
+unroll_state token_list::unroll_status() const
   {
-    if(this->force_unroll.size() > 0 && this->prevent_unroll.size() == 0) return unroll_behaviour::force;
-    if(this->force_unroll.size() == 0 && this->prevent_unroll.size() > 0) return unroll_behaviour::prevent;
+    if(this->force_unroll.size() > 0 && this->prevent_unroll.size() == 0) return unroll_state::force;
+    if(this->force_unroll.size() == 0 && this->prevent_unroll.size() > 0) return unroll_state::prevent;
 
     // if we are in an inconsistent state then an error will already have been raised, so do nothing here
-    return unroll_behaviour::allow;
+    return unroll_state::allow;
   }
 
 

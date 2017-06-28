@@ -74,11 +74,11 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour metric::get_unroll(const index_literal_list& idx_list)
+    unroll_state metric::get_unroll(const index_literal_list& idx_list)
       {
-        if(res.can_roll_metric()) return unroll_behaviour::allow;
+        if(res.can_roll_metric()) return unroll_state::allow;
         
-        return unroll_behaviour::force;   // can't roll-up
+        return unroll_state::force;   // can't roll-up
       }
     
     

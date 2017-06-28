@@ -75,10 +75,10 @@ namespace canonical
       }
     
     
-    unroll_behaviour fields::get_unroll(const index_literal_list& idx_list)
+    unroll_state fields::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->shared.can_roll_coordinates()) return unroll_behaviour::allow;
-        return unroll_behaviour::force;
+        if(this->shared.can_roll_coordinates()) return unroll_state::allow;
+        return unroll_state::force;
       }
     
     

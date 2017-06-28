@@ -190,7 +190,7 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour zeta2::get_unroll(const index_literal_list& idx_list)
+    unroll_state zeta2::get_unroll(const index_literal_list& idx_list)
       {
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > i = { idx_list[0]->get_variance() };
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > j = { idx_list[1]->get_variance() };
@@ -206,9 +206,9 @@ namespace nontrivial_metric
 
         if(this->shared.can_roll_coordinates() && has_G
            && this->res.can_roll_dV(i)
-           && this->res.can_roll_dV(j)) return unroll_behaviour::allow;
+           && this->res.can_roll_dV(j)) return unroll_state::allow;
         
-        return unroll_behaviour::force;   // can't roll-up
+        return unroll_state::force;   // can't roll-up
       }
 
 

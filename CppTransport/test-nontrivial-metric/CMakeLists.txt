@@ -21,7 +21,7 @@ SET(CPPTRANSPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 # For that we only need CPPTRANSPORT_INCLUDE_DIR which here equals ..
 # JsonCPP includes work fine, since they have the same relative position in the build
 # tree and the source tree
-# We also need to dig the include path for Eigen out of the bundled SPLINTER repository
+# We also need to dig out the include path for Eigen from the bundled SPLINTER repository
 SET(
   CPPTRANSPORT_INCLUDE_DIRS
   ${CPPTRANSPORT_INCLUDE_DIR}

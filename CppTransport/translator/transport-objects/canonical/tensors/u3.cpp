@@ -129,11 +129,11 @@ namespace canonical
       }
     
     
-    unroll_behaviour u3::get_unroll(const index_literal_list& idx_list)
+    unroll_state u3::get_unroll(const index_literal_list& idx_list)
       {
         if(this->shared.can_roll_coordinates() && this->res.can_roll_dV() && this->res.can_roll_ddV() &&
-          this->res.can_roll_dddV()) return unroll_behaviour::allow;
-        return unroll_behaviour::force;   // can't roll-up
+          this->res.can_roll_dddV()) return unroll_state::allow;
+        return unroll_state::force;   // can't roll-up
       }
 
 

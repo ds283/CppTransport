@@ -165,7 +165,9 @@ constexpr auto ERROR_TOKENIZE_TOO_MANY_ERRORS        = "Too many errors from thi
 
 constexpr auto ERROR_NO_PRE_MAP                      = "Internal error: Data to perform macro replacement was not correctly pre-mapped";
 
-constexpr auto ERROR_INCOMPATIBLE_UNROLL             = "Unrolling requirements are incompatible with earlier macros for";
+constexpr auto ERROR_INCOMPATIBLE_UNROLL             = "Conflicting unroll/roll-up requirements";
+constexpr auto NOTIFY_CONFLICT_RULE_FORCES_UNROLL    = "Note: replacement rule forces unroll";
+constexpr auto NOTIFY_CONFLICT_RULE_PREVENTS_UNROLL  = "Note: replacement rule forces roll-up";
 constexpr auto ERROR_LHS_RHS_INCOMPATIBLE_UNROLL     = "Left-hand side and right-hand side have incompatible unrolling requirements";
 constexpr auto ERROR_PREVENT_INCOMPATIBLE_FAST       = "Macro preventing unroll is incompatible with --fast switch";
 constexpr auto NOTIFY_LHS_RULE_FORCES_UNROLL         = "Note: left-hand side replacement rule prevents roll-up";
@@ -176,6 +178,13 @@ constexpr auto NOTIFY_RHS_RULE_PREVENTS_UNROLL       = "Note: right-hand side re
 constexpr auto NOTIFY_RULE_PREVENTS_UNROLL           = "Note: replacement rule forces roll-up";
 constexpr auto WARN_POLICY_WOULD_UNROLL              = "Unroll/roll-up policy violation; policy would unroll, but roll-up forced";
 constexpr auto WARN_POLICY_WOULD_ROLLUP              = "Unroll/roll-up policy violation; policy would roll-up, but unroll forced";
+constexpr auto WARN_EXPLICIT_FORCE_IGNORED           = "Ignored explicit force unroll specifier because rule cannot be unrolled";
+constexpr auto WARN_EXPLICIT_PREVENT_IGNORED         = "Ignored explicit force roll-up specifier because rule cannot be rolled up";
+constexpr auto WARN_EXPLICIT_FORCE_FOLLOWS_PREVENT   = "Explicit force unroll specifier conflicts with earlier explicit force roll-up specifier";
+constexpr auto WARN_EXPLICIT_FORCE_FOLLOWS_FORCE     = "Duplicate force unroll specifier is redundant";
+constexpr auto WARN_EXPLICIT_PREVENT_FOLLOWS_PREVENT = "Duplicate force roll-up specifier is redundant";
+constexpr auto WARN_EXPLICIT_PREVENT_FOLLOWS_FORCE   = "Explicit force roll-up specifier conflicts with earlier explicit force unroll specifier";
+constexpr auto NOTIFY_ORIGINAL_EXPLICIT_WAS          = "Note: Location of earlier explicit specifier was";
 
 constexpr auto ERROR_MISSING_INDEX_ASSIGNMENT        = "Internal error: missing index assignment";
 

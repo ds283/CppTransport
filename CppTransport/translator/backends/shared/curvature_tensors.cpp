@@ -48,7 +48,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    unroll_behaviour replace_metric::get_unroll(const index_literal_list& idx_list) const
+    unroll_state replace_metric::get_unroll(const index_literal_list& idx_list) const
       {
         if(idx_list[0]->get_variance() != idx_list[1]->get_variance()) throw rule_apply_fail(ERROR_METRIC_RULE_MIXED_INDICES);
 
@@ -98,7 +98,7 @@ namespace macro_packages
       }
 
 
-    unroll_behaviour replace_connexion::get_unroll(const index_literal_list& idx_list) const
+    unroll_state replace_connexion::get_unroll(const index_literal_list& idx_list) const
       {
         if(idx_list[0]->get_variance() != variance::contravariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);
         if(idx_list[1]->get_variance() != variance::covariant) throw rule_apply_fail(ERROR_CONNEXION_INDICES);

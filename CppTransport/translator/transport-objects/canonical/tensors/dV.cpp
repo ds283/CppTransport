@@ -37,10 +37,10 @@ namespace canonical
       }
     
     
-    unroll_behaviour dV::get_unroll(const index_literal_list& idx_list)
+    unroll_state dV::get_unroll(const index_literal_list& idx_list)
       {
-        if(this->res.can_roll_dV()) return unroll_behaviour::allow;
-        return unroll_behaviour::force;   // can't roll-up
+        if(this->res.can_roll_dV()) return unroll_state::allow;
+        return unroll_state::force;   // can't roll-up
       }
     
     

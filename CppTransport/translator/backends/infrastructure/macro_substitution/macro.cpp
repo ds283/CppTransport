@@ -199,10 +199,10 @@ bool macro_agent::apply_unroll_policy(const token_list& left_tokens, const token
     unsigned int prevent = 0;
     unsigned int force = 0;
 
-    if(left_tokens.unroll_status() == unroll_behaviour::prevent) ++prevent;
-    if(right_tokens.unroll_status() == unroll_behaviour::prevent) ++prevent;
-    if(left_tokens.unroll_status() == unroll_behaviour::force) ++force;
-    if(right_tokens.unroll_status() == unroll_behaviour::force) ++force;
+    if(left_tokens.unroll_status() == unroll_state::prevent) ++prevent;
+    if(right_tokens.unroll_status() == unroll_state::prevent) ++prevent;
+    if(left_tokens.unroll_status() == unroll_state::force) ++force;
+    if(right_tokens.unroll_status() == unroll_state::force) ++force;
     
     // if the assignment set is nonempty and we have both force and prevent conditions, then we cannot
     // resolve the situation
@@ -223,15 +223,16 @@ bool macro_agent::apply_unroll_policy(const token_list& left_tokens, const token
         
         return false;
       }
-    
+
+    // emit warnings if there is a policy violation that was not mandated by an explicit specifier
     bool emit = false;
-    if(unroll_by_policy && prevent > 0)
+    if(unroll_by_policy && prevent > 0 && !left_tokens.has_explicit_prevent() && !right_tokens.has_explicit_prevent())
       {
         // issue notification that unrolling has been prevented, if we have been asked to do so
         ctx.warn(WARN_POLICY_WOULD_UNROLL);
         emit = true;
       }
-    if(!unroll_by_policy && force > 0)
+    if(!unroll_by_policy && force > 0 && !left_tokens.has_explicit_force() && !right_tokens.has_explicit_force())
       {
         ctx.warn(WARN_POLICY_WOULD_ROLLUP);
         emit = true;

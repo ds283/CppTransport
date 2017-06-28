@@ -131,7 +131,13 @@ class token_list
   public:
 
     //! does this token set prevent, force or allow unrolling?
-    unroll_behaviour unroll_status() const;
+    unroll_state unroll_status() const;
+
+    //! does this token set have an explicit force unroll specifier?
+    bool has_explicit_force() const { return static_cast<bool>(this->explicit_force); }
+
+    //! does this token set have an explicit prevent unroll specifier?
+    bool has_explicit_prevent() const { return static_cast<bool>(this->explicit_prevent); }
     
     //! get list of replacement rules that are forcing unrolling
     const std::list< contexted_value<std::string> > get_force_rules() const { return this->force_unroll; }
@@ -187,6 +193,14 @@ class token_list
     std::pair<std::unique_ptr<token_list_impl::index_directive_token>, size_t>
     make_index_directive(const std::string& macro, const size_t position, const RuleSet& rules,
                              ContextFactory make_context);
+
+  protected:
+
+    //! determine unroll specifiers and find unroll status for an indexed replacement rule
+    template <typename ContextFactory>
+    size_t find_unroll_policy(const std::string& macro, unroll_state status,
+                              const size_t position, size_t current_position,
+                              ContextFactory make_context);
 
 
     // VALIDATION
@@ -260,12 +274,12 @@ class token_list
 
     // TOKEN DATA
 
-    typedef std::list< std::unique_ptr< token_list_impl::generic_token > > token_database;
-    typedef std::list< std::reference_wrapper< token_list_impl::simple_macro_token > > simple_macro_token_database;
-    typedef std::list< std::reference_wrapper< token_list_impl::index_macro_token > > index_macro_token_database;
-    typedef std::list< std::reference_wrapper< token_list_impl::index_literal_token > > index_literal_token_database;
-    typedef std::list< std::reference_wrapper< token_list_impl::simple_directive_token > > simple_directive_token_database;
-    typedef std::list< std::reference_wrapper< token_list_impl::index_directive_token > > index_directive_token_database;
+    using token_database = std::list< std::unique_ptr< token_list_impl::generic_token > >;
+    using simple_macro_token_database = std::list< std::reference_wrapper< token_list_impl::simple_macro_token > >;
+    using index_macro_token_database = std::list< std::reference_wrapper< token_list_impl::index_macro_token > >;
+    using index_literal_token_database = std::list< std::reference_wrapper< token_list_impl::index_literal_token > >;
+    using simple_directive_token_database = std::list< std::reference_wrapper< token_list_impl::simple_directive_token > >;
+    using index_directive_token_database = std::list< std::reference_wrapper< token_list_impl::index_directive_token > >;
 
     //! tokenized version of input
     token_database tokens;
@@ -293,7 +307,13 @@ class token_list
 
     //! list of macro names forcing loop unroll
     std::list< contexted_value<std::string> > force_unroll;
-    
+
+    //! optional indicating whether an explicit 'prevent' unroll specifier was encountered
+    boost::optional< contexted_value<std::string> > explicit_prevent;
+
+    //! optional indicating whether an explicit 'force' unroll specifier was encountered
+    boost::optional< contexted_value<std::string> > explicit_force;
+
 
     // INDEX DATA (maintains information about indices encountered in this entire line)
 

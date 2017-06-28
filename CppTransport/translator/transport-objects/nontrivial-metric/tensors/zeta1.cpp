@@ -91,7 +91,7 @@ namespace nontrivial_metric
       }
 
 
-    unroll_behaviour zeta1::get_unroll(const index_literal_list& idx_list)
+    unroll_state zeta1::get_unroll(const index_literal_list& idx_list)
       {
         // if our index is covariant then we need the metric to pull down an index on the coordinate vector
         // there are no occurrence of the potential, so we don't need the inverse metric to push their indices up
@@ -101,8 +101,8 @@ namespace nontrivial_metric
             has_G = this->res.can_roll_metric();
           }
 
-        if(this->shared.can_roll_coordinates() && has_G) return unroll_behaviour::allow;
-        return unroll_behaviour::force;   // can't roll-up
+        if(this->shared.can_roll_coordinates() && has_G) return unroll_state::allow;
+        return unroll_state::force;   // can't roll-up
       }
     
     

@@ -122,7 +122,7 @@ namespace nontrivial_metric
       }
     
     
-    unroll_behaviour C::get_unroll(const index_literal_list& idx_list)
+    unroll_state C::get_unroll(const index_literal_list& idx_list)
       {
         // if any index is covariant then we need the metric to pull down an index on the coordinate vector
         // there are no occurrences of the potential derivative, though, so we don't need the inverse metric
@@ -134,8 +134,8 @@ namespace nontrivial_metric
             has_G = this->res.can_roll_metric();
           }
         
-        if(this->shared.can_roll_coordinates() && has_G) return unroll_behaviour::allow;
-        return unroll_behaviour::force;   // can't unroll
+        if(this->shared.can_roll_coordinates() && has_G) return unroll_state::allow;
+        return unroll_state::force;   // can't unroll
       }
 
 
