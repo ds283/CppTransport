@@ -63,8 +63,9 @@ namespace nontrivial_metric
         // tag with variance information -- need to keep results of different variance distinct
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
-    
-        auto args = this->res.generate_cache_arguments<phase_index>(use_dV | use_ddV, {i,j}, this->printer);
+
+        auto args = this->res.generate_cache_arguments<phase_index>(use_dV | use_ddV | use_Riemann_A2, {i, j},
+                                                                    this->printer);
         args += { k, a };
         args += { idx_i, idx_j };
 
@@ -76,9 +77,6 @@ namespace nontrivial_metric
 
             field_index species_i = this->traits.to_species(i);
             field_index species_j = this->traits.to_species(j);
-
-            auto idx_i = this->shared.generate_index<GiNaC::varidx>(species_i);
-            auto idx_j = this->shared.generate_index<GiNaC::varidx>(species_j);
 
             if(this->traits.is_species(i) && this->traits.is_species(j))
               {
@@ -93,13 +91,17 @@ namespace nontrivial_metric
                 // don't need to symmetrize; will be symmetric with a Levi-Civita connexion
                 auto& Vij = this->ddV(species_i, species_j)[this->fl.flatten(species_i, species_j)];
 
-                auto& Vi  = this->dV(species_i)[this->fl.flatten(species_i)];
-                auto& Vj  = this->dV(species_j)[this->fl.flatten(species_j)];
+                auto& Vi = this->dV(species_i)[this->fl.flatten(species_i)];
+                auto& Vj = this->dV(species_j)[this->fl.flatten(species_j)];
 
                 auto& deriv_i = this->derivs(species_i)[this->fl.flatten(species_i)];
                 auto& deriv_j = this->derivs(species_j)[this->fl.flatten(species_j)];
 
-                result = this->expr_field_momentum(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j, k, a);
+                auto& A2_ij = this->A2(species_i, species_j)[this->fl.flatten(species_i, species_j)];
+
+                auto delta_ij = this->G(species_i, species_j);
+
+                result = this->expr_field_momentum(delta_ij, Vij, Vi, Vj, deriv_i, deriv_j, A2_ij, k, a);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_momentum(j))
               {
@@ -112,19 +114,19 @@ namespace nontrivial_metric
 
         return(result);
       }
-    
-    
-    GiNaC::ex u2::expr_field_momentum(const GiNaC::varidx& i, const GiNaC::varidx& j,
-                                      const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
-                                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
-                                      const GiNaC::symbol& k, const GiNaC::symbol& a)
+
+
+    GiNaC::ex
+    u2::expr_field_momentum(const GiNaC::ex& delta_ij, const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
+                            const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& A2_ij,
+                            const GiNaC::symbol& k, const GiNaC::symbol& a)
       {
-        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
         GiNaC::ex result = delta_ij * ( -k*k / (a*a * Hsq) );
 
         result += -Vij/Hsq;
         result += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
         result += -1/(Mp*Mp*Hsq) * ( deriv_i*Vj + deriv_j*Vi );
+        result += A2_ij;
 
         return(result);
       }
@@ -152,7 +154,7 @@ namespace nontrivial_metric
             has_Ginv = this->res.can_roll_metric_inverse();
           }
 
-        if(this->shared.can_roll_coordinates() && has_G && has_G
+        if(this->shared.can_roll_coordinates() && has_G && has_Ginv
            && this->res.can_roll_dV(i)
            && this->res.can_roll_dV(j)
            && this->res.can_roll_ddV(ij)) return unroll_state::allow;
@@ -194,7 +196,8 @@ namespace nontrivial_metric
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
 
-        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV, {i,j}, this->printer);
+        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV | use_Riemann_A2, {i, j},
+                                                                      this->printer);
         args += { k, a };
         args += { idx_i, idx_j };
 
@@ -208,8 +211,12 @@ namespace nontrivial_metric
             auto V_b_i = this->res.dV_resource(*i_field_b.second, this->printer);
             auto V_a_j = this->res.dV_resource(*j_field_a.second, this->printer);
 
+            auto A2_ij = this->res.Riemann_A2_resource(*i_field_b.second, *j_field_a.second, this->printer);
+
+            auto delta_ij = this->G(*i_field_b.second, *j_field_a.second);
+
             map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
-              this->expr_field_momentum(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);
+              this->expr_field_momentum(delta_ij, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, A2_ij, k, a);
 
             this->cache.store(expression_item_types::U2_lambda, 0, args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
@@ -232,7 +239,11 @@ namespace nontrivial_metric
         cached(false),
         derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
         dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); }),
-        ddV([&](auto k) -> auto { return res.ddV_resource(k[0], k[1], printer); })
+        ddV([&](auto k) -> auto
+              { return res.ddV_resource(k[0], k[1], printer); }),
+        A2([&](auto k) -> auto
+             { return res.Riemann_A2_resource(k[0], k[1], printer); }),
+        G(r, s, f, p)
       {
         Mp = this->shared.generate_Mp();
       }
@@ -262,6 +273,7 @@ namespace nontrivial_metric
         this->derivs.clear();
         this->dV.clear();
         this->ddV.clear();
+        this->A2.clear();
 
         // invalidate cache
         this->cached = false;

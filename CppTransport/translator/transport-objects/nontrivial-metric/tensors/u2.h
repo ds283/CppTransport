@@ -33,6 +33,7 @@
 #include "shared/shared_resources.h"
 #include "shared/variance_tensor_cache.h"
 #include "nontrivial-metric/resources.h"
+#include "nontrivial-metric/metric_resource.h"
 
 #include "indices.h"
 
@@ -104,10 +105,10 @@ namespace nontrivial_metric
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr_field_momentum(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::ex& Vij,
-                                      const GiNaC::ex& Vi, const GiNaC::ex& Vj,
-                                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::symbol& k,
-                                      const GiNaC::symbol& a);
+        GiNaC::ex
+        expr_field_momentum(const GiNaC::ex& delta_ij, const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
+                            const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& A2_ij,
+                            const GiNaC::symbol& k, const GiNaC::symbol& a);
 
 
         // INTERNAL DATA
@@ -158,6 +159,12 @@ namespace nontrivial_metric
 
         //! flattened ddV tensor
         ddV_cache ddV;
+
+        //! flattened Riemann A2 tensor
+        Riemann_A2_cache A2;
+
+        //! generator for metric components
+        metric_resource G;
 
         //! Hubble parameter
         GiNaC::ex Hsq;
