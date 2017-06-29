@@ -28,23 +28,25 @@
 
 
 abstract_index::abstract_index(char l, unsigned int f, unsigned int p)
-  : label(l),
-    classification(identify_index(l)),
-    fields(f),
-    params(p),
-    pre_string({"_"}),
-    post_string()
+  : label{l},
+    classification{identify_index(l)},
+    fields{f},
+    params{p},
+    pre_string{ {"_"} },
+    post_string{},
+    species_mappings{0}
   {
   }
 
 
 abstract_index::abstract_index(char l, index_class c, unsigned int f, unsigned int p)
-  : label(l),
-    classification(c),
-    fields(f),
-    params(p),
-    pre_string({"_"}),
-    post_string()
+  : label{l},
+    classification{c},
+    fields{f},
+    params{p},
+    pre_string{ {"_"} },
+    post_string{},
+    species_mappings{0}
   {
   }
 
@@ -74,6 +76,21 @@ unsigned int abstract_index::numeric_range() const
 std::string abstract_index::get_loop_variable() const
   {
     std::string r(1, this->label);
+
+    if(this->species_mappings != 0)
+      {
+        int offset = static_cast<int>(this->fields) * this->species_mappings;
+
+        if(offset > 0)
+          {
+            r.append("+");
+            r.append(std::to_string(offset));
+          }
+        else
+          {
+            r.append(std::to_string(offset));
+          }
+      }
 
     for(const std::string& s : this->pre_string)
       {
@@ -109,4 +126,18 @@ void abstract_index::push_pre_modifier(std::string s)
 void abstract_index::push_pre_modifier()
   {
     if(!this->pre_string.empty()) this->pre_string.pop_front();
+  }
+
+
+void abstract_index::convert_species_to_momentum()
+  {
+    ++this->species_mappings;
+    if(this->species_mappings > 1 || this->species_mappings < -1) throw std::runtime_error(ERROR_SPECIES_MAPPING_OVERFLOW);
+  }
+
+
+void abstract_index::convert_momentum_to_species()
+  {
+    --this->species_mappings;
+    if(this->species_mappings > 1 || this->species_mappings < -1) throw std::runtime_error(ERROR_SPECIES_MAPPING_OVERFLOW);
   }

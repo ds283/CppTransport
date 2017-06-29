@@ -107,24 +107,24 @@ class language_printer
     //! generate 1D array subscript
     template <typename A>
     std::string
-    array_subscript(const std::string& kernel, A a, boost::optional<std::string> flatten, unsigned int offset=0) const;
+    array_subscript(const std::string& kernel, A a, boost::optional<std::string> flatten) const;
     
     //! generate 2D array subscript
     template <typename A, typename B>
     std::string
-    array_subscript(const std::string& kernel, A a, B b, boost::optional<std::string> flatten, unsigned int offset=0) const;
+    array_subscript(const std::string& kernel, A a, B b, boost::optional<std::string> flatten) const;
     
     //! generate 3D array subscript
     template <typename A, typename B, typename C>
     std::string
-    array_subscript(const std::string& kernel, A a, B b, C c, boost::optional<std::string> flatten, unsigned int offset=0) const;
+    array_subscript(const std::string& kernel, A a, B b, C c, boost::optional<std::string> flatten) const;
     
   protected:
     
     //! format array subscripts
     virtual std::string
     format_array_subscript(const std::string& kernel, const std::initializer_list<std::string> args,
-                           const boost::optional<std::string>& flatten, unsigned int offset) const = 0;
+                           const boost::optional<std::string>& flatten) const = 0;
 
 
     // INTERFACE -- INITIALIZATION LISTS
@@ -205,35 +205,34 @@ inline std::string to_index_string(const std::string& str)
 
 
 template <typename A>
-std::string language_printer::array_subscript(const std::string& kernel, A a, boost::optional<std::string> flatten,
-                                              unsigned int offset) const
+std::string
+language_printer::array_subscript(const std::string& kernel, A a, boost::optional<std::string> flatten) const
   {
     std::string arg = to_index_string(a);
-    return this->format_array_subscript(kernel, { arg }, flatten, offset);
+    return this->format_array_subscript(kernel, { arg }, flatten);
   }
 
 
 template <typename A, typename B>
-std::string language_printer::array_subscript(const std::string& kernel, A a, B b, boost::optional<std::string> flatten,
-                                              unsigned int offset) const
+std::string
+language_printer::array_subscript(const std::string& kernel, A a, B b, boost::optional<std::string> flatten) const
   {
     std::string arg1 = to_index_string(a);
     std::string arg2 = to_index_string(b);
 
-    return this->format_array_subscript(kernel, { arg1, arg2 }, flatten, offset);
+    return this->format_array_subscript(kernel, { arg1, arg2 }, flatten);
   }
 
 
 template <typename A, typename B, typename C>
 std::string
-language_printer::array_subscript(const std::string& kernel, A a, B b, C c, boost::optional<std::string> flatten,
-                                  unsigned int offset) const
+language_printer::array_subscript(const std::string& kernel, A a, B b, C c, boost::optional<std::string> flatten) const
   {
     std::string arg1 = to_index_string(a);
     std::string arg2 = to_index_string(b);
     std::string arg3 = to_index_string(c);
     
-    return this->format_array_subscript(kernel, { arg1, arg2, arg3 }, flatten, offset);
+    return this->format_array_subscript(kernel, { arg1, arg2, arg3 }, flatten);
   }
 
 

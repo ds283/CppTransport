@@ -216,7 +216,7 @@ std::string C_style_printer::format_if_stmt(const std::string& kw, const std::li
 
 std::string
 C_style_printer::format_array_subscript(const std::string& kernel, const std::initializer_list<std::string> args,
-                                        const boost::optional<std::string>& flatten, unsigned int offset) const
+                                        const boost::optional<std::string>& flatten) const
   {
     std::ostringstream stmt;
     stmt << kernel << this->array_open;
@@ -229,13 +229,7 @@ C_style_printer::format_array_subscript(const std::string& kernel, const std::in
     for(const std::string& arg : args)
       {
         if(count > 0) stmt << ",";
-
         stmt << arg;
-        if(offset != 0)
-          {
-            stmt << "+" << offset;
-          }
-
         ++count;
       }
     

@@ -77,13 +77,18 @@ class index_traits
 
   public:
 
-    //! convert an abstract phase-space index to an abstract species index
-    //! conversion is direct
+    //! convert an abstract phase-space index to an abstract species index,
+    //! assuming that the original index had a species value.
+    //! Operationally this just means switching the index_class::full
+    //! tag for index_class::field_only
     std::pair< std::unique_ptr<abstract_index>, std::unique_ptr<index_literal> >
     species_to_species(const index_literal& index);
 
-    //! convert an abstract phase-space index to an abstract species index
-    //! conversion is offset by -number_fields
+    //! convert an abstract phase-space index to an abstract species index,
+    //! assuming that the original index had a momentum value.
+    //! Operationally this means switching the index_class::full
+    //! tag for index_class::field_only and simultaneously offsetting
+    //! its loop-variable value by -<number_fields>
     std::pair< std::unique_ptr<abstract_index>, std::unique_ptr<index_literal> >
     momentum_to_species(const index_literal& index);
 

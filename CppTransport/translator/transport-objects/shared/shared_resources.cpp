@@ -113,21 +113,21 @@ std::unique_ptr<symbol_list> shared_resources::generate_deriv_symbols(const lang
     const auto resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
 
-    // get max field index; variance assignment doesn't matter here
-    const field_index max_i = this->get_max_field_index(variance::none);
-
     if(resource && flatten)
       {
-        for(field_index i = field_index(0); i < max_i; ++i)
+        const phase_index max_i = this->get_max_phase_index(variance::none);
+
+        for(phase_index i = phase_index(this->num_fields); i < max_i; ++i)
           {
-            // TODO: explicit offset by this->num_fields is a bit ugly; would be nice to find a better approach
-            std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), **flatten, this->num_fields);
+            std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), **flatten);
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
       }
     else
       {
+        const field_index max_i = this->get_max_field_index(variance::none);
+        
         for(field_index i = field_index(0); i < max_i; ++i)
           {
             list->push_back(this->deriv_list[this->fl.flatten(i)]);
@@ -161,7 +161,7 @@ GiNaC::symbol shared_resources::generate_parameter_vector(const abstract_index& 
 
     if(!resource) throw resource_failure("parameter vector");
 
-    std::string variable = printer.array_subscript(*resource, idx, boost::optional<std::string>(), 0);
+    std::string variable = printer.array_subscript(*resource, idx, boost::none);
     return this->sym_factory.get_symbol(variable);
   }
 

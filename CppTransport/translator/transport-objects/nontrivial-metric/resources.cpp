@@ -973,6 +973,8 @@ namespace nontrivial_metric
 
     GiNaC::ex resources::generate_field_vector(const index_literal& idx, const language_printer& printer) const
       {
+        if(idx.get_class() != index_class::field_only) throw tensor_exception("generate_field_vector index class");
+
         // for the coordinates themselves, there is no notion of co- or contravariant components;
         // the coordinate labels are just scalar fields on the manifold.
         // share.generate_field_symbols() gives us these labels directly, so all we need do is return them.
@@ -989,6 +991,8 @@ namespace nontrivial_metric
 
     GiNaC::ex resources::generate_deriv_vector(const index_literal& idx, const language_printer& printer) const
       {
+        if(idx.get_class() != index_class::field_only) throw tensor_exception("generate_deriv_vector index class");
+
         // the field derivatives transform tensorially and so here there is a notion of co- and contravariant
         // components.
         // Depending what resources are available we may need to perform index raising or lowering, which is handled
@@ -998,14 +1002,13 @@ namespace nontrivial_metric
         const auto& flatten = this->mgr.phase_flatten();
 
         if(!resource || !flatten) throw resource_failure("coordinate vector");
-        
-        abstract_index idx_abstract_offset = idx;
-        std::ostringstream modifier;
-        modifier << "-" << this->payload.model.get_number_fields();
-        idx_abstract_offset.push_post_modifier(modifier.str());
-        
+    
+        // make a copy of idx and add a species-to-momentum conversion
+        abstract_index idx_offset_abst = idx;
+        idx_offset_abst.convert_species_to_momentum();
+
         index_literal idx_offset = idx;
-        idx_offset.reassign(idx_abstract_offset);
+        idx_offset.reassign(idx_offset_abst);
 
         return this->position_indices<1, index_literal>({ variance::contravariant }, { std::cref(idx_offset) }, *resource, **flatten, printer);
       }
@@ -1140,7 +1143,9 @@ namespace nontrivial_metric
     
     namespace resource_impl
       {
-        
+
+        //! generate a null field_index instance with assigned variance; used when expanding a parameter
+        //! pack pattern
         field_index initialize_index_helper(variance v)
           {
             return { 0, v };
@@ -2089,7 +2094,8 @@ namespace nontrivial_metric
             for(field_index j = field_index(0, reqd[1]); j < max_j; ++j)
               {
                 unsigned int index = this->fl.flatten(i,j);
-                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
+                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
+                                                               *flatten);
                 list[index] = this->sym_factory.get_symbol(variable);
               }
           }

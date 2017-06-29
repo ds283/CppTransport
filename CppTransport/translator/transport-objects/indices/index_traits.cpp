@@ -83,11 +83,10 @@ index_traits::species_to_species(const index_literal& index)
   }
 
 
-std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>> index_traits::momentum_to_species(
-  const index_literal& index)
+std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>>
+index_traits::momentum_to_species(const index_literal& index)
   {
     // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
-    
     
     const abstract_index& original_abst = index;
     
@@ -96,11 +95,9 @@ std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>> index
     auto new_index = std::make_unique<index_literal>(index);
     new_index->reassign(*new_abst);
 
-    // add post-modified to loop label that subtracts an appropriate value to turn this momentum value
+    // add post-modifier to loop label that subtracts an appropriate value to turn this momentum value
     // into a species value
-    std::ostringstream post_modifier;
-    post_modifier << "-" << original_abst.get_number_fields();
-    new_abst->push_post_modifier(post_modifier.str());
-    
+    new_abst->convert_momentum_to_species();
+
     return std::make_pair(std::move(new_abst), std::move(new_index));
   }

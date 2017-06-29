@@ -170,10 +170,10 @@ class C_style_printer: public language_printer
   
   protected:
     
-    //! format a 1D array subscript
+    //! format an array subscript
     std::string
     format_array_subscript(const std::string& kernel, const std::initializer_list<std::string> args,
-                           const boost::optional<std::string>& flatten, unsigned int offset) const override;
+                               const boost::optional<std::string>& flatten) const override;
 
 
     // INTERFACE -- INITIALIZATION LISTS

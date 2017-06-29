@@ -48,7 +48,7 @@ class abstract_index
     ~abstract_index() = default;
 
 
-    // INTERFACE -- REQUIRED FOR INDEX_DATABASE
+    // SERVICES REQUIRED FOR INDEX_DATABASE
 
   public:
 
@@ -59,7 +59,7 @@ class abstract_index
     index_class get_class() const { return(this->classification); }
 
 
-    // INTERFACE -- TURN SELF INTO A FOR-LOOP VARIABLE
+    // FORMAT AS A LOOP VARIABLE
 
   public:
 
@@ -67,7 +67,7 @@ class abstract_index
     std::string get_loop_variable() const;
 
 
-    // INTERFACE -- SPECIFIC TO INDEX_ABSTRACT
+    // SERVICE AND UTILITIES
 
   public:
 
@@ -80,16 +80,36 @@ class abstract_index
     //! return total number of parameters
     unsigned int get_number_parameters() const { return(this->params); }
 
+
+    // INDEX VALUE OFFSETS
+
+  public:
+
+    //! add a new offset by +number_of_fields, used to convert a species value into a momentum value
+    void convert_species_to_momentum();
+
+    //! add a new offset by -number_of_fields, used to convert a momentum value into a species value
+    void convert_momentum_to_species();
+
+
+    // GENERIC INDEX VALUE MODIFIERS
+
+  public:
+
     //! add a new post modifier; used when subtracting values to convert momenta to fields
+    [[deprecated("Unsafe interface replaced by convert_species_to_momentum() or convert_momentum_to_species()")]]
     void push_post_modifier(std::string s);
 
     //! remove the last post modifier
+    [[deprecated("Unsafe interface replaced by convert_species_to_momentum() or convert_momentum_to_species()")]]
     void pop_post_modifier();
 
     //! add a new pre modifier
+    [[deprecated("Unsafe interface replaced by convert_species_to_momentum() or convert_momentum_to_species()")]]
     void push_pre_modifier(std::string s);
 
     //! remove the last pre modifier
+    [[deprecated("Unsafe interface replaced by convert_species_to_momentum() or convert_momentum_to_species()")]]
     void push_pre_modifier();
 
 
@@ -104,10 +124,19 @@ class abstract_index
     index_class classification;
 
     //! cache total number of fields
-    unsigned int fields;
+    const unsigned int fields;
 
     //! cache total number of parameters
-    unsigned int params;
+    const unsigned int params;
+
+
+    // SPECIES CONVERSIONS
+
+    //! track total number of species-to-momentum conversions that have been applied
+    int species_mappings;
+
+
+    // GENERIC MODIFIERS
 
     //! set of "pre" modifiers to be applied during conversion to a loop variable
     std::list<std::string> pre_string;

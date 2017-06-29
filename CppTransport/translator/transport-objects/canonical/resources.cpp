@@ -25,6 +25,7 @@
 
 
 #include "resources.h"
+#include "concepts/tensor_exception.h"
 
 
 namespace canonical
@@ -186,6 +187,8 @@ namespace canonical
 
     GiNaC::ex resources::generate_field_vector(const abstract_index& idx, const language_printer& printer) const
       {
+        if(idx.get_class() != index_class::field_only) throw tensor_exception("generate_field_vector index class");
+
         // no distinction between co- and contravariant indices in a flat model, so we can always return the
         // raw variable labels (which notionally are the contravariant components)
 
@@ -201,6 +204,8 @@ namespace canonical
 
     GiNaC::ex resources::generate_deriv_vector(const abstract_index& idx, const language_printer& printer) const
       {
+        if(idx.get_class() != index_class::field_only) throw tensor_exception("generate_field_vector index class");
+
         // no distinction between co- and contravariant indices in a flat model, so we can always return the
         // raw variable labels (which notionally are the contravariant components)
 
@@ -208,8 +213,12 @@ namespace canonical
         const auto& flatten = this->mgr.phase_flatten();
 
         if(!resource || !flatten) throw resource_failure("coordinate vector");
+    
+        // make a copy of idx and add a species-to-momentum conversion
+        abstract_index idx_offset = idx;
+        idx_offset.convert_species_to_momentum();
 
-        std::string variable = printer.array_subscript(*resource, idx, **flatten, this->payload.model.get_number_fields());
+        std::string variable = printer.array_subscript(*resource, idx_offset, **flatten);
         return this->sym_factory.get_symbol(variable);
       }
 
@@ -491,7 +500,8 @@ namespace canonical
               {
                 unsigned int index = this->fl.flatten(i,j);
 
-                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
+                std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
+                                                               *flatten);
 
                 list[index] = this->sym_factory.get_symbol(variable);
               }
@@ -575,7 +585,8 @@ namespace canonical
                   {
                     unsigned int index = this->fl.flatten(i,j,k);
 
-                    std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k), *flatten);
+                    std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
+                                                                   this->fl.flatten(k), *flatten);
 
                     list[index] = this->sym_factory.get_symbol(variable);
                   }
