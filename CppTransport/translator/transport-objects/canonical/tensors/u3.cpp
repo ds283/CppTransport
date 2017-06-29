@@ -119,11 +119,7 @@ namespace canonical
           {
             result = C_agent.compute_component(species_j, species_k, species_i, k2, k3, k1, a);
           }
-        else
-          {
-            // TODO: prefer to throw exception
-            assert(false);
-          }
+        else throw tensor_exception("U3 index");
 
         return(result);
       }
@@ -163,13 +159,13 @@ namespace canonical
 
         map_lambda_table table(lambda_flattened_map_size(3));
 
-        std::unique_ptr<atomic_lambda> fff = B_agent.compute_lambda(*j_field_a.second, *k_field_a.second, *i_field_a.second, k2, k3, k1, a);
-        std::unique_ptr<atomic_lambda> ffm = C_agent.compute_lambda(*i_field_a.second, *k_field_b.second, *j_field_a.second, k1, k3, k2, a);
-        std::unique_ptr<atomic_lambda> fmf = C_agent.compute_lambda(*i_field_a.second, *j_field_b.second, *k_field_a.second, k1, k2, k3, a);
-        std::unique_ptr<atomic_lambda> mff = A_agent.compute_lambda(*i_field_b.second, *j_field_a.second, *k_field_a.second, k1, k2, k3, a);
-        std::unique_ptr<atomic_lambda> mfm = B_agent.compute_lambda(*i_field_b.second, *j_field_a.second, *k_field_b.second, k1, k2, k3, a);
-        std::unique_ptr<atomic_lambda> mmf = B_agent.compute_lambda(*i_field_b.second, *k_field_a.second, *j_field_b.second, k1, k3, k2, a);
-        std::unique_ptr<atomic_lambda> mmm = C_agent.compute_lambda(*j_field_b.second, *k_field_b.second, *i_field_b.second, k2, k3, k1, a);
+        auto fff = B_agent.compute_lambda(*j_field_a.second, *k_field_a.second, *i_field_a.second, k2, k3, k1, a);
+        auto ffm = C_agent.compute_lambda(*i_field_a.second, *k_field_b.second, *j_field_a.second, k1, k3, k2, a);
+        auto fmf = C_agent.compute_lambda(*i_field_a.second, *j_field_b.second, *k_field_a.second, k1, k2, k3, a);
+        auto mff = A_agent.compute_lambda(*i_field_b.second, *j_field_a.second, *k_field_a.second, k1, k2, k3, a);
+        auto mfm = B_agent.compute_lambda(*i_field_b.second, *j_field_a.second, *k_field_b.second, k1, k2, k3, a);
+        auto mmf = B_agent.compute_lambda(*i_field_b.second, *k_field_a.second, *j_field_b.second, k1, k3, k2, a);
+        auto mmm = C_agent.compute_lambda(*j_field_b.second, *k_field_b.second, *i_field_b.second, k2, k3, k1, a);
 
         table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD, LAMBDA_FIELD)] = -(**fff);
         table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD, LAMBDA_MOMENTUM)] = -(**ffm);

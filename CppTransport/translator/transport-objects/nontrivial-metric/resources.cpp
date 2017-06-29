@@ -1002,15 +1002,14 @@ namespace nontrivial_metric
         const auto& flatten = this->mgr.phase_flatten();
 
         if(!resource || !flatten) throw resource_failure("coordinate vector");
-    
-        // make a copy of idx and add a species-to-momentum conversion
-        abstract_index idx_offset_abst = idx;
-        idx_offset_abst.convert_species_to_momentum();
-
-        index_literal idx_offset = idx;
-        idx_offset.reassign(idx_offset_abst);
-
-        return this->position_indices<1, index_literal>({ variance::contravariant }, { std::cref(idx_offset) }, *resource, **flatten, printer);
+        
+        // idx is a field vector, so to pick out the derivatives from the full phase-space coordinates
+        // it will need to be shifted by +number_of_fields
+        // However, we can't use the built in offsetting API from abstract_index, because if we need to raise
+        // or lower an index then this offset value would end up appearing in the metric G, which is wrong --
+        // it's only values used to index the *label* that we want to offset.
+        // to accommodate this we need the extra 'offsets' argument of position_indices()
+        return this->position_indices<1, index_literal>({ variance::contravariant }, { std::cref(idx) }, *resource, **flatten, printer, {+1});
       }
 
 
@@ -1018,8 +1017,7 @@ namespace nontrivial_metric
     template <size_t Indices, size_t... Is>
     std::string
     position_indices_label(const std::string& kernel, const std::array<std::string, Indices>& indices,
-                           std::index_sequence<Is...>, const std::string& flatten,
-                           const language_printer& printer)
+                           std::index_sequence<Is...>, const std::string& flatten, const language_printer& printer)
       {
         return printer.array_subscript(kernel, indices[Is]..., flatten);
       };
@@ -1030,7 +1028,8 @@ namespace nontrivial_metric
     resources::position_indices(const std::array<variance, Indices> avail,
                                 const std::array<std::reference_wrapper<const IndexType>, Indices> reqd,
                                 const contexted_value<std::string>& label, const std::string& flatten,
-                                const language_printer& printer) const
+                                const language_printer& printer,
+                                const std::array<int, Indices> offsets) const
       {
         const unsigned int N = this->payload.model.get_number_fields();
         
@@ -1081,14 +1080,18 @@ namespace nontrivial_metric
                         if(!Ginv) throw resource_failure("metric inverse");
                         auto factor = printer.array_subscript(*Ginv, reqd[j].get(), v, flatten);
                         auto sym = this->sym_factory.get_symbol(factor);
-                        index_values[j] = to_index_string(v);
+                        
+                        // apply offset to label index, if one is present
+                        index_values[j] = to_index_string(v + static_cast<int>(N)*offsets[j]);
                         term *= sym;
                       }
                     else if(r == variance::covariant)
                       {
                         if(!G) throw resource_failure("metric");
                         auto factor = printer.array_subscript(*G, reqd[j].get(), v, flatten);
-                        index_values[j] = to_index_string(v);
+                        
+                        // apply offset to label index, if one is present
+                        index_values[j] = to_index_string(v + static_cast<int>(N)*offsets[j]);
                         auto sym = this->sym_factory.get_symbol(factor);
                         term *= sym;
                       }
@@ -1100,6 +1103,17 @@ namespace nontrivial_metric
                 else
                   {
                     index_values[j] = to_index_string(reqd[j].get());
+                    
+                    // apply offset to label index, if one is present
+                    if(offsets[j] > 0)
+                      {
+                        index_values[j].append("+");
+                        index_values[j].append(std::to_string(static_cast<int>(N)*offsets[j]));
+                      }
+                    if(offsets[j] < 0)
+                      {
+                        index_values[j].append(std::to_string(static_cast<int>(N)*offsets[j]));
+                      }
                   }
               }
 

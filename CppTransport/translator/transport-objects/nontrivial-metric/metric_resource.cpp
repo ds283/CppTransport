@@ -24,6 +24,7 @@
 //
 
 #include "metric_resource.h"
+#include "concepts/tensor_exception.h"
 
 
 namespace nontrivial_metric
@@ -63,6 +64,9 @@ namespace nontrivial_metric
     
     GiNaC::ex metric_resource::operator()(const index_literal& i, const index_literal& j)
       {
+        if(i.get_class() != index_class::field_only) throw tensor_exception(ERROR_METRIC_INDICES_ARE_FIELDS);
+        if(j.get_class() != index_class::field_only) throw tensor_exception(ERROR_METRIC_INDICES_ARE_FIELDS);
+        
         // if mixed indices, then return a Kronecker delta
         if(i.get_variance() != j.get_variance())
           {

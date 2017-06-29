@@ -362,6 +362,7 @@ constexpr auto WARNING_INDEX_POSITIONING_FAILURE     = "Index reposition failed;
 
 constexpr auto ERROR_METRIC_NOT_SQUARE               = "Internal error: field-space metric is not a square matrix";
 constexpr auto ERROR_METRIC_DIMENSION                = "Internal error: field-space metric/inverse has inconsistent dimension";
+constexpr auto ERROR_METRIC_INDICES_ARE_FIELDS       = "Internal error: indices used to construct a metric component should be fields";
 
 constexpr auto ERROR_METRIC_RESOURCE_MIXED_INDICES   = "Metric resource should not have mixed indices";
 constexpr auto ERROR_METRIC_RULE_MIXED_INDICES       = "$METRIC should not be used with mixed indices";
@@ -373,6 +374,8 @@ constexpr auto NOTIFY_TOO_MANY_ERRORS                = "encountered too many err
 constexpr auto ERROR_VARIANCE_TENSOR_CACHE_EMPLACE   = "Internal error: failed to emplace tensor in variance_tensor_cache";
 
 constexpr auto ERROR_SPECIES_MAPPING_OVERFLOW        = "Internal error: abstract index mapping overflow";
+constexpr auto ERROR_SPECIES_TO_SPECIES_FAIL         = "Internal error: species-to-species map must be applied to a phase-space index";
+constexpr auto ERROR_MOMENTUM_TO_SPECIES_FAIL        = "Internal error: momentum-to-species map must be applied to a phase-space index";
 
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";

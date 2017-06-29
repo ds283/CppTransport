@@ -325,12 +325,15 @@ namespace nontrivial_metric
         //! dress an abstract resource label with given variance assignment 'avail' to give the required variance
         //! assignment 'reqd'.
         //! Returns a GiNaC expression representing the abstract resource with correct variance assignment
+        //! If supplied, the array 'offsets' gives a list of offsets that are used to displace the index values
+        //! subscripted into the label (but not occurrences of the metric)
         template <size_t Indices, typename IndexType>
         GiNaC::ex
         position_indices(const std::array<variance, Indices> avail,
                          const std::array<std::reference_wrapper<const IndexType>, Indices> reqd,
                          const contexted_value<std::string>& label, const std::string& flatten,
-                         const language_printer& printer) const;
+                         const language_printer& printer,
+                         const std::array<int, Indices> offsets =  std::array<int, Indices>{}) const;
     
         void
         warn_resource_index_reposition(const contexted_value<std::string>& label, unsigned int size,

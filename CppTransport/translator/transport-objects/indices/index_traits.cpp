@@ -26,8 +26,8 @@
 
 #include <sstream>
 
-
 #include "index_traits.h"
+#include "concepts/tensor_exception.h"
 
 
 bool index_traits::is_species(const phase_index& index)
@@ -70,8 +70,9 @@ field_index index_traits::to_species(const phase_index& index)
 std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>>
 index_traits::species_to_species(const index_literal& index)
   {
-    // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
+    if(index.get_class() != index_class::full) throw tensor_exception(ERROR_SPECIES_TO_SPECIES_FAIL);
 
+    // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
     const abstract_index& original_abst = index;
 
     auto new_abst = std::make_unique<abstract_index>(original_abst.get_label(), index_class::field_only,
@@ -86,8 +87,9 @@ index_traits::species_to_species(const index_literal& index)
 std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>>
 index_traits::momentum_to_species(const index_literal& index)
   {
-    // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
+    if(index.get_class() != index_class::full) throw tensor_exception(ERROR_MOMENTUM_TO_SPECIES_FAIL);
     
+    // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
     const abstract_index& original_abst = index;
     
     auto new_abst = std::make_unique<abstract_index>(original_abst.get_label(), index_class::field_only,
