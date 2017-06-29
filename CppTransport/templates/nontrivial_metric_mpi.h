@@ -965,14 +965,18 @@ namespace transport
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
-          $MODEL_compute_Ginv(__raw_params,__x, __Mp, __Ginv);
+          $MODEL_compute_G(__raw_params, __x, __Mp, __G);
+          $MODEL_compute_Ginv(__raw_params, __x, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __x, __Mp, __ddV);
+          $MODEL_compute_Riemann_A2(__raw_params, __x, __Mp, __A2);
 
           // capture resources for transport tensors
+          $RESOURCE_G[_ab]{__G}
           $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
+          $RESOURCE_RIEMANN_A2[_ab]{__A2}
         $ENDIF
 
 #ifdef CPPTRANSPORT_INSTRUMENT
@@ -1071,16 +1075,24 @@ namespace transport
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $IF{!fast}
+          $MODEL_compute_G(__raw_params, __x, __Mp, __G);
           $MODEL_compute_Ginv(__raw_params, __x, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __x, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __x, __Mp, __dddV);
+          $MODEL_compute_Riemann_A2(__raw_params, __x, __Mp, __A2);
+          $MODEL_compute_Riemann_A3(__raw_params, __x, __Mp, __A3);
+          $MODEL_compute_Riemann_B3(__raw_params, __x, __Mp, __B3);
 
           // capture resources for transport tensors
+          $RESOURCE_G[_ab]{__G}
           $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
+          $RESOURCE_RIEMANN_A2[_ab]{__A2}
+          $RESOURCE_RIEMANN_A3[_abc]{__A3}
+          $RESOURCE_RIEMANN_B3[_abc]{__B3}
         $ENDIF
 
 #ifdef CPPTRANSPORT_INSTRUMENT

@@ -326,6 +326,9 @@ namespace transport
           number* __dddV;
           number* __G;
           number* __Ginv;
+          number* __A2;
+          number* __A3;
+          number* __B3;
         $ENDIF
 
         number* __raw_params;
@@ -448,6 +451,9 @@ namespace transport
           __dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
           __G = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
           __Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+          __A2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+          __A3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __B3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
         $ENDIF
 
         __raw_params = new number[$NUMBER_PARAMS];
@@ -484,6 +490,9 @@ namespace transport
           delete[] __dddV;
           delete[] __G;
           delete[] __Ginv;
+          delete[] __A2;
+          delete[] __A3;
+          delete[] __B3;
         $ENDIF
 
         delete[] __raw_params;
@@ -584,7 +593,8 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __G[FIELDS_FLATTEN($_a,$_b)] = $METRIC[_ab];
+        // force unroll to make explicit that we wish to populate array elements
+        __G[FIELDS_FLATTEN($_a, $_b)] = $METRIC[_ab]|;
       }
 
 
@@ -609,7 +619,8 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
+        // force unroll to make explicit that we wish to populate array elements
+        __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab]|;
       }
 
 
@@ -624,7 +635,8 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __dV[FIELDS_FLATTEN($_a)] = $DV[_a];
+          // force unroll to make explicit that we wish to populate array elements
+          __dV[FIELDS_FLATTEN($_a)] = $DV[_a]|;
         }
 
 
@@ -638,7 +650,8 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __ddV[FIELDS_FLATTEN($_a,$_b)] = $DDV[_ab];
+          // force unroll to make explicit that we wish to populate array elements
+          __ddV[FIELDS_FLATTEN($_a, $_b)] = $DDV[_ab]|;
         }
 
 
@@ -652,7 +665,8 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __dddV[FIELDS_FLATTEN($_a,$_b,$_c)] = $DDDV[_abc];
+          // force unroll to make explicit that we wish to populate array elements
+          __dddV[FIELDS_FLATTEN($_a, $_b, $_c)] = $DDDV[_abc]|;
         }
 
 
@@ -666,7 +680,8 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __G[FIELDS_FLATTEN($_a,$_b)] = $METRIC[_ab];
+          // force unroll to make explicit that we wish to populate array elements
+          __G[FIELDS_FLATTEN($_a, $_b)] = $METRIC[_ab]|;
         }
 
 
@@ -680,7 +695,56 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
+          // force unroll to make explicit that we wish to populate array elements
+          __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab]||;
+        }
+
+
+      template <typename number>
+      void
+      $MODEL_compute_Riemann_A2(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __A2)
+        {
+          $RESOURCE_RELEASE
+
+          $RESOURCE_PARAMETERS{__raw_params}
+          $RESOURCE_COORDINATES{__x}
+
+          $TEMP_POOL{"const auto $1 = $2;"}
+
+          // force unroll to make explicit that we wish to populate array elements
+          __A2[FIELDS_FLATTEN($_a, $_b)] = $RIEMANN_A2[_ab]|;
+        }
+
+
+      template <typename number>
+      void
+      $MODEL_compute_Riemann_A3(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __A3)
+        {
+          $RESOURCE_RELEASE
+
+          $RESOURCE_PARAMETERS{__raw_params}
+          $RESOURCE_COORDINATES{__x}
+
+          $TEMP_POOL{"const auto $1 = $2;"}
+
+          // force unroll to make explicit that we wish to populate array elements
+          __A3[FIELDS_FLATTEN($_a, $_b, $_c)] = $RIEMANN_A3[_abc]|;
+        }
+
+
+      template <typename number>
+      void
+      $MODEL_compute_Riemann_B3(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __B3)
+        {
+          $RESOURCE_RELEASE
+
+          $RESOURCE_PARAMETERS{__raw_params}
+          $RESOURCE_COORDINATES{__x}
+
+          $TEMP_POOL{"const auto $1 = $2;"}
+
+          // force unroll to make explicit that we wish to populate array elements
+          __B3[FIELDS_FLATTEN($_a, $_b, $_c)] = $RIEMANN_B3[_abc]|;
         }
     $ENDIF
 
@@ -708,7 +772,8 @@ namespace transport
             $TEMP_POOL{"const auto $1 = $2;"}
 
             // phase-space coordinates are provided in contravariant form, so we need the slow-roll velocity estimate in the same form
-            __output.push_back($SR_VELOCITY[^a]);
+            // we don't expect the velocity to unroll to an unreasonable size, so force it (anyway implied by lack of dV resource)
+            __output.push_back($SR_VELOCITY[^a]|);
           }
         else if(__input.size() == 2*$NUMBER_FIELDS)  // initial conditions for momenta *were* supplied
           {
@@ -958,6 +1023,9 @@ namespace transport
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
+          $MODEL_compute_Riemann_A2(__raw_params, __fields, __Mp, __A2);
+          $MODEL_compute_Riemann_A3(__raw_params, __fields, __Mp, __A3);
+          $MODEL_compute_Riemann_B3(__raw_params, __fields, __Mp, __B3);
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -969,6 +1037,9 @@ namespace transport
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
+          $RESOURCE_RIEMANN_A2[_ab]{__A2}
+          $RESOURCE_RIEMANN_A3[_abc]{__A3}
+          $RESOURCE_RIEMANN_B3[_abc]{__B3}
         $ENDIF
 
         const auto __Hsq = $HUBBLE_SQ;
@@ -1282,12 +1353,14 @@ namespace transport
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
-          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
+          $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
-          $RESOURCE_G[^ab]{__Ginv}
+          $MODEL_compute_Riemann_A2(__raw_params, __fields, __Mp, __A2);
+          $RESOURCE_G[_ab]{__G}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
+          $RESOURCE_RIEMANN_A2[_ab]{__A2}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1309,14 +1382,20 @@ namespace transport
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
-          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
+          $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
-          $RESOURCE_G[^ab]{__Ginv}
+          $MODEL_compute_Riemann_A2(__raw_params, __fields, __Mp, __A2);
+          $MODEL_compute_Riemann_A3(__raw_params, __fields, __Mp, __A3);
+          $MODEL_compute_Riemann_B3(__raw_params, __fields, __Mp, __B3);
+          $RESOURCE_G[_ab]{__G}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
+          $RESOURCE_RIEMANN_A2[_ab]{__A2}
+          $RESOURCE_RIEMANN_A3[_abc]{__A3}
+          $RESOURCE_RIEMANN_B3[_abc]{__B3}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1338,14 +1417,18 @@ namespace transport
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
-          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
+          $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
-          $RESOURCE_G[^ab]{__Ginv}
+          $MODEL_compute_Riemann_A2(__raw_params, __fields, __Mp, __A2);
+          $MODEL_compute_Riemann_A3(__raw_params, __fields, __Mp, __A3);
+          $RESOURCE_G[_ab]{__G}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
+          $RESOURCE_RIEMANN_A2[_ab]{__A2}
+          $RESOURCE_RIEMANN_A3[_abc]{__A3}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1367,10 +1450,12 @@ namespace transport
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
-          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
+          $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
-          $RESOURCE_G[^ab]{__Ginv}
+          $MODEL_compute_Riemann_B3(__raw_params, __fields, __Mp, __B3);
+          $RESOURCE_G[_ab]{__G}
           $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_RIEMANN_B3[_abc]{__B3}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1391,8 +1476,12 @@ namespace transport
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
+        $IF{!fast}
+          $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
+          $RESOURCE_G[_ab]{__G}
+        $ENDIF
 
-        $TEMP_POOL{"const auto $1 = $2;"}
+          $TEMP_POOL{"const auto $1 = $2;"}
 
         __C[FIELDS_FLATTEN($_a,$_b,$_c)] = $C_TENSOR[_abc]{__k1, __k2, __k3, __a};
       }
@@ -1408,8 +1497,18 @@ namespace transport
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
+        $IF{!fast}
+          $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
+          $MODEL_compute_Riemann_A2(__raw_params, __fields, __Mp, __A2);
+          $RESOURCE_G[_ab]{__G}
+          $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_DDV[_ab]{__ddV}
+          $RESOURCE_RIEMANN_A2[_ab]{__A2}
+        $ENDIF
 
-        $TEMP_POOL{"const auto $1 = $2;"}
+          $TEMP_POOL{"const auto $1 = $2;"}
 
         __M[FIELDS_FLATTEN($_a,$_b)] = $M_TENSOR[_ab];
       }

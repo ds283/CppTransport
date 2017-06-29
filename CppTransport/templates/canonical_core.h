@@ -560,7 +560,8 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __dV[FIELDS_FLATTEN($a)] = $DV[a];
+          // force unroll to make explicit that we wish to populate array elements
+          __dV[FIELDS_FLATTEN($a)] = $DV[a]|;
         }
 
 
@@ -574,7 +575,8 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
+          // force unroll to make explicit that we wish to populate array elements
+          __ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab]|;
         }
 
 
@@ -588,7 +590,8 @@ namespace transport
 
           $TEMP_POOL{"const auto $1 = $2;"}
 
-          __dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc];
+          // force unroll to make explicit that we wish to populate array elements
+          __dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc]|;
         }
     $ENDIF
 
@@ -615,7 +618,8 @@ namespace transport
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
-            __output.push_back($SR_VELOCITY[a]);
+            // force unroll to make explicit that we wish to populate array elements
+            __output.push_back($SR_VELOCITY[a]|);
           }
         else if(__input.size() == 2*$NUMBER_FIELDS)  // initial conditions for momenta *were* supplied
           {
@@ -1296,6 +1300,12 @@ namespace transport
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
+        $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
+          $RESOURCE_DV{__dV}
+          $RESOURCE_DDV{__ddV}
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 

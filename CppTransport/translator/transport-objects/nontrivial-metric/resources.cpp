@@ -2228,7 +2228,7 @@ namespace nontrivial_metric
     
     bool resources::can_roll_Riemann_B3(const std::array< variance, RESOURCE_INDICES::RIEMANN_B3_INDICES >& vars) const
       {
-        const auto resource = this->mgr.Riemann_A3(vars, false);
+        const auto resource = this->mgr.Riemann_B3(vars, false);
         const auto& flatten = this->mgr.field_flatten();
         const auto& working_type = this->mgr.working_type();
     
