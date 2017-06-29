@@ -696,7 +696,7 @@ namespace transport
           $TEMP_POOL{"const auto $1 = $2;"}
 
           // force unroll to make explicit that we wish to populate array elements
-          __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab]||;
+          __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab]|;
         }
 
 

@@ -307,7 +307,9 @@ namespace transport
 
             $IF{!fast}
               __u2(nullptr),
+              __G(nullptr),
               __Ginv(nullptr),
+              __A2(nullptr),
               __dV(nullptr),
               __ddV(nullptr),
             $ENDIF
@@ -332,7 +334,9 @@ namespace transport
               this->__dV = new number[$NUMBER_FIELDS];
               this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
 
+              this->__G = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+              this->__A2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
             this->__raw_params = new number[$NUMBER_PARAMS];
@@ -348,7 +352,9 @@ namespace transport
               delete[] this->__dV;
               delete[] this->__ddV;
 
+              delete[] this->__G;
               delete[] this->__Ginv;
+              delete[] this->__A2;
             $ENDIF
 
             delete[] this->__raw_params;
@@ -385,7 +391,9 @@ namespace transport
           number* __dV;
           number* __ddV;
 
+          number* __G;
           number* __Ginv;
+          number* __A2;
         $ENDIF
 
         number* __raw_params;
@@ -452,7 +460,11 @@ namespace transport
               __u3_k1k2k3(nullptr),
               __u3_k2k1k3(nullptr),
               __u3_k3k1k2(nullptr),
+              __G(nullptr),
               __Ginv(nullptr),
+              __A2(nullptr),
+              __A3(nullptr),
+              __B3(nullptr),
               __dV(nullptr),
               __ddV(nullptr),
               __dddV(nullptr),
@@ -485,7 +497,11 @@ namespace transport
               this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
+              this->__G = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+              this->__A2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+              this->__A3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+              this->__B3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
             this->__raw_params = new number[$NUMBER_PARAMS];
@@ -508,7 +524,11 @@ namespace transport
               delete[] this->__ddV;
               delete[] this->__dddV;
 
+              delete[] this->__G;
               delete[] this->__Ginv;
+              delete[] this->__A2;
+              delete[] this->__A3;
+              delete[] this->__B3;
             $ENDIF
 
             delete[] this->__raw_params;
@@ -551,7 +571,11 @@ namespace transport
           number* __ddV;
           number* __dddV;
 
+          number* __G;
           number* __Ginv;
+          number* __A2;
+          number* __A3;
+          number* __B3;
         $ENDIF
 
         number* __raw_params;
