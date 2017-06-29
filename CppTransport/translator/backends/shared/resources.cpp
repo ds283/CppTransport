@@ -320,7 +320,7 @@ namespace macro_packages
         this->mgr.assign_Riemann_A2(args[RESOURCES::RIEMANN_A2_KERNEL_ARGUMENT], v);
 
         std::ostringstream msg;
-        msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_A2_KERNEL_ARGUMENT]) << "'";
+        msg << RESOURCE_SET_RIEMANN_A2 << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_A2_KERNEL_ARGUMENT]) << "'";
     
         return msg.str();
       }
@@ -359,7 +359,7 @@ namespace macro_packages
         this->mgr.assign_Riemann_A3(args[RESOURCES::RIEMANN_A3_KERNEL_ARGUMENT], v);
         
         std::ostringstream msg;
-        msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_A3_KERNEL_ARGUMENT]) << "'";
+        msg << RESOURCE_SET_RIEMANN_A3 << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_A3_KERNEL_ARGUMENT]) << "'";
         
         return msg.str();
       }
@@ -398,7 +398,7 @@ namespace macro_packages
         this->mgr.assign_Riemann_B3(args[RESOURCES::RIEMANN_B3_KERNEL_ARGUMENT], v);
         
         std::ostringstream msg;
-        msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_B3_KERNEL_ARGUMENT]) << "'";
+        msg << RESOURCE_SET_RIEMANN_B3 << " '" << static_cast<std::string>(args[RESOURCES::RIEMANN_B3_KERNEL_ARGUMENT]) << "'";
         
         return msg.str();
       }

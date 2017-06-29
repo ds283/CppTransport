@@ -273,7 +273,9 @@ constexpr auto RESOURCE_SET_DDDV                     = "V,ijk resource set to";
 constexpr auto RESOURCE_SET_CONNEXION                = "connexion resource set to";
 constexpr auto RESOURCE_SET_METRIC                   = "metric resource set to";
 constexpr auto RESOURCE_SET_METRIC_INVERSE           = "inverse metric resource set to";
-constexpr auto RESOURCE_SET_RIEMANN                  = "Riemann resource set to";
+constexpr auto RESOURCE_SET_RIEMANN_A2               = "Riemann_A2 resource set to";
+constexpr auto RESOURCE_SET_RIEMANN_A3               = "Riemann_A3 resource set to";
+constexpr auto RESOURCE_SET_RIEMANN_B3               = "Riemann_B3 resource set to";
 
 constexpr auto RESOURCE_SET_PHASE_FLATTEN            = "phase-space flattener set to";
 constexpr auto RESOURCE_SET_FIELD_FLATTEN            = "field-space flattener set to";
