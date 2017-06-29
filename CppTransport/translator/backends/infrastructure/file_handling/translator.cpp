@@ -205,7 +205,7 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
 
     // emit advisory that translation is complete
     std::ostringstream finished_msg;
-    finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
+    finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_REPLACEMENT_RULE_EXPANSIONS;
     this->data_payload.message(finished_msg.str());
 
     // report time spent doing macro replacement

@@ -157,13 +157,13 @@ constexpr auto ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   = "Internal error: incremen
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_DECREMENT   = "Internal error: attempt to decrement assignment iterator before first element";
 constexpr auto ERROR_ASSIGNMENT_ITERATOR_INCREMENT   = "Internal error: attempt to increment assignment iterator after last element";
 
-constexpr auto ERROR_TOKENIZE_NO_MACRO_MATCH         = "Internal error: unexpectedly failed to match a macro";
-constexpr auto ERROR_TOKENIZE_UNEXPECTED_LIST        = "Did not expect index list following simple macro";
+constexpr auto ERROR_TOKENIZE_NO_MACRO_MATCH         = "Internal error: unexpectedly failed to match a replacement rule";
+constexpr auto ERROR_TOKENIZE_UNEXPECTED_LIST        = "Did not expect index list following simple replacement rule";
 constexpr auto ERROR_TOKENIZE_SKIPPING               = "skipping";
 
 constexpr auto ERROR_TOKENIZE_TOO_MANY_ERRORS        = "Too many errors from this token; further output will be suppressed";
 
-constexpr auto ERROR_NO_PRE_MAP                      = "Internal error: Data to perform macro replacement was not correctly pre-mapped";
+constexpr auto ERROR_NO_PRE_MAP                      = "Internal error: Data to perform replacement rule expansion was not correctly pre-mapped";
 
 constexpr auto ERROR_INCOMPATIBLE_UNROLL             = "Conflicting unroll/roll-up requirements";
 constexpr auto NOTIFY_CONFLICT_RULE_FORCES_UNROLL    = "Note: replacement rule forces unroll";
@@ -188,16 +188,16 @@ constexpr auto NOTIFY_ORIGINAL_EXPLICIT_WAS          = "Note: Location of earlie
 
 constexpr auto ERROR_MISSING_INDEX_ASSIGNMENT        = "Internal error: missing index assignment";
 
-constexpr auto ERROR_EXPECTED_OPEN_INDEX_LIST        = "Expected index list beginning with '[' for indexed macro";
-constexpr auto ERROR_EXPECTED_INDEX_LABEL_A          = "Expected index label for indexed macro";
+constexpr auto ERROR_EXPECTED_OPEN_INDEX_LIST        = "Expected index list beginning with '[' for indexed rule";
+constexpr auto ERROR_EXPECTED_INDEX_LABEL_A          = "Expected index label for indexed rule";
 constexpr auto ERROR_EXPECTED_INDEX_LABEL_B          = "received";
-constexpr auto ERROR_EXPECTED_CLOSE_INDEX_LIST       = "Expected close of index list ']' for indexed macro";
-constexpr auto ERROR_EXPECTED_OPEN_ARGUMENT_LIST     = "Missing open of argument list '{' for macro";
-constexpr auto ERROR_EXPECTED_CLOSE_ARGUMENT_LIST    = "Missing close of argument list '}' for macro";
-constexpr auto ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE   = "Missing closing quotation '\"' for macro";
-constexpr auto ERROR_UNEXPECTED_COMMA                = "Unexpected argument separator ',' for macro";
-constexpr auto ERROR_EXPECTED_COMMA                  = "Expected argument separator ',' for macro";
-constexpr auto ERROR_MACRO_WRONG_ARGUMENT_COUNT      = "Incorrect number of arguments for macro";
+constexpr auto ERROR_EXPECTED_CLOSE_INDEX_LIST       = "Expected close of index list ']' for indexed rule";
+constexpr auto ERROR_EXPECTED_OPEN_ARGUMENT_LIST     = "Missing open of argument list '{' for rule";
+constexpr auto ERROR_EXPECTED_CLOSE_ARGUMENT_LIST    = "Missing close of argument list '}' for rule";
+constexpr auto ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE   = "Missing closing quotation '\"' for rule";
+constexpr auto ERROR_UNEXPECTED_COMMA                = "Unexpected argument separator ',' for rule";
+constexpr auto ERROR_EXPECTED_COMMA                  = "Expected argument separator ',' for rule";
+constexpr auto ERROR_MACRO_WRONG_ARGUMENT_COUNT      = "Incorrect number of arguments for rule";
 constexpr auto ERROR_DIRECTIVE_WRONG_ARGUMENT_COUNT  = "Incorrect number of arguments for directive";
 constexpr auto ERROR_EXPECTED_ARGUMENT_COUNT         = "expected";
 constexpr auto ERROR_RECEIVED_ARGUMENT_COUNT         = "received";
@@ -210,8 +210,8 @@ constexpr auto ERROR_WRONG_INDEX_CLASS               = "Index type mismatch for"
 constexpr auto ERROR_WRONG_INDEX_LABEL               = "index";
 constexpr auto ERROR_WRONG_INDEX_EXPECTED            = "expected type";
 
-constexpr auto ERROR_RULE_AFTER_DIRECTIVE            = "Directives can not be mixed with other macros or index literals";
-constexpr auto ERROR_DIRECTIVE_AFTER_RULE            = "Directives can not be mixed with other macros or index literals";
+constexpr auto ERROR_RULE_AFTER_DIRECTIVE            = "Directives can not be mixed with other rules or index literals";
+constexpr auto ERROR_DIRECTIVE_AFTER_RULE            = "Directives can not be mixed with other rules or index literals";
 constexpr auto ERROR_DIRECTIVE_ON_RHS                = "A line containing a directive should not have a right-hand side";
 
 constexpr auto ERROR_INDEX_LITERAL_NO_KERNEL         = "Line ended before kernel letter for index literal";
@@ -239,7 +239,7 @@ constexpr auto ERROR_REPLACEMENT_RULE_INDEX_COUNT    = "Internal error: number o
 constexpr auto ERROR_DIRECTIVE_RULE_INDEX_COUNT      = "Internal error: number of index classes provided to directive constructor does not match declared number of indices";
 constexpr auto ERROR_REPLACEMENT_RULE_ZERO_INDICES   = "Internal error: number of indices for an indexed replacement rule cannot be zero";
 
-constexpr auto ERROR_DN_DOES_NOT_ROLL                = "Internal error: attempt to roll-up a delta-N macro";
+constexpr auto ERROR_DN_DOES_NOT_ROLL                = "Internal error: attempt to roll-up a delta-N rule";
 constexpr auto ERROR_INCONSISTENT_LAMBDA_MAP         = "Internal error: inconsistent lambda map size";
 
 constexpr auto ERROR_FILESTACK_EMPTY                 = "Internal error: filestack empty when accessing top element";
@@ -256,7 +256,7 @@ constexpr auto WARNING_HEX_CONVERSION_B              = "indicates hex, but did n
 constexpr auto WARNING_OCTAL_CONVERSION_A            = "Leading '0' in ";
 constexpr auto WARNING_OCTAL_CONVERSION_B            = "indicates octal, but did not convert";
 
-constexpr auto WARNING_RECURSION_DEPTH               = "Maximum depth of recursive macro substitution exceeded (max";
+constexpr auto WARNING_RECURSION_DEPTH               = "Maximum depth of recursive replacement rule expansion exceeded (max";
 
 constexpr auto WARNING_LEXEME_KEYWORD                = "Internal error: attempt to get keyword type for non-keyword lexeme";
 constexpr auto WARNING_LEXEME_SYMBOL                 = "Internal error: attempt to get symbol type for non-symbol lexeme";
@@ -289,7 +289,7 @@ constexpr auto NOTIFY_RESOURCE_DECLARATION_WAS       = "Note: location of origin
 constexpr auto ERROR_RESOURCE_LABEL_IN_USE           = "Resource label already in use for an index assignment with different variance";
 constexpr auto NOTIFY_RESOURCE_DECLARED_NOT_USED     = "Note: resource label declared but not used; consider removal as a performance optimization";
 
-constexpr auto DIRECTIVE_SET_MACRO_A                 = "set macro";
+constexpr auto DIRECTIVE_SET_MACRO_A                 = "set replacement rule";
 constexpr auto DIRECTIVE_SET_MACRO_B                 = "to";
 
 constexpr auto ERROR_DIRECTIVE_SET                   = "Error while evaluating set directive for";
@@ -298,8 +298,8 @@ constexpr auto NOTIFY_DIRECTIVE_NOT_EVALUATED        = "Note: output disabled, s
 
 constexpr auto ERROR_SET_INDEX_DUPLICATE             = "Index list declared to $SET contains duplicated index";
 
-constexpr auto ERROR_SET_REDEFINITION                = "Redefinition of macro";
-constexpr auto WARN_PRIOR_REDEFINITION               = "Earlier definition of this macro was here";
+constexpr auto ERROR_SET_REDEFINITION                = "Redefinition of replacement rule";
+constexpr auto WARN_PRIOR_REDEFINITION               = "Earlier definition of this rule was here";
 constexpr auto ERROR_INDEX_SUBSTITUTION              = "Missing substitution for index";
 constexpr auto ERROR_RESOURCE_FAILURE                = "Could not evaluate roll-up due to missing resource";
 
@@ -325,7 +325,7 @@ constexpr auto MESSAGE_LAMBDA_CACHE_INSERT_TIME      = "inserts";
 
 constexpr auto MESSAGE_SYMBOLIC_COMPUTE_TIME         = "symbolic computation";
 constexpr auto MESSAGE_CSE_TIME                      = "common sub-expression elimination";
-constexpr auto MESSAGE_MACRO_TIME                    = "macro replacement took";
+constexpr auto MESSAGE_MACRO_TIME                    = "replacement rule expansion took";
 constexpr auto MESSAGE_TOKENIZATION_TIME             = "of which time spent tokenizing";
 
 constexpr auto MESSAGE_PROCESSING_COMPLETE_A         = "processed";
@@ -338,7 +338,7 @@ constexpr auto MESSAGE_TRANSLATING_TO                = "into";
 constexpr auto ANNOTATE_EXPANSION_OF_LINE            = "expansion of template line";
 
 constexpr auto MESSAGE_TRANSLATION_RESULT            = "translation finished with";
-constexpr auto MESSAGE_MACRO_REPLACEMENTS            = "macro replacements";
+constexpr auto MESSAGE_REPLACEMENT_RULE_EXPANSIONS   = "replacement rule expansions";
 
 constexpr auto ERROR_UNKNOWN_STEPPER                 = "Unknown or unimplemented odeint-v2 stepper";
 constexpr auto ERROR_UNDEFINED_STEPPER               = "Stepper block not declared";
