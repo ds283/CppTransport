@@ -67,6 +67,7 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
+            // Eq. (6.4) of Mulryne 1302.3842
             field_index i_species = this->traits.to_species(i);
             result = -(1/(2*dotH)) * diff(Hsq, (*fields)[this->fl.flatten(i_species)]);
 

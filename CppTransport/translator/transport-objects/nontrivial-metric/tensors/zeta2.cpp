@@ -82,20 +82,19 @@ namespace nontrivial_metric
             auto& deriv_i = this->derivs(species_i)[this->fl.flatten(species_i)];
             auto& deriv_j = this->derivs(species_j)[this->fl.flatten(species_j)];
 
-            auto idx_i = this->shared.generate_index<GiNaC::varidx>(species_i);
-            auto idx_j = this->shared.generate_index<GiNaC::varidx>(species_j);
-
             if(this->traits.is_species(i) && this->traits.is_species(j))
               {
                 result = this->expr_field_field(deriv_i, deriv_j, k, k1, k2, a);
               }
             else if(this->traits.is_species(i) && this->traits.is_momentum(j))
               {
-                result = this->expr_field_momentum(idx_i, idx_j, deriv_i, deriv_j, k, k1, k2, a);
+                auto delta_ij = this->G(species_i,species_j);
+                result = this->expr_field_momentum(delta_ij, deriv_i, deriv_j, k, k1, k2, a);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
-                result = this->expr_field_momentum(idx_j, idx_i, deriv_j, deriv_i, k, k2, k1, a);
+                auto delta_ij = this->G(species_i,species_j);
+                result = this->expr_field_momentum(delta_ij, deriv_j, deriv_i, k, k2, k1, a);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_momentum(j))
               {
@@ -137,7 +136,7 @@ namespace nontrivial_metric
 
         for(field_index i = field_index(0, variance::none); i < num_field; ++i)
           {
-            // ds is contravariant, Vi is covariant
+            // ds is contravariant, Vi is covariant, so this is a scalar invariant
             p_ex += (*Vi)[this->fl.flatten(i)] * (*ds)[this->fl.flatten(i)];
           }
         p_ex = p_ex / (Mp*Mp*Hsq);
@@ -163,25 +162,21 @@ namespace nontrivial_metric
                                       const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
                                       const GiNaC::symbol& a)
       {
-        // formulae from DS calculation 28 May 2014
+        // nontrivial metric version of this formula from DS calculation 30 June 2017
         GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * deriv_i * deriv_j / (Mp*Mp*Mp*Mp*eps);
         return(result);
       }
     
     
-    GiNaC::ex zeta2::expr_field_momentum(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::ex& deriv_i,
-                                         const GiNaC::ex& deriv_j,
+    GiNaC::ex zeta2::expr_field_momentum(const GiNaC::ex& delta_ij, const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
                                          const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
                                          const GiNaC::symbol& a)
       {
-        // formulae from DS calculation 28 May 2014
-
+        // nontrivial metric version of this formula from DS calculation 30 June 2017
         GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2) / 2;
         GiNaC::ex k12sq = k*k;
 
         GiNaC::ex result = deriv_i * deriv_j / (2 * Mp*Mp*Mp*Mp * eps*eps);
-
-        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
 
         result += - delta_ij * (k1dotk2 / k12sq) / (2 * Mp*Mp * eps);
         result += - delta_ij * (k1*k1 / k12sq)   / (2 * Mp*Mp * eps);
@@ -196,7 +191,8 @@ namespace nontrivial_metric
         const std::array< variance, RESOURCE_INDICES::DV_INDICES > j = { idx_list[1]->get_variance() };
     
         // if any index is covariant then we need the metric to pull down an index on the coordinate vector
-        // there are no occurrences of the potential so we don't need the inverse metric to push their indices up
+        // there are no occurrences of the potential with a free index, so we don't need the
+        // inverse metric to push their indices up
         bool has_G = true;
         if(idx_list[0]->get_variance() == variance::covariant
            || idx_list[1]->get_variance() == variance::covariant)
@@ -232,12 +228,7 @@ namespace nontrivial_metric
         auto deriv_b_i = this->res.generate_deriv_vector(*i_field_b.second, this->printer);
         auto deriv_a_j = this->res.generate_deriv_vector(*j_field_a.second, this->printer);
         auto deriv_b_j = this->res.generate_deriv_vector(*j_field_b.second, this->printer);
-
-        auto idx_a_i = this->shared.generate_index<GiNaC::varidx>(*i_field_a.second);
-        auto idx_b_i = this->shared.generate_index<GiNaC::varidx>(*i_field_b.second);
-        auto idx_a_j = this->shared.generate_index<GiNaC::varidx>(*j_field_a.second);
-        auto idx_b_j = this->shared.generate_index<GiNaC::varidx>(*j_field_b.second);
-
+        
         this->pre_lambda();
 
         map_lambda_table table(lambda_flattened_map_size(2));
@@ -252,8 +243,7 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] =
-              this->expr_field_field(deriv_a_i, deriv_a_j, k, k1, k2, a);
+            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = this->expr_field_field(deriv_a_i, deriv_a_j, k, k1, k2, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]);
           }
@@ -261,9 +251,10 @@ namespace nontrivial_metric
         if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)]))
           {
             timing_instrument timer(this->compute_timer);
+            
+            auto delta_ij = this->G(*i_field_a.second, *j_field_b.second);
 
-            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] =
-              this->expr_field_momentum(idx_a_i, idx_b_j, deriv_a_i, deriv_b_j, k, k1, k2, a);
+            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = this->expr_field_momentum(delta_ij, deriv_a_i, deriv_b_j, k, k1, k2, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)]);
           }
@@ -272,8 +263,9 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
-              this->expr_field_momentum(idx_a_j, idx_b_i, deriv_a_j, deriv_b_i, k, k2, k1, a);
+            auto delta_ij = this->G(*i_field_b.second, *j_field_a.second);
+
+            table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] = this->expr_field_momentum(delta_ij, deriv_a_j, deriv_b_i, k, k2, k1, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
@@ -295,7 +287,8 @@ namespace nontrivial_metric
         traits(t),
         compute_timer(tm),
         cached(false),
-        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); })
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
+        G(r, s, f, p)
       {
       }
 

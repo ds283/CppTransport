@@ -87,6 +87,7 @@ namespace nontrivial_metric
     
     GiNaC::ex zeta1::expr(const GiNaC::ex& deriv_i)
       {
+        // nontrivial metric version of this formula from DS calculation 30 June 2017
         return -deriv_i / (2*Mp*Mp*eps);
       }
 

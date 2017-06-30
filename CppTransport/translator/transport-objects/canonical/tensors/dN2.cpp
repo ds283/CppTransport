@@ -69,6 +69,8 @@ namespace canonical
             GiNaC::symbol coord_i = this->traits.is_species(i) ? (*fields)[this->fl.flatten(i)] : (*derivs)[this->fl.flatten(this->traits.to_species(i))];
             GiNaC::symbol coord_j = this->traits.is_species(j) ? (*fields)[this->fl.flatten(j)] : (*derivs)[this->fl.flatten(this->traits.to_species(j))];
 
+            // Eq. (6.5) of Mulryne 1302.3842;
+            // p is the combination (d/dX_gamma[1/2dot(H)] * dX_gamma/dN
             result = -1/(2*dotH) * diff(diff(Hsq, coord_i), coord_j)
                      - diff(1/(2*dotH), coord_i) * diff(Hsq, coord_j)
                      - diff(1/(2*dotH), coord_j) * diff(Hsq, coord_i)

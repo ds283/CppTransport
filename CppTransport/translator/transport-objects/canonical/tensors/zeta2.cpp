@@ -230,8 +230,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] =
-              this->expr_field_field(deriv_a_i, deriv_a_j, k, k1, k2, a);
+            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = this->expr_field_field(deriv_a_i, deriv_a_j, k, k1, k2, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]);
           }
@@ -240,8 +239,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] =
-              this->expr_field_momentum(idx_a_i, idx_b_j, deriv_a_i, deriv_b_j, k, k1, k2, a);
+            table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = this->expr_field_momentum(idx_a_i, idx_b_j, deriv_a_i, deriv_b_j, k, k1, k2, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM), args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)]);
           }
@@ -250,8 +248,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
-              this->expr_field_momentum(idx_a_j, idx_b_i, deriv_a_j, deriv_b_i, k, k2, k1, a);
+            table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] = this->expr_field_momentum(idx_a_j, idx_b_i, deriv_a_j, deriv_b_i, k, k2, k1, a);
 
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
