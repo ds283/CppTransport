@@ -152,6 +152,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("zeta2 not cached");
 
         this->derivs.clear();
+        this->G.clear();
 
         // invalidate cache
         this->cached = false;

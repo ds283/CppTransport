@@ -64,8 +64,7 @@ namespace nontrivial_metric
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
 
-        auto args = this->res.generate_cache_arguments<phase_index>(use_dV | use_ddV | use_Riemann_A2, {i, j},
-                                                                    this->printer);
+        auto args = this->res.generate_cache_arguments<phase_index>(use_dV | use_ddV | use_Riemann_A2, {i, j}, this->printer);
         args += { k, a };
         args += { idx_i, idx_j };
 
@@ -84,7 +83,7 @@ namespace nontrivial_metric
               }
             else if(this->traits.is_species(i) && this->traits.is_momentum(j))
               {
-                result = GiNaC::delta_tensor(idx_i, idx_j);
+                result = this->G(species_i, species_j);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
@@ -105,7 +104,7 @@ namespace nontrivial_metric
               }
             else if(this->traits.is_momentum(i) && this->traits.is_momentum(j))
               {
-                result = GiNaC::delta_tensor(idx_i, idx_j) * (eps-3);
+                result = this->G(species_i, species_j) * (eps-3);
               }
             else throw tensor_exception("U2 index");
 
@@ -184,18 +183,13 @@ namespace nontrivial_metric
         auto deriv_a_j = this->res.generate_deriv_vector(*j_field_a.second, this->printer);
         auto deriv_b_j = this->res.generate_deriv_vector(*j_field_b.second, this->printer);
 
-        auto idx_a_i = this->shared.generate_index<GiNaC::varidx>(*i_field_a.second);
-        auto idx_b_i = this->shared.generate_index<GiNaC::varidx>(*i_field_b.second);
-        auto idx_a_j = this->shared.generate_index<GiNaC::varidx>(*j_field_a.second);
-        auto idx_b_j = this->shared.generate_index<GiNaC::varidx>(*j_field_b.second);
-
         this->pre_lambda();
 
         std::vector<GiNaC::ex> map(lambda_flattened_map_size(2));
 
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = 0;
-        map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
-        map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
+        map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = this->G(*i_field_a.second, *i_field_b.second);
+        map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = this->G(*i_field_b.second, *j_field_b.second) * (eps-3);
 
         auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV | use_Riemann_A2, {i, j}, this->printer);
         args += { k, a };

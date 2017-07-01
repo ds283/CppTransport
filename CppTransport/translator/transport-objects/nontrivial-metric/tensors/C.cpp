@@ -84,12 +84,12 @@ namespace nontrivial_metric
             auto& deriv_i = this->derivs(i)[this->fl.flatten(i)];
             auto& deriv_j = this->derivs(j)[this->fl.flatten(j)];
             auto& deriv_k = this->derivs(k)[this->fl.flatten(k)];
+            
+            auto delta_ij = this->G(i,j);
+            auto delta_jk = this->G(j,k);
+            auto delta_ik = this->G(i,k);
 
-            auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
-            auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
-            auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
-
-            result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+            result = this->expr(delta_ij, delta_jk, delta_ik, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
             this->cache.store(expression_item_types::C_item, index, args, result);
           }
@@ -98,22 +98,18 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex C::expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::varidx& k,
-                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
-                      const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3, const GiNaC::symbol& a)
+    GiNaC::ex
+    C::expr(const GiNaC::ex& delta_ij, const GiNaC::ex& delta_jk, const GiNaC::ex& delta_ik, const GiNaC::ex& deriv_i,
+            const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+            const GiNaC::symbol& k3, const GiNaC::symbol& a)
       {
         GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
         GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
         GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3) / 2;
 
-        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
-
         GiNaC::ex result = - delta_ij * deriv_k / (2*Mp*Mp);
 
         result += ( deriv_i * deriv_j * deriv_k / (8 * Mp*Mp*Mp*Mp) ) * (1 - k1dotk2*k1dotk2 / (k1*k1 * k2*k2));
-
-        GiNaC::ex delta_jk = GiNaC::delta_tensor(j, k);
-        GiNaC::ex delta_ik = GiNaC::delta_tensor(i, k);
 
         result += delta_jk * (deriv_i / (Mp*Mp)) * (k1dotk3 / (k1*k1)) / 2;
         result += delta_ik * (deriv_j / (Mp*Mp)) * (k2dotk3 / (k2*k2)) / 2;
@@ -164,8 +160,12 @@ namespace nontrivial_metric
             auto deriv_i = this->res.generate_deriv_vector(i, this->printer);
             auto deriv_j = this->res.generate_deriv_vector(j, this->printer);
             auto deriv_k = this->res.generate_deriv_vector(k, this->printer);
+            
+            auto delta_ij = this->G(i,j);
+            auto delta_jk = this->G(j,k);
+            auto delta_ik = this->G(i,k);
 
-            result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+            result = this->expr(delta_ij, delta_jk, delta_ik, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
             this->cache.store(expression_item_types::C_lambda, 0, args, result);
           }
@@ -186,7 +186,8 @@ namespace nontrivial_metric
         traits(t),
         compute_timer(tm),
         cached(false),
-        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); })
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
+        G(r, s, f, p)
       {
         Mp = this->shared.generate_Mp();
       }
@@ -205,6 +206,7 @@ namespace nontrivial_metric
         if(!this->cached) throw tensor_exception("C not cached");
 
         this->derivs.clear();
+        this->G.clear();
 
         // invalidate cache
         this->cached = false;

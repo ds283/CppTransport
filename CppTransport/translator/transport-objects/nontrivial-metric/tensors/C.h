@@ -33,6 +33,7 @@
 #include "shared/shared_resources.h"
 #include "shared/variance_tensor_cache.h"
 #include "nontrivial-metric/resources.h"
+#include "nontrivial-metric/metric_resource.h"
 
 #include "indices.h"
 
@@ -104,10 +105,10 @@ namespace nontrivial_metric
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr(const GiNaC::varidx& i, const GiNaC::varidx& j, const GiNaC::varidx& k,
-                       const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
-                       const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3,
-                       const GiNaC::symbol& a);
+        GiNaC::ex
+        expr(const GiNaC::ex& delta_ij, const GiNaC::ex& delta_jk, const GiNaC::ex& delta_ik, const GiNaC::ex& deriv_i,
+             const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
+             const GiNaC::symbol& k3, const GiNaC::symbol& a);
 
 
         // INTERNAL DATA
@@ -152,6 +153,9 @@ namespace nontrivial_metric
 
         //! list of momenta
         deriv_cache derivs;
+    
+        //! generator for metric components
+        metric_resource G;
 
         //! Planck mass
         GiNaC::symbol Mp;
