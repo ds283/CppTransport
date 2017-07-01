@@ -212,8 +212,8 @@ namespace nontrivial_metric
     zeta2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k,
                           GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
       {
-        if(i.get_class() != index_class::full) throw tensor_exception("U3");
-        if(j.get_class() != index_class::full) throw tensor_exception("U3");
+        if(i.get_class() != index_class::full) throw tensor_exception("zeta2");
+        if(j.get_class() != index_class::full) throw tensor_exception("zeta2");
 
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
