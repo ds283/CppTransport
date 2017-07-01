@@ -833,6 +833,8 @@ namespace transport
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
+        
+        $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -848,7 +850,7 @@ namespace transport
         if(IS_FIELD(__i) && IS_FIELD(__j))              // field-field correlation function
           {
             // LEADING-ORDER INITIAL CONDITION
-            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
+            auto __leading = __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))];
             auto __subl    = 0.0;
             auto __subsubl = 0.0;
 
@@ -866,7 +868,7 @@ namespace transport
                 || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
           {
             // LEADING-ORDER INITIAL CONDITION
-            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (-1.0);
+            auto __leading = -1.0 * __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))];
             auto __subl    = 0.0;
             auto __subsubl = 0.0;
 
@@ -882,7 +884,7 @@ namespace transport
         else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
           {
             // LEADING-ORDER INITIAL CONDITION
-            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
+            auto __leading = __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))];
             auto __subl    = 0.0;
             auto __subsubl = 0.0;
 
@@ -920,6 +922,8 @@ namespace transport
 
       $RESOURCE_PARAMETERS{__raw_params}
       $RESOURCE_COORDINATES{__fields}
+    
+      $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
 
       $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -932,7 +936,7 @@ namespace transport
       if(IS_FIELD(__i) && IS_MOMENTUM(__j))
         {
           // LEADING-ORDER INITIAL CONDITION
-          auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
+          auto __leading = __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))];
 
           // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
@@ -942,7 +946,7 @@ namespace transport
       else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
         {
           // LEADING-ORDER INITIAL CONDITION
-          auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
+          auto __leading = __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))];
 
           // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
