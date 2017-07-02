@@ -1436,7 +1436,9 @@ namespace transport
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
-
+    
+        // compute A with all indices covariant
+        // currently A isn't used by the platform, so the precise index assignment is arbitrary
         __A[FIELDS_FLATTEN($_a,$_b,$_c)] = $A_TENSOR[_abc]{__k1, __k2, __k3, __a};
       }
 
@@ -1455,16 +1457,20 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __G);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_Riemann_B3(__raw_params, __fields, __Mp, __B3);
           $RESOURCE_G[_ab]{__G}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_RIEMANN_B3[_abc]{__B3}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __B[FIELDS_FLATTEN($_a,$_b,$_c)] = $B_TENSOR[_abc]{__k1, __k2, __k3, __a};
+        // compute B with last index up and first two indices down
+        // this is the arrangement needed when shifting correlation functions from momenta to time derivatives
+        __B[FIELDS_FLATTEN($_a,$_b,$^c)] = $B_TENSOR[_ab^c]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1482,12 +1488,16 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $RESOURCE_G[_ab]{__G}
+          $RESOURCE_G[^ab]{__Ginv}
         $ENDIF
 
-          $TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __C[FIELDS_FLATTEN($_a,$_b,$_c)] = $C_TENSOR[_abc]{__k1, __k2, __k3, __a};
+        // compute C with first index up and last two indices down
+        // this is the arrangement needed when shifting correlation functions from momenta to time derivatives
+        __C[FIELDS_FLATTEN($^a,$_b,$_c)] = $C_TENSOR[^a_bc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1503,18 +1513,22 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_Riemann_A2(__raw_params, __fields, __Mp, __A2);
           $RESOURCE_G[_ab]{__G}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_RIEMANN_A2[_ab]{__A2}
         $ENDIF
 
-          $TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __M[FIELDS_FLATTEN($_a,$_b)] = $M_TENSOR[_ab];
+        // compute M with first index up and second index down
+        // this is the arrangement needed to compute the mass spectrum
+        __M[FIELDS_FLATTEN($^a,$_b)] = $M_TENSOR[^a_b];
       }
 
 
@@ -1637,6 +1651,7 @@ namespace transport
 
             number largest_evalue(const backg_state<number>& fields, double N)
               {
+                // compupte M matrix with first index up, last index down
                 this->mdl->M(this->task, fields, N, this->flat_M);
 
                 mass_matrix($^a,$_b) = flat_M[FIELDS_FLATTEN($^a,$_b)];

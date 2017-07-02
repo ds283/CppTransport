@@ -308,15 +308,21 @@ namespace transport
         virtual void u3(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __u3) = 0;
     
         //! compute A tensor in 'standard' index configuration (all indices down)
+        //! currently A isn't used by the platform, so the precise index arrangement is arbitrary
         virtual void A(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __A) = 0;
     
-        //! compute B tensor in 'standard' index configuration (all indices down)
+        //! compute B tensor in 'standard' index configuration (last index up, first two indices down)
+        //! this is the index configuration needed for shifting a correlation function from momenta
+        //! to time derivatives
         virtual void B(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __B) = 0;
     
-        //! compute C tensor in 'standard' index configuration (all indices down)
+        //! compute C tensor in 'standard' index configuration (first index up, last two indices down)
+        //! this is the index configuration needed for shifting a correlation function from momenta
+        //! to time derivatives
         virtual void C(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) = 0;
     
-        //! compute M tensor in 'standard' index configuration (all indices down)
+        //! compute M tensor in 'standard' index configuration (first index up, second index down)
+        //! this is the arrangement needed to compute the mass spectrum
         virtual void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) = 0;
 
 
