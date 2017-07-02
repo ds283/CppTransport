@@ -113,39 +113,39 @@ namespace nontrivial_metric
 
         //! generate V resource, including any necessary substitutions for parameters/coordinates
         //! returns raw expression, without applying any CSE
-        GiNaC::ex raw_V_resource(const language_printer& printer);
+        GiNaC::ex raw_V_resource(const language_printer& printer) const;
 
         //! generate epsilon resource
         //! returns raw expression, without applying any CSE
-        GiNaC::ex raw_eps_resource(const language_printer& printer);
+        GiNaC::ex raw_eps_resource(const language_printer& printer) const;
 
         //! generate Hubble-squared resource
         //! returns raw expression, without applying any CSE
-        GiNaC::ex raw_Hsq_resource(const language_printer& printer);
+        GiNaC::ex raw_Hsq_resource(const language_printer& printer) const;
 
       protected:
 
         //! generate metric resource, including any necessary substitutions for parameters/coordinates
         //! returns raw expression, without applying any CSE
-        std::unique_ptr<flattened_tensor> raw_G_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor> raw_G_resource(const language_printer& printer) const;
 
         //! generate inverse metric resource, including any necessary substitutions for parameters/coordinates
         //! returns raw expression, without applying any CSE
-        std::unique_ptr<flattened_tensor> raw_Ginv_resource(const language_printer& printer);
-
+        std::unique_ptr<flattened_tensor> raw_Ginv_resource(const language_printer& printer) const;
+    
         // SCALAR RESOURCES
 
       public:
 
 
         //! generate V resource, including any necessary substitutions for parameters/coordinates
-        GiNaC::ex V_resource(cse& cse_worker, const language_printer& printer);
+        GiNaC::ex V_resource(cse& cse_worker, const language_printer& printer) const;
 
         //! generate epsilon resource
-        GiNaC::ex eps_resource(cse& cse_worker, const language_printer& printer);
+        GiNaC::ex eps_resource(cse& cse_worker, const language_printer& printer) const;
 
         //! generate Hubble-squared resource
-        GiNaC::ex Hsq_resource(cse& cse_worker, const language_printer& printer);
+        GiNaC::ex Hsq_resource(cse& cse_worker, const language_printer& printer) const;
 
 
         // TENSOR RESOURCES -- COORDINATES
@@ -171,29 +171,29 @@ namespace nontrivial_metric
 
         //! generate concrete dV resource
         std::unique_ptr<flattened_tensor>
-        dV_resource(variance v, const language_printer& printer);
+        dV_resource(variance v, const language_printer& printer) const;
 
         //! generate concrete ddV resource
         std::unique_ptr<flattened_tensor>
-        ddV_resource(variance vi, variance vj, const language_printer& printer);
+        ddV_resource(variance vi, variance vj, const language_printer& printer) const;
 
         //! generate concrete dddV resource
         std::unique_ptr<flattened_tensor>
-        dddV_resource(variance vi, variance vj, variance vk, const language_printer& printer);
+        dddV_resource(variance vi, variance vj, variance vk, const language_printer& printer) const;
 
 
         //! generate abstract dV resource label
         GiNaC::ex
-        dV_resource(const index_literal& a, const language_printer& printer);
+        dV_resource(const index_literal& a, const language_printer& printer) const;
 
         //! generate abstract ddV resource label
         GiNaC::ex
-        ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
+        ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer) const;
 
         //! generate abstract dddV resource label
         GiNaC::ex
         dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
-                      const language_printer& printer);
+                      const language_printer& printer) const;
 
 
         // TENSOR RESOURCES -- METRIC AND CONNEXION
@@ -201,25 +201,25 @@ namespace nontrivial_metric
       public:
 
         //! generate concrete metric resource
-        std::unique_ptr<flattened_tensor> metric_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor> metric_resource(const language_printer& printer) const;
 
         //! generate concrete inverse metric resource
-        std::unique_ptr<flattened_tensor> metric_inverse_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor> metric_inverse_resource(const language_printer& printer) const;
 
         //! generate concrete connexion resource
-        std::unique_ptr<flattened_tensor> connexion_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor> connexion_resource(const language_printer& printer) const;
 
 
         //! generate abstract metric resource label
-        GiNaC::ex metric_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
+        GiNaC::ex metric_resource(const index_literal& a, const index_literal& b, const language_printer& printer) const;
 
         //! generate abstract inverse metric resource label
         GiNaC::ex metric_inverse_resource(const index_literal& a, const index_literal& b,
-                                          const language_printer& printer);
+                                          const language_printer& printer) const;
 
         //! generate abstract connexion resource labels
         GiNaC::ex connexion_resource(const index_literal& a, const index_literal& b, const index_literal& c,
-                                     const language_printer& printer);
+                                     const language_printer& printer) const;
 
 
         // TENSOR RESOURCES -- CURVATURE QUANTITIES
@@ -227,23 +227,23 @@ namespace nontrivial_metric
       public:
 
         //! generate concrete Riemann A2 resource
-        std::unique_ptr<flattened_tensor> Riemann_A2_resource(variance vi, variance vj, const language_printer& printer);
+        std::unique_ptr<flattened_tensor> Riemann_A2_resource(variance vi, variance vj, const language_printer& printer) const;
 
         //! generate concrete Riemann A3 resource
-        std::unique_ptr<flattened_tensor> Riemann_A3_resource(variance vi, variance vj, variance vk, const language_printer& printer);
+        std::unique_ptr<flattened_tensor> Riemann_A3_resource(variance vi, variance vj, variance vk, const language_printer& printer) const;
 
         //! generate concrete Riemann B3 resource
-        std::unique_ptr<flattened_tensor> Riemann_B3_resource(variance vi, variance vj, variance vk, const language_printer& printer);
+        std::unique_ptr<flattened_tensor> Riemann_B3_resource(variance vi, variance vj, variance vk, const language_printer& printer) const;
 
 
         //! generate abstract Riemann A2 resource label
-        GiNaC::ex Riemann_A2_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
+        GiNaC::ex Riemann_A2_resource(const index_literal& a, const index_literal& b, const language_printer& printer) const;
 
         //! generate abstract Riemann A3 resource label
-        GiNaC::ex Riemann_A3_resource(const index_literal& a, const index_literal& b, const index_literal& c, const language_printer& printer);
+        GiNaC::ex Riemann_A3_resource(const index_literal& a, const index_literal& b, const index_literal& c, const language_printer& printer) const;
 
         //! generate abstract Riemann B3 resource label
-        GiNaC::ex Riemann_B3_resource(const index_literal& a, const index_literal& b, const index_literal& c, const language_printer& printer);
+        GiNaC::ex Riemann_B3_resource(const index_literal& a, const index_literal& b, const index_literal& c, const language_printer& printer) const;
 
 
         // BUILD CACHE TAG LISTS
@@ -345,7 +345,7 @@ namespace nontrivial_metric
         GiNaC::ex
         position_indices(const std::array<variance, Indices> avail, const std::array<variance, Indices> reqd,
                          const std::array<field_index, Indices> indices, const flattened_tensor& tensor,
-                         const language_printer& printer);
+                         const language_printer& printer) const;
 
 
         // INTERNAL API -- GENERATE FLATTENED VECTOR OF RESOURCE LABELS
@@ -355,27 +355,27 @@ namespace nontrivial_metric
         //! generate 1-index labels
         void tensor_resource_label(flattened_tensor& list, const std::array<variance, 1>& avail,
                                    const std::array<variance, 1> reqd, const contexted_value<std::string>& resource,
-                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+                                   const contexted_value<std::string>& flatten, const language_printer& printer) const;
 
         //! generate 2-index labels
         void tensor_resource_label(flattened_tensor& list, const std::array<variance, 2>& avail,
                                    const std::array<variance, 2> reqd, const contexted_value<std::string>& resource,
-                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+                                   const contexted_value<std::string>& flatten, const language_printer& printer) const;
 
         //! generate 3-index labels
         void tensor_resource_label(flattened_tensor& list, const std::array<variance, 3>& avail,
                                    const std::array<variance, 3> reqd, const contexted_value<std::string>& resource,
-                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+                                   const contexted_value<std::string>& flatten, const language_printer& printer) const;
 
         //! generate 2-index labels, no index repositioning
         void tensor_resource_label(flattened_tensor& list, const std::array<variance, 2> reqd,
                                    const contexted_value<std::string>& resource,
-                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+                                   const contexted_value<std::string>& flatten, const language_printer& printer) const;
 
         //! generate 3-index labels, no index repositioning
         void tensor_resource_label(flattened_tensor& list, const std::array<variance, 3> reqd,
                                    const contexted_value<std::string>& resource,
-                                   const contexted_value<std::string>& flatten, const language_printer& printer);
+                                   const contexted_value<std::string>& flatten, const language_printer& printer) const;
 
 
         // INTERNAL API -- GENERATE FLATTENED VECTOR OF GINAC EXPRESSIONS FROM COMPUTE CACHE
@@ -385,17 +385,17 @@ namespace nontrivial_metric
         //! generate 1-index
         template <typename CacheObject>
         void tensor_resource_expr(flattened_tensor& list, const std::array<variance, 1> reqd,
-                                  expression_item_types type, const language_printer& printer, CacheObject& cache);
+                                  expression_item_types type, const language_printer& printer, CacheObject& cache) const;
 
         //! generate 2-index
         template <typename CacheObject>
         void tensor_resource_expr(flattened_tensor& list, const std::array<variance, 2> reqd,
-                                  expression_item_types type, const language_printer& printer, CacheObject& cache);
+                                  expression_item_types type, const language_printer& printer, CacheObject& cache) const;
 
         //! generate 3-index
         template <typename CacheObject>
         void tensor_resource_expr(flattened_tensor& list, const std::array<variance, 3> reqd,
-                                  expression_item_types type, const language_printer& printer, CacheObject& cache);
+                                  expression_item_types type, const language_printer& printer, CacheObject& cache) const;
 
         
         // INTERNAL DATA

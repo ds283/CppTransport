@@ -79,7 +79,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_field_symbols(const lang
   {
     auto list = std::make_unique<symbol_list>();
 
-    const auto resource = this->mgr.coordinates();
+    const auto& resource = this->mgr.coordinates();
     const auto& flatten = this->mgr.phase_flatten();
 
     // get max field index; variance assignment doesn't matter here
