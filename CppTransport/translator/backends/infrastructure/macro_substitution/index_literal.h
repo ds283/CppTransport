@@ -45,6 +45,17 @@
 enum class variance { covariant, contravariant, none };
 
 
+inline std::string to_string(variance v)
+  {
+    switch(v)
+      {
+        case variance::none: return std::string{};
+        case variance::contravariant: return std::string{ "^" };
+        case variance::covariant: return std::string{ "_" };
+      }
+  }
+
+
 class duplicate_index : public std::out_of_range
   {
     

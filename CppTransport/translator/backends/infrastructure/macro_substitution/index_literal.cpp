@@ -52,30 +52,5 @@ std::unique_ptr<index_literal_database> to_database(const index_literal_list& in
 
 std::string index_literal::to_string() const
   {
-    std::string str;
-
-    // write variance modifier, if one is present
-    switch(this->type)
-      {
-        case variance::none:
-          {
-            break;
-          }
-
-        case variance::contravariant:
-          {
-            str = "^";
-            break;
-          }
-
-        case variance::covariant:
-          {
-            str = "_";
-          }
-      }
-
-    // append index kernel letter
-    str += this->idx.get().get_label();
-
-    return str;
+    return ::to_string(this->type) + this->idx.get().get_label();
   }

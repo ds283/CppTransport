@@ -114,6 +114,9 @@ namespace tensor_index_impl
 
         //! get variance
         variance get_variance() const { return this->index_variance; }
+        
+        //! convert to string
+        std::string to_string() const;
 
 
         // INCREMENT, DECREMENT
@@ -200,8 +203,15 @@ namespace tensor_index_impl
         if(l.index_variance != r.index_variance) throw tensor_index_error(ERROR_MISMATCHED_TENSOR_INDICES);
         return l.index_value == r.index_value;
       }
-
-
+    
+    
+    template <typename IndexType>
+    std::string tensor_index<IndexType>::to_string() const
+      {
+        return ::to_string(this->index_variance) + std::to_string(this->index_value);
+      }
+    
+    
     template <typename IndexType>
     constexpr bool operator!=(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
       {
