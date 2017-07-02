@@ -77,15 +77,15 @@ namespace canonical
 
         //! generate V resource, including any necessary substitutions for parameters/coordinates
         //! returns raw expression, without applying any CSE
-        GiNaC::ex raw_V_resource(const language_printer& printer);
+        GiNaC::ex raw_V_resource(const language_printer& printer) const;
 
         //! generate epsilon resource
         //! returns raw expression, without applying any CSE
-        GiNaC::ex raw_eps_resource(const language_printer& printer);
+        GiNaC::ex raw_eps_resource(const language_printer& printer) const;
 
         //! generate Hubble-squared resource
         //! returns raw expression, without applying any CSE
-        GiNaC::ex raw_Hsq_resource(const language_printer& printer);
+        GiNaC::ex raw_Hsq_resource(const language_printer& printer) const;
 
 
         // SCALAR RESOURCES
@@ -94,13 +94,13 @@ namespace canonical
 
 
         //! generate V resource, including any necessary substitutions for parameters/coordinates
-        GiNaC::ex V_resource(cse& cse_worker, const language_printer& printer);
+        GiNaC::ex V_resource(cse& cse_worker, const language_printer& printer) const;
 
         //! generate epsilon resource
-        GiNaC::ex eps_resource(cse& cse_worker, const language_printer& printer);
+        GiNaC::ex eps_resource(cse& cse_worker, const language_printer& printer) const;
 
         //! generate Hubble-squared resource
-        GiNaC::ex Hsq_resource(cse& cse_worker, const language_printer& printer);
+        GiNaC::ex Hsq_resource(cse& cse_worker, const language_printer& printer) const;
 
 
         // TENSOR RESOURCES -- COORDINATES
@@ -125,34 +125,38 @@ namespace canonical
       public:
 
         //! generate concrete dV resource labels
-        std::unique_ptr<flattened_tensor> dV_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor> dV_resource(const language_printer& printer) const;
 
         //! generate concrete ddV resource labels
-        std::unique_ptr<flattened_tensor> ddV_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor> ddV_resource(const language_printer& printer) const;
 
         //! generate concrete dddV resource labels
-        std::unique_ptr<flattened_tensor> dddV_resource(const language_printer& printer);
+        std::unique_ptr<flattened_tensor> dddV_resource(const language_printer& printer) const;
 
 
         //! generate abstract dV resource label
-        GiNaC::ex dV_resource(const index_literal& a, const language_printer& printer);
+        GiNaC::ex dV_resource(const index_literal& a, const language_printer& printer) const;
 
         //! generate abstract ddV resource label
-        GiNaC::ex ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer);
+        GiNaC::ex ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer) const;
 
         //! generate abstract dddV resource label
         GiNaC::ex dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
-                                const language_printer& printer);
-
-
-
-        // BUILD ARGUMENT LISTS
+                                const language_printer& printer) const;
+    
+    
+        // BUILD CACHE TAG LISTS
         // used to interact with expression and lambda caches
 
       public:
 
         //! generate argument list
         cache_tags generate_cache_arguments(unsigned int flags, const language_printer& printer) const;
+  
+      protected:
+    
+        template <typename ResourceType>
+        void push_resource_tag(cache_tags& args, const ResourceType& resource) const;
 
 
         // QUERY ROLL/UNROLL AVAILABILITY
@@ -167,9 +171,9 @@ namespace canonical
 
         //! query whether dddV can be rolled-up into loops
         bool can_roll_dddV() const;
-
-
-        // INTERNAL API
+    
+    
+        // INTERNAL API -- UTILITY FUNCTIONS
 
       private:
 
@@ -179,33 +183,44 @@ namespace canonical
 
         //! generate substitution map for parameter and coordinate labels
         GiNaC::exmap make_substitution_map(const language_printer& printer) const;
-
+    
+    
+        // INTERNAL API -- GENERATE FLATTENED VECTOR OF RESOURCE LABELS
+        // (if more tensors are added later, might make sense to move to tensor_resource_label<>
+        // implementation from nontrivial-metric)
+        
+      public:
 
         //! generate concrete dV resource using labels
         void dV_resource_label(const language_printer& printer, flattened_tensor& list,
                                const contexted_value<std::string>& resource,
-                               const contexted_value<std::string>& flatten);
-
-        //! generate concrete dV resource using literal expressions
-        void dV_resource_expr(const language_printer& printer, flattened_tensor& list);
-
-
+                               const contexted_value<std::string>& flatten) const;
+    
         //! generate concrete ddV resource using labels
         void ddV_resource_label(const language_printer& printer, flattened_tensor& list,
                                 const contexted_value<std::string>& resource,
-                                const contexted_value<std::string>& flatten);
-
-        //! generate concrete ddV resource using literal expressions
-        void ddV_resource_expr(const language_printer& printer, flattened_tensor& list);
-
-
+                                const contexted_value<std::string>& flatten) const;
+    
         //! generate concrete dddV resource using labels
         void dddV_resource_label(const language_printer& printer, flattened_tensor& list,
                                  const contexted_value<std::string>& resource,
-                                 const contexted_value<std::string>& flatten);
+                                 const contexted_value<std::string>& flatten) const;
+    
+    
+        // INTERNAL API -- GENERATE FLATTENED VECTOR OF GINAC EXPRESSIONS FROM COMPUTE CACHE
+        // (if more tensors are added later, might make sense to move to tensor_resource_expr<>
+        // implementation from nontrivial-metric)
+        
+      public:
 
+        //! generate concrete dV resource using literal expressions
+        void dV_resource_expr(const language_printer& printer, flattened_tensor& list) const;
+        
+        //! generate concrete ddV resource using literal expressions
+        void ddV_resource_expr(const language_printer& printer, flattened_tensor& list) const;
+        
         //! generate concrete dddV resource using literal expressions
-        void dddV_resource_expr(const language_printer& printer, flattened_tensor& list);
+        void dddV_resource_expr(const language_printer& printer, flattened_tensor& list) const;
 
 
         // INTERNAL DATA
@@ -260,6 +275,30 @@ namespace canonical
         boost::timer::cpu_timer& compute_timer;
 
       };
+    
+    
+    // template selected when ResourceType is returned from a simple resource
+    template <>
+    inline void resources::push_resource_tag(cache_tags& args, const boost::optional< contexted_value<std::string> >& resource) const
+      {
+        if(resource)   // no need to push arguments if no resource available
+          {
+            GiNaC::symbol sym = sym_factory.get_symbol(resource.get());
+            args += sym;
+          }
+      }
+    
+    
+    // template selected when ResourceType is returned from an indexed resource
+    template <typename ResourceType>
+    void resources::push_resource_tag(cache_tags& args, const ResourceType& resource) const
+      {
+        if(resource)   // no need to push arguments if no resource available
+          {
+            GiNaC::symbol sym = sym_factory.get_symbol(resource.get().second);
+            args += sym;
+          }
+      }
 
   }   // namespace canonical
 

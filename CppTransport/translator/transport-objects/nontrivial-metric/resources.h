@@ -133,6 +133,7 @@ namespace nontrivial_metric
         //! returns raw expression, without applying any CSE
         std::unique_ptr<flattened_tensor> raw_Ginv_resource(const language_printer& printer) const;
     
+        
         // SCALAR RESOURCES
 
       public:

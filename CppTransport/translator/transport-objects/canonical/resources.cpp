@@ -45,7 +45,7 @@ namespace canonical
       public:
 
         //! constructor captures resource manager and shared resource manager
-        PotentialResourceCache(resources& r, shared_resources& s, const language_printer& p)
+        PotentialResourceCache(const resources& r, const shared_resources& s, const language_printer& p)
           : res(r),
             share(s),
             printer(p)
@@ -77,10 +77,10 @@ namespace canonical
       private:
 
         //! resource manager
-        resources& res;
+        const resources& res;
 
         //! shared resources
-        shared_resources& share;
+        const shared_resources& share;
 
         //! language printer
         const language_printer& printer;
@@ -119,34 +119,6 @@ namespace canonical
 
         // switch off compute timer (it will be restarted if needed during subsequent computations)
         compute_timer.stop();
-      }
-
-
-    cache_tags
-    resources::generate_cache_arguments(const language_printer& printer) const
-      {
-        cache_tags args;
-
-        // query resource manager for parameter and coordinate labels
-        const auto& param_resource = this->mgr.parameters();
-        const auto coord_resource = this->mgr.coordinates();
-        const auto& flatten = this->mgr.phase_flatten();
-
-        // push all parameter labels onto argument list
-        if(param_resource)
-          {
-            GiNaC::symbol sym = this->sym_factory.get_symbol(*param_resource);
-            args += sym;
-          }
-
-        // if a coordinate resource is being used, push its label onto the argument list
-        if(coord_resource && flatten)
-          {
-            GiNaC::symbol sym = this->sym_factory.get_symbol(*coord_resource);
-            args += sym;
-          }
-
-        return args;
       }
 
 
@@ -223,7 +195,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::V_resource(cse& cse_worker, const language_printer& printer)
+    GiNaC::ex resources::V_resource(cse& cse_worker, const language_printer& printer) const
       {
         // behaviour differs depending whether CSE is in use or not
         // If not, we want to return the raw expression; if it is, we want to assign an internal name to a collection
@@ -244,7 +216,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::raw_V_resource(const language_printer& printer)
+    GiNaC::ex resources::raw_V_resource(const language_printer& printer) const
       {
         auto args = this->generate_cache_arguments(printer);
 
@@ -309,7 +281,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::eps_resource(cse& cse_worker, const language_printer& printer)
+    GiNaC::ex resources::eps_resource(cse& cse_worker, const language_printer& printer) const
       {
         if(this->payload.do_cse())
           {
@@ -327,7 +299,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::raw_eps_resource(const language_printer& printer)
+    GiNaC::ex resources::raw_eps_resource(const language_printer& printer) const
       {
         auto args = this->generate_cache_arguments(printer);
 
@@ -354,7 +326,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::Hsq_resource(cse& cse_worker, const language_printer& printer)
+    GiNaC::ex resources::Hsq_resource(cse& cse_worker, const language_printer& printer) const
       {
         if(this->payload.do_cse())
           {
@@ -372,7 +344,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::raw_Hsq_resource(const language_printer& printer)
+    GiNaC::ex resources::raw_Hsq_resource(const language_printer& printer) const
       {
         auto args = this->generate_cache_arguments(printer);
 
@@ -395,7 +367,7 @@ namespace canonical
 
 
     std::unique_ptr<flattened_tensor>
-    resources::dV_resource(const language_printer& printer)
+    resources::dV_resource(const language_printer& printer) const
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(1));
 
@@ -417,7 +389,7 @@ namespace canonical
 
     void resources::dV_resource_label(const language_printer& printer, flattened_tensor& list,
                                       const contexted_value<std::string>& resource,
-                                      const contexted_value<std::string>& flatten)
+                                      const contexted_value<std::string>& flatten) const
       {
         const field_index max_i = this->share.get_max_field_index(variance::none);
 
@@ -432,7 +404,7 @@ namespace canonical
       }
 
 
-    void resources::dV_resource_expr(const language_printer& printer, flattened_tensor& list)
+    void resources::dV_resource_expr(const language_printer& printer, flattened_tensor& list) const
       {
         const field_index max_i = this->share.get_max_field_index(variance::none);
 
@@ -467,7 +439,7 @@ namespace canonical
 
 
     std::unique_ptr<flattened_tensor>
-    resources::ddV_resource(const language_printer& printer)
+    resources::ddV_resource(const language_printer& printer) const
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
 
@@ -489,7 +461,7 @@ namespace canonical
 
     void resources::ddV_resource_label(const language_printer& printer, flattened_tensor& list,
                                        const contexted_value<std::string>& resource,
-                                       const contexted_value<std::string>& flatten)
+                                       const contexted_value<std::string>& flatten) const
       {
         const field_index max_i = this->share.get_max_field_index(variance::none);
         const field_index max_j = this->share.get_max_field_index(variance::none);
@@ -509,7 +481,7 @@ namespace canonical
     }
 
 
-    void resources::ddV_resource_expr(const language_printer& printer, flattened_tensor& list)
+    void resources::ddV_resource_expr(const language_printer& printer, flattened_tensor& list) const
       {
         const field_index max_i = this->share.get_max_field_index(variance::none);
         const field_index max_j = this->share.get_max_field_index(variance::none);
@@ -549,7 +521,7 @@ namespace canonical
 
 
     std::unique_ptr<flattened_tensor>
-    resources::dddV_resource(const language_printer& printer)
+    resources::dddV_resource(const language_printer& printer) const
       {
         auto list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
 
@@ -571,7 +543,7 @@ namespace canonical
 
     void resources::dddV_resource_label(const language_printer& printer, flattened_tensor& list,
                                         const contexted_value<std::string>& resource,
-                                        const contexted_value<std::string>& flatten)
+                                        const contexted_value<std::string>& flatten) const
       {
         const field_index max_i = this->share.get_max_field_index(variance::none);
         const field_index max_j = this->share.get_max_field_index(variance::none);
@@ -595,7 +567,7 @@ namespace canonical
       }
 
 
-    void resources::dddV_resource_expr(const language_printer& printer, flattened_tensor& list)
+    void resources::dddV_resource_expr(const language_printer& printer, flattened_tensor& list) const
       {
         const field_index max_i = this->share.get_max_field_index(variance::none);
         const field_index max_j = this->share.get_max_field_index(variance::none);
@@ -637,6 +609,22 @@ namespace canonical
               }
           }
       }
+    
+    
+    cache_tags
+    resources::generate_cache_arguments(const language_printer& printer) const
+      {
+        cache_tags args;
+        const auto& flatten = this->mgr.phase_flatten();
+    
+        // push all parameter labels onto argument list
+        this->push_resource_tag(args, this->mgr.parameters());
+    
+        // if a coordinate resource is being used, push its label onto the argument list
+        if(flatten) this->push_resource_tag(args, this->mgr.coordinates());
+    
+        return args;
+      }
 
 
     cache_tags
@@ -646,35 +634,9 @@ namespace canonical
         auto args = this->generate_cache_arguments(printer);
         const auto& flatten = this->mgr.field_flatten();
 
-        if(flatten && ((flags & use_dV) != 0))
-          {
-            const auto dV_resource = this->mgr.dV();
-            if(dV_resource)   // no need to push arguments if no resource available
-              {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(dV_resource.get().second);
-                args += sym;
-              }
-          }
-
-        if(flatten && ((flags &  use_ddV) != 0))
-          {
-            const auto ddV_resource = this->mgr.ddV();
-            if(ddV_resource)
-              {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(ddV_resource.get().second);
-                args += sym;
-              }
-          }
-
-        if(flatten && ((flags & use_dddV) != 0))
-          {
-            const auto dddV_resource = this->mgr.dddV();
-            if(dddV_resource)
-              {
-                GiNaC::symbol sym = this->sym_factory.get_symbol(dddV_resource.get().second);
-                args += sym;
-              }
-          }
+        if(flatten && ((flags & use_dV) != 0)) this->push_resource_tag(args, this->mgr.dV());
+        if(flatten && ((flags &  use_ddV) != 0)) this->push_resource_tag(args, this->mgr.ddV());
+        if(flatten && ((flags & use_dddV) != 0)) this->push_resource_tag(args, this->mgr.dddV());
 
         return args;
       }
@@ -710,7 +672,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer)
+    GiNaC::ex resources::dV_resource(const index_literal& a, const language_printer& printer) const
       {
         const auto resource = this->mgr.dV();
         const auto& flatten = this->mgr.field_flatten();
@@ -724,7 +686,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer)
+    GiNaC::ex resources::ddV_resource(const index_literal& a, const index_literal& b, const language_printer& printer) const
       {
         const auto resource = this->mgr.ddV();
         const auto& flatten = this->mgr.field_flatten();
@@ -740,7 +702,7 @@ namespace canonical
 
 
     GiNaC::ex resources::dddV_resource(const index_literal& a, const index_literal& b, const index_literal& c,
-                                       const language_printer& printer)
+                                       const language_printer& printer) const
       {
         const auto resource = this->mgr.dddV();
         const auto& flatten = this->mgr.field_flatten();
