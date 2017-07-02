@@ -1358,10 +1358,12 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __G);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_Riemann_A2(__raw_params, __fields, __Mp, __A2);
           $RESOURCE_G[_ab]{__G}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_RIEMANN_A2[_ab]{__A2}
@@ -1369,7 +1371,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u2[FLATTEN($_A,$_B)] = $U2_TENSOR[_AB]{__k, __a};
+        __u2[FLATTEN($^A,$_B)] = $U2_TENSOR[^A_B]{__k, __a};
       }
 
 
@@ -1387,6 +1389,7 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
@@ -1394,6 +1397,7 @@ namespace transport
           $MODEL_compute_Riemann_A3(__raw_params, __fields, __Mp, __A3);
           $MODEL_compute_Riemann_B3(__raw_params, __fields, __Mp, __B3);
           $RESOURCE_G[_ab]{__G}
+          $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_DDDV[_abc]{__dddV}
@@ -1404,7 +1408,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u3[FLATTEN($_A,$_B,$_C)] = $U3_TENSOR[_ABC]{__k1, __k1, __k3, __a};
+        __u3[FLATTEN($^A,$_B,$_C)] = $U3_TENSOR[^A_BC]{__k1, __k1, __k3, __a};
       }
 
 
