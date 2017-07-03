@@ -46,6 +46,7 @@ namespace macro_packages
       {
         EMPLACE(simple_package, BIND(set_params, "RESOURCE_PARAMETERS"));
         EMPLACE(simple_package, BIND(set_coordinates, "RESOURCE_COORDINATES"));
+        EMPLACE(simple_package, BIND(set_connexion, "RESOURCE_CONNECTION"));
         EMPLACE(simple_package, BIND(set_phase_flatten, "PHASE_FLATTEN"));
         EMPLACE(simple_package, BIND(set_field_flatten, "FIELD_FLATTEN"));
         EMPLACE(simple_package, BIND(release_flatteners, "RELEASE_FLATTENERS"));
@@ -57,7 +58,6 @@ namespace macro_packages
         EMPLACE(index_package, BIND(set_dV, "RESOURCE_DV"));
         EMPLACE(index_package, BIND(set_ddV, "RESOURCE_DDV"));
         EMPLACE(index_package, BIND(set_dddV, "RESOURCE_DDDV"));
-        EMPLACE(index_package, BIND(set_connexion, "RESOURCE_CONNECTION"));
         EMPLACE(index_package, BIND(set_Riemann_A2, "RESOURCE_RIEMANN_A2"));
         EMPLACE(index_package, BIND(set_Riemann_A3, "RESOURCE_RIEMANN_A3"));
         EMPLACE(index_package, BIND(set_Riemann_B3, "RESOURCE_RIEMANN_B3"));
@@ -232,7 +232,7 @@ namespace macro_packages
       }
 
 
-    std::string set_connexion::apply(const macro_argument_list& args, const index_literal_list& indices)
+    std::string set_connexion::apply(const macro_argument_list& args)
       {
         this->mgr.assign_connexion(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]);
 
@@ -240,26 +240,6 @@ namespace macro_packages
         msg << RESOURCE_SET_CONNEXION << " '" << static_cast<std::string>(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]) << "'";
     
         return msg.str();
-      }
-
-
-    boost::optional<unsigned int> set_connexion::define_indices(model_type t)
-      {
-        switch(t)
-          {
-            case model_type::canonical: return 0;
-            case model_type::nontrivial_metric: return 0;
-          }
-      }
-
-
-    boost::optional<std::vector<index_class> > set_connexion::define_classes(model_type t)
-      {
-        switch(t)
-          {
-            case model_type::canonical: return boost::none;
-            case model_type::nontrivial_metric: return boost::none;
-          }
       }
     
     
