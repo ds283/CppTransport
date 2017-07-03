@@ -355,11 +355,13 @@ namespace transport
               $RESOURCE_RELEASE
               __dV = new number[$NUMBER_FIELDS];
               __Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+              __TimeGamma = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
             __raw_params = new number[$NUMBER_PARAMS];
-
-            __raw_params[$1] = __params.get_vector()[$1];
+    
+            const auto& __pvector = __params.get_vector();
+            __raw_params[$1] = __pvector[$1];
           }
 
         void close_down_workspace()
@@ -367,6 +369,7 @@ namespace transport
             $IF{!fast}
               delete[] __dV;
               delete[] __Ginv;
+              delete[] __TimeGamma;
             $ENDIF
 
             delete[] __raw_params;
@@ -381,6 +384,7 @@ namespace transport
         $IF{!fast}
           number* __dV;
           number* __Ginv;
+          number* __TimeGamma;
         $ENDIF
 
         number* __raw_params;
@@ -515,7 +519,7 @@ namespace transport
 
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
-        const flattened_tensor<number>& __param_vector = __params.get_vector();
+        const auto& __param_vector = __params.get_vector();
 
         $RESOURCE_PARAMETERS{__param_vector}
         $RESOURCE_COORDINATES{__coords}
@@ -561,7 +565,7 @@ namespace transport
 
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
-        const flattened_tensor<number>& __param_vector = __params.get_vector();
+        const auto& __param_vector = __params.get_vector();
 
         $RESOURCE_PARAMETERS{__param_vector}
         $RESOURCE_COORDINATES{__coords}
@@ -586,7 +590,7 @@ namespace transport
 
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
-        const flattened_tensor<number>& __param_vector = __params.get_vector();
+        const auto& __param_vector = __params.get_vector();
 
         $RESOURCE_PARAMETERS{__param_vector}
         $RESOURCE_COORDINATES{__coords}
@@ -612,7 +616,7 @@ namespace transport
 
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
-        const flattened_tensor<number>& __param_vector = __params.get_vector();
+        const auto& __param_vector = __params.get_vector();
 
         $RESOURCE_PARAMETERS{__param_vector}
         $RESOURCE_COORDINATES{__coords}
@@ -701,6 +705,20 @@ namespace transport
 
 
       template <typename number>
+      void $MODEL_compute_TimeGamma(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __Gamma)
+        {
+          $RESOURCE_RELEASE
+          
+          $RESOURCE_PARAMETERS{__raw_params}
+          $RESOURCE_COORDINATES{__x}
+          
+          $TEMP_POOL{"const auto $1 = $2;"}
+          
+          __Gamma[FIELDS_FLATTEN($^a,$_b)] = $CONNECTION[^a_bc] * $MOMENTA[^c];
+        }
+
+
+      template <typename number>
       void
       $MODEL_compute_Riemann_A2(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __A2)
         {
@@ -766,7 +784,8 @@ namespace transport
             // supply the missing initial conditions using a slow-roll approximation
             const auto __Mp = __params.get_Mp();
 
-            $RESOURCE_PARAMETERS{__params.get_vector()}
+            const auto& __pvector = __params.get_vector();
+            $RESOURCE_PARAMETERS{__pvector}
             $RESOURCE_COORDINATES{__input}
 
             $TEMP_POOL{"const auto $1 = $2;"}
@@ -826,7 +845,8 @@ namespace transport
                                             double __k_norm)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -915,7 +935,8 @@ namespace transport
                                           double __k_norm)
     {
       $RESOURCE_RELEASE
-      __raw_params[$1] = __task->get_params().get_vector()[$1];
+      const auto& __pvector = __task->get_params().get_vector();
+      __raw_params[$1] = __pvector[$1];
 
       const auto __Mp = __task->get_params().get_Mp();
       const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -966,7 +987,8 @@ namespace transport
                                                 double __k_norm)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -1017,7 +1039,8 @@ namespace transport
                                            double __k_norm)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -1298,7 +1321,9 @@ namespace transport
                                              flattened_tensor<number>& __dN)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
+
         const auto __Mp = __task->get_params().get_Mp();
 
         $RESOURCE_PARAMETERS{__raw_params}
@@ -1322,7 +1347,9 @@ namespace transport
                                              flattened_tensor<number>& __ddN)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
+
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
@@ -1350,7 +1377,9 @@ namespace transport
                             flattened_tensor<number>& __u2)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
+
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
@@ -1381,7 +1410,9 @@ namespace transport
                             flattened_tensor<number>& __u3)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
+
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
@@ -1418,7 +1449,9 @@ namespace transport
                            flattened_tensor<number>& __A)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
+
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
@@ -1453,7 +1486,9 @@ namespace transport
                            flattened_tensor<number>& __B)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
+
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
@@ -1484,7 +1519,9 @@ namespace transport
                            flattened_tensor<number>& __C)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
+
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
@@ -1510,7 +1547,9 @@ namespace transport
                            flattened_tensor<number>& __M)
       {
         $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
+        const auto& __pvector = __task->get_params().get_vector();
+        __raw_params[$1] = __pvector[$1];
+
         const auto __Mp = __task->get_params().get_Mp();
 
         $RESOURCE_PARAMETERS{__raw_params}
@@ -1806,6 +1845,14 @@ namespace transport
           $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
         $ENDIF
+        
+        // set up connexion for covariant time derivatives
+        $IF{!fast}
+          $MODEL_compute_TimeGamma(__raw_params, __x, __Mp, __TimeGamma);
+          $SET[^a_b]{TimeGamma, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
+        $ELSE
+          $SET[^a_b]{TimeGamma, "$CONNECTION[^a_bc] * $MOMENTA[^c]"}
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1816,8 +1863,11 @@ namespace transport
 
         // check for nan being produced
         if(std::isnan(__x[$^A])) throw integration_produced_nan(__t);
-
+        
         __dxdt[FLATTEN($^A)] = $U1_TENSOR[^A];
+
+        // momentum components are adjusted by a connexion term
+        __dxdt[FLATTEN($^a + $NUMBER_FIELDS)] $+= - $TimeGamma[^a_b] * $MOMENTA[^b];
       }
 
 

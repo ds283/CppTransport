@@ -333,8 +333,9 @@ namespace transport
             $ENDIF
 
             this->__raw_params = new number[$NUMBER_PARAMS];
-
-            this->__raw_params[$1] = this->__params.get_vector()[$1];
+    
+            const auto& __pvector = __params.get_vector();
+            this->__raw_params[$1] = __pvector[$1];
           }
 
         void close_down_workspace()
@@ -479,8 +480,9 @@ namespace transport
             $ENDIF
 
             this->__raw_params = new number[$NUMBER_PARAMS];
-
-            this->__raw_params[$1] = this->__params.get_vector()[$1];
+    
+            const auto& __pvector = __params.get_vector();
+            this->__raw_params[$1] = __pvector[$1];
           }
 
         void close_down_workspace()
