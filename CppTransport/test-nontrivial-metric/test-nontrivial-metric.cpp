@@ -43,15 +43,15 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     
     const double R0            = 0.00007053497338915804 * M_P;                                  // matches magic g_R value
     
-    const double x_init        = -R0;
-    const double y_init        = (1E-2)*R0;
+    const double R_init        = (1.0 + 1E-3) * R0;
+    const double theta_init    = -M_PI + 1E-3;
     
     const double N_init        = 0.0;
     const double N_pre         = 8.0;
     const double N_max         = 58.0;
     
     transport::parameters<> params(M_P, { R0, V0, eta_R, g_R, lambda_R, omega }, model);
-    transport::initial_conditions<> ics("gelaton", params, { x_init, y_init, 0.0, 0.0 }, N_init, N_pre);
+    transport::initial_conditions<> ics("gelaton", params, { R_init, theta_init, 0.0, 0.0 }, N_init, N_pre);
     
     transport::basic_range<> times(N_init, N_max, 500, transport::spacing::linear);
     
