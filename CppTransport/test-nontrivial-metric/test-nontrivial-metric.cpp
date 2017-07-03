@@ -44,7 +44,7 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     const double R0            = 0.00007053497338915804 * M_P;                                  // matches magic g_R value
     
     const double R_init        = (1.0 + 1E-3) * R0;
-    const double theta_init    = -M_PI + 1E-3;
+    const double theta_init    = M_PI - 1E-3;
     
     const double N_init        = 0.0;
     const double N_pre         = 8.0;
