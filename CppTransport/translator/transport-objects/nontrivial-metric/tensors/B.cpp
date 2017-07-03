@@ -119,7 +119,7 @@ namespace nontrivial_metric
         GiNaC::ex result = deriv_i * deriv_j * deriv_k / (4 * Mp * Mp * Mp * Mp);
         
         result +=
-          -(deriv_i * xi_j * deriv_k / (8 * Mp * Mp * Mp * Mp)) * (1 - k2dotk3 * k2dotk3 / (k2 * k2 * k3 * k3)) / 2
+          - (deriv_i * xi_j * deriv_k / (8 * Mp * Mp * Mp * Mp)) * (1 - k2dotk3 * k2dotk3 / (k2 * k2 * k3 * k3)) / 2
           - (deriv_j * xi_i * deriv_k / (8 * Mp * Mp * Mp * Mp)) * (1 - k1dotk3 * k1dotk3 / (k1 * k1 * k3 * k3)) / 2;
         
         result += -delta_jk * (xi_i / (2 * Mp * Mp)) * k1dotk2 / (k1 * k1) / 2;
