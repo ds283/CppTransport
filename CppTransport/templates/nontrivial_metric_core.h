@@ -860,10 +860,15 @@ namespace transport
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
-        
-        $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
 
         $TEMP_POOL{"const auto $1 = $2;"}
+    
+        $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
+        $ELSE
+          std::array<number, $NUMBER_FIELDS * $NUMBER_FIELDS> __Ginv;
+          __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
+        $ENDIF
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
@@ -950,10 +955,15 @@ namespace transport
 
       $RESOURCE_PARAMETERS{__raw_params}
       $RESOURCE_COORDINATES{__fields}
-    
-      $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
 
       $TEMP_POOL{"const auto $1 = $2;"}
+    
+      $IF{!fast}
+        $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
+      $ELSE
+        std::array<number, $NUMBER_FIELDS * $NUMBER_FIELDS> __Ginv;
+        __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
+      $ENDIF
 
       const auto __Hsq = $HUBBLE_SQ;
       const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
@@ -1862,7 +1872,7 @@ namespace transport
           $MODEL_compute_TimeGamma(__raw_params, __x, __Mp, __TimeGamma);
           $SET[^a_b]{TimeGamma, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
         $ELSE
-          const auto __tg_$^a_$_b $= $CONNECTION[^a_bc] * $MOMENTA[^c];
+          const auto __tg_$^a_$_b $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
           $SET[^a_b]{TimeGamma, "__tg_$^a_$_b"}
         $ENDIF
 

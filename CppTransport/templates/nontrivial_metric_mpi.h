@@ -1018,6 +1018,8 @@ namespace transport
           $RESOURCE_DDV[_ab]{__ddV}
           $RESOURCE_RIEMANN_A2[_ab]{__A2}
         $ENDIF
+  
+        $TEMP_POOL{"const auto $1 = $2;"}
 
         // set up connexion for covariant time derivatives; it's not currently possible to have index summation
         // within the body of a user-defined replacement rule, so in the 'fast' case we have to set up a bunch
@@ -1026,15 +1028,13 @@ namespace transport
           $MODEL_compute_TimeGamma(__raw_params, __x, __Mp, __TimeGamma);
           $SET[^a_b]{Gamma2, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
         $ELSE
-          const auto __tg_$^a_$_b $= $CONNECTION[^a_bc] * $MOMENTA[^c];
+          const auto __tg_$^a_$_b $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
           $SET[^a_b]{Gamma2, "__tg_$^a_$_b"}
         $ENDIF
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __setup_timer.resume();
 #endif
-
-        $TEMP_POOL{"const auto $1 = $2;"}
 
         // check FLATTEN functions are being evaluated at compile time
         static_assert(TENSOR_FLATTEN(0,0) == 0, "TENSOR_FLATTEN failure");
@@ -1154,6 +1154,12 @@ namespace transport
           $RESOURCE_RIEMANN_B3[_abc]{__B3}
         $ENDIF
 
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __setup_timer.resume();
+#endif
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+    
         // set up connexion for covariant time derivatives; it's not currently possible to have index summation
         // within the body of a user-defined replacement rule, so in the 'fast' case we have to set up a bunch
         // of temporary variables and then redirect Gamma3 to point to these
@@ -1161,15 +1167,9 @@ namespace transport
           $MODEL_compute_TimeGamma(__raw_params, __x, __Mp, __TimeGamma);
           $SET[^a_b]{Gamma3, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
         $ELSE
-          const auto __tg_$^a_$_b $= $CONNECTION[^a_bc] * $MOMENTA[^c];
+          const auto __tg_$^a_$_b $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
           $SET[^a_b]{Gamma3, "__tg_$^a_$_b"}
         $ENDIF
-
-#ifdef CPPTRANSPORT_INSTRUMENT
-        __setup_timer.resume();
-#endif
-
-        $TEMP_POOL{"const auto $1 = $2;"}
 
         // check FLATTEN functions are being evaluated at compile time
         static_assert(TENSOR_FLATTEN(0,0) == 0, "TENSOR_FLATTEN failure");
