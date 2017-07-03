@@ -142,7 +142,7 @@ namespace nontrivial_metric
         p_ex = p_ex / (Mp*Mp*Hsq);
 
         GiNaC::symbol p_sym = this->shared.generate_symbol(ZETA2_P_SYMBOL_NAME);
-        p = p_sym;
+        p = p_ex;
         this->cse_worker.parse(p_ex, p_sym.get_name());
       }
     
