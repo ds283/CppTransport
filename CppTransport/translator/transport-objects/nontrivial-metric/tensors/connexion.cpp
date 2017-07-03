@@ -75,7 +75,7 @@ namespace nontrivial_metric
 
         GiNaC::ex result = this->res.connexion_resource(i, j, k, this->printer);
 
-        return std::make_unique<atomic_lambda>(i, j, result, expression_item_types::connexion_lambda, args, this->shared.generate_working_type());
+        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::connexion_lambda, args, this->shared.generate_working_type());
       }
     
     
