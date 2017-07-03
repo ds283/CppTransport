@@ -188,7 +188,7 @@ namespace nontrivial_metric
         std::vector<GiNaC::ex> map(lambda_flattened_map_size(2));
 
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = 0;
-        map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = this->G(*i_field_a.second, *i_field_b.second);
+        map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = this->G(*i_field_a.second, *j_field_b.second);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = this->G(*i_field_b.second, *j_field_b.second) * (eps-3);
 
         auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV | use_Riemann_A2, {i, j}, this->printer);
