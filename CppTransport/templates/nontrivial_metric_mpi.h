@@ -312,6 +312,7 @@ namespace transport
               __A2(nullptr),
               __dV(nullptr),
               __ddV(nullptr),
+              __TimeGamma(nullptr),
             $ENDIF
 
             __raw_params(nullptr)
@@ -331,12 +332,14 @@ namespace transport
               $RESOURCE_RELEASE
               this->__u2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
 
-              this->__dV = new number[$NUMBER_FIELDS];
-              this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
-
               this->__G = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__A2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+    
+              this->__dV = new number[$NUMBER_FIELDS];
+              this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+            
+              this->__TimeGamma = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
             this->__raw_params = new number[$NUMBER_PARAMS];
@@ -349,13 +352,15 @@ namespace transport
           {
             $IF{!fast}
               delete[] this->__u2;
-
-              delete[] this->__dV;
-              delete[] this->__ddV;
-
+    
               delete[] this->__G;
               delete[] this->__Ginv;
               delete[] this->__A2;
+
+              delete[] this->__dV;
+              delete[] this->__ddV;
+            
+              delete[] this->__TimeGamma;
             $ENDIF
 
             delete[] this->__raw_params;
@@ -395,6 +400,8 @@ namespace transport
           number* __G;
           number* __Ginv;
           number* __A2;
+          
+          number* __TimeGamma;
         $ENDIF
 
         number* __raw_params;
@@ -469,6 +476,7 @@ namespace transport
               __dV(nullptr),
               __ddV(nullptr),
               __dddV(nullptr),
+              __TimeGamma(nullptr),
             $ENDIF
 
             __raw_params(nullptr)
@@ -494,15 +502,17 @@ namespace transport
               this->__u3_k2k1k3 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
               this->__u3_k3k1k2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
 
-              this->__dV = new number[$NUMBER_FIELDS];
-              this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
-              this->__dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-
               this->__G = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__A2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__A3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
               this->__B3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+    
+              this->__dV = new number[$NUMBER_FIELDS];
+              this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+              this->__dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+            
+              this->__TimeGamma = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
             this->__raw_params = new number[$NUMBER_PARAMS];
@@ -522,15 +532,17 @@ namespace transport
               delete[] this->__u3_k2k1k3;
               delete[] this->__u3_k3k1k2;
 
-              delete[] this->__dV;
-              delete[] this->__ddV;
-              delete[] this->__dddV;
-
               delete[] this->__G;
               delete[] this->__Ginv;
               delete[] this->__A2;
               delete[] this->__A3;
               delete[] this->__B3;
+    
+              delete[] this->__dV;
+              delete[] this->__ddV;
+              delete[] this->__dddV;
+            
+              delete[] this->__TimeGamma;
             $ENDIF
 
             delete[] this->__raw_params;
@@ -578,6 +590,8 @@ namespace transport
           number* __A2;
           number* __A3;
           number* __B3;
+        
+          number* __TimeGamma;
         $ENDIF
 
         number* __raw_params;
@@ -1005,6 +1019,17 @@ namespace transport
           $RESOURCE_RIEMANN_A2[_ab]{__A2}
         $ENDIF
 
+        // set up connexion for covariant time derivatives; it's not currently possible to have index summation
+        // within the body of a user-defined replacement rule, so in the 'fast' case we have to set up a bunch
+        // of temporary variables and then redirect Gamma2 to point to these
+        $IF{!fast}
+          $MODEL_compute_TimeGamma(__raw_params, __x, __Mp, __TimeGamma);
+          $SET[^a_b]{Gamma2, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
+        $ELSE
+          const auto __tg_$^a_$_b $= $CONNECTION[^a_bc] * $MOMENTA[^c];
+          $SET[^a_b]{Gamma2, "__tg_$^a_$_b"}
+        $ENDIF
+
 #ifdef CPPTRANSPORT_INSTRUMENT
         __setup_timer.resume();
 #endif
@@ -1039,6 +1064,7 @@ namespace transport
 
         // evolve the background
         __background($^A) = $U1_TENSOR[^A];
+        __background(MOMENTUM($^a)) $+= - $Gamma2[^a_b] * $MOMENTA[^b];
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __eps = $EPSILON;
@@ -1066,6 +1092,13 @@ namespace transport
         // so the index placement is not important
         __dtwopf($^A, $^B) $=  + $U2_CONTAINER[^A_C] * __twopf($^C, $^B);
         __dtwopf($^A, $^B) $+= + $U2_CONTAINER[^B_C] * __twopf($^A, $^C);
+
+        // account for connexion terms
+        __dtwopf($^a, $^B) $+= - $Gamma2[^a_c] * __twopf($^c, $^B);
+        __dtwopf(MOMENTUM($^a), $^B) $+= - $Gamma2[^a_c] * __twopf(MOMENTUM($^c), $^B);
+        
+        __dtwopf($^A, $^b) $+= - $Gamma2[^b_c] * __twopf($^A, $^c);
+        __dtwopf($^A, MOMENTUM($^b)) $+= - $Gamma2[^b_c] * __twopf($^A, MOMENTUM($^c));
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();
@@ -1119,6 +1152,17 @@ namespace transport
           $RESOURCE_RIEMANN_A2[_ab]{__A2}
           $RESOURCE_RIEMANN_A3[_abc]{__A3}
           $RESOURCE_RIEMANN_B3[_abc]{__B3}
+        $ENDIF
+
+        // set up connexion for covariant time derivatives; it's not currently possible to have index summation
+        // within the body of a user-defined replacement rule, so in the 'fast' case we have to set up a bunch
+        // of temporary variables and then redirect Gamma3 to point to these
+        $IF{!fast}
+          $MODEL_compute_TimeGamma(__raw_params, __x, __Mp, __TimeGamma);
+          $SET[^a_b]{Gamma3, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
+        $ELSE
+          const auto __tg_$^a_$_b $= $CONNECTION[^a_bc] * $MOMENTA[^c];
+          $SET[^a_b]{Gamma3, "__tg_$^a_$_b"}
         $ENDIF
 
 #ifdef CPPTRANSPORT_INSTRUMENT
@@ -1196,6 +1240,7 @@ namespace transport
 
         // evolve the background
         __background($^A) = $U1_TENSOR[^A];
+        __background(MOMENTUM($^a)) $+= - $Gamma3[^a_b] * $MOMENTA[^b];
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __eps = $EPSILON;
@@ -1242,22 +1287,64 @@ namespace transport
         // for the imaginary parts, index placement *does* matter so we must take care
         __dtwopf_re_k1($^A, $^B) $=  + $U2_k1_CONTAINER[^A_C] * __twopf_re_k1($^C, $^B);
         __dtwopf_re_k1($^A, $^B) $+= + $U2_k1_CONTAINER[^B_C] * __twopf_re_k1($^A, $^C);
+    
+        __dtwopf_re_k1($^a, $^B) $+= - $Gamma3[^a_c] * __twopf_re_k1($^c, $^B);
+        __dtwopf_re_k1(MOMENTUM($^a), $^B) $+= - $Gamma3[^a_c] * __twopf_re_k1(MOMENTUM($^c), $^B);
+    
+        __dtwopf_re_k1($^A, $^b) $+= - $Gamma3[^b_c] * __twopf_re_k1($^A, $^c);
+        __dtwopf_re_k1($^A, MOMENTUM($^b)) $+= - $Gamma3[^b_c] * __twopf_re_k1($^A, MOMENTUM($^c));
 
+        
         __dtwopf_im_k1($^A, $^B) $=  + $U2_k1_CONTAINER[^A_C] * __twopf_im_k1($^C, $^B);
         __dtwopf_im_k1($^A, $^B) $+= + $U2_k1_CONTAINER[^B_C] * __twopf_im_k1($^A, $^C);
+    
+        __dtwopf_im_k1($^a, $^B) $+= - $Gamma3[^a_c] * __twopf_im_k1($^c, $^B);
+        __dtwopf_im_k1(MOMENTUM($^a), $^B) $+= - $Gamma3[^a_c] * __twopf_im_k1(MOMENTUM($^c), $^B);
+    
+        __dtwopf_im_k1($^A, $^b) $+= - $Gamma3[^b_c] * __twopf_im_k1($^A, $^c);
+        __dtwopf_im_k1($^A, MOMENTUM($^b)) $+= - $Gamma3[^b_c] * __twopf_im_k1($^A, MOMENTUM($^c));
 
+        
         __dtwopf_re_k2($^A, $^B) $=  + $U2_k2_CONTAINER[^A_C] * __twopf_re_k2($^C, $^B);
         __dtwopf_re_k2($^A, $^B) $+= + $U2_k2_CONTAINER[^B_C] * __twopf_re_k2($^A, $^C);
+    
+        __dtwopf_re_k2($^a, $^B) $+= - $Gamma3[^a_c] * __twopf_re_k2($^c, $^B);
+        __dtwopf_re_k2(MOMENTUM($^a), $^B) $+= - $Gamma3[^a_c] * __twopf_re_k2(MOMENTUM($^c), $^B);
+    
+        __dtwopf_re_k2($^A, $^b) $+= - $Gamma3[^b_c] * __twopf_re_k2($^A, $^c);
+        __dtwopf_re_k2($^A, MOMENTUM($^b)) $+= - $Gamma3[^b_c] * __twopf_re_k2($^A, MOMENTUM($^c));
 
+        
         __dtwopf_im_k2($^A, $^B) $=  + $U2_k2_CONTAINER[^A_C] * __twopf_im_k2($^C, $^B);
         __dtwopf_im_k2($^A, $^B) $+= + $U2_k2_CONTAINER[^B_C] * __twopf_im_k2($^A, $^C);
+    
+        __dtwopf_im_k2($^a, $^B) $+= - $Gamma3[^a_c] * __twopf_im_k2($^c, $^B);
+        __dtwopf_im_k2(MOMENTUM($^a), $^B) $+= - $Gamma3[^a_c] * __twopf_im_k2(MOMENTUM($^c), $^B);
+    
+        __dtwopf_im_k2($^A, $^b) $+= - $Gamma3[^b_c] * __twopf_im_k2($^A, $^c);
+        __dtwopf_im_k2($^A, MOMENTUM($^b)) $+= - $Gamma3[^b_c] * __twopf_im_k2($^A, MOMENTUM($^c));
 
+        
         __dtwopf_re_k3($^A, $^B) $=  + $U2_k3_CONTAINER[^A_C] * __twopf_re_k3($^C, $^B);
         __dtwopf_re_k3($^A, $^B) $+= + $U2_k3_CONTAINER[^B_C] * __twopf_re_k3($^A, $^C);
+    
+        __dtwopf_re_k3($^a, $^B) $+= - $Gamma3[^a_c] * __twopf_re_k3($^c, $^B);
+        __dtwopf_re_k3(MOMENTUM($^a), $^B) $+= - $Gamma3[^a_c] * __twopf_re_k3(MOMENTUM($^c), $^B);
+    
+        __dtwopf_re_k3($^A, $^b) $+= - $Gamma3[^b_c] * __twopf_re_k3($^A, $^c);
+        __dtwopf_re_k3($^A, MOMENTUM($^b)) $+= - $Gamma3[^b_c] * __twopf_re_k3($^A, MOMENTUM($^c));
 
+        
         __dtwopf_im_k3($^A, $^B) $=  + $U2_k3_CONTAINER[^A_C] * __twopf_im_k3($^C, $^B);
         __dtwopf_im_k3($^A, $^B) $+= + $U2_k3_CONTAINER[^B_C] * __twopf_im_k3($^A, $^C);
+    
+        __dtwopf_im_k3($^a, $^B) $+= - $Gamma3[^a_c] * __twopf_im_k3($^c, $^B);
+        __dtwopf_im_k3(MOMENTUM($^a), $^B) $+= - $Gamma3[^a_c] * __twopf_im_k3(MOMENTUM($^c), $^B);
+    
+        __dtwopf_im_k3($^A, $^b) $+= - $Gamma3[^b_c] * __twopf_im_k3($^A, $^c);
+        __dtwopf_im_k3($^A, MOMENTUM($^b)) $+= - $Gamma3[^b_c] * __twopf_im_k3($^A, MOMENTUM($^c));
 
+        
         // evolve the components of the 3pf
         // index placement matters, partly because of the k-dependence
         // but also in the source terms from the imaginary components of the 2pf
@@ -1273,6 +1360,16 @@ namespace transport
         __dthreepf($^A, $^B, $^C) $+= + $U2_k3_CONTAINER[^C_M] * __threepf($^A, $^B, $^M);
         __dthreepf($^A, $^B, $^C) $+= + $U3_k3k1k2_CONTAINER[^C_MN] * __twopf_re_k1($^A, $^M) * __twopf_re_k2($^B, $^N);
         __dthreepf($^A, $^B, $^C) $+= - $U3_k3k1k2_CONTAINER[^C_MN] * __twopf_im_k1($^A, $^M) * __twopf_im_k2($^B, $^N);
+        
+        // account for connexion terms
+        __dthreepf($^a, $^B, $^C) $+= - $Gamma3[^a_d] * __threepf($^d, $^B, $^C);
+        __dthreepf(MOMENTUM($^a), $^B, $^C) $+= - $Gamma3[^a_d] * __threepf(MOMENTUM($^d), $^B, $^C);
+        
+        __dthreepf($^A, $^b, $^C) $+= - $Gamma3[^b_d] * __threepf($^A, $^d, $^C);
+        __dthreepf($^A, MOMENTUM($^b), $^C) $+= - $Gamma3[^b_d] * __threepf($^A, MOMENTUM($^d), $^C);
+        
+        __dthreepf($^A, $^B, $^c) $+= - $Gamma3[^c_d] * __threepf($^A, $^B, $^d);
+        __dthreepf($^A, $^B, MOMENTUM($^c)) $+= - $Gamma3[^c_d] * __threepf($^A, $^B, MOMENTUM($^d));
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();

@@ -345,6 +345,12 @@ namespace transport
 
         $MODEL_background_functor(const parameters<number>& p)
           : __params(p)
+            $IF{!fast}
+              ,
+              __dV(nullptr),
+              __Ginv(nullptr),
+              __TimeGamma(nullptr)
+            $ENDIF
           {
             __Mp = p.get_Mp();
           }
@@ -1846,10 +1852,12 @@ namespace transport
           $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
         $ENDIF
-        
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+    
         // set up connexion for covariant time derivatives; it's not currently possible to have index summation
         // within the body of a user-defined replacement rule, so in the 'fast' case we have to set up a bunch
-        // of temporary variables and then redirect $TimeGamma to point to these
+        // of temporary variables and then redirect TimeGamma to point to these
         $IF{!fast}
           $MODEL_compute_TimeGamma(__raw_params, __x, __Mp, __TimeGamma);
           $SET[^a_b]{TimeGamma, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
@@ -1857,8 +1865,6 @@ namespace transport
           const auto __tg_$^a_$_b $= $CONNECTION[^a_bc] * $MOMENTA[^c];
           $SET[^a_b]{TimeGamma, "__tg_$^a_$_b"}
         $ENDIF
-
-        $TEMP_POOL{"const auto $1 = $2;"}
 
         const auto __Hsq = $HUBBLE_SQ;
 
@@ -1871,7 +1877,7 @@ namespace transport
         __dxdt[FLATTEN($^A)] = $U1_TENSOR[^A];
 
         // momentum components are adjusted by a connexion term
-        __dxdt[FLATTEN($^a + $NUMBER_FIELDS)] $+= - $TimeGamma[^a_b] * $MOMENTA[^b];
+        __dxdt[FLATTEN(MOMENTUM($^a))] $+= - $TimeGamma[^a_b] * $MOMENTA[^b];
       }
 
 
