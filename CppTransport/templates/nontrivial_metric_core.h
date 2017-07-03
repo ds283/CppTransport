@@ -137,6 +137,18 @@ namespace transport
 
     $WORKING_TYPE{number}
 
+    $IF{fast}
+     
+      $SET[^a_b]{GAMMA_DECLARE, "const auto __tg_$^a_$_b"}
+      $SET[^a_b]{GAMMA, "__tg_$^a_$_b"}
+    
+    $ELSE
+    
+      $SET[^a_b]{GAMMA_DECLARE, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
+      $SET[^a_b]{GAMMA, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
+    
+    $ENDIF
+
 
     // *********************************************************************************************
 
@@ -349,6 +361,7 @@ namespace transport
               ,
               __dV(nullptr),
               __Ginv(nullptr),
+              __Gamma(nullptr),
               __TimeGamma(nullptr)
             $ENDIF
           {
@@ -361,6 +374,7 @@ namespace transport
               $RESOURCE_RELEASE
               __dV = new number[$NUMBER_FIELDS];
               __Ginv = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+              __Gamma = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
               __TimeGamma = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
             $ENDIF
 
@@ -375,6 +389,7 @@ namespace transport
             $IF{!fast}
               delete[] __dV;
               delete[] __Ginv;
+              delete[] __Gamma;
               delete[] __TimeGamma;
             $ENDIF
 
@@ -390,6 +405,7 @@ namespace transport
         $IF{!fast}
           number* __dV;
           number* __Ginv;
+          number* __Gamma;
           number* __TimeGamma;
         $ENDIF
 
@@ -711,7 +727,7 @@ namespace transport
 
 
       template <typename number>
-      void $MODEL_compute_TimeGamma(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __Gamma)
+      void $MODEL_compute_connexion(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __Gamma)
         {
           $RESOURCE_RELEASE
           
@@ -721,7 +737,7 @@ namespace transport
           $TEMP_POOL{"const auto $1 = $2;"}
     
           // force unroll to make explicit that we wish to populate array elements
-          __Gamma[FIELDS_FLATTEN($^a,$_b)] = $CONNECTION[^a_bc]| * $MOMENTA[^c];
+          __Gamma[FIELDS_FLATTEN($^a,$_b,$_c)] = $CONNECTION[^a_bc]|;
         }
 
 
@@ -1858,23 +1874,17 @@ namespace transport
 
         $IF{!fast}
           $MODEL_compute_Ginv(__raw_params, __x, __Mp, __Ginv);
+          $MODEL_compute_connexion(__raw_params, __x, __Mp, __Gamma);
           $MODEL_compute_dV(__raw_params, __x, __Mp, __dV);
           $RESOURCE_G[^ab]{__Ginv}
           $RESOURCE_DV[_a]{__dV}
+          $RESOURCE_CONNECTION{__Gamma}
         $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
     
-        // set up connexion for covariant time derivatives; it's not currently possible to have index summation
-        // within the body of a user-defined replacement rule, so in the 'fast' case we have to set up a bunch
-        // of temporary variables and then redirect TimeGamma to point to these
-        $IF{!fast}
-          $MODEL_compute_TimeGamma(__raw_params, __x, __Mp, __TimeGamma);
-          $SET[^a_b]{TimeGamma, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
-        $ELSE
-          const auto __tg_$^a_$_b $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
-          $SET[^a_b]{TimeGamma, "__tg_$^a_$_b"}
-        $ENDIF
+        // set up components of the connexion
+        $GAMMA_DECLARE[^a_b] $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
 
         const auto __Hsq = $HUBBLE_SQ;
 
@@ -1887,7 +1897,7 @@ namespace transport
         __dxdt[FLATTEN($^A)] = $U1_TENSOR[^A];
 
         // momentum components are adjusted by a connexion term
-        __dxdt[FLATTEN(MOMENTUM($^a))] $+= - $TimeGamma[^a_b] * $MOMENTA[^b];
+        __dxdt[FLATTEN(MOMENTUM($^a))] $+= - $GAMMA[^a_b] * $MOMENTA[^b];
       }
 
 
