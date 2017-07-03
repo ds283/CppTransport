@@ -713,8 +713,9 @@ namespace transport
           $RESOURCE_COORDINATES{__x}
           
           $TEMP_POOL{"const auto $1 = $2;"}
-          
-          __Gamma[FIELDS_FLATTEN($^a,$_b)] = $CONNECTION[^a_bc] * $MOMENTA[^c];
+    
+          // force unroll to make explicit that we wish to populate array elements
+          __Gamma[FIELDS_FLATTEN($^a,$_b)] = $CONNECTION[^a_bc]| * $MOMENTA[^c];
         }
 
 
