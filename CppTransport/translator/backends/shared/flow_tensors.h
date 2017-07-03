@@ -47,6 +47,9 @@ namespace macro_packages
 
     constexpr unsigned int FIELD_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int FIELD_TOTAL_INDICES = 1;
+    
+    constexpr unsigned int MOMENTA_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int MOMENTA_TOTAL_INDICES = 1;
 
     constexpr unsigned int COORDINATE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int COORDINATE_TOTAL_INDICES = 1;
@@ -326,6 +329,65 @@ namespace macro_packages
         //! field tensor
         std::unique_ptr<fields> field_tensor;
 
+      };
+    
+    
+    class replace_momenta : public cse_map_field1
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        replace_momenta(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
+          : cse_map_field1(std::move(n), MOMENTA_TOTAL_ARGUMENTS, f.make_flatten()),
+            printer(prn),
+            cse_worker(cw),
+            lambda_mgr(lm)
+          {
+            momenta_tensor = f.make_momenta(prn, cw);
+          }
+        
+        //! destructor
+        virtual ~replace_momenta() = default;
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! determine unroll status
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->momenta_tensor->get_unroll(idx_list); }
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! evaluate
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! evaluate
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! CSE worker
+        cse& cse_worker;
+        
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+        
+        //! language printer
+        language_printer& printer;
+        
+        //! field tensor
+        std::unique_ptr<momenta> momenta_tensor;
+        
       };
 
 

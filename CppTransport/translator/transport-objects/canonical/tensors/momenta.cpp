@@ -23,97 +23,85 @@
 // --@@
 //
 
-#include "coordinates.h"
+#include "momenta.h"
 
 
 namespace canonical
   {
     
-    std::unique_ptr<flattened_tensor> coordinates::compute(const index_literal_list& indices)
+    std::unique_ptr<flattened_tensor> momenta::compute(const index_literal_list& indices)
       {
-        if(indices.size() != COORDINATE_TENSOR_INDICES) throw tensor_exception("coordinate indices");
+        if(indices.size() != MOMENTA_TENSOR_INDICES) throw tensor_exception("coordinate indices");
         
-        auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(COORDINATE_TENSOR_INDICES));
+        auto result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(MOMENTA_TENSOR_INDICES));
         
         const field_index max_i = this->shared.get_max_field_index(indices[0]->get_variance());
-
-        unsigned deriv_offset = result->size()/2;
 
         // set up a TensorJanitor to manage use of cache
         TensorJanitor J(*this, indices);
 
         for(field_index i = field_index(0, indices[0]->get_variance()); i < max_i; ++i)
           {
-            GiNaC::ex f;
-            GiNaC::ex d;
-            
-            std::tie(f, d) = this->compute_component(i);
-            
-            (*result)[this->fl.flatten(i)] = f;
-            (*result)[this->fl.flatten(i) + deriv_offset] = d;
+            unsigned int index = this->fl.flatten(i);
+            (*result)[index] = this->compute_component(i);
           }
         
         return result;
       }
     
     
-    std::pair<GiNaC::ex, GiNaC::ex> coordinates::compute_component(field_index i)
+    GiNaC::ex momenta::compute_component(field_index i)
       {
-        if(!this->cached) throw tensor_exception("coordinates cache not ready");
+        if(!this->cached) throw tensor_exception("momenta cache not ready");
 
         unsigned int index = this->fl.flatten(i);
-
-        GiNaC::ex f = (*this->fields)[index];
-        GiNaC::ex d = (*this->derivs)[index];
-        
-        return std::make_pair(f, d);
+        return (*derivs)[index];
       }
     
     
-    void coordinates::pre_explicit(const index_literal_list& indices)
+    void momenta::pre_explicit(const index_literal_list& indices)
       {
-        if(cached) throw tensor_exception("coordinates already cached");
+        if(cached) throw tensor_exception("momenta already cached");
 
-        fields = this->res.generate_field_vector(this->printer);
         derivs = this->res.generate_deriv_vector(this->printer);
 
         this->cached = true;
       }
     
     
-    void coordinates::post()
+    void momenta::post()
       {
-        if(!this->cached) throw tensor_exception("coordinates not cached");
+        if(!this->cached) throw tensor_exception("momenta not cached");
 
         // invalidate cache
         this->cached = false;
       }
     
     
-    std::unique_ptr<atomic_lambda> coordinates::compute_lambda(const index_literal& i)
+    std::unique_ptr<atomic_lambda> momenta::compute_lambda(const index_literal& i)
       {
-        if(i.get_class() != index_class::full) throw tensor_exception("coordinates");
+        if(i.get_class() != index_class::full) throw tensor_exception("momenta");
         
         auto idx_i = this->shared.generate_index<GiNaC::idx>(i);
         
         auto args = std::make_unique<cache_tags>();
         
-        auto result = this->res.generate_field_vector(i, this->printer);
+        auto result = this->res.generate_deriv_vector(i, this->printer);
     
-        return std::make_unique<atomic_lambda>(i, result, expression_item_types::coordinates_lambda, *args, this->shared.generate_working_type());
+        return std::make_unique<atomic_lambda>(i, result, expression_item_types::momenta_lambda, *args, this->shared.generate_working_type());
       }
     
     
-    unroll_state coordinates::get_unroll(const index_literal_list& idx_list)
+    unroll_state momenta::get_unroll(const index_literal_list& idx_list)
       {
         if(this->shared.can_roll_coordinates()) return unroll_state::allow;
         return unroll_state::force;
       }
     
     
-    coordinates::coordinates(language_printer& p, cse& cw, resources& r, shared_resources& s,
-                             index_flatten& f, index_traits& t)
-      : ::coordinates(),
+    momenta::momenta(language_printer& p, cse& cw, resources& r, shared_resources& s,
+                     index_flatten& f, index_traits& t)
+      : ::momenta(),
         printer(p),
         cse_worker(cw),
         res(r),

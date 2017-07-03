@@ -32,6 +32,7 @@
 #include "tensors/C.h"
 #include "tensors/connexion.h"
 #include "tensors/coordinates.h"
+#include "tensors/momenta.h"
 #include "tensors/dV.h"
 #include "tensors/ddV.h"
 #include "tensors/dddV.h"
@@ -174,6 +175,12 @@ namespace nontrivial_metric
     std::unique_ptr<::fields> tensor_factory::make_fields(language_printer& p, cse& cw)
       {
         return std::make_unique<fields>(p, cw, this->res, this->shared, this->fl, this->traits);
+      }
+    
+    
+    std::unique_ptr<::momenta> tensor_factory::make_momenta(language_printer& p, cse& cw)
+      {
+        return std::make_unique<momenta>(p, cw, this->res, this->shared, this->fl, this->traits);
       }
     
     

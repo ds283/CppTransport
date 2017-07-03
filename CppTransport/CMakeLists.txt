@@ -160,6 +160,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/canonical/tensors/Hubble.cpp
   translator/transport-objects/canonical/tensors/SR_velocity.cpp
   translator/transport-objects/canonical/tensors/M.cpp
+  translator/transport-objects/canonical/tensors/momenta.cpp
   translator/transport-objects/canonical/tensors/u1.cpp
   translator/transport-objects/canonical/tensors/u2.cpp
   translator/transport-objects/canonical/tensors/u3.cpp
@@ -188,6 +189,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/nontrivial-metric/tensors/M.cpp
   translator/transport-objects/nontrivial-metric/tensors/metric.cpp
   translator/transport-objects/nontrivial-metric/tensors/metric_inverse.cpp
+  translator/transport-objects/nontrivial-metric/tensors/momenta.cpp
   translator/transport-objects/nontrivial-metric/tensors/Riemann_A2.cpp
   translator/transport-objects/nontrivial-metric/tensors/Riemann_A3.cpp
   translator/transport-objects/nontrivial-metric/tensors/Riemann_B3.cpp
@@ -569,6 +571,8 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_TENSORS_FILES
   translator/transport-objects/canonical/tensors/Hubble.h
   translator/transport-objects/canonical/tensors/M.cpp
   translator/transport-objects/canonical/tensors/M.h
+  translator/transport-objects/canonical/tensors/momenta.cpp
+  translator/transport-objects/canonical/tensors/momenta.h
   translator/transport-objects/canonical/tensors/SR_velocity.cpp
   translator/transport-objects/canonical/tensors/SR_velocity.h
   translator/transport-objects/canonical/tensors/u1.cpp
@@ -609,6 +613,7 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_TENSORS_FILES
   translator/transport-objects/concepts/tensors/M.h
   translator/transport-objects/concepts/tensors/metric.h
   translator/transport-objects/concepts/tensors/metric_inverse.h
+  translator/transport-objects/concepts/tensors/momenta.h
   translator/transport-objects/concepts/tensors/parameters.h
   translator/transport-objects/concepts/tensors/parameters.cpp
   translator/transport-objects/concepts/tensors/Riemann_A2.h
@@ -668,6 +673,8 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_TENSORS_FILES
   translator/transport-objects/nontrivial-metric/tensors/metric.h
   translator/transport-objects/nontrivial-metric/tensors/metric_inverse.cpp
   translator/transport-objects/nontrivial-metric/tensors/metric_inverse.h
+  translator/transport-objects/nontrivial-metric/tensors/momenta.cpp
+  translator/transport-objects/nontrivial-metric/tensors/momenta.h
   translator/transport-objects/nontrivial-metric/tensors/Riemann_A2.cpp
   translator/transport-objects/nontrivial-metric/tensors/Riemann_A2.h
   translator/transport-objects/nontrivial-metric/tensors/Riemann_A3.cpp

@@ -56,6 +56,7 @@
 #include "tensors/M.h"
 #include "tensors/metric.h"
 #include "tensors/metric_inverse.h"
+#include "tensors/momenta.h"
 #include "tensors/parameters.h"
 #include "tensors/Riemann_A2.h"
 #include "tensors/Riemann_A3.h"
@@ -112,6 +113,9 @@ class tensor_factory
     
     //! obtain a fields object
     virtual std::unique_ptr<fields> make_fields(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a momenta object
+    virtual std::unique_ptr<momenta> make_momenta(language_printer& p, cse& cw) = 0;
     
     //! obtain a coordinates object
     virtual std::unique_ptr<coordinates> make_coordinates(language_printer& p, cse& cw) = 0;

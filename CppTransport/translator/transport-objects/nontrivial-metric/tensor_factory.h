@@ -72,6 +72,9 @@ namespace nontrivial_metric
         //! obtain a fields object
         std::unique_ptr<::fields> make_fields(language_printer& p, cse& cw) override;
     
+        //! obtain a momenta object
+        std::unique_ptr<::momenta> make_momenta(language_printer& p, cse& cw) override;
+    
         //! obtain a coordinates object
         std::unique_ptr<::coordinates> make_coordinates(language_printer& p, cse& cw) override;
 

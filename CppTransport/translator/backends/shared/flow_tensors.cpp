@@ -46,6 +46,7 @@ namespace macro_packages
 
         EMPLACE(index_package, BIND(replace_parameter, "PARAMETER"));
         EMPLACE(index_package, BIND(replace_field, "FIELD"));
+        EMPLACE(index_package, BIND(replace_momenta, "MOMENTA"));
         EMPLACE(index_package, BIND(replace_coordinate, "COORDINATE"));
         EMPLACE(index_package, BIND(replace_SR_velocity, "SR_VELOCITY"));
         EMPLACE(index_package, BIND(replace_dV, "DV"));
@@ -101,6 +102,13 @@ namespace macro_packages
         if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_FIELD_INDICES_ARE_CONTRAVARIANT);
         
         std::unique_ptr<flattened_tensor> container = this->field_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    void replace_momenta::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<flattened_tensor> container = this->momenta_tensor->compute(indices);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
     
@@ -186,6 +194,13 @@ namespace macro_packages
         // assume that the result will always be just a single symbol (it won't have its indices repositioned,
         // because only contravariant indices are allowed), so can be safely inlined
         return this->printer.ginac(**lambda);
+      }
+    
+    
+    std::string replace_momenta::roll(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->momenta_tensor->compute_lambda(*indices[0]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
