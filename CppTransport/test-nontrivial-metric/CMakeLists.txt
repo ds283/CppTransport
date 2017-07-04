@@ -37,7 +37,7 @@ SET(CPPTRANSPORT_LIBRARIES ${JSONCPP_LIBRARIES} ${SPLINTER_LIBRARIES})
 
 ADD_CUSTOM_COMMAND(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/gelaton_core.h ${CMAKE_CURRENT_BINARY_DIR}/gelaton_mpi.h
-  COMMAND CppTransport --verbose --profile --Wdevelop --Wunroll --no-search-env -I ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/gelaton.model
+  COMMAND CppTransport --verbose --profile --Wdevelop --Wunroll --no-search-env --fast -I ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/gelaton.model
   DEPENDS gelaton.model
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/nontrivial_metric_mpi.h
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/nontrivial_metric_core.h
