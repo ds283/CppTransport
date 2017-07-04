@@ -29,17 +29,21 @@
 namespace nontrivial_metric
   {
     
-    PotentialResourceCache::value_type PotentialResourceCache::get()
+    const GiNaC::ex& PotentialResourceCache::get_V()
       {
-        // acquire resources if we do not already have them;
-        // these resources are provided with all necessary substitutions applied, so there is no need
-        // to do further substitutions in the resource manager
-    
+        // V is provided with all necessary substitutions applied, so there is no need
+        // to do further substitutions here
         if(!this->subs_V) this->subs_V = this->res.raw_V_resource(printer);
+   
+        return *this->subs_V;
+      }
+    
+    
+    const symbol_list& PotentialResourceCache::get_symbol_list()
+      {
         if(!this->f_list) this->f_list = this->share.generate_field_symbols(printer);
     
-        // return references
-        return std::make_pair(std::cref(*subs_V), std::cref(*f_list));
+        return *this->f_list;
       }
 
   }   // namespace nontrivial_metric

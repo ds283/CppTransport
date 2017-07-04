@@ -63,7 +63,11 @@ namespace nontrivial_metric
       
       public:
         
-        value_type get();
+        //! get potential
+        const GiNaC::ex& get_V();
+        
+        //! get symbol list
+        const symbol_list& get_symbol_list();
         
         
         // INTERNAL DATA

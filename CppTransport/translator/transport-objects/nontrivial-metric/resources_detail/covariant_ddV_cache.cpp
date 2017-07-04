@@ -63,10 +63,9 @@ namespace nontrivial_metric
                 if(!res.cache.query(expression_item_types::ddV_item, index, args, ddV))
                   {
                     timing_instrument timer(res.compute_timer);
-                    
-                    auto data = cache.get();
-                    const GiNaC::ex& V = data.first.get();
-                    const symbol_list& f_list = data.second.get();
+    
+                    const GiNaC::ex& V = cache.get_V();
+                    const symbol_list& f_list = cache.get_symbol_list();
                     
                     const GiNaC::symbol& x1 = f_list[res.fl.flatten(i)];
                     const GiNaC::symbol& x2 = f_list[res.fl.flatten(j)];
