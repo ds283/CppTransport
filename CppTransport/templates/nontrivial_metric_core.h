@@ -1079,7 +1079,7 @@ namespace transport
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $IF{!fast}
-          $MODEL_compute_Ginv(__Ginv, __fields, __Mp, __Ginv);
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_dddV(__raw_params, __fields, __Mp, __dddV);
@@ -1101,10 +1101,8 @@ namespace transport
         $ENDIF
   
         $TEMP_POOL{"const auto $1 = $2;"}
-  
-        $IF{!fast}
-          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
-        $ELSE
+
+        $IF{fast}
           std::array<number, $NUMBER_FIELDS * $NUMBER_FIELDS> __Ginv;
           __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
         $ENDIF
