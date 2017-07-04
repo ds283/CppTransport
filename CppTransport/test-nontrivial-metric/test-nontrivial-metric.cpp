@@ -118,6 +118,20 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     vis_toolkit::time_series_plot<> plot2{"gelaton.threepf-zeta", "threepf-zeta.pdf"};
     plot2 += ztpf;
     
+    vis_toolkit::zeta_reduced_bispectrum_time_series<> zrbsp(ztk3, tquery, k3query);
+    
+    vis_toolkit::time_series_plot<> plot3("gelaton.threepf-redbsp", "threepf-redbsp.pdf");
+    plot3.set_log_y(false);
+    plot3 += zrbsp;
+    
+    vis_toolkit::twopf_time_series<> tk3_fields{tk3, f2_fields, tquery, k2query};
+    vis_toolkit::twopf_time_series<> tk3_momenta{tk3, f2_momenta, tquery, k2query};
+    
+    vis_toolkit::time_series_plot<> tk3_fplot{"gelaton.threepf-1.fields-plot", "fields-plot.pdf"};
+    tk3_fplot += tk3_fields;
+    vis_toolkit::time_series_plot<> tk3_mplot{"gelaton.threepf-1.momenta-plot", "momenta-plot.pdf"};
+    tk3_mplot += tk3_momenta;
+    
     vis_toolkit::SQL_time_query tquery2{"serial IN (SELECT MAX(serial) FROM time_samples)"};
     vis_toolkit::SQL_threepf_query k3query2("1=1");
     
@@ -128,7 +142,7 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     fNLplot += fNL;
     
     transport::output_task<> otk{"gelaton.output"};
-    otk += table + plot + plot2 + fNLplot;
+    otk += table + plot + plot2 + plot3 + tk3_fplot + tk3_mplot + fNLplot;
     
     repo.commit(ztk2);
     repo.commit(ztk3);
