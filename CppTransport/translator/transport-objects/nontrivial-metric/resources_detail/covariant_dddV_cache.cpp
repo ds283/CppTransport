@@ -67,16 +67,14 @@ namespace nontrivial_metric
                       {
                         timing_instrument timer(res.compute_timer);
                         
-                        const GiNaC::ex& V = cache.get_V();
                         const symbol_list& f_list = cache.get_symbol_list();
-                        
-                        const GiNaC::symbol& x1 = f_list[res.fl.flatten(i)];
-                        const GiNaC::symbol& x2 = f_list[res.fl.flatten(j)];
-                        const GiNaC::symbol& x3 = f_list[res.fl.flatten(k)];
-                        dddV = GiNaC::diff(GiNaC::diff(GiNaC::diff(V, x1), x2), x3);
-                        
-                        // include connexion term
                         auto& ddV = ddV_cache.get();
+                        
+                        // partial derivative term is partial_k (V;ij)
+                        const GiNaC::symbol& x3 = f_list[res.fl.flatten(k)];
+                        dddV = GiNaC::diff(ddV[res.fl.flatten(i,j)], x3);
+                        
+                        // include connexion terms, which are -Gamma^l_ik V;lj - Gamma^l_jk V;ik
                         auto& Gamma = Gamma_cache.get();
                         
                         for(field_index l = field_index(0, variance::contravariant); l < max_l; ++l)

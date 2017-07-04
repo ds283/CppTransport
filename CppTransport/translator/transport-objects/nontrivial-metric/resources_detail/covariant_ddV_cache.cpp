@@ -55,24 +55,23 @@ namespace nontrivial_metric
         
         for(field_index i = field_index(0, variance::covariant); i < max; ++i)
           {
-            for(field_index j = field_index(0, variance::covariant); j < max; ++j)
+            for(field_index j = field_index(0, variance::covariant); j <= i; ++j)
               {
                 GiNaC::ex ddV;
-                unsigned int index = res.fl.flatten(i,j);
+                unsigned int index_ij = res.fl.flatten(i,j);
                 
-                if(!res.cache.query(expression_item_types::ddV_item, index, args, ddV))
+                if(!res.cache.query(expression_item_types::ddV_item, index_ij, args, ddV))
                   {
                     timing_instrument timer(res.compute_timer);
     
-                    const GiNaC::ex& V = cache.get_V();
-                    const symbol_list& f_list = cache.get_symbol_list();
-                    
-                    const GiNaC::symbol& x1 = f_list[res.fl.flatten(i)];
-                    const GiNaC::symbol& x2 = f_list[res.fl.flatten(j)];
-                    ddV = GiNaC::diff(GiNaC::diff(V, x1), x2);
-                    
-                    // include connexion term
                     auto& dV = dV_cache.get();
+                    const symbol_list& f_list = cache.get_symbol_list();
+
+                    // partial derivative term is partial_j V;i
+                    const GiNaC::symbol& x2 = f_list[res.fl.flatten(j)];
+                    ddV = GiNaC::diff(dV[res.fl.flatten(i)], x2);
+                    
+                    // include connexion term -Gamma^k_ij V;k
                     auto& Gamma = Gamma_cache.get();
                     
                     for(field_index k = field_index(0, variance::contravariant); k < max_k; ++k)
@@ -80,10 +79,14 @@ namespace nontrivial_metric
                         ddV -= Gamma[res.fl.flatten(k,i,j)] * dV[res.fl.flatten(k)];
                       }
                     
-                    res.cache.store(expression_item_types::ddV_item, index, args, ddV);
+                    res.cache.store(expression_item_types::ddV_item, index_ij, args, ddV);
                   }
                 
-                (*this->ddV)[index] = ddV;
+                (*this->ddV)[index_ij] = ddV;
+                
+                // second derivative is symmetric, so don't bother computing the ji term
+                unsigned int index_ji = res.fl.flatten(j,i);
+                (*this->ddV)[index_ji] = ddV;
               }
           }
         
