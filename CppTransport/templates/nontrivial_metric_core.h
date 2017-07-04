@@ -1088,8 +1088,6 @@ namespace transport
           $MODEL_compute_Riemann_B3(__raw_params, __fields, __Mp, __B3);
         $ENDIF
 
-        $TEMP_POOL{"const auto $1 = $2;"}
-
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
@@ -1100,6 +1098,15 @@ namespace transport
           $RESOURCE_RIEMANN_A2[_ab]{__A2}
           $RESOURCE_RIEMANN_A3[_abc]{__A3}
           $RESOURCE_RIEMANN_B3[_abc]{__B3}
+        $ENDIF
+  
+        $TEMP_POOL{"const auto $1 = $2;"}
+  
+        $IF{!fast}
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
+        $ELSE
+          std::array<number, $NUMBER_FIELDS * $NUMBER_FIELDS> __Ginv;
+          __Ginv[FIELDS_FLATTEN($^a,$^b)] = $METRIC[^ab];
         $ENDIF
 
         const auto __Hsq = $HUBBLE_SQ;
@@ -1174,9 +1181,9 @@ namespace transport
 
                 // these components are dimension 1
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                __tpf  = __Ginv[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k))] * __fields[MOMENTUM(__i)] * __k2dotk3 / (2.0*__Mp*__Mp);
+                __tpf += __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k))] * __fields[MOMENTUM(__j)] * __k1dotk3 / (2.0*__Mp*__Mp);
+                __tpf += __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j))] * __fields[MOMENTUM(__k)] * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 1
                 __tpf += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k2/2.0;
@@ -1212,9 +1219,9 @@ namespace transport
 
                 // these components are dimension 1
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                auto __tpf_1  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_1 += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_1 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                auto __tpf_1  = __Ginv[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k))] * __fields[MOMENTUM(__i)] * __k2dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k))] * __fields[MOMENTUM(__j)] * __k1dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j))] * __fields[MOMENTUM(__k)] * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 1
                      __tpf_1 += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k2 / 2.0;
@@ -1233,9 +1240,9 @@ namespace transport
 
                 // these components are dimension 3
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                auto __tpf_2  = - (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_2 += - (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_2 += - (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                auto __tpf_2  = - __Ginv[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k))] * __fields[MOMENTUM(__i)] * (__Ksq + __k1*__k2*__k3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_2 += - __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k))] * __fields[MOMENTUM(__j)] * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_2 += - __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j))] * __fields[MOMENTUM(__k)] * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 3
                      __tpf_2 += (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
@@ -1269,9 +1276,9 @@ namespace transport
 
                 // these components have dimension 1
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                auto __tpf_1  = - (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_1 += - (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_1 += - (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                auto __tpf_1  = - __Ginv[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k))] * __fields[MOMENTUM(__i)] * __k2dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += - __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k))] * __fields[MOMENTUM(__j)] * __k1dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += - __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j))] * __fields[MOMENTUM(__k)] * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components have dimension 1
                      __tpf_1 += (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * __k1*__k2 / 2.0;
@@ -1312,9 +1319,9 @@ namespace transport
 
                 // these components are dimension 3
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * (__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                __tpf  = __Ginv[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k))] * __fields[MOMENTUM(__i)] * __k2dotk3 / (2.0*__Mp*__Mp);
+                __tpf += __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k))] * __fields[MOMENTUM(__j)] * __k1dotk3 / (2.0*__Mp*__Mp);
+                __tpf += __Ginv[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j))] * __fields[MOMENTUM(__k)] * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 3
                 __tpf += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
