@@ -173,6 +173,16 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/connexion_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_ddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA2_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannB3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/derivative_symbols.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/potential_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/substitution_map_cache.cpp
   translator/transport-objects/nontrivial-metric/tensors/A.cpp
   translator/transport-objects/nontrivial-metric/tensors/Atilde.cpp
   translator/transport-objects/nontrivial-metric/tensors/B.cpp
@@ -638,6 +648,30 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
 SET(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_DETAIL_FILES
   translator/transport-objects/concepts/resources_detail/indexed_resource.h
   translator/transport-objects/concepts/resources_detail/simple_resource.h
+  )
+
+SET(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_RESOURCES_DETAIL_FILES
+  translator/transport-objects/nontrivial-metric/resources_detail/connexion_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/connexion_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dddV_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_ddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_ddV_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dV_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA2_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA2_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA3_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannB3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannB3_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/derivative_symbols.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/derivative_symbols.h
+  translator/transport-objects/nontrivial-metric/resources_detail/potential_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/potential_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/substitution_map_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/substitution_map_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/common.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_TENSORS_FILES
@@ -1253,6 +1287,7 @@ set(SOURCE_FILES
   ${TRANSLATOR_PARSER_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_RESOURCES_DETAIL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_DETAIL_FILES}
