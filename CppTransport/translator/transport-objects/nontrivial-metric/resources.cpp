@@ -45,8 +45,8 @@
 
 namespace nontrivial_metric
   {
-
-        resources::resources(translator_data& p, resource_manager& m, expression_cache& c,
+    
+    resources::resources(translator_data& p, resource_manager& m, expression_cache& c,
                          shared_resources& s, boost::timer::cpu_timer& t)
       : mgr(m),
         cache(c),
@@ -559,6 +559,7 @@ namespace nontrivial_metric
             
             if(derivs->size() != this->G->rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
             if(derivs->size() != this->G->cols()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+
             const unsigned int max = derivs->size();
             
             for(unsigned int i = 0; i < max; ++i)
