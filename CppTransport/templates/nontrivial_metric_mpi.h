@@ -1105,9 +1105,9 @@ namespace transport
 
         // account for connexion terms
         __dtwopf($^a, $^B) $+= - $GAMMA[^a_c] * __twopf($^c, $^B);
-        __dtwopf(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf(MOMENTUM($^c), $^B);
-        
         __dtwopf($^A, $^b) $+= - $GAMMA[^b_c] * __twopf($^A, $^c);
+    
+        __dtwopf(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf(MOMENTUM($^c), $^B);
         __dtwopf($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf($^A, MOMENTUM($^c));
 
 #ifdef CPPTRANSPORT_INSTRUMENT
@@ -1293,9 +1293,9 @@ namespace transport
         __dtwopf_re_k1($^A, $^B) $+= + $U2_k1_CONTAINER[^B_C] * __twopf_re_k1($^A, $^C);
     
         __dtwopf_re_k1($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_re_k1($^c, $^B);
-        __dtwopf_re_k1(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_re_k1(MOMENTUM($^c), $^B);
-    
         __dtwopf_re_k1($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_re_k1($^A, $^c);
+        
+        __dtwopf_re_k1(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_re_k1(MOMENTUM($^c), $^B);
         __dtwopf_re_k1($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_re_k1($^A, MOMENTUM($^c));
 
         
@@ -1303,9 +1303,9 @@ namespace transport
         __dtwopf_im_k1($^A, $^B) $+= + $U2_k1_CONTAINER[^B_C] * __twopf_im_k1($^A, $^C);
     
         __dtwopf_im_k1($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_im_k1($^c, $^B);
-        __dtwopf_im_k1(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_im_k1(MOMENTUM($^c), $^B);
-    
         __dtwopf_im_k1($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_im_k1($^A, $^c);
+
+        __dtwopf_im_k1(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_im_k1(MOMENTUM($^c), $^B);
         __dtwopf_im_k1($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_im_k1($^A, MOMENTUM($^c));
 
         
@@ -1313,9 +1313,9 @@ namespace transport
         __dtwopf_re_k2($^A, $^B) $+= + $U2_k2_CONTAINER[^B_C] * __twopf_re_k2($^A, $^C);
     
         __dtwopf_re_k2($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_re_k2($^c, $^B);
-        __dtwopf_re_k2(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_re_k2(MOMENTUM($^c), $^B);
-    
         __dtwopf_re_k2($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_re_k2($^A, $^c);
+
+        __dtwopf_re_k2(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_re_k2(MOMENTUM($^c), $^B);
         __dtwopf_re_k2($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_re_k2($^A, MOMENTUM($^c));
 
         
@@ -1323,9 +1323,9 @@ namespace transport
         __dtwopf_im_k2($^A, $^B) $+= + $U2_k2_CONTAINER[^B_C] * __twopf_im_k2($^A, $^C);
     
         __dtwopf_im_k2($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_im_k2($^c, $^B);
-        __dtwopf_im_k2(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_im_k2(MOMENTUM($^c), $^B);
-    
         __dtwopf_im_k2($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_im_k2($^A, $^c);
+
+        __dtwopf_im_k2(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_im_k2(MOMENTUM($^c), $^B);
         __dtwopf_im_k2($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_im_k2($^A, MOMENTUM($^c));
 
         
@@ -1333,9 +1333,9 @@ namespace transport
         __dtwopf_re_k3($^A, $^B) $+= + $U2_k3_CONTAINER[^B_C] * __twopf_re_k3($^A, $^C);
     
         __dtwopf_re_k3($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_re_k3($^c, $^B);
-        __dtwopf_re_k3(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_re_k3(MOMENTUM($^c), $^B);
-    
         __dtwopf_re_k3($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_re_k3($^A, $^c);
+
+        __dtwopf_re_k3(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_re_k3(MOMENTUM($^c), $^B);
         __dtwopf_re_k3($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_re_k3($^A, MOMENTUM($^c));
 
         
@@ -1343,9 +1343,9 @@ namespace transport
         __dtwopf_im_k3($^A, $^B) $+= + $U2_k3_CONTAINER[^B_C] * __twopf_im_k3($^A, $^C);
     
         __dtwopf_im_k3($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_im_k3($^c, $^B);
-        __dtwopf_im_k3(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_im_k3(MOMENTUM($^c), $^B);
-    
         __dtwopf_im_k3($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_im_k3($^A, $^c);
+
+        __dtwopf_im_k3(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_im_k3(MOMENTUM($^c), $^B);
         __dtwopf_im_k3($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_im_k3($^A, MOMENTUM($^c));
 
         
@@ -1367,12 +1367,11 @@ namespace transport
         
         // account for connexion terms
         __dthreepf($^a, $^B, $^C) $+= - $GAMMA[^a_d] * __threepf($^d, $^B, $^C);
-        __dthreepf(MOMENTUM($^a), $^B, $^C) $+= - $GAMMA[^a_d] * __threepf(MOMENTUM($^d), $^B, $^C);
-        
         __dthreepf($^A, $^b, $^C) $+= - $GAMMA[^b_d] * __threepf($^A, $^d, $^C);
-        __dthreepf($^A, MOMENTUM($^b), $^C) $+= - $GAMMA[^b_d] * __threepf($^A, MOMENTUM($^d), $^C);
-        
         __dthreepf($^A, $^B, $^c) $+= - $GAMMA[^c_d] * __threepf($^A, $^B, $^d);
+
+        __dthreepf(MOMENTUM($^a), $^B, $^C) $+= - $GAMMA[^a_d] * __threepf(MOMENTUM($^d), $^B, $^C);
+        __dthreepf($^A, MOMENTUM($^b), $^C) $+= - $GAMMA[^b_d] * __threepf($^A, MOMENTUM($^d), $^C);
         __dthreepf($^A, $^B, MOMENTUM($^c)) $+= - $GAMMA[^c_d] * __threepf($^A, $^B, MOMENTUM($^d));
 
 #ifdef CPPTRANSPORT_INSTRUMENT
