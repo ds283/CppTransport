@@ -36,6 +36,21 @@ namespace nontrivial_metric
         if(this->A3) return *this->A3;
         
         this->A3 = std::make_unique<flattened_tensor>(res.fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_A3_INDICES));
+    
+        const auto max = res.share.get_max_field_index(variance::covariant);
+        
+        for(field_index i = field_index(0, variance::covariant); i < max; ++i)
+          {
+            for(field_index j = field_index(0, variance::covariant); j < max; ++j)
+              {
+                for(field_index k = field_index(0, variance::covariant); k < max; ++k)
+                  {
+                    unsigned int index = res.fl.flatten(i,j,k);
+                    
+                    (*this->A3)[index] = 0;
+                  }
+              }
+          }
         
         return *this->A3;
       }
