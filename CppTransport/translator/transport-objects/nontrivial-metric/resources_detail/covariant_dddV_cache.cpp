@@ -61,7 +61,7 @@ namespace nontrivial_metric
                 for(field_index k = field_index(0, variance::covariant); k < max; ++k)
                   {
                     GiNaC::ex dddV;
-                    unsigned int index = res.fl.flatten(i,j);
+                    unsigned int index = res.fl.flatten(i,j,k);
                     
                     if(!res.cache.query(expression_item_types::dddV_item, index, args, dddV))
                       {
