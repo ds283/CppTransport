@@ -59,8 +59,8 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     
     transport::basic_range<> times{N_init, N_max, 500, transport::spacing::linear};
     
-    transport::basic_range<> ks{exp(10.0), exp(10.0), 0, transport::spacing::log_bottom};
-    transport::basic_range<> kts{exp(10.0), exp(11.0), 20, transport::spacing::log_bottom};
+    transport::basic_range<> ks{exp(10.0), exp(18.5), 1000, transport::spacing::log_bottom};
+    transport::basic_range<> kts{exp(10.0), exp(17.0), 100, transport::spacing::log_bottom};
     transport::basic_range<> alphas{0.0, 0.0, 0, transport::spacing::linear};
     transport::basic_range<> betas{1.0/3.0, 1.0/3.0, 0, transport::spacing::linear};
     
@@ -79,8 +79,13 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     ztk3.set_paired(true);
     
     vis_toolkit::SQL_time_query tquery{"1=1"};
+    vis_toolkit::SQL_time_query tlast{"serial IN (SELECT MAX(serial) FROM time_samples)"};
+    
     vis_toolkit::SQL_twopf_query k2query{"comoving IN (SELECT MAX(comoving) FROM twopf_samples UNION SELECT MIN(comoving) FROM twopf_samples)"};
     vis_toolkit::SQL_threepf_query k3query{"kt_comoving IN (SELECT MAX(kt_comoving) FROM threepf_samples UNION SELECT MIN(kt_comoving) FROM threepf_samples)"};
+    
+    vis_toolkit::SQL_twopf_query k2all{"1=1"};
+    vis_toolkit::SQL_threepf_query k3all("1=1");
     
     vis_toolkit::zeta_twopf_time_series<> z2pf{ztk3, tquery, k2query};    // defaults to dimensionless
     vis_toolkit::largest_u2_line<> u2line{tk3, tquery, k2query};
@@ -156,6 +161,12 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     vis_toolkit::time_series_table<> table{"gelaton.utable", "utable.txt"};
     table += z2pf + u2line + u3line + hubble;
     
+    vis_toolkit::zeta_twopf_wavenumber_series<> zeta2pf{ztk3, tlast, k2all};
+    zeta2pf.set_current_x_axis_value(vis_toolkit::axis_value::efolds_exit);
+    
+    vis_toolkit::wavenumber_series_plot<> zeta2pf_plot{"gelaton.threepf-1.zeta_2pf", "zeta2pf-plot.pdf"};
+    zeta2pf_plot += zeta2pf;
+    
     vis_toolkit::index_selector<3> fsel{model->get_N_fields()};
     fsel.none().set_on({0,0,0}).set_on({1,1,1});
     vis_toolkit::threepf_time_series<> tpf{tk3, fsel, tquery, k3query};
@@ -192,10 +203,7 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     vis_toolkit::time_series_plot<> tk3_c2plot{"gelaton.threepf-1.cross2-plot", "cross2-plot.pdf"};
     tk3_c2plot += tk3_cross2;
     
-    vis_toolkit::SQL_time_query tquery2{"serial IN (SELECT MAX(serial) FROM time_samples)"};
-    vis_toolkit::SQL_threepf_query k3query2("1=1");
-    
-    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> fNL{ztk3, tquery2, k3query2};
+    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> fNL{ztk3, tlast, k3all};
     fNL.set_current_x_axis_value(vis_toolkit::axis_value::efolds_exit);
     
     vis_toolkit::wavenumber_series_plot<> fNLplot{"gelaton.fNL", "fNL.pdf"};
@@ -203,7 +211,8 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     fNLplot += fNL;
     
     transport::output_task<> otk{"gelaton.output"};
-    otk += table + plot + plot2 + plot2a + plot3 + tk3_fplot + tk3_mplot + tk3_cplot + tk3_c2plot + thpf_tab + fNLplot;
+    otk += zeta2pf_plot + table + plot + plot2 + plot2a + plot3 + tk3_fplot + tk3_mplot + tk3_cplot + tk3_c2plot
+           + thpf_tab + fNLplot;
     
     repo.commit(ztk2);
     repo.commit(ztk3);
