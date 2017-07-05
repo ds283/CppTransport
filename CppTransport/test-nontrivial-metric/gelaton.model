@@ -87,8 +87,8 @@ parameter lambda_R
  { latex = "\lambda_R";
  };
 
-parameter omega
- { latex = "\omega";
+parameter alpha
+ { latex = "\alpha";
  };
 
 subexpr uplift
@@ -98,7 +98,7 @@ subexpr uplift
 
 subexpr angular_tilt
  { latex = "V_{\theta}";
-   value = omega * (R_0^2 / M_P^2) * theta;
+   value = alpha * theta;
  };
 
 subexpr radial_mass

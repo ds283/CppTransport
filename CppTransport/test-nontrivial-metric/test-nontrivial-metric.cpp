@@ -41,6 +41,8 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     const double g_R           = M_P*M_P / std::sqrt(V0);                                       // adjust radial cubic coupling to be of order Hubble
     const double lambda_R      = 0.5 * M_P*M_P*M_P / std::pow(V0, 3.0/4.0) / std::sqrt(omega);  // adjust radial quartic coupling to dominate the displacement
     
+    const double alpha         = 7.25*omega;                                                    // adjust angular tilt to get desired omega
+    
     const double R0            = std::sqrt(V0/3.0) / (M_P * omega * std::sqrt(P_zeta));         // adjust radial minimum to give desired P_zeta normalization
     
     const double x_init        = -R0;
@@ -52,13 +54,13 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     const double N_pre         = 8.0;
     const double N_max         = 28.0;
     
-    transport::parameters<> params{M_P, { R0, V0, eta_R, g_R, lambda_R, omega }, model};
+    transport::parameters<> params{M_P, { R0, V0, eta_R, g_R, lambda_R, alpha }, model};
     transport::initial_conditions<> ics{"gelaton", params, { R_init, theta_init, 0.0, 0.0 }, N_init, N_pre};
     
     transport::basic_range<> times{N_init, N_max, 500, transport::spacing::linear};
     
     transport::basic_range<> ks{exp(10.0), exp(10.0), 0, transport::spacing::log_bottom};
-    transport::basic_range<> kts{exp(10.0), exp(17.0), 100, transport::spacing::log_bottom};
+    transport::basic_range<> kts{exp(10.0), exp(11.0), 20, transport::spacing::log_bottom};
     transport::basic_range<> alphas{0.0, 0.0, 0, transport::spacing::linear};
     transport::basic_range<> betas{1.0/3.0, 1.0/3.0, 0, transport::spacing::linear};
     
@@ -151,7 +153,7 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
                + tk2_R_plot + tk2_theta_plot + tk2_eps_plot + tk2_H_plot + tk2_bg_table;
     repo.commit(tk2_out);
     
-    vis_toolkit::time_series_table<> table{"gelaton.utable", "utable.csv"};
+    vis_toolkit::time_series_table<> table{"gelaton.utable", "utable.txt"};
     table += z2pf + u2line + u3line + hubble;
     
     vis_toolkit::index_selector<3> fsel{model->get_N_fields()};
@@ -161,16 +163,20 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     vis_toolkit::time_series_plot<> plot{"gelaton.threepf-fields", "threepf-fields.pdf"};
     plot += tpf;
     
-    vis_toolkit::zeta_threepf_time_series<> ztpf{ztk3, tquery, k3query};
-    
-    vis_toolkit::time_series_plot<> plot2{"gelaton.threepf-zeta", "threepf-zeta.pdf"};
-    plot2 += ztpf;
-    
+    vis_toolkit::zeta_twopf_time_series<> ztwpf{ztk3, tquery, k2query};
+    vis_toolkit::zeta_threepf_time_series<> zthpf{ztk3, tquery, k3query};
     vis_toolkit::zeta_reduced_bispectrum_time_series<> zrbsp(ztk3, tquery, k3query);
     
+    vis_toolkit::time_series_plot<> plot2{"gelaton.threepf-zeta", "threepf-zeta.pdf"};
+    plot2 += zthpf;
+    vis_toolkit::time_series_plot<> plot2a{"gelaton.twopf-zeta", "twopf-zeta.pdf"};
+    plot2a += ztwpf;
     vis_toolkit::time_series_plot<> plot3("gelaton.threepf-redbsp", "threepf-redbsp.pdf");
     plot3.set_log_y(false);
     plot3 += zrbsp;
+    
+    vis_toolkit::time_series_table<> thpf_tab{"gelaton.threepf-table", "threepf-table.txt"};
+    thpf_tab += ztwpf + zthpf + zrbsp;
     
     vis_toolkit::twopf_time_series<> tk3_fields{tk3, f2_fields, tquery, k2query};
     vis_toolkit::twopf_time_series<> tk3_momenta{tk3, f2_momenta, tquery, k2query};
@@ -197,7 +203,7 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     fNLplot += fNL;
     
     transport::output_task<> otk{"gelaton.output"};
-    otk += table + plot + plot2 + plot3 + tk3_fplot + tk3_mplot + tk3_cplot + tk3_c2plot + fNLplot;
+    otk += table + plot + plot2 + plot2a + plot3 + tk3_fplot + tk3_mplot + tk3_cplot + tk3_c2plot + thpf_tab + fNLplot;
     
     repo.commit(ztk2);
     repo.commit(ztk3);
