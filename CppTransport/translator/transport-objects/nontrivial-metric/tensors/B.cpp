@@ -182,8 +182,7 @@ namespace nontrivial_metric
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
         auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
         
-        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_Riemann_B3, { i, j, k },
-                                                                      this->printer);
+        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_Riemann_B3, { i, j, k }, this->printer);
         args += { k1, k2, k3, a };
         args += { idx_i, idx_j, idx_k };
         

@@ -218,6 +218,9 @@ namespace nontrivial_metric
         const auto G = this->mgr.metric();
         const auto Ginv = this->mgr.metric_inverse();
         
+        const auto field_flatten = this->mgr.field_flatten();
+        if(!field_flatten) throw resource_failure("fields flatten");
+        
         // compute size of sum involving all factors of the metric or inverse metric
         unsigned int size = 1;
         unsigned int repositioned = 0;
@@ -260,7 +263,7 @@ namespace nontrivial_metric
                     if(r == variance::contravariant)
                       {
                         if(!Ginv) throw resource_failure("metric inverse");
-                        auto factor = printer.array_subscript(*Ginv, reqd[j].get(), v, flatten);
+                        auto factor = printer.array_subscript(*Ginv, reqd[j].get(), v, **field_flatten);
                         auto sym = this->sym_factory.get_symbol(factor);
                         
                         // apply offset to label index, if one is present
@@ -270,7 +273,7 @@ namespace nontrivial_metric
                     else if(r == variance::covariant)
                       {
                         if(!G) throw resource_failure("metric");
-                        auto factor = printer.array_subscript(*G, reqd[j].get(), v, flatten);
+                        auto factor = printer.array_subscript(*G, reqd[j].get(), v, **field_flatten);
                         
                         // apply offset to label index, if one is present
                         index_values[j] = to_index_string(v + static_cast<int>(N)*offsets[j]);
