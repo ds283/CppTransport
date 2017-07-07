@@ -68,11 +68,15 @@ namespace cpp
         if(GiNaC::is_a<GiNaC::function>(expr)) name = GiNaC::ex_to<GiNaC::function>(expr).get_name();
         else name = GiNaC::ex_to<GiNaC::basic>(expr).class_name();
 
-        if     (name == "numeric") return this->printer.ginac(expr);
-        else if(name == "symbol")  return this->printer.ginac(expr);
-        else if(name == "add")     return this->print_operands(expr, "+", use_count);
-        else if(name == "mul")     return this->print_operands(expr, "*", use_count);
-        else if(name == "power")   return this->print_power(expr, use_count);
+        if     (name == "numeric")   return this->printer.ginac(expr);
+        else if(name == "symbol")    return this->printer.ginac(expr);
+        else if(name == "add")       return this->print_operands(expr, "+", use_count);
+        else if(name == "mul")       return this->print_operands(expr, "*", use_count);
+        else if(name == "power")     return this->print_power(expr, use_count);
+        else if(name == "tensdelta") return this->printer.ginac(expr);
+        else if(name == "idx")       return this->printer.ginac(expr);
+        else if(name == "varidx")    return this->printer.ginac(expr);
+        else if(name == "indexed")   return this->printer.ginac(expr);
 
         // not a standard operation, so assume it must be a special function
         // look up its C++ form in func_map, and then format its arguments,
