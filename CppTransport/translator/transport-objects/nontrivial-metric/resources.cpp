@@ -83,9 +83,9 @@ namespace nontrivial_metric
 
             // GiNaC matrices are indexed by numbers; here, the row/column numbering order
             // matches the declaration order of the fields
-            for(int i = 0; i < N; ++i)
+            for(unsigned int i = 0; i < N; ++i)
               {
-                for(int j = 0; j < N; ++j)
+                for(unsigned int j = 0; j < N; ++j)
                   {
                     field_metric::index_type idx = std::make_pair(field_list[i].get_name(), field_list[j].get_name());
                     this->G->set(i, j, G(idx));
