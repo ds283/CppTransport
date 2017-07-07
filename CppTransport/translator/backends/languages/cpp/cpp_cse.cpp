@@ -35,42 +35,82 @@
 
 namespace cpp
   {
+    
+    const std::map< std::string, std::string > func_convert
+      {
+        {"abs", "std::abs"},
+        {"sqrt", "std::sqrt"},
+        {"sin", "std::sin"},
+        {"cos", "std::cos"},
+        {"tan", "std::tan"},
+        {"asin", "std::asin"},
+        {"acos", "std::acos"},
+        {"atan", "std::atan"},
+        {"atan2", "std::atan2"},
+        {"sinh", "std::sinh"},
+        {"cosh", "std::cosh"},
+        {"tanh", "std::tanh"},
+        {"asinh", "std::asinh"},
+        {"acosh", "std::acosh"},
+        {"atanh", "std::atanh"},
+        {"exp", "std:exp"},
+        {"log", "std::log"},
+        {"pow", "std::pow"},
+        {"tgamma", "std::tgamma"},
+        {"lgamma", "std::lgamma"}
+      };
+    
 
     std::string cpp_cse::print(const GiNaC::ex& expr, bool use_count)
       {
-        std::ostringstream out;
-        std::string        name;
-
+        std::string name;
+    
         if(GiNaC::is_a<GiNaC::function>(expr)) name = GiNaC::ex_to<GiNaC::function>(expr).get_name();
-        else                                   name = GiNaC::ex_to<GiNaC::basic>(expr).class_name();
+        else name = GiNaC::ex_to<GiNaC::basic>(expr).class_name();
 
-        if     (name == "numeric") out << this->printer.ginac(expr);
-        else if(name == "symbol")  out << this->printer.ginac(expr);
-        else if(name == "add")     out << this->print_operands(expr, "+", use_count);
-        else if(name == "mul")     out << this->print_operands(expr, "*", use_count);
-        else if(name == "power")   out << this->print_power(expr, use_count);
-        else                       out << this->printer.ginac(expr);
+        if     (name == "numeric") return this->printer.ginac(expr);
+        else if(name == "symbol")  return this->printer.ginac(expr);
+        else if(name == "add")     return this->print_operands(expr, "+", use_count);
+        else if(name == "mul")     return this->print_operands(expr, "*", use_count);
+        else if(name == "power")   return this->print_power(expr, use_count);
 
-        return(out.str());
+        // not a standard operation, so assume it must be a special function
+        // look up it's C++ form in func_map, and then format its arguments,
+        // taking care to keep track of use counts
+        
+        auto t = func_convert.find(name);
+        if(t == func_convert.end())
+          {
+            std::ostringstream msg;
+            msg << ERROR_UNIMPLEMENTED_MATHS_FUNCTION << " '" << name << "'";
+            throw cse_exception(msg.str());
+          }
+
+        std::string rval{t->second};
+        rval.append("(");
+        rval.append(this->print_operands(expr, ",", use_count));
+        rval.append(")");
+
+        return rval;
       }
 
 
     std::string cpp_cse::print_operands(const GiNaC::ex& expr, std::string op, bool use_count)
       {
-        std::ostringstream out;
+        std::string rval;
 
         unsigned int c = 0;
-        for(GiNaC::const_iterator t = expr.begin(); t != expr.end(); ++t)
+        for(auto t = expr.begin(); t != expr.end(); ++t)
           {
-            if(c > 0) out << op;
-
-            if(use_count) out << this->get_symbol_with_use_count(*t);
-            else          out << this->get_symbol_without_use_count(*t);
+            if(c > 0) rval.append(op);
+    
+            if(use_count) rval.append(this->get_symbol_with_use_count(*t));
+            else          rval.append(this->get_symbol_without_use_count(*t));
 
             ++c;
           }
-
-        return(out.str());
+        
+        return rval;
       }
 
 
@@ -79,7 +119,7 @@ namespace cpp
     std::string cpp_cse::print_power(const GiNaC::ex& expr, bool use_count)
       {
         std::ostringstream out;
-        size_t             n = expr.nops();
+        size_t n = expr.nops();
 
         if(n != 2)
           {
@@ -93,7 +133,7 @@ namespace cpp
 
             if(GiNaC::is_a<GiNaC::numeric>(exp_generic))
               {
-                const GiNaC::numeric& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exp_generic);
+                const auto& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exp_generic);
 
                 std::string sym;
                 if(use_count) sym = this->get_symbol_with_use_count(expr.op(0));
