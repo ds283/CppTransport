@@ -532,7 +532,7 @@ namespace transport
 		    double earliest_crossing = std::numeric_limits<double>::max();
 		    double latest_crossing   = -std::numeric_limits<double>::max();
 
-        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
+        for(auto t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 	        {
 		        if(t->t_exit < earliest_crossing) earliest_crossing = t->t_exit;
 		        if(t->t_exit > latest_crossing)   latest_crossing = t->t_exit;
@@ -579,7 +579,7 @@ namespace transport
         double earliest_required = std::numeric_limits<double>::max();
         double earliest_tmassless = std::numeric_limits<double>::max();
 
-        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
+        for(auto t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 	        {
             double ics_time = this->get_initial_time(*t);
             if(ics_time < earliest_required) earliest_required = ics_time;
@@ -778,7 +778,7 @@ namespace transport
 		template <typename SplineObject, typename TolerancePolicy>
 		void twopf_db_task<number>::twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_a2H2M, TolerancePolicy tol)
 			{
-		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
+		    for(auto t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate log(aH)-log(k) and then solve for N which makes this
             // zero, hence k = aH

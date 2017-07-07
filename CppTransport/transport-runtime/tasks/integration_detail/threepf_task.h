@@ -386,7 +386,7 @@ namespace transport
 		template <typename SplineObject, typename TolerancePolicy>
 		void threepf_task<number>::threepf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
 			{
-		    for(threepf_kconfig_database::config_iterator t = this->threepf_db->config_begin(); t != this->threepf_db->config_end(); ++t)
+		    for(auto t = this->threepf_db->config_begin(); t != this->threepf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(std::log(t->kt_comoving/3.0));
