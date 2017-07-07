@@ -565,7 +565,9 @@ namespace transport
 
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
-
+        const auto& __param_vector = __params.get_vector();
+    
+        $RESOURCE_PARAMETERS{__param_vector}
         $RESOURCE_COORDINATES{__coords}
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1650,8 +1652,9 @@ namespace transport
           {
           public:
             EpsilonUnityPredicate(const parameters<number>& p)
+              : __Mp{p.get_Mp()},
+                __params{p.get_vector()}
               {
-                __Mp = p.get_Mp();
               }
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
@@ -1659,6 +1662,7 @@ namespace transport
                 $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
 
+                $RESOURCE_PARAMETERS{__params}
                 $RESOURCE_COORDINATES{__x.first}
 
                 const auto __eps = $EPSILON;
@@ -1669,7 +1673,10 @@ namespace transport
           private:
 
             //! cache Planck mass
-            number __Mp;
+            const number __Mp;
+            
+            //! cache parameter vector
+            const flattened_tensor<number>& __params;
 
           };
 
@@ -1715,19 +1722,19 @@ namespace transport
           public:
             aHAggregatorPredicate(const twopf_db_task<number>* tk, model<number>* m, std::vector<double>& N,
                                   flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double lk)
-              : params(tk->get_params()),
-                task(tk),
-                mdl(m),
-                N_vector(N),
-                log_aH_vector(log_aH),
-                log_a2H2M_vector(log_a2H2M),
-                largest_k(lk),
-                flat_M($NUMBER_FIELDS*$NUMBER_FIELDS),
-                N_horizon_crossing(tk->get_N_horizon_crossing()),
-                astar_normalization(tk->get_astar_normalization())
+              : params{tk->get_params()},
+                task{tk},
+                mdl{m},
+                N_vector{N},
+                log_aH_vector{log_aH},
+                log_a2H2M_vector{log_a2H2M},
+                largest_k{lk},
+                flat_M{$NUMBER_FIELDS*$NUMBER_FIELDS},
+                N_horizon_crossing{tk->get_N_horizon_crossing()},
+                astar_normalization{tk->get_astar_normalization()},
+                __Mp{params.get_Mp()},
+                __params{params.get_vector()}
               {
-                param_vector = params.get_vector();
-                __Mp = params.get_Mp();
               }
 
             number largest_evalue(const backg_state<number>& fields, double N)
@@ -1751,7 +1758,7 @@ namespace transport
                 $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
 
-                $RESOURCE_PARAMETERS{param_vector}
+                $RESOURCE_PARAMETERS{__params}
                 $RESOURCE_COORDINATES{__x.first}
 
                 const auto __Hsq = $HUBBLE_SQ;
@@ -1781,10 +1788,10 @@ namespace transport
             const parameters<number>& params;
 
             //! cache parameters vectors
-            flattened_tensor<number> param_vector;
+            const flattened_tensor<number>& __params;
 
             //! cache Planck mass
-            number __Mp;
+            const number __Mp;
 
             //! output vector for times N
             std::vector<double>& N_vector;
