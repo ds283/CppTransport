@@ -105,8 +105,7 @@ namespace transport
         template <typename SplineObject, typename TolerancePolicy>
         double find_zero_of_spline(const std::string& task_name, std::string bracket_error, SplineObject& sp, TolerancePolicy& tol)
           {
-            // find root; note use of std::ref, because root finder would normally would take a copy of
-            // its system function and this is slow -- we have to copy the whole spline
+            // check extreme values bracket the root
             assert(sp(sp.get_min_x()) * sp(sp.get_max_x()) < 0.0);
             if(sp(sp.get_min_x()) * sp(sp.get_max_x()) >= 0.0)
               {
@@ -114,7 +113,9 @@ namespace transport
                 msg << "'" << task_name << "': " << bracket_error;
                 throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
-
+    
+            // find root; note use of std::ref, because root finder would normally would take a copy of
+            // its system function and this is slow -- we have to copy the whole spline
             boost::uintmax_t max_iter = CPPTRANSPORT_MAX_ITERATIONS;
             std::pair< double, double > result = boost::math::tools::bisect(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
 
@@ -748,7 +749,8 @@ namespace transport
             spline1d<number> log_aH_sp(N, log_aH);
             spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
-            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_compute_horizon_exit_times
+              (log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
