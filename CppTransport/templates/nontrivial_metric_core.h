@@ -1652,8 +1652,8 @@ namespace transport
           {
           public:
             EpsilonUnityPredicate(const parameters<number>& p)
-              : __Mp{p.get_Mp()},
-                __params{p.get_vector()}
+              : __Mp(p.get_Mp()),
+                __params(p.get_vector())
               {
               }
 
@@ -1722,18 +1722,18 @@ namespace transport
           public:
             aHAggregatorPredicate(const twopf_db_task<number>* tk, model<number>* m, std::vector<double>& N,
                                   flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double lk)
-              : params{tk->get_params()},
-                task{tk},
-                mdl{m},
-                N_vector{N},
-                log_aH_vector{log_aH},
-                log_a2H2M_vector{log_a2H2M},
-                largest_k{lk},
-                flat_M{$NUMBER_FIELDS*$NUMBER_FIELDS},
-                N_horizon_crossing{tk->get_N_horizon_crossing()},
-                astar_normalization{tk->get_astar_normalization()},
-                __Mp{params.get_Mp()},
-                __params{params.get_vector()}
+              : params(tk->get_params()),
+                task(tk),
+                mdl(m),
+                N_vector(N),
+                log_aH_vector(log_aH),
+                log_a2H2M_vector(log_a2H2M),
+                largest_k(lk),
+                flat_M($NUMBER_FIELDS*$NUMBER_FIELDS),
+                N_horizon_crossing(tk->get_N_horizon_crossing()),
+                astar_normalization(tk->get_astar_normalization()),
+                __Mp(params.get_Mp()),
+                __params(params.get_vector())
               {
               }
 
