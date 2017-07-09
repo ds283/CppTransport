@@ -1701,15 +1701,28 @@ namespace transport
         auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>};
 
         auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $BACKG_STEP_SIZE);
-
-        // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
-        auto iter = boost::find_if(range, $MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
-
-				if(iter == boost::end(range)) throw end_of_inflation_not_found();
-
+    
+        double Nend = 0.0;
+        try
+          {
+            // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
+            auto iter = boost::find_if(range, $MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
+            if(iter == boost::end(range)) throw end_of_inflation_not_found{};
+            
+            Nend = iter->second;
+          }
+        catch(integration_produced_nan& xe)
+          {
+            throw end_of_inflation_not_found{};
+          }
+        catch(Hsq_is_negative& xe)
+          {
+            throw end_of_inflation_not_found{};
+          }
+        
         system.close_down_workspace();
 
-		    return ((*iter).second);
+        return Nend;
       };
 
 
