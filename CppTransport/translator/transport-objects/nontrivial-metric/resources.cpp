@@ -104,6 +104,7 @@ namespace nontrivial_metric
         // construct curvature tensors based on this metric
         this->Crstfl = std::make_unique<Christoffel>(*this->G, *this->Ginv, field_list);
         this->Rie_T = std::make_unique<Riemann_T>(*this->Crstfl);
+        this->DRie_T = std::make_unique<DRiemann_T>(*this->Rie_T);
 
         // switch off compute timer (it will be restarted if needed during subsequent computations)
         compute_timer.stop();

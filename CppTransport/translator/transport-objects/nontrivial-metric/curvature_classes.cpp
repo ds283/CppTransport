@@ -97,6 +97,9 @@ Riemann_T::Riemann_T(const Christoffel& Gamma_)
               {
                 for(unsigned int l = 0; l < k; ++l)
                   {
+                    // compute the flatten of the index groups (i,j) and (k,l)
+                    // since the Riemann tensor is invariant under these exchanges we need
+                    // only compute the lower triangle r <= s
                     unsigned int r = i * (i - 1) / 2 + j;
                     unsigned int s = k * (k - 1) / 2 + l;
 
@@ -124,6 +127,7 @@ Riemann_T::Riemann_T(const Christoffel& Gamma_)
 
 GiNaC::ex Riemann_T::operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int l) const
   {
+    // Riemann tensor is antisymmetric on (i,j) and (k,l)
     if(i == j or k == l) return 0;
 
     int num = 1; // numeric factor from symmetries
@@ -141,25 +145,127 @@ GiNaC::ex Riemann_T::operator()(unsigned int i, unsigned int j, unsigned int k, 
         std::swap(k, l);
         num *= -1;
       }
-
-    unsigned int r = i * (i - 1) / 2 + j; // flattened indices for each pair of indices
+    
+    // flattened indices for each pair of indices
+    unsigned int r = i * (i - 1) / 2 + j;
     unsigned int s = k * (k - 1) / 2 + l;
 
     if(s > r)
-      { // symmetry in pairs of indices
+      {
+        // symmetry in pairs of indices
         std::swap(i, k);
         std::swap(j, l);
         std::swap(r, s);
         num *= 1;
       }
-
-    unsigned int index = (r * (r + 1)) / 2 + s; // index of flattened vector after all swaps
-
-    return num * rie_t[index]; // return numeric factor * component from flat vector
+    
+    // index of flattened vector after all swaps
+    unsigned int index = (r * (r + 1)) / 2 + s;
+    
+    // return numeric factor * component from flat vector
+    return num * rie_t[index];
   }
 
 
 size_t Riemann_T::size() const
   {
-    return rie_t.size();
+    return this->rie_t.size();
+  }
+
+
+DRiemann_T::DRiemann_T(const Riemann_T& R_)
+  : N(R_.get_connexion().get_number_fields()),
+    N_Rie_T((N*(N-1)*(N*N-N-2)/8)),
+    R(R_)
+  {
+    const Christoffel& Gamma = R.get_connexion();
+    const symbol_list& coords = Gamma.get_coords();
+    
+    for(unsigned int m = 0; m < N; ++m)
+      {
+        for(unsigned int i = 0; i < N; ++i)
+          {
+            for(unsigned int j = 0; j < i; ++j)
+              {
+                for(unsigned int k = 0; k < N; ++k)
+                  {
+                    for(unsigned int l = 0; l < k; ++l)
+                      {
+                        // compute the flatten of the index groups (i,j) and (k,l)
+                        // since the Riemann tensor is invariant under these exchanges we need
+                        // only compute the lower triangle r <= s
+                        unsigned int r = i * (i - 1) / 2 + j;
+                        unsigned int s = k * (k - 1) / 2 + l;
+
+                        if(s > r) continue;
+
+                        GiNaC::ex temp = diff(R(i, j, k, l), coords[m]);
+
+                        for(unsigned int n = 0; n < N; ++n)
+                          {
+                            temp -= Gamma(n, m, i) * R(n, j, k, l);
+                            temp -= Gamma(n, m, j) * R(i, n, k, l);
+                            temp -= Gamma(n, m, k) * R(i, j, n, l);
+                            temp -= Gamma(n, m, l) * R(i, j, k, n);
+                          }
+
+                        rie_t_covar_deriv.push_back(temp);
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+
+GiNaC::ex DRiemann_T::operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int l, unsigned int m) const
+  {
+    // Riemann tensor is antisymmetric on (i,j) and (k,l)
+    if (i==j or k==l) return 0;
+    
+    // flattened DRiemann consists of N copies of the flattened Riemann tensor stacked
+    // next to each other
+    // the m index gives us the correct offset into this stack
+    int mIndex = m * N_Rie_T;
+    
+    int num = 1; // numeric factor from symmetries
+    
+    if(j > i)
+      {
+        // anti-symmetry in first 2 indices
+        std::swap(i, j);
+        num *= -1;
+      }
+
+    if(l > k)
+      {
+        // anti-symmetry in second 2 indices
+        std::swap(k, l);
+        num *= -1;
+      }
+    
+    // flattened indices for each pair of indices
+    unsigned int r = i * (i - 1) / 2 + j;
+    unsigned int s = k * (k - 1) / 2 + l;
+    
+    if(s > r)
+      {
+        // symmetry in pairs of indices
+        std::swap(i, k);
+        std::swap(j, l);
+        std::swap(r, s);
+        num *= 1;
+      }
+    
+    // index of flattened vector after all swaps with mIndex to give covariant derivative of chosen coordinate
+    int index = (r * (r + 1)) / 2 + s + mIndex;
+
+    // return numeric factor * component from flat vector
+    return num * rie_t_covar_deriv[index];
+  }
+
+
+size_t DRiemann_T::size() const
+  {
+    return this->rie_t_covar_deriv.size();
   }

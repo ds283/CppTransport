@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: Sean Butchers <smlb20@sussex.ac.uk>
+// @contributor: David Seery <D.Seery@sussex.ac.uk>
 // --@@
 //
 
@@ -119,6 +120,9 @@ class Riemann_T
 
     //! get size
     size_t size() const;
+    
+    //! get connexion
+    const Christoffel& get_connexion() const { return this->Gamma; }
 
 
     // INTERNAL DATA
@@ -134,6 +138,54 @@ class Riemann_T
     //! reference to Christoffel object from which the Riemann tensor is built
     const Christoffel& Gamma;
 
+  };
+
+
+class DRiemann_T
+  {
+    
+    // CONSTRUCTOR, DESTRUCTOR
+    
+  public:
+    
+    //! constructor takes a reference to a Riemann_T object and uses it to compute the
+    //! corresponding first derivative of the Riemann tensor
+    DRiemann_T(const Riemann_T& R_);
+    
+    //! destructor is default
+    ~DRiemann_T() = default;
+    
+    
+    // EXTRACT COMPONENTS
+    
+  public:
+    
+    //! extract a component of the fully-covariant object R_{ijkl;m}
+    GiNaC::ex operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int l, unsigned int m) const;
+    
+    //! get size
+    size_t size() const;
+    
+    //! get Riemann tensor
+    const Riemann_T& get_Riemann() const { return this->R; }
+    
+    
+    // INTERNAL DATA
+    
+  private:
+    
+    //! cache nubmer of fields
+    const unsigned int N;
+    
+    //! cache size of the flattened Riemann tensor
+    const unsigned int N_Rie_T;
+    
+    //! flattened tensor representing the components of grad Riemann
+    flattened_tensor rie_t_covar_deriv;
+    
+    //! reference to Riemann object from which the derivative is constructed
+    const Riemann_T& R;
+    
   };
 
 #endif //CPPTRANSPORT_NONCANONICAL_CURVATURE_CLASSES_H

@@ -449,6 +449,9 @@ namespace nontrivial_metric
 
         //! Riemann tensor components
         std::unique_ptr<Riemann_T> Rie_T;
+        
+        //! covariant derivative of Riemann tensor
+        std::unique_ptr<DRiemann_T> DRie_T;
 
         // AGENTS
 
