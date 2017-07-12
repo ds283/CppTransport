@@ -77,6 +77,8 @@ namespace nontrivial_metric
                     // get substitution map
                     GiNaC::exmap& subs_map = subs_cache.get();
                     subs_expr = expr.subs(subs_map, GiNaC::subs_options::no_pattern);
+    
+                    res.cache.store(expression_item_types::Riemann_A2_item, index_ij, args, subs_expr);
                   }
                 
                 (*this->A2)[index_ij] = subs_expr;

@@ -34,10 +34,16 @@ namespace nontrivial_metric
     const flattened_tensor& CovariantRiemannB3Cache::get()
       {
         if(this->B3) return *this->B3;
-        
+    
+        auto args = res.generate_cache_arguments(printer);
+    
         this->B3 = std::make_unique<flattened_tensor>(res.fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_B3_INDICES));
     
         const auto max = res.share.get_max_field_index(variance::covariant);
+        const auto max_l = res.share.get_max_field_index(variance::contravariant);
+    
+        SubstitutionMapCache subs_cache(res, printer);
+        DerivativeSymbolsCache deriv_cache(res, res.share, printer);
     
         for(field_index i = field_index(0, variance::covariant); i < max; ++i)
           {
@@ -46,8 +52,36 @@ namespace nontrivial_metric
                 for(field_index k = field_index(0, variance::covariant); k < max; ++k)
                   {
                     unsigned int index = res.fl.flatten(i,j,k);
-                
-                    (*this->B3)[index] = 0;
+    
+                    GiNaC::ex subs_expr = 0;
+    
+                    if(!res.cache.query(expression_item_types::Riemann_B3_item, index, args, subs_expr))
+                      {
+                        timing_instrument timer(res.compute_timer);
+    
+                        auto& deriv_syms = deriv_cache.get();
+                        GiNaC::ex expr = 0;
+    
+                        for(field_index l = field_index(0, variance::contravariant); l < max_l; ++l)
+                          {
+                            auto Rie_ijk = (*res.Rie_T)(static_cast<unsigned int>(k), static_cast<unsigned int>(i),
+                                                        static_cast<unsigned int>(j), static_cast<unsigned int>(l));
+                            auto Rie_ikj = (*res.Rie_T)(static_cast<unsigned int>(k), static_cast<unsigned int>(j),
+                                                        static_cast<unsigned int>(i), static_cast<unsigned int>(l));
+                            
+                            auto Rie_sym = (Rie_ijk + Rie_ikj) / 2;
+                            
+                            expr += Rie_sym * deriv_syms[res.fl.flatten(l)];
+                          }
+    
+                        // get substitution map
+                        GiNaC::exmap& subs_map = subs_cache.get();
+                        subs_expr = expr.subs(subs_map, GiNaC::subs_options::no_pattern);
+                        
+                        res.cache.store(expression_item_types::Riemann_B3_item, index, args, subs_expr);
+                      }
+                    
+                    (*this->B3)[index] = subs_expr;
                   }
               }
           }

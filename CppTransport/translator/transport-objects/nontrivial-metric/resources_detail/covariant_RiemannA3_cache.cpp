@@ -35,9 +35,15 @@ namespace nontrivial_metric
       {
         if(this->A3) return *this->A3;
         
+        auto args = res.generate_cache_arguments(printer);
+        
         this->A3 = std::make_unique<flattened_tensor>(res.fl.get_flattened_size<field_index>(RESOURCE_INDICES::RIEMANN_A3_INDICES));
     
         const auto max = res.share.get_max_field_index(variance::covariant);
+        const auto max_lm = res.share.get_max_field_index(variance::contravariant);
+        
+        SubstitutionMapCache subs_cache(res, printer);
+        DerivativeSymbolsCache deriv_cache(res, res.share, printer);
         
         for(field_index i = field_index(0, variance::covariant); i < max; ++i)
           {
@@ -47,7 +53,46 @@ namespace nontrivial_metric
                   {
                     unsigned int index = res.fl.flatten(i,j,k);
                     
-                    (*this->A3)[index] = 0;
+                    GiNaC::ex subs_expr = 0;
+                    
+                    if(!res.cache.query(expression_item_types::Riemann_A3_item, index, args, subs_expr))
+                      {
+                        timing_instrument timer(res.compute_timer);
+                        
+                        auto& deriv_syms = deriv_cache.get();
+                        GiNaC::ex expr = 0;
+                        
+                        for(field_index l = field_index(0, variance::contravariant); l < max_lm; ++l)
+                          {
+                            for(field_index m = field_index(0, variance::contravariant); m < max_lm; ++m)
+                              {
+                                auto DRie_ijk = (*res.DRie_T)(static_cast<unsigned int>(l), static_cast<unsigned int>(i),
+                                                              static_cast<unsigned int>(j), static_cast<unsigned int>(m), static_cast<unsigned int>(k));
+                                auto DRie_ikj = (*res.DRie_T)(static_cast<unsigned int>(l), static_cast<unsigned int>(i),
+                                                              static_cast<unsigned int>(k), static_cast<unsigned int>(m), static_cast<unsigned int>(j));
+                                auto DRie_jik = (*res.DRie_T)(static_cast<unsigned int>(l), static_cast<unsigned int>(j),
+                                                              static_cast<unsigned int>(i), static_cast<unsigned int>(m), static_cast<unsigned int>(k));
+                                auto DRie_jki = (*res.DRie_T)(static_cast<unsigned int>(l), static_cast<unsigned int>(j),
+                                                              static_cast<unsigned int>(k), static_cast<unsigned int>(m), static_cast<unsigned int>(i));
+                                auto DRie_kij = (*res.DRie_T)(static_cast<unsigned int>(l), static_cast<unsigned int>(k),
+                                                              static_cast<unsigned int>(i), static_cast<unsigned int>(m), static_cast<unsigned int>(j));
+                                auto DRie_kji = (*res.DRie_T)(static_cast<unsigned int>(l), static_cast<unsigned int>(k),
+                                                              static_cast<unsigned int>(j), static_cast<unsigned int>(m), static_cast<unsigned int>(i));
+                                
+                                auto Rie_sym = (DRie_ijk + DRie_ikj + DRie_jik + DRie_jki + DRie_kij + DRie_kji) / 6;
+                                
+                                expr += Rie_sym * deriv_syms[res.fl.flatten(l)] * deriv_syms[res.fl.flatten(m)];
+                              }
+                          }
+    
+                        // get substitution map
+                        GiNaC::exmap& subs_map = subs_cache.get();
+                        subs_expr = expr.subs(subs_map, GiNaC::subs_options::no_pattern);
+    
+                        res.cache.store(expression_item_types::Riemann_A3_item, index, args, subs_expr);
+                      }
+                    
+                    (*this->A3)[index] = subs_expr;
                   }
               }
           }

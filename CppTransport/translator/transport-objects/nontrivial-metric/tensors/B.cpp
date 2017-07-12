@@ -89,7 +89,7 @@ namespace nontrivial_metric
             auto& Vj = this->dV(j)[this->fl.flatten(j)];
             auto& Vk = this->dV(k)[this->fl.flatten(k)];
             
-            // B3 is jk symmetric
+            // B3 is symmetric on ij, in the same way that B_ijk is
             auto& B3_ijk = this->B3(i, j, k)[this->fl.flatten(i, j, k)];
             
             auto delta_ik = this->G(i, k);
@@ -202,7 +202,7 @@ namespace nontrivial_metric
             auto Vj = this->res.dV_resource(j, this->printer);
             auto Vk = this->res.dV_resource(k, this->printer);
             
-            // B3 is symmetric on jk
+            // B3 is symmetric on ij, in the same way that B_ijk is
             auto B3_ijk = this->res.Riemann_B3_resource(i, j, k, this->printer);
     
             auto delta_ik = this->G(i, k);

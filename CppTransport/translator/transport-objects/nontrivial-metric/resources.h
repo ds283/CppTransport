@@ -64,7 +64,7 @@ namespace nontrivial_metric
     class PotentialResourceCache;
     class SubstitutionMapCache;
     class ConnexionCache;
-    class DerivativeSymbolCache;
+    class DerivativeSymbolsCache;
 
     class CovariantdVCache;
     class CovariantddVCache;
@@ -75,7 +75,7 @@ namespace nontrivial_metric
     class CovariantRiemannB3Cache;
 
 
-    //! implements resources for nontrivial_metric models, ie. trivial kinetic terms and just a potential
+    //! implements resources for nontrivial_metric models, ie. arbitrary kinetic matrix and any potential
     class resources
       {
 
@@ -84,7 +84,7 @@ namespace nontrivial_metric
         friend class PotentialResourceCache;
         friend class SubstitutionMapCache;
         friend class ConnexionCache;
-        friend class DerivativeSymbolCache;
+        friend class DerivativeSymbolsCache;
 
         friend class CovariantdVCache;
         friend class CovariantddVCache;
@@ -550,7 +550,8 @@ namespace nontrivial_metric
         
         // Riemann tensor resources are more ambiguous, since whether they are used or not depends on the index assignments that
         // are available, and the availability of the metric tensor and its inverse.
-        // As for G, we opt for the conservative option of pushing
+        // As above, assume we don't need to be careful with index permutations since v12 and v21 would generate the
+        // same symbol
         if(flatten && ((flags & use_Riemann_A2) != 0)) this->push_resource_tag(args, this->mgr.Riemann_A2(v12, false));
         
         return args;
@@ -584,7 +585,7 @@ namespace nontrivial_metric
         std::array<variance, 2> v23{ idxs[0].get_variance(), idxs[1].get_variance() };
         std::array<variance, 3> v123{ idxs[0].get_variance(), idxs[1].get_variance(), idxs[2].get_variance() };
     
-        // assume we don't need to be too careful with index perumutations since we'll get the same
+        // assume we don't need to be too careful with index permutations since we'll get the same
         // match from eg. 123 and 132 or 321
         
         if(flatten && ((flags & use_dV) != 0)) this->push_resource_tag(args, this->mgr.dV(v1, false));
@@ -598,7 +599,8 @@ namespace nontrivial_metric
         
         // Riemann tensor resources are more ambiguous, since whether they are used or not depends on the index assignments that
         // are available, and the availability of the metric tensor and its inverse.
-        // As for G, we opt for the conservative option of pushing
+        // As above, assume we don't need to be careful with index permutations since v123 and v132 etc. would generate the
+        // same symbol
         if(flatten && ((flags & use_Riemann_A3) != 0)) this->push_resource_tag(args, this->mgr.Riemann_A3(v123, false));
         if(flatten && ((flags & use_Riemann_B3) != 0)) this->push_resource_tag(args, this->mgr.Riemann_B3(v123, false));
         
