@@ -152,7 +152,8 @@ namespace transport
         // copy supplied data into Splinter DataTable
         for(unsigned int i = 0; i < N; ++i)
           {
-            table.addSample(x[i], y[i]);
+            // y may need an explicit downcast to double
+            table.addSample(x[i], static_cast<double>(y[i]));
 
 		        if(x[i] < min_x) min_x = x[i];
 		        if(x[i] > max_x) max_x = x[i];

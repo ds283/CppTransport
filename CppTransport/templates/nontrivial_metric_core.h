@@ -1879,7 +1879,10 @@ namespace transport
 				// so something has gone wrong
 				if(iter == boost::end(range))
 					{
-            throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_aH.size(), (N.size() > 0 ? N.back() : 0.0), (log_aH.size() > 0 ? log_aH.back() : 0.0), largest_k);
+            throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_aH.size(),
+                                                 (N.size() > 0 ? N.back() : 0.0),
+                                                 (log_aH.size() > 0 ? static_cast<double>(log_aH.back()) : 0.0),
+                                                 largest_k);
 					}
 
         system.close_down_workspace();

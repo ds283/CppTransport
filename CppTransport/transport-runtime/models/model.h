@@ -573,13 +573,18 @@ namespace transport
 
         if(history.size() > 0)
           {
+            // H() is defined to return a number, which must be downcast to double if needed
+            double H = static_cast<double>(this->H(tk->get_params(), history.back()));
+
             // the wavenumbers supplied to the twopf, threepf integration routines
             // use k=1 for the wavenumber which crosses the horizon at time Nstar.
             // This wavenumber should have comoving value k=aH
             // To avoid numbers becoming too large or small, and also because the integrator has
             // noticeably better performance for correlation-function amplitudes in a
             // certain range, use a fixed normalization which can be adjusted in twopf_db_task
-            return( this->H(tk->get_params(), history.back()) * exp(tk->get_astar_normalization()) );
+            double a = exp(tk->get_astar_normalization());
+
+            return(a*H);
           }
         else
           {
