@@ -34,6 +34,9 @@ using DataType = long double;
 constexpr double FP_MATCH_TOLERANCE = 1E-6;
 constexpr double FP_MATCH_MINIMUM = 1E-10;
 
+// determine where to check equivalence
+constexpr unsigned int check_point = 200;
+
 
 template <typename Value>
 constexpr bool fp_match(Value v1, Value v2)
@@ -94,9 +97,6 @@ SCENARIO( "Comparison of Yvette model between CppTransport and PyTransport", "[y
     // evolve solution
     transport::backg_history<DataType> history;
     CppTransport_model->backend_process_backg(&bgtk, history, true);
-    
-    // determine where to check equivalence
-    unsigned int check_point = 200;
     
     // construct twopf task, needed to compute any of the u-tensors using CppTransport
     transport::twopf_task<DataType> tk2{"yvette.twopf", ics, times, ks};
@@ -169,6 +169,14 @@ SCENARIO( "Comparison of Yvette model between CppTransport and PyTransport", "[y
                   {
                     int Hpower = (i >= Nf ? 1 : 0) + (j >= Nf ? -1 : 0);
                     DataType Hfactor = std::pow(H, Hpower);
+                    
+                    std::cout << "(" << i << "," << j << "), CppT = "
+                              << Hfactor * CppTransport_u2[transport::FLATTEN(i,j)]
+                              << ", PyT = "
+                              << PyTransport_u2[i + j*2*Nf]
+                              << ", Hfactor = "
+                              << Hfactor
+                              << '\n';
     
                     REQUIRE( fp_match(Hfactor * CppTransport_u2[transport::FLATTEN(i,j)], static_cast<DataType>(PyTransport_u2[i + j*2*Nf])) );
                   }
@@ -203,6 +211,14 @@ SCENARIO( "Comparison of Yvette model between CppTransport and PyTransport", "[y
                     int Hpower = (i >= Nf ? 1 : 0) + (j >= Nf ? -1 : 0) + (k >= Nf ? -1 : 0);
                     DataType Hfactor = std::pow(H, Hpower);
                     
+//                    std::cout << "(" << i << "," << j << "," << k << "), CppT = "
+//                              << Hfactor * CppTransport_u3[transport::FLATTEN(i,j,k)]
+//                              << ", PyT = "
+//                              << PyTransport_u3[i + j*2*Nf + k*2*Nf*2*Nf]
+//                              << ", Hfactor = "
+//                              << Hfactor
+//                              << '\n';
+
                     REQUIRE( fp_match(Hfactor * CppTransport_u3[transport::FLATTEN(i,j,k)], static_cast<DataType>(PyTransport_u3[i + j*2*Nf + k*2*Nf*2*Nf])) );
                   }
               }
