@@ -105,10 +105,19 @@ translator::~translator()
 	{
 	  if(!this->data_payload.get_argument_cache().show_profiling()) return;
 
+    auto hits = this->cache->get_hits();
+    auto misses = this->cache->get_misses();
+    
+    double hit_rate = static_cast<double>(hits) / (static_cast<double>(hits) + static_cast<double>(misses));
+    
     std::ostringstream expr_cache_msg;
-    expr_cache_msg << this->cache->get_hits() << " " << MESSAGE_EXPRESSION_CACHE_HITS
-                   << ", " << this->cache->get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES
-                   << " (" << MESSAGE_EXPRESSION_CACHE_QUERY_TIME << " " << format_time(this->cache->get_query_time())
+    expr_cache_msg << hits << " " << (hits == 1 ? MESSAGE_EXPRESSION_CACHE_HIT : MESSAGE_EXPRESSION_CACHE_HITS)
+                   << ", " << this->cache->get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES;
+    auto prec = expr_cache_msg.precision();
+    expr_cache_msg.precision(3);
+    expr_cache_msg << " (" << 100.0*hit_rate << "%)";
+    expr_cache_msg.precision(prec);
+    expr_cache_msg << " (" << MESSAGE_EXPRESSION_CACHE_QUERY_TIME << " " << format_time(this->cache->get_query_time())
                    << ", " << MESSAGE_EXPRESSION_CACHE_INSERT_TIME << " " << format_time(this->cache->get_insert_time())
                    << ")";
 

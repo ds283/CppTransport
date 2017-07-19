@@ -45,15 +45,21 @@ package_group::~package_group()
 		    this->data_payload.message(msg.str());
 			}
 
-    unsigned int lambda_hits = this->lambda_mgr->get_hits();
-    unsigned int lambda_misses = this->lambda_mgr->get_misses();
+    auto hits = this->lambda_mgr->get_hits();
+    auto misses = this->lambda_mgr->get_misses();
 
-    if(lambda_hits + lambda_misses > 0)
+    if(hits + misses > 0)
       {
+        double hit_rate = static_cast<double>(hits) / (static_cast<double>(hits) + static_cast<double>(misses));
+        
         std::ostringstream lambda_msg;
-        lambda_msg << lambda_hits << " " << MESSAGE_LAMBDA_CACHE_HITS
-                   << ", " << lambda_misses << " " << MESSAGE_LAMBDA_CACHE_MISSES
-                   << " (" << MESSAGE_LAMBDA_CACHE_QUERY_TIME << " " << format_time(this->lambda_mgr->get_query_time())
+        lambda_msg << hits << " " << (hits == 1 ? MESSAGE_LAMBDA_CACHE_HIT : MESSAGE_LAMBDA_CACHE_HITS)
+                   << ", " << misses << " " << MESSAGE_LAMBDA_CACHE_MISSES;
+        auto prec = lambda_msg.precision();
+        lambda_msg.precision(3);
+        lambda_msg << " (" << 100.0*hit_rate << "%)";
+        lambda_msg.precision(prec);
+        lambda_msg << " (" << MESSAGE_LAMBDA_CACHE_QUERY_TIME << " " << format_time(this->lambda_mgr->get_query_time())
                    << ", " << MESSAGE_LAMBDA_CACHE_INSERT_TIME << " " << format_time(this->lambda_mgr->get_insert_time())
                    << ")";
         this->data_payload.message(lambda_msg.str());

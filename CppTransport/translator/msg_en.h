@@ -315,11 +315,13 @@ constexpr auto ERROR_DUPLICATE_ELSE                  = "Duplicate $ELSE clause";
 
 constexpr auto WARNING_UNKNOWN_SWITCH                = "Ignored unknown command-line switch";
 
+constexpr auto MESSAGE_EXPRESSION_CACHE_HIT          = "total expression cache hit";
 constexpr auto MESSAGE_EXPRESSION_CACHE_HITS         = "total expression cache hits";
 constexpr auto MESSAGE_EXPRESSION_CACHE_MISSES       = "misses";
 constexpr auto MESSAGE_EXPRESSION_CACHE_QUERY_TIME   = "time spent performing queries";
 constexpr auto MESSAGE_EXPRESSION_CACHE_INSERT_TIME  = "inserts";
 
+constexpr auto MESSAGE_LAMBDA_CACHE_HIT              = "lambda cache hit";
 constexpr auto MESSAGE_LAMBDA_CACHE_HITS             = "lambda cache hits";
 constexpr auto MESSAGE_LAMBDA_CACHE_MISSES           = "misses";
 constexpr auto MESSAGE_LAMBDA_CACHE_QUERY_TIME       = "time spent performing queries";
