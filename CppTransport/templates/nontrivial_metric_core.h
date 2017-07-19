@@ -1427,7 +1427,7 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
-          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __G);
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
           $MODEL_compute_Riemann_A2(__raw_params, __fields, __Mp, __A2);
@@ -1536,7 +1536,7 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
         $IF{!fast}
           $MODEL_compute_G(__raw_params, __fields, __Mp, __G);
-          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __G);
+          $MODEL_compute_Ginv(__raw_params, __fields, __Mp, __Ginv);
           $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
           $MODEL_compute_Riemann_B3(__raw_params, __fields, __Mp, __B3);
           $RESOURCE_G[_ab]{__G}
