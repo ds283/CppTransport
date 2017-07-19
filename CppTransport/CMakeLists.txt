@@ -62,6 +62,7 @@ SET(EXTERNAL_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/thirdparty/dist")
 
 BUILD_JSONCPP(${CMAKE_BINARY_DIR}/thirdparty/jsoncpp ${EXTERNAL_INSTALL_PREFIX})
 BUILD_SPLINTER(${CMAKE_BINARY_DIR}/thirdparty/SPLINTER ${EXTERNAL_INSTALL_PREFIX})
+BUILD_CATCH(${CMAKE_BINARY_DIR}/thirdparty/Catch ${EXTERNAL_INSTALL_PREFIX})
 
 
 # configure build_data.h
@@ -272,6 +273,9 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
 # pull in test targets
 ADD_SUBDIRECTORY(test-canonical EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY(test-nontrivial-metric EXCLUDE_FROM_ALL)
+
+ADD_SUBDIRECTORY(tests EXCLUDE_FROM_ALL)
+
 
 # install targets for CppTransport translator, templates, and runtime system
 # note that CppTransport-sendmail has more restrictive permissions since it may contain a password
@@ -1260,6 +1264,13 @@ set(TRANSPORT_RUNTIME_UTILITIES_FILES
   transport-runtime/utilities/to_printable.h
   )
 
+set(TESTS_PYTRANSPORT_NONTRIVIAL_METRIC_FILES
+  tests/PyTransport/nontrivial-metric/fieldmetric.h
+  tests/PyTransport/nontrivial-metric/model.h
+  tests/PyTransport/nontrivial-metric/potential.h
+  tests/PyTransport/nontrivial-metric/nontrivial-metric.t.cpp
+  )
+
 set(SOURCE_FILES
   ${TEMPLATES_FILES}
   ${TEMPLATES_VEXCL_CUDA_FILES}
@@ -1347,6 +1358,7 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_TRANSACTIONS_FILES}
   ${TRANSPORT_RUNTIME_UTILITIES_FILES}
+  ${TESTS_PYTRANSPORT_NONTRIVIAL_METRIC_FILES}
   )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})
