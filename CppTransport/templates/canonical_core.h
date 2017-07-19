@@ -1231,7 +1231,7 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u3[FLATTEN($A,$B,$C)] = $U3_TENSOR[ABC]{__k1, __k1, __k3, __a};
+        __u3[FLATTEN($A,$B,$C)] = $U3_TENSOR[ABC]{__k1, __k2, __k3, __a};
       }
 
 
