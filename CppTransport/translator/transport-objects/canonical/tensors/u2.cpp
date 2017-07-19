@@ -91,7 +91,7 @@ namespace canonical
                 auto& deriv_i = (*derivs)[this->fl.flatten(species_i)];
                 auto& deriv_j = (*derivs)[this->fl.flatten(species_j)];
 
-                result = this->expr_field_momentum(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j, k, a);
+                result = this->expr_momentum_field(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j, k, a);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_momentum(j))
               {
@@ -106,7 +106,7 @@ namespace canonical
       }
     
     
-    GiNaC::ex u2::expr_field_momentum(const GiNaC::idx& i, const GiNaC::idx& j,
+    GiNaC::ex u2::expr_momentum_field(const GiNaC::idx& i, const GiNaC::idx& j,
                                       const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
                                       const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
                                       const GiNaC::symbol& k, const GiNaC::symbol& a)
@@ -176,7 +176,7 @@ namespace canonical
             auto V_a_j = this->res.dV_resource(*j_field_a.second, this->printer);
 
             map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] =
-              this->expr_field_momentum(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);
+              this->expr_momentum_field(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);
 
             this->cache.store(expression_item_types::U2_lambda, 0, args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }

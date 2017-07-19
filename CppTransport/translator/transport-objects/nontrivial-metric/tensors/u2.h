@@ -106,7 +106,7 @@ namespace nontrivial_metric
 
         //! underlying symbolic expression
         GiNaC::ex
-        expr_field_momentum(const GiNaC::ex& delta_ij, const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
+        expr_momentum_field(const GiNaC::ex& delta_ij, const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
                             const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& A2_ij,
                             const GiNaC::symbol& k, const GiNaC::symbol& a);
 

@@ -104,7 +104,7 @@ namespace canonical
       private:
 
         //! underlying symbolic expression
-        GiNaC::ex expr_field_momentum(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::ex& Vij,
+        GiNaC::ex expr_momentum_field(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::ex& Vij,
                                       const GiNaC::ex& Vi, const GiNaC::ex& Vj,
                                       const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::symbol& k,
                                       const GiNaC::symbol& a);
