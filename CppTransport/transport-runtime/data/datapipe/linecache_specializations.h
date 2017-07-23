@@ -35,48 +35,14 @@ namespace transport
     // Provide specializations for the size methods used in linecache to compute the size of data elements
     namespace linecache
 	    {
-
-        template<>
-        unsigned int sizeof_container_element< std::vector<twopf_kconfig> >() { return(sizeof(twopf_kconfig)); }
-
-        template<>
-        unsigned int elementsof_container(const std::vector<twopf_kconfig>& container) { return(container.size()); }
-
-        template<>
-        unsigned int sizeof_container_element< std::vector<threepf_kconfig> >() { return(sizeof(threepf_kconfig)); }
-
-        template<>
-        unsigned int elementsof_container(const std::vector<threepf_kconfig>& container) { return(container.size()); }
-
-        template<>
-        unsigned int sizeof_container_element< std::vector<time_config> >() { return(sizeof(time_config)); }
-
-        template<>
-        unsigned int elementsof_container(const std::vector<time_config>& container) { return(container.size()); }
-
-        template<>
-        unsigned int sizeof_container_element< std::vector<kconfiguration_statistics> >() { return(sizeof(kconfiguration_statistics)); }
-
-        template<>
-        unsigned int elementsof_container(const std::vector<kconfiguration_statistics>& container) { return(container.size()); }
-
-        template<>
-        unsigned int sizeof_container_element< std::vector<double> >() { return(sizeof(double)); }
-
-        template<>
-        unsigned int elementsof_container(const std::vector<double>& container) { return(container.size()); }
-
-        template<>
-        unsigned int sizeof_container_element< std::vector<float> >() { return(sizeof(float)); }
-
-        template<>
-        unsigned int elementsof_container(const std::vector<float>& container) { return(container.size()); }
-
-        template<>
-        unsigned int sizeof_container_element< std::vector<long double> >() { return(sizeof(long double)); }
-
-        template<>
-        unsigned int elementsof_container(const std::vector<long double>& container) { return(container.size()); }
+        
+        // template for any container implementing the STL container interface
+        template <typename Container>
+        unsigned int elementsof_container(const Container& c) { return c.size(); }
+        
+        // template for any container providing a value_type type
+        template <typename Container>
+        unsigned int sizeof_container_element() { return sizeof(typename Container::value_type); }
 
 	    }   // namespace linecache -- specializations
 
