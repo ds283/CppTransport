@@ -361,7 +361,7 @@ namespace transport
             delete[] __raw_params;
           }
 
-        void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t);
+        void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, number __t);
 
       protected:
 
@@ -392,7 +392,7 @@ namespace transport
             current_step = time_db.record_begin();
           }
 
-        void operator ()(const backg_state<number>& x, double t);
+        void operator ()(const backg_state<number>& x, number t);
 
       private:
 
@@ -1359,7 +1359,9 @@ namespace transport
         backg_state<number> x($MODEL_pool::backg_state_size);
         x[FLATTEN($A)] = ics[$A];
 
-        boost::numeric::odeint::integrate_times($MAKE_BACKG_STEPPER{backg_state<number>, number, double}, system, x, time_db.value_begin(), time_db.value_end(), $BACKG_STEP_SIZE, obs);
+        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number};
+        boost::numeric::odeint::integrate_times(stepper, system, x, time_db.value_begin(), time_db.value_end(),
+                                                static_cast<number>($BACKG_STEP_SIZE), obs);
         system.close_down_workspace();
       }
 
@@ -1376,7 +1378,7 @@ namespace transport
               {
               }
 
-            bool operator()(const std::pair< backg_state<number>, double >& __x)
+            bool operator()(const std::pair< backg_state<number>, number >& __x)
               {
                 $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
@@ -1413,7 +1415,7 @@ namespace transport
         x[FLATTEN($A)] = ics[$A];
 
 		    // find point where epsilon = 1
-        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, double};
+        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number};
 
         auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $BACKG_STEP_SIZE);
     
@@ -1424,7 +1426,8 @@ namespace transport
             auto iter = boost::find_if(range, $MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
             if(iter == boost::end(range)) throw end_of_inflation_not_found{};
         
-            Nend = iter->second;
+            // may require explicit narrowing cast to double if working type is wider
+            Nend = static_cast<double>(iter->second);
           }
         catch(integration_produced_nan& xe)
           {
@@ -1465,9 +1468,9 @@ namespace transport
               {
               }
 
-            number largest_evalue(const backg_state<number>& fields, double N)
+            number largest_evalue(const backg_state<number>& fields, number N)
               {
-                this->mdl->M(this->task, fields, N, this->flat_M);
+                this->mdl->M(this->task, fields, static_cast<double>(N), this->flat_M);
 
                 mass_matrix($a,$b) = flat_M[FIELDS_FLATTEN($a,$b)];
 
@@ -1480,7 +1483,7 @@ namespace transport
                 return largest_eigenvalue;
               }
 
-            bool operator()(const std::pair< backg_state<number>, double >& __x)
+            bool operator()(const std::pair< backg_state<number>, number >& __x)
               {
                 $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
@@ -1493,7 +1496,7 @@ namespace transport
 
                 const auto __N   = __x.second - this->N_horizon_crossing + this->astar_normalization;
 
-                this->N_vector.push_back(__x.second);
+                this->N_vector.push_back(static_cast<double>(__x.second));
                 this->log_aH_vector.push_back(__N + std::log(__H)); // = log(aH)
                 this->log_a2H2M_vector.push_back(2.0*__N + 2.0*std::log(__H)
                                                  + std::log(this->largest_evalue(__x.first, __x.second))); // = log(a^2 H^2 * largest eigenvalue)
@@ -1565,7 +1568,7 @@ namespace transport
 				backg_state<number> x($MODEL_pool::backg_state_size);
 				x[FLATTEN($A)] = ics[$A];
 
-				auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, double};
+				auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number};
 
         double N_range = 0.0;
         bool found_end = false;
@@ -1607,7 +1610,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
+    void $MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, number __t)
       {
         $RESOURCE_RELEASE
 
@@ -1624,10 +1627,10 @@ namespace transport
         const auto __Hsq = $HUBBLE_SQ;
 
         // check whether Hsq is positive
-        if(__Hsq < 0) throw Hsq_is_negative(__t);
+        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t));
 
         // check for nan being produced
-        if(std::isnan(__x[$A])) throw integration_produced_nan(__t);
+        if(std::isnan(__x[$A])) throw integration_produced_nan(static_cast<double>(__t));
 
         __dxdt[FLATTEN($A)] = $U1_TENSOR[A];
       }
@@ -1637,7 +1640,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_background_observer<number>::operator()(const backg_state<number>& x, double t)
+    void $MODEL_background_observer<number>::operator()(const backg_state<number>& x, number t)
       {
         if(this->current_step != this->time_db.record_end() && this->current_step->is_stored())
           {

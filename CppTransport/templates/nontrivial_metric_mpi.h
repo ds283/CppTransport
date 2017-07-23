@@ -377,7 +377,7 @@ namespace transport
             delete[] this->__raw_params;
           }
 
-        void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
+        void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, number __t);
 
         // adjust horizon exit time, given an initial time N_init which we wish to move to zero
         void rebase_horizon_exit_time(double N_init) { this->__N_horizon_exit -= N_init; }
@@ -443,7 +443,7 @@ namespace transport
           {
           }
 
-        void operator ()(const twopf_state<number>& x, double t);
+        void operator ()(const twopf_state<number>& x, number t);
 
       };
 
@@ -563,7 +563,7 @@ namespace transport
             delete[] this->__raw_params;
           }
 
-        void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
+        void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, number __dt);
 
         // adjust horizon exit time, given an initial time N_init which we wish to move to zero
         void rebase_horizon_exit_time(double N_init) { this->__N_horizon_exit -= N_init; }
@@ -642,7 +642,7 @@ namespace transport
           {
           }
 
-        void operator ()(const threepf_state<number>& x, double t);
+        void operator ()(const threepf_state<number>& x, number t);
 
       };
 
@@ -795,10 +795,13 @@ namespace transport
         // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
         // TODO: would be nice to remove this in future
         rhs.rebase_horizon_exit_time(tk->get_ics().get_N_initial());
-        time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
-        time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
+        auto begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
+        auto end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        size_t steps = boost::numeric::odeint::integrate_times($MAKE_PERT_STEPPER{twopf_state<number>, number, double}, rhs, x, begin_iterator, end_iterator, $PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        auto stepper = $MAKE_PERT_STEPPER{twopf_state<number>, number, number};
+        size_t steps =
+          boost::numeric::odeint::integrate_times(stepper, rhs, x, begin_iterator, end_iterator,
+                                                  static_cast<number>($PERT_STEP_SIZE/pow(4.0,refinement_level)), obs);
 
         obs.stop_timers(steps, refinement_level);
         rhs.close_down_workspace();
@@ -979,10 +982,13 @@ namespace transport
         // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
         // TODO: would be nice to remove this in future
         rhs.rebase_horizon_exit_time(tk->get_ics().get_N_initial());
-        time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
-        time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
+        auto begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
+        auto end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        size_t steps = boost::numeric::odeint::integrate_times( $MAKE_PERT_STEPPER{threepf_state<number>, number, double}, rhs, x, begin_iterator, end_iterator, $PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        auto stepper = $MAKE_PERT_STEPPER{threepf_state<number>, number, number};
+        size_t steps =
+          boost::numeric::odeint::integrate_times(stepper , rhs, x, begin_iterator, end_iterator,
+                                                  static_cast<number>($PERT_STEP_SIZE/pow(4.0,refinement_level)), obs);
 
         obs.stop_timers(steps, refinement_level);
         rhs.close_down_workspace();
@@ -1010,7 +1016,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_mpi_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
+    void $MODEL_mpi_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, number __t)
       {
         $RESOURCE_RELEASE
 
@@ -1121,9 +1127,9 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_mpi_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
+    void $MODEL_mpi_twopf_observer<number>::operator()(const twopf_state<number>& x, number t)
       {
-        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
+        this->start_batching(static_cast<double>(t), this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
       }
@@ -1133,7 +1139,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_mpi_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
+    void $MODEL_mpi_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, number __t)
       {
         $RESOURCE_RELEASE
 
@@ -1385,9 +1391,9 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_mpi_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
+    void $MODEL_mpi_threepf_observer<number>::operator()(const threepf_state<number>& x, number t)
       {
-        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
+        this->start_batching(static_cast<double>(t), this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
       }

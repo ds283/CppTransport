@@ -116,7 +116,7 @@ namespace transport
 		  private:
 
 				//! alias for database data structure
-				typedef std::map< unsigned int, time_config_record > database_type;
+				using database_type = std::map< unsigned int, time_config_record >;
 
 
 				// RECORD VALUED ITERATORS
@@ -124,11 +124,11 @@ namespace transport
 		  public:
 
 		    // specialize to obtain intended iterators
-		    typedef configuration_database::generic_record_iterator< database_type::iterator, database_type::const_iterator, time_config_record, false > record_iterator;
-		    typedef configuration_database::generic_record_iterator< database_type::iterator, database_type::const_iterator, time_config_record, true >  const_record_iterator;
+		    using record_iterator = configuration_database::generic_record_iterator< database_type::iterator, database_type::const_iterator, time_config_record, false>;
+		    using const_record_iterator = configuration_database::generic_record_iterator< database_type::iterator, database_type::const_iterator, time_config_record, true>;
 
-        typedef configuration_database::generic_record_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config_record, false > reverse_record_iterator;
-        typedef configuration_database::generic_record_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config_record, true >  const_reverse_record_iterator;
+        using reverse_record_iterator = configuration_database::generic_record_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config_record, false>;
+        using const_reverse_record_iterator = configuration_database::generic_record_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config_record, true>;
 
 
 		    // CONFIG VALUED ITERATOR
@@ -136,11 +136,11 @@ namespace transport
 		  public:
 
 		    // specialize to obtain intended iterators
-		    typedef configuration_database::generic_config_iterator< database_type::iterator, database_type::const_iterator, time_config, false> config_iterator;
-		    typedef configuration_database::generic_config_iterator< database_type::iterator, database_type::const_iterator, time_config, true>  const_config_iterator;
+		    using config_iterator = configuration_database::generic_config_iterator< database_type::iterator, database_type::const_iterator, time_config, false>;
+		    using const_config_iterator = configuration_database::generic_config_iterator< database_type::iterator, database_type::const_iterator, time_config, true>;
 
-        typedef configuration_database::generic_config_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config, false> reverse_config_iterator;
-        typedef configuration_database::generic_config_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config, true>  const_reverse_config_iterator;
+        using reverse_config_iterator = configuration_database::generic_config_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config, false>;
+        using const_reverse_config_iterator = configuration_database::generic_config_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config, true>;
 
 
             // VALUE ITERATOR
@@ -148,11 +148,11 @@ namespace transport
 		  public:
 
 		    // specialize to obtain intended iterators
-        typedef configuration_database::generic_value_iterator< database_type::iterator, database_type::const_iterator, double, false> value_iterator;
-        typedef configuration_database::generic_value_iterator< database_type::iterator, database_type::const_iterator, double, true>  const_value_iterator;
+        using value_iterator = configuration_database::generic_value_iterator< database_type::iterator, database_type::const_iterator, double, false>;
+        using const_value_iterator = configuration_database::generic_value_iterator< database_type::iterator, database_type::const_iterator, double, true>;
 
-		    typedef configuration_database::generic_value_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, double, false> reverse_value_iterator;
-		    typedef configuration_database::generic_value_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, double, true>  const_reverse_value_iterator;
+        using reverse_value_iterator = configuration_database::generic_value_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, double, false>;
+        using const_reverse_value_iterator = configuration_database::generic_value_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, double, true>;
 
 
 		    // CONSTRUCTOR, DESTRUCTOR
@@ -281,26 +281,6 @@ namespace transport
 
 				this->database.emplace(config.serial, time_config_record(config, store));
 			}
-
-
-      // allow random-access notation for time_config const_value_iterators, which is required by older versions
-      // of BOOST odeint-v2 in integrate_times()
-      // TODO: preferable to remove this when a future opportunity arises
-
-
-    time_config_database::const_value_iterator operator-(const time_config_database::const_value_iterator &lhs, unsigned int rhs)
-      {
-        time_config_database::const_value_iterator temp = lhs;
-
-        while(rhs > 0)
-          {
-            --temp;
-            --rhs;
-          }
-
-        return temp;
-      }
-
 
   }   // namespace transport
 
