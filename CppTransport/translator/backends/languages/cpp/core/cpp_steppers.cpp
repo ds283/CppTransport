@@ -52,9 +52,11 @@ namespace cpp
 
 
     // *******************************************************************
-
-
-    static std::string replace_stepper(boost::optional< contexted_value< std::shared_ptr<stepper> > > s, std::string state_name)
+    
+    
+    static std::string
+    replace_stepper(boost::optional< contexted_value< std::shared_ptr<stepper> > > s, std::string state_name,
+                    std::string value_type, std::string time_type)
       {
         std::ostringstream out;
 
@@ -86,23 +88,33 @@ namespace cpp
 
             if(name == "runge_kutta_dopri5")
               {
-                out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type
+                    << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else if(name == "bulirsch_stoer_dense_out")
               {
-                out << "boost::numeric::odeint::bulirsch_stoer_dense_out< " << state_name << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::bulirsch_stoer_dense_out< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type
+                    << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else if(name == "bulirsch_stoer")
               {
-                out << "boost::numeric::odeint::bulirsch_stoer< " << state_name << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::bulirsch_stoer< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type
+                    << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else if(name == "runge_kutta_fehlberg78")
               {
-                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type
+                    << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else if(name == "runge_kutta_cash_karp45")
               {
-                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type
+                    << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else
               {
@@ -128,8 +140,10 @@ namespace cpp
       {
         auto s = this->data_payload.templates.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
+        std::string value_type = args[BACKG_STEPPER_VALUE_TYPE_ARGUMENT];
+        std::string time_type = args[BACKG_STEPPER_TIME_TYPE_ARGUMENT];
 
-        return(replace_stepper(s, state_name));
+        return(replace_stepper(s, state_name, value_type, time_type));
       }
 
 
@@ -137,8 +151,10 @@ namespace cpp
       {
         auto s = this->data_payload.templates.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
+        std::string value_type = args[PERT_STEPPER_VALUE_TYPE_ARGUMENT];
+        std::string time_type = args[PERT_STEPPER_TIME_TYPE_ARGUMENT];
 
-        return(replace_stepper(s, state_name));
+        return(replace_stepper(s, state_name, value_type, time_type));
       }
 
 

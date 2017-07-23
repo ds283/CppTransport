@@ -36,10 +36,14 @@ namespace cpp
   {
 
     constexpr unsigned int BACKG_STEPPER_STATE_ARGUMENT = 0;
-    constexpr unsigned int BACKG_STEPPER_TOTAL_ARGUMENTS = 1;
+    constexpr unsigned int BACKG_STEPPER_VALUE_TYPE_ARGUMENT = 1;
+    constexpr unsigned int BACKG_STEPPER_TIME_TYPE_ARGUMENT = 2;
+    constexpr unsigned int BACKG_STEPPER_TOTAL_ARGUMENTS = 3;
 
     constexpr unsigned int PERT_STEPPER_STATE_ARGUMENT = 0;
-    constexpr unsigned int PERT_STEPPER_TOTAL_ARGUMENTS = 1;
+    constexpr unsigned int PERT_STEPPER_VALUE_TYPE_ARGUMENT = 1;
+    constexpr unsigned int PERT_STEPPER_TIME_TYPE_ARGUMENT = 2;
+    constexpr unsigned int PERT_STEPPER_TOTAL_ARGUMENTS = 3;
 
 
     class replace_backg_stepper : public ::macro_packages::replacement_rule_simple

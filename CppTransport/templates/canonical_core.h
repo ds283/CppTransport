@@ -1359,7 +1359,7 @@ namespace transport
         backg_state<number> x($MODEL_pool::backg_state_size);
         x[FLATTEN($A)] = ics[$A];
 
-        boost::numeric::odeint::integrate_times($MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $BACKG_STEP_SIZE, obs);
+        boost::numeric::odeint::integrate_times($MAKE_BACKG_STEPPER{backg_state<number>, number, double}, system, x, time_db.value_begin(), time_db.value_end(), $BACKG_STEP_SIZE, obs);
         system.close_down_workspace();
       }
 
@@ -1413,7 +1413,7 @@ namespace transport
         x[FLATTEN($A)] = ics[$A];
 
 		    // find point where epsilon = 1
-        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>};
+        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, double};
 
         auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $BACKG_STEP_SIZE);
     
@@ -1565,7 +1565,7 @@ namespace transport
 				backg_state<number> x($MODEL_pool::backg_state_size);
 				x[FLATTEN($A)] = ics[$A];
 
-				auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>};
+				auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, double};
 
         double N_range = 0.0;
         bool found_end = false;

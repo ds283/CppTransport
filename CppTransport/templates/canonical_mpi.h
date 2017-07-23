@@ -730,7 +730,7 @@ namespace transport
         time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        size_t steps = boost::numeric::odeint::integrate_times($MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, begin_iterator, end_iterator, $PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        size_t steps = boost::numeric::odeint::integrate_times($MAKE_PERT_STEPPER{twopf_state<number>, number, double}, rhs, x, begin_iterator, end_iterator, $PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(steps, refinement_level);
         rhs.close_down_workspace();
@@ -914,7 +914,7 @@ namespace transport
         time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        size_t steps = boost::numeric::odeint::integrate_times( $MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, begin_iterator, end_iterator, $PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        size_t steps = boost::numeric::odeint::integrate_times( $MAKE_PERT_STEPPER{threepf_state<number>, number, double}, rhs, x, begin_iterator, end_iterator, $PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(steps, refinement_level);
         rhs.close_down_workspace();
