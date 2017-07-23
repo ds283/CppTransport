@@ -44,135 +44,103 @@ namespace transport
 
     namespace repository_toolkit_impl
       {
-
-        //! template method to extract a content group
+    
+        //! template method to get content group record from repository
         template <typename number, typename Payload>
-        std::unique_ptr< content_group_record<Payload> > get_rw_content_group(repository<number>& repo, const std::string& name, transaction_manager& mgr);
+        struct get_rw_content_group
+          {
+            
+            std::unique_ptr< content_group_record<Payload> >
+            get(repository<number>& repo, const std::string& name, transaction_manager& mgr);
+            
+          };
 
 
         //! specialize for integration payloads
-        template <>
-        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        template <typename number>
+        struct get_rw_content_group<number, integration_payload>
           {
-            return repo.query_integration_content(name, mgr);
-          }
 
-        template <>
-        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_integration_content(name, mgr);
-          }
-
-        template <>
-        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_integration_content(name, mgr);
-          }
-
+            std::unique_ptr< content_group_record< integration_payload > >
+            get(repository<number>& repo, const std::string& name, transaction_manager& mgr)
+              {
+                return repo.query_integration_content(name, mgr);
+              }
+            
+          };
 
         //! specialize for postintegration payloads
-        template <>
-        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        template <typename number>
+        struct get_rw_content_group<number, postintegration_payload>
           {
-            return repo.query_postintegration_content(name, mgr);
-          }
 
-        template <>
-        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_postintegration_content(name, mgr);
-          }
-
-        template <>
-        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_postintegration_content(name, mgr);
-          }
-
+            std::unique_ptr< content_group_record< postintegration_payload > >
+            get(repository<number>& repo, const std::string& name, transaction_manager& mgr)
+              {
+                return repo.query_postintegration_content(name, mgr);
+              }
+            
+          };
 
         //! specialize for output payloads
-        template <>
-        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        template <typename number>
+        struct get_rw_content_group<number, output_payload>
           {
-            return repo.query_output_content(name, mgr);
-          }
 
-        template <>
-        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_output_content(name, mgr);
-          }
-
-        template <>
-        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_output_content(name, mgr);
-          }
+            std::unique_ptr< content_group_record< output_payload > >
+            get(repository<number>& repo, const std::string& name, transaction_manager& mgr)
+              {
+                return repo.query_output_content(name, mgr);
+              }
+            
+          };
 
 
         //! template method to delete a content group
         template <typename number, typename Payload>
-        void erase_repository_record(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr);
+        struct erase_repository_record
+          {
+    
+            void erase(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr);
+            
+          };
 
 
         // specialize for integration payloads
-        template <>
-        void erase_repository_record<double, integration_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+        template <typename number>
+        struct erase_repository_record<number, integration_payload>
           {
-            repo.delete_integration_content(name, task_name, mgr);
-          }
 
-        template <>
-        void erase_repository_record<float, integration_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_integration_content(name, task_name, mgr);
-          }
-
-        template <>
-        void erase_repository_record<long double, integration_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_integration_content(name, task_name, mgr);
-          }
-
+            void erase(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+              {
+                repo.delete_integration_content(name, task_name, mgr);
+              }
+            
+          };
 
         // specialize for postintegration payloads
-        template <>
-        void erase_repository_record<double, postintegration_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+        template <typename number>
+        struct erase_repository_record<number, postintegration_payload>
           {
-            repo.delete_postintegration_content(name, task_name, mgr);
-          }
 
-        template <>
-        void erase_repository_record<float, postintegration_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_postintegration_content(name, task_name, mgr);
-          }
-
-        template <>
-        void erase_repository_record<long double, postintegration_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_postintegration_content(name, task_name, mgr);
-          }
-
+            void erase(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+              {
+                repo.delete_postintegration_content(name, task_name, mgr);
+              }
+            
+          };
 
         // specialize for output payloads
-        template <>
-        void erase_repository_record<double, output_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+        template <typename number>
+        struct erase_repository_record<number, output_payload>
           {
-            repo.delete_output_content(name, task_name, mgr);
-          }
 
-        template <>
-        void erase_repository_record<float, output_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_output_content(name, task_name, mgr);
-          }
-
-        template <>
-        void erase_repository_record<long double, output_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_output_content(name, task_name, mgr);
-          }
+            void erase(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+              {
+                repo.delete_output_content(name, task_name, mgr);
+              }
+            
+          };
 
       }   // namespace repository_toolkit_impl
 
@@ -333,7 +301,9 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
+                    typename ContentDatabase::mapped_type rw_record =
+                      get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
+                        this->repo, record.get_name(), mgr);
 
                     if(rw_record->get_lock_status())
                       {
@@ -443,7 +413,8 @@ namespace transport
                                 msg << CPPTRANSPORT_REPO_TOOLKIT_DELETING_OBJECT << " '" << record.get_name() << "'";
                                 this->msg(msg.str());
 
-                                erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), record.get_task_name(),mgr);
+                                erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.erase(
+                                  this->repo, record.get_name(), record.get_task_name(),mgr);
 
                                 // erase record and reset iterator to point to following element
                                 t = db.erase(t);
@@ -538,7 +509,9 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
+                    typename ContentDatabase::mapped_type rw_record =
+                      get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
+                        this->repo, record.get_name(), mgr);
 
                     rw_record->set_lock_status(true);
 
@@ -607,7 +580,9 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
+                    typename ContentDatabase::mapped_type rw_record =
+                      get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
+                        this->repo, record.get_name(), mgr);
 
                     rw_record->set_lock_status(false);
 
