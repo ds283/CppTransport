@@ -31,7 +31,7 @@
 #include <vector>
 #include <array>
 #include <limits>
-
+#include <type_traits>
 #include <assert.h>
 
 #include "SPLINTER/datatable.h"
@@ -45,26 +45,38 @@ namespace transport
     template <typename number>
     class spline1d
       {
+        
+        // TYPES
+        
+      public:
+        
+        //! spline y-values are 'number'
+        using value_type = number;
+        
+        //! spline x-values are 'double'
+        using domain_type = double;
 
+        
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! set up a 1d spline object with given data points
-        spline1d(const std::vector<double>& x, const std::vector<number>& y);
+        spline1d(const std::vector<domain_type>& x, const std::vector<value_type>& y);
 
         //! destructor is default
         ~spline1d() = default;
 
+        
 		    // INTERFACE -- OFFSETS
 
       public:
 
 		    //! get current offset
-		    number get_offset() const { return(this->offset); }
+		    value_type get_offset() const { return(this->offset); }
 
 		    //! set new offset
-		    void set_offset(number o) { this->offset = o; }
+		    void set_offset(value_type o) { this->offset = o; }
 
 
         // INTERFACE -- EVALUATE VALUES
@@ -72,10 +84,10 @@ namespace transport
       public:
 
         //! evaluate the spline at a given value of x
-        number eval(double x);
+        value_type eval(domain_type x);
 
         //! evaluate the spline at a given value of x
-        number operator()(double x) { return(this->eval(x)); }
+        value_type operator()(domain_type x) { return this->eval(x); }
 
 
         // INTERFACE -- EVALUATE DERIVATIVES
@@ -83,7 +95,7 @@ namespace transport
       public:
 
         //! evaluate the derivative of the spline at a given value of x
-        number eval_diff(double x);
+        value_type eval_diff(domain_type x);
 
 
 		    // INTERFACE -- MISC DATA
@@ -91,10 +103,10 @@ namespace transport
       public:
 
 		    //! get minimum x value
-		    double get_min_x() const { return(this->min_x); }
+		    domain_type get_min_x() const { return(this->min_x); }
 
 		    //! get maximum x value
-		    double get_max_x() const { return(this->max_x); }
+		    domain_type get_max_x() const { return(this->max_x); }
 
 
         // WRITE TO STREAM
@@ -125,25 +137,25 @@ namespace transport
         SPLINTER::DataTable table;
 
 		    //! offset to apply on evaluation
-		    number offset;
+		    value_type offset;
 
 		    //! number of points
 		    size_t N;
 
 		    //! minimum x value
-		    double min_x;
+		    domain_type min_x;
 
 		    //! maximum x value
-		    double max_x;
+		    domain_type max_x;
 
       };
 
 
     template <typename number>
-    spline1d<number>::spline1d(const std::vector<double>& x, const std::vector<number>& y)
+    spline1d<number>::spline1d(const std::vector<domain_type>& x, const std::vector<value_type>& y)
       : offset(0.0),
-        min_x(std::numeric_limits<double>::max()),
-        max_x(-std::numeric_limits<double>::max())
+        min_x(std::numeric_limits<domain_type>::max()),
+        max_x(-std::numeric_limits<domain_type>::max())
       {
         assert(x.size() == y.size());
 
@@ -152,8 +164,8 @@ namespace transport
         // copy supplied data into Splinter DataTable
         for(unsigned int i = 0; i < N; ++i)
           {
-            // y may need an explicit downcast to double
-            table.addSample(x[i], static_cast<double>(y[i]));
+            // y may need an explicit downcast to domain_type
+            table.addSample(x[i], static_cast<domain_type>(y[i]));
 
 		        if(x[i] < min_x) min_x = x[i];
 		        if(x[i] > max_x) max_x = x[i];
@@ -172,22 +184,22 @@ namespace transport
 
 
     template <typename number>
-    number spline1d<number>::eval(double x)
+    typename spline1d<number>::value_type spline1d<number>::eval(domain_type x)
       {
         SPLINTER::DenseVector xv(1);
         xv(0) = x;
 
-        return( static_cast<number>(this->b_spline->eval(xv)) - this->offset );
+        return( static_cast<value_type>(this->b_spline->eval(xv)) - this->offset );
       }
 
 
     template <typename number>
-    number spline1d<number>::eval_diff(double x)
+    typename spline1d<number>::value_type spline1d<number>::eval_diff(domain_type x)
       {
         SPLINTER::DenseVector xv(1);
         xv(0) = x;
 
-        return( static_cast<number>((this->p_spline->evalJacobian(xv))(0)) );
+        return( static_cast<value_type>((this->p_spline->evalJacobian(xv))(0)) );
       }
 
 

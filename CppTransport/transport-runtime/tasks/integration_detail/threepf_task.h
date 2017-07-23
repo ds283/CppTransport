@@ -353,10 +353,10 @@ namespace transport
             // forward to underlying twopf_db_task to update its database;
             // should be done *before* computing horizon exit times for threepfs, so that horizon exit & massless times
             // for the corresponding twopfs are known
-            this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate<number>{this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE});
 
             // compute horizon exit times & massless times for threepf configuraitons
-            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate<number>{this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE});
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
