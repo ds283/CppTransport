@@ -105,15 +105,7 @@ namespace transport
       $SET[^a_b]{GAMMA, "__TimeGamma[FIELDS_FLATTEN($^a,$_b)]"}
 
     $ENDIF
-
-    // set up a state type for 2pf integration
-    template <typename number>
-    using twopf_state = std::vector<number>;
-
-    // set up a state type for 3pf integration
-    template <typename number>
-    using threepf_state = std::vector<number>;
-
+    
     namespace $MODEL_pool
       {
         const static std::string backend = "MPI";
@@ -126,10 +118,22 @@ namespace transport
 
 
     // CLASS FOR $MODEL '*_mpi', ie., an MPI-based implementation
-    template <typename number=default_number_type>
+    template <typename number = default_number_type, typename StateType = std::vector<number> >
     class $MODEL_mpi : public $MODEL<number>
       {
+        
+        // TYPES
+        
+      public:
 
+        //! expose floating point value type
+        using value_type = number;
+        
+        //! expose 2pf/3pf integration state type
+        using twopf_state = StateType;
+        using threepf_state = StateType;
+
+        
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -204,66 +208,78 @@ namespace transport
 
       public:
 
-        virtual const std::string& get_backend() const override { return($MODEL_pool::backend); }
+        //! return backend name
+        const std::string& get_backend() const override { return($MODEL_pool::backend); }
 
-        virtual const std::string& get_back_stepper() const override { return($MODEL_pool::back_stepper); }
+        //! return background stepper name
+        const std::string& get_back_stepper() const override { return($MODEL_pool::back_stepper); }
 
-        virtual const std::string& get_pert_stepper() const override { return($MODEL_pool::pert_stepper); }
+        //! return perturbations stepper name
+        const std::string& get_pert_stepper() const override { return($MODEL_pool::pert_stepper); }
 
-        virtual std::pair< double, double > get_back_tol() const override { return std::make_pair($BACKG_ABS_ERR, $BACKG_REL_ERR); }
+        //! return background tolerances
+        std::pair< double, double > get_back_tol() const override { return std::make_pair($BACKG_ABS_ERR, $BACKG_REL_ERR); }
 
-        virtual std::pair< double, double > get_pert_tol() const override { return std::make_pair($PERT_ABS_ERR, $PERT_REL_ERR); }
+        //! return perturbations tolerances
+        std::pair< double, double > get_pert_tol() const override { return std::make_pair($PERT_ABS_ERR, $PERT_REL_ERR); }
 
 
         // BACKEND INTERFACE
 
       public:
 
-        // Set up a context
-        virtual context backend_get_context() override;
+        //! set up a context
+        context backend_get_context() override;
 
-        // Get backend type
-        virtual worker_type get_backend_type() override;
+        //! report backend type
+        worker_type get_backend_type() override;
 
-        //! Get backend memory capacity
-        virtual unsigned int get_backend_memory() override;
+        //! report backend memory capacity
+        unsigned int get_backend_memory() override;
 
-        //! Get backend priority
-        virtual unsigned int get_backend_priority() override;
+        //! report backend priority
+        unsigned int get_backend_priority() override;
 
-        // Integrate background and 2-point function on the CPU
-        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
-                                           twopf_batcher<number>& batcher,
-                                           bool silent = false) override;
+        //! integrate background and 2-point function on the CPU
+        void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
+                                   twopf_batcher<number>& batcher, bool silent = false) override;
 
-        // Integrate background, 2-point function and 3-point function on the CPU
-        virtual void backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
-                                           threepf_batcher<number>& batcher,
-                                           bool silent = false) override;
+        //! integrate background, 2-point function and 3-point function on the CPU
+        void backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
+                                   threepf_batcher<number>& batcher, bool silent = false) override;
 
-        virtual unsigned int backend_twopf_state_size(void)   const override { return($MODEL_pool::twopf_state_size); }
-        virtual unsigned int backend_threepf_state_size(void) const override { return($MODEL_pool::threepf_state_size); }
+        //! report 2pf integrator state size
+        unsigned int backend_twopf_state_size() const override { return($MODEL_pool::twopf_state_size); }
 
-        virtual bool supports_per_configuration_statistics(void) const override { return(true); }
+        //! report 3pf integrator state size
+        unsigned int backend_threepf_state_size() const override { return($MODEL_pool::threepf_state_size); }
+
+        //! query whether backend support collection of per-configuration statistics
+        virtual bool supports_per_configuration_statistics() const override { return(true); }
 
 
         // INTERNAL API
 
       protected:
 
+        //! integrate a single 2pf k-configuration
         void twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_db_task<number>* tk,
                          twopf_batcher<number>& batcher, unsigned int refinement_level);
 
+        //! integrate a single 3pf k-configuration
         void threepf_kmode(const threepf_kconfig_record&, const threepf_task<number>* tk,
                            threepf_batcher<number>& batcher, unsigned int refinement_level);
 
-        void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
+        //! populate initial values for a 2pf configuration
+        void populate_twopf_ic(twopf_state& x, unsigned int start, double kmode, double Ninit,
                                const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0, bool imaginary = false);
 
-        void populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
+        //! populate initial values for a tensor 2pf configuration
+        void populate_tensor_ic(twopf_state& x, unsigned int start, double kmode, double Ninit,
                                 const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0);
 
-        void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
+        //! populate initial values for a 3pf configuration
+        void populate_threepf_ic(threepf_state& x, unsigned int start, const threepf_kconfig& kconfig,
                                  double Ninit, const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0);
 
 
@@ -291,10 +307,19 @@ namespace transport
 
 
     // integration - 2pf functor
-    template <typename number>
+    template <typename Model>
     class $MODEL_mpi_twopf_functor
       {
+      
+      public:
+        
+        //! inherit number type from Model
+        using number = typename Model::value_type;
+        
+        //! inherit state type from model
+        using twopf_state = typename Model::twopf_state;
 
+        
       public:
 
         $MODEL_mpi_twopf_functor(const twopf_db_task<number>* tk, const twopf_kconfig& k
@@ -377,7 +402,7 @@ namespace transport
             delete[] this->__raw_params;
           }
 
-        void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, number __t);
+        void operator()(const twopf_state& __x, twopf_state& __dxdt, number __t);
 
         // adjust horizon exit time, given an initial time N_init which we wish to move to zero
         void rebase_horizon_exit_time(double N_init) { this->__N_horizon_exit -= N_init; }
@@ -429,10 +454,19 @@ namespace transport
 
 
     // integration - observer object for 2pf
-    template <typename number>
-    class $MODEL_mpi_twopf_observer: public twopf_singleconfig_batch_observer<number>
+    template <typename Model>
+    class $MODEL_mpi_twopf_observer: public twopf_singleconfig_batch_observer<typename Model::value_type>
       {
+  
+      public:
+    
+        //! inherit number type from Model
+        using number = typename Model::value_type;
+    
+        //! inherit state type from model
+        using twopf_state = typename Model::twopf_state;
 
+        
       public:
 
         $MODEL_mpi_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
@@ -443,16 +477,25 @@ namespace transport
           {
           }
 
-        void operator ()(const twopf_state<number>& x, number t);
+        void operator()(const twopf_state& x, number t);
 
       };
 
 
     // integration - 3pf functor
-    template <typename number>
+    template <typename Model>
     class $MODEL_mpi_threepf_functor
       {
+  
+      public:
+    
+        //! inherit number type from Model
+        using number = typename Model::value_type;
+    
+        //! inherit state type from model
+        using threepf_state = typename Model::threepf_state;
 
+        
       public:
 
         $MODEL_mpi_threepf_functor(const twopf_db_task<number>* tk, const threepf_kconfig& k
@@ -563,7 +606,7 @@ namespace transport
             delete[] this->__raw_params;
           }
 
-        void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, number __dt);
+        void operator()(const threepf_state& __x, threepf_state& __dxdt, number __dt);
 
         // adjust horizon exit time, given an initial time N_init which we wish to move to zero
         void rebase_horizon_exit_time(double N_init) { this->__N_horizon_exit -= N_init; }
@@ -623,10 +666,19 @@ namespace transport
 
 
     // integration - observer object for 3pf
-    template <typename number>
-    class $MODEL_mpi_threepf_observer: public threepf_singleconfig_batch_observer<number>
+    template <typename Model>
+    class $MODEL_mpi_threepf_observer: public threepf_singleconfig_batch_observer<typename Model::value_type>
       {
+  
+      public:
+    
+        //! inherit number type from Model
+        using number = typename Model::value_type;
+    
+        //! inherit state type from model
+        using threepf_state = typename Model::threepf_state;
 
+        
       public:
         $MODEL_mpi_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
                                     double t_ics, const time_config_database& t)
@@ -642,7 +694,7 @@ namespace transport
           {
           }
 
-        void operator ()(const threepf_state<number>& x, number t);
+        void operator()(const threepf_state& x, number t);
 
       };
 
@@ -651,8 +703,8 @@ namespace transport
 
 
     // generate a context
-    template <typename number>
-    context $MODEL_mpi<number>::backend_get_context(void)
+    template <typename number, typename StateType>
+    context $MODEL_mpi<number, StateType>::backend_get_context(void)
       {
         context ctx;
 
@@ -663,31 +715,32 @@ namespace transport
       }
 
 
-    template <typename number>
-    worker_type $MODEL_mpi<number>::get_backend_type(void)
+    template <typename number, typename StateType>
+    worker_type $MODEL_mpi<number, StateType>::get_backend_type(void)
       {
         return(worker_type::cpu);
       }
 
 
-    template <typename number>
-    unsigned int $MODEL_mpi<number>::get_backend_memory(void)
+    template <typename number, typename StateType>
+    unsigned int $MODEL_mpi<number, StateType>::get_backend_memory(void)
       {
         return(0);
       }
 
 
-    template <typename number>
-    unsigned int $MODEL_mpi<number>::get_backend_priority(void)
+    template <typename number, typename StateType>
+    unsigned int $MODEL_mpi<number, StateType>::get_backend_priority(void)
       {
         return(1);
       }
 
 
     // process work queue for twopf
-    template <typename number>
-    void $MODEL_mpi<number>::backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
-                                                   twopf_batcher<number>& batcher, bool silent)
+    template <typename number, typename StateType>
+    void $MODEL_mpi<number, StateType>::backend_process_queue(work_queue<twopf_kconfig_record>& work,
+                                                              const twopf_db_task<number>* tk,
+                                                              twopf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
         batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
@@ -746,9 +799,10 @@ namespace transport
       }
 
 
-    template <typename number>
-    void $MODEL_mpi<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_db_task<number>* tk,
-                                         twopf_batcher<number>& batcher, unsigned int refinement_level)
+    template <typename number, typename StateType>
+    void $MODEL_mpi<number, StateType>::twopf_kmode(const twopf_kconfig_record& kconfig,
+                                                    const twopf_db_task<number>* tk,
+                                                    twopf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
@@ -757,10 +811,10 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_mpi_twopf_observer<number> obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
+        $MODEL_mpi_twopf_observer< $MODEL_mpi<number, StateType> > obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
 
         // set up a functor to evolve this system
-        $MODEL_mpi_twopf_functor<number> rhs(tk, *kconfig
+        $MODEL_mpi_twopf_functor< $MODEL_mpi<number, StateType> > rhs(tk, *kconfig
 #ifdef CPPTRANSPORT_INSTRUMENT
           ,
             this->twopf_setup_timer, this->twopf_u_tensor_timer, this->twopf_transport_eq_timer, this->twopf_invokations
@@ -769,7 +823,7 @@ namespace transport
         rhs.set_up_workspace();
 
         // set up a state vector
-        twopf_state<number> x;
+        twopf_state x;
         x.resize($MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
@@ -782,9 +836,9 @@ namespace transport
             double t_exit = tk->get_ics_exit_time(*kconfig);
             batcher.push_ics(kconfig->serial, t_exit, ics_1);
           }
-
+    
         // observers expect all correlation functions to be dimensionless and rescaled by the same factors
-
+    
         // fix initial conditions - tensors (use dimensionless correlation functions)
         this->populate_tensor_ic(x, $MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
 
@@ -798,7 +852,7 @@ namespace transport
         auto begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         auto end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        auto stepper = $MAKE_PERT_STEPPER{twopf_state<number>, number, number};
+        auto stepper = $MAKE_PERT_STEPPER{twopf_state, number, number};
         size_t steps =
           boost::numeric::odeint::integrate_times(stepper, rhs, x, begin_iterator, end_iterator,
                                                   static_cast<number>($PERT_STEP_SIZE/pow(4.0,refinement_level)), obs);
@@ -821,9 +875,11 @@ namespace transport
     // ics         - initial conditions for the background fields (or fields+momenta)
     // k_normalize - used to adjust ics to be dimensionless, or just 1.0 to get raw correlation function
     // imaginary   - whether to populate using real or imaginary components of the 2pf
-    template <typename number>
-    void $MODEL_mpi<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                               const twopf_db_task<number>* tk, const std::vector<number>& ics, double k_normalize, bool imaginary)
+    template <typename number, typename StateType>
+    void $MODEL_mpi<number, StateType>::populate_twopf_ic(twopf_state& x, unsigned int start, double kmode,
+                                                          double Ninit, const twopf_db_task<number>* tk,
+                                                          const std::vector<number>& ics, double k_normalize,
+                                                          bool imaginary)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::twopf_size);
@@ -834,9 +890,10 @@ namespace transport
 
 
     // make initial conditions for the tensor twopf
-    template <typename number>
-    void $MODEL_mpi<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                const twopf_db_task<number>* tk, const std::vector<number>& ics, double k_normalize)
+    template <typename number, typename StateType>
+    void $MODEL_mpi<number, StateType>::populate_tensor_ic(twopf_state& x, unsigned int start, double kmode,
+                                                           double Ninit, const twopf_db_task<number>* tk,
+                                                           const std::vector<number>& ics, double k_normalize)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::tensor_size);
@@ -852,9 +909,10 @@ namespace transport
     // THREE-POINT FUNCTION INTEGRATION
 
 
-    template <typename number>
-    void $MODEL_mpi<number>::backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
-                                                   threepf_batcher<number>& batcher, bool silent)
+    template <typename number, typename StateType>
+    void $MODEL_mpi<number, StateType>::backend_process_queue(work_queue<threepf_kconfig_record>& work,
+                                                              const threepf_task<number>* tk,
+                                                              threepf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
         batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
@@ -916,9 +974,10 @@ namespace transport
       }
 
 
-    template <typename number>
-    void $MODEL_mpi<number>::threepf_kmode(const threepf_kconfig_record& kconfig, const threepf_task<number>* tk,
-                                           threepf_batcher<number>& batcher, unsigned int refinement_level)
+    template <typename number, typename StateType>
+    void $MODEL_mpi<number, StateType>::threepf_kmode(const threepf_kconfig_record& kconfig,
+                                                      const threepf_task<number>* tk,
+                                                      threepf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
@@ -927,10 +986,10 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_mpi_threepf_observer<number> obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
+        $MODEL_mpi_threepf_observer< $MODEL_mpi<number, StateType> > obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
 
         // set up a functor to evolve this system
-        $MODEL_mpi_threepf_functor<number>  rhs(tk, *kconfig
+        $MODEL_mpi_threepf_functor< $MODEL_mpi<number, StateType> >  rhs(tk, *kconfig
 #ifdef CPPTRANSPORT_INSTRUMENT
           ,
             this->threepf_setup_timer, this->threepf_u_tensor_timer, this->threepf_transport_eq_timer, this->threepf_invokations
@@ -939,7 +998,7 @@ namespace transport
         rhs.set_up_workspace();
 
         // set up a state vector
-        threepf_state<number> x;
+        threepf_state x;
         x.resize($MODEL_pool::threepf_state_size);
 
         // fix initial conditions - background
@@ -959,7 +1018,7 @@ namespace transport
           }
 
         // observers expect all correlation functions to be dimensionless and rescaled by the same factors
-
+        
         // fix initial conditions - tensors (use dimensionless correlation functions, all rescaled by k_t to be consistent)
         this->populate_tensor_ic(x, $MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
         this->populate_tensor_ic(x, $MODEL_pool::tensor_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
@@ -985,9 +1044,9 @@ namespace transport
         auto begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         auto end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        auto stepper = $MAKE_PERT_STEPPER{threepf_state<number>, number, number};
+        auto stepper = $MAKE_PERT_STEPPER{threepf_state, number, number};
         size_t steps =
-          boost::numeric::odeint::integrate_times(stepper , rhs, x, begin_iterator, end_iterator,
+          boost::numeric::odeint::integrate_times(stepper, rhs, x, begin_iterator, end_iterator,
                                                   static_cast<number>($PERT_STEP_SIZE/pow(4.0,refinement_level)), obs);
 
         obs.stop_timers(steps, refinement_level);
@@ -999,11 +1058,11 @@ namespace transport
       }
 
 
-    template <typename number>
-    void $MODEL_mpi<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
-                                                 const threepf_kconfig& kconfig, double Ninit,
-                                                 const twopf_db_task<number>* tk, const std::vector<number>& ics,
-                                                 double k_normalize)
+    template <typename number, typename StateType>
+    void $MODEL_mpi<number, StateType>::populate_threepf_ic(threepf_state& x, unsigned int start,
+                                                            const threepf_kconfig& kconfig, double Ninit,
+                                                            const twopf_db_task<number>* tk,
+                                                            const std::vector<number>& ics, double k_normalize)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::threepf_size);
@@ -1015,8 +1074,8 @@ namespace transport
     // IMPLEMENTATION - FUNCTOR FOR 2PF INTEGRATION
 
 
-    template <typename number>
-    void $MODEL_mpi_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, number __t)
+    template <typename Model>
+    void $MODEL_mpi_twopf_functor<Model>::operator()(const twopf_state& __x, twopf_state& __dxdt, number __t)
       {
         $RESOURCE_RELEASE
 
@@ -1126,8 +1185,8 @@ namespace transport
     // IMPLEMENTATION - FUNCTOR FOR 2PF OBSERVATION
 
 
-    template <typename number>
-    void $MODEL_mpi_twopf_observer<number>::operator()(const twopf_state<number>& x, number t)
+    template <typename Model>
+    void $MODEL_mpi_twopf_observer<Model>::operator()(const twopf_state& x, number t)
       {
         this->start_batching(static_cast<double>(t), this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
@@ -1138,8 +1197,8 @@ namespace transport
     // IMPLEMENTATION - FUNCTOR FOR 3PF INTEGRATION
 
 
-    template <typename number>
-    void $MODEL_mpi_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, number __t)
+    template <typename Model>
+    void $MODEL_mpi_threepf_functor<Model>::operator()(const threepf_state& __x, threepf_state& __dxdt, number __t)
       {
         $RESOURCE_RELEASE
 
@@ -1390,8 +1449,8 @@ namespace transport
     // IMPLEMENTATION - FUNCTOR FOR 3PF OBSERVATION
 
 
-    template <typename number>
-    void $MODEL_mpi_threepf_observer<number>::operator()(const threepf_state<number>& x, number t)
+    template <typename Model>
+    void $MODEL_mpi_threepf_observer<Model>::operator()(const threepf_state& x, number t)
       {
         this->start_batching(static_cast<double>(t), this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);

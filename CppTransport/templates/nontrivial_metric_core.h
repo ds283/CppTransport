@@ -60,9 +60,6 @@
 namespace transport
   {
 
-    template <typename number>
-    using backg_state = flattened_tensor<number>;
-
     // Literal data pool
     namespace $MODEL_pool
       {
@@ -653,8 +650,8 @@ namespace transport
 
 
     $IF{!fast}
-      template <typename number>
-      void $MODEL_compute_dV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_dV(const number* __raw_params, const StateType& __x, number __Mp, number* __dV)
         {
           $RESOURCE_RELEASE
 
@@ -668,8 +665,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_ddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __ddV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_ddV(const number* __raw_params, const StateType& __x, number __Mp, number* __ddV)
         {
           $RESOURCE_RELEASE
 
@@ -683,8 +680,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_dddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dddV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_dddV(const number* __raw_params, const StateType& __x, number __Mp, number* __dddV)
         {
           $RESOURCE_RELEASE
 
@@ -698,8 +695,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_G(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __G)
+      template <typename number, typename StateType>
+      void $MODEL_compute_G(const number* __raw_params, const StateType& __x, number __Mp, number* __G)
         {
           $RESOURCE_RELEASE
 
@@ -713,8 +710,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_Ginv(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __Ginv)
+      template <typename number, typename StateType>
+      void $MODEL_compute_Ginv(const number* __raw_params, const StateType& __x, number __Mp, number* __Ginv)
         {
           $RESOURCE_RELEASE
 
@@ -728,8 +725,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_connexion(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __Gamma)
+      template <typename number, typename StateType>
+      void $MODEL_compute_connexion(const number* __raw_params, const StateType& __x, number __Mp, number* __Gamma)
         {
           $RESOURCE_RELEASE
           
@@ -743,9 +740,9 @@ namespace transport
         }
 
 
-      template <typename number>
+      template <typename number, typename StateType>
       void
-      $MODEL_compute_Riemann_A2(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __A2)
+      $MODEL_compute_Riemann_A2(const number* __raw_params, const StateType& __x, number __Mp, number* __A2)
         {
           $RESOURCE_RELEASE
 
@@ -759,9 +756,9 @@ namespace transport
         }
 
 
-      template <typename number>
+      template <typename number, typename StateType>
       void
-      $MODEL_compute_Riemann_A3(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __A3)
+      $MODEL_compute_Riemann_A3(const number* __raw_params, const StateType& __x, number __Mp, number* __A3)
         {
           $RESOURCE_RELEASE
 
@@ -775,9 +772,9 @@ namespace transport
         }
 
 
-      template <typename number>
+      template <typename number, typename StateType>
       void
-      $MODEL_compute_Riemann_B3(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __B3)
+      $MODEL_compute_Riemann_B3(const number* __raw_params, const StateType& __x, number __Mp, number* __B3)
         {
           $RESOURCE_RELEASE
 

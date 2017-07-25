@@ -551,8 +551,8 @@ namespace transport
 
 
     $IF{!fast}
-      template <typename number>
-      void $MODEL_compute_dV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_dV(const number* __raw_params, const StateType& __x, number __Mp, number* __dV)
         {
           $RESOURCE_RELEASE
 
@@ -566,8 +566,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_ddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __ddV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_ddV(const number* __raw_params, const StateType& __x, number __Mp, number* __ddV)
         {
           $RESOURCE_RELEASE
 
@@ -581,8 +581,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_dddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dddV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_dddV(const number* __raw_params, const StateType& __x, number __Mp, number* __dddV)
         {
           $RESOURCE_RELEASE
 

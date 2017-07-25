@@ -25,10 +25,10 @@
 
 //#include "boost/multiprecision/mpfr.hpp"
 
-
 //using mpfr50 = boost::multiprecision::number< boost::multiprecision::mpfr_float_backend<50>, boost::multiprecision::et_off >;
 //using mpfr50 = boost::multiprecision::mpfr_float_50;
-using DataType = long double;
+using DataType = double;
+using StateType = std::vector<DataType>;
 
 //namespace std
 //  {
@@ -61,10 +61,7 @@ using DataType = long double;
 //  }
 
 
-void write_tasks(transport::repository<DataType>& repo, transport::gelaton_mpi<DataType>* model);
-
-
-void write_tasks(transport::repository<DataType>& repo, transport::gelaton_mpi<DataType>* model)
+void write_tasks(transport::repository<DataType>& repo, transport::gelaton_mpi<DataType, StateType>* model)
   {
     const double M_P           = 1.0;
     const double P_zeta        = 1E-9;                                                          // desired amplitude of fluctuations
@@ -260,7 +257,7 @@ int main(int argc, char* argv[])
     transport::task_manager<DataType> mgr(argc, argv);
     
     // create model instance
-    auto model = mgr.create_model< transport::gelaton_mpi<DataType> >();
+    auto model = mgr.create_model< transport::gelaton_mpi<DataType, StateType> >();
     
     // write tasks to repository
     mgr.add_generator([=](transport::repository<DataType>& repo) -> void { write_tasks(repo, model.get()); });
