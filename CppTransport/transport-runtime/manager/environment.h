@@ -566,6 +566,7 @@ namespace transport
 
         std::ofstream outf(temp_sns.string(), std::ios_base::out | std::ios_base::trunc);
         outf << "import seaborn as sns" << '\n';
+        outf << "sns.set()" << '\n';
         outf.close();
 
         this->seaborn_available = this->execute_python(temp_sns) == 0;

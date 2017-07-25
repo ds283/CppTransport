@@ -149,6 +149,7 @@ namespace transport
                 if(env.has_seaborn())
                   {
                     outf << "import seaborn as sns" << '\n';
+                    outf << "sns.set()" << '\n';
                   }
                 break;
               }
