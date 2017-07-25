@@ -27,8 +27,6 @@
 
 //using mpfr50 = boost::multiprecision::number< boost::multiprecision::mpfr_float_backend<50>, boost::multiprecision::et_off >;
 //using mpfr50 = boost::multiprecision::mpfr_float_50;
-using DataType = double;
-using StateType = std::vector<DataType>;
 
 //namespace std
 //  {
@@ -50,8 +48,6 @@ using StateType = std::vector<DataType>;
 //
 //  }
 
-#include "gelaton_mpi.h"
-
 //namespace transport
 //  {
 //
@@ -59,6 +55,16 @@ using StateType = std::vector<DataType>;
 //    std::string data_type_name<mpfr50>() { return std::string{"boost::multiprecision::mpfr_float_50 without expression templates"}; }
 //
 //  }
+
+//#include "boost/numeric/odeint/external/mkl/mkl_operations.hpp"
+//
+//#define CPPTRANSPORT_ALGEBRA_NAME(state) boost::numeric::odeint::vector_space_algebra
+//#define CPPTRANSPORT_OPERATIONS_NAME(state) boost::numeric::odeint::mkl_operations
+
+#include "gelaton_mpi.h"
+
+using DataType = double;
+using StateType = std::vector<DataType>;
 
 
 void write_tasks(transport::repository<DataType>& repo, transport::gelaton_mpi<DataType, StateType>* model)
