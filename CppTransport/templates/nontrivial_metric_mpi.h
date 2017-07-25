@@ -852,10 +852,11 @@ namespace transport
         auto begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         auto end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        auto stepper = $MAKE_PERT_STEPPER{twopf_state, number, number};
-        size_t steps =
-          boost::numeric::odeint::integrate_times(stepper, rhs, x, begin_iterator, end_iterator,
-                                                  static_cast<number>($PERT_STEP_SIZE/pow(4.0,refinement_level)), obs);
+        using boost::numeric::odeint::integrate_times;
+        
+        auto stepper = $MAKE_PERT_STEPPER{twopf_state, number, number, CPPTRANSPORT_ALGEBRA_NAME(twopf_state), CPPTRANSPORT_OPERATIONS_NAME(twopf_state)};
+        size_t steps = integrate_times(stepper, rhs, x, begin_iterator, end_iterator,
+                                       static_cast<number>($PERT_STEP_SIZE/pow(4.0,refinement_level)), obs);
 
         obs.stop_timers(steps, refinement_level);
         rhs.close_down_workspace();
@@ -1044,10 +1045,11 @@ namespace transport
         auto begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         auto end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        auto stepper = $MAKE_PERT_STEPPER{threepf_state, number, number};
-        size_t steps =
-          boost::numeric::odeint::integrate_times(stepper, rhs, x, begin_iterator, end_iterator,
-                                                  static_cast<number>($PERT_STEP_SIZE/pow(4.0,refinement_level)), obs);
+        using boost::numeric::odeint::integrate_times;
+        
+        auto stepper = $MAKE_PERT_STEPPER{threepf_state, number, number, CPPTRANSPORT_ALGEBRA_NAME(threepf_state), CPPTRANSPORT_OPERATIONS_NAME(threepf_state)};
+        size_t steps = integrate_times(stepper, rhs, x, begin_iterator, end_iterator,
+                                       static_cast<number>($PERT_STEP_SIZE/pow(4.0,refinement_level)), obs);
 
         obs.stop_timers(steps, refinement_level);
         rhs.close_down_workspace();
