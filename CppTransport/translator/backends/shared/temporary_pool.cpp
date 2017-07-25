@@ -35,6 +35,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, cw, lm, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -43,7 +44,7 @@ namespace macro_packages
     temporary_pool::temporary_pool(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
 	    : replacement_rule_package(f, cw, lm, p, prn)
 	    {
-        pre_package.emplace_back(BIND(replace_temp_pool, "TEMP_POOL"));
+        EMPLACE(pre_package, BIND(replace_temp_pool, "TEMP_POOL"));
 	    }
 
 
@@ -68,8 +69,8 @@ namespace macro_packages
       {
         if(!this->tag_set)
           {
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.warn(WARNING_TEMPORARY_NO_TAG_SET);
+            error_context err_ctx = this->data_payload.make_error_context();
+            err_ctx.warn(WARNING_TEMPORARY_NO_TAG_SET);
           }
         else
           {
@@ -102,8 +103,8 @@ namespace macro_packages
               {
                 std::ostringstream msg;
                 msg << ERROR_MISSING_LHS << " '" << this->templ << "'";
-
-                error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+    
+                error_context err_ctx = this->data_payload.make_error_context();
                 err_ctx.error(msg.str());
                 ok = false;
               }
@@ -111,8 +112,8 @@ namespace macro_packages
               {
                 std::ostringstream msg;
                 msg << ERROR_MISSING_RHS << " '" << this->templ << "'";
-
-                error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+    
+                error_context err_ctx = this->data_payload.make_error_context();
                 err_ctx.error(msg.str());
                 ok = false;
               }

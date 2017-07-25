@@ -79,10 +79,27 @@
 #define FAST_SWITCH                   "fast"
 #define FAST_HELP                     "unroll all loops and optimize for speed"
 
+#define PROFILING_SWITCH              "profile"
+#define PROFILING_HELP                "display profiling information"
+
+// WARNINGS
+
+#define DEVELOP_WARNINGS              "Wdevelop"
+#define DEVELOP_WARN_HELP             "display developer warnings"
+
+#define UNROLL_WARNINGS               "Wunroll"
+#define UNROLL_WARN_HELP              "report violations of the unroll policy"
+
+#define REPOSITION_WARNINGS           "Wreposition"
+#define REPOSITION_WARN_HELP          "report on-the-fly index repositioning"
+
+// HEADERS
+
 #define MISC_OPTIONS                  "Miscellaneous options"
 #define CONFIG_OPTIONS                "Configuration options"
 #define HIDDEN_OPTIONS                "Hidden options"
 #define GENERATION_OPTIONS            "Code generation options"
+#define WARNING_OPTIONS               "Warnings"
 
 
 #endif //CPPTRANSPORT_SWITCHES_H

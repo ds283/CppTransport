@@ -38,6 +38,14 @@
 class argument_cache
   {
 
+    // TYPES
+
+  public:
+
+    //! payload for a message
+    using message_payload = std::pair< bool, std::string >;
+
+
     // CONSTRUCTOR, DESTRUCTOR
 
   public:
@@ -93,12 +101,37 @@ class argument_cache
     bool fast() const { return(this->fast_flag); }
 
 
+    // WARNINGS
+
+  public:
+
+    //! display profiling data?
+    bool show_profiling() const { return this->profile_flag; }
+
+    //! display developer warnings?
+    bool report_developer_warnings() const { return this->develop_warnings; }
+    
+    //! report unroll policy violations?
+    bool report_unroll_warnings() const { return this->unroll_warnings; }
+
+    //! report on-the-fly index repositioning?
+    bool report_reposition_warnings() const { return this->reposition_warnings; }
+
+
     // INPUT FILES
 
   public:
 
     //! get input files
     const std::list<boost::filesystem::path>& input_files() const { return(this->input_file_list); }
+
+
+    // GET ERROR MESSAGES GENERATED DURING CONSTRUCTION
+
+  public:
+
+    //! get messages
+    const std::list< message_payload >& get_messages() const { return this->err_msgs; }
 
 
     // INTERNAL DATA
@@ -146,10 +179,31 @@ class argument_cache
     bool fast_flag;
 
 
+    // WARNINGS
+
+    //! display profiling information
+    bool profile_flag;
+
+    //! display general developer warnings?
+    bool develop_warnings;
+    
+    //! report violations of the unrolling policy
+    bool unroll_warnings;
+
+    //! report on-the-fly index repositioning
+    bool reposition_warnings;
+
+
     // INPUT FILES
 
     //! list of files to process
     std::list< boost::filesystem::path > input_file_list;
+
+
+    // LIST OF EXCEPTIONS GENERATED DURING CONSTRUCTION
+
+    //! exception messages
+    std::list< message_payload > err_msgs;
 
   };
 

@@ -29,23 +29,20 @@
 
 
 #include <stdexcept>
+#include <functional>
+#include <vector>
 
 #include "index_assignment.h"
+#include "index_literal.h"
 #include "macro_types.h"
 #include "cse_map.h"
+#include "rules_common.h"
+
+#include "boost/optional.hpp"
 
 
 namespace macro_packages
   {
-
-    //! tag for type of replacement rule;
-    //! either a macro, which evaluates to text and is replaced in the template,
-    //! or a directive, which does not evaluate to text and instead causes a
-    //! change of state in the translator
-    enum class replacement_rule_class
-      {
-        macro, directive
-      };
 
 
     //! base class for a 'simple' macro which takes arguments but not indices
@@ -73,10 +70,7 @@ namespace macro_packages
 
         //! evaluate the macro
         std::string operator()(const macro_argument_list& args);
-
-        //! perform any required setup after tokenization; here a no-op but can be overridden if needed
-        virtual void post_tokenize_hook(const macro_argument_list& args) { return; }
-
+    
         //! report end of input; here a no-op but but can be overridden if needed
         virtual void report_end_of_input() { return; }
 
@@ -86,11 +80,12 @@ namespace macro_packages
       public:
 
         //! get number of arguments associated with this macro
-        unsigned int get_number_args() const { return(this->num_args); };
+        unsigned int get_number_args() const { return this->num_args; };
 
         //! get name associated with this macro
-        const std::string& get_name() const { return(this->name); }
+        const std::string& get_name() const { return this->name; }
 
+        
 
         // INTERNAL API
 
@@ -98,6 +93,14 @@ namespace macro_packages
 
         //! evaluation function; has to be supplied by implementation
         virtual std::string evaluate(const macro_argument_list& args) = 0;
+
+
+        // VALIDATION
+  
+      protected:
+    
+        //! validate supplied arguments
+        void validate(const macro_argument_list& args);
 
 
         // INTERNAL DATA
@@ -121,39 +124,26 @@ namespace macro_packages
 
       public:
 
-        //! constructor for a 'traditional' index macro with a fixed number of arguments and indices,
-        //! and enforcing a specific class for the index type
-        replacement_rule_index(std::string nm, unsigned int a, unsigned int i, enum index_class c)
+        //! constructor for an index macro with a fixed number of arguments and indices.
+        //! optionally enforces specific classes for the index types if the fourth argument
+        //! 'c' is given
+        replacement_rule_index(std::string nm, unsigned int a, unsigned int i,
+                               boost::optional< std::vector<index_class> > c = boost::none)
           : name(std::move(nm)),
             num_args(a),
             num_indices(i),
-            idx_class(c)
+            idx_classes(std::move(c))
           {
-            // traditional rules are always macros
-            rule_class = replacement_rule_class::macro;
+            if(num_indices == 0) throw std::runtime_error(ERROR_REPLACEMENT_RULE_ZERO_INDICES);
+
+            // if no list of index classes supplied, then nothing to do
+            if(!idx_classes) return;
+            
+            // if a list was supplied, its length should match the specified number of indices
+            if(num_indices != idx_classes.get().size()) throw std::runtime_error(ERROR_REPLACEMENT_RULE_INDEX_COUNT);
           }
 
-        //! constructor for a 'traditional' index macro with a fixed number of arguments and indices,
-        //! but no specific class for the index types
-        replacement_rule_index(std::string nm, unsigned int a, unsigned int i)
-          : name(std::move(nm)),
-            num_args(a),
-            num_indices(i)
-          {
-            // traditional rules are always macros
-            rule_class = replacement_rule_class::macro;
-          }
-
-        //! constructor for a 'variable' index macro which can accept a variable number of indices
-        replacement_rule_index(std::string nm, unsigned int a)
-          : name(std::move(nm)),
-            num_args(a)
-          {
-            // for the time being, variable rules are always directives
-            rule_class = replacement_rule_class::directive;
-          }
-
-        //! destructor
+        //! destructor is default
         virtual ~replacement_rule_index() = default;
 
 
@@ -162,13 +152,13 @@ namespace macro_packages
       public:
 
         //! evaluate the macro on a concrete (unrolled) index assignment
-        std::string evaluate_unroll(const macro_argument_list& args, const assignment_list& indices);
+        std::string evaluate_unroll(const macro_argument_list& args, const index_literal_assignment& indices);
 
         //! evaluate the macro on an abstract (rolled-up) index assignment
-        std::string evaluate_roll(const macro_argument_list& args, const abstract_index_list& indices);
+        std::string evaluate_roll(const macro_argument_list& args, const index_literal_list& indices);
 
         //! pre-evaluation
-        void pre(const macro_argument_list& args);
+        void pre(const macro_argument_list& args, const index_literal_list& indices);
 
         //! post-evaluation
         void post(const macro_argument_list& args);
@@ -179,26 +169,23 @@ namespace macro_packages
       public:
 
         //! get number of arguments associated with this macro
-        unsigned int get_number_args() const { return(this->num_args); }
+        unsigned int get_number_args() const { return this->num_args; }
 
-        //! get number of indices associated with this macro;
+        //! get number of indices associated with this macro
         //! returned as a boost::optional which will be empty if the macro can accept a variable
         //! number of indices
-        boost::optional<unsigned int> get_number_indices() const { return(this->num_indices); }
+        unsigned int get_number_indices() const { return this->num_indices; }
 
         //! get index class associated with this macro;
         //! returned as a boost::optional which will be empty if the macro can accept variable
         //! index types
-        boost::optional<enum index_class> get_index_class() const { return(this->idx_class); }
+        const boost::optional< std::vector<index_class> >& get_index_class() const { return this->idx_classes; }
 
         //! get name associated with this macro
-        const std::string& get_name() const { return(this->name); }
+        const std::string& get_name() const { return this->name; }
 
         //! get unroll status for this macro -- must be handled by implementation
-        virtual enum unroll_behaviour get_unroll() const = 0;
-
-        //! determine whether this rule is a directive
-        bool is_directive() const { return(this->rule_class == replacement_rule_class::directive); }
+        virtual unroll_state get_unroll(const index_literal_list& idx_list) const = 0;
 
 
         // INTERNAL API
@@ -206,20 +193,28 @@ namespace macro_packages
       protected:
 
         //! evaluation function for unrolled index sets; has to be supplied by implementation
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) = 0;
+        virtual std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) = 0;
 
         //! pre-evaluation; if needed, can be supplied by implementation; default is no-op
-        virtual void pre_hook(const macro_argument_list& args) { return; }
+        virtual void pre_hook(const macro_argument_list& args, const index_literal_list& indices) { return; }
 
         //! post-evaluation; if needed, can be supplied by implementation; default is no-op
         virtual void post_hook(const macro_argument_list& args) { return; }
 
         //! evaluation function for rolled-up index sets; has to be supplied by implementation
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) = 0;
+        virtual std::string roll(const macro_argument_list& args, const index_literal_list& indices) = 0;
 
-        //! validate supplies arguments and index assignments
+        
+        // VALIDATION
+        
+      protected:
+        
+        //! validate supplied arguments
+        void validate(const macro_argument_list& args);
+        
+        //! validate supplied index assignments
         template <typename IndexDatabase>
-        void check(const macro_argument_list& args, const IndexDatabase& indices);
+        void validate(const IndexDatabase& indices);
 
 
         // INTERNAL DATA
@@ -229,78 +224,25 @@ namespace macro_packages
         //! name of this replacement rule
         std::string name;
 
-        //! class of this replacement rule
-        enum replacement_rule_class rule_class;
-
         //! number of arguments expected
         unsigned int num_args;
 
         //! number of indices expected
-        boost::optional<unsigned int> num_indices;
+        unsigned int num_indices;
 
         //! class of index expected
-        boost::optional<enum index_class> idx_class;
-
-      };
-
-
-    class rule_apply_fail: public std::runtime_error
-      {
-
-        // CONSTRUCTOR, DESTRUCTOR
-
-      public:
-
-        //! constructor
-        rule_apply_fail(const std::string x)
-          : std::runtime_error(std::move(x))
-          {
-          }
-
-        //! destructor is default
-        virtual ~rule_apply_fail() = default;
-
-      };
-
-
-    class argument_mismatch: public std::runtime_error
-      {
-
-        // CONSTRUCTOR, DESTRUCTOR
-
-      public:
-
-        //! constructor
-        argument_mismatch(const std::string x)
-          : std::runtime_error(std::move(x))
-          {
-          }
-
-        //! destructor is default
-        virtual ~argument_mismatch() = default;
-
-      };
-
-
-    class index_mismatch: public std::runtime_error
-      {
-
-        // CONSTRUCTOR, DESTRUCTOR
-
-      public:
-
-        //! constructor
-        index_mismatch(const std::string x)
-          : std::runtime_error(std::move(x))
-          {
-          }
-
-        //! destructor is default
-        virtual ~index_mismatch() = default;
+        boost::optional< std::vector<index_class> > idx_classes;
 
       };
 
   } // namespace macro_packages
+
+
+// containers for rulesets; since we can't store references in the STL
+// cotainers, they must be wrapped in std::reference_wrapper<>
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> > pre_ruleset;
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> > post_ruleset;
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_index> > index_ruleset;
 
 
 #endif //CPPTRANSPORT_REPLACEMENT_RULE_DEFINITIONS_H

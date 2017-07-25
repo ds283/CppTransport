@@ -32,6 +32,8 @@
 #include <string>
 
 #include "abstract_index.h"
+#include "index_literal.h"
+#include "indices.h"
 #include "lambdas.h"
 
 #include "disable_warnings.h"
@@ -101,30 +103,28 @@ class language_printer
     // INTERFACE -- ARRAY SUBSCRIPTING
 
   public:
-
-    //! generate 1D array subscript without flattening
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int offset=0) const = 0;
-
+    
     //! generate 1D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, const std::string& flatten, unsigned int offset=0) const = 0;
-
+    template <typename A>
+    std::string
+    array_subscript(const std::string& kernel, A a, boost::optional<std::string> flatten) const;
+    
     //! generate 2D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int b, const std::string& flatten) const = 0;
-
+    template <typename A, typename B>
+    std::string
+    array_subscript(const std::string& kernel, A a, B b, boost::optional<std::string> flatten) const;
+    
     //! generate 3D array subscript
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int b, unsigned int c, const std::string& flatten) const = 0;
-
-    //! generate 1D array subscript without flattening
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, unsigned int offset=0) const = 0;
-
-    //! generate 1D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const std::string& flatten, unsigned int offset=0) const = 0;
-
-    //! generate 2D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const std::string& flatten) const = 0;
-
-    //! generate 3D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const abstract_index& c, const std::string& flatten) const = 0;
+    template <typename A, typename B, typename C>
+    std::string
+    array_subscript(const std::string& kernel, A a, B b, C c, boost::optional<std::string> flatten) const;
+    
+  protected:
+    
+    //! format array subscripts
+    virtual std::string
+    format_array_subscript(const std::string& kernel, const std::initializer_list<std::string> args,
+                           const boost::optional<std::string>& flatten) const = 0;
 
 
     // INTERFACE -- INITIALIZATION LISTS
@@ -138,18 +138,21 @@ class language_printer
     // INTERFACE -- LAMBDAS
 
   public:
-
-    //! format a lambda invokation string
-    virtual std::string lambda_invokation(const std::string& name, const generic_lambda& lambda) const = 0;
+    
+    //! format a lambda invokation string, remembering that the indices it is being invoked with (supplied in
+    //! 'indices') may be different from the indices it was defined with
+    virtual std::string lambda_invokation(const std::string& name, const generic_lambda& lambda,
+                                          const abstract_index_database& indices) const = 0;
 
     //! format a lambda definition open string
-    virtual std::string open_lambda(const abstract_index_list& indices, const std::string& return_type) const = 0;
+    virtual std::string open_lambda(const abstract_index_database& indices, const std::string& return_type) const = 0;
 
     //! format a lambda definition close string
     virtual std::string close_lambda() const = 0;
 
     //! format a return statement
     virtual std::string format_return(const GiNaC::ex& expr) const = 0;
+    virtual std::string format_return(const std::string& expr) const = 0;
 
     //! format an if statement
     virtual std::string format_if(const std::list<GiNaC::ex>& conditions) const = 0;
@@ -168,6 +171,69 @@ class language_printer
     bool debug;
 
   };
+
+
+inline std::string to_index_string(const abstract_index& idx)
+  {
+    return idx.get_loop_variable();
+  }
+
+
+inline std::string to_index_string(const index_literal& idx)
+  {
+    return to_index_string(idx.get());
+  }
+
+
+template <typename ClassTag>
+inline std::string to_index_string(const tensor_index_impl::tensor_index<ClassTag>& idx)
+  {
+    return std::to_string(idx.get());
+  }
+
+
+inline std::string to_index_string(unsigned int i)
+  {
+    return std::to_string(i);
+  }
+
+
+inline std::string to_index_string(const std::string& str)
+  {
+    return str;
+  }
+
+
+template <typename A>
+std::string
+language_printer::array_subscript(const std::string& kernel, A a, boost::optional<std::string> flatten) const
+  {
+    std::string arg = to_index_string(a);
+    return this->format_array_subscript(kernel, { arg }, flatten);
+  }
+
+
+template <typename A, typename B>
+std::string
+language_printer::array_subscript(const std::string& kernel, A a, B b, boost::optional<std::string> flatten) const
+  {
+    std::string arg1 = to_index_string(a);
+    std::string arg2 = to_index_string(b);
+
+    return this->format_array_subscript(kernel, { arg1, arg2 }, flatten);
+  }
+
+
+template <typename A, typename B, typename C>
+std::string
+language_printer::array_subscript(const std::string& kernel, A a, B b, C c, boost::optional<std::string> flatten) const
+  {
+    std::string arg1 = to_index_string(a);
+    std::string arg2 = to_index_string(b);
+    std::string arg3 = to_index_string(c);
+    
+    return this->format_array_subscript(kernel, { arg1, arg2, arg3 }, flatten);
+  }
 
 
 #endif //CPPTRANSPORT_LANGUAGE_PRINTER_H

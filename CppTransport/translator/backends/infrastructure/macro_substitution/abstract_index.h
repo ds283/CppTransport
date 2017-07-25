@@ -42,13 +42,13 @@ class abstract_index
     abstract_index(char l, unsigned int f, unsigned int p);
 
     //! constructor -- with assigned classification
-    abstract_index(char l, enum index_class c, unsigned int f, unsigned int p);
+    abstract_index(char l, index_class c, unsigned int f, unsigned int p);
 
     //! destructor is default
     ~abstract_index() = default;
 
 
-    // INTERFACE -- REQUIRED FOR INDEX_DATABASE
+    // SERVICES REQUIRED FOR INDEX_DATABASE
 
   public:
 
@@ -56,18 +56,18 @@ class abstract_index
     char get_label() const { return(this->label); }
 
     //! return classification
-    enum index_class get_class() const { return(this->classification); }
+    index_class get_class() const { return(this->classification); }
 
 
-    // INTERFACE -- TURN SELF INTO A FOR-LOOP VARIABLE
+    // FORMAT AS A LOOP VARIABLE
 
   public:
 
     //! return equivalent 'for'-loop variable for this abstract index
-    std::string get_loop_variable() const { return(this->pre_string + this->label + this->post_string); }
+    std::string get_loop_variable() const;
 
 
-    // INTERFACE -- SPECIFIC TO INDEX_ABSTRACT
+    // SERVICE AND UTILITIES
 
   public:
 
@@ -80,8 +80,38 @@ class abstract_index
     //! return total number of parameters
     unsigned int get_number_parameters() const { return(this->params); }
 
-    //! set post string; used when subtracting values to convert momenta to fields
-    void set_post_string(std::string s) { this->post_string = std::move(s); }
+
+    // INDEX VALUE OFFSETS
+
+  public:
+
+    //! add a new offset by +number_of_fields, used to convert a species value into a momentum value
+    void convert_species_to_momentum();
+
+    //! add a new offset by -number_of_fields, used to convert a momentum value into a species value
+    void convert_momentum_to_species();
+
+
+    // GENERIC INDEX VALUE MODIFIERS
+
+  public:
+
+    //! add a new post modifier; used when subtracting values to convert momenta to fields
+    [[deprecated("Unsafe interface replaced by convert_species_to_momentum() or convert_momentum_to_species()")]]
+    void push_post_modifier(std::string s);
+
+    //! remove the last post modifier
+    [[deprecated("Unsafe interface replaced by convert_species_to_momentum() or convert_momentum_to_species()")]]
+    void pop_post_modifier();
+
+    //! add a new pre modifier
+    [[deprecated("Unsafe interface replaced by convert_species_to_momentum() or convert_momentum_to_species()")]]
+    void push_pre_modifier(std::string s);
+
+    //! remove the last pre modifier
+    [[deprecated("Unsafe interface replaced by convert_species_to_momentum() or convert_momentum_to_species()")]]
+    void push_pre_modifier();
+
 
     // INTERNAL DATA
 
@@ -91,25 +121,64 @@ class abstract_index
     char label;
 
     //! index classification
-    enum index_class classification;
+    index_class classification;
 
     //! cache total number of fields
-    unsigned int fields;
+    const unsigned int fields;
 
     //! cache total number of parameters
-    unsigned int params;
+    const unsigned int params;
 
-    //! pre-string for conversion to loop variable
-    std::string pre_string;
 
-    //! post-string for conversion to loop variable
-    std::string post_string;
+    // SPECIES CONVERSIONS
+
+    //! track total number of species-to-momentum conversions that have been applied
+    int species_mappings;
+
+
+    // GENERIC MODIFIERS
+
+    //! set of "pre" modifiers to be applied during conversion to a loop variable
+    std::list<std::string> pre_string;
+
+    //! set of "post" modifiers to be applied during conversion to a loop variable
+    std::list<std::string> post_string;
 
   };
 
 
+namespace std
+  {
+
+    // provide std::equal_to implementation for abstract_index
+    template <>
+    struct equal_to<abstract_index>
+      {
+
+        bool operator()(const abstract_index& lhs, const abstract_index& rhs) const
+          {
+            return (lhs.get_label() == rhs.get_label()) && (lhs.get_class() == rhs.get_class());
+          }
+
+      };
+
+    // provide std::hash implementation for abstract_index, so it can be used in a std::unordered_map
+    template <>
+    struct hash<abstract_index>
+      {
+
+        size_t operator()(const abstract_index& idx) const
+          {
+            return static_cast<size_t>(idx.get_label());
+          }
+
+      };
+
+  }   // namespace std
+
+
 //! set up typedef for database of abstract_index records
-typedef index_database<abstract_index> abstract_index_list;
+typedef index_database<abstract_index> abstract_index_database;
 
 
 

@@ -40,27 +40,39 @@
 #include "index_flatten.h"
 #include "index_traits.h"
 
-#include "Hubble.h"
-#include "SR_velocity.h"
-#include "dV.h"
-#include "ddV.h"
-#include "dddV.h"
-#include "A.h"
-#include "Atilde.h"
-#include "B.h"
-#include "C.h"
-#include "M.h"
-#include "u1.h"
-#include "u2.h"
-#include "u3.h"
-#include "zeta1.h"
-#include "zeta2.h"
-#include "dN1.h"
-#include "dN2.h"
+#include "tensors/A.h"
+#include "tensors/Atilde.h"
+#include "tensors/B.h"
+#include "tensors/C.h"
+#include "tensors/connexion.h"
+#include "tensors/coordinates.h"
+#include "tensors/dV.h"
+#include "tensors/ddV.h"
+#include "tensors/dddV.h"
+#include "tensors/dN1.h"
+#include "tensors/dN2.h"
+#include "tensors/fields.h"
+#include "tensors/Hubble.h"
+#include "tensors/M.h"
+#include "tensors/metric.h"
+#include "tensors/metric_inverse.h"
+#include "tensors/momenta.h"
+#include "tensors/parameters.h"
+#include "tensors/Riemann_A2.h"
+#include "tensors/Riemann_A3.h"
+#include "tensors/Riemann_B3.h"
+#include "tensors/SR_velocity.h"
+#include "tensors/u1.h"
+#include "tensors/u2.h"
+#include "tensors/u3.h"
+#include "tensors/zeta1.h"
+#include "tensors/zeta2.h"
 
 #include "boost/timer/timer.hpp"
 
 
+//! tensor factory is the most generic factory concept.
+//! It can manufacture tensor classes for the transport tensors that are common to all models.
 class tensor_factory
   {
 
@@ -72,23 +84,42 @@ class tensor_factory
     tensor_factory(translator_data& p, expression_cache& c)
       : payload(p),
         cache(c),
-        shared(p, mgr, c),
-        fl(p.get_number_parameters(), p.get_number_fields()),
-        traits(p.get_number_fields())
+        fl(p.model.get_number_params(), p.model.get_number_fields()),
+        traits(p.model.get_number_fields())
       {
       }
 
     //! destructor
     virtual ~tensor_factory() = default;
+    
+    
+    // SERVICES
+    
+  public:
+    
+    //! make an index flatten object
+    index_flatten make_flatten() const { return fl; }
 
-
-    // INTERFACE -- MANUFACTURE TENSOR OBJECTS
+    
+    // GENERIC TENSOR CLASSES
 
   public:
 
     //! obtain a Hubble-object
     virtual std::unique_ptr<Hubble> make_Hubble(language_printer& p, cse& cw) = 0;
 
+    //! obtain a parameter object
+    virtual std::unique_ptr<parameters> make_parameters(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a fields object
+    virtual std::unique_ptr<fields> make_fields(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a momenta object
+    virtual std::unique_ptr<momenta> make_momenta(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a coordinates object
+    virtual std::unique_ptr<coordinates> make_coordinates(language_printer& p, cse& cw) = 0;
+    
     //! obtain a dV-tensor
     virtual std::unique_ptr<dV> make_dV(language_printer& p, cse& cw) = 0;
 
@@ -138,18 +169,15 @@ class tensor_factory
     virtual std::unique_ptr<dN2> make_dN2(language_printer& p, cse& cw) = 0;
 
 
-    // INTERFACE -- PROVIDE ACCESS TO AGENTS
+    // PROVIDE ACCESS TO RESOURCE MANAGER
 
   public:
 
     //! link to resource manager object
-    resource_manager& get_resource_manager() { return(this->mgr); }
-
-    //! link to shared resources object
-    shared_resources& get_shared_resources() { return(this->shared); }
-
-
-    // INTERFACE -- QUERY FOR PERFORMANCE
+    virtual resource_manager& get_resource_manager() = 0;
+    
+    
+    // QUERY FOR PERFORMANCE
 
   public:
 
@@ -169,14 +197,8 @@ class tensor_factory
     //! GiNaC expression cache
     expression_cache& cache;
 
-    //! resource manager
-    resource_manager mgr;
-
 
     // RESOURCES
-
-    //! shared resources; must be constructed *after* resource_manager
-    shared_resources shared;
 
 
     // AGENTS
@@ -193,6 +215,50 @@ class tensor_factory
     //! compute timer
     boost::timer::cpu_timer compute_timer;
 
+  };
+
+
+//! curvature_tensor_factory inherits from tensor_factory, but provides APIs to manufacture
+//! transport tensors for curvature quantities
+class curvature_tensor_factory: public tensor_factory
+  {
+    
+    // CONSTRUCTOR, DESTRUCTOR
+    
+  public:
+    
+    //! constructor
+    curvature_tensor_factory(translator_data& p, expression_cache& c)
+      : tensor_factory(p, c)
+      {
+      }
+    
+    //! destructor is default
+    ~curvature_tensor_factory() = default;
+    
+    
+    // CURVATURE TENSOR CLASSES
+  
+  public:
+    
+    //! obtain a connexion-"tensor" object
+    virtual std::unique_ptr<connexion> make_connexion(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a metric tensor object
+    virtual std::unique_ptr<metric> make_metric(language_printer& p, cse& cw) = 0;
+    
+    //! obtain an inverse metric tensor object
+    virtual std::unique_ptr<metric_inverse> make_metric_inverse(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a Riemann-A2 tensor object
+    virtual std::unique_ptr<Riemann_A2> make_Riemann_A2(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a Riemann-A3 tensor object
+    virtual std::unique_ptr<Riemann_A3> make_Riemann_A3(language_printer& p, cse& cw) = 0;
+    
+    //! obtain a Riemann-B3 tensor object
+    virtual std::unique_ptr<Riemann_B3> make_Riemann_B3(language_printer& p, cse& cw) = 0;
+    
   };
 
 

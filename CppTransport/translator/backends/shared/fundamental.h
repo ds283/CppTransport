@@ -338,6 +338,7 @@ namespace macro_packages
             data_payload(p),
             printer(prn)
           {
+            policy_hex_uuid = this->data_payload.get_version_policy().adjudicate_policy(POLICY_HEX_UUID);
           }
 
         //! destructor
@@ -361,6 +362,9 @@ namespace macro_packages
 
         //! language printer
         language_printer& printer;
+        
+        //! apply HEX_UUID policy?
+        bool policy_hex_uuid;
 
       };
 

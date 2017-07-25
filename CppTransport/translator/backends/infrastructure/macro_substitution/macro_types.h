@@ -33,12 +33,9 @@
 #include "contexted_value.h"
 
 
-// use vector to allow index subscripting
-typedef std::vector< contexted_value<std::string> > macro_argument_list;
-
 enum class simple_macro_type { pre, post };
 
-enum class unroll_behaviour { force, prevent, allow };
+enum class unroll_state { force, prevent, allow };
 
 
 #endif //CPPTRANSPORT_MACRO_TYPES_H

@@ -58,6 +58,16 @@ class input_stack: public filestack_derivation_helper<input_stack>
         unsigned int                  line;
 
       };
+    
+    
+    // TYPES
+
+    //! inclusion stack
+    //! can't use a real stack data type because for context management we need to walk through it,
+    //! and a real stack only exposes the top element
+    using inclusion_stack = std::deque<inclusion>;
+    
+  protected:
 
     // CONSTRUCTOR, DESTRUCTOR
 
@@ -113,10 +123,7 @@ class input_stack: public filestack_derivation_helper<input_stack>
 
   protected:
 
-    //! inclusion stack
-    //! can't use a real stack data type because for context management we need to walk through it,
-    //! and a real stack only exposes the top element
-    typedef std::deque<inclusion> inclusion_stack;
+    //! stack of included files
     inclusion_stack inclusions;
 
   };

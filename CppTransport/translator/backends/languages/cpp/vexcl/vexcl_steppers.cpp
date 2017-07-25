@@ -35,6 +35,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace vexcl
@@ -46,10 +47,10 @@ namespace vexcl
     vexcl_steppers::vexcl_steppers(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
-        pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
-        pre_package.emplace_back(BIND(stepper_name, "BACKG_STEPPER"));
-        pre_package.emplace_back(BIND(stepper_name, "PERT_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
+        EMPLACE(pre_package, BIND(stepper_name, "BACKG_STEPPER"));
+        EMPLACE(pre_package, BIND(stepper_name, "PERT_STEPPER"));
       }
 
 
@@ -58,7 +59,7 @@ namespace vexcl
 
     std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
         if(!s)
@@ -66,15 +67,15 @@ namespace vexcl
             throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
           }
 
-        stepper step = *s;
+        auto& step = ***s;
 
         if(step.get_name() != VEXCL_STEPPER)
           {
             std::ostringstream msg;
             msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << step.get_name() << "')";
-
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.warn(msg.str());
+    
+            error_context err_ctx = this->data_payload.make_error_context();
+            err_ctx.warn(msg.str());
           }
 
         std::ostringstream out;
@@ -86,7 +87,7 @@ namespace vexcl
 
     std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
         if(!s)
@@ -94,15 +95,15 @@ namespace vexcl
             throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
           }
 
-        stepper step = *s;
+        auto& step = ***s;
 
         if(step.get_name() != VEXCL_STEPPER)
           {
             std::ostringstream msg;
             msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << step.get_name() << "')";
-
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.warn(msg.str());
+    
+            error_context err_ctx = this->data_payload.make_error_context();
+            err_ctx.warn(msg.str());
           }
 
         std::ostringstream out;

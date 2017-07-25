@@ -57,18 +57,18 @@ namespace cpp
 		    // INTERNAL API
 
       protected:
-
+    
         //! print a GiNaC expression; if use_count is set then any temporaries which are
         //! used will be marked for deposition
-        virtual std::string print         (const GiNaC::ex& expr, bool use_count) override;
-
+        std::string print(const GiNaC::ex& expr, bool use_count) override;
+    
         //! print the operands to a GiNaC expression; if use_count is set then any temporaries
         //! which are used will be marked for deposition
-        virtual std::string print_operands(const GiNaC::ex& expr, std::string op, bool use_count) override;
-
+        std::string print_operands(const GiNaC::ex& expr, std::string op, bool use_count) override;
+    
         //! special implementation of print_operands() to print a power;
         //! uses strength reduction to compute integer powers by multiplication for small enough exponents
-        std::string print_power           (const GiNaC::ex& expr, bool use_count);
+        std::string print_power(const GiNaC::ex& expr, bool use_count);
 
       };
 

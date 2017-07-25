@@ -51,7 +51,7 @@ def add_folder(tree_path, archive_path, archive):
                 and dir.lower() != 'build-icpc' \
                 and dir.lower() != 'build-gcc' \
                 and dir.lower() != 'tools' \
-                and dir.lower() != 'test-target' \
+                and dir.lower() != 'test-canonical' \
                 and dir.lower() != 'packages' \
                 and dir.lower() != 'bison':  # don't descend into unneeded directories
 

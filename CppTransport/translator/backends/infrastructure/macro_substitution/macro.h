@@ -36,11 +36,12 @@
 
 #include "core.h"
 #include "index_assignment.h"
+#include "index_literal.h"
 #include "cse.h"
 #include "translator_data.h"
 #include "package_group.h"
 #include "replacement_rule_definitions.h"
-#include "macro_tokenizer.h"
+#include "token_list.h"
 
 #include "boost/timer/timer.hpp"
 
@@ -66,20 +67,45 @@ namespace macro_impl
     //! hold the result of breaking an input line at a split-point marker, if one is present
     class split_string
       {
+        
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
-
-        //! constructor applies sensible defaults
-        split_string()
-          : split_point(0),
-            comma(false),
-            semicolon(false),
-            type(split_type::none)
-          {
-          }
+    
+        //! constructor splits std::string into its components
+        split_string(const std::string& line, const std::string& split_equal,
+                     const std::string& split_sum_equal);
 
         //! destructor is default
         ~split_string() = default;
+        
+        
+        // INTERFACE
+        
+      public:
+        
+        //! get left-hand string
+        const std::string& get_left() const { return this->left; }
+        
+        //! get right-hand string
+        const std::string& get_right() const { return this->right; }
+        
+        //! get position of split point, if one exists
+        size_t get_split_point() const { return this->split_point; }
+        
+        //! get type of split point
+        split_type get_split_type() const { return this->type; }
+        
+        //! has a trailing comma on LHS?
+        bool has_trailing_comma() const { return this->comma; }
+        
+        //! has a trailing semicolon on RHS?
+        bool has_trailing_semicolon() const { return this->semicolon; }
+        
+        
+        // INTERNAL DATA
+        
+      private:
 
         //! left-hand side
         std::string left;
@@ -97,7 +123,7 @@ namespace macro_impl
         bool semicolon;
 
         //! split type
-        enum split_type type;
+        split_type type;
 
       };
 
@@ -124,10 +150,12 @@ class macro_agent
 
     //! tokenize a line; used internally, but also available as a service to clients which may need
     //! to inspect tokenized strings (eg. directive implementations)
-    std::unique_ptr< token_list > tokenize(const std::string& line);
+    std::unique_ptr<token_list>
+    tokenize(const std::string& line, boost::optional<index_literal_database&> validate_db=boost::none,
+             bool strict=false);
 
     //! inject a new macro definition
-    void inject_macro(macro_packages::replacement_rule_index* rule);
+    void inject_macro(std::reference_wrapper< macro_packages::replacement_rule_index > rule);
 
 
     // INTERFACE -- OUTPUT CONTROL
@@ -139,6 +167,9 @@ class macro_agent
 
     //! re-enable output
     void enable_output() { this->output_enabled = true; }
+    
+    //! query whether output is enabled
+    bool is_enabled() const { return this->output_enabled; }
 
 
 		// INTERFACE - STATISTICS
@@ -159,8 +190,34 @@ class macro_agent
     //! do the heavy lifting of applying macro substitution to a line
     std::unique_ptr< std::list<std::string> > apply_line(const std::string& line, unsigned int& replacements);
 
-    //! find a split-point in a line, if one exists
-    macro_impl::split_string split(const std::string& line);
+    //! perform tokenization of a split line
+    std::pair< std::unique_ptr<token_list>, std::unique_ptr<token_list> >
+    perform_tokenization(const macro_impl::split_string& split_result);
+
+    //! construct error_context associated with split point
+    error_context make_split_point_context(const std::string& line, const macro_impl::split_string& split_result);
+    
+    //! determine whether the current unroll policy mandates unrolling or roll-up of the given assignment set
+    bool apply_unroll_policy(const token_list& left_tokens, const token_list& right_tokens,
+                             const assignment_set& LHS_assignments, const assignment_set& RHS_assignments,
+                             const error_context& ctx) const;
+    
+    //! report on replacement rules that influenced the application of the unroll policy
+    void notify_unroll_outcome(const token_list& left_tokens, const token_list& right_tokens) const;
+
+
+    // INTERNAL API -- VALIDATION
+
+  protected:
+
+    //! perform validation of a set of RHS indices
+    void validate_RHS_indices(token_list& left_tokens, token_list& right_tokens);
+
+    //! check number of occurrrences of each RHS index, and flag warnings for those that occur only once
+    void validate_RHS_count(const index_literal_list& right_indices);
+
+    //! check index positioning for nontrivial-metric cases
+    void validate_RHS_variances(const index_literal_list& decls);
 
 
     // INTERNAL API -- HANDLE INDEX SET BY UNROLLING
@@ -228,7 +285,7 @@ class macro_agent
     unsigned int parameters;
 
     //! cache index ordering convention
-    enum index_order order;
+    index_order order;
 
     //! current recursion depth
     unsigned int recursion_depth;
@@ -242,19 +299,16 @@ class macro_agent
     //! indexes to macro package
     package_group& package;
 
-    //! cache pre-rules; note we take a copy, not a reference, so we can inject further rules later if required
-    std::vector<macro_packages::replacement_rule_simple*> pre_rule_cache;
-
-    //! cache post-rules; note we take a copy, not a reference, so we can inject further rules later if required
-    std::vector<macro_packages::replacement_rule_simple*> post_rule_cache;
-
-    //! cache index rules; note we take a copy, not a reference, so we can inject further rules later if required
-    std::vector<macro_packages::replacement_rule_index*> index_rule_cache;
+    //! local index rule cache, used for storing macros dynamically defined within the template
+    //! (this still contains references to rule objects; the objects themselves are owned by the
+    //! set_directive class within the package_group, which maintains a symbol table of
+    //! user-defined macros)
+    index_ruleset local_index_rules;
 
 
     // MACRO CONFIGURATION
 
-    //! macro prefix string (usually '$$__')
+    //! macro prefix string (usually '$')
     const std::string prefix;
 
     //! split-equality symbol (usually '$$=')

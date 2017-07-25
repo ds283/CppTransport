@@ -37,6 +37,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace shared
@@ -46,12 +47,12 @@ namespace shared
     kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(args_params, "PARAM_ARGS"));
-        pre_package.emplace_back(BIND(args_1index, "COORD_ARGS"));
-        pre_package.emplace_back(BIND(args_2index, "U2_ARGS"));
-        pre_package.emplace_back(BIND(args_2index, "TWOPF_ARGS"));
-        pre_package.emplace_back(BIND(args_3index, "U3_ARGS"));
-        pre_package.emplace_back(BIND(args_3index, "THREEPF_ARGS"));
+        EMPLACE(pre_package, BIND(args_params, "PARAM_ARGS"));
+        EMPLACE(pre_package, BIND(args_1index, "COORD_ARGS"));
+        EMPLACE(pre_package, BIND(args_2index, "U2_ARGS"));
+        EMPLACE(pre_package, BIND(args_2index, "TWOPF_ARGS"));
+        EMPLACE(pre_package, BIND(args_3index, "U3_ARGS"));
+        EMPLACE(pre_package, BIND(args_3index, "THREEPF_ARGS"));
       }
 
 
@@ -60,7 +61,7 @@ namespace shared
 
     std::string args_params::evaluate(const macro_argument_list& args)
       {
-        std::vector<std::string> list = this->data_payload.get_param_list();
+        std::vector<std::string> list = this->data_payload.model.get_param_name_list();
 
         std::ostringstream out;
 
@@ -82,17 +83,19 @@ namespace shared
         // build a set of assignments for a fake index 'A'
         // the assignments will range over all possible values which A can assume
         // we use these to construct a list of arguments, one for each possible value
-        abstract_index_list indices;
-        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        abstract_index_database indices;
+        indices.emplace_back('A',
+                             std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
 
-        assignment_set assignments(indices, this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
-        for(std::unique_ptr<assignment_list> assign : assignments)
+        for(std::unique_ptr<indices_assignment> assign : assignments)
           {
             out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
 
-            for(const assignment_record& t : *assign)
+            for(const index_value& t : *assign)
               {
                 out << "_" << t.get_numeric_value();
               }
@@ -110,18 +113,22 @@ namespace shared
 
         std::ostringstream out;
 
-        abstract_index_list indices;
-        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
-        indices.emplace_back('B', std::make_unique<abstract_index>('B', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        abstract_index_database indices;
+        indices.emplace_back('A',
+                             std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
+        indices.emplace_back('B',
+                             std::make_unique<abstract_index>('B', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
 
-        assignment_set assignments(indices, this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
-        for(std::unique_ptr<assignment_list> assign : assignments)
+        for(std::unique_ptr<indices_assignment> assign : assignments)
           {
             out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
 
-            for(const assignment_record& t : *assign)
+            for(const index_value& t : *assign)
               {
                 out << "_" << t.get_numeric_value();
               }
@@ -139,19 +146,25 @@ namespace shared
 
         std::ostringstream out;
 
-        abstract_index_list indices;
-        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
-        indices.emplace_back('B', std::make_unique<abstract_index>('B', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
-        indices.emplace_back('C', std::make_unique<abstract_index>('C', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        abstract_index_database indices;
+        indices.emplace_back('A',
+                             std::make_unique<abstract_index>('A', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
+        indices.emplace_back('B',
+                             std::make_unique<abstract_index>('B', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
+        indices.emplace_back('C',
+                             std::make_unique<abstract_index>('C', this->data_payload.model.get_number_fields(),
+                                                              this->data_payload.model.get_number_params()));
 
-        assignment_set assignments(indices, this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.misc.get_indexorder());
 
         unsigned int c = 0;
-        for(std::unique_ptr<assignment_list> assign : assignments)
+        for(std::unique_ptr<indices_assignment> assign : assignments)
           {
             out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
 
-            for(const assignment_record& t : *assign)
+            for(const index_value& t : *assign)
               {
                 out << "_" << t.get_numeric_value();
               }

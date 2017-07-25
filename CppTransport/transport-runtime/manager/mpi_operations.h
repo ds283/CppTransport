@@ -353,8 +353,8 @@ namespace transport
 
                 //! Value constructor (used for sending messages)
                 data_ready_payload(const boost::filesystem::path& p)
-                : container_path(p.string()),
-                  timestamp(boost::posix_time::second_clock::local_time())
+									: container_path(p.string()),
+										timestamp(boost::posix_time::second_clock::local_time())
                   {
                   }
 

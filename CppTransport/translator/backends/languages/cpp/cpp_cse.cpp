@@ -35,42 +35,90 @@
 
 namespace cpp
   {
+    
+    const std::map< std::string, std::string > func_convert
+      {
+        {"abs", "std::abs"},
+        {"sqrt", "std::sqrt"},
+        {"sin", "std::sin"},
+        {"cos", "std::cos"},
+        {"tan", "std::tan"},
+        {"asin", "std::asin"},
+        {"acos", "std::acos"},
+        {"atan", "std::atan"},
+        {"atan2", "std::atan2"},
+        {"sinh", "std::sinh"},
+        {"cosh", "std::cosh"},
+        {"tanh", "std::tanh"},
+        {"asinh", "std::asinh"},
+        {"acosh", "std::acosh"},
+        {"atanh", "std::atanh"},
+        {"exp", "std:exp"},
+        {"log", "std::log"},
+        {"pow", "std::pow"},
+        {"tgamma", "std::tgamma"},
+        {"lgamma", "std::lgamma"}
+      };
+    
 
     std::string cpp_cse::print(const GiNaC::ex& expr, bool use_count)
       {
-        std::ostringstream out;
-        std::string        name;
-
+        std::string name;
+    
         if(GiNaC::is_a<GiNaC::function>(expr)) name = GiNaC::ex_to<GiNaC::function>(expr).get_name();
-        else                                   name = GiNaC::ex_to<GiNaC::basic>(expr).class_name();
+        else name = GiNaC::ex_to<GiNaC::basic>(expr).class_name();
 
-        if     (name == "numeric") out << this->printer.ginac(expr);
-        else if(name == "symbol")  out << this->printer.ginac(expr);
-        else if(name == "add")     out << this->print_operands(expr, "+", use_count);
-        else if(name == "mul")     out << this->print_operands(expr, "*", use_count);
-        else if(name == "power")   out << this->print_power(expr, use_count);
-        else                       out << this->printer.ginac(expr);
+        if     (name == "numeric")   return this->printer.ginac(expr);
+        else if(name == "symbol")    return this->printer.ginac(expr);
+        else if(name == "add")       return this->print_operands(expr, "+", use_count);
+        else if(name == "mul")       return this->print_operands(expr, "*", use_count);
+        else if(name == "power")     return this->print_power(expr, use_count);
+        else if(name == "tensdelta") return this->printer.ginac(expr);
+        else if(name == "idx")       return this->printer.ginac(expr);
+        else if(name == "varidx")    return this->printer.ginac(expr);
+        else if(name == "indexed")   return this->printer.ginac(expr);
 
-        return(out.str());
+        // not a standard operation, so assume it must be a special function
+        // look up its C++ form in func_map, and then format its arguments,
+        // taking care to keep track of use counts
+        
+        auto t = func_convert.find(name);
+        if(t == func_convert.end())
+          {
+            error_context err_ctx = this->data_payload.make_error_context();
+
+            std::ostringstream msg;
+            msg << ERROR_UNIMPLEMENTED_MATHS_FUNCTION << " '" << name << "'";
+            err_ctx.error(msg.str());
+
+            return std::string{};
+          }
+
+        std::string rval{t->second};
+        rval.append("(");
+        rval.append(this->print_operands(expr, ",", use_count));
+        rval.append(")");
+
+        return rval;
       }
 
 
     std::string cpp_cse::print_operands(const GiNaC::ex& expr, std::string op, bool use_count)
       {
-        std::ostringstream out;
+        std::string rval;
 
         unsigned int c = 0;
-        for(GiNaC::const_iterator t = expr.begin(); t != expr.end(); ++t)
+        for(const auto& arg : expr)
           {
-            if(c > 0) out << op;
-
-            if(use_count) out << this->get_symbol_with_use_count(*t);
-            else          out << this->get_symbol_without_use_count(*t);
+            if(c > 0) rval.append(op);
+    
+            if(use_count) rval.append(this->get_symbol_with_use_count(arg));
+            else          rval.append(this->get_symbol_without_use_count(arg));
 
             ++c;
           }
-
-        return(out.str());
+        
+        return rval;
       }
 
 
@@ -79,58 +127,59 @@ namespace cpp
     std::string cpp_cse::print_power(const GiNaC::ex& expr, bool use_count)
       {
         std::ostringstream out;
-        size_t             n = expr.nops();
+        size_t n = expr.nops();
 
         if(n != 2)
           {
-            error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            error_context err_ctx = this->data_payload.make_error_context();
             err_ctx.error(ERROR_CSE_POWER_ARGUMENTS);
             out << "std::pow(" << this->print_operands(expr, ",", use_count) << ")";
+            return std::string{};
           }
-        else
+    
+        // perform use-counting on exponent, which is necessary since its values may have been
+        // used elsewhere in the CSE tree, even if it is an integer that we will unroll and not use explicitly
+        std::string exponent;
+        if(use_count) exponent = this->get_symbol_with_use_count(expr.op(1));
+        else exponent = this->get_symbol_without_use_count(expr.op(1));
+
+        const GiNaC::ex& exp_generic = expr.op(1);
+    
+        if(GiNaC::is_a<GiNaC::numeric>(exp_generic))
           {
-            const GiNaC::ex& exp_generic = expr.op(1);
-
-            if(GiNaC::is_a<GiNaC::numeric>(exp_generic))
+            const auto& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exp_generic);
+        
+            std::string base;
+            if(use_count) base = this->get_symbol_with_use_count(expr.op(0));
+            else base = this->get_symbol_without_use_count(expr.op(0));
+        
+            if(GiNaC::is_integer(exp_numeric))
               {
-                const GiNaC::numeric& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exp_generic);
-
-                std::string sym;
-                if(use_count) sym = this->get_symbol_with_use_count(expr.op(0));
-                else          sym = this->get_symbol_without_use_count(expr.op(0));
-
-                if(GiNaC::is_integer(exp_numeric))
+            
+                if(GiNaC::is_nonneg_integer(exp_numeric))
                   {
-
-                    if(GiNaC::is_nonneg_integer(exp_numeric))
-                      {
-                        if      (exp_numeric.to_int() == 0) out << "1.0";
-                        else if (exp_numeric.to_int() == 1) out << sym;
-                        else if (exp_numeric.to_int() == 2) out << sym << "*" << sym;
-                        else if (exp_numeric.to_int() == 3) out << sym << "*" << sym << "*" << sym;
-                        else if (exp_numeric.to_int() == 4) out << sym << "*" << sym << "*" << sym << "*" << sym;
-                        else                                out << "std::pow(" << sym << "," << exp_numeric.to_int() << ")";
-                      }
-                    else  // negative integer
-                      {
-                        out << "1.0/";
-                        if      (exp_numeric.to_int() == -0) out << "1.0";
-                        else if (exp_numeric.to_int() == -1) out << sym;
-                        else if (exp_numeric.to_int() == -2) out << "(" << sym << "*" << sym << ")";
-                        else if (exp_numeric.to_int() == -3) out << "(" << sym << "*" << sym << "*" << sym << ")";
-                        else if (exp_numeric.to_int() == -4) out << "(" << sym << "*" << sym << "*" << sym << "*" << sym << ")";
-                        else                                 out << "std::pow(" << sym << "," << -exp_numeric.to_int() << ")";
-                      }
+                    if(exp_numeric.to_int() == 0) out << "1.0";
+                    else if(exp_numeric.to_int() == 1) out << base;
+                    else if(exp_numeric.to_int() == 2) out << base << "*" << base;
+                    else if(exp_numeric.to_int() == 3) out << base << "*" << base << "*" << base;
+                    else if(exp_numeric.to_int() == 4) out << base << "*" << base << "*" << base << "*" << base;
+                    else out << "std::pow(" << base << "," << exp_numeric.to_int() << ")";
                   }
-                else  // not an integer
+                else  // negative integer
                   {
-                    std::string sym1;
-
-                    if(use_count) sym1 = this->get_symbol_with_use_count(expr.op(1));
-                    else          sym1 = this->get_symbol_without_use_count(expr.op(1));
-
-                    out << "std::pow(" << sym << "," << sym1 << ")";
+                    out << "1.0/";
+                    if(exp_numeric.to_int() == -0) out << "1.0";
+                    else if(exp_numeric.to_int() == -1) out << base;
+                    else if(exp_numeric.to_int() == -2) out << "(" << base << "*" << base << ")";
+                    else if(exp_numeric.to_int() == -3) out << "(" << base << "*" << base << "*" << base << ")";
+                    else if(exp_numeric.to_int() == -4)
+                      out << "(" << base << "*" << base << "*" << base << "*" << base << ")";
+                    else out << "std::pow(" << base << "," << -exp_numeric.to_int() << ")";
                   }
+              }
+            else  // not an integer
+              {
+                out << "std::pow(" << base << "," << exponent << ")";
               }
           }
 

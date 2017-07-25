@@ -27,7 +27,9 @@
 #define CPPTRANSPORT_MACROS_RESOURCES_H
 
 
-#include "replacement_rule_package.h"
+#include "directive_package.h"
+#include "concepts/resource_manager.h"
+#include "nontrivial-metric/resource_manager.h"
 
 
 namespace macro_packages
@@ -41,6 +43,7 @@ namespace macro_packages
 
         constexpr unsigned int COORDINATES_KERNEL_ARGUMENT = 0;
         constexpr unsigned int COORDINATES_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int COORDINATES_TOTAL_INDICES = 1;
 
         constexpr unsigned int PHASE_FLATTEN_KERNEL_ARGUMENT = 0;
         constexpr unsigned int PHASE_FLATTEN_TOTAL_ARGUMENTS = 1;
@@ -52,18 +55,39 @@ namespace macro_packages
 
         constexpr unsigned int DV_KERNEL_ARGUMENT = 0;
         constexpr unsigned int DV_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int DV_TOTAL_INDICES = 1;
 
         constexpr unsigned int DDV_KERNEL_ARGUMENT = 0;
         constexpr unsigned int DDV_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int DDV_TOTAL_INDICES = 2;
 
         constexpr unsigned int DDDV_KERNEL_ARGUMENT = 0;
         constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int DDDV_TOTAL_INDICES = 3;
 
         constexpr unsigned int CONNEXION_KERNEL_ARGUMENT = 0;
         constexpr unsigned int CONNEXION_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int CONNEXION_TOTAL_INDICES = 3;
+        
+        constexpr unsigned int METRIC_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int METRIC_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int METRIC_TOTAL_INDICES = 2;
+    
+        constexpr unsigned int INVERSE_METRIC_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int INVERSE_METRIC_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int INVERSE_METRIC_TOTAL_INDICES = 2;
 
-        constexpr unsigned int RIEMANN_KERNEL_ARGUMENT = 0;
-        constexpr unsigned int RIEMANN_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int RIEMANN_A2_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int RIEMANN_A2_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int RIEMANN_A2_TOTAL_INDICES = 2;
+    
+        constexpr unsigned int RIEMANN_A3_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int RIEMANN_A3_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int RIEMANN_A3_TOTAL_INDICES = 3;
+    
+        constexpr unsigned int RIEMANN_B3_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int RIEMANN_B3_TOTAL_ARGUMENTS = 1;
+        constexpr unsigned int RIEMANN_B3_TOTAL_INDICES = 3;
 
         constexpr unsigned int RELEASE_TOTAL_ARGUMENTS = 0;
 
@@ -75,7 +99,7 @@ namespace macro_packages
       }   // namespace RESOURCES
 
 
-    class set_params : public replacement_rule_simple
+    class set_params : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -83,10 +107,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_params(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::PARAMETERS_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_params(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::PARAMETERS_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -98,8 +121,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -109,13 +132,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_coordinates : public replacement_rule_simple
+    class set_coordinates : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -123,10 +143,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_coordinates(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_coordinates(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -138,8 +157,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -149,13 +168,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_phase_flatten : public replacement_rule_simple
+    class set_phase_flatten : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -163,10 +179,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_phase_flatten(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::PHASE_FLATTEN_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_phase_flatten(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::PHASE_FLATTEN_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -178,8 +193,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -189,13 +204,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_field_flatten : public replacement_rule_simple
+    class set_field_flatten : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -203,10 +215,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_field_flatten(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::FIELD_FLATTEN_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_field_flatten(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::FIELD_FLATTEN_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -218,8 +229,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -229,13 +240,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_dV : public replacement_rule_simple
+    class set_dV : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -243,10 +251,10 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_dV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::DV_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_dV(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::DV_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(m)
           {
           }
 
@@ -258,8 +266,14 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -269,13 +283,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_ddV : public replacement_rule_simple
+    class set_ddV : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -283,10 +294,10 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_ddV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::DDV_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_ddV(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::DDV_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(m)
           {
           }
 
@@ -298,8 +309,14 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -309,13 +326,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_dddV : public replacement_rule_simple
+    class set_dddV : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -323,10 +337,10 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_dddV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::DDDV_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_dddV(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::DDDV_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(m)
           {
           }
 
@@ -338,8 +352,14 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -349,13 +369,13 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
-
-
-    class set_connexion : public replacement_rule_simple
+    
+    
+    //! field-space connexion
+    //! dynamic cast to curvature_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
+    class set_connexion : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -363,10 +383,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_connexion(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_connexion(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS, p),
+            mgr(dynamic_cast<curvature_resource_manager&>(m))
           {
           }
 
@@ -378,24 +397,71 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
 
       private:
-
+        
         //! resource manager
-        resource_manager& mgr;
+        curvature_resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
+      };
+    
+    
+    //! field-space metric
+    //! dynamic cast to curvature_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
+    class set_metric : public directive_index
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        set_metric(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(dynamic_cast<curvature_resource_manager&>(m))
+          {
+          }
+        
+        //! destructor
+        virtual ~set_metric() = default;
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+        
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! resource manager
+        curvature_resource_manager& mgr;
+        
       };
 
 
-    class set_Riemann : public replacement_rule_simple
+    //! Riemann 'A2' is the 2-index combination of the Riemann tensor appearing in the A-tensor
+    //! (it also appears in the M-tensor)
+    //! dynamic cast to curvature_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
+    class set_Riemann_A2 : public directive_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -403,23 +469,29 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_Riemann(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::RIEMANN_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_Riemann_A2(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::RIEMANN_A2_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(dynamic_cast<curvature_resource_manager&>(m))
           {
           }
 
         //! destructor
-        virtual ~set_Riemann() = default;
+        virtual ~set_Riemann_A2() = default;
 
 
         // INTERNAL API
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
 
 
         // INTERNAL DATA
@@ -427,15 +499,108 @@ namespace macro_packages
       private:
 
         //! resource manager
-        resource_manager& mgr;
+        curvature_resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
+      };
+    
+    
+    //! Riemann 'A3' is the 3-index combination of the Riemann tensor appearing in the A-tensor
+    //! dynamic cast to curvature_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
+    class set_Riemann_A3 : public directive_index
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        set_Riemann_A3(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::RIEMANN_A3_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(dynamic_cast<curvature_resource_manager&>(m))
+          {
+          }
+        
+        //! destructor
+        virtual ~set_Riemann_A3() = default;
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+        
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! resource manager
+        curvature_resource_manager& mgr;
+        
+      };
+    
+    
+    //! Riemann 'B3' is the 2-index combination of the Riemann tensor appearing in the B-tensor
+    //! dynamic cast to curvature_resource_manager& will fail if the model is not
+    //! appropriate for this directive, disabling it
+    class set_Riemann_B3 : public directive_index
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        set_Riemann_B3(std::string n, resource_manager& m, translator_data& p)
+          : directive_index(std::move(n), RESOURCES::RIEMANN_B3_TOTAL_ARGUMENTS, p,
+                            define_indices(p.model.get_lagrangian_type()), define_classes(p.model.get_lagrangian_type())),
+            mgr(dynamic_cast<curvature_resource_manager&>(m))
+          {
+          }
+        
+        //! destructor
+        virtual ~set_Riemann_B3() = default;
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! apply
+        virtual std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! determine how many indices should be expected
+        boost::optional<unsigned int> define_indices(model_type t);
+        
+        //! determine which index classes should be expected
+        boost::optional< std::vector<index_class> > define_classes(model_type t);
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! resource manager
+        curvature_resource_manager& mgr;
+        
       };
 
 
-    class release : public replacement_rule_simple
+    //! directive to release all resources, *except* flattener
+    //! this is the most common use case; we wish to release resources for eg. coordinates or
+    //! dV, ddV, dddV that have been used in a function body, but we don't want to
+    //! change the flattener function
+    class release : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -443,10 +608,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        release(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        release(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::RELEASE_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -458,8 +622,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -469,13 +633,12 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class release_flatteners : public replacement_rule_simple
+    //! directive to release names of flattener functions
+    //! this is a much less common use-case than just release of resources
+    class release_flatteners : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -483,10 +646,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        release_flatteners(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_FLATTENERS_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        release_flatteners(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::RELEASE_FLATTENERS_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -498,8 +660,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -509,13 +671,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class set_working_type : public replacement_rule_simple
+    class set_working_type : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -523,10 +682,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        set_working_type(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::WORKING_TYPE_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        set_working_type(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::WORKING_TYPE_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -538,8 +696,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -549,13 +707,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class release_working_type : public replacement_rule_simple
+    class release_working_type : public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -563,10 +718,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        release_working_type(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_WORKING_TYPE_TOTAL_ARGUMENTS),
-            mgr(m),
-            printer(prn)
+        release_working_type(std::string n, resource_manager& m, translator_data& p)
+          : directive_simple(std::move(n), RESOURCES::RELEASE_WORKING_TYPE_TOTAL_ARGUMENTS, p),
+            mgr(m)
           {
           }
 
@@ -578,8 +732,8 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        virtual std::string apply(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -589,13 +743,10 @@ namespace macro_packages
         //! resource manager
         resource_manager& mgr;
 
-        //! language printer
-        language_printer& printer;
-
       };
 
 
-    class resources : public replacement_rule_package
+    class resources : public directive_package
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -603,7 +754,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        resources(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
+        resources(translator_data& p, resource_manager& m);
 
         //! destructor is default
         virtual ~resources() = default;

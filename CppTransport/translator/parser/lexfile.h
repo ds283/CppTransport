@@ -24,7 +24,6 @@
 //
 
 
-
 #ifndef CPPTRANSPORT_LEXFILE_H
 #define CPPTRANSPORT_LEXFILE_H
 
@@ -32,44 +31,54 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <tuple>
+#include <boost/optional.hpp>
 
 #include "filestack.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/optional.hpp"
 
-
-// reading from the stream is a finite state machine
-// the available internal states are:
-
-enum class lexfile_state
-	{
-    unready,  // current value of c does not make sense; need to read a new one
-    eof,      // at end of file
-    error,    // an error state
-    ready     // current value of c is valid; can simply return this
-	};
-
-// the states reported via the API are:
-
-enum class lexfile_outcome
-	{
-    ok,       // everything was ok
-    eof,      // we are at the end of the file
-    error     // there was an error
-	};
-
-
-// read in characters from a file - the base step in the lexical analysis stack
-
+//! read in characters from a file - the base step in the lexical analysis stack
 class lexfile
 	{
+
+    // TYPES
+
+  public:
+
+    // reading from the stream is a finite state machine
+
+    // the states reported via the API are:
+    enum class status
+      {
+        ok,       // everything was ok
+        eof,      // we are at the end of the file
+        error     // there was an error
+      };
+
+    // return type is a character and an outcome
+    typedef std::tuple< char, status > value_type;
+
+  protected:
+
+    // the available internal states are:
+
+    enum class internal_state
+      {
+        unready,  // current value of c does not make sense; need to read a new one
+        eof,      // at end of file
+        error,    // an error state
+        ready     // current value of c is valid; can simply return this
+      };
+
 
     // CONSTRUCTOR, DESTRUCTOR
 
   public:
 
     //! constructor
-    lexfile(const boost::filesystem::path& fnam, filestack& s);
+    lexfile(const boost::filesystem::path& fnam, filestack& s, boost::optional<unsigned int> ml = boost::none);
 
     //! destructor
     ~lexfile();
@@ -81,13 +90,14 @@ class lexfile
 
     //! return next character in the input. Can be called as many times as required
     //! without advancing our position in the file
-    char get(enum lexfile_outcome& state);
+    value_type get();
+    value_type operator*() { return this->get(); }
 
     //! move past current character
-    void eat();
+    lexfile& operator++();
 
     //! get current state of the file
-    enum lexfile_outcome current_state() const;
+    status get_state() const;
 
     //! get shared_ptr to current line; used to allow lexemes generated from
     //! this line to co-own it
@@ -95,6 +105,15 @@ class lexfile
 
     //! get current character position within current line
     unsigned int get_current_char_pos() const { return(this->char_pos); }
+
+
+    // INTERNAL API
+
+  protected:
+
+    //! try to go from a not-ready to a ready state
+    void make_ready();
+
 
 		// INTERNAL DATA
 
@@ -105,15 +124,19 @@ class lexfile
 
     //! stream representing the input
     std::ifstream stream;
+    
+    //! maximum number of lines to read, if supplied
+    boost::optional<unsigned int> max_lines;
 
     //! filestack representing our current position in processing the input file hierarchy
     filestack& stack;
 
-    //! char read from the file
+    //! char read from the file; whether it has current meaning depends on the value
+    //! of the internal state variable 'state' below
     char c;
 
     //! current state of the file
-    enum lexfile_state state;
+    internal_state state;
 
     //! current character position in the line
     unsigned int char_pos;

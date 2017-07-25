@@ -37,10 +37,10 @@ namespace transport
         namespace derived_data_impl
           {
 
-            enum class fixed_index { first_index, second_index };
+            enum class fixed_index { first, second };
 
 
-            enum class operator_position { left_pos, middle_pos, right_pos };
+            enum class operator_position { left, middle, right };
 
           }   // namespace derived_data_impl
 

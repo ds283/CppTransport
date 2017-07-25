@@ -38,6 +38,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace vexcl
@@ -46,7 +47,7 @@ namespace vexcl
     vexcl_kernels::vexcl_kernels(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(import_kernel, "IMPORT_KERNEL"));
+        EMPLACE(pre_package, BIND(import_kernel, "IMPORT_KERNEL"));
       }
 
 
@@ -61,7 +62,7 @@ namespace vexcl
         translator t(this->data_payload);
 
         buffer& buf = os.top_buffer();
-        enum process_type type = os.top_process_type();
+        process_type type = os.top_process_type();
 
         // set up a new in-memory buffer to hold the translated kernel
         buffer kernel_buffer;
@@ -81,7 +82,7 @@ namespace vexcl
         std::function<std::string(const std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
 
         // translate into our new in-memory buffer, preserving the type of translation (ie. core or implementation)
-        error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        error_context ctx = this->data_payload.make_error_context();
         unsigned int replacements = t.translate(kernel_file, ctx, kernel_buffer, type, &filter);
 
         // merge new buffer into old one

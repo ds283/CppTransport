@@ -43,6 +43,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -52,41 +53,41 @@ namespace macro_packages
     fundamental::fundamental(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(replace_tool, "TOOL"));
-        pre_package.emplace_back(BIND(replace_version, "VERSION"));
-        pre_package.emplace_back(BIND(replace_numeric_version, "NUMERIC_VERSION"));
-        pre_package.emplace_back(BIND(replace_guard, "GUARD"));
-        pre_package.emplace_back(BIND(replace_date, "DATE"));
-        pre_package.emplace_back(BIND(replace_source, "SOURCE"));
-        pre_package.emplace_back(BIND(replace_model, "MODEL"));
-        pre_package.emplace_back(BIND(replace_name, "NAME"));
-        pre_package.emplace_back(BIND(replace_author, "AUTHORS"));
-        pre_package.emplace_back(BIND(replace_citeguide, "CITEGUIDE"));
-        pre_package.emplace_back(BIND(replace_description, "DESCRIPTION"));
-        pre_package.emplace_back(BIND(replace_license, "LICENSE"));
-        pre_package.emplace_back(BIND(replace_revision, "REVISION"));
-        pre_package.emplace_back(BIND(replace_references, "REFERENCES"));
-        pre_package.emplace_back(BIND(replace_urls, "URLS"));
-        pre_package.emplace_back(BIND(replace_uid, "UNIQUE_ID"));
-        pre_package.emplace_back(BIND(replace_header, "HEADER"));
-        pre_package.emplace_back(BIND(replace_core, "CORE"));
-        pre_package.emplace_back(BIND(replace_number_fields, "NUMBER_FIELDS"));
-        pre_package.emplace_back(BIND(replace_number_params, "NUMBER_PARAMS"));
-        pre_package.emplace_back(BIND(replace_field_list, "FIELD_NAME_LIST"));
-        pre_package.emplace_back(BIND(replace_latex_list, "LATEX_NAME_LIST"));
-        pre_package.emplace_back(BIND(replace_param_list, "PARAM_NAME_LIST"));
-        pre_package.emplace_back(BIND(replace_platx_list, "PLATX_NAME_LIST"));
-        pre_package.emplace_back(BIND(replace_state_list, "STATE_NAME_LIST"));
-        pre_package.emplace_back(BIND(replace_b_abs_err, "BACKG_ABS_ERR"));
-        pre_package.emplace_back(BIND(replace_b_rel_err, "BACKG_REL_ERR"));
-        pre_package.emplace_back(BIND(replace_b_step, "BACKG_STEP_SIZE"));
-        pre_package.emplace_back(BIND(replace_b_stepper, "BACKG_STEPPER"));
-        pre_package.emplace_back(BIND(replace_p_abs_err, "PERT_ABS_ERR"));
-        pre_package.emplace_back(BIND(replace_p_rel_err, "PERT_REL_ERR"));
-        pre_package.emplace_back(BIND(replace_p_step, "PERT_STEP_SIZE"));
-        pre_package.emplace_back(BIND(replace_p_stepper, "PERT_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_tool, "TOOL"));
+        EMPLACE(pre_package, BIND(replace_version, "VERSION"));
+        EMPLACE(pre_package, BIND(replace_numeric_version, "NUMERIC_VERSION"));
+        EMPLACE(pre_package, BIND(replace_guard, "GUARD"));
+        EMPLACE(pre_package, BIND(replace_date, "DATE"));
+        EMPLACE(pre_package, BIND(replace_source, "SOURCE"));
+        EMPLACE(pre_package, BIND(replace_model, "MODEL"));
+        EMPLACE(pre_package, BIND(replace_name, "NAME"));
+        EMPLACE(pre_package, BIND(replace_author, "AUTHORS"));
+        EMPLACE(pre_package, BIND(replace_citeguide, "CITEGUIDE"));
+        EMPLACE(pre_package, BIND(replace_description, "DESCRIPTION"));
+        EMPLACE(pre_package, BIND(replace_license, "LICENSE"));
+        EMPLACE(pre_package, BIND(replace_revision, "REVISION"));
+        EMPLACE(pre_package, BIND(replace_references, "REFERENCES"));
+        EMPLACE(pre_package, BIND(replace_urls, "URLS"));
+        EMPLACE(pre_package, BIND(replace_uid, "UNIQUE_ID"));
+        EMPLACE(pre_package, BIND(replace_header, "HEADER"));
+        EMPLACE(pre_package, BIND(replace_core, "CORE"));
+        EMPLACE(pre_package, BIND(replace_number_fields, "NUMBER_FIELDS"));
+        EMPLACE(pre_package, BIND(replace_number_params, "NUMBER_PARAMS"));
+        EMPLACE(pre_package, BIND(replace_field_list, "FIELD_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_latex_list, "LATEX_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_param_list, "PARAM_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_platx_list, "PLATX_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_state_list, "STATE_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_b_abs_err, "BACKG_ABS_ERR"));
+        EMPLACE(pre_package, BIND(replace_b_rel_err, "BACKG_REL_ERR"));
+        EMPLACE(pre_package, BIND(replace_b_step, "BACKG_STEP_SIZE"));
+        EMPLACE(pre_package, BIND(replace_b_stepper, "BACKG_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_p_abs_err, "PERT_ABS_ERR"));
+        EMPLACE(pre_package, BIND(replace_p_rel_err, "PERT_REL_ERR"));
+        EMPLACE(pre_package, BIND(replace_p_step, "PERT_STEP_SIZE"));
+        EMPLACE(pre_package, BIND(replace_p_stepper, "PERT_STEPPER"));
 
-        post_package.emplace_back(BIND(replace_unique, "UNIQUE"));
+        EMPLACE(post_package, BIND(replace_unique, "UNIQUE"));
       }
 
 
@@ -119,7 +120,7 @@ namespace macro_packages
     std::string replace_guard::evaluate(const macro_argument_list& args)
       {
         std::string guard;
-        enum process_type type = this->data_payload.get_stack().top_process_type();
+        process_type type = this->data_payload.get_stack().top_process_type();
 
         if(type == process_type::process_core)
           {
@@ -144,7 +145,7 @@ namespace macro_packages
 
     std::string replace_source::evaluate(const macro_argument_list& args)
       {
-        return(this->data_payload.get_model_input().string());
+        return(this->data_payload.get_source_filename().string());
       }
 
 
@@ -152,16 +153,16 @@ namespace macro_packages
       {
         std::ostringstream uid_str;
 
-        boost::optional< contexted_value<std::string>& > md_value = this->data_payload.get_model();
+        auto md_value = this->data_payload.templates.get_model();
         if(md_value) uid_str << static_cast<std::string>(*md_value);
 
-        boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
+        auto nm_value = this->data_payload.meta.get_name();
         if(nm_value) uid_str << static_cast<std::string>(*nm_value);
 
-        boost::optional< contexted_value<std::string>& > lc_value = this->data_payload.get_license();
+        auto lc_value = this->data_payload.meta.get_license();
         if(lc_value) uid_str << static_cast<std::string>(*lc_value);
         
-        boost::optional< contexted_value<unsigned int>& > rv_value = this->data_payload.get_revision();
+        auto rv_value = this->data_payload.meta.get_revision();
         if(rv_value) uid_str << static_cast<unsigned int>(*rv_value);
 
         // hash using MD5 so we are guaranteed to get the same result on all platforms
@@ -171,7 +172,15 @@ namespace macro_packages
         std::ostringstream id_str;
         for(unsigned int i = 0; i < MD5_DIGEST_LENGTH; ++i)
           {
-            id_str << std::setw(2) << static_cast<int>(result[i]);
+            // POLICY: POLICY_HEX_UUID corrects omission of std::hex in versions prior to 201701
+            if(this->policy_hex_uuid)
+              {
+                id_str << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(result[i]);
+              }
+            else
+              {
+                id_str << std::setw(2) << static_cast<int>(result[i]);
+              }
           }
 
         // convert hash to UUID-like format for convenience
@@ -184,7 +193,7 @@ namespace macro_packages
 
     std::string replace_name::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_name();
+        auto value = this->data_payload.meta.get_name();
         if(value)
           {
             return to_printable(*value);
@@ -201,7 +210,7 @@ namespace macro_packages
         std::string record = args[AUTHOR_RECORD_CLASS_ARGUMENT];
 
         // convert author table into a suitable initialization list
-        const author_table& table = this->data_payload.get_author();
+        const author_table& table = this->data_payload.meta.get_author();
         std::vector<std::string> init_list;
         for(const author_table::value_type& item : table)
           {
@@ -236,7 +245,7 @@ namespace macro_packages
 
     std::string replace_citeguide::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_citeguide();
+        auto value = this->data_payload.meta.get_citeguide();
         if(value)
           {
             return to_printable(*value);
@@ -250,7 +259,7 @@ namespace macro_packages
 
     std::string replace_description::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_description();
+        auto value = this->data_payload.meta.get_description();
         if(value)
           {
             return to_printable(*value);
@@ -264,7 +273,7 @@ namespace macro_packages
 
     std::string replace_license::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_license();
+        auto value = this->data_payload.meta.get_license();
         if(value)
           {
             return to_printable(*value);
@@ -278,7 +287,7 @@ namespace macro_packages
 
     std::string replace_revision::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<unsigned int>& > value = this->data_payload.get_revision();
+        auto value = this->data_payload.meta.get_revision();
         if(value)
           {
             return boost::lexical_cast<std::string>(*value);
@@ -292,7 +301,7 @@ namespace macro_packages
 
     std::string replace_references::evaluate(const macro_argument_list& args)
       {
-        boost::optional< std::vector< contexted_value<std::string> >& > value = this->data_payload.get_references();
+        auto value = this->data_payload.meta.get_references();
         if(value)
           {
             std::vector<std::string> list;
@@ -311,7 +320,7 @@ namespace macro_packages
 
     std::string replace_urls::evaluate(const macro_argument_list& args)
       {
-        boost::optional< std::vector< contexted_value<std::string> >& > value = this->data_payload.get_urls();
+        auto value = this->data_payload.meta.get_urls();
         if(value)
           {
             std::vector<std::string> list;
@@ -330,7 +339,7 @@ namespace macro_packages
 
     std::string replace_model::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_model();
+        auto value = this->data_payload.templates.get_model();
         if(value)
           {
             return *value;
@@ -344,13 +353,13 @@ namespace macro_packages
 
     std::string replace_header::evaluate(const macro_argument_list& args)
       {
-        return(this->data_payload.get_implementation_output().string());
+        return(this->data_payload.get_implementation_filename().string());
       }
 
 
     std::string replace_core::evaluate(const macro_argument_list& args)
       {
-        return(this->data_payload.get_core_output().string());
+        return(this->data_payload.get_core_filename().string());
       }
 
 
@@ -358,7 +367,7 @@ namespace macro_packages
       {
         std::ostringstream out;
 
-        out << this->data_payload.get_number_fields();
+        out << this->data_payload.model.get_number_fields();
 
         return(out.str());
       }
@@ -368,7 +377,7 @@ namespace macro_packages
       {
         std::ostringstream out;
 
-        out << this->data_payload.get_number_parameters();
+        out << this->data_payload.model.get_number_params();
 
         return(out.str());
       }
@@ -376,7 +385,7 @@ namespace macro_packages
 
     std::string replace_field_list::evaluate(const macro_argument_list& args)
       {
-        std::vector<std::string> list = this->data_payload.get_field_list();
+        std::vector<std::string> list = this->data_payload.model.get_field_name_list();
 
         return this->printer.initialization_list(list, true);
       }
@@ -384,7 +393,7 @@ namespace macro_packages
 
     std::string replace_latex_list::evaluate(const macro_argument_list& args)
       {
-        std::vector<std::string> list = this->data_payload.get_latex_list();
+        std::vector<std::string> list = this->data_payload.model.get_field_latex_list();
 
         return this->printer.initialization_list(list, true);
       }
@@ -392,7 +401,7 @@ namespace macro_packages
 
     std::string replace_param_list::evaluate(const macro_argument_list& args)
       {
-        std::vector<std::string> list = this->data_payload.get_param_list();
+        std::vector<std::string> list = this->data_payload.model.get_param_name_list();
 
         return this->printer.initialization_list(list, true);
       }
@@ -400,7 +409,7 @@ namespace macro_packages
 
     std::string replace_platx_list::evaluate(const macro_argument_list& args)
       {
-        std::vector<std::string> list = this->data_payload.get_platx_list();
+        std::vector<std::string> list = this->data_payload.model.get_param_latex_list();
 
         return this->printer.initialization_list(list, true);
       }
@@ -408,8 +417,8 @@ namespace macro_packages
 
     std::string replace_state_list::evaluate(const macro_argument_list& args)
       {
-        symbol_list f_list = this->data_payload.get_field_symbols();
-        symbol_list d_list = this->data_payload.get_deriv_symbols();
+        symbol_list f_list = this->data_payload.model.get_field_symbols();
+        symbol_list d_list = this->data_payload.model.get_deriv_symbols();
 
         std::vector<std::string> list;
 
@@ -428,11 +437,11 @@ namespace macro_packages
 
     std::string replace_b_abs_err::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
+        auto s = this->data_payload.templates.get_background_stepper();
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_abserr());
           }
         else
@@ -444,11 +453,11 @@ namespace macro_packages
 
     std::string replace_b_rel_err::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
+        auto s = this->data_payload.templates.get_background_stepper();
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_relerr());
           }
         else
@@ -460,11 +469,11 @@ namespace macro_packages
 
     std::string replace_b_step::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
+        auto s = this->data_payload.templates.get_background_stepper();
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_stepsize());
           }
         else
@@ -476,11 +485,11 @@ namespace macro_packages
 
     std::string replace_b_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
+        auto s = this->data_payload.templates.get_background_stepper();
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             return step.get_name();
           }
         else
@@ -492,11 +501,11 @@ namespace macro_packages
 
     std::string replace_p_abs_err::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_abserr());
           }
         else
@@ -508,11 +517,11 @@ namespace macro_packages
 
     std::string replace_p_rel_err::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_relerr());
           }
         else
@@ -524,11 +533,11 @@ namespace macro_packages
 
     std::string replace_p_step::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             return boost::lexical_cast<std::string>(step.get_stepsize());
           }
         else
@@ -540,11 +549,11 @@ namespace macro_packages
 
     std::string replace_p_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             return step.get_name();
           }
         else
@@ -559,7 +568,7 @@ namespace macro_packages
 
     std::string replace_unique::evaluate(const macro_argument_list& args)
       {
-        return boost::lexical_cast<std::string>(this->unique++);
+        return std::to_string(this->unique++);
       }
 
 

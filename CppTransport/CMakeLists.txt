@@ -28,18 +28,14 @@ IF(CLANG)
   # suppress missing override warnings which are automatically enabled in recent
   # versions of Clang. These produce a slew of warnings from GiNaC >= 1.7
   # also suppress unknown attribute warnings which produce errors for GiNaC_deprecated
-  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -Wno-inconsistent-missing-override -Wno-unknown-attributes")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast -Wno-inconsistent-missing-override -Wno-unknown-attributes")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
+  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-unknown-attributes")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
+  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wno-unknown-attributes")
 
 ELSEIF(GCC)
 
-  SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-O3")
-
 ELSEIF(INTEL)
-
-  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast")
 
 ENDIF()
 
@@ -66,12 +62,14 @@ SET(EXTERNAL_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/thirdparty/dist")
 
 BUILD_JSONCPP(${CMAKE_BINARY_DIR}/thirdparty/jsoncpp ${EXTERNAL_INSTALL_PREFIX})
 BUILD_SPLINTER(${CMAKE_BINARY_DIR}/thirdparty/SPLINTER ${EXTERNAL_INSTALL_PREFIX})
+BUILD_CATCH(${CMAKE_BINARY_DIR}/thirdparty/Catch ${EXTERNAL_INSTALL_PREFIX})
+BUILD_ODEINT(${CMAKE_BINARY_DIR}/thirdparty/odeint-v2)
 
 
 # configure build_data.h
 STRING(TIMESTAMP CONFIG_TIMESTAMP)
 CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/build_data.h)
-# provision a second version of build_data.h for use in test-target
+# provision a second version of build_data.h for use in test-canonical
 CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/transport-runtime/build_data.h)
 
 # build parser
@@ -93,15 +91,19 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/infrastructure/language_concepts/lambda_manager.cpp
   translator/backends/infrastructure/macro_substitution/index_assignment.cpp
   translator/backends/infrastructure/macro_substitution/macro.cpp
-  translator/backends/infrastructure/macro_substitution/macro_tokenizer.cpp
+  translator/backends/infrastructure/macro_substitution/token_list.cpp
+  translator/backends/infrastructure/macro_substitution/macro_tokens.cpp
   translator/backends/infrastructure/macro_substitution/abstract_index.cpp
+  translator/backends/infrastructure/macro_substitution/index_literal.cpp
   translator/backends/infrastructure/macro_substitution/index_class.cpp
   translator/backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
   translator/backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
   translator/backends/infrastructure/replacement_rules/package_group.cpp
   translator/backends/infrastructure/replacement_rules/package_group_factory.cpp
-  translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
   translator/backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
+  translator/backends/infrastructure/replacement_rules/directive_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/directive_package.cpp
   translator/backends/languages/cpp/core/cpp_group.cpp
   translator/backends/languages/cpp/core/cpp_steppers.cpp
   translator/backends/languages/cpp/vexcl/vexcl_group.cpp
@@ -115,6 +117,7 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/languages/opencl/opencl_printer.cpp
   translator/backends/languages/shared/C_style_printer.cpp
   translator/backends/languages/shared/kernel_argument_macros.cpp
+  translator/backends/shared/curvature_tensors.cpp
   translator/backends/shared/directives.cpp
   translator/backends/shared/flow_tensors.cpp
   translator/backends/shared/fundamental.cpp
@@ -124,37 +127,98 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/shared/temporary_pool.cpp
   translator/backends/shared/utensors.cpp
   ${BISON_parser_OUTPUTS}
+  translator/parser/descriptor/blocks/lagrangian_block.cpp
+  translator/parser/descriptor/blocks/metadata_block.cpp
+  translator/parser/descriptor/blocks/templates_block.cpp
+  translator/parser/descriptor/blocks/misc_block.cpp
+  translator/parser/descriptor/symbols/declarations.cpp
+  translator/parser/descriptor/model_descriptor.cpp
+  translator/parser/driver/expression_tree_driver.cpp
+  translator/parser/driver/lagrangian_driver.cpp
+  translator/parser/driver/metadata_driver.cpp
+  translator/parser/driver/templates_driver.cpp
+  translator/parser/driver/misc_driver.cpp
+  translator/parser/driver/y_driver.cpp
+  translator/parser/semantic-values/attributes.cpp
+  translator/parser/semantic-values/author.cpp
+  translator/parser/semantic-values/metric.cpp
+  translator/parser/semantic-values/stepper.cpp
+  translator/parser/semantic-values/string_array.cpp
+  translator/parser/semantic-values/subexpr.cpp
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
-  translator/parser/script.cpp
-  translator/parser/y_driver.cpp
   translator/parser/y_lexer.cpp
-  translator/transport-objects/canonical/resources.cpp
-  translator/transport-objects/canonical/Hubble.cpp
-  translator/transport-objects/canonical/dV.cpp
-  translator/transport-objects/canonical/ddV.cpp
-  translator/transport-objects/canonical/dddV.cpp
-  translator/transport-objects/canonical/SR_velocity.cpp
-  translator/transport-objects/canonical/A.cpp
-  translator/transport-objects/canonical/Atilde.cpp
-  translator/transport-objects/canonical/B.cpp
-  translator/transport-objects/canonical/C.cpp
-  translator/transport-objects/canonical/M.cpp
-  translator/transport-objects/canonical/u1.cpp
-  translator/transport-objects/canonical/u2.cpp
-  translator/transport-objects/canonical/u3.cpp
-  translator/transport-objects/canonical/zeta1.cpp
-  translator/transport-objects/canonical/zeta2.cpp
-  translator/transport-objects/canonical/dN1.cpp
-  translator/transport-objects/canonical/dN2.cpp
+  translator/transport-objects/canonical/tensors/A.cpp
+  translator/transport-objects/canonical/tensors/Atilde.cpp
+  translator/transport-objects/canonical/tensors/B.cpp
+  translator/transport-objects/canonical/tensors/C.cpp
+  translator/transport-objects/canonical/tensors/coordinates.cpp
+  translator/transport-objects/canonical/tensors/dV.cpp
+  translator/transport-objects/canonical/tensors/ddV.cpp
+  translator/transport-objects/canonical/tensors/dddV.cpp
+  translator/transport-objects/canonical/tensors/dN1.cpp
+  translator/transport-objects/canonical/tensors/dN2.cpp
+  translator/transport-objects/canonical/tensors/fields.cpp
+  translator/transport-objects/canonical/tensors/Hubble.cpp
+  translator/transport-objects/canonical/tensors/SR_velocity.cpp
+  translator/transport-objects/canonical/tensors/M.cpp
+  translator/transport-objects/canonical/tensors/momenta.cpp
+  translator/transport-objects/canonical/tensors/u1.cpp
+  translator/transport-objects/canonical/tensors/u2.cpp
+  translator/transport-objects/canonical/tensors/u3.cpp
+  translator/transport-objects/canonical/tensors/zeta1.cpp
+  translator/transport-objects/canonical/tensors/zeta2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
-  translator/transport-objects/resource_manager.cpp
-  translator/transport-objects/concepts/transport_tensor.cpp
+  translator/transport-objects/canonical/resources.cpp
+  translator/transport-objects/canonical/resource_manager.cpp
+  translator/transport-objects/concepts/tensors/parameters.cpp
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
-  translator/transport-objects/utilities/symbol_factory.cpp
-  translator/transport-objects/utilities/shared_resources.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/connexion_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_ddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA2_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannB3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/derivative_symbols.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/potential_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/substitution_map_cache.cpp
+  translator/transport-objects/nontrivial-metric/tensors/A.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Atilde.cpp
+  translator/transport-objects/nontrivial-metric/tensors/B.cpp
+  translator/transport-objects/nontrivial-metric/tensors/C.cpp
+  translator/transport-objects/nontrivial-metric/tensors/connexion.cpp
+  translator/transport-objects/nontrivial-metric/tensors/coordinates.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/ddV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dddV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dN1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dN2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/fields.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Hubble.cpp
+  translator/transport-objects/nontrivial-metric/tensors/M.cpp
+  translator/transport-objects/nontrivial-metric/tensors/metric.cpp
+  translator/transport-objects/nontrivial-metric/tensors/metric_inverse.cpp
+  translator/transport-objects/nontrivial-metric/tensors/momenta.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_A2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_A3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_B3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/SR_velocity.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/zeta1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/zeta2.cpp
+  translator/transport-objects/nontrivial-metric/metric_resource.cpp
+  translator/transport-objects/nontrivial-metric/tensor_factory.cpp
+  translator/transport-objects/nontrivial-metric/resources.cpp
+  translator/transport-objects/nontrivial-metric/resource_manager.cpp
+  translator/transport-objects/nontrivial-metric/curvature_classes.cpp
+  translator/transport-objects/shared/cache_detail/cache_tags.cpp
+  translator/transport-objects/shared/symbol_factory.cpp
+  translator/transport-objects/shared/shared_resources.cpp
   translator/utilities/error.cpp
   translator/utilities/error_context.cpp
   translator/utilities/finder.cpp
@@ -163,6 +227,7 @@ ADD_EXECUTABLE(CppTransport
   translator/utilities/to_printable.cpp
   translator/utilities/local_environment.cpp
   translator/utilities/argument_cache.cpp
+  translator/version-policy/version_policy.cpp
   )
 
 ADD_DEPENDENCIES(CppTransport DEPS)
@@ -186,13 +251,19 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/backends/languages/opencl
   translator/backends/languages/shared
   translator/backends/shared
-  translator/concepts
   translator/instruments
   translator/parser
+  translator/parser/descriptor/blocks
+  translator/parser/descriptor/symbols
+  translator/parser/descriptor
+  translator/parser/driver
+  translator/parser/semantic-values
   translator/transport-objects
   translator/transport-objects/indices
-  translator/transport-objects/utilities
+  translator/transport-objects/concepts/resources_detail
+  translator/transport-objects/shared
   translator/utilities
+  translator/version-policy
   ${Boost_INCLUDE_DIRS}
   ${GINAC_INCLUDE_DIRS}
   ${OPENSSL_INCLUDE_DIR}
@@ -200,8 +271,12 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   )
 
 
-# pull in test target
-ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
+# pull in test targets
+ADD_SUBDIRECTORY(test-canonical EXCLUDE_FROM_ALL)
+ADD_SUBDIRECTORY(test-nontrivial-metric EXCLUDE_FROM_ALL)
+
+ADD_SUBDIRECTORY(tests EXCLUDE_FROM_ALL)
+
 
 # install targets for CppTransport translator, templates, and runtime system
 # note that CppTransport-sendmail has more restrictive permissions since it may contain a password
@@ -225,9 +300,10 @@ INSTALL(DIRECTORY thirdparty/prism DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/DataTables DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
 
-# emplace JsonCpp and SPLINTER assets into runtime system folders
+# emplace JsonCpp, SPLINTER and odeint-v2 assets into runtime system folders
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/json DESTINATION include/cpptransport)
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/SPLINTER DESTINATION include/cpptransport)
+INSTALL(DIRECTORY ${ODEINT_INCLUDE_DIRS}/boost DESTINATION include/cpptransport)
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib DESTINATION lib/cpptransport)
 
 # install CMake finder script for all these assets
@@ -240,6 +316,8 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/FindCppTransport.cmake DESTINATION share/cmake
 set(TEMPLATES_FILES
   templates/canonical_core.h
   templates/canonical_mpi.h
+  templates/nontrivial_metric_core.h
+  templates/nontrivial_metric_mpi.h
   )
 
 set(TEMPLATES_VEXCL_CUDA_FILES
@@ -298,9 +376,13 @@ set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
   translator/backends/infrastructure/macro_substitution/index_database.h
   translator/backends/infrastructure/macro_substitution/macro.cpp
   translator/backends/infrastructure/macro_substitution/macro.h
-  translator/backends/infrastructure/macro_substitution/macro_tokenizer.cpp
-  translator/backends/infrastructure/macro_substitution/macro_tokenizer.h
+  translator/backends/infrastructure/macro_substitution/token_list.cpp
+  translator/backends/infrastructure/macro_substitution/token_list.h
   translator/backends/infrastructure/macro_substitution/macro_types.h
+  translator/backends/infrastructure/macro_substitution/macro_tokens.cpp
+  translator/backends/infrastructure/macro_substitution/macro_tokens.h
+  translator/backends/infrastructure/macro_substitution/index_literal.cpp
+  translator/backends/infrastructure/macro_substitution/index_literal.h
   )
 
 set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
@@ -316,6 +398,11 @@ set(TRANSLATOR_BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
   translator/backends/infrastructure/replacement_rules/replacement_rule_definitions.h
   translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
   translator/backends/infrastructure/replacement_rules/replacement_rule_package.h
+  translator/backends/infrastructure/replacement_rules/directive_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/directive_definitions.h
+  translator/backends/infrastructure/replacement_rules/rules_common.h
+  translator/backends/infrastructure/replacement_rules/directive_package.cpp
+  translator/backends/infrastructure/replacement_rules/directive_package.h
   )
 
 set(TRANSLATOR_BACKENDS_LANGUAGES_CPP_CORE_FILES
@@ -363,6 +450,8 @@ set(TRANSLATOR_BACKENDS_LANGUAGES_SHARED_FILES
   )
 
 set(TRANSLATOR_BACKENDS_SHARED_FILES
+  translator/backends/shared/curvature_tensors.cpp
+  translator/backends/shared/curvature_tensors.h
   translator/backends/shared/directives.cpp
   translator/backends/shared/directives.h
   translator/backends/shared/flow_tensors.cpp
@@ -379,12 +468,6 @@ set(TRANSLATOR_BACKENDS_SHARED_FILES
   translator/backends/shared/temporary_pool.h
   translator/backends/shared/utensors.cpp
   translator/backends/shared/utensors.h
-  )
-
-set(TRANSLATOR_CONCEPTS_FILES
-  translator/concepts/model_settings.h
-  translator/concepts/stepper.h
-  translator/concepts/symbol_list.h
   )
 
 set(TRANSLATOR_FILES
@@ -404,6 +487,64 @@ set(TRANSLATOR_PARSER_BISON_FILES
   translator/parser/bison/y_parser.yy
   )
 
+set(TRANSLATOR_PARSER_DESCRIPTOR_BLOCKS_FILES
+  translator/parser/descriptor/blocks/metadata_block.cpp
+  translator/parser/descriptor/blocks/metadata_block.h
+  translator/parser/descriptor/blocks/lagrangian_block.cpp
+  translator/parser/descriptor/blocks/lagrangian_block.h
+  translator/parser/descriptor/blocks/misc_block.cpp
+  translator/parser/descriptor/blocks/misc_block.h
+  translator/parser/descriptor/blocks/templates_block.cpp
+  translator/parser/descriptor/blocks/templates_block.h
+  )
+
+set(TRANSLATOR_PARSER_DESCRIPTOR_SYMBOLS_FILES
+  translator/parser/descriptor/symbols/declarations.h
+  translator/parser/descriptor/symbols/declarations.cpp
+  translator/parser/descriptor/symbols/generic_iterator.h
+  translator/parser/descriptor/symbols/symbol_database.h
+  translator/parser/descriptor/symbols/symbol_tables.h
+  )
+
+set(TRANSLATOR_PARSER_DESCRIPTOR_FILES
+  translator/parser/descriptor/model_settings.h
+  translator/parser/descriptor/model_descriptor.cpp
+  translator/parser/descriptor/model_descriptor.h
+  translator/parser/descriptor/generics_descriptor.h
+  )
+
+set(TRANSLATOR_PARSER_DRIVER_FILES
+  translator/parser/driver/generics_driver.h
+  translator/parser/driver/expression_tree_driver.cpp
+  translator/parser/driver/expression_tree_driver.h
+  translator/parser/driver/lagrangian_driver.cpp
+  translator/parser/driver/lagrangian_driver.h
+  translator/parser/driver/metadata_driver.cpp
+  translator/parser/driver/metadata_driver.h
+  translator/parser/driver/templates_driver.cpp
+  translator/parser/driver/templates_driver.h
+  translator/parser/driver/misc_driver.cpp
+  translator/parser/driver/misc_driver.h
+  translator/parser/driver/y_driver.cpp
+  translator/parser/driver/y_driver.h
+  translator/parser/driver/parse_error.h
+  )
+
+set(TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES
+  translator/parser/semantic-values/stepper.h
+  translator/parser/semantic-values/stepper.cpp
+  translator/parser/semantic-values/attributes.h
+  translator/parser/semantic-values/attributes.cpp
+  translator/parser/semantic-values/subexpr.h
+  translator/parser/semantic-values/subexpr.cpp
+  translator/parser/semantic-values/author.h
+  translator/parser/semantic-values/author.cpp
+  translator/parser/semantic-values/string_array.h
+  translator/parser/semantic-values/string_array.cpp
+  translator/parser/semantic-values/metric.h
+  translator/parser/semantic-values/metric.cpp
+  )
+
 set(TRANSLATOR_PARSER_FILES
   translator/parser/input_stack.cpp
   translator/parser/input_stack.h
@@ -412,91 +553,203 @@ set(TRANSLATOR_PARSER_FILES
   translator/parser/lexfile.h
   translator/parser/lexical.h
   translator/parser/lexstream.h
-  translator/parser/script.cpp
-  translator/parser/script.h
-  translator/parser/semantic_data.h
+  translator/parser/semantic-values/semantic_values.h
+  translator/parser/symbol_list.h
   translator/parser/y_common.h
-  translator/parser/y_driver.cpp
-  translator/parser/y_driver.h
   translator/parser/y_lexer.cpp
   translator/parser/y_lexer.h
   )
 
+set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_TENSORS_FILES
+  translator/transport-objects/canonical/tensors/A.cpp
+  translator/transport-objects/canonical/tensors/A.h
+  translator/transport-objects/canonical/tensors/Atilde.cpp
+  translator/transport-objects/canonical/tensors/Atilde.h
+  translator/transport-objects/canonical/tensors/B.cpp
+  translator/transport-objects/canonical/tensors/B.h
+  translator/transport-objects/canonical/tensors/C.cpp
+  translator/transport-objects/canonical/tensors/C.h
+  translator/transport-objects/canonical/tensors/coordinates.cpp
+  translator/transport-objects/canonical/tensors/coordinates.h
+  translator/transport-objects/canonical/tensors/dddV.cpp
+  translator/transport-objects/canonical/tensors/dddV.h
+  translator/transport-objects/canonical/tensors/ddV.cpp
+  translator/transport-objects/canonical/tensors/ddV.h
+  translator/transport-objects/canonical/tensors/dN1.cpp
+  translator/transport-objects/canonical/tensors/dN1.h
+  translator/transport-objects/canonical/tensors/dN2.cpp
+  translator/transport-objects/canonical/tensors/dN2.h
+  translator/transport-objects/canonical/tensors/dV.cpp
+  translator/transport-objects/canonical/tensors/dV.h
+  translator/transport-objects/canonical/tensors/fields.cpp
+  translator/transport-objects/canonical/tensors/fields.h
+  translator/transport-objects/canonical/tensors/Hubble.cpp
+  translator/transport-objects/canonical/tensors/Hubble.h
+  translator/transport-objects/canonical/tensors/M.cpp
+  translator/transport-objects/canonical/tensors/M.h
+  translator/transport-objects/canonical/tensors/momenta.cpp
+  translator/transport-objects/canonical/tensors/momenta.h
+  translator/transport-objects/canonical/tensors/SR_velocity.cpp
+  translator/transport-objects/canonical/tensors/SR_velocity.h
+  translator/transport-objects/canonical/tensors/u1.cpp
+  translator/transport-objects/canonical/tensors/u1.h
+  translator/transport-objects/canonical/tensors/u2.cpp
+  translator/transport-objects/canonical/tensors/u2.h
+  translator/transport-objects/canonical/tensors/u3.cpp
+  translator/transport-objects/canonical/tensors/u3.h
+  translator/transport-objects/canonical/tensors/zeta1.cpp
+  translator/transport-objects/canonical/tensors/zeta1.h
+  translator/transport-objects/canonical/tensors/zeta2.cpp
+  translator/transport-objects/canonical/tensors/zeta2.h
+  )
+
 set(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES
-  translator/transport-objects/canonical/A.cpp
-  translator/transport-objects/canonical/A.h
-  translator/transport-objects/canonical/B.cpp
-  translator/transport-objects/canonical/B.h
-  translator/transport-objects/canonical/C.cpp
-  translator/transport-objects/canonical/C.h
-  translator/transport-objects/canonical/dddV.cpp
-  translator/transport-objects/canonical/dddV.h
-  translator/transport-objects/canonical/ddV.cpp
-  translator/transport-objects/canonical/ddV.h
-  translator/transport-objects/canonical/dN1.cpp
-  translator/transport-objects/canonical/dN1.h
-  translator/transport-objects/canonical/dN2.cpp
-  translator/transport-objects/canonical/dN2.h
-  translator/transport-objects/canonical/dV.cpp
-  translator/transport-objects/canonical/dV.h
-  translator/transport-objects/canonical/Hubble.cpp
-  translator/transport-objects/canonical/Hubble.h
-  translator/transport-objects/canonical/M.cpp
-  translator/transport-objects/canonical/M.h
+  translator/transport-objects/canonical/resource_manager.cpp
+  translator/transport-objects/canonical/resource_manager.h
   translator/transport-objects/canonical/resources.cpp
   translator/transport-objects/canonical/resources.h
-  translator/transport-objects/canonical/SR_velocity.cpp
-  translator/transport-objects/canonical/SR_velocity.h
   translator/transport-objects/canonical/tensor_factory.cpp
   translator/transport-objects/canonical/tensor_factory.h
-  translator/transport-objects/canonical/u1.cpp
-  translator/transport-objects/canonical/u1.h
-  translator/transport-objects/canonical/u2.cpp
-  translator/transport-objects/canonical/u2.h
-  translator/transport-objects/canonical/u3.cpp
-  translator/transport-objects/canonical/u3.h
-  translator/transport-objects/canonical/zeta1.cpp
-  translator/transport-objects/canonical/zeta1.h
-  translator/transport-objects/canonical/zeta2.cpp
-  translator/transport-objects/canonical/zeta2.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_TENSORS_FILES
+  translator/transport-objects/concepts/tensors/A.h
+  translator/transport-objects/concepts/tensors/Atilde.h
+  translator/transport-objects/concepts/tensors/B.h
+  translator/transport-objects/concepts/tensors/C.h
+  translator/transport-objects/concepts/tensors/connexion.h
+  translator/transport-objects/concepts/tensors/coordinates.h
+  translator/transport-objects/concepts/tensors/dddV.h
+  translator/transport-objects/concepts/tensors/ddV.h
+  translator/transport-objects/concepts/tensors/dN1.h
+  translator/transport-objects/concepts/tensors/dN2.h
+  translator/transport-objects/concepts/tensors/dV.h
+  translator/transport-objects/concepts/tensors/fields.h
+  translator/transport-objects/concepts/tensors/Hubble.h
+  translator/transport-objects/concepts/tensors/M.h
+  translator/transport-objects/concepts/tensors/metric.h
+  translator/transport-objects/concepts/tensors/metric_inverse.h
+  translator/transport-objects/concepts/tensors/momenta.h
+  translator/transport-objects/concepts/tensors/parameters.h
+  translator/transport-objects/concepts/tensors/parameters.cpp
+  translator/transport-objects/concepts/tensors/Riemann_A2.h
+  translator/transport-objects/concepts/tensors/Riemann_A3.h
+  translator/transport-objects/concepts/tensors/Riemann_B3.h
+  translator/transport-objects/concepts/tensors/SR_velocity.h
+  translator/transport-objects/concepts/tensors/u1.h
+  translator/transport-objects/concepts/tensors/u2.h
+  translator/transport-objects/concepts/tensors/u3.h
+  translator/transport-objects/concepts/tensors/zeta1.h
+  translator/transport-objects/concepts/tensors/zeta2.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES
-  translator/transport-objects/concepts/A.h
-  translator/transport-objects/concepts/B.h
-  translator/transport-objects/concepts/C.h
-  translator/transport-objects/concepts/dddV.h
-  translator/transport-objects/concepts/ddV.h
-  translator/transport-objects/concepts/dN1.h
-  translator/transport-objects/concepts/dN2.h
-  translator/transport-objects/concepts/dV.h
   translator/transport-objects/concepts/flattened_tensor.h
-  translator/transport-objects/concepts/Hubble.h
-  translator/transport-objects/concepts/M.h
-  translator/transport-objects/concepts/SR_velocity.h
+  translator/transport-objects/concepts/resource_manager.h
   translator/transport-objects/concepts/tensor_factory.h
-  translator/transport-objects/concepts/transport_tensor.cpp
   translator/transport-objects/concepts/transport_tensor.h
-  translator/transport-objects/concepts/u1.h
-  translator/transport-objects/concepts/u2.h
-  translator/transport-objects/concepts/u3.h
-  translator/transport-objects/concepts/zeta1.h
-  translator/transport-objects/concepts/zeta2.h
+  translator/transport-objects/concepts/tensor_exception.h
   )
 
-set(TRANSLATOR_TRANSPORT_OBJECTS_DEPRECATED_FILES
-  translator/transport-objects/deprecated/canonical_u_tensor_factory.cpp
-  translator/transport-objects/deprecated/canonical_u_tensor_factory.h
-  translator/transport-objects/deprecated/flatten.h
-  translator/transport-objects/deprecated/make_u_tensor_factory.h
-  translator/transport-objects/deprecated/u_tensor_factory.cpp
-  translator/transport-objects/deprecated/u_tensor_factory.h
+SET(TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_DETAIL_FILES
+  translator/transport-objects/concepts/resources_detail/indexed_resource.h
+  translator/transport-objects/concepts/resources_detail/simple_resource.h
+  )
+
+SET(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_RESOURCES_DETAIL_FILES
+  translator/transport-objects/nontrivial-metric/resources_detail/connexion_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/connexion_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dddV_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_ddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_ddV_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dV_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA2_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA2_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA3_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannB3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannB3_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/derivative_symbols.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/derivative_symbols.h
+  translator/transport-objects/nontrivial-metric/resources_detail/potential_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/potential_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/substitution_map_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/substitution_map_cache.h
+  translator/transport-objects/nontrivial-metric/resources_detail/common.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_TENSORS_FILES
+  translator/transport-objects/nontrivial-metric/tensors/A.cpp
+  translator/transport-objects/nontrivial-metric/tensors/A.h
+  translator/transport-objects/nontrivial-metric/tensors/Atilde.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Atilde.h
+  translator/transport-objects/nontrivial-metric/tensors/B.cpp
+  translator/transport-objects/nontrivial-metric/tensors/B.h
+  translator/transport-objects/nontrivial-metric/tensors/C.cpp
+  translator/transport-objects/nontrivial-metric/tensors/C.h
+  translator/transport-objects/nontrivial-metric/tensors/connexion.cpp
+  translator/transport-objects/nontrivial-metric/tensors/connexion.h
+  translator/transport-objects/nontrivial-metric/tensors/coordinates.cpp
+  translator/transport-objects/nontrivial-metric/tensors/coordinates.h
+  translator/transport-objects/nontrivial-metric/tensors/dddV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dddV.h
+  translator/transport-objects/nontrivial-metric/tensors/ddV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/ddV.h
+  translator/transport-objects/nontrivial-metric/tensors/dN1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dN1.h
+  translator/transport-objects/nontrivial-metric/tensors/dN2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dN2.h
+  translator/transport-objects/nontrivial-metric/tensors/dV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dV.h
+  translator/transport-objects/nontrivial-metric/tensors/fields.cpp
+  translator/transport-objects/nontrivial-metric/tensors/fields.h
+  translator/transport-objects/nontrivial-metric/tensors/Hubble.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Hubble.h
+  translator/transport-objects/nontrivial-metric/tensors/M.cpp
+  translator/transport-objects/nontrivial-metric/tensors/M.h
+  translator/transport-objects/nontrivial-metric/tensors/metric.cpp
+  translator/transport-objects/nontrivial-metric/tensors/metric.h
+  translator/transport-objects/nontrivial-metric/tensors/metric_inverse.cpp
+  translator/transport-objects/nontrivial-metric/tensors/metric_inverse.h
+  translator/transport-objects/nontrivial-metric/tensors/momenta.cpp
+  translator/transport-objects/nontrivial-metric/tensors/momenta.h
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_A2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_A2.h
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_A3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_A3.h
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_B3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_B3.h
+  translator/transport-objects/nontrivial-metric/tensors/SR_velocity.cpp
+  translator/transport-objects/nontrivial-metric/tensors/SR_velocity.h
+  translator/transport-objects/nontrivial-metric/tensors/u1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u1.h
+  translator/transport-objects/nontrivial-metric/tensors/u2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u2.h
+  translator/transport-objects/nontrivial-metric/tensors/u3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u3.h
+  translator/transport-objects/nontrivial-metric/tensors/zeta1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/zeta1.h
+  translator/transport-objects/nontrivial-metric/tensors/zeta2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/zeta2.h
+  )
+
+set(TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES
+  translator/transport-objects/nontrivial-metric/resource_manager.cpp
+  translator/transport-objects/nontrivial-metric/resource_manager.h
+  translator/transport-objects/nontrivial-metric/resources.cpp
+  translator/transport-objects/nontrivial-metric/resources.h
+  translator/transport-objects/nontrivial-metric/tensor_factory.cpp
+  translator/transport-objects/nontrivial-metric/tensor_factory.h
+  translator/transport-objects/nontrivial-metric/curvature_classes.h
+  translator/transport-objects/nontrivial-metric/curvature_classes.cpp
+  translator/transport-objects/nontrivial-metric/metric_resource.cpp
+  translator/transport-objects/nontrivial-metric/metric_resource.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_FILES
   translator/transport-objects/make_tensor_factory.h
-  translator/transport-objects/resource_manager.cpp
-  translator/transport-objects/resource_manager.h
   )
 
 set(TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES
@@ -508,14 +761,27 @@ set(TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES
   translator/transport-objects/indices/indices.h
   )
 
-set(TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES
-  translator/transport-objects/utilities/expression_cache.h
-  translator/transport-objects/utilities/ginac_cache.h
-  translator/transport-objects/utilities/shared_resources.cpp
-  translator/transport-objects/utilities/shared_resources.h
-  translator/transport-objects/utilities/symbol_factory.cpp
-  translator/transport-objects/utilities/symbol_factory.h
+SET(TRANSLATOR_TRANSPORT_OBJECTS_SHARED_CACHE_DETAIL_FILES
+  translator/transport-objects/shared/cache_detail/cache_tags.cpp
+  translator/transport-objects/shared/cache_detail/cache_tags.h
+  translator/transport-objects/shared/cache_detail/cache_key.h
   )
+
+SET(TRANSLATOR_TRANSPORT_OBJECTS_SHARED_FILES
+  translator/transport-objects/shared/expression_cache.h
+  translator/transport-objects/shared/ginac_cache.h
+  translator/transport-objects/shared/shared_resources.cpp
+  translator/transport-objects/shared/shared_resources.h
+  translator/transport-objects/shared/symbol_factory.cpp
+  translator/transport-objects/shared/symbol_factory.h
+  translator/transport-objects/shared/resource_failure.h
+  translator/transport-objects/shared/variance_tensor_cache.h
+  )
+
+set(TRANSLATOR_VERSION_POLICY_FILES
+  translator/version-policy/version_policy.cpp
+  translator/version-policy/version_policy.h
+  translator/version-policy/policies.h)
 
 set(TRANSLATOR_UTILITIES_FILES
   translator/utilities/argument_cache.cpp
@@ -534,6 +800,7 @@ set(TRANSLATOR_UTILITIES_FILES
   translator/utilities/local_environment.h
   translator/utilities/to_printable.cpp
   translator/utilities/to_printable.h
+  translator/utilities/hash_combine.h
   )
 
 set(TRANSPORT_RUNTIME_CONCEPTS_FILES
@@ -815,6 +1082,7 @@ set(TRANSPORT_RUNTIME_MANAGER_FILES
 set(TRANSPORT_RUNTIME_MODELS_FILES
   transport-runtime/models/advisory_classes.h
   transport-runtime/models/canonical_model.h
+  transport-runtime/models/nontrivial_metric_model.h
   transport-runtime/models/model.h
   transport-runtime/models/model_forward_declare.h
   transport-runtime/models/observers.h
@@ -998,6 +1266,13 @@ set(TRANSPORT_RUNTIME_UTILITIES_FILES
   transport-runtime/utilities/to_printable.h
   )
 
+set(TESTS_PYTRANSPORT_NONTRIVIAL_METRIC_FILES
+  tests/PyTransport/nontrivial-metric/fieldmetric.h
+  tests/PyTransport/nontrivial-metric/model.h
+  tests/PyTransport/nontrivial-metric/potential.h
+  tests/PyTransport/nontrivial-metric/nontrivial-metric.t.cpp
+  )
+
 set(SOURCE_FILES
   ${TEMPLATES_FILES}
   ${TEMPLATES_VEXCL_CUDA_FILES}
@@ -1014,18 +1289,29 @@ set(SOURCE_FILES
   ${TRANSLATOR_BACKENDS_LANGUAGES_OPENCL_FILES}
   ${TRANSLATOR_BACKENDS_LANGUAGES_SHARED_FILES}
   ${TRANSLATOR_BACKENDS_SHARED_FILES}
-  ${TRANSLATOR_CONCEPTS_FILES}
   ${TRANSLATOR_FILES}
   ${TRANSLATOR_INSTRUMENTS_FILES}
   ${TRANSLATOR_PARSER_BISON_FILES}
+  ${TRANSLATOR_PARSER_DESCRIPTOR_BLOCKS_FILES}
+  ${TRANSLATOR_PARSER_DESCRIPTOR_SYMBOLS_FILES}
+  ${TRANSLATOR_PARSER_DESCRIPTOR_FILES}
+  ${TRANSLATOR_PARSER_DRIVER_FILES}
+  ${TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES}
   ${TRANSLATOR_PARSER_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_RESOURCES_DETAIL_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_TENSORS_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_RESOURCES_DETAIL_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CONCEPTS_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_DEPRECATED_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_INDICES_FILES}
-  ${TRANSLATOR_TRANSPORT_OBJECTS_UTILITIES_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_SHARED_CACHE_DETAIL_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_SHARED_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_FILES}
   ${TRANSLATOR_UTILITIES_FILES}
+  ${TRANSLATOR_VERSION_POLICY_FILES}
   ${TRANSPORT_RUNTIME_CONCEPTS_FILES}
   ${TRANSPORT_RUNTIME_CONCEPTS_RANGE_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_DATA_BATCHERS_FILES}
@@ -1074,6 +1360,7 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_TRANSACTIONS_FILES}
   ${TRANSPORT_RUNTIME_UTILITIES_FILES}
+  ${TESTS_PYTRANSPORT_NONTRIVIAL_METRIC_FILES}
   )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})

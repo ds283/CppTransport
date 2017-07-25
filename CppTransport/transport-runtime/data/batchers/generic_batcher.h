@@ -261,7 +261,7 @@ namespace transport
         static const std::map< generic_batcher::log_severity_level, std::string > stringize_map =
           {
             { generic_batcher::log_severity_level::datapipe_pull, "data" },
-            { generic_batcher::log_severity_level::normal, "norm" },
+            { generic_batcher::log_severity_level::normal, "info" },
             { generic_batcher::log_severity_level::warning, "warn" },
             { generic_batcher::log_severity_level::error, "err " },
             { generic_batcher::log_severity_level::critical, "CRIT" }

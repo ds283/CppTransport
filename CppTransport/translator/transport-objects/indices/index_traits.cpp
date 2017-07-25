@@ -26,61 +26,80 @@
 
 #include <sstream>
 
-
 #include "index_traits.h"
+#include "concepts/tensor_exception.h"
 
 
 bool index_traits::is_species(const phase_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
-    return(raw < this->num_fields);
+    auto raw = static_cast<unsigned int>(index);
+    return raw < this->num_fields;
   }
 
 
 bool index_traits::is_momentum(const phase_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
-    return(raw >= this->num_fields && raw < 2 * this->num_fields);
+    auto raw = static_cast<unsigned int>(index);
+    return raw >= this->num_fields && raw < 2 * this->num_fields;
   }
 
 
 phase_index index_traits::to_momentum(const field_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
-    return phase_index(raw + this->num_fields);
+    auto raw = static_cast<unsigned int>(index);
+    return {raw + this->num_fields, index.get_variance()};
   }
 
 
 phase_index index_traits::to_momentum(const phase_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
+    auto raw = static_cast<unsigned int>(index);
     if(raw < this->num_fields) raw += this->num_fields;
-    return phase_index(raw);
+    return {raw, index.get_variance()};
   }
 
 
 field_index index_traits::to_species(const phase_index& index)
   {
-    unsigned raw = static_cast<unsigned int>(index);
+    auto raw = static_cast<unsigned int>(index);
     if(raw >= this->num_fields) raw -= this->num_fields;
-    return field_index(raw);
+    return {raw, index.get_variance()};
   }
 
 
-abstract_index index_traits::species_to_species(const abstract_index& index)
+std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>>
+index_traits::species_to_species(const index_literal& index)
   {
-    abstract_index converted(index.get_label(), index_class::field_only, index.get_number_fields(), index.get_number_parameters());
-    return(converted);
+    if(index.get_class() != index_class::full) throw tensor_exception(ERROR_SPECIES_TO_SPECIES_FAIL);
+
+    // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
+    const abstract_index& original_abst = index;
+
+    auto new_abst = std::make_unique<abstract_index>(original_abst.get_label(), index_class::field_only,
+                                                     original_abst.get_number_fields(), original_abst.get_number_parameters());
+    auto new_index = std::make_unique<index_literal>(index);
+    new_index->reassign(*new_abst);
+    
+    return std::make_pair(std::move(new_abst), std::move(new_index));
   }
 
 
-abstract_index index_traits::momentum_to_species(const abstract_index& index)
+std::pair<std::unique_ptr<abstract_index>, std::unique_ptr<index_literal>>
+index_traits::momentum_to_species(const index_literal& index)
   {
-    abstract_index converted(index.get_label(), index_class::field_only, index.get_number_fields(), index.get_number_parameters());
+    if(index.get_class() != index_class::full) throw tensor_exception(ERROR_MOMENTUM_TO_SPECIES_FAIL);
+    
+    // TODO: consider whether this is the best strategy. Currently we just manufacture new instance of abstract_index and index_literal
+    const abstract_index& original_abst = index;
+    
+    auto new_abst = std::make_unique<abstract_index>(original_abst.get_label(), index_class::field_only,
+                                                     original_abst.get_number_fields(), original_abst.get_number_parameters());
+    auto new_index = std::make_unique<index_literal>(index);
+    new_index->reassign(*new_abst);
 
-    std::ostringstream tag;
-    tag << "-" << index.get_number_fields();
-    converted.set_post_string(tag.str());
+    // add post-modifier to loop label that subtracts an appropriate value to turn this momentum value
+    // into a species value
+    new_abst->convert_momentum_to_species();
 
-    return(converted);
+    return std::make_pair(std::move(new_abst), std::move(new_index));
   }

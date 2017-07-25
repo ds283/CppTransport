@@ -467,7 +467,7 @@ namespace transport
           {
             assert(xs.size() == col.size());
 
-            for(const double y : col)
+            for(const number& y : col)
               {
                 std::ostringstream entry;
 

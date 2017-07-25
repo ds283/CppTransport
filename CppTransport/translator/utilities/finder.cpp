@@ -27,6 +27,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <core.h>
 
 #include "finder.h"
 
@@ -76,10 +77,8 @@ bool finder::fqpn(const boost::filesystem::path& leaf, boost::filesystem::path& 
     if(leaf.is_absolute())
       {
         fqpn = boost::filesystem::canonical(leaf);
-        return(boost::filesystem::exists(leaf));
+        return boost::filesystem::exists(leaf);
       }
-
-    bool match = false;
 
     for(const boost::filesystem::path& path : this->paths)
       {
@@ -87,11 +86,10 @@ bool finder::fqpn(const boost::filesystem::path& leaf, boost::filesystem::path& 
 
         if(boost::filesystem::exists(file))
           {
-            match = true;
-            fqpn  = boost::filesystem::canonical(file);
-            break;
+            fqpn = boost::filesystem::canonical(file);
+            return true;
           }
       }
 
-    return(match);
+    return false;
   }

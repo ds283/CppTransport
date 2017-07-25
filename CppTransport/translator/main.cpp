@@ -6,12 +6,15 @@
 //  Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
+
 #include <iostream>
 
 #include "core.h"
 #include "local_environment.h"
 #include "argument_cache.h"
 #include "translation_unit.h"
+#include "version_policy.h"
+#include "error.h"
 
 #include "ginac_print_indexed.h"
 
@@ -33,22 +36,35 @@ int main(int argc, const char *argv[])
     local_environment env;
     argument_cache args(argc, argv, env);
 
+		// emit any messages generated during argument parsing
+		auto& messages = args.get_messages();
+		for(const auto& m : messages)
+			{
+        // first component of pair is a flag that indicates whether this is an error or a warning
+				if(m.first) error(m.second, args, env);
+				if(!m.first) warn(m.second, args, env);
+			}
+
     // set up the initial search path;
     // this should consist of the current working directory, but also
     // any include paths set using environment variables
     finder path;
     if(args.search_environment()) path.add(env.search_paths());
     path.add(args.search_paths());
+    
+    // set up version policy registry
+    version_policy policy;
 
+    // process specified files
     unsigned int files_processed = 0;
     unsigned int replacements    = 0;
 
     bool errors = false;
 
-    const std::list<boost::filesystem::path> input_files = args.input_files();
+    const std::list<boost::filesystem::path>& input_files = args.input_files();
     for(const boost::filesystem::path& f : input_files)
       {
-        translation_unit unit(f, path, args, env);
+        translation_unit unit(f, path, args, env, policy);
         replacements += unit.apply();
         ++files_processed;
 
@@ -57,6 +73,7 @@ int main(int argc, const char *argv[])
 
     timer.stop();
 
+    // issue summary statistics
 		if(args.verbose())
 			{
 		    std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A

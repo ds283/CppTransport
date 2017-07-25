@@ -32,10 +32,13 @@
 
 enum class keyword_type
   {
+    metadata, require_version, lagrangian,
+    canonical, nontrivial_metric,
     name, author, citeguide,
     description, license, revision,
     references, urls, email, institute,
-    field, potential, subexpr, value,
+    field, potential, metric,
+    subexpr, value,
     parameter, latex, templates, settings,
     core, impl, model,
     abserr, relerr, stepper, stepsize,

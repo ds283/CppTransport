@@ -1,0 +1,75 @@
+model "yvette"
+ { name = "Yvette's problematic model";
+   lagrangian = nontrivial_metric;
+
+   description = "A model with nontrivial field-space metric, giving a disagreement between different methods of calculation";
+   revision = 1;
+
+   references = [ "arXiv:1010.3693" ];
+ };
+
+metadata
+ { require_version = 201701;
+ };
+
+author "David Seery"
+ { email = "D.Seery@sussex.ac.uk";
+   institute = "University of Sussex";
+ };
+
+templates
+ { core = "nontrivial_metric_core";
+   implementation = "nontrivial_metric_mpi";
+ };
+
+background
+ { abserr = 1E-12;
+   relerr = 1E-12;
+   stepsize = 1E-10;
+   stepper = "runge_kutta_dopri5";
+ };
+
+perturbations
+ { abserr = 1E-14;
+   relerr = 1E-14;
+   stepsize = 1E-15;
+   stepper = "runge_kutta_dopri5";
+ };
+
+% set up the fields
+field chi
+ { latex = "\chi";
+ };
+
+field psi
+ { latex = "\psi";
+ };
+
+parameter Gamma0
+ { latex = "\Gamma_0";
+ };
+
+parameter chi0
+ { latex = "\chi_0";
+ };
+
+parameter DeltaChi
+ { latex = "\Delta\chi";
+ };
+
+parameter m
+ { latex = "m";
+ };
+
+parameter M
+ { latex = "M";
+ };
+
+subexpr Gamma
+ { latex = "\Gamma";
+   value = Gamma0 / cosh( 2*(chi-chi0) / DeltaChi )^2;
+ };
+
+potential = m^2 * chi^2 / 2 + M^2 * psi^2 / 2;
+
+metric = [ chi,chi = 1; psi,psi = 1; chi,psi = Gamma; ];

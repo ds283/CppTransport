@@ -54,8 +54,8 @@ namespace transport
 					        {
 				            if(status == SQLITE_ROW)
 					            {
-				                double time = static_cast<TargetType>(sqlite3_column_double(stmt, 0));
-				                sample.push_back(time);
+				                TargetType value = static_cast<TargetType>(sqlite3_column_double(stmt, 0));
+				                sample.push_back(value);
 					            }
 				            else
 					            {

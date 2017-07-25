@@ -31,6 +31,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, lm, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace macro_packages
@@ -39,17 +40,18 @@ namespace macro_packages
     flow_tensors::flow_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(replace_V, "POTENTIAL"));
-        pre_package.emplace_back(BIND(replace_Hsq, "HUBBLE_SQ"));
-        pre_package.emplace_back(BIND(replace_eps, "EPSILON"));
+        EMPLACE(pre_package, BIND(replace_V, "POTENTIAL"));
+        EMPLACE(pre_package, BIND(replace_Hsq, "HUBBLE_SQ"));
+        EMPLACE(pre_package, BIND(replace_eps, "EPSILON"));
 
-        index_package.emplace_back(BIND(replace_parameter, "PARAMETER"));
-        index_package.emplace_back(BIND(replace_field, "FIELD"));
-        index_package.emplace_back(BIND(replace_coordinate, "COORDINATE"));
-        index_package.emplace_back(BIND(replace_SR_velocity, "SR_VELOCITY"));
-        index_package.emplace_back(BIND(replace_dV, "DV"));
-        index_package.emplace_back(BIND(replace_ddV, "DDV"));
-        index_package.emplace_back(BIND(replace_dddV, "DDDV"));
+        EMPLACE(index_package, BIND(replace_parameter, "PARAMETER"));
+        EMPLACE(index_package, BIND(replace_field, "FIELD"));
+        EMPLACE(index_package, BIND(replace_momenta, "MOMENTA"));
+        EMPLACE(index_package, BIND(replace_coordinate, "COORDINATE"));
+        EMPLACE(index_package, BIND(replace_SR_velocity, "SR_VELOCITY"));
+        EMPLACE(index_package, BIND(replace_dV, "DV"));
+        EMPLACE(index_package, BIND(replace_ddV, "DDV"));
+        EMPLACE(index_package, BIND(replace_dddV, "DDDV"));
       }
 
 
@@ -59,10 +61,8 @@ namespace macro_packages
     std::string replace_V::evaluate(const macro_argument_list& args)
       {
         GiNaC::ex V = this->Hubble_obj->compute_V();
-
-
-
-        // pass to CSE module for evalaution
+        
+        // pass to CSE module for evaluation
         this->cse_worker.parse(V);
 
         // emit
@@ -95,133 +95,152 @@ namespace macro_packages
 
 
     // ******************************************************************
-
-
-    std::string replace_parameter::unroll(const macro_argument_list& args, const assignment_list& indices)
+    
+    
+    void replace_field::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<symbol_list> parameters = this->shared.generate_parameters(this->printer);
-        return this->printer.ginac((*parameters)[indices[0].get_numeric_value()]);
+        if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_FIELD_INDICES_ARE_CONTRAVARIANT);
+        
+        std::unique_ptr<flattened_tensor> container = this->field_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    void replace_momenta::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<flattened_tensor> container = this->momenta_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    void replace_coordinate::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_COORD_INDICES_ARE_CONTRAVARIANT);
+    
+        std::unique_ptr<flattened_tensor> container = this->coordinate_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    void replace_parameter::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<flattened_tensor> container = this->parameter_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+
+    void replace_SR_velocity::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<flattened_tensor> container = this->SR_velocity_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    std::string replace_field::unroll(const macro_argument_list& args, const assignment_list& indices)
+    void replace_dV::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
-        return this->printer.ginac((*fields)[indices[0].get_numeric_value()]);
+        std::unique_ptr<flattened_tensor> container = this->dV_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    std::string replace_coordinate::unroll(const macro_argument_list& args, const assignment_list& indices)
+    void replace_ddV::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
-        std::unique_ptr<symbol_list> derivs = this->shared.generate_derivs(this->printer);
+        std::unique_ptr<flattened_tensor> container = this->ddV_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
 
-        std::string rval;
 
-        if(indices[0].is_field())
-          {
-            rval = this->printer.ginac((*fields)[indices[0].species()]);
-          }
-        else if(indices[0].is_momentum())
-          {
-            rval = this->printer.ginac((*derivs)[indices[0].species()]);
-          }
-        else
-          {
-            assert(false);
-          }
-
-        return(rval);
+    void replace_dddV::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<flattened_tensor> container = this->dddV_tensor->compute(indices);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+    
+    
+    // ******************************************************************
+    
+    
+    std::string replace_parameter::unroll(const macro_argument_list& args, const index_literal_assignment& indices)
+      {
+        if(!this->map) throw rule_apply_fail(ERROR_NO_PRE_MAP);
+    
+        const index_value& idx = indices[0].second.get();
+    
+        param_index i_label = param_index(idx.get_numeric_value());
+    
+        return((*this->map)[this->fl.flatten(i_label)]);
       }
 
 
     // ******************************************************************
 
 
-    void replace_SR_velocity::pre_hook(const macro_argument_list& args)
+    std::string replace_parameter::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> container = this->SR_velocity_tensor->compute();
-        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+        std::unique_ptr<atomic_lambda> lambda = this->parameter_tensor->compute_lambda(*indices[0]);
+    
+        // assume that the result will always be just a single symbol (indices aren't raised or lowered
+        // on parameters, so there are no sums), so can be safely inlined
+        return this->printer.ginac(**lambda);
       }
-
-
-    void replace_dV::pre_hook(const macro_argument_list& args)
+    
+    
+    std::string replace_field::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> container = this->dV_tensor->compute();
-        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+        if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_FIELD_INDICES_ARE_CONTRAVARIANT);
+    
+        std::unique_ptr<atomic_lambda> lambda = this->field_tensor->compute_lambda(*indices[0]);
+    
+        // assume that the result will always be just a single symbol (it won't have its indices repositioned,
+        // because only contravariant indices are allowed), so can be safely inlined
+        return this->printer.ginac(**lambda);
       }
-
-
-    void replace_ddV::pre_hook(const macro_argument_list& args)
+    
+    
+    std::string replace_momenta::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<flattened_tensor> container = this->ddV_tensor->compute();
-        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
-      }
-
-
-    void replace_dddV::pre_hook(const macro_argument_list& args)
-      {
-        std::unique_ptr<flattened_tensor> container = this->dddV_tensor->compute();
-        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
-      }
-
-
-    // ******************************************************************
-
-
-    std::string replace_parameter::roll(const macro_argument_list& args, const abstract_index_list& indices)
-      {
-        GiNaC::ex sym = this->shared.generate_parameters(indices[0], this->printer);
-        return this->printer.ginac(sym);
-      }
-
-
-    std::string replace_field::roll(const macro_argument_list& args, const abstract_index_list& indices)
-      {
-        GiNaC::ex sym = this->shared.generate_fields(indices[0], this->printer);
-        return this->printer.ginac(sym);
-      }
-
-
-    std::string replace_coordinate::roll(const macro_argument_list& args, const abstract_index_list& indices)
-      {
-        // safe to re-use generate_fields since the symbol is the same as for the field list
-        GiNaC::ex sym = this->shared.generate_fields(indices[0], this->printer);
-        return this->printer.ginac(sym);
-      }
-
-
-    std::string replace_SR_velocity::roll(const macro_argument_list& args, const abstract_index_list& indices)
-      {
-        std::unique_ptr<atomic_lambda> lambda = this->SR_velocity_tensor->compute_lambda(indices[0]);
+        std::unique_ptr<atomic_lambda> lambda = this->momenta_tensor->compute_lambda(*indices[0]);
         return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    std::string replace_dV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_coordinate::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<atomic_lambda> lambda = this->dV_tensor->compute_lambda(indices[0]);
-
-        // assume that the result will always be just a single symbol, so can be safely inlined
+        if(indices[0]->get_variance() == variance::covariant) throw rule_apply_fail(ERROR_COORD_INDICES_ARE_CONTRAVARIANT);
+    
+        std::unique_ptr<atomic_lambda> lambda = this->coordinate_tensor->compute_lambda(*indices[0]);
+    
+        // assume that the result will always be just a single symbol (it won't have its indices repositioned,
+        // because only contravariant indices are allowed), so can be safely inlined
         return this->printer.ginac(**lambda);
       }
 
 
-    std::string replace_ddV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_SR_velocity::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<atomic_lambda> lambda = this->ddV_tensor->compute_lambda(indices[0], indices[1]);
-
-        // assume that the result will always be just a single symbol, so can be safely inlined
-        return this->printer.ginac(**lambda);
+        std::unique_ptr<atomic_lambda> lambda = this->SR_velocity_tensor->compute_lambda(*indices[0]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    std::string replace_dddV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+    std::string replace_dV::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        std::unique_ptr<atomic_lambda> lambda = this->dddV_tensor->compute_lambda(indices[0], indices[1], indices[2]);
+        std::unique_ptr<atomic_lambda> lambda = this->dV_tensor->compute_lambda(*indices[0]);
+        return this->lambda_mgr.cache(std::move(lambda));
+      }
 
-        // assume that the result will always be just a single symbol, so can be safely inlined
-        return this->printer.ginac(**lambda);
+
+    std::string replace_ddV::roll(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->ddV_tensor->compute_lambda(*indices[0], *indices[1]);
+        return this->lambda_mgr.cache(std::move(lambda));
+      }
+
+
+    std::string replace_dddV::roll(const macro_argument_list& args, const index_literal_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->dddV_tensor->compute_lambda(*indices[0], *indices[1], *indices[2]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
   } // namespace macro_packages

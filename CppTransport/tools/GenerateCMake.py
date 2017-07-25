@@ -62,7 +62,7 @@ for dir in top_level_dirs:
             and dir.lower() != 'tools' \
             and dir.lower() != 'splinter' \
             and dir.lower() != 'html_assets' \
-            and dir.lower() != 'test-target':  # don't descend into thirdparty directories
+            and dir.lower() != 'test-canonical':  # don't descend into thirdparty directories
 
         add_folder(os.path.join(top_path, dir), dir, dir.upper().replace("-", "_"), cmake_variables)
 
