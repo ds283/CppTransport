@@ -23,14 +23,48 @@
 // --@@
 //
 
-#include "transport-runtime/transport.h"
+//#include "boost/multiprecision/mpfr.hpp"
+
+
+//using mpfr50 = boost::multiprecision::number< boost::multiprecision::mpfr_float_backend<50>, boost::multiprecision::et_off >;
+//using mpfr50 = boost::multiprecision::mpfr_float_50;
+using DataType = long double;
+
+//namespace std
+//  {
+//
+//    mpfr50 sqrt(const mpfr50& x) { return boost::multiprecision::sqrt(x); }
+//    mpfr50 log(const mpfr50& x) { return boost::multiprecision::log(x); }
+//    mpfr50 pow(const mpfr50& x, double y) { return boost::multiprecision::pow(x, y); }
+//    mpfr50 exp(const mpfr50& x) { return boost::multiprecision::exp(x); }
+//
+//    mpfr50 max(const mpfr50& a, const mpfr50& b) { return (a < b) ? b : a; }
+//    mpfr50 abs(const mpfr50& x) { return boost::multiprecision::abs(x); }
+//
+//    mpfr50 sinh(const mpfr50& x) { return boost::multiprecision::sinh(x); }
+//    mpfr50 cosh(const mpfr50& x) { return boost::multiprecision::cosh(x); }
+//    mpfr50 tanh(const mpfr50& x) { return boost::multiprecision::tanh(x); }
+//
+//    bool isnan(const mpfr50& x) { return boost::math::isnan(x); }
+//    bool isinf(const mpfr50& x) { return boost::math::isinf(x); }
+//
+//  }
+
 #include "gelaton_mpi.h"
 
+//namespace transport
+//  {
+//
+//    template <>
+//    std::string data_type_name<mpfr50>() { return std::string{"boost::multiprecision::mpfr_float_50 without expression templates"}; }
+//
+//  }
 
-void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model);
+
+void write_tasks(transport::repository<DataType>& repo, transport::gelaton_mpi<DataType>* model);
 
 
-void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
+void write_tasks(transport::repository<DataType>& repo, transport::gelaton_mpi<DataType>* model)
   {
     const double M_P           = 1.0;
     const double P_zeta        = 1E-9;                                                          // desired amplitude of fluctuations
@@ -54,26 +88,26 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     const double N_pre         = 8.0;
     const double N_max         = 28.0;
     
-    transport::parameters<> params{M_P, { R0, V0, eta_R, g_R, lambda_R, alpha }, model};
-    transport::initial_conditions<> ics{"gelaton", params, { R_init, theta_init, 0.0, 0.0 }, N_init, N_pre};
+    transport::parameters<DataType> params{M_P, { R0, V0, eta_R, g_R, lambda_R, alpha }, model};
+    transport::initial_conditions<DataType> ics{"gelaton", params, { R_init, theta_init, 0.0, 0.0 }, N_init, N_pre};
     
-    transport::basic_range<> times{N_init, N_max, 500, transport::spacing::linear};
+    transport::basic_range<double> times{N_init, N_max, 500, transport::spacing::linear};
     
-    transport::basic_range<> ks{exp(10.0), exp(18.5), 1000, transport::spacing::log_bottom};
-    transport::basic_range<> kts{exp(10.0), exp(17.0), 100, transport::spacing::log_bottom};
-    transport::basic_range<> alphas{0.0, 0.0, 0, transport::spacing::linear};
-    transport::basic_range<> betas{1.0/3.0, 1.0/3.0, 0, transport::spacing::linear};
+    transport::basic_range<double> ks{exp(10.0), exp(18.5), 1000, transport::spacing::log_bottom};
+    transport::basic_range<double> kts{exp(10.0), exp(17.0), 100, transport::spacing::log_bottom};
+    transport::basic_range<double> alphas{0.0, 0.0, 0, transport::spacing::linear};
+    transport::basic_range<double> betas{1.0/3.0, 1.0/3.0, 0, transport::spacing::linear};
     
     // construct a twopf task
-    transport::twopf_task<> tk2{"gelaton.twopf", ics, times, ks};
+    transport::twopf_task<DataType> tk2{"gelaton.twopf", ics, times, ks};
     tk2.set_collect_initial_conditions(true).set_adaptive_ics_efolds(5.0);
     
     // construct a threepf task
-    transport::threepf_alphabeta_task<> tk3{"gelaton.threepf", ics, times, kts, alphas, betas};
+    transport::threepf_alphabeta_task<DataType> tk3{"gelaton.threepf", ics, times, kts, alphas, betas};
     tk3.set_collect_initial_conditions(true).set_adaptive_ics_efolds(5.0);
     
-    transport::zeta_twopf_task<> ztk2{"gelaton.twopf-zeta", tk2};
-    transport::zeta_threepf_task<> ztk3{"gelaton.threepf-zeta", tk3};
+    transport::zeta_twopf_task<DataType> ztk2{"gelaton.twopf-zeta", tk2};
+    transport::zeta_threepf_task<DataType> ztk3{"gelaton.threepf-zeta", tk3};
     
     ztk2.set_paired(true);
     ztk3.set_paired(true);
@@ -87,10 +121,10 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     vis_toolkit::SQL_twopf_query k2all{"1=1"};
     vis_toolkit::SQL_threepf_query k3all("1=1");
     
-    vis_toolkit::zeta_twopf_time_series<> z2pf{ztk3, tquery, k2query};    // defaults to dimensionless
-    vis_toolkit::largest_u2_line<> u2line{tk3, tquery, k2query};
-    vis_toolkit::largest_u3_line<> u3line{tk3, tquery, k3query};
-    vis_toolkit::background_line<> hubble{tk3, tquery, vis_toolkit::background_quantity::Hubble};
+    vis_toolkit::zeta_twopf_time_series<DataType> z2pf{ztk3, tquery, k2query};    // defaults to dimensionless
+    vis_toolkit::largest_u2_line<DataType> u2line{tk3, tquery, k2query};
+    vis_toolkit::largest_u3_line<DataType> u3line{tk3, tquery, k3query};
+    vis_toolkit::background_line<DataType> hubble{tk3, tquery, vis_toolkit::background_quantity::Hubble};
     
     vis_toolkit::index_selector<2> f2_fields{model->get_N_fields()};
     f2_fields.none().set_on({0,0}).set_on({0,1}).set_on({1,0}).set_on({1,1});
@@ -101,33 +135,33 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     vis_toolkit::index_selector<2> f2_cross2{model->get_N_fields()};
     f2_cross2.none().set_on({0,2}).set_on({1,2}).set_on({0,3}).set_on({1,3});
     
-    vis_toolkit::twopf_time_series<> tk2_fields{tk2, f2_fields, tquery, k2query};
-    vis_toolkit::twopf_time_series<> tk2_momenta{tk2, f2_momenta, tquery, k2query};
-    vis_toolkit::twopf_time_series<> tk2_cross{tk2, f2_cross, tquery, k2query};
-    vis_toolkit::twopf_time_series<> tk2_cross2{tk2, f2_cross2, tquery, k2query};
+    vis_toolkit::twopf_time_series<DataType> tk2_fields{tk2, f2_fields, tquery, k2query};
+    vis_toolkit::twopf_time_series<DataType> tk2_momenta{tk2, f2_momenta, tquery, k2query};
+    vis_toolkit::twopf_time_series<DataType> tk2_cross{tk2, f2_cross, tquery, k2query};
+    vis_toolkit::twopf_time_series<DataType> tk2_cross2{tk2, f2_cross2, tquery, k2query};
     
-    vis_toolkit::time_series_plot<> tk2_fplot{"gelaton.twopf-1.fields-plot", "fields-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_fplot{"gelaton.twopf-1.fields-plot", "fields-plot.pdf"};
     tk2_fplot += tk2_fields;
-    vis_toolkit::time_series_plot<> tk2_mplot{"gelaton.twopf-1.momenta-plot", "momenta-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_mplot{"gelaton.twopf-1.momenta-plot", "momenta-plot.pdf"};
     tk2_mplot += tk2_momenta;
-    vis_toolkit::time_series_plot<> tk2_cplot("gelaton.twopf-1.cross-plot", "cross-plot.pdf");
+    vis_toolkit::time_series_plot<DataType> tk2_cplot("gelaton.twopf-1.cross-plot", "cross-plot.pdf");
     tk2_cplot += tk2_cross;
-    vis_toolkit::time_series_plot<> tk2_c2plot("gelaton.twopf-1.cross2-plot", "cross2-plot.pdf");
+    vis_toolkit::time_series_plot<DataType> tk2_c2plot("gelaton.twopf-1.cross2-plot", "cross2-plot.pdf");
     tk2_c2plot += tk2_cross2;
     
-    vis_toolkit::u2_line<> tk2_u2_fields{tk2, f2_fields, tquery, k2query};
-    vis_toolkit::u2_line<> tk2_u2_momenta{tk2, f2_momenta, tquery, k2query};
-    vis_toolkit::u2_line<> tk2_u2_cross{tk2, f2_cross, tquery, k2query};
-    vis_toolkit::u2_line<> tk2_u2_cross2{tk2, f2_cross2, tquery, k2query};
+    vis_toolkit::u2_line<DataType> tk2_u2_fields{tk2, f2_fields, tquery, k2query};
+    vis_toolkit::u2_line<DataType> tk2_u2_momenta{tk2, f2_momenta, tquery, k2query};
+    vis_toolkit::u2_line<DataType> tk2_u2_cross{tk2, f2_cross, tquery, k2query};
+    vis_toolkit::u2_line<DataType> tk2_u2_cross2{tk2, f2_cross2, tquery, k2query};
     
-    vis_toolkit::time_series_plot<> tk2_u2_mplot{"gelaton.twopf-1.u2-momenta-plot", "u2-momenta-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_u2_mplot{"gelaton.twopf-1.u2-momenta-plot", "u2-momenta-plot.pdf"};
     tk2_u2_mplot += tk2_u2_momenta;
-    vis_toolkit::time_series_plot<> tk2_u2_cplot{"gelaton.twopf-1.u2-cross-plot", "u2-cross-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_u2_cplot{"gelaton.twopf-1.u2-cross-plot", "u2-cross-plot.pdf"};
     tk2_u2_cplot += tk2_u2_cross;
-    vis_toolkit::time_series_plot<> tk2_u2_c2plot{"gelaton.twopf-1.u2-cross2-plot", "u2-cross2-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_u2_c2plot{"gelaton.twopf-1.u2-cross2-plot", "u2-cross2-plot.pdf"};
     tk2_u2_c2plot += tk2_u2_cross2;
     
-    vis_toolkit::time_series_table<> tk2_u2_table{"gelaton.twopf-1.u2-table", "u2-table.txt"};
+    vis_toolkit::time_series_table<DataType> tk2_u2_table{"gelaton.twopf-1.u2-table", "u2-table.txt"};
     tk2_u2_table += tk2_u2_fields + tk2_u2_momenta + tk2_u2_cross + tk2_u2_cross2;
     
     vis_toolkit::index_selector<1> Rindex{model->get_N_fields()};
@@ -135,82 +169,82 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
     vis_toolkit::index_selector<1> thetaindex{model->get_N_fields()};
     thetaindex.none().set_on({1});
 
-    vis_toolkit::background_time_series<> tk2_R{tk2, Rindex, tquery};
-    vis_toolkit::background_time_series<> tk2_theta{tk2, thetaindex, tquery};
-    vis_toolkit::background_line<> tk2_eps{tk2, tquery, vis_toolkit::background_quantity::epsilon};
-    vis_toolkit::background_line<> tk2_H{tk2, tquery, vis_toolkit::background_quantity::Hubble};
+    vis_toolkit::background_time_series<DataType> tk2_R{tk2, Rindex, tquery};
+    vis_toolkit::background_time_series<DataType> tk2_theta{tk2, thetaindex, tquery};
+    vis_toolkit::background_line<DataType> tk2_eps{tk2, tquery, vis_toolkit::background_quantity::epsilon};
+    vis_toolkit::background_line<DataType> tk2_H{tk2, tquery, vis_toolkit::background_quantity::Hubble};
     
-    vis_toolkit::time_series_plot<> tk2_R_plot{"gelaton.twopf-1.bg-R", "bg-R.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_R_plot{"gelaton.twopf-1.bg-R", "bg-R.pdf"};
     tk2_R_plot += tk2_R;
-    vis_toolkit::time_series_plot<> tk2_theta_plot{"gelaton.twopf-1.bg-theta", "bg-theta.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_theta_plot{"gelaton.twopf-1.bg-theta", "bg-theta.pdf"};
     tk2_theta_plot += tk2_theta;
-    vis_toolkit::time_series_plot<> tk2_eps_plot{"gelaton.twopf-1.epsilon", "epsilon.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_eps_plot{"gelaton.twopf-1.epsilon", "epsilon.pdf"};
     tk2_eps_plot += tk2_eps;
-    vis_toolkit::time_series_plot<> tk2_H_plot{"gelaton.twopf-1.Hubble", "Hubble.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk2_H_plot{"gelaton.twopf-1.Hubble", "Hubble.pdf"};
     tk2_H_plot += tk2_H;
     
-    vis_toolkit::time_series_table<> tk2_bg_table{"gelaton.twopf-1.bg-table", "bg-table.txt"};
+    vis_toolkit::time_series_table<DataType> tk2_bg_table{"gelaton.twopf-1.bg-table", "bg-table.txt"};
     tk2_bg_table += tk2_R + tk2_theta + tk2_eps + tk2_H;
     
-    transport::output_task<> tk2_out{"gelaton.test"};
+    transport::output_task<DataType> tk2_out{"gelaton.test"};
     tk2_out += tk2_fplot + tk2_mplot + tk2_cplot + tk2_c2plot
                + tk2_u2_mplot + tk2_u2_cplot + tk2_u2_c2plot + tk2_u2_table
                + tk2_R_plot + tk2_theta_plot + tk2_eps_plot + tk2_H_plot + tk2_bg_table;
     repo.commit(tk2_out);
     
-    vis_toolkit::time_series_table<> table{"gelaton.utable", "utable.txt"};
+    vis_toolkit::time_series_table<DataType> table{"gelaton.utable", "utable.txt"};
     table += z2pf + u2line + u3line + hubble;
     
-    vis_toolkit::zeta_twopf_wavenumber_series<> zeta2pf{ztk3, tlast, k2all};
+    vis_toolkit::zeta_twopf_wavenumber_series<DataType> zeta2pf{ztk3, tlast, k2all};
     zeta2pf.set_current_x_axis_value(vis_toolkit::axis_value::efolds_exit);
     
-    vis_toolkit::wavenumber_series_plot<> zeta2pf_plot{"gelaton.threepf-1.zeta_2pf", "zeta2pf-plot.pdf"};
+    vis_toolkit::wavenumber_series_plot<DataType> zeta2pf_plot{"gelaton.threepf-1.zeta_2pf", "zeta2pf-plot.pdf"};
     zeta2pf_plot += zeta2pf;
     
     vis_toolkit::index_selector<3> fsel{model->get_N_fields()};
     fsel.none().set_on({0,0,0}).set_on({1,1,1});
-    vis_toolkit::threepf_time_series<> tpf{tk3, fsel, tquery, k3query};
+    vis_toolkit::threepf_time_series<DataType> tpf{tk3, fsel, tquery, k3query};
     
-    vis_toolkit::time_series_plot<> plot{"gelaton.threepf-fields", "threepf-fields.pdf"};
+    vis_toolkit::time_series_plot<DataType> plot{"gelaton.threepf-fields", "threepf-fields.pdf"};
     plot += tpf;
     
-    vis_toolkit::zeta_twopf_time_series<> ztwpf{ztk3, tquery, k2query};
-    vis_toolkit::zeta_threepf_time_series<> zthpf{ztk3, tquery, k3query};
-    vis_toolkit::zeta_reduced_bispectrum_time_series<> zrbsp(ztk3, tquery, k3query);
+    vis_toolkit::zeta_twopf_time_series<DataType> ztwpf{ztk3, tquery, k2query};
+    vis_toolkit::zeta_threepf_time_series<DataType> zthpf{ztk3, tquery, k3query};
+    vis_toolkit::zeta_reduced_bispectrum_time_series<DataType> zrbsp(ztk3, tquery, k3query);
     
-    vis_toolkit::time_series_plot<> plot2{"gelaton.threepf-zeta", "threepf-zeta.pdf"};
+    vis_toolkit::time_series_plot<DataType> plot2{"gelaton.threepf-zeta", "threepf-zeta.pdf"};
     plot2 += zthpf;
-    vis_toolkit::time_series_plot<> plot2a{"gelaton.twopf-zeta", "twopf-zeta.pdf"};
+    vis_toolkit::time_series_plot<DataType> plot2a{"gelaton.twopf-zeta", "twopf-zeta.pdf"};
     plot2a += ztwpf;
-    vis_toolkit::time_series_plot<> plot3("gelaton.threepf-redbsp", "threepf-redbsp.pdf");
+    vis_toolkit::time_series_plot<DataType> plot3("gelaton.threepf-redbsp", "threepf-redbsp.pdf");
     plot3.set_log_y(false);
     plot3 += zrbsp;
     
-    vis_toolkit::time_series_table<> thpf_tab{"gelaton.threepf-table", "threepf-table.txt"};
+    vis_toolkit::time_series_table<DataType> thpf_tab{"gelaton.threepf-table", "threepf-table.txt"};
     thpf_tab += ztwpf + zthpf + zrbsp;
     
-    vis_toolkit::twopf_time_series<> tk3_fields{tk3, f2_fields, tquery, k2query};
-    vis_toolkit::twopf_time_series<> tk3_momenta{tk3, f2_momenta, tquery, k2query};
-    vis_toolkit::twopf_time_series<> tk3_cross{tk3, f2_cross, tquery, k2query};
-    vis_toolkit::twopf_time_series<> tk3_cross2{tk3, f2_cross2, tquery, k2query};
+    vis_toolkit::twopf_time_series<DataType> tk3_fields{tk3, f2_fields, tquery, k2query};
+    vis_toolkit::twopf_time_series<DataType> tk3_momenta{tk3, f2_momenta, tquery, k2query};
+    vis_toolkit::twopf_time_series<DataType> tk3_cross{tk3, f2_cross, tquery, k2query};
+    vis_toolkit::twopf_time_series<DataType> tk3_cross2{tk3, f2_cross2, tquery, k2query};
     
-    vis_toolkit::time_series_plot<> tk3_fplot{"gelaton.threepf-1.fields-plot", "fields-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk3_fplot{"gelaton.threepf-1.fields-plot", "fields-plot.pdf"};
     tk3_fplot += tk3_fields;
-    vis_toolkit::time_series_plot<> tk3_mplot{"gelaton.threepf-1.momenta-plot", "momenta-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk3_mplot{"gelaton.threepf-1.momenta-plot", "momenta-plot.pdf"};
     tk3_mplot += tk3_momenta;
-    vis_toolkit::time_series_plot<> tk3_cplot{"gelaton.threepf-1.cross-plot", "cross-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk3_cplot{"gelaton.threepf-1.cross-plot", "cross-plot.pdf"};
     tk3_cplot += tk3_cross;
-    vis_toolkit::time_series_plot<> tk3_c2plot{"gelaton.threepf-1.cross2-plot", "cross2-plot.pdf"};
+    vis_toolkit::time_series_plot<DataType> tk3_c2plot{"gelaton.threepf-1.cross2-plot", "cross2-plot.pdf"};
     tk3_c2plot += tk3_cross2;
     
-    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<> fNL{ztk3, tlast, k3all};
+    vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<DataType> fNL{ztk3, tlast, k3all};
     fNL.set_current_x_axis_value(vis_toolkit::axis_value::efolds_exit);
     
-    vis_toolkit::wavenumber_series_plot<> fNLplot{"gelaton.fNL", "fNL.pdf"};
+    vis_toolkit::wavenumber_series_plot<DataType> fNLplot{"gelaton.fNL", "fNL.pdf"};
     fNLplot.set_log_y(false);
     fNLplot += fNL;
     
-    transport::output_task<> otk{"gelaton.output"};
+    transport::output_task<DataType> otk{"gelaton.output"};
     otk += zeta2pf_plot + table + plot + plot2 + plot2a + plot3 + tk3_fplot + tk3_mplot + tk3_cplot + tk3_c2plot
            + thpf_tab + fNLplot;
     
@@ -223,13 +257,13 @@ void write_tasks(transport::repository<>& repo, transport::gelaton_mpi<>* model)
 int main(int argc, char* argv[])
   {
     // create task manager instance
-    transport::task_manager<> mgr(argc, argv);
+    transport::task_manager<DataType> mgr(argc, argv);
     
     // create model instance
-    auto model = mgr.create_model< transport::gelaton_mpi<> >();
+    auto model = mgr.create_model< transport::gelaton_mpi<DataType> >();
     
     // write tasks to repository
-    mgr.add_generator([=](transport::repository<>& repo) -> void { write_tasks(repo, model.get()); });
+    mgr.add_generator([=](transport::repository<DataType>& repo) -> void { write_tasks(repo, model.get()); });
     
     // hand off control to task manager
     mgr.process();
