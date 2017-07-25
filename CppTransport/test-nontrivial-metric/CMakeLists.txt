@@ -60,7 +60,12 @@ ADD_EXECUTABLE(test-nontrivial-metric test-nontrivial-metric.cpp)
 ADD_DEPENDENCIES(test-nontrivial-metric GelatonGenerator)
 
 TARGET_LINK_LIBRARIES(test-nontrivial-metric sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
-TARGET_COMPILE_OPTIONS(test-nontrivial-metric PRIVATE -std=c++14 -ftemplate-backtrace-limit=0)
+SET_TARGET_PROPERTIES(test-nontrivial-metric PROPERTIES
+  CXX_STANDARD 14
+  CXX_STANDARD_REQUIRED YES
+  CXX_EXTENSIONS NO
+  )
+TARGET_COMPILE_OPTIONS(test-nontrivial-metric PRIVATE -ftemplate-backtrace-limit=0)
 
 
 TARGET_INCLUDE_DIRECTORIES(

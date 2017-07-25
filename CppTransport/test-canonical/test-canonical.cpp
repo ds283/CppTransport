@@ -32,17 +32,21 @@
 #include "axion_mpi.h"
 
 
+using DataType = double;
+using StateType = std::vector<DataType>;
+
+
 // ****************************************************************************
 
 
 int main(int argc, char* argv[])
   {
     // set up an instance of a manager
-    auto mgr = std::make_unique< transport::task_manager<> >(argc, argv);
+    auto mgr = std::make_unique< transport::task_manager<DataType> >(argc, argv);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    auto model = mgr->create_model< transport::axion_mpi<> >();
+    auto model = mgr->create_model< transport::axion_mpi<DataType, StateType> >();
 
     mgr->process();
 

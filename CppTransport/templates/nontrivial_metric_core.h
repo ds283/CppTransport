@@ -52,6 +52,7 @@
 
 #include "transport-runtime/transport.h"
 #include "transport-runtime/models/nontrivial_metric_model.h"
+#include "transport-runtime/models/odeint_defaults.h"
 
 
 // #define CPPTRANSPORT_INSTRUMENT
@@ -59,9 +60,6 @@
 
 namespace transport
   {
-
-    template <typename number>
-    using backg_state = flattened_tensor<number>;
 
     // Literal data pool
     namespace $MODEL_pool
@@ -653,8 +651,8 @@ namespace transport
 
 
     $IF{!fast}
-      template <typename number>
-      void $MODEL_compute_dV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_dV(const number* __raw_params, const StateType& __x, number __Mp, number* __dV)
         {
           $RESOURCE_RELEASE
 
@@ -668,8 +666,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_ddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __ddV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_ddV(const number* __raw_params, const StateType& __x, number __Mp, number* __ddV)
         {
           $RESOURCE_RELEASE
 
@@ -683,8 +681,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_dddV(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __dddV)
+      template <typename number, typename StateType>
+      void $MODEL_compute_dddV(const number* __raw_params, const StateType& __x, number __Mp, number* __dddV)
         {
           $RESOURCE_RELEASE
 
@@ -698,8 +696,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_G(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __G)
+      template <typename number, typename StateType>
+      void $MODEL_compute_G(const number* __raw_params, const StateType& __x, number __Mp, number* __G)
         {
           $RESOURCE_RELEASE
 
@@ -713,8 +711,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_Ginv(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __Ginv)
+      template <typename number, typename StateType>
+      void $MODEL_compute_Ginv(const number* __raw_params, const StateType& __x, number __Mp, number* __Ginv)
         {
           $RESOURCE_RELEASE
 
@@ -728,8 +726,8 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $MODEL_compute_connexion(const number* __raw_params, const flattened_tensor<number>& __x, number __Mp, number* __Gamma)
+      template <typename number, typename StateType>
+      void $MODEL_compute_connexion(const number* __raw_params, const StateType& __x, number __Mp, number* __Gamma)
         {
           $RESOURCE_RELEASE
           
@@ -743,9 +741,9 @@ namespace transport
         }
 
 
-      template <typename number>
+      template <typename number, typename StateType>
       void
-      $MODEL_compute_Riemann_A2(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __A2)
+      $MODEL_compute_Riemann_A2(const number* __raw_params, const StateType& __x, number __Mp, number* __A2)
         {
           $RESOURCE_RELEASE
 
@@ -759,9 +757,9 @@ namespace transport
         }
 
 
-      template <typename number>
+      template <typename number, typename StateType>
       void
-      $MODEL_compute_Riemann_A3(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __A3)
+      $MODEL_compute_Riemann_A3(const number* __raw_params, const StateType& __x, number __Mp, number* __A3)
         {
           $RESOURCE_RELEASE
 
@@ -775,9 +773,9 @@ namespace transport
         }
 
 
-      template <typename number>
+      template <typename number, typename StateType>
       void
-      $MODEL_compute_Riemann_B3(const number* __raw_params, const flattened_tensor <number>& __x, number __Mp, number* __B3)
+      $MODEL_compute_Riemann_B3(const number* __raw_params, const StateType& __x, number __Mp, number* __B3)
         {
           $RESOURCE_RELEASE
 
@@ -1639,9 +1637,12 @@ namespace transport
         backg_state<number> x($MODEL_pool::backg_state_size);
         x[FLATTEN($^A)] = ics[$^A];
 
-        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number};
-        boost::numeric::odeint::integrate_times(stepper, system, x, time_db.value_begin(), time_db.value_end(),
-                                                static_cast<number>($BACKG_STEP_SIZE), obs);
+        using boost::numeric::odeint::integrate_times;
+        
+        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number, CPPTRANSPORT_ALGEBRA_NAME(backg_state<number>), CPPTRANSPORT_OPERATIONS_NAME(backg_state<number>)};
+        integrate_times(stepper, system, x, time_db.value_begin(), time_db.value_end(),
+                        static_cast<number>($BACKG_STEP_SIZE), obs);
+
         system.close_down_workspace();
       }
 
@@ -1700,9 +1701,10 @@ namespace transport
         x[FLATTEN($^A)] = ics[$^A];
 
 		    // find point where epsilon = 1
-        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number};
-
-        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $BACKG_STEP_SIZE);
+        using boost::numeric::odeint::make_adaptive_time_range;
+        
+        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number, CPPTRANSPORT_ALGEBRA_NAME(backg_state<number>), CPPTRANSPORT_OPERATIONS_NAME(backg_state<number>)};
+        auto range = make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $BACKG_STEP_SIZE);
     
         double Nend = 0.0;
         try
@@ -1854,8 +1856,6 @@ namespace transport
 				backg_state<number> x($MODEL_pool::backg_state_size);
 				x[FLATTEN($^A)] = ics[$^A];
 
-				auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number};
-
         double N_range = 0.0;
         bool found_end = false;
         try
@@ -1868,8 +1868,11 @@ namespace transport
             // try to fall back on a sensible default
             N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
-
-        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $BACKG_STEP_SIZE);
+        
+        using boost::numeric::odeint::make_adaptive_time_range;
+        
+        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number, CPPTRANSPORT_ALGEBRA_NAME(backg_state<number>), CPPTRANSPORT_OPERATIONS_NAME(backg_state<number>)};
+        auto range = make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $BACKG_STEP_SIZE);
 
         $MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, this, N, log_aH, log_a2H2M, largest_k);
 
