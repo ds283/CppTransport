@@ -28,8 +28,13 @@
 
 
 #ifdef __INTEL_COMPILER
+
 // Intel compiler produces warnings about GiNaC_deprecated
 #pragma warning disable 1292
+
+// Intel compiler produces warnings about #pragma clang system_header
+#pragma warning disable 161
+
 #endif
 
 
