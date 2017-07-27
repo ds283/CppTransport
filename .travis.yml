@@ -1,16 +1,6 @@
 sudo: required
 language: cpp
 
-addons:
-  apt:
-    packages:
-      cmake
-      libsqlite3-dev
-      libboost-all-dev
-      libginac-dev
-      libopenmpi-dev
-      libssl-dev
-
 before_script:
   - cd CppTransport
   - mkdir build
@@ -27,8 +17,28 @@ matrix:
   include:
     - os: linux
       dist: trusty
+      addons:
+        apt:
+          packages:
+            - cmake
+            - libsqlite3-dev
+            - libboost-all-dev
+            - libginac-dev
+            - libopenmpi-dev
+            - libssl-dev
+            - clang-3.8
       compiler: clang
 
     - os: linux
       dist: trusty
+      addons:
+        apt:
+          packages:
+            - cmake
+            - libsqlite3-dev
+            - libboost-all-dev
+            - libginac-dev
+            - libopenmpi-dev
+            - libssl-dev
+            - gcc-6
       compiler: gcc
