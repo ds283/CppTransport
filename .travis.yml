@@ -14,7 +14,7 @@ addons:
 before_script:
   - cd CppTransport
   - mkdir build
-  - cd buikd
+  - cd build
   - cmake .. -DCMAKE_BUILD_TYPE=Release
 
 script:
