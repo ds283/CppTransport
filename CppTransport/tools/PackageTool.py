@@ -1,13 +1,11 @@
 __author__ = 'ds283'
 
-
 import os
 import tarfile
 import subprocess
 
 
 def list_files(path):
-
     # returns a list of names (with extension, without full path) of all files
     # in folder path
     files = []
@@ -19,7 +17,6 @@ def list_files(path):
 
 
 def list_directories(path):
-
     dirs = []
     for name in os.listdir(path):
         if os.path.isdir(os.path.join(path, name)):
@@ -28,7 +25,6 @@ def list_directories(path):
 
 
 def add_folder(tree_path, archive_path, archive):
-
     # get list of files at this level
     files = list_files(tree_path)
 
@@ -37,7 +33,7 @@ def add_folder(tree_path, archive_path, archive):
 
     for file in files:
 
-        if file.lower() != 'cmakelists.txt': # don't emplace CMakeLists.txt; we will do it separately using a special package-ready version
+        if file.lower() != 'cmakelists.txt':  # don't emplace CMakeLists.txt; we will do it separately using a special package-ready version
 
             tree_name = os.path.join(tree_path, file)
             archive_name = os.path.join(archive_path, file)
@@ -47,13 +43,16 @@ def add_folder(tree_path, archive_path, archive):
     for dir in dirs:
 
         if dir[0] != '.' \
-                and dir.lower() != 'build-clang' \
-                and dir.lower() != 'build-icpc' \
-                and dir.lower() != 'build-gcc' \
-                and dir.lower() != 'tools' \
-                and dir.lower() != 'test-canonical' \
-                and dir.lower() != 'packages' \
-                and dir.lower() != 'bison':  # don't descend into unneeded directories
+            and dir.lower() != 'build-clang' \
+            and dir.lower() != 'build-icpc' \
+            and dir.lower() != 'cmake-build-debug' \
+            and dir.lower() != 'build-gcc' \
+            and dir.lower() != 'tools' \
+            and dir.lower() != 'test-canonical' \
+            and dir.lower() != 'test-nontrivial-metric' \
+            and dir.lower() != 'tests' \
+            and dir.lower() != 'packages' \
+            and dir.lower() != 'bison':  # don't descend into unneeded directories
 
             tree_name = os.path.join(tree_path, dir)
             archive_name = os.path.join(archive_path, dir)
@@ -64,9 +63,13 @@ def add_folder(tree_path, archive_path, archive):
             # and recursively add its contents
             add_folder(tree_name, archive_name, archive)
 
-
 package_dir = "packages/pkg"
-version = "2016_03"
+
+# ensure packaging directory exists
+if not os.path.exists(package_dir):
+    os.makedirs(package_dir)
+
+version = "2017_01_beta1"
 archive_file = "CppTransport" + "_" + version + ".tar.gz"
 
 # tree_path points to the position of some object within the source tree
@@ -104,7 +107,6 @@ archive_cmakelists = os.path.join(archive_path, "CMakeLists.txt")
 # write out all variables
 tarname = os.path.join(package_dir, archive_file)
 with tarfile.open(name=tarname, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
-
     # add top-level directory to archive
     archive.add(name=tree_path, arcname=archive_path, recursive=False)
 
