@@ -1,0 +1,16 @@
+sudo: required
+language: cpp
+
+env:
+  global:
+    - APT_DEPENDENCIES="libsqlite3-dev libboost-all-dev libginac-dev libopenmpi-dev libssl-dev cmake python-matplotlib python-seaborn graphviz"
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      compiler: clang
+
+    - os: linux:
+      dist: trusty
+      compiler: gcc
