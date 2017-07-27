@@ -33,7 +33,9 @@ def add_folder(tree_path, archive_path, archive):
 
     for file in files:
 
-        if file.lower() != 'cmakelists.txt':  # don't emplace CMakeLists.txt; we will do it separately using a special package-ready version
+        file_lower = file.lower()
+
+        if file_lower != 'cmakelists.txt':  # don't emplace CMakeLists.txt; we will do it separately using a special package-ready version
 
             tree_name = os.path.join(tree_path, file)
             archive_name = os.path.join(archive_path, file)
@@ -42,17 +44,20 @@ def add_folder(tree_path, archive_path, archive):
 
     for dir in dirs:
 
+        dir_lower = dir.lower()
+
         if dir[0] != '.' \
-            and dir.lower() != 'build-clang' \
-            and dir.lower() != 'build-icpc' \
-            and dir.lower() != 'cmake-build-debug' \
-            and dir.lower() != 'build-gcc' \
-            and dir.lower() != 'tools' \
-            and dir.lower() != 'test-canonical' \
-            and dir.lower() != 'test-nontrivial-metric' \
-            and dir.lower() != 'tests' \
-            and dir.lower() != 'packages' \
-            and dir.lower() != 'bison':  # don't descend into unneeded directories
+            and dir_lower != 'build-clang' \
+            and dir_lower != 'build-icpc' \
+            and dir_lower != 'build-gcc' \
+            and dir_lower != 'cmake-build-debug' \
+            and dir_lower != 'build-gcc' \
+            and dir_lower != 'tools' \
+            and dir_lower != 'test-canonical' \
+            and dir_lower != 'test-nontrivial-metric' \
+            and dir_lower != 'tests' \
+            and dir_lower != 'packages' \
+            and dir_lower != 'bison':  # don't descend into unneeded directories
 
             tree_name = os.path.join(tree_path, dir)
             archive_name = os.path.join(archive_path, dir)
