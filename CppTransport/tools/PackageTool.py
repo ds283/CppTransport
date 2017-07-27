@@ -35,7 +35,9 @@ def add_folder(tree_path, archive_path, archive):
 
         file_lower = file.lower()
 
-        if file_lower != 'cmakelists.txt':  # don't emplace CMakeLists.txt; we will do it separately using a special package-ready version
+        # don't emplace CMakeLists.txt; we will do it separately using a special package-ready version
+        if file_lower != 'cmakelists.txt' \
+            and file_lower != '.DS_Store':
 
             tree_name = os.path.join(tree_path, file)
             archive_name = os.path.join(archive_path, file)
@@ -47,10 +49,11 @@ def add_folder(tree_path, archive_path, archive):
         dir_lower = dir.lower()
 
         if dir[0] != '.' \
+            and dir_lower != '.idea' \
             and dir_lower != 'build-clang' \
             and dir_lower != 'build-icpc' \
             and dir_lower != 'build-gcc' \
-            and dir_lower != 'cmake-build-debug' \
+            and dir_lower != 'clion-build-debug' \
             and dir_lower != 'build-gcc' \
             and dir_lower != 'tools' \
             and dir_lower != 'test-canonical' \
@@ -68,68 +71,94 @@ def add_folder(tree_path, archive_path, archive):
             # and recursively add its contents
             add_folder(tree_name, archive_name, archive)
 
-package_dir = "packages/pkg"
 
-# ensure packaging directory exists
-if not os.path.exists(package_dir):
-    os.makedirs(package_dir)
+def package_CppTransport(package_dir, archive_file, version_string):
+
+    # tree_path points to the position of some object within the source tree
+    tree_path = "../CppTransport"
+
+    # archive path is the corresponding position of the object within the tar archive
+    archive_path = "CppTransport" + "_" + version_string
+
+    # bison output files
+    cwd = os.getcwd()
+    abs_package_dir = os.path.join(cwd, package_dir)
+    bison_parser_h = os.path.join(abs_package_dir, "y_parser.hpp")
+    bison_parser_cpp = os.path.join(abs_package_dir, "y_parser.cpp")
+    bison_location = os.path.join(abs_package_dir, "location.hh")
+    bison_position = os.path.join(abs_package_dir, "position.hh")
+    bison_stack = os.path.join(abs_package_dir, "stack.hh")
+    bison_graph = os.path.join(abs_package_dir, "grammar.dot")
+
+    # corresponding locations within the archive tree
+    archive_parser_hpp = "CppTransport/translator/parser/y_parser.hpp"
+    archive_parser_cpp = "CppTransport/translator/parser/y_parser.cpp"
+    archive_location = "CppTransport/translator/parser/location.hh"
+    archive_position = "CppTransport/translator/parser/position.hh"
+    archive_stack = "CppTransport/translator/parser/stack.hh"
+
+    # bison source grammar
+    tree_grammar = os.path.join(cwd, "translator/parser/bison/y_parser.yy")
+
+    # packageable CMakeLists.txt position in tree
+    tree_cmakelists = "packages/assets/CMakeLists.txt"
+
+    # and corresponding position within archive
+    archive_cmakelists = os.path.join(archive_path, "CMakeLists.txt")
+
+    # write out all variables
+    tarname = os.path.join(package_dir, archive_file)
+    with tarfile.open(name=tarname, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
+        # add top-level directory to archive
+        archive.add(name=tree_path, arcname=archive_path, recursive=False)
+
+        add_folder(tree_path, archive_path, archive)
+
+        # now use Bison to produce the various parser files
+        subprocess.check_call(
+            "bison -v --output=\"{outfile}\" --graph=\"{graph}\" \"{grammar}\"".format(outfile=bison_parser_cpp,
+                                                                                       grammar=tree_grammar,
+                                                                                       graph=bison_graph),
+            shell=True)
+
+        archive.add(name=bison_parser_h, arcname=archive_parser_hpp)
+        archive.add(name=bison_parser_cpp, arcname=archive_parser_cpp)
+        archive.add(name=bison_location, arcname=archive_location)
+        archive.add(name=bison_position, arcname=archive_position)
+        archive.add(name=bison_stack, arcname=archive_stack)
+
+        archive.add(name=tree_cmakelists, arcname=archive_cmakelists)
+
+        archive.close()
+
+
+def package_examples(package_dir, archive_file, version_string):
+
+    # tree_path points to the position of some object within the source tree
+    tree_path = "../Documentation/Examples"
+
+    # archive path is the corresponding position of the object within the tar archive
+    archive_path = "UserGuideExamples" + "_" + version_string
+
+    tarname = os.path.join(package_dir, archive_file)
+    with tarfile.open(name=tarname, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
+        # add top-level directory to archive
+        archive.add(name=tree_path, arcname=archive_path, recursive=False)
+
+        add_folder(tree_path, archive_path, archive)
+
+        archive.close()
+
 
 version = "2017_01_beta1"
-archive_file = "CppTransport" + "_" + version + ".tar.gz"
 
-# tree_path points to the position of some object within the source tree
-tree_path = "../CppTransport"
+package_dir = os.path.join("packages", "pkg")
+version_dir = os.path.join(package_dir, version)
 
-# archive path is the corresponding position of the object within the tar archive
-archive_path = "CppTransport"
+# ensure packaging directory exists
+if not os.path.exists(version_dir):
+    os.makedirs(version_dir)
 
-# bison output files
-cwd = os.getcwd()
-abs_package_dir = os.path.join(cwd, package_dir)
-bison_parser_h = os.path.join(abs_package_dir, "y_parser.hpp")
-bison_parser_cpp = os.path.join(abs_package_dir, "y_parser.cpp")
-bison_location = os.path.join(abs_package_dir, "location.hh")
-bison_position = os.path.join(abs_package_dir, "position.hh")
-bison_stack = os.path.join(abs_package_dir, "stack.hh")
-bison_graph = os.path.join(abs_package_dir, "grammar.dot")
+package_CppTransport(version_dir, "CppTransport" + "_" + version + ".tar.gz", version)
 
-# corresponding locations within the archive tree
-archive_parser_hpp = "CppTransport/translator/parser/y_parser.hpp"
-archive_parser_cpp = "CppTransport/translator/parser/y_parser.cpp"
-archive_location = "CppTransport/translator/parser/location.hh"
-archive_position = "CppTransport/translator/parser/position.hh"
-archive_stack = "CppTransport/translator/parser/stack.hh"
-
-# bison source grammar
-tree_grammar = os.path.join(cwd, "translator/parser/bison/y_parser.yy")
-
-# packageable CMakeLists.txt position in tree
-tree_cmakelists = "packages/assets/CMakeLists.txt"
-
-# and corresponding position within archive
-archive_cmakelists = os.path.join(archive_path, "CMakeLists.txt")
-
-# write out all variables
-tarname = os.path.join(package_dir, archive_file)
-with tarfile.open(name=tarname, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
-    # add top-level directory to archive
-    archive.add(name=tree_path, arcname=archive_path, recursive=False)
-
-    add_folder(tree_path, archive_path, archive)
-
-    # now use Bison to produce the various parser files
-    subprocess.check_call(
-        "bison -v --output=\"{outfile}\" --graph=\"{graph}\" \"{grammar}\"".format(outfile=bison_parser_cpp,
-                                                                                   grammar=tree_grammar,
-                                                                                   graph=bison_graph),
-        shell=True)
-
-    archive.add(name=bison_parser_h, arcname=archive_parser_hpp)
-    archive.add(name=bison_parser_cpp, arcname=archive_parser_cpp)
-    archive.add(name=bison_location, arcname=archive_location)
-    archive.add(name=bison_position, arcname=archive_position)
-    archive.add(name=bison_stack, arcname=archive_stack)
-
-    archive.add(name=tree_cmakelists, arcname=archive_cmakelists)
-
-    archive.close()
+package_examples(version_dir, "UserGuideExamples" + "_" + version + ".tar.gz", version)
