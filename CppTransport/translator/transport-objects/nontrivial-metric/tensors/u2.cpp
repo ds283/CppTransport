@@ -64,7 +64,9 @@ namespace nontrivial_metric
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
 
-        auto args = this->res.generate_cache_arguments<phase_index>(use_dV | use_ddV | use_Riemann_A2, {i, j}, this->printer);
+        auto args =
+          this->res.generate_cache_arguments(use_dV | use_ddV | use_Riemann_A2,
+                                             std::array<phase_index, 2>{i, j}, this->printer);
         args += { k, a };
         args += { idx_i, idx_j };
 
@@ -191,7 +193,9 @@ namespace nontrivial_metric
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = this->G(*i_field_a.second, *j_field_b.second);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = this->G(*i_field_b.second, *j_field_b.second) * (eps-3);
 
-        auto args = this->res.generate_cache_arguments<index_literal>(use_dV | use_ddV | use_Riemann_A2, {i, j}, this->printer);
+        auto args =
+          this->res.generate_cache_arguments(use_dV | use_ddV | use_Riemann_A2,
+                                             std::array<index_literal, 2>{i, j}, this->printer);
         args += { k, a };
         args += { idx_i, idx_j };
 

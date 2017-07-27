@@ -70,7 +70,8 @@ namespace nontrivial_metric
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
         auto idx_k = this->shared.generate_index<GiNaC::varidx>(k);
 
-        auto args = this->res.generate_cache_arguments<index_literal>(use_Gamma, {i,j,k}, this->printer);
+        auto args =
+          this->res.generate_cache_arguments(use_Gamma, std::array<index_literal, 3>{i,j,k}, this->printer);
         args += { idx_i, idx_j, idx_k };
 
         GiNaC::ex result = this->res.connexion_resource(i, j, k, this->printer);

@@ -58,7 +58,8 @@ namespace nontrivial_metric
         // tag with variance information -- need to keep results of different variance distinct
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
     
-        auto args = this->res.generate_cache_arguments<phase_index>(use_dV, {i}, this->printer);
+        auto args =
+          this->res.generate_cache_arguments(use_dV, std::array<phase_index, 1>{i}, this->printer);
         args += { idx_i };
 
         GiNaC::ex result;
@@ -137,7 +138,8 @@ namespace nontrivial_metric
 
         map[lambda_flatten(LAMBDA_FIELD)] = deriv_a_i;
 
-        auto args = this->res.generate_cache_arguments<index_literal>(use_dV, {i}, this->printer);
+        auto args =
+          this->res.generate_cache_arguments(use_dV, std::array<index_literal, 1>{i}, this->printer);
         args += idx_i;
 
         if(!this->cache.query(expression_item_types::U1_lambda, 0, args, map[lambda_flatten(LAMBDA_MOMENTUM)]))

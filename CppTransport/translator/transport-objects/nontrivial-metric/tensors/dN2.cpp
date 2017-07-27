@@ -63,7 +63,8 @@ namespace nontrivial_metric
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
         auto idx_j = this->shared.generate_index<GiNaC::varidx>(j);
     
-        auto args = this->res.generate_cache_arguments<phase_index>(use_dV, {i,j}, this->printer);
+        auto args =
+          this->res.generate_cache_arguments(use_dV, std::array<phase_index, 2>{i,j}, this->printer);
         args += { idx_i, idx_j };
 
         GiNaC::ex result;

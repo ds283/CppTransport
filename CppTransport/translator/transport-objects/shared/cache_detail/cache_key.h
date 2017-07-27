@@ -39,8 +39,14 @@ template <typename ItemClass>
 bool operator==(const cache_key<ItemClass>& A, const cache_key<ItemClass>& B);
 
 //! std::hash implementation
-template <typename ItemClass>
-struct std::hash< cache_key<ItemClass> >;
+//! g++ < 7.0 has a bug that requires this to be embedded within an explicit namespace
+namespace std
+  {
+    
+    template <typename ItemClass>
+    struct hash< cache_key<ItemClass> >;
+    
+  }   // namespace std
 
 
 template <typename ItemClass>

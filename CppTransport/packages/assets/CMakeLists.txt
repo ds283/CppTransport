@@ -29,11 +29,18 @@ IF(CLANG)
   # versions of Clang. These produce a slew of warnings from GiNaC >= 1.7
   # also suppress unknown attribute warnings which produce errors for GiNaC_deprecated
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
-  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-unknown-attributes")
+#  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
-  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wno-unknown-attributes")
+#  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 
 ELSEIF(GCC)
+
+  # suppress unknown attribute warnings which produce errors for GiNaC_deprecated
+  # suppress warnings for deprecated binder1st, binder2nd etc. declarations from SPLINTER's bundled Eigen
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-ignored-attributes -Wno-deprecated-declarations")
+#  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-ignored-attributes -Wno-deprecated-declarations")
+#  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 
 ELSEIF(INTEL)
 

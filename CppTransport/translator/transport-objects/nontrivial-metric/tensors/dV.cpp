@@ -52,7 +52,8 @@ namespace nontrivial_metric
 
         auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
 
-        auto args = this->res.generate_cache_arguments<index_literal>(use_dddV, {i}, this->printer);
+        auto args =
+          this->res.generate_cache_arguments(use_dddV, std::array<index_literal, 1>{i}, this->printer);
         args += idx_i;
 
         GiNaC::ex result = this->res.dV_resource(i, this->printer);

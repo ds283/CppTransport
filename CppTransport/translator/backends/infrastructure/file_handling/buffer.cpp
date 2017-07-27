@@ -164,7 +164,7 @@ void buffer::write_to_tag(std::string line)
 
 void buffer::delimit_line(std::string& item)
   {
-    for(struct delimiter& dlmt : this->delimiters)
+    for(auto& dlmt : this->delimiters)
       {
         item.insert(0, dlmt.left);
         item.append(dlmt.right);
