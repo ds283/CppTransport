@@ -1,0 +1,34 @@
+sudo: required
+language: cpp
+
+addons:
+  apt:
+    packages:
+      cmake
+      libsqlite3-dev
+      libboost-all-dev
+      libginac-dev
+      libopenmpi-dev
+      libssl-dev
+
+before_script:
+  - cd CppTransport
+  - mkdir build
+  - cd buikd
+  - cmake .. -DCMAKE_BUILD_TYPE=Release
+
+script:
+  - make CppTransport
+  - make test-canonical
+  - make test-nontrivial-metric
+
+matrix:
+
+  include:
+    - os: linux
+      dist: trusty
+      compiler: clang
+
+    - os: linux:
+      dist: trusty
+      compiler: gcc
