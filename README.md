@@ -1,3 +1,5 @@
+[![Build Status: experimental](https://travis-ci.org/ds283/CppTransport.svg?branch=experimental)](https://travis-ci.org/ds283/CppTransport)
+
 # Overview
 
 **CppTransport** is an automated platform that can be used to solve for the 2- and 3-point functions of the perturbations produced during an inflationary epoch in the very early universe. The present version is implemented for models with canonical kinetic terms, although the underlying method is quite general and could be scaled to handle models with a non-trivial field-space metric or an even more general non-canonical Lagrangian.
