@@ -53,7 +53,7 @@ def add_folder(tree_path, archive_path, archive):
             and dir_lower != 'build-clang' \
             and dir_lower != 'build-icpc' \
             and dir_lower != 'build-gcc' \
-            and dir_lower != 'clion-build-debug' \
+            and dir_lower != 'cmake-build-debug' \
             and dir_lower != 'build-gcc' \
             and dir_lower != 'tools' \
             and dir_lower != 'test-canonical' \
