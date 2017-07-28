@@ -1,5 +1,5 @@
 sudo: required
-language: cpp
+language: generic
 
 before_script:
   - cd CppTransport
@@ -17,22 +17,11 @@ matrix:
   include:
     - os: linux
       dist: trusty
+      env: COMPILER_NAME=clang CXX=clang++-3.8 CC=clang-3.8
       addons:
         apt:
-          packages:
-            - cmake
-            - libsqlite3-dev
-            - libboost-all-dev
-            - libginac-dev
-            - libopenmpi-dev
-            - libssl-dev
-            - clang-3.8
-      compiler: clang
-
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
+          sources:
+            - ubuntu-toolchain-r-test
           packages:
             - cmake
             - libsqlite3-dev
@@ -41,4 +30,22 @@ matrix:
             - libopenmpi-dev
             - libssl-dev
             - gcc-6
-      compiler: gcc
+            - g++-6
+            - clang-3.8
+
+    - os: linux
+      dist: trusty
+      env: COMPILER_NAME=gcc CXX=g++-6 CC=gcc-6
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - cmake
+            - libsqlite3-dev
+            - libboost-all-dev
+            - libginac-dev
+            - libopenmpi-dev
+            - libssl-dev
+            - gcc-6
+            - g++-6
