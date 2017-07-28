@@ -4,54 +4,16 @@ PROJECT(CppTransport)
 
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 INCLUDE(BuildDeps)
+INCLUDE(CompilerFlags)
 
-# Attempt some platform/compiler introspection
-STRING(COMPARE EQUAL "Linux" ${CMAKE_SYSTEM_NAME} LINUX)
-STRING(COMPARE EQUAL "Windows" ${CMAKE_SYSTEM_NAME} WINDOWS)
-STRING(COMPARE EQUAL "Darwin" ${CMAKE_SYSTEM_NAME} OS_X)
-
-IF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  SET(CLANG TRUE)
-ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  SET(CLANG TRUE)
-ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  SET(GCC TRUE)
-ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-  SET(INTEL TRUE)
-ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  SET(MSVC TRUE)
-ENDIF()
-
-
-IF(CLANG)
-
-  # suppress missing override warnings which are automatically enabled in recent
-  # versions of Clang. These produce a slew of warnings from GiNaC >= 1.7
-  # also suppress unknown attribute warnings which produce errors for GiNaC_deprecated
-  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
-#  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-inconsistent-missing-override -Wno-unknown-attributes -Wno-undefined-var-template")
-#  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-
-ELSEIF(GCC)
-
-  # suppress unknown attribute warnings which produce errors for GiNaC_deprecated
-  # suppress warnings for deprecated binder1st, binder2nd etc. declarations from SPLINTER's bundled Eigen
-  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-ignored-attributes -Wno-deprecated-declarations")
-#  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-ignored-attributes -Wno-deprecated-declarations")
-#  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-
-ELSEIF(INTEL)
-
-ENDIF()
-
+SET_COMPILER_FLAGS()
 
 # find MPI library
 FIND_PACKAGE(MPI REQUIRED)
 
 # find required Boost libraries
-FIND_PACKAGE(Boost REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
+# minimum version is 1.56 to get support for Boost.Optional with move-only types
+FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
 
 # find GiNaC library
 FIND_PACKAGE(GiNaC REQUIRED)
@@ -146,6 +108,7 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
   translator/parser/y_lexer.cpp
+  translator/transport-objects/canonical/resources_detail/potential_cache.cpp
   translator/transport-objects/canonical/tensors/A.cpp
   translator/transport-objects/canonical/tensors/Atilde.cpp
   translator/transport-objects/canonical/tensors/B.cpp
@@ -304,3 +267,4 @@ INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib DESTINATION lib/cpptransport)
 # install CMake finder script for all these assets
 CONFIGURE_FILE(cmake/FindCppTransport.cmake.in ${CMAKE_BINARY_DIR}/FindCppTransport.cmake @ONLY)
 INSTALL(FILES ${CMAKE_BINARY_DIR}/FindCppTransport.cmake DESTINATION share/cmake)
+INSTALL(FILES cmake/CompilerFlags.cmake DESTINATION share/cmake)

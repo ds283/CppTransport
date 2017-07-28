@@ -15,7 +15,8 @@ FIND_PACKAGE(BISON 3.0 REQUIRED)
 FIND_PACKAGE(MPI REQUIRED)
 
 # find required Boost libraries
-FIND_PACKAGE(Boost REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
+# minimum version is 1.56 to get support for Boost.Optional with move-only types
+FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
 
 # find GiNaC library
 FIND_PACKAGE(GiNaC REQUIRED)
