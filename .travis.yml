@@ -22,10 +22,22 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - sourceline: 'ppa:samuel-bachmann/boost'
           packages:
             - cmake
             - libsqlite3-dev
-            - libboost-all-dev
+            - libboost1.60-dev
+            - libboost-log1.60-dev
+            - libboost-system1.60-dev
+            - libboost-filesystem1.60-dev
+            - libboost-random1.60-dev
+            - libboost-timer1.60-dev
+            - libboost-date-time1.60-dev
+            - libboost-mpi1.60-dev
+            - libboost-thread1.60-dev
+            - libboost-serialization1.60-dev
+            - libboost-program-options1.60-dev
+            - libboost-regex1.60-dev
             - libginac-dev
             - libopenmpi-dev
             - libssl-dev
@@ -40,10 +52,22 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - sourceline: 'ppa:samuel-bachmann/boost'
           packages:
             - cmake
             - libsqlite3-dev
-            - libboost-all-dev
+            - libboost1.60-dev
+            - libboost-log1.60-dev
+            - libboost-system1.60-dev
+            - libboost-filesystem1.60-dev
+            - libboost-random1.60-dev
+            - libboost-timer1.60-dev
+            - libboost-date-time1.60-dev
+            - libboost-mpi1.60-dev
+            - libboost-thread1.60-dev
+            - libboost-serialization1.60-dev
+            - libboost-program-options1.60-dev
+            - libboost-regex1.60-dev
             - libginac-dev
             - libopenmpi-dev
             - libssl-dev
