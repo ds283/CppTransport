@@ -74,15 +74,16 @@ def add_folder(tree_path, archive_path, archive):
 
 def package_CppTransport(package_dir, archive_file, version_string):
 
+    cwd = os.getcwd()
+    abs_package_dir = os.path.join(cwd, package_dir)
+
     # tree_path points to the position of some object within the source tree
-    tree_path = "../CppTransport"
+    tree_path = os.path.join("..", "CppTransport")
 
     # archive path is the corresponding position of the object within the tar archive
     archive_path = "CppTransport" + "_" + version_string
 
     # bison output files
-    cwd = os.getcwd()
-    abs_package_dir = os.path.join(cwd, package_dir)
     bison_parser_h = os.path.join(abs_package_dir, "y_parser.hpp")
     bison_parser_cpp = os.path.join(abs_package_dir, "y_parser.cpp")
     bison_location = os.path.join(abs_package_dir, "location.hh")
@@ -91,17 +92,17 @@ def package_CppTransport(package_dir, archive_file, version_string):
     bison_graph = os.path.join(abs_package_dir, "grammar.dot")
 
     # corresponding locations within the archive tree
-    archive_parser_hpp = "CppTransport/translator/parser/y_parser.hpp"
-    archive_parser_cpp = "CppTransport/translator/parser/y_parser.cpp"
-    archive_location = "CppTransport/translator/parser/location.hh"
-    archive_position = "CppTransport/translator/parser/position.hh"
-    archive_stack = "CppTransport/translator/parser/stack.hh"
+    archive_parser_hpp = os.path.join(archive_path, "translator", "parser", "y_parser.hpp")
+    archive_parser_cpp = os.path.join(archive_path, "translator", "parser", "y_parser.cpp")
+    archive_location = os.path.join(archive_path, "translator", "parser", "location.hh")
+    archive_position = os.path.join(archive_path, "translator", "parser", "position.hh")
+    archive_stack = os.path.join(archive_path, "translator", "parser", "stack.hh")
 
     # bison source grammar
-    tree_grammar = os.path.join(cwd, "translator/parser/bison/y_parser.yy")
+    tree_grammar = os.path.join(cwd, "translator", "parser", "bison", "y_parser.yy")
 
     # packageable CMakeLists.txt position in tree
-    tree_cmakelists = "packages/assets/CMakeLists.txt"
+    tree_cmakelists = os.path.join("packages", "assets", "CMakeLists.txt")
 
     # and corresponding position within archive
     archive_cmakelists = os.path.join(archive_path, "CMakeLists.txt")
@@ -135,7 +136,7 @@ def package_CppTransport(package_dir, archive_file, version_string):
 def package_examples(package_dir, archive_file, version_string):
 
     # tree_path points to the position of some object within the source tree
-    tree_path = "../Documentation/Examples"
+    tree_path = os.path.join("..", "Documentation", "Examples")
 
     # archive path is the corresponding position of the object within the tar archive
     archive_path = "UserGuideExamples" + "_" + version_string
