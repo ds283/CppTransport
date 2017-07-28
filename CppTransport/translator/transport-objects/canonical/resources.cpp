@@ -25,78 +25,14 @@
 
 
 #include "resources.h"
+
 #include "concepts/tensor_exception.h"
+
+#include "resources_detail/potential_cache.h"
 
 
 namespace canonical
   {
-
-    class PotentialResourceCache
-      {
-
-        // TYPE
-
-      public:
-
-        using value_type = std::pair< std::reference_wrapper<const GiNaC::ex>, std::reference_wrapper<const symbol_list> >;
-
-        // CONSTRUCTOR, DESTRUCTOR
-
-      public:
-
-        //! constructor captures resource manager and shared resource manager
-        PotentialResourceCache(const resources& r, const shared_resources& s, const language_printer& p)
-          : res(r),
-            share(s),
-            printer(p)
-          {
-          }
-
-        //! destructor is default
-        ~PotentialResourceCache() = default;
-
-
-        // INTERFACE
-
-      public:
-
-        value_type get()
-          {
-            // acquire resources if we do not already have them
-            if(!this->subs_V) this->subs_V = this->res.raw_V_resource(printer);
-            if(!this->f_list) this->f_list = this->share.generate_field_symbols(printer);
-
-            // return references
-            return std::make_pair(std::cref(*subs_V), std::cref(**f_list));
-          }
-
-
-
-        // INTERNAL DATA
-
-      private:
-
-        //! resource manager
-        const resources& res;
-
-        //! shared resources
-        const shared_resources& share;
-
-        //! language printer
-        const language_printer& printer;
-
-
-        // CACHE
-
-        //! raw V expressions, after substitution with the current resource labels
-        boost::optional< GiNaC::ex > subs_V;
-
-        //! symbol list
-        boost::optional< std::unique_ptr<symbol_list> > f_list;
-
-
-      };
-
 
     resources::resources(translator_data& p, resource_manager& m, expression_cache& c,
                          shared_resources& s, boost::timer::cpu_timer& t)
@@ -422,10 +358,9 @@ namespace canonical
             if(!this->cache.query(expression_item_types::dV_item, index, args, dV))
               {
                 timing_instrument timer(this->compute_timer);
-
-                auto data = cache.get();
-                const GiNaC::ex& V = data.first.get();
-                const symbol_list& f_list = data.second.get();
+    
+                const GiNaC::ex& V = cache.get_V();
+                const symbol_list& f_list = cache.get_symbol_list();
 
                 const GiNaC::symbol& x1 = f_list[this->fl.flatten(i)];
                 dV = GiNaC::diff(V, x1);
@@ -502,10 +437,9 @@ namespace canonical
                 if(!this->cache.query(expression_item_types::ddV_item, index, args, ddV))
                   {
                     timing_instrument timer(this->compute_timer);
-
-                    auto data = cache.get();
-                    const GiNaC::ex& V = data.first.get();
-                    const symbol_list& f_list = data.second.get();
+    
+                    const GiNaC::ex& V = cache.get_V();
+                    const symbol_list& f_list = cache.get_symbol_list();
 
                     const GiNaC::symbol& x1 = f_list[this->fl.flatten(i)];
                     const GiNaC::symbol& x2 = f_list[this->fl.flatten(j)];
@@ -591,10 +525,9 @@ namespace canonical
                     if(!this->cache.query(expression_item_types::dddV_item, index, args, dddV))
                       {
                         timing_instrument timer(this->compute_timer);
-
-                        auto data = cache.get();
-                        const GiNaC::ex& V = data.first.get();
-                        const symbol_list& f_list = data.second.get();
+    
+                        const GiNaC::ex& V = cache.get_V();
+                        const symbol_list& f_list = cache.get_symbol_list();
 
                         const GiNaC::symbol& x1 = f_list[this->fl.flatten(i)];
                         const GiNaC::symbol& x2 = f_list[this->fl.flatten(j)];

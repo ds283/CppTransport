@@ -116,6 +116,7 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
   translator/parser/y_lexer.cpp
+  translator/transport-objects/canonical/resources_detail/potential_cache.cpp
   translator/transport-objects/canonical/tensors/A.cpp
   translator/transport-objects/canonical/tensors/Atilde.cpp
   translator/transport-objects/canonical/tensors/B.cpp
@@ -532,6 +533,11 @@ SET(TRANSLATOR_PARSER_FILES
   translator/parser/y_common.h
   translator/parser/y_lexer.cpp
   translator/parser/y_lexer.h
+  )
+
+SET(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_RESOURCES_DETAIL_FILES
+  translator/transport-objects/canonical/resources_detail/potential_cache.cpp
+  translator/transport-objects/canonical/resources_detail/potential_cache.h
   )
 
 SET(TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_TENSORS_FILES
@@ -1273,6 +1279,7 @@ SET(SOURCE_FILES
   ${TRANSLATOR_PARSER_DRIVER_FILES}
   ${TRANSLATOR_PARSER_SEMANTIC_VALUES_FILES}
   ${TRANSLATOR_PARSER_FILES}
+  ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_RESOURCES_DETAIL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_TENSORS_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSLATOR_TRANSPORT_OBJECTS_NONTRIVIAL_METRIC_RESOURCES_DETAIL_FILES}

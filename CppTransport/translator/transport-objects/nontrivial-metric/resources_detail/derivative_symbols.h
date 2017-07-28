@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_DERIVATIVE_SYMBOLS_H
-#define CPPTRANSPORT_DERIVATIVE_SYMBOLS_H
+#ifndef CPPTRANSPORT_NONTRIVIAL_METRIC_DERIVATIVE_SYMBOLS_H
+#define CPPTRANSPORT_NONTRIVIAL_METRIC_DERIVATIVE_SYMBOLS_H
 
 
 #include "nontrivial-metric/resources.h"
@@ -85,4 +85,4 @@ namespace nontrivial_metric
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_DERIVATIVE_SYMBOLS_H
+#endif //CPPTRANSPORT_NONTRIVIAL_METRIC_DERIVATIVE_SYMBOLS_H

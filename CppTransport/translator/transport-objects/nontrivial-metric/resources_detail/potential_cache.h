@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_POTENTIAL_CACHE_H
-#define CPPTRANSPORT_POTENTIAL_CACHE_H
+#ifndef CPPTRANSPORT_NONTRIVIAL_METRIC_POTENTIAL_CACHE_H
+#define CPPTRANSPORT_NONTRIVIAL_METRIC_POTENTIAL_CACHE_H
 
 
 #include "nontrivial-metric/resources.h"
@@ -36,12 +36,6 @@ namespace nontrivial_metric
 
     class PotentialResourceCache
       {
-        
-        // TYPE
-      
-      public:
-        
-        using value_type = std::pair< std::reference_wrapper<const GiNaC::ex>, std::reference_wrapper<const symbol_list> >;
         
         // CONSTRUCTOR, DESTRUCTOR
       
@@ -97,4 +91,4 @@ namespace nontrivial_metric
   }   // namespace nontrivial metric
 
 
-#endif //CPPTRANSPORT_POTENTIAL_CACHE_H
+#endif //CPPTRANSPORT_NONTRIVIAL_METRIC_POTENTIAL_CACHE_H

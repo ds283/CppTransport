@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 04/07/2017.
+// Created by David Seery on 28/07/2017.
 // --@@
 // Copyright (c) 2017 University of Sussex. All rights reserved.
 //
@@ -23,41 +23,44 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_NONTRIVIAL_METRIC_COVARIANT_RIEMANNB3_CACHE_H
-#define CPPTRANSPORT_NONTRIVIAL_METRIC_COVARIANT_RIEMANNB3_CACHE_H
+#ifndef CPPTRANSPORT_CANONICAL_POTENTIAL_CACHE_H
+#define CPPTRANSPORT_CANONICAL_POTENTIAL_CACHE_H
 
 
-#include "nontrivial-metric/resources.h"
-#include "common.h"
+#include "canonical/resources.h"
 
 
-namespace nontrivial_metric
+namespace canonical
   {
-    
-    class CovariantRiemannB3Cache
+
+    class PotentialResourceCache
       {
         
         // CONSTRUCTOR, DESTRUCTOR
       
       public:
         
-        //! constructor
-        CovariantRiemannB3Cache(const resources& r, const language_printer& p)
+        //! constructor captures resource manager and shared resource manager
+        PotentialResourceCache(const resources& r, const shared_resources& s, const language_printer& p)
           : res(r),
+            share(s),
             printer(p)
           {
           }
         
         //! destructor is default
-        ~CovariantRiemannB3Cache() = default;
+        ~PotentialResourceCache() = default;
         
         
         // INTERFACE
       
       public:
         
-        //! compute flattened, covariant tensor
-        const flattened_tensor& get();
+        //! get potential
+        const GiNaC::ex& get_V();
+        
+        //! get symbol list
+        const symbol_list& get_symbol_list();
         
         
         // INTERNAL DATA
@@ -67,18 +70,24 @@ namespace nontrivial_metric
         //! resource manager
         const resources& res;
         
+        //! shared resources
+        const shared_resources& share;
+        
         //! language printer
         const language_printer& printer;
         
         
         // CACHE
         
-        //! flattened tensor representing the components of Riemann_B3
-        std::unique_ptr<flattened_tensor> B3;
+        //! raw V expressions, after substitution with the current resource labels
+        boost::optional< GiNaC::ex > subs_V;
+        
+        //! symbol list
+        std::unique_ptr<symbol_list> f_list;
         
       };
     
-  }   // namespace nontrivial_metric
+  }   // namespace nontrivial metric
 
 
-#endif //CPPTRANSPORT_NONTRIVIAL_METRIC_COVARIANT_RIEMANNB3_CACHE_H
+#endif //CPPTRANSPORT_POTENTIAL_CACHE_H

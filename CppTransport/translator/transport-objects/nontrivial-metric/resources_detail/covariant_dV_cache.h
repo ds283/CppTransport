@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_COVARIANT_DV_CACHE_H
-#define CPPTRANSPORT_COVARIANT_DV_CACHE_H
+#ifndef CPPTRANSPORT_NONTRIVIAL_METRIC_COVARIANT_DV_CACHE_H
+#define CPPTRANSPORT_NONTRIVIAL_METRIC_COVARIANT_DV_CACHE_H
 
 
 #include "nontrivial-metric/resources.h"
@@ -82,4 +82,4 @@ namespace nontrivial_metric
   }   // namespace nontrivial_metric
 
 
-#endif //CPPTRANSPORT_COVARIANT_DV_CACHE_H
+#endif //CPPTRANSPORT_NONTRIVIAL_METRIC_COVARIANT_DV_CACHE_H
