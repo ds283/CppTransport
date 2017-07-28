@@ -1009,9 +1009,9 @@ namespace transport
                                                                     bool ics, generic_batcher& batcher, replacement_action action)
       {
         sqlite3* db = nullptr;
-
+    
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary twopf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1047,7 +1047,7 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary threepf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1083,7 +1083,7 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary zeta twopf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1119,7 +1119,7 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary zeta threepf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1155,7 +1155,7 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary " << derived_data::template_type_to_string(type) << " container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);

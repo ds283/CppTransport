@@ -653,8 +653,13 @@ namespace transport
 
         // generate a list of work assignments
         std::list<work_assignment> work = this->work_scheduler.assign_work(log);
-
-        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Generating new work assignments for " << work.size() << " worker" << (work.size() > 1 ? "s" : "") << " (" << this->work_scheduler.get_items_remaining() << " work items remain in queue)";
+    
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Generating new work assignments for "
+                                                                    << work.size() << " worker"
+                                                                    << (work.size() > 1 ? std::string{"s"} : std::string{})
+                                                                    << " ("
+                                                                    << this->work_scheduler.get_items_remaining()
+                                                                    << " work items remain in queue)";
 
         // push assignments to workers
         std::vector<boost::mpi::request> msg_status(work.size());
@@ -673,7 +678,11 @@ namespace transport
             // issue message to log
             unsigned int items = assgn.get_items().size();
             unsigned int worker = assgn.get_worker();
-            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Assigned " << items << " work item" << (items == 1 ? "" : "s") << " to worker " << worker << " [MPI rank=" << this->worker_rank(worker) << "]";
+    
+            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Assigned " << items << " work item"
+                                                                        << (items == 1 ? std::string{} : std::string{"s"})
+                                                                        << " to worker " << worker << " [MPI rank="
+                                                                        << this->worker_rank(worker) << "]";
           }
 
         // wait for all assignments to be received
@@ -933,7 +942,11 @@ namespace transport
                         this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
 
                         unsigned int num_active = this->work_scheduler.get_number_active();
-                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising close-down after end-of-work; " << num_active << " worker" << (num_active != 1 ? "s" : "") << " still active";
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source()
+                                                                                    << " advising close-down after end-of-work; "
+                                                                                    << num_active << " worker"
+                                                                                    << (num_active != 1 ? std::string{"s"} : std::string{})
+                                                                                    << " still active";
                         break;
                       }
 

@@ -600,8 +600,12 @@ namespace transport
 
         kv.insert_back(CPPTRANSPORT_TASK_DATA_SMALLEST, format_number(this->twopf_db->get_kmin_conventional()));
         kv.insert_back(CPPTRANSPORT_TASK_DATA_LARGEST, format_number(this->twopf_db->get_kmax_conventional()));
-        kv.insert_back(CPPTRANSPORT_TASK_DATA_EARLIEST, std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (earliest_crossing > 0 ? "+" : "") + format_number(earliest_crossing, 4));
-        kv.insert_back(CPPTRANSPORT_TASK_DATA_LATEST, std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (latest_crossing > 0 ? "+" : "") + format_number(latest_crossing, 4));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_EARLIEST,
+                       std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (earliest_crossing > 0 ? "+" : "") +
+                       format_number(earliest_crossing, 4));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_LATEST,
+                       std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (latest_crossing > 0 ? "+" : "") +
+                       format_number(latest_crossing, 4));
 
         this->validate_subhorizon_efolds();
 
