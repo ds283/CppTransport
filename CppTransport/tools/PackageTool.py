@@ -50,6 +50,7 @@ def add_folder(tree_path, archive_path, archive):
 
         if dir[0] != '.' \
             and dir_lower != '.idea' \
+            and dir_lower != 'build' \
             and dir_lower != 'build-clang' \
             and dir_lower != 'build-icpc' \
             and dir_lower != 'build-gcc' \
@@ -141,12 +142,17 @@ def package_examples(package_dir, archive_file, version_string):
     # archive path is the corresponding position of the object within the tar archive
     archive_path = "UserGuideExamples" + "_" + version_string
 
+    tree_cmakelists = os.path.join(tree_path, "CMakeLists.txt")
+    archive_cmakelists = os.path.join(archive_path, "CMakeLists.txt")
+
     tarname = os.path.join(package_dir, archive_file)
     with tarfile.open(name=tarname, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
         # add top-level directory to archive
         archive.add(name=tree_path, arcname=archive_path, recursive=False)
 
         add_folder(tree_path, archive_path, archive)
+
+        archive.add(name=tree_cmakelists, arcname=archive_cmakelists)
 
         archive.close()
 
