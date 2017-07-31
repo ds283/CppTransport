@@ -28,7 +28,7 @@ int main(int argc, const char *argv[])
   {
     boost::timer::auto_cpu_timer timer;
 
-    // we use Kroncecker deltas in some symbolic expressions, and GiNaC's C-source output
+    // we use Kronecker deltas in some symbolic expressions, and GiNaC's C-source output
     // has to be adjusted to print these correctly
     set_up_ginac_printing();
 
@@ -61,7 +61,7 @@ int main(int argc, const char *argv[])
 
     bool errors = false;
 
-    const std::list<boost::filesystem::path>& input_files = args.input_files();
+    const auto& input_files = args.input_files();
     for(const boost::filesystem::path& f : input_files)
       {
         translation_unit unit(f, path, args, env, policy);
@@ -83,5 +83,5 @@ int main(int argc, const char *argv[])
 			}
 
     if(errors) return (EXIT_FAILURE);
-    else return(EXIT_SUCCESS);
+    return(EXIT_SUCCESS);
   }
