@@ -3,10 +3,21 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(CppTransport)
 
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
-INCLUDE(BuildDeps)
+INCLUDE(BuildCatch)
+INCLUDE(BuildGiNaC)
+INCLUDE(BuildJsonCPP)
+INCLUDE(BuildOdeint)
+INCLUDE(BuildSPLINTER)
 INCLUDE(CompilerFlags)
 
+# detect toolchain and set compiler flags appropriately
 SET_COMPILER_FLAGS()
+
+# RESOLVE DEPENDENCIES
+
+# some libraries require system-level installation (MPI, Boost.Mpi) and are things that
+# we shouldn't try to build ourseves. We insist that these are already available
+# at configure time
 
 # find MPI library
 FIND_PACKAGE(MPI REQUIRED)
@@ -15,12 +26,16 @@ FIND_PACKAGE(MPI REQUIRED)
 # minimum version is 1.56 to get support for Boost.Optional with move-only types
 FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
 
-# find GiNaC library
-FIND_PACKAGE(GiNaC REQUIRED)
-
 # find OpenSSL libraries
 FIND_PACKAGE(OpenSSL REQUIRED)
 
+# GiNaC we allow to be pre-installed or not. If it isn't already available then we
+# fall back to building a copy ourselves
+
+# find GiNaC library unless explicitly prevented by the user
+IF(NOT FORCE_BUILD_GINAC)
+  FIND_PACKAGE(GiNaC REQUIRED)
+ENDIF()
 
 # handle non-standard external dependencies
 ADD_CUSTOM_TARGET(DEPS ALL)
@@ -29,6 +44,12 @@ SET(EXTERNAL_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/thirdparty/dist")
 BUILD_JSONCPP(${CMAKE_BINARY_DIR}/thirdparty/jsoncpp ${EXTERNAL_INSTALL_PREFIX})
 BUILD_SPLINTER(${CMAKE_BINARY_DIR}/thirdparty/SPLINTER ${EXTERNAL_INSTALL_PREFIX})
 BUILD_ODEINT(${CMAKE_BINARY_DIR}/thirdparty/odeint-v2)
+
+IF(NOT GINAC_FOUND)
+  # GiNaC was not found, so attempt to build it from source
+  BUILD_CLN(${CMAKE_BINARY_DIR}/thirdparty/CLN ${EXTERNAL_INSTALL_PREFIX})
+  BUILD_GINAC(${CMAKE_BINARY_DIR}/thirdparty/GiNaC ${CLN_INCLUDE_DIRS} ${CLN_LIBRARY_DIRS} ${CLN_LIBRARIES} ${EXTERNAL_INSTALL_PREFIX})
+ENDIF()
 
 
 # configure build_data.h

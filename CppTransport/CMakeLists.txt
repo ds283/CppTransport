@@ -59,7 +59,7 @@ ENDIF()
 # configure build_data.h
 STRING(TIMESTAMP CONFIG_TIMESTAMP)
 CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/build_data.h)
-# provision a second version of build_data.h for use in test-canonical
+# provision a second version of build_data.h for use in test-canonical/test-nontrivial-metric
 CONFIGURE_FILE(configure_assets/build_data.h.in ${CMAKE_BINARY_DIR}/transport-runtime/build_data.h)
 
 # build parser
