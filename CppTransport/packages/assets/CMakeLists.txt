@@ -34,7 +34,7 @@ FIND_PACKAGE(OpenSSL REQUIRED)
 
 # find GiNaC library unless explicitly prevented by the user
 IF(NOT FORCE_BUILD_GINAC)
-  FIND_PACKAGE(GiNaC REQUIRED)
+  FIND_PACKAGE(GiNaC)
 ENDIF()
 
 # handle non-standard external dependencies
