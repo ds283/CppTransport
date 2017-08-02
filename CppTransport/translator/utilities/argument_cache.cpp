@@ -105,36 +105,41 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     generic.add_options()
       (VERSION_SWITCH, VERSION_HELP)
       (HELP_SWITCH,    HELP_HELP)
-      (LICENSE_SWITCH, LICENSE_HELP);
+      (LICENSE_SWITCH, LICENSE_HELP)
+      ;
 
     boost::program_options::options_description configuration(CONFIG_OPTIONS);
     configuration.add_options()
       (VERBOSE_SWITCH,                                                                                         VERBOSE_HELP)
+      (NO_COLOUR_SWITCH,                                                                                       NO_COLOUR_HELP)
       (INCLUDE_SWITCH,               boost::program_options::value< std::vector<std::string> >()->composing(), INCLUDE_HELP)
       (NO_ENV_SEARCH_SWITCH,                                                                                   NO_ENV_SEARCH_HELP)
       (CORE_OUTPUT_SWITCH,           boost::program_options::value< std::string >()->default_value(""),        CORE_OUTPUT_HELP)
       (IMPLEMENTATION_OUTPUT_SWITCH, boost::program_options::value< std::string >()->default_value(""),        IMPLEMENTATION_OUTPUT_HELP)
-      (NO_COLOUR_SWITCH,                                                                                       NO_COLOUR_HELP);
+      ;
 
     boost::program_options::options_description generation(GENERATION_OPTIONS);
     generation.add_options()
       (NO_CSE_SWITCH,                                                                                            NO_CSE_HELP)
       (ANNOTATE_SWITCH,                                                                                          ANNOTATE_HELP)
       (UNROLL_POLICY_SWITCH, boost::program_options::value< unsigned int >()->default_value(DEFAULT_UNROLL_MAX), UNROLL_POLICY_HELP)
-      (FAST_SWITCH,                                                                                              FAST_HELP);
+      (FAST_SWITCH,                                                                                              FAST_HELP)
+      ;
 
     boost::program_options::options_description warnings(WARNING_OPTIONS);
     warnings.add_options()
       (PROFILING_SWITCH,    PROFILING_HELP)
       (DEVELOP_WARNINGS,    DEVELOP_WARN_HELP)
       (UNROLL_WARNINGS,     UNROLL_WARN_HELP)
-      (REPOSITION_WARNINGS, REPOSITION_WARN_HELP);
+      (REPOSITION_WARNINGS, REPOSITION_WARN_HELP)
+      ;
 
     boost::program_options::options_description hidden(HIDDEN_OPTIONS);
     hidden.add_options()
       (INPUT_FILE_SWITCH, boost::program_options::value< std::vector<std::string> >(), INPUT_FILE_HELP)
       (NO_COLOR_SWITCH,                                                                NO_COLOR_HELP)
-      (BUILDDATA_SWITCH,                                                               BUILDDATA_HELP);
+      (BUILDDATA_SWITCH,                                                               BUILDDATA_HELP)
+      ;
 
     boost::program_options::positional_options_description positional_options;
     positional_options.add(INPUT_FILE_SWITCH, -1);
