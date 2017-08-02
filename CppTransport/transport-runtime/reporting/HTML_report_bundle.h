@@ -215,7 +215,7 @@ namespace transport
 
             //! find asset on search paths; throws an exception if asset cannot be located
             //! accepts a relative path and returns a fully-qualified absolute path
-            boost::filesystem::path find_asset(boost::filesystem::path);
+            boost::filesystem::path find_asset(boost::filesystem::path asset);
 
 
             // INTERNAL DATA
@@ -283,12 +283,14 @@ namespace transport
             this->JavaScript = std::make_unique< JavaScript_writer >(r / CPPTRANSPORT_HTML_JAVASCRIPT);
 
             // build list of search paths from environment and command line
-            for(const boost::filesystem::path& p : env.get_resource_paths())
+            const auto& rp = env.get_resource_paths();
+            for(const auto& p : rp)
               {
                 search_paths.emplace_back(p / CPPTRANSPORT_HTML_RESOURCE_DIRECTORY);
               }
 
-            for(const boost::filesystem::path& p : arg_cache.get_search_paths())
+            const auto& sp = arg_cache.get_search_paths();
+            for(const auto& p : sp)
               {
                 search_paths.emplace_back(p / CPPTRANSPORT_HTML_RESOURCE_DIRECTORY);
               }
@@ -393,7 +395,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_A << " '" << asset_dest.string() << "' "
-                << CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_B << " '" << asset_src.string() << "'";
+                    << CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_B << " '" << asset_src.string() << "'";
                 throw runtime_exception(exception_type::REPORTING_ERROR, msg.str());
               }
 
@@ -405,13 +407,13 @@ namespace transport
         template <typename number>
         boost::filesystem::path HTML_report_bundle<number>::find_asset(boost::filesystem::path asset)
           {
-            for(const boost::filesystem::path& p : this->search_paths)
+            for(const auto& p : this->search_paths)
               {
                 boost::filesystem::path abs_path = p / asset;
                 if(boost::filesystem::exists(abs_path)) return abs_path;
               }
 
-            // the asset was not found
+            // if we arrive here, the asset was not found
             std::ostringstream msg;
             msg << CPPTRANSPORT_HTML_ASSET_NOT_FOUND << " '" << asset.string() << "'";
             throw runtime_exception(exception_type::REPORTING_ERROR, msg.str());
@@ -421,8 +423,8 @@ namespace transport
         template <typename number>
         boost::filesystem::path HTML_report_bundle<number>::make_asset_directory(const std::string& name)
           {
-            boost::filesystem::path relative_path = boost::filesystem::path(CPPTRANSPORT_HTML_ASSET_DIR) / name;
-            boost::filesystem::path absolute_path = this->root / relative_path;
+            auto relative_path = boost::filesystem::path{CPPTRANSPORT_HTML_ASSET_DIR} / name;
+            auto absolute_path = this->root / relative_path;
 
             if(boost::filesystem::exists(absolute_path))
               {
@@ -432,10 +434,8 @@ namespace transport
                     msg << CPPTRANSPORT_HTML_ASSERT_DIRECTORY_EXISTS << " '" << absolute_path.string() << "'";
                     throw runtime_exception(exception_type::REPORTING_ERROR, msg.str());
                   }
-                else
-                  {
-                    return relative_path;
-                  }
+
+                return relative_path;
               }
 
             // directory didn't exist, so try to create it
@@ -468,10 +468,10 @@ namespace transport
               }
             catch(boost::filesystem::filesystem_error& xe)
               {
-              std::ostringstream msg;
-              msg << CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_A << " '" << absolute_asset_location.string() << "' "
-                  << CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_B << " '" << source.string() << "'";
-              throw runtime_exception(exception_type::REPORTING_ERROR, msg.str());
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_A << " '" << absolute_asset_location.string() << "' "
+                    << CPPTRANSPORT_HTML_ASSET_EMPLACE_FAILURE_B << " '" << source.string() << "'";
+                throw runtime_exception(exception_type::REPORTING_ERROR, msg.str());
               }
 
             return relative_asset_location;
