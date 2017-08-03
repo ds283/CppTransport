@@ -70,13 +70,15 @@ namespace transport
                     std::string architecture = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 13)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 13)));
                     std::string cpu_vendor   = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 14)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 14)));
     
-                    data.insert(std::make_pair(std::make_pair(workgroup, worker),
-                                               std::make_unique<worker_record>(workgroup, worker, backend, pert_stepper,
-                                                                               back_stepper, back_abs_tol, back_rel_tol,
-                                                                               pert_abs_tol, pert_rel_tol,
-                                                                               hostname, os_name, os_version,
-                                                                               os_release,
-                                                                               architecture, cpu_vendor)));
+                    data.insert(
+                      std::make_pair(
+                        std::make_pair(workgroup, worker),
+                        std::make_unique<worker_record>(workgroup, worker, backend, back_stepper, pert_stepper,
+                                                        back_abs_tol, back_rel_tol, pert_abs_tol, pert_rel_tol,
+                                                        hostname, os_name, os_version, os_release, architecture,
+                                                        cpu_vendor)
+                      )
+                    );
                   }
                 else
                   {
