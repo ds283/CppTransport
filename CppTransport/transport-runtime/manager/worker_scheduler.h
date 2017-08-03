@@ -184,12 +184,15 @@ namespace transport
         boost::timer::nanosecond_type get_total_time() const { return(this->time); }
     
         //! get running mean time per work item for this workers
-        boost::timer::nanosecond_type get_mean_time_per_work_item() const { return(this->items == 0 ? this->time : this->time / this->items); }
+        boost::timer::nanosecond_type get_mean_time_per_work_item() const
+          { return this->items > 0 ? this->time / this->items
+                                   : this->time; }
         
       private:
     
         //! update timing data
-        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n) { this->time += t; this->items += n; }
+        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n)
+          { this->time += t; this->items += n; }
     
     
         // INTERFACE -- GENERAL METADATA
@@ -331,7 +334,7 @@ namespace transport
         double query_completion() const;
     
         //! get remaining number of items
-        unsigned int get_items_remaining() const { return this->queue.size(); }
+        unsigned int get_items_remaining() const { return static_cast<unsigned int>(this->queue.size()); }
         
         //! get number of items processed
         unsigned int get_items_processsed() const { return this->work_items_completed; }
@@ -340,7 +343,9 @@ namespace transport
         unsigned int get_items_inflight() const { return this->work_items_in_flight; }
         
         //! get mean time per-item
-        boost::timer::nanosecond_type get_mean_time_per_item() const { return this->total_work_time / this->work_items_completed; };
+        boost::timer::nanosecond_type get_mean_time_per_item() const
+          { return this->work_items_completed > 0 ? this->total_work_time / this->work_items_completed
+                                                  : this->total_work_time; };
         
         //! get target assignment
         boost::timer::nanosecond_type get_target_assignment() const { return this->current_granularity; }
@@ -806,7 +811,8 @@ namespace transport
 				this->total_aggregation_time += time;
 				this->number_aggregations++;
 
-		    boost::timer::nanosecond_type mean_aggregation_time = this->total_aggregation_time / this->number_aggregations;
+		    boost::timer::nanosecond_type mean_aggregation_time =
+          this->total_aggregation_time / this->number_aggregations;
 
 				// we want to allocate work in chunks large enough that they last
 				// many times the time required to aggregate, otherwise the workers will spend
@@ -838,18 +844,29 @@ namespace transport
     void worker_scheduler::update_estimated_completion()
       {
         // estimate remaining duration of the task
-        boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
-        boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->work_items_completed;
-        boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size() + this->work_items_in_flight);
+        auto total_wallclock_time = this->timer.elapsed().wall;
+        auto mean_wallclock_time_per_item =
+          this->work_items_completed > 0 ? total_wallclock_time / this->work_items_completed
+                                         : total_wallclock_time;
+        auto estimated_time_remaining =
+          static_cast<boost::timer::nanosecond_type>
+            (
+              mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size() + this->work_items_in_flight)
+            );
     
-        boost::posix_time::time_duration duration = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
+        boost::posix_time::time_duration duration =
+          boost::posix_time::seconds{estimated_time_remaining / (1000 * 1000 * 1000)};
     
         // update cached expected completion time and expected total CPU time
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        auto now = boost::posix_time::second_clock::local_time();
         this->estimated_completion = now + duration;
     
-        boost::timer::nanosecond_type mean_time_per_item = this->get_mean_time_per_item();
-        this->estimated_cpu_time = this->total_work_time + mean_time_per_item * (this->work_items_in_flight + this->queue.size());
+        auto mean_time_per_item = this->get_mean_time_per_item();
+        this->estimated_cpu_time =
+          static_cast<boost::timer::nanosecond_type>
+            (
+              this->total_work_time + mean_time_per_item * (this->work_items_in_flight + this->queue.size())
+            );
       }
     
     
