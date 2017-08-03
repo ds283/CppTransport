@@ -412,19 +412,22 @@ namespace transport
         boost::uintmax_t container_size = boost::filesystem::file_size(writer.get_abs_container_path());
         if(container_size < CPPTRANSPORT_MAX_VACUUMABLE_SIZE)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+              << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
             boost::timer::cpu_timer timer;
             char* errmsg;
             sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
             timer.stop();
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+              << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
           }
         else
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '"
-                                                                                     << writer.get_abs_container_path().string() << "' of size "
-                                                                                     << format_memory(container_size)
-                                                                                     << " is very large; automatic maintenance disabled";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+              << "** SQLite3 container '"
+              << writer.get_abs_container_path().string() << "' of size "
+              << format_memory(container_size)
+              << " is very large; automatic maintenance disabled";
           }
 
         this->open_containers.remove(db);
@@ -574,8 +577,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
-        << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
@@ -596,7 +600,8 @@ namespace transport
         mgr.commit();
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -607,8 +612,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
-        << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
@@ -635,7 +641,8 @@ namespace transport
         mgr.commit();
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -646,8 +653,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
-        << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
@@ -660,7 +668,8 @@ namespace transport
         mgr.commit();
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -671,8 +680,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
-        << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
@@ -690,7 +700,8 @@ namespace transport
         mgr.commit();
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1773,7 +1784,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for twopf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for twopf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1792,7 +1804,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1801,7 +1814,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for threepf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for threepf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1820,7 +1834,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1829,7 +1844,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1848,7 +1864,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1857,7 +1874,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1876,7 +1894,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1885,7 +1904,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for fNL container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for fNL container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1904,7 +1924,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 

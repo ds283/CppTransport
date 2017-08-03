@@ -563,7 +563,8 @@ namespace transport
 
                 default:
                   {
-                    BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source() << "; discarding";
+                    BOOST_LOG_SEV(log, base_writer::log_severity_level::error)
+                      << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source() << "; discarding";
                     this->world.recv(stat.source(), stat.tag());
                     break;
                   }
@@ -581,7 +582,7 @@ namespace transport
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
 
-        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Notifying workers of end-of-work";
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::notification) << "++ Notifying workers of end-of-work";
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
         for(unsigned int i = 0; i < this->world.size()-1; ++i)
@@ -987,7 +988,8 @@ namespace transport
                   {
                     if(emit_agg_queue_msg)
                       {
-                        BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "++ Idle for more than 5 seconds: processing queued aggregations";
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal)
+                          << "++ Idle for more than 5 seconds: processing queued aggregations";
                         emit_agg_queue_msg = false;
                       }
 
@@ -1002,7 +1004,8 @@ namespace transport
         this->reporter.periodic_report(writer);
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "++ All work items completed at " << boost::posix_time::to_simple_string(now);
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::notification)
+          << "++ All work items completed at " << boost::posix_time::to_simple_string(now);
 
         // process any remaining aggregations
         if(aggregation_queue.size() > 0)

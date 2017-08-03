@@ -427,7 +427,8 @@ namespace transport
 
           // wait for all messages to be received
           boost::mpi::wait_all(requests.begin(), requests.end());
-          BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
+          BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+            << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
         bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
@@ -483,7 +484,8 @@ namespace transport
 
           // wait for all messages to be received
           boost::mpi::wait_all(requests.begin(), requests.end());
-          BOOST_LOG_SEV(i_writer.get_log(), base_writer::log_severity_level::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
+          BOOST_LOG_SEV(i_writer.get_log(), base_writer::log_severity_level::notification)
+            << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
         bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, i_writer, begin_label, end_label);
@@ -514,7 +516,8 @@ namespace transport
         boost::timer::cpu_timer aggregate_timer;
 
         boost::filesystem::path ctr_path = payload.get_container_path();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << ctr_path.filename().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "++ Beginning aggregation of temporary container '" << ctr_path.filename().string() << "'";
         bool success = true;
 
         try

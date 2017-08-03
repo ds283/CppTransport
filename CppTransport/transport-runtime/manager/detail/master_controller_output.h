@@ -125,7 +125,8 @@ namespace transport
 
           // wait for all messages to be received
           boost::mpi::wait_all(requests.begin(), requests.end());
-          BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
+          BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+            << "++ All workers received NEW_DERIVED_CONTENT instruction";
         }
 
         // we keep track of the global content group list, but content groups are also tracked

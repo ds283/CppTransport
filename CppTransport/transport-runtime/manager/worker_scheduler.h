@@ -53,7 +53,7 @@
 // 1 millisecond = 1000 microsecond
 // 1 second = 1000 milisecond
 // 1 minute = 60 seconds
-#define CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
+#define CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type{1}*60*1000*1000*1000)
 
 //#define CPPTRANSPORT_DEBUG_SCHEDULER
 
@@ -584,7 +584,7 @@ namespace transport
 			    }
 		    else
 			    {
-		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Unexpected double identification for worker  " << worker;
+		        BOOST_LOG_SEV(log, base_writer::log_severity_level::error) << "!! Unexpected double identification for worker  " << worker;
 			    }
 
 			}

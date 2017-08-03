@@ -102,7 +102,7 @@ namespace transport
       {
         static const std::map< base_writer::log_severity_level, std::string > stringize_map =
           {
-            { base_writer::log_severity_level::normal, "normal" },
+            { base_writer::log_severity_level::normal, "information" },
             { base_writer::log_severity_level::notification, "notification" },
             { base_writer::log_severity_level::warning, "warning" },
             { base_writer::log_severity_level::error, "error" },
