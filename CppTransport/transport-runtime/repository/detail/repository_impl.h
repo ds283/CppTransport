@@ -497,10 +497,10 @@ namespace transport
         std::ostringstream msg;
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-
+    
         msg << CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_A << " '" << group->get_name() << "' "
-          << CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_B << " '" << group->get_task_name() << "' "
-          << CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
+            << CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_B << " '" << group->get_task_name() << "' "
+            << CPPTRANSPORT_REPO_COMMITTING_CONTENT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
         this->message(msg.str());
 
         if(group->get_payload().is_failed())
@@ -580,28 +580,29 @@ namespace transport
         boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF / writer.get_task_name();
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
-        if(boost::filesystem::is_directory(fail_path))
+        if(!boost::filesystem::is_directory(fail_path))
+          throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+    
+        boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+    
+        try
           {
-            boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
-
-            try
-              {
-                boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
-              }
-            catch(boost::filesystem::filesystem_error& xe)
-              {
-                throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
-              }
-
-            std::ostringstream msg1;
-            msg1 << CPPTRANSPORT_REPO_FAILED_TASK_CONTENT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_TASK_CONTENT_GROUP_B;
-            this->error(msg1.str());
-
-            std::ostringstream msg2;
-            msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' " << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
-            this->warning(msg2.str());
+            boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
           }
-        else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+        catch(boost::filesystem::filesystem_error& xe)
+          {
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+          }
+    
+        std::ostringstream msg1;
+        msg1 << CPPTRANSPORT_REPO_FAILED_TASK_CONTENT_GROUP_A << " '" << writer.get_task_name() << "': "
+             << CPPTRANSPORT_REPO_FAILED_TASK_CONTENT_GROUP_B;
+        this->error(msg1.str());
+    
+        std::ostringstream msg2;
+        msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' "
+             << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
+        this->warning(msg2.str());
       }
 
 
@@ -680,27 +681,28 @@ namespace transport
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
         if(boost::filesystem::is_directory(fail_path))
+          throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+    
+        boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+    
+        try
           {
-            boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
-
-            try
-              {
-                boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
-              }
-            catch(boost::filesystem::filesystem_error& xe)
-              {
-                throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
-              }
-
-            std::ostringstream msg1;
-            msg1 << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B;
-            this->error(msg1.str());
-
-            std::ostringstream msg2;
-            msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' " << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
-            this->warning(msg2.str());
+            boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
           }
-        else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+        catch(boost::filesystem::filesystem_error& xe)
+          {
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+          }
+    
+        std::ostringstream msg1;
+        msg1 << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_task_name() << "': "
+             << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B;
+        this->error(msg1.str());
+    
+        std::ostringstream msg2;
+        msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' "
+             << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
+        this->warning(msg2.str());
       }
 
 
@@ -749,28 +751,29 @@ namespace transport
         boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF / writer.get_task_name();
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
-        if(boost::filesystem::is_directory(fail_path))
+        if(!boost::filesystem::is_directory(fail_path))
+          throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+    
+        boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+    
+        try
           {
-            boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
-
-            try
-              {
-                boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
-              }
-            catch(boost::filesystem::filesystem_error& xe)
-              {
-                throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
-              }
-
-            std::ostringstream msg1;
-            msg1 << CPPTRANSPORT_REPO_FAILED_OUTPUT_CONTENT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_OUTPUT_CONTENT_GROUP_B;
-            this->error(msg1.str());
-
-            std::ostringstream msg2;
-            msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' " << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
-            this->warning(msg2.str());
+            boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
           }
-        else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+        catch(boost::filesystem::filesystem_error& xe)
+          {
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+          }
+    
+        std::ostringstream msg1;
+        msg1 << CPPTRANSPORT_REPO_FAILED_OUTPUT_CONTENT_GROUP_A << " '" << writer.get_task_name() << "': "
+             << CPPTRANSPORT_REPO_FAILED_OUTPUT_CONTENT_GROUP_B;
+        this->error(msg1.str());
+    
+        std::ostringstream msg2;
+        msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' "
+             << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
+        this->warning(msg2.str());
       }
 
 
