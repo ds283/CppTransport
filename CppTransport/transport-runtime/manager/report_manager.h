@@ -351,7 +351,7 @@ namespace transport
             subject << CPPTRANSPORT_END_TASK_SUBJECT << " '" << this->task_name << "'";
             
             std::ostringstream report;
-            subject << CPPTRANSPORT_END_TASK_BODY << " '" << this->task_name << "'";
+            report << CPPTRANSPORT_END_TASK_BODY << " '" << this->task_name << "'";
     
             msg.set_to(this->arg_cache.get_report_email()).set_subject(subject.str()).set_body(report.str());
             msg.send();
