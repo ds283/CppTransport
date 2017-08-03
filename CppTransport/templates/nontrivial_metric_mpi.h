@@ -790,6 +790,7 @@ namespace transport
               {
                 batcher.report_integration_failure(list[i]->serial);
                 batcher.unbatch(list[i]->serial);
+                success = true;
 
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)
                     << "!! " CPPTRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
@@ -1177,6 +1178,17 @@ namespace transport
         __dtwopf(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf(MOMENTUM($^c), $^B);
         __dtwopf($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf($^A, MOMENTUM($^c));
 
+#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+        if(std::isnan(__background($^A)) || std::isinf(__background($^A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_tensor(0,0)) || std::isinf(__dtwopf_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_tensor(0,1)) || std::isinf(__dtwopf_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_tensor(1,0)) || std::isinf(__dtwopf_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_tensor(1,1)) || std::isinf(__dtwopf_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf($^A, $^B)) || std::isinf(__dtwopf($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+#endif
+
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();
         ++__invokations;
@@ -1440,6 +1452,36 @@ namespace transport
         __dthreepf(MOMENTUM($^a), $^B, $^C) $+= - $GAMMA[^a_d] * __threepf(MOMENTUM($^d), $^B, $^C);
         __dthreepf($^A, MOMENTUM($^b), $^C) $+= - $GAMMA[^b_d] * __threepf($^A, MOMENTUM($^d), $^C);
         __dthreepf($^A, $^B, MOMENTUM($^c)) $+= - $GAMMA[^c_d] * __threepf($^A, $^B, MOMENTUM($^d));
+
+#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+        if(std::isnan(__background($^A)) || std::isinf(__background($^A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_k1_tensor(0,0)) || std::isinf(__dtwopf_k1_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k1_tensor(0,1)) || std::isinf(__dtwopf_k1_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k1_tensor(1,0)) || std::isinf(__dtwopf_k1_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k1_tensor(1,1)) || std::isinf(__dtwopf_k1_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_k2_tensor(0,0)) || std::isinf(__dtwopf_k2_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k2_tensor(0,1)) || std::isinf(__dtwopf_k2_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k2_tensor(1,0)) || std::isinf(__dtwopf_k2_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k2_tensor(1,1)) || std::isinf(__dtwopf_k2_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_k3_tensor(0,0)) || std::isinf(__dtwopf_k3_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k3_tensor(0,1)) || std::isinf(__dtwopf_k3_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k3_tensor(1,0)) || std::isinf(__dtwopf_k3_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_k3_tensor(1,1)) || std::isinf(__dtwopf_k3_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_re_k1($^A, $^B)) || std::isinf(__dtwopf_re_k1($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_im_k1($^A, $^B)) || std::isinf(__dtwopf_im_k1($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_re_k2($^A, $^B)) || std::isinf(__dtwopf_re_k2($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_im_k2($^A, $^B)) || std::isinf(__dtwopf_im_k2($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_re_k3($^A, $^B)) || std::isinf(__dtwopf_re_k3($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_im_k3($^A, $^B)) || std::isinf(__dtwopf_im_k3($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dthreepf($^A, $^B, $^C)) || std::isinf(__dthreepf($^A, $^B, $^C))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+#endif
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();

@@ -68,5 +68,6 @@
 
 #define CPPTRANSPORT_REFINEMENT_TOO_DEEP   "Integration error: too many levels of mesh refinement were required; decrease the underlying time step"
 
+#define CPPTRANSPORT_INTEGRATOR_NAN_OR_INF "Integration error: encountered NaN or infinity"
 
 #endif // CPPTRANSPORT_MESSAGES_EN_MODELS_H

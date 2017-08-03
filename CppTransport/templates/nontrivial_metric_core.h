@@ -56,6 +56,7 @@
 
 
 // #define CPPTRANSPORT_INSTRUMENT
+// #define CPPTRANSPORT_NO_STRICT_FP_TEST
 
 
 namespace transport
