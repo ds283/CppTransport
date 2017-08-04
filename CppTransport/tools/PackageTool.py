@@ -157,7 +157,7 @@ def package_examples(package_dir, archive_file, version_string):
         archive.close()
 
 
-version = "2017_01_beta1"
+version = "2017_01_beta1_Apollo"
 
 package_dir = os.path.join("packages", "pkg")
 version_dir = os.path.join(package_dir, version)

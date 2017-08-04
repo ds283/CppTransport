@@ -12,8 +12,7 @@ FUNCTION(BUILD_CLN BUILD_DIR INSTALL_PREFIX)
 
   EXTERNALPROJECT_ADD(
     CLN
-    URL http://www.ginac.de/CLN/cln-1.3.4.tar.bz2
-    URL_MD5 30ef9d2f02ef5c3f8d221a8692f8b28e
+    DOWNLOAD_COMMAND wget http://www.ginac.de/CLN/cln-1.3.4.tar.bz2 && tar xvf cln-1.3.4.tar.bz2 -C ${CLN_SRC} --strip-components=1
 
     SOURCE_DIR ${CLN_SRC}
     BINARY_DIR ${CLN_BIN}
@@ -54,8 +53,7 @@ FUNCTION(BUILD_GINAC BUILD_DIR CLN_INCLUDE_DIRS CLN_LIBRARY_DIRS CLN_LIBRARIES I
   EXTERNALPROJECT_ADD(
     GiNaC
     DEPENDS CLN
-    URL http://www.ginac.de/ginac-1.7.2.tar.bz2
-    URL_MD5 ac47d481ef8f7ce423ac226fb07e9359
+    DOWNLOAD_COMMAND wget http://www.ginac.de/CLN/cln-1.3.4.tar.bz2 && tar xvf cln-1.3.4.tar.bz2 -C ${CLN_SRC} --strip-components=1
 
     SOURCE_DIR ${GINAC_SRC}
     BINARY_DIR ${GINAC_BIN}
