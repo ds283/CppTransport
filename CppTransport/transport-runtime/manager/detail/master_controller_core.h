@@ -655,12 +655,10 @@ namespace transport
         // generate a list of work assignments
         std::list<work_assignment> work = this->work_scheduler.assign_work(log);
     
-        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Generating new work assignments for "
-                                                                    << work.size() << " worker"
-                                                                    << (work.size() > 1 ? std::string{"s"} : std::string{})
-                                                                    << " ("
-                                                                    << this->work_scheduler.get_items_remaining()
-                                                                    << " work items remain in queue)";
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal)
+          << "++ Generating new work assignments for " << work.size() << " worker"
+          << (work.size() > 1 ? std::string{"s"} : std::string{})
+          << " (" << this->work_scheduler.get_items_remaining() << " work items remain in queue)";
 
         // push assignments to workers
         std::vector<boost::mpi::request> msg_status(work.size());
@@ -680,10 +678,9 @@ namespace transport
             unsigned int items = assgn.get_items().size();
             unsigned int worker = assgn.get_worker();
     
-            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Assigned " << items << " work item"
-                                                                        << (items == 1 ? std::string{} : std::string{"s"})
-                                                                        << " to worker " << worker << " [MPI rank="
-                                                                        << this->worker_rank(worker) << "]";
+            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal)
+              << "++ Assigned " << items << " work item" << (items == 1 ? std::string{} : std::string{"s"})
+              << " to worker " << worker << " [MPI rank=" << this->worker_rank(worker) << "]";
           }
 
         // wait for all assignments to be received
@@ -707,7 +704,7 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         boost::posix_time::time_duration time_since_last_update = now - this->last_push_to_repo;
         
-        // update every 60 seconds to avoid producing excessive database traffic
+        // update time-to-completion estimate only every 60 seconds to avoid producing excessive database traffic
         if(time_since_last_update.total_seconds() > 60)
           {
             this->last_push_to_repo = now;

@@ -130,6 +130,7 @@ namespace transport
           (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value<long int>(), CPPTRANSPORT_HELP_BATCHER_CAPACITY)
           (CPPTRANSPORT_SWITCH_CACHE_CAPACITY, boost::program_options::value<long int>(), CPPTRANSPORT_HELP_CACHE_CAPACITY)
           (CPPTRANSPORT_SWITCH_NETWORK_MODE, CPPTRANSPORT_HELP_NETWORK_MODE)
+          (CPPTRANSPORT_SWITCH_REJECT_FAILED, CPPTRANSPORT_HELP_REJECT_FAILED)
           ;
         
         boost::program_options::options_description plotting("Plot styling", width);
@@ -423,6 +424,7 @@ namespace transport
             option_map[CPPTRANSPORT_SWITCH_INCLUDE_LONG].as<std::vector<std::string> >());
         
         if(option_map.count(CPPTRANSPORT_SWITCH_NETWORK_MODE)) this->arg_cache.set_network_mode(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_REJECT_FAILED)) this->arg_cache.set_commit_failed(false);
         
         // process global capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))

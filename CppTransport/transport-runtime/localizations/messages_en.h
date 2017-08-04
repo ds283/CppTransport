@@ -57,6 +57,7 @@
 #include "transport-runtime/localizations/messages_en/worker_scheduler.h"
 #include "transport-runtime/localizations/messages_en/worker_manager.h"
 #include "transport-runtime/localizations/messages_en/report_manager.h"
+#include "transport-runtime/localizations/messages_en/mpi.h"
 
 #include "transport-runtime/localizations/messages_en/repository.h"
 #include "transport-runtime/localizations/messages_en/json_repository_interface.h"

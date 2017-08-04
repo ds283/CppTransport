@@ -143,7 +143,7 @@ namespace transport
 
         // check whether finder can locate a suitable content group for this parent task;
         // if not, an exception will be thrown which is caught back in the main task processing loop, so this task will be aborted
-        std::unique_ptr< content_group_record<integration_payload> > group = finder(tk->get_name(), tags);
+        auto group = finder(tk->get_name(), tags);
       }
 
 
@@ -156,7 +156,7 @@ namespace transport
 
         // check whether finder can locate a suitable content group for this parent task;
         // if not, an exception will be thrown which is caught back in the main task processing loop, so this task will be aborted
-        std::unique_ptr< content_group_record<postintegration_payload> > group = finder(tk->get_name(), tags);
+        auto group = finder(tk->get_name(), tags);
       }
 
 
@@ -169,7 +169,7 @@ namespace transport
         // create an output writer to commit our results into the repository
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::unique_ptr< postintegration_writer<number> > writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
+        auto writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
     
         // create new timer for this task; the BusyIdle_Context manager
         // ensures the timer is removed when the context manager is destroyed
@@ -207,7 +207,7 @@ namespace transport
         this->aggregation_profiles.push_back(std::move(writer->get_aggregation_profiler()));
 
         // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
-        if(success) writer->commit();
+        if(success || this->arg_cache.get_commit_failed() == true) writer->commit();
       }
 
 
@@ -217,7 +217,7 @@ namespace transport
                                                                     bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
-        std::unique_ptr< task_record<number> > pre_prec = this->repo->query_task(ptk->get_name());
+        auto pre_prec = this->repo->query_task(ptk->get_name());
         integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
 
         assert(prec != nullptr);
@@ -237,12 +237,12 @@ namespace transport
           }
 
         // create an output writer for the postintegration task
-        std::unique_ptr< postintegration_writer<number> > p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
+        auto p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
         this->data_mgr->initialize_writer(*p_writer);
         this->data_mgr->create_tables(*p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different content groups
-        std::unique_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(*prec, tags, this->get_rank(), 0, this->world.size(), "paired");
+        auto i_writer = this->repo->new_integration_task_content(*prec, tags, this->get_rank(), 0, this->world.size(), "paired");
         this->data_mgr->initialize_writer(*i_writer);
         this->data_mgr->create_tables(*i_writer, ptk);
     
@@ -288,7 +288,7 @@ namespace transport
         // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         // if the writers are not committed they automatically abort
         // committing (or aborting) the writers automatically deregisters them
-        if(success)
+        if(success || this->arg_cache.get_commit_failed() == true)
           {
             i_writer->commit();
             p_writer->commit();
@@ -304,7 +304,7 @@ namespace transport
         postintegration_content_db db = this->repo->enumerate_postintegration_task_content(tk->get_name());
 
         // find the specified group in this list, by name
-        postintegration_content_db::const_iterator t = std::find_if(db.begin(), db.end(), OutputGroupFinder<postintegration_payload>(seed_group));
+        auto t = std::find_if(db.begin(), db.end(), OutputGroupFinder<postintegration_payload>(seed_group));
 
         if(t == db.end())   // no record found
           {
@@ -336,7 +336,7 @@ namespace transport
         postintegration_content_db db = this->repo->enumerate_postintegration_task_content(tk->get_name());
 
         // find the specified group in this list
-        postintegration_content_db::const_iterator t = std::find_if(db.begin(), db.end(),  OutputGroupFinder<postintegration_payload>(seed_group));
+        auto t = std::find_if(db.begin(), db.end(), OutputGroupFinder<postintegration_payload>(seed_group));
 
         if(t == db.end())   // no record found
           {

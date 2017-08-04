@@ -377,7 +377,9 @@ namespace transport
                     bool success = true;
                     batcher.begin_assignment();
 
-                    slave_message_buffer messages(this->environment, this->world, [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
+                    slave_message_buffer
+                      messages(this->environment, this->world,
+                               [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
                     slave_message_context msg_ctx(messages, tk->get_name());
 
                     // keep track of wallclock time
@@ -405,16 +407,17 @@ namespace transport
                     if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
                     else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-                    MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
-                                                                       batcher.get_max_integration_time(), batcher.get_min_integration_time(),
-                                                                       batcher.get_batching_time(),
-                                                                       batcher.get_max_batching_time(), batcher.get_min_batching_time(),
-                                                                       timer.elapsed().wall,
-                                                                       batcher.get_reported_integrations(),
-                                                                       batcher.get_reported_refinements(), batcher.get_reported_failures(),
-                                                                       batcher.get_failed_serials(), this->busyidle_timers.get_load_average(payload.get_group_name()));
+                    MPI::finished_integration_payload
+                      outgoing_payload{batcher.get_integration_time(), batcher.get_max_integration_time(),
+                                       batcher.get_min_integration_time(), batcher.get_batching_time(),
+                                       batcher.get_max_batching_time(), batcher.get_min_batching_time(),
+                                       timer.elapsed().wall, batcher.get_reported_integrations(),
+                                       batcher.get_reported_refinements(), batcher.get_reported_failures(),
+                                       batcher.get_failed_serials(),
+                                       this->busyidle_timers.get_load_average(payload.get_group_name())};
 
-                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
+                    boost::mpi::request finish_msg =
+                      this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
                     finish_msg.wait();
 
                     break;
@@ -654,19 +657,20 @@ namespace transport
                     if(success) BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
                     else        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error)  << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-                    MPI::finished_derived_payload finish_payload(content_groups, pipe->get_database_time(), timer.elapsed().wall,
-                                                                 list.size(), processing_time,
-                                                                 min_processing_time, max_processing_time,
-                                                                 pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
-                                                                 pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
-                                                                 pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
-                                                                 pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
-                                                                 pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
-                                                                 pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
-                                                                 pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
-                                                                 pipe->get_data_cache_evictions(), this->busyidle_timers.get_load_average(payload.get_group_name()));
+                    MPI::finished_derived_payload
+                      finish_payload{content_groups, pipe->get_database_time(), timer.elapsed().wall,
+                                     static_cast<unsigned int>(list.size()), processing_time, min_processing_time, max_processing_time,
+                                     pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
+                                     pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
+                                     pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
+                                     pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
+                                     pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
+                                     pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
+                                     pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
+                                     pipe->get_data_cache_evictions(), this->busyidle_timers.get_load_average(payload.get_group_name())};
 
-                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
+                    boost::mpi::request finish_msg =
+                      this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
                     finish_msg.wait();
 
                     break;
@@ -986,7 +990,9 @@ namespace transport
                     bool success = true;
                     batcher.begin_assignment();
 
-                    slave_message_buffer messages(this->environment, this->world, [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
+                    slave_message_buffer
+                      messages(this->environment, this->world,
+                               [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
                     slave_message_context msg_ctx(messages, tk->get_name());
 
                     // keep track of wallclock time
@@ -1019,19 +1025,21 @@ namespace transport
                     if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
                     else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-                    MPI::finished_postintegration_payload outgoing_payload(group, pipe->get_database_time(), timer.elapsed().wall,
-                                                                           batcher.get_items_processed(), batcher.get_processing_time(),
-                                                                           batcher.get_max_processing_time(), batcher.get_min_processing_time(),
-                                                                           pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
-                                                                           pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
-                                                                           pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
-                                                                           pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
-                                                                           pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
-                                                                           pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
-                                                                           pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
-                                                                           pipe->get_data_cache_evictions(), this->busyidle_timers.get_load_average(payload.get_group_name()));
+                    MPI::finished_postintegration_payload
+                      outgoing_payload{group, pipe->get_database_time(), timer.elapsed().wall,
+                                       batcher.get_items_processed(), batcher.get_processing_time(),
+                                       batcher.get_max_processing_time(), batcher.get_min_processing_time(),
+                                       pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
+                                       pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
+                                       pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
+                                       pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
+                                       pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
+                                       pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
+                                       pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
+                                       pipe->get_data_cache_evictions(), this->busyidle_timers.get_load_average(payload.get_group_name())};
 
-                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
+                    boost::mpi::request finish_msg =
+                      this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
                     finish_msg.wait();
 
                     break;

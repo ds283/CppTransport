@@ -97,7 +97,7 @@ namespace transport
         // create an output writer to commit the result of this integration to the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::unique_ptr< integration_writer<number> > writer = this->repo->new_integration_task_content(rec, tags, this->get_rank(), 0, this->world.size());
+        auto writer = this->repo->new_integration_task_content(rec, tags, this->get_rank(), 0, this->world.size());
     
         // create new timer for this task; the BusyIdle_Context manager
         // ensures the timer is removed when the context manager is destroyed
@@ -138,7 +138,7 @@ namespace transport
         // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         // if the writer is not committed it automatically aborts
         // committing (or aborting) the writer automatically deregisters it
-        if(success) writer->commit();
+        if(success || this->arg_cache.get_commit_failed() == true) writer->commit();
       }
 
 
@@ -150,7 +150,7 @@ namespace transport
         integration_content_db db = this->repo->enumerate_integration_task_content(tk->get_name());
 
         // find the specified group in this list
-        integration_content_db::const_iterator t = std::find_if(db.begin(), db.end(), OutputGroupFinder<integration_payload>(seed_group));
+        auto t = std::find_if(db.begin(), db.end(), OutputGroupFinder<integration_payload>(seed_group));
 
         if(t == db.end())   // no record found
           {
@@ -318,7 +318,7 @@ namespace transport
         if(metadata.global_max_batching_time == 0 || payload.get_max_batching_time() > metadata.global_max_batching_time) metadata.global_max_batching_time = payload.get_max_batching_time();
         if(metadata.global_min_batching_time == 0 || payload.get_min_batching_time() < metadata.global_min_batching_time) metadata.global_min_batching_time = payload.get_min_batching_time();
 
-        metadata.total_configurations += payload.get_items_processed();
+        metadata.total_configurations += payload.get_num_success();
         metadata.total_failures += payload.get_num_failures();
         metadata.total_refinements += payload.get_num_refinements();
       }

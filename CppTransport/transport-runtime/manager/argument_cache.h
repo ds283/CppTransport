@@ -107,6 +107,12 @@ namespace transport
 
         //! Set network mode
         void set_network_mode(bool m)                             { this->network_mode = m; }
+        
+        //! Commit failed integrations?
+        bool get_commit_failed() const                            { return this->commit_failed; }
+        
+        //! Set commit-failed mode
+        void set_commit_failed(bool c)                            { this->commit_failed = c; }
 
 
         // REPOSITORY OPTIONS
@@ -295,6 +301,9 @@ namespace transport
 
         //! network mode?
         bool network_mode;
+        
+        //! commit integrations with failures?
+        bool commit_failed;
 
         //! Storage capacity per batcher
         size_t batcher_capacity;
@@ -353,6 +362,7 @@ namespace transport
             ar & create;
             ar & colour_output;
             ar & network_mode;
+            ar & commit_failed;
             ar & batcher_capacity;
             ar & pipe_capacity;
             ar & checkpoint_interval;
@@ -380,6 +390,7 @@ namespace transport
         create(false),
         colour_output(true),
         network_mode(false),
+        commit_failed(true),
         batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
         pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),
         checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL),

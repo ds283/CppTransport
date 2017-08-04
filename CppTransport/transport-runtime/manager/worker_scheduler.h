@@ -319,7 +319,7 @@ namespace transport
         void prepare_queue(const std::set<unsigned int>& list);
 
 		    //! current queue exhausted? ie., finished all current work?
-		    bool is_finished() const { return(this->queue.size() == 0); }
+		    bool is_finished() const { return this->queue.empty(); }
 
 		    //! finalize queue setup; should be called before generating work assignments
 		    void complete_queue_setup();
@@ -560,7 +560,7 @@ namespace transport
               }
 
 		        this->worker_data[worker].set_data(worker, type, payload.get_capacity(), payload.get_priority());
-				    this->waiting_for_setup--;
+				    --this->waiting_for_setup;
 
 		        std::ostringstream msg;
 		        msg << "** Worker " << worker+1 << " identified as ";
@@ -579,8 +579,8 @@ namespace transport
 
 		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << msg.str();
 
-				    this->unassigned++;
-				    this->active++;
+				    ++this->unassigned;
+				    ++this->active;
 			    }
 		    else
 			    {
@@ -704,9 +704,11 @@ namespace transport
 				// This is intended to prevent lots of k-configurations being allocated in one go,
 				// and then the system inadvertently running out of work with some cores
 				// left unallocated for a long period.
-				if(this->worker_data.size() > 0)
+				if(!this->worker_data.empty())
 					{
-				    this->max_work_allocation = std::max(static_cast<unsigned int>(this->queue.size() / (5*this->worker_data.size())), static_cast<unsigned int>(1));
+				    this->max_work_allocation =
+              std::max(static_cast<unsigned int>(this->queue.size() / (5*this->worker_data.size())),
+                       static_cast<unsigned int>(1));
 					}
 				else
 					{
@@ -718,38 +720,41 @@ namespace transport
 		bool worker_scheduler::assignable() const
 			{
 				// are there unassigned workers and work items left for them to process?
-				return(this->queue.size() > 0 && this->unassigned > 0);
+				return(!this->queue.empty() && this->unassigned > 0);
 			}
 
 
 		void worker_scheduler::mark_assigned(const work_assignment& assignment)
 			{
 				// check that there are unassigned workers
-				if(this->unassigned == 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NO_UNASSIGNED);
+				if(this->unassigned == 0)
+          throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NO_UNASSIGNED);
 
 				// if this worker is already assigned, then an error must have occurred
-				if(this->worker_data[assignment.get_worker()].is_assigned()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_ASSIGNED);
+				if(this->worker_data[assignment.get_worker()].is_assigned())
+          throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_ASSIGNED);
 
 				// mark this worker as assigned
 				this->worker_data[assignment.get_worker()].mark_assigned(true);
-				this->unassigned--;
+				--this->unassigned;
 
 				// remove assigned work items from the queue
         for(const unsigned int& item : assignment.get_items())
 					{
 						// we're guaranteed only one instance of this work item exists in the queue
-				    std::list<unsigned int>::iterator u = std::find(this->queue.begin(), this->queue.end(), item);
+            auto u = std::find(this->queue.begin(), this->queue.end(), item);
 
 						if(u == this->queue.end())
 							{
-						    std::ostringstream msg;
-								msg << CPPTRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST << " " << item << ", " << CPPTRANSPORT_SCHEDULING_ASSIGN_WORKER << " " << assignment.get_worker();
-								throw runtime_exception(exception_type::SCHEDULING_ERROR, msg.str());
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST << " " << item << ", "
+                    << CPPTRANSPORT_SCHEDULING_ASSIGN_WORKER << " " << assignment.get_worker();
+                throw runtime_exception(exception_type::SCHEDULING_ERROR, msg.str());
 							}
 						else
 							{
 								this->queue.erase(u);
-								this->work_items_in_flight++;
+								++this->work_items_in_flight;
 							}
 					}
 			}
@@ -757,10 +762,12 @@ namespace transport
 
 		void worker_scheduler::mark_unassigned(unsigned int worker, boost::timer::nanosecond_type time, unsigned int items)
 			{
-        if(worker >= this->worker_data.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
+        if(worker >= this->worker_data.size())
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
         
 				// if this worker is not already assigned, an error must have occurred
-				if(!this->worker_data[worker].is_assigned()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED);
+				if(!this->worker_data[worker].is_assigned())
+          throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED);
 
 				this->worker_data[worker].update_timing_data(time, items);
 				this->worker_data[worker].mark_assigned(false);
@@ -786,21 +793,25 @@ namespace transport
 
 		void worker_scheduler::mark_inactive(unsigned int worker)
 			{
-        if(worker >= this->worker_data.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
+        if(worker >= this->worker_data.size())
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
 
 				// if this worker is already inactive, an error must have occurred
-				if(!this->worker_data[worker].is_active()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE);
+				if(!this->worker_data[worker].is_active())
+          throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE);
 
 				this->worker_data[worker].mark_active(false);
-				this->active--;
+				--this->active;
 
-				if(this->active == 0 && this->work_items_in_flight > 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT);
+				if(this->active == 0 && this->work_items_in_flight > 0)
+          throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT);
 			}
     
     
     const worker_scheduling_data& worker_scheduler::operator[](unsigned int worker) const
       {
-        if(worker >= this->worker_data.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
+        if(worker >= this->worker_data.size())
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE);
         
         return this->worker_data[worker];
       }
@@ -809,7 +820,7 @@ namespace transport
 		void worker_scheduler::report_aggregation(boost::timer::nanosecond_type time)
 			{
 				this->total_aggregation_time += time;
-				this->number_aggregations++;
+				++this->number_aggregations;
 
 		    boost::timer::nanosecond_type mean_aggregation_time =
           this->total_aggregation_time / this->number_aggregations;
@@ -879,16 +890,15 @@ namespace transport
 		        // CPU only scheduling strategy
 		        return this->assign_work_cpu_only_strategy(log);
 			    }
-		    else if(this->has_gpus && !this->has_cpus)
+		    
+        if(this->has_gpus && !this->has_cpus)
 			    {
 		        // GPU only scheduling strategy
 		        return this->assign_work_gpu_only_strategy(log);
 			    }
-		    else
-			    {
-		        // mixed CPU & GPU scheduling strategy
-		        return this->assign_work_mixed_strategy(log);
-			    }
+
+        // mixed CPU & GPU scheduling strategy
+        return this->assign_work_mixed_strategy(log);
 			}
 
 
@@ -902,7 +912,8 @@ namespace transport
 		    // but we won't be amending it within this function
 		    std::list< std::vector<worker_scheduling_data>::iterator > workers;
 
-		    for(std::vector<worker_scheduling_data>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+        // build list of iterators to workers requiring assignments
+		    for(auto t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
 			    {
 		        if(!t->is_assigned()) workers.push_back(t);
 			    }
@@ -934,34 +945,40 @@ namespace transport
 				assert(workers.size() > 0);
 				double worker_scale = sqrt(workers.size() * this->worker_data.size());
 
-				unsigned int max_allocation_per_worker = std::max(static_cast<unsigned int>(1), static_cast<unsigned int>(floor(static_cast<double>(this->queue.size()) / worker_scale)));
+				unsigned int max_allocation_per_worker =
+          std::max(static_cast<unsigned int>(1),
+                   static_cast<unsigned int>(floor(static_cast<double>(this->queue.size()) / worker_scale)));
 
 				// set up an iterator to point at the next item of work
-		    std::list<unsigned int>::iterator next_item = this->queue.begin();
+        auto next_item = this->queue.begin();
 
 				// loop through workers, allocating work from the queue
 #ifdef CPPTRANSPORT_DEBUG_SCHEDULER
 				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", max allocation per worker=" << max_allocation_per_worker << ")";
 #endif
-				for(typename std::list< std::vector<worker_scheduling_data>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t)
+        for(auto wkr : workers)
 					{
+            // exit if no work left to be assigned
+            if(next_item == this->queue.end()) break;
+            
 				    std::list<unsigned int> items;
 
 						// is this a worker which has not yet had any assignment?
-						if((*t)->get_total_time() == 0)
+						if(wkr->get_total_time() == 0)
 							{
 #ifdef CPPTRANSPORT_DEBUG_SCHEDULER
-								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " has not yet been allocated work; allocating 1 item";
+								BOOST_LOG_SEV(log, generic_writer::normal)
+								  << "%% Worker " << (*t)->get_number()+1 << " has not yet been allocated work; allocating 1 item";
 #endif
 								// if so, assign just a single work item to get a sense of how long it takes this worker to process
 								items.push_back(*next_item);
-								next_item++;
+								++next_item;
 							}
 						else
 							{
 								// allocate enough work items to fill up the current scheduling granularity (begins at 60 seconds)
 								// or the mean allocation per worker, whichever is smaller
-						    boost::timer::nanosecond_type time_per_item             = (*t)->get_mean_time_per_work_item();
+						    boost::timer::nanosecond_type time_per_item             = wkr->get_mean_time_per_work_item();
 						    boost::timer::nanosecond_type items_per_granularity     = time_per_item > 0 ? this->current_granularity / time_per_item : 1.0;
 						    unsigned int                  int_items_per_granularity = std::max(static_cast<unsigned int>(1), static_cast<unsigned int>(floor(items_per_granularity)));
 
@@ -980,19 +997,20 @@ namespace transport
 								unsigned int num_work_items = std::min(unit_of_work, max_allocation_per_worker);
 
 #ifdef CPPTRANSPORT_DEBUG_SCHEDULER
-								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " mean time-per-item = " << format_time(time_per_item)
-										<< " -> granularity = " << granularity_int
-										<< ". Allocated " << num_work_items << " items";
+								BOOST_LOG_SEV(log, generic_writer::normal)
+								  << "%% Worker " << (*t)->get_number()+1 << " mean time-per-item = " << format_time(time_per_item)
+                  << " -> granularity = " << granularity_int
+                  << ". Allocated " << num_work_items << " items";
 #endif
 
 								for(unsigned int i = 0; next_item != this->queue.end() && i < num_work_items; ++i)
 									{
 										items.push_back(*next_item);
-										next_item++;
+										++next_item;
 									}
 							}
 
-						assignment_list.push_back(work_assignment((*t)->get_number(), items));
+						assignment_list.emplace_back(wkr->get_number(), items);
 					}
 
 				return(assignment_list);
@@ -1009,7 +1027,7 @@ namespace transport
 				// but we won't be amending it within this function
 		    std::list< std::vector<worker_scheduling_data>::iterator > workers;
 
-				for(std::vector<worker_scheduling_data>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+				for(auto t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
 					{
 						if(!t->is_assigned()) workers.push_back(t);
 					}
@@ -1023,19 +1041,23 @@ namespace transport
 		    std::list<work_assignment> assignment_list;
 
 				unsigned int c = 0;
-		    std::list<unsigned int>::iterator next_item = this->queue.begin();
+        auto next_item = this->queue.begin();
 
-				for(typename std::list< std::vector<worker_scheduling_data>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t, ++c)
+        for(auto wkr : workers)
 					{
+            // exit if no work left to be assigned
+            if(next_item == this->queue.end()) break;
+
 				    std::list<unsigned int> items;
 
 						for(unsigned int i = 0; next_item != this->queue.end() && i < items_per_worker + (c < items_left_over ? 1 : 0); ++i)
 							{
 								items.push_back(*next_item);
-								next_item++;
+								++next_item;
 							}
 
-						assignment_list.push_back(work_assignment((*t)->get_number(), items));
+						assignment_list.emplace_back(wkr->get_number(), items);
+            ++c;
 					}
 
 				return(assignment_list);

@@ -1019,6 +1019,7 @@ SET(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/model_list.h
   transport-runtime/localizations/messages_en/model_manager.h
   transport-runtime/localizations/messages_en/models.h
+  transport-runtime/localizations/messages_en/mpi.h
   transport-runtime/localizations/messages_en/named_list.h
   transport-runtime/localizations/messages_en/parameters.h
   transport-runtime/localizations/messages_en/range.h
