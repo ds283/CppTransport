@@ -940,11 +940,9 @@ namespace transport
                         this->work_manager.update_load_average(this->worker_number(stat->source()), payload.get_load_average());
 
                         unsigned int num_active = this->work_scheduler.get_number_active();
-                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source()
-                                                                                    << " advising close-down after end-of-work; "
-                                                                                    << num_active << " worker"
-                                                                                    << (num_active != 1 ? std::string{"s"} : std::string{})
-                                                                                    << " still active";
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal)
+                          << "++ Worker " << stat->source() << " advising close-down after end-of-work; "
+                          << num_active << " worker" << (num_active != 1 ? std::string{"s"} : std::string{}) << " still active";
                         break;
                       }
 

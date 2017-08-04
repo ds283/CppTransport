@@ -1815,16 +1815,16 @@ namespace transport
 
         // then, carry out an integrity check and commit the writer
 
-        for(const inflight_integration_db_value_type& inflight : list)
+        for(const auto& inflight : list)
           {
             // get task record
-            std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+            auto pre_rec = this->query_task(inflight.second->task_name);
             integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
             assert(rec != nullptr);
             if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-            std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(*inflight.second, data_mgr, *rec, worker);
+            auto writer = this->get_integration_recovery_writer(*inflight.second, data_mgr, *rec, worker);
 
             // metadata for the writer are likely to be inconsistent
             // try to recover correct metadata directly from the container
@@ -1849,7 +1849,7 @@ namespace transport
                                                                 integration_task_record<number>& rec, unsigned int worker)
       {
         // set up a new writer instance for this content group
-        std::unique_ptr< integration_writer<number> > writer = this->recover_integration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker, data.workgroup_number);
+        auto writer = this->recover_integration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker, data.workgroup_number);
 
         // initialize writer in recovery mode
         data_mgr.initialize_writer(*writer, true);
@@ -1911,10 +1911,10 @@ namespace transport
     void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& data_mgr, inflight_postintegration_db& p_list,
                                                               inflight_integration_db& i_list, unsigned int worker)
       {
-        for(const inflight_postintegration_db_value_type& inflight : p_list)
+        for(const auto& inflight : p_list)
           {
             // get task record
-            std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+            auto pre_rec = this->query_task(inflight.second->task_name);
             postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
 
             assert(rec != nullptr);
@@ -1930,7 +1930,7 @@ namespace transport
     void repository_sqlite3<number>::recover_unpaired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
                                                                       postintegration_task_record<number>& rec, unsigned int worker)
       {
-        std::unique_ptr< postintegration_writer<number> > writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
+        auto writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
 
         // close writer, performing integrity check to update all missing serial numbers
         // if any are missing, the writer will be marked as failed
@@ -1975,40 +1975,43 @@ namespace transport
                                                                     inflight_integration_db& i_list, unsigned int worker)
       {
         // try to find paired integration in i_list
-        inflight_integration_db::iterator t = std::find_if(i_list.begin(), i_list.end(),
-                                                           repository_sqlite3_impl::FindInFlight<inflight_integration_db_value_type>(data.parent_group));
+        auto t = std::find_if(i_list.begin(), i_list.end(),
+                              repository_sqlite3_impl::FindInFlight<inflight_integration_db_value_type>(data.parent_group));
 
-        if(t == i_list.end()) this->recover_unpaired_postintegration(data, data_mgr, p_rec, worker);    // no match for paired integration, treat as unpaired
-        else
+        if(t == i_list.end())
           {
-            // get task record
-            std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->second->task_name);
-            integration_task_record<number>& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
-
-            std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
-            std::unique_ptr< postintegration_writer<number> > p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
-
-            // metadata for the writer are likely to be inconsistent
-            // try to recover correct metadata directly from the container
-            this->recover_integration_metadata(data_mgr, *i_writer);
-
-            // close writers, performing integrity check to update all missing serial numbers
-            // if any are missing, the writer will be marked as failed
-            // any missing serials are synchornized between the containers
-            // also updates writer's metadata with correct number of configurations stored in the container
-            // and performs finalization step
-            // (closing the writer will remove it from the list of active integrations)
-            data_mgr.close_writer(*i_writer, *p_writer);
-
-            // commit output
-            // (closing the writers will remove them from the list of active postintegrations)
-            i_writer->commit();
-            p_writer->commit();
-
-            // remove integration from database of remaining hot integrations
-            // (we shouldn't try to recover it twice)
-            i_list.erase(t);
+            // no match for paired integration, treat as unpaired
+            this->recover_unpaired_postintegration(data, data_mgr, p_rec, worker);
+            return;
           }
+
+        // get task record
+        auto pre_rec = this->query_task(t->second->task_name);
+        integration_task_record<number>& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
+
+        auto i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
+        auto p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
+
+        // metadata for the writer are likely to be inconsistent
+        // try to recover correct metadata directly from the container
+        this->recover_integration_metadata(data_mgr, *i_writer);
+
+        // close writers, performing integrity check to update all missing serial numbers
+        // if any are missing, the writer will be marked as failed
+        // any missing serials are synchornized between the containers
+        // also updates writer's metadata with correct number of configurations stored in the container
+        // and performs finalization step
+        // (closing the writer will remove it from the list of active integrations)
+        data_mgr.close_writer(*i_writer, *p_writer);
+
+        // commit output
+        // (closing the writers will remove them from the list of active postintegrations)
+        i_writer->commit();
+        p_writer->commit();
+
+        // remove integration from database of remaining hot integrations
+        // (we shouldn't try to recover it twice)
+        i_list.erase(t);
       }
 
 
@@ -2018,7 +2021,7 @@ namespace transport
                                                                     postintegration_task_record<number>& rec, unsigned int worker)
       {
         // set up a new writer instance for this content group
-        std::unique_ptr< postintegration_writer<number> > writer = this->recover_postintegration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker);
+        auto writer = this->recover_postintegration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker);
 
         // initialize writer in recovery mode
         data_mgr.initialize_writer(*writer, true);
@@ -2042,16 +2045,16 @@ namespace transport
 
         // When we commit the writer, it will automatically move to the fail cache
 
-        for(const inflight_derived_content_db_value_type& inflight : list)
+        for(const auto& inflight : list)
           {
             // get task record
-            std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+            auto pre_rec = this->query_task(inflight.second->task_name);
             output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(pre_rec.get());
 
             assert(rec != nullptr);
             if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-            std::unique_ptr< derived_content_writer<number> > writer = this->get_derived_content_recovery_writer(*inflight.second, data_mgr, *rec, worker);
+            auto writer = this->get_derived_content_recovery_writer(*inflight.second, data_mgr, *rec, worker);
 
             // commit writer (automatically removes this content group from database of active tasks))
             data_mgr.close_writer(*writer);
@@ -2064,7 +2067,7 @@ namespace transport
     repository_sqlite3<number>::get_derived_content_recovery_writer(const inflight_derived_content& data, data_manager<number>& data_mgr,
                                                                     output_task_record<number>& rec, unsigned int worker)
       {
-        std::unique_ptr< derived_content_writer<number> > writer = this->recover_output_task_content(data.content_group, rec, data.output, data.logdir, data.tempdir, worker);
+        auto writer = this->recover_output_task_content(data.content_group, rec, data.output, data.logdir, data.tempdir, worker);
 
         // initialize writer in recover mode
         data_mgr.initialize_writer(*writer, true);
@@ -2088,18 +2091,12 @@ namespace transport
       {
         transaction_manager transaction = this->transaction_factory();
 
-        sqlite3_operations::register_integration_writer(transaction, this->db,
-                                                        writer.get_name(),
-                                                        writer.get_task_name(),
-                                                        writer.get_relative_output_path(),
-                                                        writer.get_relative_container_path(),
-                                                        writer.get_relative_logdir_path(),
-                                                        writer.get_relative_tempdir_path(),
-                                                        writer.get_workgroup_number(),
-                                                        writer.is_seeded(),
-                                                        writer.get_seed_group(),
-                                                        writer.is_collecting_statistics(),
-                                                        writer.is_collecting_initial_conditions());
+        sqlite3_operations::register_integration_writer(
+          transaction, this->db, writer.get_name(), writer.get_task_name(), writer.get_relative_output_path(),
+          writer.get_relative_container_path(), writer.get_relative_logdir_path(),
+          writer.get_relative_tempdir_path(), writer.get_workgroup_number(),
+          writer.is_seeded(), writer.get_seed_group(), writer.is_collecting_statistics(),
+          writer.is_collecting_initial_conditions());
 
         transaction.commit();
       }
@@ -2110,17 +2107,11 @@ namespace transport
       {
         transaction_manager transaction = this->transaction_factory();
 
-        sqlite3_operations::register_postintegration_writer(transaction, this->db,
-                                                            writer.get_name(),
-                                                            writer.get_task_name(),
-                                                            writer.get_relative_output_path(),
-                                                            writer.get_relative_container_path(),
-                                                            writer.get_relative_logdir_path(),
-                                                            writer.get_relative_tempdir_path(),
-                                                            writer.is_paired(),
-                                                            writer.get_parent_group(),
-                                                            writer.is_seeded(),
-                                                            writer.get_seed_group());
+        sqlite3_operations::register_postintegration_writer(
+          transaction, this->db, writer.get_name(), writer.get_task_name(), writer.get_relative_output_path(),
+          writer.get_relative_container_path(), writer.get_relative_logdir_path(),
+          writer.get_relative_tempdir_path(), writer.is_paired(), writer.get_parent_group(),
+          writer.is_seeded(), writer.get_seed_group());
 
         transaction.commit();
       }
@@ -2131,12 +2122,9 @@ namespace transport
       {
         transaction_manager transaction = this->transaction_factory();
 
-        sqlite3_operations::register_derived_content_writer(transaction, this->db,
-                                                            writer.get_name(),
-                                                            writer.get_task_name(),
-                                                            writer.get_relative_output_path(),
-                                                            writer.get_relative_logdir_path(),
-                                                            writer.get_relative_tempdir_path());
+        sqlite3_operations::register_derived_content_writer(
+          transaction, this->db, writer.get_name(), writer.get_task_name(), writer.get_relative_output_path(),
+          writer.get_relative_logdir_path(), writer.get_relative_tempdir_path());
 
         transaction.commit();
       }
