@@ -35,69 +35,158 @@
 
 namespace transport
   {
+    
+    // forward-declare context class
+    class context;
+    
+    namespace context_impl
+      {
+
+        //! device record
+        template <typename ContextManager>
+        class device
+          {
+
+            // TYPES
+            
+          public:
+
+            enum class memory_type { bounded, unbounded };
+            
+            
+            // CONSTRUCTOR, DESTRUCTOR
+            
+          public:
+        
+            //! constructor
+            device(std::string n, unsigned int m, const ContextManager& p, enum memory_type t=memory_type::unbounded, unsigned int w=1)
+              : name(n),
+                mem_size(m),
+                weight(w),
+                type(t),
+                parent(p)
+              {
+              }
+            
+            //! destructor is default
+            ~device() = default;
+    
+    
+            // INTERFACE
+            
+          public:
+            
+            //! get device name
+            const std::string& get_name() const { return this->name; }
+    
+            //! get device memory capacity
+            unsigned int get_mem_size() const { return this->mem_size; }
+    
+            //! get device memory type
+            enum memory_type get_mem_type() const { return this->type; }
+    
+            //! get device compute weight
+            unsigned int get_weight() const { return this->weight; }
+    
+            //! get device fractional weight (normalized by all devices in parent context)
+            double get_fractional_weight() const
+              { return static_cast<double>(this->weight) / static_cast<double>(parent.get_total_weight()); }
+      
+            
+            // INTERNAL DATA
+            
+          protected:
+    
+            //! device name
+            std::string name;
+    
+            //! device memory capacity
+            unsigned int mem_size;
+    
+            //! device compute weight
+            unsigned int weight;
+    
+            //! device memory type
+            enum memory_type type;
+    
+            //! capture reference to parent context object
+            const ContextManager& parent;
+
+          };
+        
+      }   // namespace context_impl
 
     class context
       {
+        
+        // TYPES
+        
+      public:
+        
+        //! set up type for device record
+        using device = context_impl::device<context>;
+        
+        
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        class device
-          {
-          public:
-            enum memory_type { bounded, unbounded };
-
-            device(std::string n, unsigned int m, const context* p, enum memory_type t=unbounded, unsigned int w=1)
-              : name(n), mem_size(m), weight(w), type(t), parent(p)
-              {
-              }
-
-            const std::string& get_name() const              { return(this->name); }
-            unsigned int       get_mem_size() const          { return(this->mem_size); }
-            enum memory_type   get_mem_type() const          { return(this->type); }
-            unsigned int       get_weight() const            { return(this->weight); }
-            double             get_fractional_weight() const { return(static_cast<double>(this->weight) / parent->total_weight); }
-
-          protected:
-            std::string      name;
-            unsigned int     mem_size;
-            unsigned int     weight;
-            enum memory_type type;
-
-            const context*         parent;
-          };
-
+        //! constructor
         context()
           : total_weight(0)
           {
           }
+        
+        //! destructor is default
+        ~context() = default;
+        
+        
+        // INTERFACE
+        
+      public:
 
-        size_t size() const { return(this->devices.size()); }
+        //! get total size of this compute context
+        size_t size() const { return this->devices.size(); }
 
+        
+        // CONTEXT MANAGEMENT
+        
+      public:
+        
         // add a device to the context
-        void add_device(std::string name, unsigned int mem_size=0, enum device::memory_type type=device::unbounded, unsigned int weight=1);
-
-        // return fractional weighting (ie., normalized to 1.0) for the dth device
-        // d must be within the current size of the context
-        double fractional_weight(unsigned int d) const;
-
+        void add_device(std::string name, unsigned int mem_size=0,
+                        enum device::memory_type type=device::memory_type::unbounded, unsigned int weight=1);
+    
+        //! get device record
         const device& get_device(unsigned int d) const;
-        const device& operator[](unsigned int d) const { return(this->get_device(d)); }
+        
+        //! get device record via [] overliad
+        const device& operator[](unsigned int d) const { return this->get_device(d); }
+        
+        //! return fractional weighting (ie., normalized to 1.0) for the dth device
+        //! d must be within the current size of the context
+        double fractional_weight(unsigned int d) const;
+        
+        //! get total weight of this compute context
+        unsigned int get_total_weight() const { return this->total_weight; }
 
-        friend class device;
-
+        
+        // INTERNAL DATA
+        
       protected:
 
+        //! vector of device records describing this context
         std::vector<device> devices;
-        unsigned            total_weight;
+        
+        //! total weight of this compute context
+        unsigned total_weight;
 
       };
 
 
     void context::add_device(std::string name, unsigned int mem_size, enum device::memory_type type, unsigned int weight)
       {
-        device dev(name, mem_size, this, type, weight);
-
-        this->devices.push_back(dev);
+        this->devices.emplace_back(name, mem_size, *this, type, weight);
         this->total_weight += weight;
       }
 
@@ -106,14 +195,9 @@ namespace transport
       {
         assert(d < this->devices.size());
 
-        if(d < this->devices.size())
-          {
-            return(this->devices[d]);
-          }
-        else
-          {
-            return(this->devices[this->devices.size()-1]);
-          }
+        if(d < this->devices.size()) return(this->devices[d]);
+
+        return(this->devices[this->devices.size()-1]);
       }
 
 
@@ -121,14 +205,10 @@ namespace transport
       {
         assert(d < this->devices.size());
 
-        double rval = 0;
-
         if(d < this->devices.size())
-          {
-            rval = static_cast<double>(this->devices[d].get_weight()) / static_cast<double>(this->total_weight);
-          }
+          return this->devices[d].get_fractional_weight();
 
-        return(rval);
+        return(0.0);
       }
 
   } // namespace transport

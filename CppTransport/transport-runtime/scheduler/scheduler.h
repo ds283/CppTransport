@@ -50,17 +50,50 @@ namespace transport
 		template <typename work_element>
     class abstract_filter
       {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+        
       public:
+        
+        //! constructor is default
+        abstract_filter() = default;
+        
+        //! destructor is default
+        virtual ~abstract_filter() = default;
+        
+        // FILTER INTERFACE
+        
+      public:
+
+        //! filter an individual work item
         virtual bool filter(const work_element& config) const = 0;
+
       };
 
 
-    //! Empty filter
+    //! Explicit empty filter
 		template <typename work_element>
     class trivial_filter: public abstract_filter<work_element>
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+        
       public:
-        bool filter(const work_element& config) const { return(true); }
+        
+        //! constructor is default
+        trivial_filter() = default;
+        
+        //! destructor is default
+        ~trivial_filter() = default;
+
+        
+        // FILTER INTERFACE
+        
+      public:
+    
+        //! filter an individual work item
+        bool filter(const work_element& config) const override { return(true); }
+
       };
 
 
@@ -69,25 +102,35 @@ namespace transport
 		template <typename work_element>
     class work_item_filter: public abstract_filter<work_element>
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+        
       public:
 
         //! Construct an empty filter
-        work_item_filter()
-          {
-          }
+        work_item_filter() = default;
 
-        //! Construct a filter from a predefined set of items
+        //! Construct a filter from a predefined list of matching items
 		    work_item_filter(const std::list<unsigned int>& filter_set)
 			    {
 				    items.clear();
 		        std::copy(filter_set.begin(), filter_set.end(), std::inserter(items, items.begin()));
 			    }
+    
+        //! Destructor is default
+        ~work_item_filter() = default;
+        
+        
+        // INTERFACE
+        
+      public:
 
         //! Add an item to the list of work-items included in this filter
         void add_work_item(unsigned int serial) { this->items.insert(serial); }
 
         //! Check whether a work-item is part of the filter
-        bool filter(const work_element& config)   const { return(this->items.find(config.get_serial()) != this->items.end()); }
+        bool filter(const work_element& config) const
+          { return (this->items.find(config.get_serial()) != this->items.end()); }
 
 
         // WRITE SELF TO STREAM
@@ -95,7 +138,7 @@ namespace transport
       public:
 
         //! write details
-        template <typename Stream> void write(Stream& out);
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -110,13 +153,17 @@ namespace transport
 
     template <typename work_element>
     template <typename Stream>
-    void work_item_filter<work_element>::write(Stream& out)
+    void work_item_filter<work_element>::write(Stream& out) const
       {
         out << CPPTRANSPORT_FILTER_TAG;
-        for(std::set<unsigned int>::iterator t = this->items.begin(); t != this->items.end(); ++t)
+        
+        unsigned int c = 0;
+        for(auto it : this->items)
           {
-            out << (t != this->items.begin() ? ", " : " ") << *t;
+            out << (c > 0 ? ", " : " ") << it;
+            ++c;
           }
+
         out << '\n';
       }
 
@@ -126,17 +173,30 @@ namespace transport
     std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const work_item_filter<work_element>& filter)
       {
         filter.write(out);
-        return(out);
+        return out;
       }
 
 
     class scheduler
       {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+        
       public:
+        
+        //! constuctor captures context
         scheduler(context& c)
           : ctx(c)
           {
           }
+        
+        //! destructor is default
+        ~scheduler() = default;
+        
+        
+        // SET UP QUEUES
+        
+      public:
 
         //! set up a work queue for a two-point function task, using a user-provided filter function
         template <typename number>
@@ -166,8 +226,14 @@ namespace transport
 		    template <typename number>
 			  work_queue< output_task_element<number> > make_queue(const output_task<number>& task);
 
+        
+        // INTERNAL DATA
+        
       protected:
-        const context&    ctx;
+        
+        //! capture compute context
+        const context& ctx;
+        
       };
 
 
@@ -175,63 +241,67 @@ namespace transport
 
 
     template <typename number>
-    work_queue<twopf_kconfig_record> scheduler::make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F)
+    work_queue<twopf_kconfig_record>
+    scheduler::make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F)
       {
         // set up an empty queue
         work_queue<twopf_kconfig_record> work(this->ctx, size);
 
-        const twopf_kconfig_database& twopf_db = task.get_twopf_database();
-        for(twopf_kconfig_database::const_record_iterator t = twopf_db.record_begin(); t != twopf_db.record_end(); ++t)
+        const auto& twopf_db = task.get_twopf_database();
+        for(auto t = twopf_db.record_cbegin(); t != twopf_db.record_cend(); ++t)
           {
             if(F.filter(*(*t))) work.enqueue_work_item(*t);
           }
 
-        return(work);
+        return work;
       }
 
 
     template <typename number>
-    work_queue<threepf_kconfig_record> scheduler::make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+    work_queue<threepf_kconfig_record>
+    scheduler::make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
       {
         work_queue<threepf_kconfig_record> work(this->ctx, size);
 
-        const threepf_kconfig_database& threepf_db = task.get_threepf_database();
-        for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); ++t)
+        const auto& threepf_db = task.get_threepf_database();
+        for(auto t = threepf_db.record_cbegin(); t != threepf_db.record_cend(); ++t)
           {
             if(F.filter(*(*t))) work.enqueue_work_item(*t);
           }
 
-        return(work);
+        return work;
       }
 
 
     template <typename number>
-    work_queue<threepf_kconfig_record> scheduler::make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+    work_queue<threepf_kconfig_record>
+    scheduler::make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
 	    {
         work_queue<threepf_kconfig_record> work(this->ctx, size);
 
-        const threepf_kconfig_database& threepf_db = task.get_threepf_database();
-        for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); ++t)
+        const auto& threepf_db = task.get_threepf_database();
+        for(auto t = threepf_db.record_cbegin(); t != threepf_db.record_cend(); ++t)
           {
             if(F.filter(*(*t))) work.enqueue_work_item(*t);
           }
 
-        return(work);
+        return work;
 	    }
 
 
 		template <typename number>
-		work_queue< output_task_element<number> > scheduler::make_queue(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F)
+		work_queue< output_task_element<number> >
+    scheduler::make_queue(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F)
 			{
 				work_queue< output_task_element<number> > work(this->ctx, 1);
 
-				const typename std::vector< output_task_element<number> >& config_list = task.get_elements();
-				for(typename std::vector< output_task_element<number> >::const_iterator t = config_list.begin(); t != config_list.end(); ++t)
+				const auto& config_list = task.get_elements();
+        for(const auto& it : config_list)
 					{
-						if(F.filter(*t)) work.enqueue_work_item(*t);
+						if(F.filter(it)) work.enqueue_work_item(it);
 					}
 
-				return(work);
+				return work;
 			}
 
 
@@ -241,21 +311,21 @@ namespace transport
     template <typename number>
     work_queue<twopf_kconfig_record> scheduler::make_queue(unsigned int size, const twopf_task<number>& task)
       {
-        return(this->make_queue(size, task, trivial_filter<twopf_kconfig>()));
+        return this->make_queue(size, task, trivial_filter<twopf_kconfig>{});
       }
 
 
     template <typename number>
     work_queue<threepf_kconfig_record> scheduler::make_queue(unsigned int size, const threepf_task<number>& task)
       {
-        return(this->make_queue(size, task, trivial_filter<threepf_kconfig>()));
+        return this->make_queue(size, task, trivial_filter<threepf_kconfig>{});
       }
 
 
 		template <typename number>
 		work_queue< output_task_element<number> > scheduler::make_queue(const output_task<number>& task)
 			{
-				return(this->make_queue(task, trivial_filter< output_task_element<number> >()));
+				return this->make_queue(task, trivial_filter< output_task_element<number> >{});
 			}
 
 
