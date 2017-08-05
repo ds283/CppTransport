@@ -1178,7 +1178,7 @@ namespace transport
         __dtwopf(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf(MOMENTUM($^c), $^B);
         __dtwopf($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf($^A, MOMENTUM($^c));
 
-#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+#ifdef CPPTRANSPORT_STRICT_FP_TEST
         if(std::isnan(__background($^A)) || std::isinf(__background($^A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
         if(std::isnan(__dtwopf_tensor(0,0)) || std::isinf(__dtwopf_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
@@ -1453,7 +1453,7 @@ namespace transport
         __dthreepf($^A, MOMENTUM($^b), $^C) $+= - $GAMMA[^b_d] * __threepf($^A, MOMENTUM($^d), $^C);
         __dthreepf($^A, $^B, MOMENTUM($^c)) $+= - $GAMMA[^c_d] * __threepf($^A, $^B, MOMENTUM($^d));
 
-#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+#ifdef CPPTRANSPORT_STRICT_FP_TEST
         if(std::isnan(__background($^A)) || std::isinf(__background($^A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
         if(std::isnan(__dtwopf_k1_tensor(0,0)) || std::isinf(__dtwopf_k1_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);

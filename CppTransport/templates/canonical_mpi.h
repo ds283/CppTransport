@@ -1091,7 +1091,7 @@ namespace transport
         __dtwopf($A, $B) $=  + $U2_CONTAINER[AC] * __twopf($C, $B);
         __dtwopf($A, $B) $+= + $U2_CONTAINER[BC] * __twopf($A, $C);
         
-#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+#ifdef CPPTRANSPORT_STRICT_FP_TEST
         if(std::isnan(__background($A)) || std::isinf(__background($A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
         if(std::isnan(__dtwopf_tensor(0,0)) || std::isinf(__dtwopf_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
@@ -1299,7 +1299,7 @@ namespace transport
         __dthreepf($A, $B, $C) $+= + $U3_k3k1k2_CONTAINER[CMN] * __twopf_re_k1($A, $M) * __twopf_re_k2($B, $N);
         __dthreepf($A, $B, $C) $+= - $U3_k3k1k2_CONTAINER[CMN] * __twopf_im_k1($A, $M) * __twopf_im_k2($B, $N);
 
-#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+#ifdef CPPTRANSPORT_STRICT_FP_TEST
         if(std::isnan(__background($A)) || std::isinf(__background($A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
         if(std::isnan(__dtwopf_k1_tensor(0,0)) || std::isinf(__dtwopf_k1_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
