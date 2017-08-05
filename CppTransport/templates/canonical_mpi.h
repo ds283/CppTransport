@@ -1115,6 +1115,25 @@ namespace transport
     template <typename Model>
     void $MODEL_mpi_twopf_observer<Model>::operator()(const twopf_state& x, number t)
       {
+#undef __background
+#undef __twopf
+#undef __dtwopf_tensor
+
+#define __background(a)      x[$MODEL_pool::backg_start + FLATTEN(a)]
+#define __twopf(a,b)         x[$MODEL_pool::twopf_start + FLATTEN(a,b)]
+#define __twopf_tensor(a,b) x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(a,b)]
+
+#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+        if(std::isnan(__background($A)) || std::isinf(__background($A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__twopf_tensor(0,0)) || std::isinf(__twopf_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_tensor(0,1)) || std::isinf(__twopf_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_tensor(1,0)) || std::isinf(__twopf_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_tensor(1,1)) || std::isinf(__twopf_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__twopf($A, $B)) || std::isinf(__twopf($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+#endif
+
         this->start_batching(static_cast<double>(t), this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
@@ -1298,37 +1317,7 @@ namespace transport
         __dthreepf($A, $B, $C) $+= + $U2_k3_CONTAINER[CM] * __threepf($A, $B, $M);
         __dthreepf($A, $B, $C) $+= + $U3_k3k1k2_CONTAINER[CMN] * __twopf_re_k1($A, $M) * __twopf_re_k2($B, $N);
         __dthreepf($A, $B, $C) $+= - $U3_k3k1k2_CONTAINER[CMN] * __twopf_im_k1($A, $M) * __twopf_im_k2($B, $N);
-
-#ifdef CPPTRANSPORT_STRICT_FP_TEST
-        if(std::isnan(__background($A)) || std::isinf(__background($A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-
-        if(std::isnan(__dtwopf_k1_tensor(0,0)) || std::isinf(__dtwopf_k1_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k1_tensor(0,1)) || std::isinf(__dtwopf_k1_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k1_tensor(1,0)) || std::isinf(__dtwopf_k1_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k1_tensor(1,1)) || std::isinf(__dtwopf_k1_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-
-        if(std::isnan(__dtwopf_k2_tensor(0,0)) || std::isinf(__dtwopf_k2_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k2_tensor(0,1)) || std::isinf(__dtwopf_k2_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k2_tensor(1,0)) || std::isinf(__dtwopf_k2_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k2_tensor(1,1)) || std::isinf(__dtwopf_k2_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-
-        if(std::isnan(__dtwopf_k3_tensor(0,0)) || std::isinf(__dtwopf_k3_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k3_tensor(0,1)) || std::isinf(__dtwopf_k3_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k3_tensor(1,0)) || std::isinf(__dtwopf_k3_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_k3_tensor(1,1)) || std::isinf(__dtwopf_k3_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-
-        if(std::isnan(__dtwopf_re_k1($A, $B)) || std::isinf(__dtwopf_re_k1($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_im_k1($A, $B)) || std::isinf(__dtwopf_im_k1($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-
-        if(std::isnan(__dtwopf_re_k2($A, $B)) || std::isinf(__dtwopf_re_k2($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_im_k2($A, $B)) || std::isinf(__dtwopf_im_k2($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-
-        if(std::isnan(__dtwopf_re_k3($A, $B)) || std::isinf(__dtwopf_re_k3($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__dtwopf_im_k3($A, $B)) || std::isinf(__dtwopf_im_k3($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-
-        if(std::isnan(__dthreepf($A, $B, $C)) || std::isinf(__dthreepf($A, $B, $C))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-#endif
-
+        
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();
         ++__invokations;
@@ -1342,6 +1331,60 @@ namespace transport
     template <typename Model>
     void $MODEL_mpi_threepf_observer<Model>::operator()(const threepf_state& x, number t)
       {
+#undef __background
+#undef __twopf_k1_tensor
+#undef __twopf_k2_tensor
+#undef __twopf_k3_tensor
+#undef __twopf_re_k1
+#undef __twopf_im_k1
+#undef __twopf_re_k2
+#undef __twopf_im_k2
+#undef __twopf_re_k3
+#undef __twopf_im_k3
+#undef __threepf
+
+#define __background(a)        x[$MODEL_pool::backg_start       + FLATTEN(a)]
+#define __twopf_k1_tensor(a,b) x[$MODEL_pool::tensor_k1_start   + TENSOR_FLATTEN(a,b)]
+#define __twopf_k2_tensor(a,b) x[$MODEL_pool::tensor_k2_start   + TENSOR_FLATTEN(a,b)]
+#define __twopf_k3_tensor(a,b) x[$MODEL_pool::tensor_k3_start   + TENSOR_FLATTEN(a,b)]
+#define __twopf_re_k1(a,b)     x[$MODEL_pool::twopf_re_k1_start + FLATTEN(a,b)]
+#define __twopf_im_k1(a,b)     x[$MODEL_pool::twopf_im_k1_start + FLATTEN(a,b)]
+#define __twopf_re_k2(a,b)     x[$MODEL_pool::twopf_re_k2_start + FLATTEN(a,b)]
+#define __twopf_im_k2(a,b)     x[$MODEL_pool::twopf_im_k2_start + FLATTEN(a,b)]
+#define __twopf_re_k3(a,b)     x[$MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
+#define __twopf_im_k3(a,b)     x[$MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
+#define __threepf(a,b,c)       x[$MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
+
+#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+        if(std::isnan(__background($A)) || std::isinf(__background($A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__twopf_k1_tensor(0,0)) || std::isinf(__twopf_k1_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k1_tensor(0,1)) || std::isinf(__twopf_k1_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k1_tensor(1,0)) || std::isinf(__twopf_k1_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k1_tensor(1,1)) || std::isinf(__twopf_k1_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__twopf_k2_tensor(0,0)) || std::isinf(__twopf_k2_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k2_tensor(0,1)) || std::isinf(__twopf_k2_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k2_tensor(1,0)) || std::isinf(__twopf_k2_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k2_tensor(1,1)) || std::isinf(__twopf_k2_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__twopf_k3_tensor(0,0)) || std::isinf(__twopf_k3_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k3_tensor(0,1)) || std::isinf(__twopf_k3_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k3_tensor(1,0)) || std::isinf(__twopf_k3_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_k3_tensor(1,1)) || std::isinf(__twopf_k3_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__twopf_re_k1($A, $B)) || std::isinf(__twopf_re_k1($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_im_k1($A, $B)) || std::isinf(__twopf_im_k1($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__twopf_re_k2($A, $B)) || std::isinf(__twopf_re_k2($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_im_k2($A, $B)) || std::isinf(__twopf_im_k2($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__twopf_re_k3($A, $B)) || std::isinf(__twopf_re_k3($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_im_k3($A, $B)) || std::isinf(__twopf_im_k3($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+    
+        if(std::isnan(__threepf($A, $B, $C)) || std::isinf(__threepf($A, $B, $C))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+#endif
+
         this->start_batching(static_cast<double>(t), this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
