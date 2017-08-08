@@ -737,6 +737,8 @@ namespace transport
                                                     const twopf_db_task<number>* tk,
                                                     twopf_batcher<number>& batcher, unsigned int refinement_level)
       {
+        DEFINE_INDEX_TOOLS
+
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get time configuration database
@@ -815,6 +817,8 @@ namespace transport
                                                           const std::vector<number>& ics, double k_normalize,
                                                           bool imaginary)
       {
+        DEFINE_INDEX_TOOLS
+
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::twopf_size);
 
@@ -829,6 +833,8 @@ namespace transport
                                                            double Ninit, const twopf_db_task<number>* tk,
                                                            const std::vector<number>& ics, double k_normalize)
       {
+        DEFINE_INDEX_TOOLS
+
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::tensor_size);
 
@@ -913,6 +919,8 @@ namespace transport
                                                       const threepf_task<number>* tk,
                                                       threepf_batcher<number>& batcher, unsigned int refinement_level)
       {
+        DEFINE_INDEX_TOOLS
+
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get list of time steps, and storage list
@@ -939,7 +947,7 @@ namespace transport
         // use adaptive ics if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
-        x[$MODEL_pool::backg_start + $A] = ics[$A];
+        x[$MODEL_pool::backg_start + FLATTEN($A)] = ics[$A];
 
         if(batcher.is_collecting_initial_conditions())
           {
@@ -999,6 +1007,8 @@ namespace transport
                                                             const twopf_db_task<number>* tk,
                                                             const std::vector<number>& ics, double k_normalize)
       {
+        DEFINE_INDEX_TOOLS
+
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::threepf_size);
 
@@ -1012,6 +1022,7 @@ namespace transport
     template <typename Model>
     void $MODEL_mpi_twopf_functor<Model>::operator()(const twopf_state& __x, twopf_state& __dxdt, number __t)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
 
         const auto __a = std::exp(__t - this->__N_horizon_exit + this->__astar_normalization);
@@ -1115,6 +1126,8 @@ namespace transport
     template <typename Model>
     void $MODEL_mpi_twopf_observer<Model>::operator()(const twopf_state& x, number t)
       {
+        DEFINE_INDEX_TOOLS
+        
 #undef __background
 #undef __twopf
 #undef __dtwopf_tensor
@@ -1146,6 +1159,7 @@ namespace transport
     template <typename Model>
     void $MODEL_mpi_threepf_functor<Model>::operator()(const threepf_state& __x, threepf_state& __dxdt, number __t)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
 
         const auto __a = std::exp(__t - this->__N_horizon_exit + this->__astar_normalization);
@@ -1331,6 +1345,8 @@ namespace transport
     template <typename Model>
     void $MODEL_mpi_threepf_observer<Model>::operator()(const threepf_state& x, number t)
       {
+        DEFINE_INDEX_TOOLS
+
 #undef __background
 #undef __twopf_k1_tensor
 #undef __twopf_k2_tensor

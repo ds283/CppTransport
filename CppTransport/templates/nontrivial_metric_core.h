@@ -110,26 +110,37 @@ namespace transport
 
         constexpr unsigned int u2_size            = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
         constexpr unsigned int u3_size            = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
+    
+    
+        // FLATTENING FUNCTIONS
+        constexpr unsigned int SPECIES       (unsigned int a)                                 { return flatten_impl::species(a, $NUMBER_FIELDS); }
+        constexpr unsigned int MOMENTUM      (unsigned int a)                                 { return flatten_impl::momentum(a, $NUMBER_FIELDS); }
+        constexpr unsigned int IS_FIELD      (unsigned int a)                                 { return flatten_impl::is_field(a, $NUMBER_FIELDS); }
+        constexpr unsigned int IS_MOMENTUM   (unsigned int a)                                 { return flatten_impl::is_momentum(a, $NUMBER_FIELDS); }
+    
+        constexpr unsigned int FLATTEN       (unsigned int a)                                 { return flatten_impl::flatten(a, $NUMBER_FIELDS); }
+        constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b)                 { return flatten_impl::flatten(a, b, $NUMBER_FIELDS); }
+        constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::flatten(a, b, c, $NUMBER_FIELDS); }
+    
+        constexpr unsigned int FIELDS_FLATTEN(unsigned int a)                                 { return flatten_impl::fields_flatten(a, $NUMBER_FIELDS); }
+        constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::fields_flatten(a, b, $NUMBER_FIELDS); }
+        constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::fields_flatten(a, b, c, $NUMBER_FIELDS); }
+    
+        constexpr unsigned int TENSOR_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::tensor_flatten(a, b); }
+
       }
 
 
-    // FLATTENNING FUNCTIONS
+#undef DEFINE_INDEX_TOOLS
+#define DEFINE_INDEX_TOOLS \
+    using $MODEL_pool::SPECIES; \
+    using $MODEL_pool::MOMENTUM; \
+    using $MODEL_pool::IS_FIELD; \
+    using $MODEL_pool::IS_MOMENTUM; \
+    using $MODEL_pool::FLATTEN; \
+    using $MODEL_pool::FIELDS_FLATTEN; \
+    using $MODEL_pool::TENSOR_FLATTEN; \
 
-
-    constexpr unsigned int SPECIES       (unsigned int a)                                 { return flatten_impl::species(a, $NUMBER_FIELDS); }
-    constexpr unsigned int MOMENTUM      (unsigned int a)                                 { return flatten_impl::momentum(a, $NUMBER_FIELDS); }
-    constexpr unsigned int IS_FIELD      (unsigned int a)                                 { return flatten_impl::is_field(a, $NUMBER_FIELDS); }
-    constexpr unsigned int IS_MOMENTUM   (unsigned int a)                                 { return flatten_impl::is_momentum(a, $NUMBER_FIELDS); }
-
-    constexpr unsigned int FLATTEN       (unsigned int a)                                 { return flatten_impl::flatten(a, $NUMBER_FIELDS); }
-    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b)                 { return flatten_impl::flatten(a, b, $NUMBER_FIELDS); }
-    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::flatten(a, b, c, $NUMBER_FIELDS); }
-
-    constexpr unsigned int FIELDS_FLATTEN(unsigned int a)                                 { return flatten_impl::fields_flatten(a, $NUMBER_FIELDS); }
-    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::fields_flatten(a, b, $NUMBER_FIELDS); }
-    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::fields_flatten(a, b, c, $NUMBER_FIELDS); }
-
-    constexpr unsigned int TENSOR_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::tensor_flatten(a, b); }
 
     $PHASE_FLATTEN{FLATTEN}
     $FIELD_FLATTEN{FIELDS_FLATTEN}
@@ -537,7 +548,8 @@ namespace transport
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
-
+    
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
         const auto& __param_vector = __params.get_vector();
@@ -561,7 +573,8 @@ namespace transport
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
-
+    
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
         const auto& __param_vector = __params.get_vector();
@@ -585,7 +598,8 @@ namespace transport
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
-
+    
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
         const auto& __param_vector = __params.get_vector();
@@ -610,7 +624,8 @@ namespace transport
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
-
+    
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
         const auto& __param_vector = __params.get_vector();
@@ -636,7 +651,8 @@ namespace transport
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
-
+    
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto __Mp = __params.get_Mp();
         const auto& __param_vector = __params.get_vector();
@@ -655,6 +671,7 @@ namespace transport
       template <typename number, typename StateType>
       void $MODEL_compute_dV(const number* __raw_params, const StateType& __x, number __Mp, number* __dV)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{__raw_params}
@@ -670,6 +687,7 @@ namespace transport
       template <typename number, typename StateType>
       void $MODEL_compute_ddV(const number* __raw_params, const StateType& __x, number __Mp, number* __ddV)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{__raw_params}
@@ -685,6 +703,7 @@ namespace transport
       template <typename number, typename StateType>
       void $MODEL_compute_dddV(const number* __raw_params, const StateType& __x, number __Mp, number* __dddV)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{__raw_params}
@@ -700,6 +719,7 @@ namespace transport
       template <typename number, typename StateType>
       void $MODEL_compute_G(const number* __raw_params, const StateType& __x, number __Mp, number* __G)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{__raw_params}
@@ -715,6 +735,7 @@ namespace transport
       template <typename number, typename StateType>
       void $MODEL_compute_Ginv(const number* __raw_params, const StateType& __x, number __Mp, number* __Ginv)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{__raw_params}
@@ -730,6 +751,7 @@ namespace transport
       template <typename number, typename StateType>
       void $MODEL_compute_connexion(const number* __raw_params, const StateType& __x, number __Mp, number* __Gamma)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
           
           $RESOURCE_PARAMETERS{__raw_params}
@@ -746,6 +768,7 @@ namespace transport
       void
       $MODEL_compute_Riemann_A2(const number* __raw_params, const StateType& __x, number __Mp, number* __A2)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{__raw_params}
@@ -762,6 +785,7 @@ namespace transport
       void
       $MODEL_compute_Riemann_A3(const number* __raw_params, const StateType& __x, number __Mp, number* __A3)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{__raw_params}
@@ -778,6 +802,7 @@ namespace transport
       void
       $MODEL_compute_Riemann_B3(const number* __raw_params, const StateType& __x, number __Mp, number* __B3)
         {
+          DEFINE_INDEX_TOOLS
           $RESOURCE_RELEASE
 
           $RESOURCE_PARAMETERS{__raw_params}
@@ -803,6 +828,7 @@ namespace transport
 
         if(__input.size() == $NUMBER_FIELDS)  // initial conditions for momenta *were not* supplied -- need to compute them
           {
+            DEFINE_INDEX_TOOLS
             $RESOURCE_RELEASE
 
             // supply the missing initial conditions using a slow-roll approximation
@@ -868,6 +894,7 @@ namespace transport
                                             const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
                                             double __k_norm)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -963,6 +990,7 @@ namespace transport
                                           const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
                                           double __k_norm)
     {
+      DEFINE_INDEX_TOOLS
       $RESOURCE_RELEASE
       const auto& __pvector = __task->get_params().get_vector();
       __raw_params[$1] = __pvector[$1];
@@ -1020,6 +1048,7 @@ namespace transport
                                                 const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
                                                 double __k_norm)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1072,6 +1101,7 @@ namespace transport
                                            const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
                                            double __k_norm)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1359,6 +1389,7 @@ namespace transport
                                              const flattened_tensor<number>& __state,
                                              flattened_tensor<number>& __dN)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1385,6 +1416,7 @@ namespace transport
                                              double __k, double __k1, double __k2, double __N,
                                              flattened_tensor<number>& __ddN)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1415,6 +1447,7 @@ namespace transport
                             const flattened_tensor<number>& __fields, double __k, double __N,
                             flattened_tensor<number>& __u2)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1448,6 +1481,7 @@ namespace transport
                             const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
                             flattened_tensor<number>& __u3)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1487,6 +1521,7 @@ namespace transport
                            const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            flattened_tensor<number>& __A)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1524,6 +1559,7 @@ namespace transport
                            const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            flattened_tensor<number>& __B)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1557,6 +1593,7 @@ namespace transport
                            const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            flattened_tensor<number>& __C)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1585,6 +1622,7 @@ namespace transport
     void $MODEL<number>::M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N,
                            flattened_tensor<number>& __M)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
         const auto& __pvector = __task->get_params().get_vector();
         __raw_params[$1] = __pvector[$1];
@@ -1617,6 +1655,8 @@ namespace transport
     template <typename number>
     void $MODEL<number>::backend_process_backg(const background_task<number>* tk, backg_history<number>& solution, bool silent)
       {
+        DEFINE_INDEX_TOOLS
+        
         assert(tk != nullptr);
 
         const time_config_database time_db = tk->get_time_config_database();
@@ -1663,6 +1703,7 @@ namespace transport
 
             bool operator()(const std::pair< backg_state<number>, number >& __x)
               {
+                DEFINE_INDEX_TOOLS
                 $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1690,6 +1731,8 @@ namespace transport
     template <typename number>
     double $MODEL<number>::compute_end_of_inflation(const integration_task<number>* tk, double search_time)
       {
+        DEFINE_INDEX_TOOLS
+        
         assert(tk != nullptr);
 
         // set up a functor to evolve this system
@@ -1758,6 +1801,8 @@ namespace transport
 
             number largest_evalue(const backg_state<number>& fields, number N)
               {
+                DEFINE_INDEX_TOOLS
+                
                 // compupte M matrix with first index up, last index down
                 this->mdl->M(this->task, fields, static_cast<double>(N), this->flat_M);
 
@@ -1774,6 +1819,7 @@ namespace transport
 
             bool operator()(const std::pair< backg_state<number>, number >& __x)
               {
+                DEFINE_INDEX_TOOLS
                 $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1844,6 +1890,8 @@ namespace transport
 		template <typename number>
 		void $MODEL<number>::compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k)
 			{
+        DEFINE_INDEX_TOOLS
+        
 				N.clear();
 				log_aH.clear();
         log_a2H2M.clear();
@@ -1902,6 +1950,7 @@ namespace transport
     template <typename number>
     void $MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, number __t)
       {
+        DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
 
         $RESOURCE_PARAMETERS{__raw_params}
