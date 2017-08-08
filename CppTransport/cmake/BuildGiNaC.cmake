@@ -53,7 +53,7 @@ FUNCTION(BUILD_GINAC BUILD_DIR CLN_INCLUDE_DIRS CLN_LIBRARY_DIRS CLN_LIBRARIES I
   EXTERNALPROJECT_ADD(
     GiNaC
     DEPENDS CLN
-    DOWNLOAD_COMMAND wget http://www.ginac.de/CLN/cln-1.3.4.tar.bz2 && tar xvf cln-1.3.4.tar.bz2 -C ${CLN_SRC} --strip-components=1
+    DOWNLOAD_COMMAND wget https://www.ginac.de/ginac-1.7.2.tar.bz2 && tar xvf ginac-1.7.2.tar.bz2 -C ${GINAC_SRC} --strip-components=1
 
     SOURCE_DIR ${GINAC_SRC}
     BINARY_DIR ${GINAC_BIN}
