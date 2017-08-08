@@ -62,7 +62,7 @@ namespace transport
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-		        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); ++t)
+		        for(auto t = time_db.config_begin(); t != time_db.config_end(); ++t)
 			        {
 		            check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
 		            check_stmt(db, sqlite3_bind_double(stmt, 2, t->t));
@@ -105,7 +105,7 @@ namespace transport
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-		        for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); ++t)
+		        for(auto t = twopf_db.config_begin(); t != twopf_db.config_end(); ++t)
 			        {
 		            check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
 		            check_stmt(db, sqlite3_bind_double(stmt, 2, t->k_conventional));
@@ -159,7 +159,7 @@ namespace transport
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-		        for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
+		        for(auto t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
 			        {
 		            check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
 		            check_stmt(db, sqlite3_bind_int(stmt, 2, t->k1_serial));
