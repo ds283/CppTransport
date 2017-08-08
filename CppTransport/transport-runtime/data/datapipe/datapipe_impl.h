@@ -89,13 +89,31 @@ namespace transport
             this->log_sink.reset();
           }
 
-        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "** Instantiated datapipe (cache capacity " << format_memory(cap) << ")"
-        << " on MPI host " << host_info.get_host_name()
-        << ", OS = " << host_info.get_os_name()
-        << ", Version = " << host_info.get_os_version()
-        << " (Release = " << host_info.get_os_release()
-        << ") | " << host_info.get_architecture()
-        << " | CPU vendor = " << host_info.get_cpu_vendor_id() << '\n';
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal)
+          << "** Instantiated datapipe (cache capacity " << format_memory(cap) << ")"
+          << " on MPI host " << host_info.get_host_name();
+    
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal)
+          << "** Host details: OS = " << host_info.get_os_name()
+          << ", version = " << host_info.get_os_version()
+          << " (release = " << host_info.get_os_release() << ")";
+    
+        const auto& cpu_brand = host_info.get_cpu_brand_string();
+        if(cpu_brand)
+          {
+            BOOST_LOG_SEV(this->log_source, log_severity_level::normal)
+              << "** Host details: "
+              << host_info.get_architecture()
+              << " | CPU = " << cpu_brand.get()
+              << " | CPU vendor = " << host_info.get_cpu_vendor_id();
+          }
+        else
+          {
+            BOOST_LOG_SEV(this->log_source, log_severity_level::normal)
+              << "** Host details: "
+              << host_info.get_architecture()
+              << " | CPU vendor = " << host_info.get_cpu_vendor_id();
+          }
       }
 
 
