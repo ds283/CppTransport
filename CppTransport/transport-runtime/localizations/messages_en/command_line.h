@@ -84,6 +84,9 @@
 #define CPPTRANSPORT_SWITCH_RECOVER           "recover"
 #define CPPTRANSPORT_HELP_RECOVER             "attempt to recover crashed tasks or jobs"
 
+#define CPPTRANSPORT_SWITCH_UPGRADE           "upgrade"
+#define CPPTRANSPORT_HELP_UPGRADE             "upgrade repository data containers if required"
+
 #define CPPTRANSPORT_SWITCH_SEED              "seed"
 #define CPPTRANSPORT_HELP_SEED                "use named content group as a seed"
 

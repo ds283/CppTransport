@@ -179,6 +179,7 @@ namespace transport
         boost::program_options::options_description report_options("Repository reporting and status", width);
         report_options.add_options()
           (CPPTRANSPORT_SWITCH_RECOVER, CPPTRANSPORT_HELP_RECOVER)
+          (CPPTRANSPORT_SWITCH_UPGRADE, CPPTRANSPORT_HELP_UPGRADE)
           (CPPTRANSPORT_SWITCH_STATUS, CPPTRANSPORT_HELP_STATUS)
           (CPPTRANSPORT_SWITCH_INFLIGHT, CPPTRANSPORT_HELP_INFLIGHT)
           (CPPTRANSPORT_SWITCH_INFO, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_INFO)
@@ -520,6 +521,7 @@ namespace transport
         busyidle_instrument timers(this->busyidle_timers);
         
         if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER)) this->arg_cache.set_recovery_mode(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_UPGRADE)) this->arg_cache.set_upgrade_mode(true);
         
         if(option_map.count(CPPTRANSPORT_SWITCH_STATUS))
           {
