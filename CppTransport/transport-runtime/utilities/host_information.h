@@ -169,7 +169,7 @@ namespace transport
         const std::string& get_cpu_vendor_id() const { return(this->vendor_id.get_vendor_id()); }
         
         //! get CPU brand string, if supported
-        const boost::optional< std::string > get_cpu_brand_string() const { return this->brand_string.get_brand_string(); }
+        const boost::optional< std::string >& get_cpu_brand_string() const { return this->brand_string.get_brand_string(); }
 
         //! get operating system name
         const std::string& get_os_name() const { return(this->os_name); }

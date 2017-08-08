@@ -3513,6 +3513,7 @@ namespace transport
             pert_tol_label.add_attribute("data-placement", "top").add_attribute("title", "atol, rtol");
             HTML_node configurations_label("th", "Configurations");
             HTML_node os_name_label("th", "Operating system");
+            HTML_node CPU_brand_label("th", "CPU");
 
             head_row.add_element(identifier_label).add_element(hostname_label).add_element(backend_label);
             head_row.add_element(backg_step_label).add_element(backg_tol_label);
@@ -3537,7 +3538,7 @@ namespace transport
                 configurations = rec.get_payload().get_metadata().total_configurations;
               }
 
-            head_row.add_element(os_name_label);
+            head_row.add_element(os_name_label).add_element(CPU_brand_label);
             head.add_element(head_row);
 
             HTML_node body("tbody");
@@ -3575,6 +3576,20 @@ namespace transport
                   }
 
                 table_row.add_element(os_name);
+    
+                const std::string CPU_id = info.get_cpu_brand_string();
+                if(!CPU_id.empty())
+                  {
+                    HTML_node CPU_brand("td", CPU_id);
+                    table_row.add_element(CPU_brand);
+                  }
+                else
+                  {
+                    HTML_node CPU_brand("td", "unknown");
+                    CPU_brand.add_attribute("class", "disabled");
+                    table_row.add_element(CPU_brand);
+                  }
+
                 body.add_element(table_row);
               }
 

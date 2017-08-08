@@ -202,6 +202,7 @@ namespace transport
 			        << "os_version    TEXT, "
 			        << "os_release    TEXT, "
 			        << "architecture  TEXT, "
+              << "cpu_brand     TEXT, "
 			        << "cpu_vendor_id TEXT";
 
             // create composite primary key based on workgroup and worker ids.
