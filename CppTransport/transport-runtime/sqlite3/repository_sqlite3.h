@@ -64,6 +64,9 @@
 // DEFINE REPOSITORY SQLITE3
 #include "transport-runtime/sqlite3/detail/repository_sqlite3_impl.h"
 
+// DEFINE REPOSITORY_UPGRADEKIT_SQLITE3
+#include "transport-runtime/sqlite3/repository_upgradekit_sqlite3.h"
+
 
 // FACTORY FUNCTIONS TO BUILD A REPOSITORY
 
@@ -72,10 +75,17 @@ namespace transport
   {
 
     template <typename number>
-    std::unique_ptr<json_repository<number> > repository_factory(const std::string& path, model_manager<number>& finder,
-                                                                 repository_mode mode, local_environment& ev, argument_cache& ar)
+    std::unique_ptr< json_repository<number> > repository_factory(const std::string& path, model_manager<number>& finder,
+                                                                  repository_mode mode, local_environment& ev, argument_cache& ar)
       {
-        return std::make_unique<repository_sqlite3<number> >(path, finder, mode, ev, ar);
+        return std::make_unique< repository_sqlite3<number> >(path, finder, mode, ev, ar);
+      }
+    
+    template <typename number>
+    std::unique_ptr< repository_upgradekit<number> >
+    upgradekit_factory(repository<number>& r, argument_cache& ac, error_handler eh, warning_handler wh, message_handler mh)
+      {
+        return std::make_unique< repository_upgradekit_sqlite3<number> >(r, ac, eh, wh, mh);
       }
 
   }   // namespace transport

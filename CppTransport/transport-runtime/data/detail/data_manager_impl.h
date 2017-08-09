@@ -40,7 +40,9 @@ namespace transport
         template <typename ConfigurationType>
         class ConfigurationFinder
           {
+
           public:
+
             ConfigurationFinder(unsigned int s)
               : serial(s)
               {
@@ -54,14 +56,18 @@ namespace transport
 
 
           private:
+
             unsigned int serial;
+
           };
 
 
         template <typename RecordData>
         class RecordFinder
           {
+
           public:
+
             RecordFinder(unsigned int s)
               : serial(s)
               {
@@ -75,7 +81,9 @@ namespace transport
 
 
           private:
+
             unsigned int serial;
+
           };
 
       }   // namespace integrity_check_impl

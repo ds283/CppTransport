@@ -65,6 +65,8 @@
 
 #include "transport-runtime/localizations/messages_en/repository_sqlite3.h"
 #include "transport-runtime/localizations/messages_en/repository_toolkit.h"
+#include "transport-runtime/localizations/messages_en/repository_upgradekit.h"
+#include "transport-runtime/localizations/messages_en/repository_upgradekit_sqlite3.h"
 
 #include "transport-runtime/localizations/messages_en/transaction_manager.h"
 

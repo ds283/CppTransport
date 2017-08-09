@@ -1030,6 +1030,8 @@ SET(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/repository_records.h
   transport-runtime/localizations/messages_en/repository_sqlite3.h
   transport-runtime/localizations/messages_en/repository_toolkit.h
+  transport-runtime/localizations/messages_en/repository_upgradekit.h
+  transport-runtime/localizations/messages_en/repository_upgradekit_sqlite3.h
   transport-runtime/localizations/messages_en/runtimeapi.h
   transport-runtime/localizations/messages_en/scheduler.h
   transport-runtime/localizations/messages_en/serialization.h
@@ -1119,6 +1121,7 @@ SET(TRANSPORT_RUNTIME_REPOSITORY_FILES
   transport-runtime/repository/repository.h
   transport-runtime/repository/repository_toolkit.h
   transport-runtime/repository/repository_graphkit.h
+  transport-runtime/repository/repository_upgradekit.h
   transport-runtime/repository/repository_forward_declare.h
   )
 
@@ -1184,9 +1187,14 @@ SET(TRANSPORT_RUNTIME_SQLITE3_DETAIL_FILES
   transport-runtime/sqlite3/detail/writer_data_mgr_impl.h
   )
 
+SET(TRANSPORT_RUNTIME_SQLITE3_UPGRADEKIT_FILES
+  transport-runtime/sqlite3/upgradekit/update_201701.h
+  )
+
 SET(TRANSPORT_RUNTIME_SQLITE3_FILES
   transport-runtime/sqlite3/data_manager_sqlite3.h
   transport-runtime/sqlite3/repository_sqlite3.h
+  transport-runtime/sqlite3/repository_upgradekit_sqlite3.h
   )
 
 SET(TRANSPORT_RUNTIME_SQLITE3_OPERATIONS_FILES
@@ -1357,8 +1365,9 @@ SET(SOURCE_FILES
   ${TRANSPORT_RUNTIME_SCHEDULER_FILES}
   ${TRANSPORT_RUNTIME_SERIALIZATION_FILES}
   ${TRANSPORT_RUNTIME_SQLITE3_DETAIL_FILES}
-  ${TRANSPORT_RUNTIME_SQLITE3_FILES}
   ${TRANSPORT_RUNTIME_SQLITE3_OPERATIONS_FILES}
+  ${TRANSPORT_RUNTIME_SQLITE3_UPGRADEKIT_FILES}
+  ${TRANSPORT_RUNTIME_SQLITE3_FILES}
   ${TRANSPORT_RUNTIME_TASKS_CONFIGURATION_DATABASE_FILES}
   ${TRANSPORT_RUNTIME_TASKS_FILES}
   ${TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES}

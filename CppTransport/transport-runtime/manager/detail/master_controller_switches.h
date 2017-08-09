@@ -555,6 +555,7 @@ namespace transport
               {
                 if(option_map.count(CPPTRANSPORT_SWITCH_DELETE))
                   {
+                    // ensure --delete did not occur in conjunction with any other switch
                     if(option_map.count(CPPTRANSPORT_SWITCH_ADD_TAG) ||
                        option_map.count(CPPTRANSPORT_SWITCH_DELETE_TAG) ||
                        option_map.count(CPPTRANSPORT_SWITCH_ADD_NOTE) ||

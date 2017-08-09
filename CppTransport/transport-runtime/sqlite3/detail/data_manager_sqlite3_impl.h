@@ -133,7 +133,7 @@ namespace transport
     transaction_manager data_manager_sqlite3<number>::transaction_factory(sqlite3* db, const boost::filesystem::path lockfile)
       {
         // generate a transaction handler bundle
-        std::unique_ptr< data_manager_sqlite3_transaction_handler<number> > handle = std::make_unique< data_manager_sqlite3_transaction_handler<number> >(*this, db);
+        auto handle = std::make_unique< data_manager_sqlite3_transaction_handler<number> >(*this, db);
 
         // construct transaction manager
         return this->data_manager<number>::generate_transaction_manager(std::move(lockfile), std::move(handle));

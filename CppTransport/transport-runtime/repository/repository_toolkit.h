@@ -145,12 +145,6 @@ namespace transport
       }   // namespace repository_toolkit_impl
 
 
-    // pull in repository_toolkit_impl for this scope
-    using namespace repository_toolkit_impl;
-
-
-
-
     //! repository_toolkit provides tools to manipulate repository records,
     //! or otherwise perform useful services which are not part of the core
     //! repository API
@@ -166,9 +160,9 @@ namespace transport
         repository_toolkit(repository<number>& r, error_handler eh, warning_handler wh, message_handler mh)
           : repo(r),
             graphkit(r, eh, wh, mh),
-            err(eh),
-            warn(wh),
-            msg(mh)
+            err(std::move(eh)),
+            warn(std::move(wh)),
+            msg(std::move(mh))
           {
           }
 
@@ -301,6 +295,7 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
+                    using repository_toolkit_impl::get_rw_content_group;
                     auto rw_record =
                       get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
                         this->repo, record.get_name(), mgr
@@ -414,6 +409,7 @@ namespace transport
                                 msg << CPPTRANSPORT_REPO_TOOLKIT_DELETING_OBJECT << " '" << record.get_name() << "'";
                                 this->msg(msg.str());
 
+                                using repository_toolkit_impl::erase_repository_record;
                                 erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.erase(
                                   this->repo, record.get_name(), record.get_task_name(),mgr);
 
@@ -510,6 +506,7 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
+                    using repository_toolkit_impl::get_rw_content_group;
                     auto rw_record =
                       get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
                         this->repo, record.get_name(), mgr
@@ -582,6 +579,7 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
+                    using repository_toolkit_impl::get_rw_content_group;
                     auto rw_record =
                       get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
                         this->repo, record.get_name(), mgr
