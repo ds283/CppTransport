@@ -33,6 +33,7 @@
 #include "mpi.h"
 
 #include "boost/optional.hpp"
+#include "boost/algorithm/string.hpp"
 
 #include <sys/utsname.h>
 #include <cpuid.h>
@@ -248,14 +249,21 @@ namespace transport
         std::string temp = block1.to_string() + block2.to_string() + block3.to_string();
         
         std::string temp2;
+        bool last_was_whitespace = false;
         auto ins = std::back_inserter(temp2);
         for(auto c : temp)
           {
             if(c == '\0') break;
             
-            ins = c;
+            // concatenate adjacent whitespace characters
+            if(std::isspace(c) == 0 || !last_was_whitespace) ins = c;
             ++ins;
+    
+            last_was_whitespace = (std::isspace(c) != 0);
           }
+        
+        // trim trailing whitespace (some brandstrings are padded)
+        boost::algorithm::trim_right(temp2);
         
         brand_string = temp2;
       }
