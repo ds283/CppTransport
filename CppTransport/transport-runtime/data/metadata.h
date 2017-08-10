@@ -47,20 +47,21 @@ namespace transport
         worker_record(unsigned int wg, unsigned int wk, std::string be, std::string bs,
                       const std::string ps, double b_atol, double b_rtol, double p_atol, double p_rtol,
                       std::string hn, std::string on, std::string ov, std::string orl,
-                      std::string ar, std::string cv)
+                      std::string ar, std::string cb, std::string cv)
           : workgroup(wg),
             worker(wk),
-            backend(be),
-            backg_stepper(bs),
-            pert_stepper(ps),
+            backend(std::move(be)),
+            backg_stepper(std::move(bs)),
+            pert_stepper(std::move(ps)),
             backg_tol(b_atol, b_rtol),
             pert_tol(p_atol, p_rtol),
-            hostname(hn),
-            os_name(on),
-            os_version(ov),
-            os_release(orl),
-            architecture(ar),
-            cpu_vendor(cv)
+            hostname(std::move(hn)),
+            os_name(std::move(on)),
+            os_version(std::move(ov)),
+            os_release(std::move(orl)),
+            architecture(std::move(ar)),
+            cpu_brand(std::move(cb)),
+            cpu_vendor(std::move(cv))
           {
           }
 
@@ -108,6 +109,9 @@ namespace transport
         //! return architecture
         const std::string& get_architecture() const { return architecture; }
 
+        //! return CPU brand string
+        const std::string& get_cpu_brand_string() const { return cpu_brand; }
+        
         //! return CPU vendor
         const std::string& get_cpu_vendor() const { return cpu_vendor; }
 
@@ -152,6 +156,9 @@ namespace transport
         //! CPU architecture
         std::string architecture;
 
+        //! CPU brand
+        std::string cpu_brand;
+        
         //! CPU vendor
         std::string cpu_vendor;
 

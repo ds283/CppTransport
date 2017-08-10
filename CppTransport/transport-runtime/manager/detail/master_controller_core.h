@@ -30,6 +30,7 @@
 #include "transport-runtime/manager/detail/master_controller_decl.h"
 #include "transport-runtime/repository/repository_toolkit.h"
 #include "transport-runtime/repository/repository_graphkit.h"
+#include "transport-runtime/repository/repository_upgradekit.h"
 
 #include "transport-runtime/build_data.h"
 #include "transport-runtime/defaults.h"
@@ -73,9 +74,14 @@ namespace transport
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
 
-        // perform recovery if requested
+        // perform repository operations if requested
         if(this->arg_cache.get_recovery_mode() && this->repo) this->repo->perform_recovery(*this->data_mgr, this->get_rank());
-
+        if(this->arg_cache.get_upgrade_mode() && this->repo)
+          {
+            auto ukit = upgradekit_factory<number>(*this->repo, this->arg_cache, this->err, this->warn, this->msg);
+            (*ukit)();
+          }
+        
         if(this->arg_cache.get_model_list())                  this->model_mgr.write_models(std::cout);
         if(this->arg_cache.get_create_model() && this->repo)  this->gallery.commit(*this->repo);
 

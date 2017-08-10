@@ -123,7 +123,13 @@ namespace transport
         void set_create_mode(bool g)                              { this->create = g; }
 
         //! Get create mode status
-        bool get_create_model() const                              { return(this->create); }
+        bool get_create_model() const                             { return(this->create); }
+        
+        //! Set upgrade mode
+        void set_upgrade_mode(bool u)                             { this->upgrade = u; }
+        
+        //! Get upgrade mode
+        bool get_upgrade_mode() const                             { return upgrade; }
 
 
         // CHECKPOINTING AND RECOVERY
@@ -292,6 +298,9 @@ namespace transport
 
         //! recovery mode?
         bool recovery;
+        
+        //! upgrade mode
+        bool upgrade;
 
         //! create mode?
         bool create;
@@ -359,6 +368,7 @@ namespace transport
             ar & verbose;
             ar & list_models;
             ar & recovery;
+            ar & upgrade;
             ar & create;
             ar & colour_output;
             ar & network_mode;
@@ -387,6 +397,7 @@ namespace transport
 	      verbose(false),
         list_models(false),
         recovery(false),
+        upgrade(false),
         create(false),
         colour_output(true),
         network_mode(false),

@@ -145,12 +145,6 @@ namespace transport
       }   // namespace repository_toolkit_impl
 
 
-    // pull in repository_toolkit_impl for this scope
-    using namespace repository_toolkit_impl;
-
-
-
-
     //! repository_toolkit provides tools to manipulate repository records,
     //! or otherwise perform useful services which are not part of the core
     //! repository API
@@ -166,9 +160,9 @@ namespace transport
         repository_toolkit(repository<number>& r, error_handler eh, warning_handler wh, message_handler mh)
           : repo(r),
             graphkit(r, eh, wh, mh),
-            err(eh),
-            warn(wh),
-            msg(mh)
+            err(std::move(eh)),
+            warn(std::move(wh)),
+            msg(std::move(mh))
           {
           }
 
@@ -250,7 +244,7 @@ namespace transport
       {
         // make local copy of objects to process; we will tag items in this list as 'processed' as we go
         std::map<std::string, bool> items;
-        for(const std::string& item : objects)
+        for(const auto& item : objects)
           {
             items[item] = false;
           }
@@ -264,7 +258,7 @@ namespace transport
         this->update_tags_notes(postintegration_content, items, tags_add, tags_remove, notes_add, notes_remove);
         this->update_tags_notes(output_content, items, tags_add, tags_remove, notes_add, notes_remove);
 
-        for(const std::pair< const std::string, bool >& item : items)
+        for(const auto& item : items)
           {
             if(!item.second)
               {
@@ -286,14 +280,14 @@ namespace transport
         transaction_manager mgr = this->repo.transaction_factory();
 
         // step through records in content database
-        for(const typename ContentDatabase::value_type& item : db)
+        for(const auto& item : db)
           {
             // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
             // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
-            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+            const auto& record = *item.second;
 
             // step through objects in match list
-            for(std::pair< const std::string, bool >& t : items)
+            for(auto& t : items)
               {
                 const std::string& match_expr = t.first;
                 if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
@@ -301,9 +295,11 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record =
+                    using repository_toolkit_impl::get_rw_content_group;
+                    auto rw_record =
                       get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
-                        this->repo, record.get_name(), mgr);
+                        this->repo, record.get_name(), mgr
+                      );
 
                     if(rw_record->get_lock_status())
                       {
@@ -313,10 +309,10 @@ namespace transport
                       }
                     else
                       {
-                        for(const std::string& tag : tags_remove)   rw_record->remove_tag(tag);
-                        for(const std::string& tag : tags_add)      rw_record->add_tag(tag);
-                        for(const std::string& note : notes_remove) rw_record->remove_note(boost::lexical_cast<unsigned int>(note));
-                        for(const std::string& note : notes_add)    rw_record->add_note(note);
+                        for(const auto& tag : tags_remove)   rw_record->remove_tag(tag);
+                        for(const auto& tag : tags_add)      rw_record->add_tag(tag);
+                        for(const auto& note : notes_remove) rw_record->remove_note(boost::lexical_cast<unsigned int>(note));
+                        for(const auto& note : notes_add)    rw_record->add_note(note);
 
                         // recommit record
                         // in the current implementation there is no need to re-read the value in the enumerated database
@@ -340,13 +336,13 @@ namespace transport
       {
         // make local copy of objects to process; we will tag items in this list as 'processed' as we go
         std::map<std::string, bool> items;
-        for(const std::string& item : objects)
+        for(const auto& item : objects)
           {
             items[item] = false;
           }
 
         // cache distance matrix for the content group graph
-        std::unique_ptr<repository_distance_matrix> dmat = this->graphkit.content_group_distance_matrix();
+        auto dmat = this->graphkit.content_group_distance_matrix();
 
         // cache content databases
         integration_content_db integration_content = this->repo.enumerate_integration_task_content();
@@ -360,7 +356,7 @@ namespace transport
         this->delete_content(postintegration_content, items, dmat);
         this->delete_content(integration_content, items, dmat);
 
-        for(const std::pair< const std::string, bool >& item : items)
+        for(const auto& item : items)
           {
             if(!item.second)
               {
@@ -381,20 +377,20 @@ namespace transport
         transaction_manager mgr = this->repo.transaction_factory();
 
         // step through records in content database
-        for(typename ContentDatabase::const_iterator t = db.begin(); t != db.end(); /* intentionally empty increment field */)
+        for(auto t = db.cbegin(); t != db.cend(); /* intentionally empty increment field */)
           {
-            const typename ContentDatabase::value_type& item = *t;
+            const auto& item = *t;
             // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
             // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
-            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+            const auto& record = *item.second;
 
             // step through objects in match list
-            for(std::pair< const std::string, bool >& item : items)
+            for(auto& item : items)
               {
                 if(check_match(record.get_name(), item.first, true))    // true = insist on exact match
                   {
                     item.second = true;   // mark as a match for this item
-                    std::unique_ptr< std::set<std::string> > dependent_groups = dmat->find_dependent_objects(record.get_name());
+                    auto dependent_groups = dmat->find_dependent_objects(record.get_name());
 
                     if(dependent_groups)
                       {
@@ -413,6 +409,7 @@ namespace transport
                                 msg << CPPTRANSPORT_REPO_TOOLKIT_DELETING_OBJECT << " '" << record.get_name() << "'";
                                 this->msg(msg.str());
 
+                                using repository_toolkit_impl::erase_repository_record;
                                 erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.erase(
                                   this->repo, record.get_name(), record.get_task_name(),mgr);
 
@@ -420,7 +417,7 @@ namespace transport
                                 t = db.erase(t);
 
                                 // delete this record from the repository enumeration, and then recompute the distance matrix
-                                std::unique_ptr<repository_distance_matrix> new_dmat = this->graphkit.content_group_distance_matrix();
+                                auto new_dmat = this->graphkit.content_group_distance_matrix();
                                 dmat.swap(new_dmat);
                               }
                           }
@@ -431,7 +428,7 @@ namespace transport
                                 << CPPTRANSPORT_REPO_TOOLKIT_CANNOT_DELETE_DEPENDENT_B << " ";
 
                             unsigned int count = 0;
-                            for(const std::string& group : *dependent_groups)
+                            for(const auto& group : *dependent_groups)
                               {
                                 if(count > 0) msg << ", ";
                                 msg << group;
@@ -460,7 +457,7 @@ namespace transport
       {
         // make local copy of objects to process; we will tag items in this list as 'processed' as we go
         std::map<std::string, bool> items;
-        for(const std::string& item : objects)
+        for(const auto& item : objects)
           {
             items[item] = false;
           }
@@ -474,7 +471,7 @@ namespace transport
         this->lock_content(postintegration_content, items);
         this->lock_content(output_content, items);
 
-        for(const std::pair< const std::string, bool >& item : items)
+        for(const auto& item : items)
           {
             if(!item.second)
               {
@@ -494,14 +491,14 @@ namespace transport
         transaction_manager mgr = this->repo.transaction_factory();
 
         // step through records in content database
-        for(const typename ContentDatabase::value_type& item : db)
+        for(const auto& item : db)
           {
             // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
             // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
-            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+            const auto& record = *item.second;
 
             // step through objects in match list
-            for(std::pair< const std::string, bool >& t : items)
+            for(auto& t : items)
               {
                 const std::string& match_expr = t.first;
                 if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
@@ -509,9 +506,11 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record =
+                    using repository_toolkit_impl::get_rw_content_group;
+                    auto rw_record =
                       get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
-                        this->repo, record.get_name(), mgr);
+                        this->repo, record.get_name(), mgr
+                      );
 
                     rw_record->set_lock_status(true);
 
@@ -531,7 +530,7 @@ namespace transport
       {
         // make local copy of objects to process; we will tag items in this list as 'processed' as we go
         std::map<std::string, bool> items;
-        for(const std::string& item : objects)
+        for(const auto& item : objects)
           {
             items[item] = false;
           }
@@ -545,7 +544,7 @@ namespace transport
         this->unlock_content(postintegration_content, items);
         this->unlock_content(output_content, items);
 
-        for(const std::pair< const std::string, bool >& item : items)
+        for(const auto& item : items)
           {
             if(!item.second)
               {
@@ -565,14 +564,14 @@ namespace transport
         transaction_manager mgr = this->repo.transaction_factory();
 
         // step through records in content database
-        for(const typename ContentDatabase::value_type& item : db)
+        for(const auto& item : db)
           {
             // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
             // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
-            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+            const auto& record = *item.second;
 
             // step through objects in match list
-            for(std::pair< const std::string, bool >& t : items)
+            for(auto& t : items)
               {
                 const std::string& match_expr = t.first;
                 if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
@@ -580,9 +579,11 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record =
+                    using repository_toolkit_impl::get_rw_content_group;
+                    auto rw_record =
                       get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
-                        this->repo, record.get_name(), mgr);
+                        this->repo, record.get_name(), mgr
+                      );
 
                     rw_record->set_lock_status(false);
 
@@ -601,4 +602,3 @@ namespace transport
 
 
 #endif //CPPTRANSPORT_REPOSITORY_TOOLKIT_H
-

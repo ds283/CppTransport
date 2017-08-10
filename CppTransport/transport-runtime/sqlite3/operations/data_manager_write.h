@@ -89,7 +89,7 @@ namespace transport
 				    const host_information& host = batcher->get_host_information();
 
 		        std::ostringstream insert_stmt;
-				    insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@workgroup, @worker, @backend, @back_stepper, @pert_stepper, @back_abs_tol, @back_rel_tol, @pert_abs_tol, @pert_rel_tol, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_vendor_id)";
+				    insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@workgroup, @worker, @backend, @back_stepper, @pert_stepper, @back_abs_tol, @back_rel_tol, @pert_abs_tol, @pert_rel_tol, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_brand, @cpu_vendor_id)";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -124,6 +124,12 @@ namespace transport
 		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@os_release"), host.get_os_release().c_str(), host.get_os_release().length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@architecture"), host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@cpu_vendor_id"), host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
+            
+            auto& cpu_brand = host.get_cpu_brand_string();
+            if(cpu_brand)
+              {
+                check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@cpu_brand"), cpu_brand->c_str(), cpu_brand->length(), SQLITE_STATIC));
+              }
 
 				    check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
 
