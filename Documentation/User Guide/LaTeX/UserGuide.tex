@@ -31,6 +31,11 @@
 
 \newenvironment{warning}{\begin{tcolorbox}[enhanced,breakable,colback=red!10,colbacktitle=red!20,colframe=red!40,coltitle=black,title={Warning},fonttitle=\sffamily\fontseries{b}\selectfont]}{\end{tcolorbox}}
 
+\definecolor{ERCorange}{HTML}{F26623}
+\definecolor{SussexCobaltBlue}{HTML}{1E428A}
+\definecolor{SussexDeepAquamarine}{HTML}{487A7B}
+\hypersetup{colorlinks=true,citecolor=SussexDeepAquamarine,linkcolor=SussexCobaltBlue,urlcolor=SussexCobaltBlue}
+
 \newcommand{\ket}[1]{|{#1}\rangle}
 \newcommand{\bra}[1]{\langle{#1}|}
 \newcommand{\braket}[3]{\langle{#1}|{#2}|{#3}\rangle}
@@ -80,9 +85,11 @@
 
 \newcommand{\repoobject}[1]{{\ttfamily\bfseries\small #1}}
 
+\newcommand{\newfeature}[1]{\textcolor{SussexCobaltBlue}{({\packagefont New in {#1}})}}
+
 %\newcommand{\packagefont}{\fontfamily{lmtt}\selectfont\fontseries{l}\selectfont}
-%\newcommand{\packagefont}{\sffamily\fontseries{sbc}\selectfont}
-\newcommand{\packagefont}{\sffamily}
+\newcommand{\packagefont}{\sffamily\fontseries{sbc}\selectfont}
+%\newcommand{\packagefont}{\sffamily}
 
 \newcommand{\MadGraph}{{\packagefont MadGraph}}
 \newcommand{\Grace}{{\packagefont Grace}}
@@ -282,7 +289,9 @@
 
 \begin{document}
 \title{\fontseries{s}\selectfont {\CppTransport}: a platform to
-automate calculation of inflationary correlation functions
+automate calculation of inflationary correlation functions \\
+\vspace{3mm}
+{\small Version \textbf{2017.1}}
 \vspace{5mm}\hrule}
 \author{\fontseries{s}\selectfont\large David Seery}
 
@@ -295,7 +304,8 @@ Astronomy Centre, University of Sussex, Falmer, Brighton BN1 9QH, UK}
 generate and solve the evolution equations for the 2- and 3-point correlation
 functions
 (in field space and for the curvature perturbation $\zeta$)
-for any inflationary model with canonical kinetic terms.
+for inflationary models with canonical kinetic terms
+or a nontrivial field-space metric.
 It makes no approximations beyond the applicability of tree-level
 perturbation theory.
 Given an input Lagrangian,
@@ -345,22 +355,24 @@ we must compare these observations with predictions
 that carefully account for the precise character of quantum
 fluctuations given the field content, mass scales and coupling constants of the model.
 
+\para{Traditional approximation schemes}
 Unfortunately these calculations are challenging.
 Various
 approximate schemes to compute a general $n$-point function are known,
 but even where these are available they require numerical methods
 except in special cases.
 Such schemes typically break the calculation into two pieces:
-a `hard' contribution---that is, involving comparatively
-large momenta---characterized by wavenumbers near the scale
+a `hard' contribution (that is, involving large momenta)
+characterized by wavenumbers near the scale
 of the sound horizon $k/a \sim H / c_s$,
 and a `soft' contribution involving comparatively low wavenumbers
 $k/a \ll H / c_s$~\cite{Dias:2012qy}.
 The soft contribution can be computed using the classical
-equations of motion and is normally the only one to be handled exactly.
-The hard contribution is estimated by assuming
+equations of motion and is normally the only part to be handled exactly.
+The hard contribution is estimated by assuming that
 all relevant degrees of freedom are massless and non-interacting.
-A typical example is the $\delta N$ formula for the
+The archetypal example of such a scheme
+is the $\delta N$ formula for the
 equal-time two-point function
 of the curvature perturbation $\zeta$,
 \begin{equation}
@@ -384,6 +396,7 @@ This division is entirely analogous to the factorization
 of hadronic scattering amplitudes into a hard subprocess
 followed by soft hadronization.
 
+\para{Difficulties}
 Any scheme of this type will break down if the
 hard initial condition
 can not be approximated by the `universal'
@@ -408,8 +421,8 @@ calculation with which we started.
 
 A different way in which~\eqref{eq:deltaN-approx}
 loses its simplicity
-occurs when there is not a single hard scale,
-but a number of widely separated scales.
+occurs when there is not just one hard scale,
+but a number of separated scales.
 For example, this can occur in an $n$-point function
 with $n \geq 3$
 where the external wavenumbers $\vect{k}_i$
@@ -583,18 +596,19 @@ late-universe observable of interest.
 
 {\CppTransport} is a platform that implements
 this prescription.
-It is the result of three years of development, amounting to roughly 60,000
+It is the result of four years of development, amounting to roughly 84,000
 lines of {\CC},
 and consists of three major components:
 \begin{enumerate}
     \item
-    A \emph{translator} (17,000 lines)
+    A \emph{translator} (28,000 lines)
     converts `model description files' into
     custom {\CC} implementing suitable evolution equations and
     initial conditions.
     The model description file enumerates the field content of the model,
     lists any parameters required by the Lagrangian, and
-    specifies the inflationary potential.
+    specifies the inflationary potential
+    and field-space metric (if it is nontrivial).
     It is also possible to document the model by providing
     a rich range of metadata.
 
@@ -603,7 +617,7 @@ and consists of three major components:
     together with a runtime support system to produce a finished product capable
     of integrating the transport equations and producing correlation
     functions.
-    The \emph{management system} (29,000 lines) is the largest component
+    The \emph{management system} (34,000 lines) is the largest component
     in the runtime support
     and
     has responsibility for coordinating integration jobs
@@ -736,8 +750,9 @@ The main features of the platform are:
         the initial conditions,
         the slow-roll approximation should be
         approximately satisfied at the initial time.
-        For more details, see the accompanying technical
-        paper~\cite{DiasFrazerMulryneSeery}.
+        For more details, see the original technical
+        paper describing the transport system
+        for three-point functions~\cite{DiasFrazerMulryneSeery}.
         This also contains a discussion of the validity
         of the tree-level approximation.}
 
@@ -777,6 +792,17 @@ The main features of the platform are:
     If modifications are required then the messaging implementation is
     \semibold{automatically instrumented} to assist with debugging and
     performance optimization.
+    
+    \item Calculations can be performed with \semibold{arbitrary floating-point
+    types}, including multiprecision types such as those provided by the
+    \href{http://www.mpfr.org}{\packagefont GNU MPFR library}.
+    These can be used directly through a {\CC} interface such
+    as
+    \href{http://www.holoborodko.com/pavel/mpfr/}{\packagefont MPFR \CC}
+    or through the
+    \href{http://www.boost.org/doc/libs/release/libs/multiprecision}{{\Boost}.{\packagefont Multiprecision}} wrapper.
+	This enables calculations to be performed to very high accuracy,
+	or with very large numerical range, if that is required.
 
     \item Manages the \semibold{data lifecycle} by
     linking each dataset
@@ -830,7 +856,9 @@ The main features of the platform are:
     \item The translator is a full-featured tool in its own right,
     capable of customizing arbitrary template code
     for each model using sophisticated replacement rules.
-    It understands a form of Einstein summation convention,
+    It understands a form of tensor notation
+    (including the distinction between co- and contravariant indices)
+    and Einstein summation convention,
     making generation of \semibold{specialized template code}
     rapid and convenient.
 \end{itemize}
@@ -851,7 +879,6 @@ is colour-coded according to the language:
 {\CppTransport} uses units where $c=\hbar=1$ but the
 reduced Planck mass $\Mp = (8\pi G)^{-1/2}$
 can be set to an arbitrary value.
-
 Each inflationary model can have an arbitrary number of scalar fields. These are
 all taken to be singlets
 labelled by indices $\alpha$, $\beta$, \dots,
@@ -871,6 +898,19 @@ set of fields indexed by labels $a$, $b$, \ldots:
     \delta X^a = (\delta\phi^\alpha, \delta\pi^\alpha) .
 \end{equation}
 
+{\CppTransport} supports models in which the scalar field manifold
+is given a nontrivial metric $G_{\alpha\beta}$.
+In these models, indices on $\delta\phi^\alpha$,
+$\pi^\alpha$ and $\delta\pi^\alpha$
+are raised and lowered using $G_{\alpha\beta}$ or its inverse
+$G^{\alpha\beta}$. The usual summation convention is applied
+to contractions such as $\delta\phi^\alpha \delta\phi_\alpha
+\equiv \sum_{\alpha,\beta} G_{\alpha\beta} \delta\phi^\alpha
+\delta\phi^\beta$.
+Note that because $\phi^\alpha$ is simply a scalar function on
+the manifold, its index $\alpha$ is \emph{not} a tensor index
+and can not be lowered.
+
 \section{Installation}
 
 \subsection{Minimum requirements}
@@ -885,14 +925,20 @@ correctly with the three major {\CC} toolchains---%
 \href{https://gcc.gnu.org}{gcc} and the
 \href{https://software.intel.com/en-us/c-compilers}{Intel compiler}.
 The minimum recommended versions
-are $\geq$ gcc 5.0
+are $\geq$ gcc 6.2
 and $\geq$ Intel 16.0.
-Versions of gcc prior to 5.0 have insufficient standard library support,
+Versions of gcc prior to 6.2 have a bug that can prevent linking
+with {\Boost}
+(although this may not affect you if you compile {\CppTransport}
+using the same version used to build {\Boost},
+in which case a version $\geq 5.0$ is sufficient),
 and versions of the Intel compiler prior to 16.0
 contain bugs that prevent a successful build.%
     \footnote{On Linux, the Intel compiler normally depends on the
     standard library supplied with gcc.
-    This means that gcc $\geq$ 5.0 should also be available.}
+    This means that gcc $\geq$ 5.0 should also be available in order
+    to provide sufficient {\CC}14 support. Versions of gcc earlier
+    than 5.0 do not support {\CC}14 correctly.}
 Any moderately recent version of Clang should work correctly.
 
 In the absence of specialized requirements
@@ -989,19 +1035,7 @@ are
 and
 \href{http://www.boost.org/doc/libs/1_60_0/libs/timer/doc/index.html}{\packagefont Timer}.
 
-{\CppTransport} will function with any version of Boost later than 1.56,
-but is more efficient with version 1.58 or later.
-
-\item \semibold{The {\GiNaC} computer algebra library.}
-\href{http://www.ginac.de}{\GiNaC} is a library for performing symbolic computations
-in {\CC}. It was originally developed as part of the
-\href{http://wwwthep.physik.uni-mainz.de/~xloops/}{\xloopsginac} project
-to develop an automated 1-loop particle physics code.
-However, the library itself is independent of any particular application.
-{\GiNaC} has a further dependence on the
-\href{http://www.ginac.de/CLN/}{\CLN} project, but this will
-be handled automatically if installation is managed by
-a packaging system.
+{\CppTransport} will function with any version of Boost later than 1.56.
 
 \item \semibold{The {\SQLite} database library.}
 This is almost certain to be installed on every Linux or OS X machine,
@@ -1011,11 +1045,24 @@ but some extra developer files may be required.
 This is needed to calculate MD5 hashes, which {\CppTransport} uses
 to uniquely identify models. The MD5 algorithm is used to give consistent results
 on all platforms.
-
+\end{itemize}
+In addition, {\CppTransport} will look for global installations of the following
+libraries, although it will fall back to building its own versions if they
+are not available:
+\begin{itemize}
+	\item \semibold{The {\GiNaC} computer algebra library.}
+	\href{http://www.ginac.de}{\GiNaC} is a library for performing symbolic computations
+	in {\CC}. It was originally developed as part of the
+	\href{http://wwwthep.physik.uni-mainz.de/~xloops/}{\xloopsginac} project
+	to develop an automated 1-loop particle physics code.
+	However, the library itself is independent of any particular application.
+	{\GiNaC} has a further dependence on the
+	\href{http://www.ginac.de/CLN/}{\CLN} project, but this will
+	be handled automatically.	
 \end{itemize}
 Typically, some of
 these dependencies
-(such as {\CMake}, an {\MPI} implementation, Boost, {\SQLite}, {\OpenSSL})
+(such as {\CMake}, an {\MPI} implementation, {\Boost}, {\SQLite}, {\OpenSSL})
 will already
 be available in a managed HPC environment
 such as a compute cluster.
@@ -1202,10 +1249,10 @@ The procedure is similar for Homebrew.
 
 \end{itemize}
 
-\subsubsection{Installing dependencies on Ubuntu 16.04}
+\subsubsection{Installing dependencies on Ubuntu 16.04 and 17.04}
 Most Linux distributions will include packages for all
 {\CppTransport} dependencies. For illustration we describe the process for
-Ubuntu 16.04, but the process will be nearly unchanged for any
+Ubuntu 16.04 and 17.04, but the process will be nearly unchanged for any
 Debian-based distribution.
 
 From a terminal, issue the command:
@@ -1245,12 +1292,14 @@ it will be packaged as a \file{.tar.gz} archive containing the source tree.
 Place this archive in a suitable directory, then unpack the
 archive by typing
 \begin{minted}{bash}
-	tar xvf CppTransport_2016_03.tar.gz
+	tar xvf CppTransport_2017_01.tar.gz
 \end{minted}
 The name of the archive may be different if you are using a more recent
 version.
 The {\CppTransport} source code will be unpacked into a directory
-with the name \file{CppTransport}.
+with the name \file{CppTransport\_2017\_01}.
+(These means you can install the source trees for multiple versions of
+{\CppTransport} simultaneously, if required.)
 The build process proceeds by entering this directory,
 creating a \emph{new} directory called
 \file{build} that will hold temporary files,
@@ -1279,12 +1328,12 @@ for temporary files:
 The next step is to configure {\CMake}. If you are building with the default
 compiler you can enter
 \begin{minted}{bash}
-	cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/.cpptransport-packages
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/.cpptransport201701
 \end{minted}
 This instructs {\CMake}
 to build using a release configuration
 (some debugging code is suppressed)
-and install to the directory \file{\textasciitilde{}/.cpptransport-packages}.
+and install to the directory \file{\textasciitilde{}/.cpptransport201701}.
 The precise name of this directory is arbitrary and can be freely changed,
 although it is wise to avoid the names
 \file{\textasciitilde{}/.cpptransport}
@@ -1296,13 +1345,15 @@ If you are installing system-wide the install prefix should
 be set using
 \mintinline{bash}{-DCMAKE_INSTALL_PREFIX=/usr/local}
 or similar.
+If you install using a unique prefix then it is possible to use
+multiple installations of {\CppTransport} simultaneously.
 
 If you wish to build with a different compiler then {\CMake} will require
 further information.
 For example, if the Intel compiler is available on your \envvar{PATH}
 and you wish to build with it, you should use
 \begin{minted}{bash}
-	cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/.cpptransport-packages -DCMAKE_C_COMPILER=icc -DCMAKE_CXX_COMPILER=icpc
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/.cpptransport201701 -DCMAKE_C_COMPILER=icc -DCMAKE_CXX_COMPILER=icpc
 \end{minted}
 More generally, you should pass the location of the C compiler
 as the value of
@@ -1378,7 +1429,7 @@ directory under your installation prefix.
 For example, for a user named \texttt{ds283}
 the resulting line might be
 \begin{minted}{bash}
-	export PATH=/Users/ds283/.cpptransport-packages/bin:$PATH
+	export PATH=/Users/ds283/.cpptransport201701/bin:$PATH
 \end{minted}
 Ensure that you \emph{add} to the list of
 colon-separated paths rather than replacing any existing ones,
@@ -1398,7 +1449,7 @@ The translator should respond by printing information about
 the installed version, such as
 \begin{center}
 	\ttfamily\fontseries{l}\selectfont
-	CppTransport 2016.3 (c) University of Sussex 2016
+	CppTransport 2017.1 (c) University of Sussex 2016, 2017
 \end{center}
 
 If this has worked successfully
@@ -1409,9 +1460,46 @@ is to inform the runtime system
 where it can find the files installed under \file{share}.
 There are two ways to do this:
 \begin{itemize}
+    \item \label{page:config-files}\semibold{Use configuration files.}
+    {\CppTransport} allows you to specify default options
+    using configuration files in the top level of your home directory.
+    The translator will look for a configuration file named
+    \file{\textasciitilde{}/.cpptransport},
+    and the runtime environment will look for a file named
+    \file{\textasciitilde{}/.cpptransport\_runtime}.
+    The use of separate files
+    enables different options to be passed
+    to each component.
+
+    To set up a simple configuration file,
+    create a \file{\textasciitilde{}/.cpptransport} file
+    containing a the line such as
+    \begin{minted}{text}
+        include = /Users/ds283/.cpptransport201701/share/cpptransport
+    \end{minted}
+    where the path on the right-hand side should be adjusted to have
+    the correct prefix and home directory.
+    Notice that
+    although is the same path that would appear in \envvar{CPPTRANSPORT_PATH},
+    the symbol \mintinline{text}{~} cannot be used to represent
+    the path to the home directory.
+    If you wish to search multiple locations then add these as
+    extra \mintinline{text}{include} directives on separate lines.
+
+    The runtime system requires a separate configuration
+    file called \file{.cpptransport\_runtime}
+    which should include the same line:
+    \begin{minted}{text}
+        include = /Users/ds283/.cpptransport201701/share/cpptransport
+    \end{minted}
+
+	In general, the use of configuration files is the recommended approach.
+    If you have multiple versions of {\CppTransport} installed then you
+    can switch between them by changing the paths used in these files.
+
     \item \semibold{Use the \envvar{CPPTRANSPORT_PATH} environment variable.}
-    {\CppTransport} will search a list of filesystem locations when looking
-    for files. One option is to supply this information as a colon-separated list
+    Alternatively, you can supply a list of
+    locations to search a colon-separated list
     in the environment variable \envvar{CPPTRANSPORT_PATH},
     which functions very like the variable \mintinline{bash}{PATH}
     used above to inform the shell where it should search for executable files.
@@ -1422,44 +1510,10 @@ There are two ways to do this:
     For example, your \file{\textasciitilde{}/.profile} could include
     a line such as
     \begin{minted}{bash}
-        export CPPTRANSPORT_PATH=~/.cpptransport-packages/share/cpptransport
+        export CPPTRANSPORT_PATH=~/.cpptransport201701/share/cpptransport
     \end{minted}
     The \envvar{CPPTRANSPORT_PATH} variable is used by both the
     translator and the runtime library.
-
-    \item \label{page:config-files}\semibold{Use configuration files.}
-    Alternatively, options may be supplied to {\CppTransport}
-    using configuration files in the top level of your home directory.
-    The translator will look for a configuration file named
-    \file{\textasciitilde{}/.cpptransport},
-    and the runtime environment will look for a file named
-    \file{\textasciitilde{}/.cpptransport\_runtime}.
-    The use of separate files
-    enables different options to be passed
-    to each component.
-
-    This method allows you to avoid adding extra material to
-    your \file{\textasciitilde{}/.profile} script
-    (or related files), if that is desirable.
-    To use configuration files for this purpose,
-    create a \file{\textasciitilde{}/.cpptransport} file
-    containing a the line such as
-    \begin{minted}{text}
-        include = /Users/ds283/.cpptransport-packages/share/cpptransport
-    \end{minted}
-    where the path on the right-hand side should be adjusted to have
-    the correct prefix and home directory.
-    Notice that
-    although is the same path that would appear in \envvar{CPPTRANSPORT_PATH},
-    the symbol \file{\textasciitilde{}} cannot be used to represent
-    the path to the home directory.
-
-    The runtime system requires a separate configuration
-    file called \file{.cpptransport\_runtime}
-    which should include the same line:
-    \begin{minted}{text}
-        include = /Users/ds283/.cpptransport-packages/share/cpptransport
-    \end{minted}
 
 \end{itemize}
 
@@ -1612,7 +1666,7 @@ further \mintinline{text}{#include} directives.
 \label{sec:model-block}
 Blocks can come in any order, but
 it is generally preferable to place
-the\block{model} block at or near the top of
+the \block{model} block at or near the top of
 the file because it
 contains a range of useful summary information.
 Most of the fields are optional,
@@ -1639,6 +1693,15 @@ The attributes available within the \block{model} block are:
     is generally used only when producing reports;
     automatically-generated code normally refers to the model
     using the tag associated with the block.
+    
+    \item \attribute{lagrangian = canonical;} \\
+    \attribute{lagrangian = nontrivial_metric;} \\
+    Specifies whether the model has a nontrivial field-space metric
+    appearing in its kinetic terms. Defaults to
+    \attribute{canonical}; if set to \attribute{nontrivial_metric} then
+    it is necessary to supply the metric in addition to the potential;
+    see below.
+    \newfeature{2017.1}
 
     \item \attribute{description = "string";} \\
     Adds a short description of the model. This should briefly identify
@@ -1688,6 +1751,33 @@ The attributes available within the \block{model} block are:
     its implementation.
 \end{itemize}
 
+\subsection{Adding a metadata block}
+You may optionally specify a \block{metadata} block
+that controls how {\CppTransport} processes your model file.
+Currently there is just a single option:
+\begin{itemize}
+	\item \attribute{require_version = identifier;} \\
+	Specifies the minimum version of {\CppTransport} required to
+	process this model file. Where changes in behaviour occur
+	between versions,
+	{\CppTransport} assumes an `opt-in' model in order not to
+	break backwards-compatibility.
+	The changes will not be applied unless a
+	\attribute{require_version} directive is given.
+	So, for example,
+	\attribute{require_version = 201701;} will apply any changes
+	in behaviour introduced in version 2017.1, but not any subsequent changes.
+	Likewise, \attribute{require_version = 201803;} will apply any
+	changes introduced up to and included version 2018.3, but not later.
+	
+	Specifying a minimum version is optional, but recommended. If no
+	directive is given then {\CppTransport} will behave like
+	version 2016.3 and will issue a warning that
+	some new features may be disabled.
+	\newfeature{2017.1}
+\end{itemize}
+
+
 \begin{example}
     To illustrate the process of preparing a model file and
     constructing tasks,
@@ -1723,6 +1813,8 @@ The attributes available within the \block{model} block are:
     model "dquad"
       {
         name        = "Double quadratic inflation";
+        lagrangian  = canonical;
+        
         description = "A two-field model with quadratic potentials";
         citeguide   = "Example from the CppTransport user guide";
         license     = "CC BY";
@@ -1731,9 +1823,14 @@ The attributes available within the \block{model} block are:
         references  = [ "astro-ph/0504508",
                         "astro-ph/0511041",
                         "astro-ph/0603799",
-                        "arXiv:160x.yyyy" ];
+                        "arXiv:1609.00380" ];
         urls        = [ "http://transportmethod.com" ];
-     };
+      };
+     
+    metadata
+      {
+        require_version = 201701;
+      };
     \end{minted}
 \end{example}
 
@@ -1745,6 +1842,7 @@ using it to construct all the information needed
 for concrete calculations, and then writing this information
 into a \emph{template}. We will examine this
 process in more detail in \S\ref{sec:run-translator}.
+For highly specialized uses
 {\CppTransport} allows arbitrary templates to be used,
 although there will not normally be any need to
 modify the supplied examples.
@@ -1752,7 +1850,8 @@ The purpose of the \block{model} block
 is to tell {\CppTransport} which templates are intended
 for use. It does not have a tag.
 
-To use the standard templates, the
+Each template is specific to a particular type of Lagrangina.
+To use the standard templates for a canonical model the
 \block{templates} block should read:
 \begin{minted}{text}
 	templates
@@ -1761,7 +1860,18 @@ To use the standard templates, the
 	    implementation = "canonical_mpi";
 	  };
 \end{minted}
+For a model with nontrivial field-space metric it should be
+\begin{minted}{text}
+	templates
+	  {
+	    core           = "nontrivial_metric_core";
+	    implementation = "nontrivial_metric_mpi";
+	  };
+\end{minted}
 Notice that two templates are required.
+{\CppTransport} will report an error if you attempt to use
+an inappropriate template for your model.
+
 The \emph{core} template
 writes an output file called
 \file{tag\_core.h}
@@ -1791,9 +1901,11 @@ it is not straightforward to extract
 good performance from GPUs.
 This difficulty is partially driven by memory requirements,
 and may change in future.
-The CPU integrator is supplied as a template called
+The CPU integrator is supplied as templates called
 \file{canonical\_mpi.h}
 and
+\file{nontrivial\_metric\_mpi.h};
+in either case, it
 writes an output file called
 \file{tag\_mpi.h}.
 It
@@ -1817,7 +1929,7 @@ Currently, the supported steppers are:
 	It is capable of efficiently interpolating the solution between
 	sample points, meaning that the step-size can often be kept large
 	even when high accuracy is required.
-	This gives the method good overall performance.
+	This gives the method excellent overall performance.
 	It should be regarded as the default unless the model requires
 	special treatment.
 
@@ -1831,6 +1943,11 @@ Currently, the supported steppers are:
 	sometimes struggles to control its step-size.
 	Nevertheless,
 	it remains a useful alternative.
+	
+	\item \option{runge\_kutta\_cash\_karp45}.
+	This is an implementation of a $4^{\mathrm{th}}$/$5^{\mathrm{th}}$-order
+	Cash--Karp algorithm. Its performance is not competitive, so
+	generally \option{runge\_kutta\_dopri5} should be preferred.
 
 	\item \option{bulirsch\_stoer\_dense\_out}.
 	This is a Bulirsch--Stoer algorithm that adapts both its
@@ -1843,6 +1960,17 @@ Currently, the supported steppers are:
 	It may be the only practical choice if the solution exhibits
 	sharp features, which the adaptive order control can handle
 	quite effectively.
+	
+	\item \option{adams\_bashforth\_moulton}.
+	This is an implementation of the Adams--Moulton multistep method.
+	In principle this should be a good choice when the right-hand side
+	of the ODE system is expensive to integrate, but this stepper is
+	new in {\Boost}.{\odeint} and testing currently shows poor performance.
+	For this time being, it should probably be avoided
+	until the implementation matures
+	unless you know
+	what you are doing.
+	\newfeature{2017.1}
 \end{itemize}
 No matter which stepper is selected, it is a good idea to check
 that features in a solution
@@ -1883,13 +2011,40 @@ Each block accepts the same attributes, and neither has a tag.
 \end{itemize}
 Suitable values for the tolerances are typically in the
 range
-$10^{-8}$
+$10^{-10}$
 to
-$10^{-12}$,
+$10^{-14}$,
 although in some cases they need to be smaller.
-A reasonable default choice is $10^{-8}$, followed by reduction
-to $10^{-10}$ or $10^{-12}$ if the stepper fails to keep the solution
+A reasonable default choice is $10^{-12}$, followed by reduction
+to $10^{-14}$ or $10^{-16}$ if the stepper fails to keep the solution
 under control.
+\begin{warning}
+	The {\PyTransport} code is an alternative implementation of the
+	transport framework, using a mix of Python and {\CC}.
+	Although {\CppTransport} and {\PyTransport} apply the same
+	formalism, their implementations are \emph{not} identical.
+	Internally, they make different choices for the correlation functions
+	to be evolved and for the precise numerical scheme used.
+
+	{\CppTransport} and {\PyTransport} have been tested to agree to very
+	high precision, so ordinarily these differences are invisible to
+	users. However, because they implement different systems of ODEs,
+	the meaning of the numerical tolerances
+	on each platform \semibold{is not the same}.
+	
+	In {\CppTransport} the tolerance is the required error in the final
+	solution for the field-space correlation functions.
+	In {\PyTransport} and internal scaling is applied.
+	This has the disadvantage that the meaning
+	of the tolerance is not quite so direct,
+	but the advantage that larger tolerances can often be used.
+	Where {\CppTransport} requires tolerances in the neighbourhood of
+	$10^{-12}$, the typical {\PyTransport} equivalent might be in the
+	neighbourhood of $10^{-8}$.
+
+	Note that this does not mean that the {\CppTransport} integration
+	will be slower.
+\end{warning}
 
 \begin{example}
     Nothing special is needed for the double-quadratic model,
@@ -1966,8 +2121,9 @@ The available attributes are:
 \subsection{Specifying field content and Lagrangian parameters}
 \label{sec:field-param-block}
 The final step is to specify the Lagrangian of the model.
-Because {\CppTransport} is currently restricted to models with
-canonical kinetic terms it is only necessary to specify the potential.
+This always requires an expression for the potential, and
+additionally requires the field-space metric in a noncanonical model.
+
 Before doing so, we must enumerate the fields used by the model
 and any parameters appearing in the Lagrangian.
 This is done by giving
@@ -2023,7 +2179,10 @@ a {\LaTeX} name for the quantity:
 \subsection{Specifying the Lagrangian}
 \label{sec:lagrangian-block}
 Once all fields and parameters have been declared
-we can use them to give an expression for the potential.
+we can use them to specify the Lagrangian.
+
+\para{Potential}
+It is always necessary to give the potential.
 The syntax for this is
 \attribute{potential = expression;}
 where \attribute{expression} is a mathematical
@@ -2103,6 +2262,7 @@ Fields are assumed to have dimension $[\mathrm{M}]$,
 and the pre-defined symbol \descfile{M_P} is available to represent
 the Planck mass.
 
+\para{Subexpressions}
 In more complex cases, single-line expressions become difficult to read
 or debug and it is preferable to break the potential down into subexpressions.
 {\CppTransport} provides a \block{subexpr} block for this purpose.
@@ -2167,6 +2327,39 @@ the potential can be broken down into subexpressions:
     potential = V1 + V2;
 \end{minted}
 
+\para{Metric}
+\newfeature{2017.1}
+If a field space metric is required, it should be specified in the form
+\begin{minted}{text}
+	metric = prefactor * [ component = expression; ... ] + ... ;
+\end{minted}
+Each component is identified by giving a comma-separated pair of fields,
+and the expression is any valid mathematical formula (possibly using
+subexpressions as defined above). Any components that are not explicitly
+given are assumed to be zero. Off-diagonal elements need be specified only
+once; {\CppTransport} uses the symmetry of the metric to determine
+any related values.
+
+For example, a flat metric in a model with two fields
+\descfile{phi} and \descfile{chi} would be written
+\begin{minted}{text}
+	model = [ phi, phi = 1; chi, chi = 1; ];	
+\end{minted}
+whereas a flat metric in polar field-space coordinates
+\descfile{R}, \descfile{theta}
+would require
+\begin{minted}{text}
+	model = [ R, R = 1; theta, theta = R^2; ];	
+\end{minted}
+
+It is possible to add or subtract multiple metric definitions
+to obtain the final formula. For example, this can be useful to help readability
+in cases where there multiple sectors in the inflationary field-space
+that give a block-diagonal metric.
+\begin{minted}{text}
+	model = [ phi, phi = 1; chi, chi = 1; ] + 2 * [ xi, xi = 1; xi, mu = 2; mu, mu = xi^2; ] / 3;
+\end{minted}
+
 \begin{example}
     The potential for double-quadratic inflation is simple.
     Given the fields and parameter definitions
@@ -2174,6 +2367,8 @@ the potential can be broken down into subexpressions:
     \begin{minted}{text}
         potential = Mphi^2 * phi^2 / 2 + Mchi^2 * chi^2 / 2;
     \end{minted}
+    The model is canonical, so we do not need to specify
+    the field-space metric.
 \end{example}
 
 \subsection{Running the translator and producing output}
@@ -2251,7 +2446,7 @@ Others affect the files read or written by the translator:
     In most cases this default will be suitable, so it is not necessary
     to specify a filename explicitly.
 \end{itemize}
-A final set of options influence the {\CC} code generated by the translator:
+A further set of options influence the {\CC} code generated by the translator:
 \begin{itemize}
     \item \option{{-}{-}no-cse} \\
     Disable \emph{common sub-expression elimination}, described in more detail
@@ -2270,7 +2465,27 @@ A final set of options influence the {\CC} code generated by the translator:
 
     \item \option{{-}{-}fast} \\
     Unroll all index sets, regardless of size.
+    This improves performance, but also gives the compiler maximum opportunity
+    to optimize redundant parts of the calculation.
+    Taken together, these effects can
+    gives better performance at the expense of
+    much larger generated code; see the discussion in~\S\ref{sec:codegen}
+    below.
 \end{itemize}
+Finally, there are options to control warnings produced during translation:
+\begin{itemize}
+	\item \option{{-}{-}profile} \\
+	After translation, issue profiling information regarding the time
+	required for individual stages of the process, and
+	the performance of the expression and lambda caches.
+	This is primarily useful for debugging purposes, or to understand
+	performance issues if {\CppTransport} takes a long time to process
+	your model. (If significant time is reported for common
+	subexpression elimination, it may be worth
+	disabling it using \option{{-}{-}no-cse} described above; see~\S\ref{sec:codegen}.)
+	\newfeature{2017.1}
+\end{itemize}
+
 
 These options may also be specified in the
 \file{\textasciitilde{}/.cpptransport} configuration
@@ -2283,6 +2498,9 @@ should be written in the format
 such as
 \mintinline{text}{include = /usr/local/share/cpptransport}
 as described above.
+Options without an argument should be written as
+(for example)
+\mintinline{text}{no-cse = yes}.
 If an option appears both in the configuration file and on the
 command line, then values specified on the command line
 are preferred.
@@ -2298,14 +2516,11 @@ are preferred.
     This gives:
     \begin{minted}[xleftmargin=0pt,bgcolor=blue!10,linenos=false]{text}
         $ CppTransport -v dquad.model
-        CppTransport: translating '...templates/canonical_core.h' into 'dquad_core.h'
-        CppTransport: translation finished with 1216 macro replacements
-        CppTransport: macro replacement took 0.172s, of which time spent tokenizing 0.00881s (symbolic computation 0.0223s, common sub-expression elimination 0.087s)
-        CppTransport: translating '...templates/canonical_mpi.h' into 'dquad_mpi.h'
-        CppTransport: translation finished with 8102 macro replacements
-        CppTransport: macro replacement took 0.169s, of which time spent tokenizing 0.00547s (symbolic computation 0.0179s, common sub-expression elimination 0.0919s)
-        CppTransport: 153 expression cache hits, 415 misses (time spent performing queries 0.0116s)
-        CppTransport: processed 1 model in time 0.391s
+        CppTransport: translating '.../templates/canonical_core.h' into 'dquad_core.h'
+        CppTransport: translation finished with 1189 replacement rule expansions
+        CppTransport: translating '.../templates/canonical_mpi.h' into 'dquad_mpi.h'
+        CppTransport: translation finished with 8987 replacement rule expansions
+        CppTransport: processed 1 model in time 0.416s
     \end{minted}
 
     {\CppTransport} gives information about each file it translates.
@@ -2318,12 +2533,7 @@ are preferred.
     Recall that the stem \file{dquad} used to construct these filenames
     is taken from the tag provided to the model block
     in~\S\ref{sec:model-block}.
-
-    In the subsequent messages, {\CppTransport} informs us of the number
-    of tokens (`macros') replaced while customizing each file,
-    and also the time spent performing each step.
-    Sometimes common sub-expression elimination becomes very time-consuming;
-    in this case, see the discussion in~\S\ref{sec:codegen}.
+    For the meaning of `replacement rule expansions', see~\S\ref{sec:codegen}.
 \end{example}
 
 
@@ -2332,7 +2542,7 @@ are preferred.
 As explained above,
 the translator's task is to produce customized output.
 It does this by rewriting the template files according
-to well-defined rules.
+to well-defined `replacement rules'.
 
 In order to perform this rewriting
 the translator recognizes a large number of
@@ -2354,7 +2564,8 @@ expressions to compute the square of the Hubble rate $H^2$
 and the slow-roll parameter $\epsilon = - \dot{H}/H^2$,
 respectively.
 
-\para{Unrolling index sets}
+\subsubsection{Conversion of tensor equations}
+\para{Tensor formulae in {\CppTransport}}
 In addition to these simple rewriting rules, the translator
 must be able to generate code that implements the transport equations
 for the two- and three-point functions.
@@ -2379,11 +2590,11 @@ Writing these correlation functions as
 their evolution equations become
 \begin{equation}
 \begin{split}
-    \frac{\d \Sigma^{\alpha\beta}}{\d N}
+    \frac{\mathrm{D} \Sigma^{\alpha\beta}}{\d N}
     & =
     {u^\alpha}_\gamma \Sigma^{\gamma\beta}
     + {u^\beta}_\gamma \Sigma^{\alpha\gamma} \\
-    \frac{\d \alpha^{\alpha\beta\gamma}}{\d N}
+    \frac{\mathrm{D} \alpha^{\alpha\beta\gamma}}{\d N}
     & =
     {u^\alpha}_\delta \alpha^{\delta\beta\gamma}
     +
@@ -2393,43 +2604,95 @@ their evolution equations become
 \label{eq:transport-equations}
 \end{equation}
 where $\d N = H \, \d t$ represents the number of e-folds which elapse in a
-cosmic time interval $\d t$.
+cosmic time interval $\d t$,
+and $\mathrm{D}/\d N = (\d \phi^\alpha / \d N) \nabla_\alpha$ is the
+corresponding covariant derivative.
 Here, ${u^\alpha}_\beta$ and ${u^\alpha}_{\beta\gamma}$ are coefficient matrices
 calculated internally by the translator and
 depending on the wavenumbers $\vect{k}_1$, $\vect{k}_2$, $\vect{k}_3$.
 These matrices are represented using further tokens
-such as \token{U2\_TENSOR[AB]} (corresponding to ${u^\alpha}_\beta$)
-and \token{U3\_TENSOR[ABC]} (corresponding to ${u^\alpha}_{\beta\gamma}$).
-The labels \indexset{AB} and \indexset{ABC} represent the associated indices.
+such as \token{U2\_TENSOR[{\textasciicircum}A\_B]} (corresponding to ${u^\alpha}_\beta$)
+and \token{U3\_TENSOR[{\textasciicircum}A\_BC]} (corresponding to ${u^\alpha}_{\beta\gamma}$).
+The labels \indexset{{\textasciicircum}A\_B} and \indexset{{\textasciicircum}A\_BC}
+represent the associated indices,
+with `\indexset{\textasciicircum}' labelling contravariant indices and
+`\indexset{\_}' labelling covariant indices.
+(These variance specifiers are dropped in canonical models where the distinction
+is not needed.)
 The translator understands enough of the Einstein summation convention
-to represent (for example) the transport equation for the two-point function
+to represent---for example---the transport equation for the two-point function
 as
 \begin{minted}{text}
-    dSigma[$A][$B] $=  $U2_TENSOR[AC] * Sigma[$C][$B];
-    dSigma[$A][$B] $+= $U2_TENSOR[BC] * Sigma[$A][$C];
+    dSigma[$^A][$^B] $=  $U2_TENSOR[^A_C] * Sigma[$^C][$^B];
+    dSigma[$^A][$^B] $+= $U2_TENSOR[^B_C] * Sigma[$^A][$^C];
+    
+    dSigma[$^a][$^B] $+= - $GAMMA[^a_c] * Sigma[$^c][$^B];
+    dSigma[$^A][$^b] $+= - $GAMMA[^b_c] * Sigma[$^A][$^c];
+    
+    dSigma[MOMENTUM($^a)][$^B] $+= - $GAMMA[^a_c] * Sigma[MOMENTUM($^c)][$^B];
+    dSigma[$^A][MOMENTUM($^b)] $+= - $GAMMA[^b_c] * Sigma[$^A][MOMENTUM($^c)];
 \end{minted}
-It has been assumed that the two-point function $\Sigma^{\alpha\beta}$ is
+The first set of two lines represents the right hand side,
+and the upper case indices \indexset{{\textasciicircum}A},
+\indexset{{\textasciicircum}B}
+and \indexset{{\textasciicircum}C} range over the full phase space of
+field and momentum labels.
+The remaining sets represent the connexion terms hidden in the
+covariant derivative,
+and the lower case indices
+\indexset{{\textasciicircum}a},
+\indexset{{\textasciicircum}b}
+and
+\indexset{{\textasciicircum}c}
+range over field values only. The function
+\mintinline{text}{MOMENTUM()} maps a field index to the
+corresponding momentum index, and
+\token{GAMMA[{\textasciicircum}a\_b]}
+represents the combination
+$\Gamma^\alpha_{\beta\gamma} \d\phi^\gamma / \d N$.
+It has been assumed that the
+contravariant two-point function $\Sigma^{\alpha\beta}$ is
 encoded in an array-like object \mintinline{text}{Sigma[][]}
 and the derivative is to be written into a separate
 array-like object \mintinline{text}{dSigma[][]}.
-In particular, given these expressions the translator
+
+In particular, given these expressions, the translator
 understands that the free indices
-\indexset{A} and \indexset{B}
+\indexset{{\textasciicircum}A} and \indexset{{\textasciicircum}B}
 label independent components of the
 overall matrix equation,
-and that the repeated index \indexset{C} is to be summed over.
+and that the repeated index \indexset{{\textasciicircum}C} is to be summed over.
+For models with a nontrivial metric, it enforces that
+free indices appear with the same variance assignment on either side
+of the symbol
+\mintinline{text}{$=} or
+\mintinline{text}{$+=} that divides the formula into left- and right-hand
+sides.
+It also understands how to manipulate indices on the tensor-like objects
+\token{U2\_TENSOR[{\textasciicircum}A\_B]}
+and
+\token{GAMMA[{\textasciicircum}a\_b]}
+to obtain the required variance assignment;
+had different positioning been required, we could have written
+\token{U2\_TENSOR[{\textasciicircum}AB]},
+\token{U2\_TENSOR[\_A{\textasciicircum}B]}, and so on.
 The transport equation for the three-point function can
 be represented similarly.
+In general all of this is hidden from the end user,
+who can simply use the predefined templates provided with
+{\CppTransport}.
 
+\para{Unrolling index sets}
 During translation these compact expressions must be unpacked into
 valid {\CC} that performs the required calculations.
 There are $N^2$ independent equations for the two-point function,
 each of which entails a sum over one dummy index.
-Therefore the overall size for this set of equations scales as $\Or(N^3)$.
+Therefore the overall computational cost
+for this set of equations scales as $\Or(N^3)$.
 For the three-point function there are $N^3$ independent equations,
-but now each equation entails a sum over \emph{two} dummy indices.
-Therefore the overall size scales as $\Or(N^5)$.
-After unpacking we incur two types of cost.
+but now each equation contains terms that sum over \emph{two} dummy indices.
+Therefore the overall computational cost scales as $\Or(N^5)$.
+These costs manifest themselves in two ways.
 One is \emph{execution time}:
 no matter how they are expressed, the amount of work
 involved in solving these evolution
@@ -2456,10 +2719,19 @@ make some limited tradeoffs between the space cost and execution time:
     Unrolling allows the {\CC} compiler to generate simple linear code
     that performs all the required computations without branches
     or jumps, which would be required by loops
-    and may incur performance penalties.
+    and often incur performance penalties.
     Also,
-    because this strategy is completely explicit it maximizes
+    because this strategy is completely explicit, it maximizes
     the compiler's opportunities to optimize away redundant calculations.
+    This can be very helpful in models where the metric is nontrivial, but many
+    (or most) components of the Riemann tensor happen to be zero and do not need to be
+    included in summations. For example, this can happen if the metric is flat
+    but we are not working in Cartesian coordinates.
+    In such cases the compiler can often optimize away
+    the extra complexity of the nontrivial metric integrator, giving results that
+    are just as fast as a simple canonical code.
+    Without unrolling, summations over the Riemann tensor
+    will be retained if the compiler cannot deduce that they have no effect.
 
     The downside is that generated {\CC} files become
     very large even for moderate $N$.
@@ -2483,7 +2755,7 @@ make some limited tradeoffs between the space cost and execution time:
     {\CC} \mintinline{c++}{for}-loop.
     For example, the translator
     might unpack the line
-    \mintinline{text}{dSigma[$A][$B] $= $U2_TENSOR[AC] * Sigma[$C][$B];}
+    \mintinline{text}{dSigma[$^A][$^B] $= $U2_TENSOR[^A_C] * Sigma[$^C][$^B];}
     into
     \begin{minted}{c++}
         for(int A = 0; A < 2*N; ++A)
@@ -2541,12 +2813,14 @@ make some limited tradeoffs between the space cost and execution time:
     see Table~\ref{table:fast-v-unroll}.
 \end{itemize}
 
-{\CppTransport} attempts to find a compromise between these
+By default,
+{\CppTransport} attempts to compromise between these
 strategies.
 It will elect to unroll index sets where the result will not
-be too large,
+produce too many lines,
 with
-the distinction being set by the value assigned to
+the upper limit
+being set by the value assigned to
 \option{{-}{-}unroll-policy}. The default is 1000.
 Also,
 the elements of a tensor such as ${u^\alpha}_\beta$
@@ -2642,7 +2916,7 @@ yielding a non-negligible performance improvement.
 
 \end{table}
 
-\para{Common sub-expression elimination}
+\subsubsection{Common sub-expression elimination}
 To keep its generated files as small as possible,
 {\CppTransport} uses a second strategy called
 \emph{common sub-expression elimination}.
@@ -2668,7 +2942,7 @@ For example, after common sub-expression elimination,
     const auto temp_3 = temp_2 * temp_2;
     const auto temp_4 = temp_3 / temp_1;
 \end{minted}
-The local variable \mintinline{c++}{temp_4} would be used to represent
+The local variable \mintinline{c++}{temp_4} represents
 the value of the expression.
 
 This procedure is generally effective at minimizing the size of the generated
@@ -2717,7 +2991,7 @@ int main(int argc, char* argv[])
     transport::task_manager<> mgr(argc, argv);
 
     // set up an instance of the double quadratic model
-    std::shared_ptr< transport::dquad_mpi<> > model = mgr.create_model< transport::dquad_mpi<> >();
+    auto model = mgr.create_model< transport::dquad_mpi<> >();
 
     // hand off control to the task manager
     mgr.process();
@@ -2944,7 +3218,7 @@ described above. A suitable script is:
     CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
     PROJECT(dquad)
 
-    SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport-packages/share/cmake/")
+    SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport201701/share/cmake/")
 
     SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
     SET(CMAKE_C_FLAGS_RELEASE "-Ofast -DNDEBUG")
@@ -2980,7 +3254,7 @@ The steps involved are:
 
     \item The line
     \begin{minted}{cmake}
-        SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport-packages/share/cmake/")
+        SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport201701/share/cmake/")
     \end{minted}
     should be adjusted to point to the \file{share/cmake} directory
     installed under your installation prefix
@@ -5331,7 +5605,7 @@ objects used in~\S\ref{sec:add-integration-task}.
     Generally, increasing the number of e-folds of massless evolution
     will improve {\CppTransport}'s estimate of the correlation functions
     at horizon exit.
-    The accuracy is these estimates is the principal factor determining accuracy
+    The accuracy of these estimates is the principal factor determining accuracy
     of the evolution in the superhorizon regime.
     Unfortunately, subhorizon evolution is very expensive.
     In this phase the individual wavefunctions oscillate with exponentially
@@ -5363,7 +5637,7 @@ objects used in~\S\ref{sec:add-integration-task}.
     a very large number of e-folds of massless evolution.
     Often this makes the corresponding integrations impracticably expensive.
 
-    The alternative is adaptive initial conditions.
+    The alternative is to use {\semibold adaptive initial conditions}.
     Using adaptive initial conditions, {\CppTransport} will compute a customized
     initial condition a fixed number of e-folds before the massless point
     for the correlation function in question.
