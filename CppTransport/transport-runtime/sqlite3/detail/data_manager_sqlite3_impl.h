@@ -39,20 +39,30 @@ namespace transport
     template <typename number>
     data_manager_sqlite3<number>::~data_manager_sqlite3()
       {
-        // close any remaining open containers
+        // close any remaining open containers, reporting any failures
+        bool fail = false;
 
+        error_handler msg(this->env, this->args);
+        
         for(sqlite3* h : this->open_containers)
           {
             int status = sqlite3_close(h);
 
             if(status != SQLITE_OK)
               {
-                if(status == SQLITE_BUSY) throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATACTR_NOT_CLOSED);
+                if(status == SQLITE_BUSY)
+                  {
+                    if(!fail)
+                      {
+                        fail = true;
+                        msg(CPPTRANSPORT_DATACTR_NOT_CLOSED);
+                      }
+                  }
                 else
                   {
-                    std::ostringstream msg;
-                    msg << CPPTRANSPORT_DATACTR_CLOSE << status << ")";
-                    throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
+                    std::ostringstream report_msg;
+                    report_msg << CPPTRANSPORT_DATACTR_CLOSE << status << ")";
+                    msg(report_msg.str());
                   }
               }
           }
