@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     transport::task_manager<> mgr(argc, argv);
 
     // set up an instance of the double quadratic model
-    std::shared_ptr< transport::dquad_mpi<> > model = mgr.create_model< transport::dquad_mpi<> >();
+    auto model = mgr.create_model< transport::dquad_mpi<> >();
 
     // register task writer
     mgr.add_generator([=](transport::repository<>& repo) -> void { write_tasks(repo, model.get()); });
