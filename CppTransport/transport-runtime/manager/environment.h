@@ -294,7 +294,7 @@ namespace transport
         sendmail_available(false)
       {
         // add $PATH to object finder
-        find.add_environment_variable("PATH");
+        find.add_environment_variable(CPPTRANSPORT_SHELL_PATH_ENV);
         
         // detect user id
         this->detect_userid();

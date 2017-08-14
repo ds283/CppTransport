@@ -78,6 +78,7 @@ namespace transport
 
     constexpr auto         CPPTRANSPORT_HOME_ENV                           = "HOME";
     constexpr auto         CPPTRANSPORT_PATH_ENV                           = "CPPTRANSPORT_PATH";
+    constexpr auto         CPPTRANSPORT_SHELL_PATH_ENV                     = "PATH";
     constexpr auto         CPPTRANSPORT_RUNTIME_CONFIG_FILE                = ".cpptransport_runtime";
     constexpr auto         CPPTRANSPORT_HTML_RESOURCE_DIRECTORY            = "HTML";
 
