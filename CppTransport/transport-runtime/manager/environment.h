@@ -30,9 +30,9 @@
 
 #include <fstream>
 #include <string>
+#include <cstdlib>
 
 #include <sys/ioctl.h>
-#include <unistd.h>
 #include <pwd.h>
 
 #include "transport-runtime/defaults.h"
@@ -586,7 +586,7 @@ namespace transport
 
         // source user's .profile script if it exists
         // TODO: Platform introspection
-        const char* user_home = getenv("HOME");
+        const char* user_home = std::getenv("HOME");
         if(user_home != nullptr)
           {
             boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
@@ -610,7 +610,7 @@ namespace transport
 
         // source user's .profile script if it exists
         // TODO: Platform introspection
-        const char* user_home = getenv("HOME");
+        const char* user_home = std::getenv("HOME");
         if(user_home != nullptr)
           {
             boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
@@ -640,7 +640,7 @@ namespace transport
         
         // source user's .profile script if it exists
         // TODO: Platform introspection
-        const char* user_home = getenv("HOME");
+        const char* user_home = std::getenv("HOME");
         if(user_home != nullptr)
           {
             boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
