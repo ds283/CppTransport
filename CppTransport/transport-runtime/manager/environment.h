@@ -370,7 +370,7 @@ namespace transport
       {
         // TODO: Platform introspection
         // determine if terminal supports colour output
-        char* term_type_cstr = std::getenv("TERM");
+        char* term_type_cstr = std::getenv(CPPTRANSPORT_TERM_ENV);
 
         if(term_type_cstr == nullptr)
           {
