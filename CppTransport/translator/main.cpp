@@ -1,9 +1,26 @@
 //
-//  main.cpp
-//  CppTransport
+// Created by David Seery on 12/06/2013.
+// --@@
+// Copyright (c) 2016 University of Sussex. All rights reserved.
 //
-//  Created by David Seery on 12/06/2013.
-//  Copyright (c) 2016 University of Sussex. All rights reserved.
+// This file is part of the CppTransport platform.
+//
+// CppTransport is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License, or
+// (at your option) any later version.
+//
+// CppTransport is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CppTransport.  If not, see <http://www.gnu.org/licenses/>.
+//
+// @license: GPL-2
+// @contributor: David Seery <D.Seery@sussex.ac.uk>
+// --@@
 //
 
 
@@ -49,8 +66,8 @@ int main(int argc, const char *argv[])
     // this should consist of the current working directory, but also
     // any include paths set using environment variables
     finder path;
-    if(args.search_environment()) path.add(env.search_paths());
-    path.add(args.search_paths());
+    path.add_cwd().add(args.search_paths());
+    if(args.search_environment()) path.add_environment_variable(CPPTRANSPORT_PATH_ENV, CPPTRANSPORT_TEMPLATE_PATH);
     
     // set up version policy registry
     version_policy policy;
@@ -62,13 +79,13 @@ int main(int argc, const char *argv[])
     bool errors = false;
 
     const auto& input_files = args.input_files();
-    for(const boost::filesystem::path& f : input_files)
+    for(const auto& f : input_files)
       {
         translation_unit unit(f, path, args, env, policy);
         replacements += unit.apply();
         ++files_processed;
 
-        errors = errors | unit.fail();
+        errors = errors || unit.fail();
       }
 
     timer.stop();
@@ -76,10 +93,10 @@ int main(int argc, const char *argv[])
     // issue summary statistics
 		if(args.verbose())
 			{
-		    std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A
-			    << " " << files_processed << " "
-			    << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
-			    << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << '\n';
+        std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A
+                  << " " << files_processed << " "
+                  << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
+                  << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << '\n';
 			}
 
     if(errors) return (EXIT_FAILURE);

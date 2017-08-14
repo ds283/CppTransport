@@ -38,7 +38,6 @@ local_environment::local_environment()
   {
     this->set_terminal_colour_support();
     this->set_home_directory();
-    this->set_template_search_paths();
   }
 
 
@@ -72,31 +71,6 @@ void local_environment::set_home_directory()
 
     std::string home_path(home_cstr);
     this->home = boost::filesystem::path(home_path);
-  }
-
-
-void local_environment::set_template_search_paths()
-  {
-    char* resource_path_cstr = std::getenv(CPPTRANSPORT_PATH_ENV);
-
-    if(resource_path_cstr == nullptr) return;
-
-    std::string template_paths(resource_path_cstr);
-
-    // parse environment variable into a : separated list of directories
-    for(boost::algorithm::split_iterator<std::string::iterator> t = boost::algorithm::make_split_iterator(template_paths, boost::algorithm::first_finder(":", boost::algorithm::is_equal()));
-        t != boost::algorithm::split_iterator<std::string::iterator>(); ++t)
-      {
-        std::string path = boost::copy_range<std::string>(*t);
-
-        // add 'templates' directory to each root
-        boost::filesystem::path rpath(path);
-
-        // if path is not absolute, make relative to current working directory
-        if(!rpath.is_absolute()) rpath = boost::filesystem::absolute(rpath);
-
-        this->template_search.emplace_back(rpath / CPPTRANSPORT_TEMPLATE_PATH);
-      }
   }
 
 
