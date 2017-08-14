@@ -30,17 +30,19 @@
 
 #include <fstream>
 #include <string>
+#include <cstdlib>
 
 #include <sys/ioctl.h>
-#include <unistd.h>
 #include <pwd.h>
 
 #include "transport-runtime/defaults.h"
+#include "transport-runtime/utilities/finder.h"
 #include "transport-runtime/utilities/to_printable.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/optional.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/lexical_cast.hpp"
 
 
 namespace transport
@@ -171,7 +173,7 @@ namespace transport
         bool has_colour_terminal_support() const { return this->colour_output; }
 
         //! determine current terminal width
-        unsigned int detect_terminal_width() const;
+        unsigned int detect_terminal_width(unsigned int default_width) const;
 
       protected:
 
@@ -199,6 +201,11 @@ namespace transport
         // INTERNAL DATA
 
       protected:
+        
+        // DELGATES
+        
+        //! filesystem object finder
+        finder find;
 
         // USERS AND AUTHENTICATION
 
@@ -207,7 +214,8 @@ namespace transport
 
         // ENVIRONMENT PATHS
 
-        //! user home directory
+        
+        //! user home directory, if detected
         boost::optional< boost::filesystem::path > home;
 
         //! CppTransport resource installation paths
@@ -285,6 +293,9 @@ namespace transport
         dot_available(false),
         sendmail_available(false)
       {
+        // add $PATH to object finder
+        find.add_environment_variable("PATH");
+        
         // detect user id
         this->detect_userid();
 
@@ -369,7 +380,8 @@ namespace transport
 
         std::string term_type(term_type_cstr);
 
-        this->colour_output = term_type == "xterm"
+        this->colour_output =
+             term_type == "xterm"
           || term_type == "xterm-color"
           || term_type == "xterm-256color"
           || term_type == "screen"
@@ -381,96 +393,51 @@ namespace transport
     void local_environment::detect_graphviz()
       {
         // TODO: platform introspection
-        FILE* f = popen("which dot", "r");
+        auto dot = this->find.find("dot");
 
-        if(!f)
+        if(!dot)
           {
             this->dot_available = false;
             this->dot_location = CPPTRANSPORT_DEFAULT_DOT_PATH;
+            return;
           }
-        else
-          {
-            char buffer[1024];
-            char* line = fgets(buffer, sizeof(buffer), f);
-            pclose(f);
 
-            if(line != nullptr)
-              {
-                this->dot_available = true;
-                std::string temp = std::string(line);
-                boost::algorithm::trim_right(temp);
-                this->dot_location = temp;
-              }
-            else
-              {
-                this->dot_available = false;
-                this->dot_location = CPPTRANSPORT_DEFAULT_DOT_PATH;
-              }
-          }
+        this->dot_available = true;
+        this->dot_location = *dot;
       }
     
     
     void local_environment::detect_sendmail()
       {
         // TODO: platform introspection
-        FILE* f = popen("which CppTransport-sendmail", "r");
+        auto sendmail = this->find.find("CppTransport-sendmail");
         
-        if(!f)
+        if(!sendmail)
           {
             this->sendmail_available = false;
             this->sendmail_location = CPPTRANSPORT_DEFAULT_SENDMAIL_PATH;
+            return;
           }
-        else
-          {
-            char buffer[1024];
-            char* line = fgets(buffer, sizeof(buffer), f);
-            pclose(f);
-    
-            if(line != nullptr)
-              {
-                this->sendmail_available = true;
-                std::string temp = std::string(line);
-                boost::algorithm::trim_right(temp);
-                this->sendmail_location = temp;
-              }
-            else
-              {
-                this->sendmail_available = false;
-                this->sendmail_location = CPPTRANSPORT_DEFAULT_SENDMAIL_PATH;
-              }
-          }
+        
+        this->sendmail_available = true;
+        this->sendmail_location = *sendmail;
       }
 
 
     void local_environment::detect_python()
       {
         // TODO: Platform introspection
-        FILE* f = popen("which python", "r");
+        auto python = this->find.find("python");
 
-        if(!f)
+        if(!python)
           {
             this->python_available = false;
             this->python_location = CPPTRANSPORT_DEFAULT_PYTHON_PATH;
+            return;
           }
-        else
-          {
-            char buffer[1024];
-            char* line = fgets(buffer, sizeof(buffer), f);
-            pclose(f);
-
-            if(line != nullptr)
-              {
-                this->python_available = true;
-                std::string temp = std::string(line);
-                boost::algorithm::trim_right(temp);
-                this->python_location = temp;
-              }
-            else
-              {
-                this->python_available = false;
-                this->python_location = CPPTRANSPORT_DEFAULT_PYTHON_PATH;
-              }
-          }
+        
+        this->python_available = true;
+        this->python_location = *python;
 
         this->python_cached = true;
       }
@@ -577,6 +544,7 @@ namespace transport
 
     int local_environment::execute_python(const boost::filesystem::path& script)
       {
+        // python detection is lazy; we don't look for it until we need it
         if(!this->python_cached) this->detect_python();
         
         if(!this->python_available) return EXIT_FAILURE;
@@ -585,10 +553,10 @@ namespace transport
 
         // source user's .profile script if it exists
         // TODO: Platform introspection
-        const char* user_home = getenv("HOME");
+        const char* user_home = std::getenv("HOME");
         if(user_home != nullptr)
           {
-            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
             if(boost::filesystem::exists(user_profile))
               {
                 // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
@@ -609,10 +577,10 @@ namespace transport
 
         // source user's .profile script if it exists
         // TODO: Platform introspection
-        const char* user_home = getenv("HOME");
+        const char* user_home = std::getenv("HOME");
         if(user_home != nullptr)
           {
-            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
             if(boost::filesystem::exists(user_profile))
               {
                 // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
@@ -639,10 +607,10 @@ namespace transport
         
         // source user's .profile script if it exists
         // TODO: Platform introspection
-        const char* user_home = getenv("HOME");
+        const char* user_home = std::getenv("HOME");
         if(user_home != nullptr)
           {
-            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
             if(boost::filesystem::exists(user_profile))
               {
                 // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
@@ -671,14 +639,34 @@ namespace transport
       }
 
 
-    unsigned int local_environment::detect_terminal_width() const
+    unsigned int local_environment::detect_terminal_width(unsigned int default_width) const
       {
         // TODO: Platform introspection
-        // Read terminal display width (assuming the output *is* a terminal)
+        
+        // Attempt to read terminal display width (assuming the output *is* a terminal)
         struct winsize w;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
-        return(w.ws_col > 0 ? w.ws_col : CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH);
+        if(w.ws_col > 0) return w.ws_col;
+        
+        // fall back on trying to read $COLUMNS
+        const char* columns = std::getenv("COLUMNS");
+        if(columns != nullptr)
+          {
+            std::string col_str{columns};
+            unsigned int n_col = 0;
+            try
+              {
+                n_col = boost::lexical_cast<unsigned int>(col_str);
+              }
+            catch(boost::bad_lexical_cast& xe)
+              {
+              }
+
+            if(n_col > 0) return n_col;
+          }
+        
+        return default_width;
       }
     
     

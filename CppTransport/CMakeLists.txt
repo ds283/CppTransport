@@ -1266,6 +1266,7 @@ SET(TRANSPORT_RUNTIME_TRANSACTIONS_FILES
 
 SET(TRANSPORT_RUNTIME_UTILITIES_FILES
   transport-runtime/utilities/asciitable.h
+  transport-runtime/utilities/finder.h
   transport-runtime/utilities/formatter.h
   transport-runtime/utilities/host_information.h
   transport-runtime/utilities/latex_output.h

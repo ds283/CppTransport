@@ -105,6 +105,9 @@
 #define CPPTRANSPORT_SWITCH_NO_COLOR          "no-color"
 #define CPPTRANSPORT_HELP_NO_COLOR            "disable colourized output"
 
+#define CPPTRANSPORT_SWITCH_WIDTH             "width"
+#define CPPTRANSPORT_HELP_WIDTH               "specify default terminal width"
+
 #define CPPTRANSPORT_SWITCH_PLOT_STYLE        "plot-style,p"
 #define CPPTRANSPORT_SWITCH_PLOT_STYLE_LONG   "plot-style"
 #define CPPTRANSPORT_HELP_PLOT_STYLE          "set plotting style"

@@ -59,10 +59,7 @@ class local_environment
     // ENVIRONMENT PATHS
 
   public:
-
-    //! get template search paths specified via environment variables
-    const std::list< boost::filesystem::path >& search_paths() const { return(this->template_search); }
-
+    
     //! get path to config file, if it exists
     boost::optional< boost::filesystem::path > config_file_path() const;
 
@@ -76,11 +73,8 @@ class local_environment
 
     //! detect home directory
     void set_home_directory();
-
-    //! detect template search paths
-    void set_template_search_paths();
-
-
+    
+    
     // INTERNAL DATA
 
   private:
@@ -95,10 +89,7 @@ class local_environment
 
     //! user home directory
     boost::optional< boost::filesystem::path > home;
-
-    //! template search path
-    std::list<boost::filesystem::path> template_search;
-
+    
   };
 
 

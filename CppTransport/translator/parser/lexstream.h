@@ -236,15 +236,16 @@ bool lexstream<Keywords, Characters>::state()
 template <typename Keywords, typename Characters>
 bool lexstream<Keywords, Characters>::parse(const boost::filesystem::path& file)
   {
-    boost::filesystem::path path;
-    bool found = this->data_payload.get_finder().fqpn(file, path);
+    boost::optional< boost::filesystem::path > path;
+    
+    path = this->data_payload.get_finder().find(file);
 
-    if(!found) return false;
+    if(!path) return false;
 
     // push parent directory into search paths
-    if(path.has_parent_path())
+    if(path->has_parent_path())
       {
-        this->data_payload.get_finder().add(path.parent_path());
+        this->data_payload.get_finder().add(path->parent_path());
       }
 
     // the lexfile object responsible for reading in a file persists only within this block,
@@ -252,9 +253,9 @@ bool lexstream<Keywords, Characters>::parse(const boost::filesystem::path& file)
     // the lexemes which are generated during lexicalization
     // then inherit ownership of these lines, so even though the
     // lexfile object itself is destroyed we are not left with dangling pointers
-    lexfile input(path, this->stack, this->data_payload.get_max_lines());
+    lexfile input(*path, this->stack, this->data_payload.get_max_lines());
 
-    this->stack.push(path);
+    this->stack.push(*path);
     this->lexicalize(input);
     this->stack.pop();
 

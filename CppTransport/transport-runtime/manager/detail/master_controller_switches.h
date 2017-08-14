@@ -109,7 +109,7 @@ namespace transport
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
         
-        unsigned int width = this->local_env.detect_terminal_width();
+        unsigned int width = this->local_env.detect_terminal_width(this->arg_cache.get_default_terminal_width());
         
         // set up Boost::program_options descriptors for command-line arguments
         boost::program_options::options_description generic("Generic options", width);
@@ -124,6 +124,7 @@ namespace transport
         configuration.add_options()
           (CPPTRANSPORT_SWITCH_VERBOSE, CPPTRANSPORT_HELP_VERBOSE)
           (CPPTRANSPORT_SWITCH_NO_COLOUR, CPPTRANSPORT_HELP_NO_COLOUR)
+          (CPPTRANSPORT_SWITCH_WIDTH, boost::program_options::value<int>(), CPPTRANSPORT_HELP_WIDTH)
           (CPPTRANSPORT_SWITCH_INCLUDE, boost::program_options::value<std::vector<std::string> >()->composing(), CPPTRANSPORT_HELP_INCLUDE)
           (CPPTRANSPORT_SWITCH_REPO, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_REPO)
           (CPPTRANSPORT_SWITCH_CAPACITY, boost::program_options::value<long int>(), CPPTRANSPORT_HELP_CAPACITY)
@@ -402,12 +403,16 @@ namespace transport
           }
         
         if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
-          {
             this->arg_cache.set_model_list(true);
-          }
         
         if(option_map.count(CPPTRANSPORT_SWITCH_NO_COLOUR) || option_map.count(CPPTRANSPORT_SWITCH_NO_COLOR))
           this->arg_cache.set_colour_output(false);
+        
+        if(option_map.count(CPPTRANSPORT_SWITCH_WIDTH))
+          {
+            int w = option_map[CPPTRANSPORT_SWITCH_WIDTH].as<int>();
+            if(w > 0) this->arg_cache.set_default_terminal_width(w);
+          }
       }
     
     

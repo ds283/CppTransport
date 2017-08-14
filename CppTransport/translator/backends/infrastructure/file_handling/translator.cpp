@@ -143,25 +143,23 @@ unsigned int translator::translate(const std::string& in, const error_context& c
 
 unsigned int translator::translate(const std::string& in, const error_context& ctx, buffer& buf, process_type type, filter_function* filter)
   {
-    unsigned int rval = 0;
-    boost::filesystem::path template_in;
-
+    boost::optional< boost::filesystem::path > template_in;
     finder& path = this->data_payload.get_finder();
 
 		// try to find a template corresponding to the input filename
-    if(path.fqpn(in + ".h", template_in) || path.fqpn(in, template_in))   // leaves fully-qualified path-name in 'template_in', if exists; short-circuit evaluation means value not overwritten
-      {
-        rval += this->process(template_in, buf, type, filter);
-      }
-    else
-      {
-        std::ostringstream msg;
-        msg << ERROR_MISSING_TEMPLATE << " '" << in << ".h'";
+    
+    template_in = path.find(in + ".h");
+    if(template_in) return this->process(*template_in, buf, type, filter);
+    
+    template_in = path.find(in);
+    if(template_in) return this->process(*template_in, buf, type, filter);
+    
+    std::ostringstream msg;
+    msg << ERROR_MISSING_TEMPLATE << " '" << in << ".h'";
 
-        ctx.error(msg.str());
-      }
-
-    return(rval);
+    ctx.error(msg.str());
+    
+    return 0;
   }
 
 
