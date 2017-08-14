@@ -104,7 +104,8 @@ namespace transport
           protected:
 
             //! compute number of columns and column width for current terminal
-            void compute_columns(unsigned int& columns_per_batch, unsigned int& column_width, print_options opts);
+            //! returns std::pair representing (number of columns per batch, width of column)
+            std::pair<unsigned int, unsigned int> compute_columns(print_options opts);
 
 
             // INTERNAL DATA
@@ -144,9 +145,12 @@ namespace transport
           {
             unsigned int columns_per_batch = 1;
             unsigned int column_width = 0;
-
+            
             // if tiling, compute number of columns and column width
-            if(tile) this->compute_columns(columns_per_batch, column_width, opts);
+            if(this->tile)
+              {
+                std::tie(columns_per_batch, column_width) = this->compute_columns(opts);
+              }
 
             bool colour = this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
             if(opts == print_options::fixed_width) colour = false;    // assume fixed width means we don't know anything about the terminal's properties
@@ -161,9 +165,9 @@ namespace transport
 
             unsigned int current_column = 0;
             unsigned int printed_columns = 0;
-            const unsigned int total_columns = this->db.size();
+            const unsigned int total_columns = static_cast<unsigned int>(this->db.size());
 
-            for(const std::pair< std::string, std::string >& elt : this->db)
+            for(const auto& elt : this->db)
               {
                 if(colour) out << ColourCode(ANSI_colour::bold);
                 out << elt.first;
@@ -177,7 +181,7 @@ namespace transport
                 ++printed_columns;
                 if(this->tile && current_column < columns_per_batch && printed_columns < total_columns)
                   {
-                    out << std::left << std::setw(column_width - elt.first.length());
+                    out << std::left << std::setw(column_width - static_cast<unsigned int>(elt.first.length()));
                   }
 
                 // emit remainder of field, omitting spacing "  " between columns if we are the
@@ -206,38 +210,40 @@ namespace transport
           }
 
 
-        void key_value::compute_columns(unsigned int& columns_per_batch, unsigned int& column_width, print_options opts)
+        std::pair<unsigned int, unsigned int> key_value::compute_columns(print_options opts)
           {
-            unsigned int width = (opts == print_options::fixed_width ? this->fix_width : this->env.detect_terminal_width());
+            size_t width =
+              (opts == print_options::fixed_width ? this->fix_width
+                                                  : this->env.detect_terminal_width(this->arg_cache.get_default_terminal_width()));
 
             // set up default return values; these will be overwritten later if we use
             // a multicolumn configuration
-            columns_per_batch = 1;
-            column_width = width;
+            unsigned int columns_per_batch = 1;
+            unsigned int column_width = static_cast<unsigned int>(width);
 
             // no need to do any work if no key-value pairs
-            if(this->db.empty()) return;
+            if(this->db.empty()) return std::make_pair(columns_per_batch, column_width);
 
             unsigned int max_width = 1;
-            for(const std::pair< std::string, std::string >& elt : this->db)
+            for(const auto& elt : this->db)
               {
-                unsigned int w = elt.first.length() + elt.second.length() + 2 + 2; // +2 for ': ', +2 for space between columns
-
-                if(w > max_width) max_width = w;
+                size_t w = elt.first.length() + elt.second.length() + 2 + 2; // +2 for ': ', +2 for space between columns
+                
+                if(w > max_width) max_width = static_cast<unsigned int>(w);
               }
 
             // can we fit more than one column on the terminal? if not, just return
-            if(max_width >= width/2) return;
+            if(max_width >= width/2) return std::make_pair(columns_per_batch, column_width);
 
-            columns_per_batch = width / max_width;
+            columns_per_batch = static_cast<unsigned int>(width) / max_width;
             column_width = max_width;
+            
+            return std::make_pair(columns_per_batch, column_width);
           }
 
 
       }
 
   }
-
-
 
 #endif //CPPTRANSPORT_REPORTING_KEY_VALUE_H

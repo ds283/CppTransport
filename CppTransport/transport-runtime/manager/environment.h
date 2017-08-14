@@ -41,6 +41,7 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/optional.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/lexical_cast.hpp"
 
 
 namespace transport
@@ -171,7 +172,7 @@ namespace transport
         bool has_colour_terminal_support() const { return this->colour_output; }
 
         //! determine current terminal width
-        unsigned int detect_terminal_width() const;
+        unsigned int detect_terminal_width(unsigned int default_width) const;
 
       protected:
 
@@ -588,7 +589,7 @@ namespace transport
         const char* user_home = getenv("HOME");
         if(user_home != nullptr)
           {
-            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
             if(boost::filesystem::exists(user_profile))
               {
                 // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
@@ -612,7 +613,7 @@ namespace transport
         const char* user_home = getenv("HOME");
         if(user_home != nullptr)
           {
-            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
             if(boost::filesystem::exists(user_profile))
               {
                 // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
@@ -642,7 +643,7 @@ namespace transport
         const char* user_home = getenv("HOME");
         if(user_home != nullptr)
           {
-            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
             if(boost::filesystem::exists(user_profile))
               {
                 // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
@@ -671,14 +672,34 @@ namespace transport
       }
 
 
-    unsigned int local_environment::detect_terminal_width() const
+    unsigned int local_environment::detect_terminal_width(unsigned int default_width) const
       {
         // TODO: Platform introspection
-        // Read terminal display width (assuming the output *is* a terminal)
+        
+        // Attempt to read terminal display width (assuming the output *is* a terminal)
         struct winsize w;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
-        return(w.ws_col > 0 ? w.ws_col : CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH);
+        if(w.ws_col > 0) return w.ws_col;
+        
+        // fall back on trying to read $COLUMNS
+        const char* columns = std::getenv("COLUMNS");
+        if(columns != nullptr)
+          {
+            std::string col_str{columns};
+            unsigned int n_col = 0;
+            try
+              {
+                n_col = boost::lexical_cast<unsigned int>(col_str);
+              }
+            catch(boost::bad_lexical_cast& xe)
+              {
+              }
+
+            if(n_col > 0) return n_col;
+          }
+        
+        return default_width;
       }
     
     

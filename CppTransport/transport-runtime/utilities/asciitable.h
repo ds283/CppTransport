@@ -180,7 +180,7 @@ namespace transport
             env(e),
             arg_cache(c),
             precision(DEFAULT_ASCIITABLE_PRECISION),
-	          display_width(e.detect_terminal_width()),
+	          display_width(e.detect_terminal_width(c.get_default_terminal_width())),
 	          wrap_width(DEFAULT_ASCIITABLE_WRAP_WIDTH),
             terminal_output(false)
 	        {

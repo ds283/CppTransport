@@ -101,6 +101,12 @@ namespace transport
 
         //! Set colourized output status
         void set_colour_output(bool g)                            { this->colour_output = g; }
+        
+        //! Get default terminal width
+        unsigned int get_default_terminal_width() const           { return this->terminal_width; }
+        
+        //! Set default terminal width
+        void set_default_terminal_width(unsigned int w)           { this->terminal_width = w; }
 
         //! Get network mode
         bool get_network_mode() const                             { return(this->network_mode); }
@@ -307,6 +313,9 @@ namespace transport
 
         //! colour output?
         bool colour_output;
+        
+        //! default terminal width
+        unsigned int terminal_width;
 
         //! network mode?
         bool network_mode;
@@ -400,6 +409,7 @@ namespace transport
         upgrade(false),
         create(false),
         colour_output(true),
+        terminal_width(CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH),
         network_mode(false),
         commit_failed(true),
         batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
