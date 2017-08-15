@@ -2,7 +2,7 @@
 
 # Overview
 
-**CppTransport** is an automated platform that can be used to solve for the 2- and 3-point functions of the perturbations produced during an inflationary epoch in the very early universe. The present version can accommodate models with an arbitrary  field-space metric and arbitrary potential, including models with canonical kinetic terms as a special case. It does not yet support more general models where the Lagrangian is an arbitrary function of the kinetic energies and field values.
+**CppTransport** is an automated platform that can be used to solve for the 2- and 3-point functions of the perturbations produced during an inflationary epoch in the very early universe. The present version can accommodate models with an arbitrary  field-space metric and arbitrary potential, including models with canonical kinetic terms as a special case. It does not yet support more general models where the Lagrangian is an arbitrary function of the kinetic energies and field values. For example, the well-studied Dirac-Born-Infeld model is of this type.
 
 Future versions of **CppTransport** may include support for these generalizations. If you would like to contribute to this effort then any patches, corrections or enhancements are very welcome. The best way to start is to fork this repository and submit enhancements [via pull requests](https://guides.github.com/introduction/flow).
 
@@ -28,6 +28,21 @@ The current release of CppTransport is 2017.1 (X August 2017). This release can 
 * 2016.3 (31 August 2016) [Source code DOI:10.5281/zenodo.61237](http://dx.doi.org/10.5281/zenodo.61237) | [User guide DOI:10.5281/zenodo.61239](http://dx.doi.org/10.5281/zenodo.61239)
 * 2016.2 (3 August 2016) [Source code DOI:10.5281/zenodo.59403](http://dx.doi.org/10.5281/zenodo.59403) | [User guide DOI:10.5281/zenodo.59406](http://dx.doi.org/10.5281/zenodo.59406)
 * 2016.1 (26 July 2016) [Source code DOI:10.5281/zenodo.58710](http://dx.doi.org/10.5281/zenodo.58710) | [User guide DOI:10.5281/zenodo.58714](http://dx.doi.org/10.5281/zenodo.58714)
+
+# Upgrading repositories from 2016.3 and earlier
+
+Version 2017.1 introduces a [small change](https://github.com/ds283/CppTransport/commit/1a61ecc7d1003fff20b662648f709ce0e7bcf220) in the repository database. This is backwards compatible: it is generally possible to use repositories from <= 2016.3 with >= 2017.1, and vice-versa, *except* for generating HTML reports. In this case, **CppTransport** versions 2017.1 and above will produce an error:
+```
+SQLite error: no such column: cpu_brand
+```
+To fix this you should upgrade your repositories to the new format. As explained above, they will remain compatible with older versions of **CppTransport**. To upgrade, simply run a **CppTransport** with the `--upgrade` flag:
+```
+./dquad -v -r <repo name> --upgrade
+```
+This is a one-time operation; it does not need to be done again. If you enabled verbose output using `-v` then you will see a list of notifications when **CppTransport** finds a data container that requires conversion:
+```
+Upgrading data container '.../20160421T020324/data.sqlite'
+```
 
 # Licensing
 
