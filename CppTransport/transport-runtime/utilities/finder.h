@@ -62,7 +62,7 @@ namespace transport
         
         //! add a container of paths to the search list
         template <typename Container>
-        finder& add(const Container& plist);
+        finder& add(const Container& plist, const boost::filesystem::path tail = boost::filesystem::path{});
         
         //! add the current working directory to the list of search paths
         finder& add_cwd();
@@ -78,8 +78,7 @@ namespace transport
         
         // find fully-qualified path name corresponding to a given leafname;
         // if present, returns the FQPN, otherwise returns boost::none
-        boost::optional< boost::filesystem::path >
-        find(const boost::filesystem::path& leaf);
+        boost::optional< boost::filesystem::path > find(const boost::filesystem::path& leaf) const;
         
         
         // INTERNAL DATA
@@ -93,11 +92,12 @@ namespace transport
     
     
     template <typename Container>
-    finder& finder::add(const Container& plist)
+    finder& finder::add(const Container& plist, const boost::filesystem::path tail)
       {
         for(const auto& t : plist)
           {
-            this->add(t);
+            if(!tail.empty()) this->add(t / tail);
+            else this->add(t);
           }
         
         return *this;
@@ -115,7 +115,7 @@ namespace transport
       }
     
     
-    inline finder& finder::add_environment_variable(const std::string var, const boost::filesystem::path leaf)
+    inline finder& finder::add_environment_variable(const std::string var, const boost::filesystem::path tail)
       {
         // query value of environment variable
         char* resource_path_cstr = std::getenv(var.c_str());
@@ -132,13 +132,12 @@ namespace transport
           {
             std::string path = boost::copy_range<std::string>(*t);
             
-            // add 'templates' directory to each root
             boost::filesystem::path rpath(path);
             
             // if path is not absolute, make relative to current working directory
             if(!rpath.is_absolute()) rpath = boost::filesystem::absolute(rpath);
             
-            if(!leaf.empty()) this->add(rpath / leaf);
+            if(!tail.empty()) this->add(rpath / tail);
             else this->add(rpath);
           }
         
@@ -155,7 +154,7 @@ namespace transport
     
     
     inline boost::optional< boost::filesystem::path >
-    finder::find(const boost::filesystem::path& leaf)
+    finder::find(const boost::filesystem::path& leaf) const
       {
         if(leaf.is_absolute())
           {

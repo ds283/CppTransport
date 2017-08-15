@@ -49,7 +49,7 @@ finder& finder::add(boost::filesystem::path p)
   }
 
 
-finder& finder::add_environment_variable(const std::string var, const boost::filesystem::path leaf)
+finder& finder::add_environment_variable(const std::string var, const boost::filesystem::path tail)
   {
     // query value of environment variable
     char* resource_path_cstr = std::getenv(var.c_str());
@@ -66,13 +66,12 @@ finder& finder::add_environment_variable(const std::string var, const boost::fil
       {
         std::string path = boost::copy_range<std::string>(*t);
         
-        // add 'templates' directory to each root
         boost::filesystem::path rpath(path);
         
         // if path is not absolute, make relative to current working directory
         if(!rpath.is_absolute()) rpath = boost::filesystem::absolute(rpath);
         
-        if(!leaf.empty()) this->add(rpath / leaf);
+        if(!tail.empty()) this->add(rpath / tail);
         else this->add(rpath);
       }
     
@@ -89,7 +88,7 @@ finder& finder::add_cwd()
 
 
 boost::optional< boost::filesystem::path >
-finder::find(const boost::filesystem::path& leaf)
+finder::find(const boost::filesystem::path& leaf) const
   {
     if(leaf.is_absolute())
       {
