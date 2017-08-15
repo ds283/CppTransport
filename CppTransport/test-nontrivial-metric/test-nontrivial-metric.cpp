@@ -31,28 +31,19 @@
 //namespace std
 //  {
 //
-//    mpfr50 sqrt(const mpfr50& x) { return boost::multiprecision::sqrt(x); }
-//    mpfr50 log(const mpfr50& x) { return boost::multiprecision::log(x); }
-//    mpfr50 pow(const mpfr50& x, double y) { return boost::multiprecision::pow(x, y); }
-//    mpfr50 exp(const mpfr50& x) { return boost::multiprecision::exp(x); }
+//    using boost::multiprecision::sqrt;
+//    using boost::multiprecision::log;
+//    using boost::multiprecision::pow;
+//    using boost::multiprecision::exp;
 //
-//    mpfr50 max(const mpfr50& a, const mpfr50& b) { return (a < b) ? b : a; }
-//    mpfr50 abs(const mpfr50& x) { return boost::multiprecision::abs(x); }
-//
-//    mpfr50 sinh(const mpfr50& x) { return boost::multiprecision::sinh(x); }
-//    mpfr50 cosh(const mpfr50& x) { return boost::multiprecision::cosh(x); }
-//    mpfr50 tanh(const mpfr50& x) { return boost::multiprecision::tanh(x); }
+//    using boost::multiprecision::abs;
+//    using boost::multiprecision::sinh;
+//    using boost::multiprecision::cosh;
+//    using boost::multiprecision::tanh;
 //
 //    bool isnan(const mpfr50& x) { return boost::math::isnan(x); }
 //    bool isinf(const mpfr50& x) { return boost::math::isinf(x); }
-//
-//  }
-
-//namespace transport
-//  {
-//
-//    template <>
-//    std::string data_type_name<mpfr50>() { return std::string{"boost::multiprecision::mpfr_float_50 without expression templates"}; }
+//    mpfr50 max(const mpfr50& a, const mpfr50& b) { return (a < b) ? b : a; }
 //
 //  }
 
@@ -65,6 +56,14 @@
 
 using DataType = double;
 using StateType = std::vector<DataType>;
+
+//namespace transport
+//  {
+//
+//    template <>
+//    inline std::string data_type_name<mpfr50>() { return std::string{"boost::multiprecision::mpfr_float_50 without expression templates"}; }
+//
+//  }
 
 
 void write_tasks(transport::repository<DataType>& repo, transport::gelaton_mpi<DataType, StateType>* model)
