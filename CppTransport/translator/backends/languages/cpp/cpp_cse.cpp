@@ -53,7 +53,7 @@ namespace cpp
         {"asinh", "std::asinh"},
         {"acosh", "std::acosh"},
         {"atanh", "std::atanh"},
-        {"exp", "std:exp"},
+        {"exp", "std::exp"},
         {"log", "std::log"},
         {"pow", "std::pow"},
         {"tgamma", "std::tgamma"},
