@@ -58,7 +58,7 @@ class finder
 
     //! add a container of paths to the search list
     template <typename Container>
-    finder& add(const Container& plist);
+    finder& add(const Container& plist, const boost::filesystem::path tail = boost::filesystem::path{});
     
     //! add the current working directory to the list of search paths
     finder& add_cwd();
@@ -74,8 +74,7 @@ class finder
 
     // find fully-qualified path name corresponding to a given leafname;
     // if present, returns the FQPN, otherwise returns boost::none
-    boost::optional< boost::filesystem::path >
-    find(const boost::filesystem::path& leaf);
+    boost::optional< boost::filesystem::path > find(const boost::filesystem::path& leaf) const;
 
 
     // INTERNAL DATA
@@ -89,11 +88,12 @@ class finder
 
 
 template <typename Container>
-finder& finder::add(const Container& plist)
+finder& finder::add(const Container& plist, const boost::filesystem::path tail)
   {
     for(const auto& t : plist)
       {
-        this->add(t);
+        if(!tail.empty()) this->add(t / tail);
+        else this->add(t);
       }
     
     return *this;

@@ -249,8 +249,8 @@ namespace transport
             //! root directory for bundle
             boost::filesystem::path root;
 
-            //! list of paths to search for assets
-            std::list< boost::filesystem::path > search_paths;
+            //! asset finder
+            std::unique_ptr<finder> asset_find;
 
           };
 
@@ -264,7 +264,8 @@ namespace transport
             env(e),
             arg_cache(c),
             cache(rep),
-            root(r)
+            root(r),
+            asset_find(env.make_resource_finder(CPPTRANSPORT_HTML_RESOURCE_DIRECTORY))
           {
             // create root directory if it does not already exist, taking care to catch any exceptions which occur
             try
@@ -281,19 +282,9 @@ namespace transport
             // create writers for HTML, CSS and JavaScript files
             this->HTML = std::make_unique< HTML_writer >(r / CPPTRANSPORT_HTML_INDEX, repo.get_name());
             this->JavaScript = std::make_unique< JavaScript_writer >(r / CPPTRANSPORT_HTML_JAVASCRIPT);
-
-            // build list of search paths from environment and command line
-            const auto& rp = env.get_resource_paths();
-            for(const auto& p : rp)
-              {
-                search_paths.emplace_back(p / CPPTRANSPORT_HTML_RESOURCE_DIRECTORY);
-              }
-
-            const auto& sp = arg_cache.get_search_paths();
-            for(const auto& p : sp)
-              {
-                search_paths.emplace_back(p / CPPTRANSPORT_HTML_RESOURCE_DIRECTORY);
-              }
+            
+            // add explicitly-specified paths to asset finder
+            asset_find->add(arg_cache.get_search_paths(), CPPTRANSPORT_HTML_RESOURCE_DIRECTORY);
           }
 
 
@@ -407,11 +398,8 @@ namespace transport
         template <typename number>
         boost::filesystem::path HTML_report_bundle<number>::find_asset(boost::filesystem::path asset)
           {
-            for(const auto& p : this->search_paths)
-              {
-                boost::filesystem::path abs_path = p / asset;
-                if(boost::filesystem::exists(abs_path)) return abs_path;
-              }
+            auto p = this->asset_find->find(asset);
+            if(p) return *p;
 
             // if we arrive here, the asset was not found
             std::ostringstream msg;

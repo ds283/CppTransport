@@ -187,14 +187,14 @@ namespace transport
 
         //! get path to config file, if it exists
         boost::optional< boost::filesystem::path > config_file_path() const;
-
-        //! list of paths to search for resources/assets
-        //! may be empty if not paths have been specified
-        const std::list<boost::filesystem::path>& get_resource_paths() const;
-
+        
+        //! manufacture finder object used to search for resources/assets,
+        //! with optional tail relative to $CPPTRANSPORT_PATH
+        std::unique_ptr<finder> make_resource_finder(boost::filesystem::path tail = boost::filesystem::path{}) const;
+  
       protected:
 
-        //! detect home direcotry
+        //! detect home directory
         void detect_home();
 
 
@@ -207,21 +207,19 @@ namespace transport
         //! filesystem object finder
         finder find;
 
+        
         // USERS AND AUTHENTICATION
 
         //! userid
         std::string userid;
 
+        
         // ENVIRONMENT PATHS
-
         
         //! user home directory, if detected
         boost::optional< boost::filesystem::path > home;
-
-        //! CppTransport resource installation paths
-        std::list< boost::filesystem::path > resources;
-
-
+    
+    
         // GRAPHVIZ SUPPORT
 
         //! is dot available?
@@ -294,7 +292,7 @@ namespace transport
         sendmail_available(false)
       {
         // add $PATH to object finder
-        find.add_environment_variable("PATH");
+        find.add_environment_variable(CPPTRANSPORT_SHELL_PATH_ENV);
         
         // detect user id
         this->detect_userid();
@@ -308,7 +306,7 @@ namespace transport
         // detect Graphviz installation
         this->detect_graphviz();
         
-        // deteect sendmail
+        // detect our sendmail script
         this->detect_sendmail();
 
         // detection of Python support (Python interpreter, Matplotlib, style sheets, Seaborn, etc.) is
@@ -339,30 +337,6 @@ namespace transport
             std::string home_path(home_cstr);
             this->home = boost::filesystem::path(home_path);
           }
-
-        char* path_cstr = std::getenv(CPPTRANSPORT_PATH_ENV);
-
-        if(path_cstr != nullptr)
-          {
-            std::string resource_paths(path_cstr);
-
-            // parse environment variable into a : separated list of directories
-            for(boost::algorithm::split_iterator<std::string::iterator> t = boost::algorithm::make_split_iterator(resource_paths, boost::algorithm::first_finder(":", boost::algorithm::is_equal()));
-                t != boost::algorithm::split_iterator<std::string::iterator>(); ++t)
-              {
-                std::string path = boost::copy_range<std::string>(*t);
-
-                boost::filesystem::path p = path;
-
-                // if path is not absolute, make relative to current working directory
-                if(!p.is_absolute())
-                  {
-                    p = boost::filesystem::absolute(p);
-                  }
-
-                this->resources.emplace_back(p);
-              }
-          }
       }
 
 
@@ -370,7 +344,7 @@ namespace transport
       {
         // TODO: Platform introspection
         // determine if terminal supports colour output
-        char* term_type_cstr = std::getenv("TERM");
+        char* term_type_cstr = std::getenv(CPPTRANSPORT_TERM_ENV);
 
         if(term_type_cstr == nullptr)
           {
@@ -393,7 +367,7 @@ namespace transport
     void local_environment::detect_graphviz()
       {
         // TODO: platform introspection
-        auto dot = this->find.find("dot");
+        auto dot = this->find.find(CPPTRANSPORT_DOT_EXECUTABLE);
 
         if(!dot)
           {
@@ -410,7 +384,7 @@ namespace transport
     void local_environment::detect_sendmail()
       {
         // TODO: platform introspection
-        auto sendmail = this->find.find("CppTransport-sendmail");
+        auto sendmail = this->find.find(CPPTRANSPORT_SENDMAIL_EXECUTABLE);
         
         if(!sendmail)
           {
@@ -427,7 +401,7 @@ namespace transport
     void local_environment::detect_python()
       {
         // TODO: Platform introspection
-        auto python = this->find.find("python");
+        auto python = this->find.find(CPPTRANSPORT_PYTHON_EXECUTABLE);
 
         if(!python)
           {
@@ -540,6 +514,28 @@ namespace transport
 
         this->seaborn_cached = true;
       }
+    
+    
+    inline boost::optional< std::string >
+    source_profile()
+      {
+        // TODO: Platform introspection
+        const char* user_home = std::getenv(CPPTRANSPORT_HOME_ENV);
+        if(user_home == nullptr) return boost::none;
+
+        std::ostringstream command;
+        
+        auto user_profile = boost::filesystem::path{std::string{user_home}} /
+          boost::filesystem::path{std::string{CPPTRANSPORT_PROFILE_CONFIG_FILE}};
+
+        if(boost::filesystem::exists(user_profile))
+          {
+            // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
+            command << ". " << user_profile.string() << "; ";
+          }
+        
+        return command.str();
+      }
 
 
     int local_environment::execute_python(const boost::filesystem::path& script)
@@ -552,17 +548,8 @@ namespace transport
         std::ostringstream command;
 
         // source user's .profile script if it exists
-        // TODO: Platform introspection
-        const char* user_home = std::getenv("HOME");
-        if(user_home != nullptr)
-          {
-            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
-            if(boost::filesystem::exists(user_profile))
-              {
-                // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
-                command << ". " << user_profile.string() << "; ";
-              }
-          }
+        auto src_cmd = source_profile();
+        if(src_cmd) command << *src_cmd;
         
         command << this->python_location.string() << " \"" << script.string() << "\" > /dev/null 2>&1";
         return std::system(command.str().c_str());
@@ -574,19 +561,10 @@ namespace transport
         if(!this->dot_available) return EXIT_FAILURE;
 
         std::ostringstream command;
-
+    
         // source user's .profile script if it exists
-        // TODO: Platform introspection
-        const char* user_home = std::getenv("HOME");
-        if(user_home != nullptr)
-          {
-            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
-            if(boost::filesystem::exists(user_profile))
-              {
-                // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
-                command << ". " << user_profile.string() << "; ";
-              }
-          }
+        auto src_cmd = source_profile();
+        if(src_cmd) command << *src_cmd;
 
         command << this->dot_location.string() << " -T" << format << " \"" << script.string() << "\" -o \"" << output.string() << "\" > /dev/null 2>&1";
         return std::system(command.str().c_str());
@@ -604,19 +582,10 @@ namespace transport
         std::ofstream outf(body_file.string(), std::ios_base::out | std::ios_base::trunc);
         outf << body;
         outf.close();
-        
+    
         // source user's .profile script if it exists
-        // TODO: Platform introspection
-        const char* user_home = std::getenv("HOME");
-        if(user_home != nullptr)
-          {
-            boost::filesystem::path user_profile = boost::filesystem::path{std::string{user_home}} / boost::filesystem::path{std::string{".profile"}};
-            if(boost::filesystem::exists(user_profile))
-              {
-                // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
-                command << ". " << user_profile.string() << "; ";
-              }
-          }
+        auto src_cmd = source_profile();
+        if(src_cmd) command << *src_cmd;
 
         command << this->sendmail_location << " --body " << body_file.string() << " --rcpt " << to_printable(to) << " > /dev/null 2>&1";
         return std::system(command.str().c_str());
@@ -631,11 +600,15 @@ namespace transport
 
         return config_path / CPPTRANSPORT_RUNTIME_CONFIG_FILE;
       }
-
-
-    const std::list<boost::filesystem::path>& local_environment::get_resource_paths() const
+    
+    
+    std::unique_ptr<finder> local_environment::make_resource_finder(boost::filesystem::path tail) const
       {
-        return this->resources;
+        auto f = std::make_unique<finder>();
+        
+        f->add_environment_variable(CPPTRANSPORT_PATH_ENV, std::move(tail));
+        
+        return f;
       }
 
 
@@ -650,7 +623,7 @@ namespace transport
         if(w.ws_col > 0) return w.ws_col;
         
         // fall back on trying to read $COLUMNS
-        const char* columns = std::getenv("COLUMNS");
+        const char* columns = std::getenv(CPPTRANSPORT_COLUMNS_ENV);
         if(columns != nullptr)
           {
             std::string col_str{columns};
