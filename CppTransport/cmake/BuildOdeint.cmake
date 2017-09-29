@@ -9,8 +9,8 @@ FUNCTION(BUILD_ODEINT BUILD_DIR)
 
   EXTERNALPROJECT_ADD(
     odeint-v2
-    GIT_REPOSITORY https://github.com/ds283/odeint-v2.git
-    GIT_TAG af59be4beb759929a78ccfe17db8b64b194f36b0
+    GIT_REPOSITORY https://github.com/headmyshoulder/odeint-v2.git
+    GIT_TAG 540f46f42cf1cd80f1dbfe0e6c1efa4bb70b2d6c
     SOURCE_DIR ${ODEINT_SRC}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
