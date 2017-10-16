@@ -111,14 +111,46 @@ namespace cpp
         for(const auto& arg : expr)
           {
             if(c > 0) rval.append(op);
-    
+
+            // determine whether we should bracket this operand
+            // this should happen any time the operand has lower precedence than the current operand, but at the moment
+            // we only deal with + and * so we can simply check for +
+            // we can kill the brackets if the operands are a comma-separated list of arguments, though
+            bool bracket = op != "," && GiNaC::is_a<GiNaC::add>(arg);
+
+            if(bracket) rval.append("(");
             if(use_count) rval.append(this->get_symbol_with_use_count(arg));
             else          rval.append(this->get_symbol_without_use_count(arg));
+            if(bracket) rval.append(")");
 
             ++c;
           }
         
         return rval;
+      }
+
+
+    // utility function to properly bracket the base of a power expression
+    static std::string unwrap_power(const std::string& base_str, const GiNaC::ex& base_expr, unsigned int factors)
+      {
+        bool simple = GiNaC::is_a<GiNaC::symbol>(base_expr)
+                      || GiNaC::is_a<GiNaC::constant>(base_expr)
+                      || GiNaC::is_a<GiNaC::function>(base_expr);
+
+        std::ostringstream buf;
+
+        unsigned int count = 0;
+        while(factors > 0)
+          {
+            if(count > 0) buf << "*";
+            if(simple) buf << base_str;
+            else       buf << "(" << base_str << ")";
+
+            --factors;
+            ++count;
+          }
+
+        return buf.str();
       }
 
 
@@ -136,45 +168,44 @@ namespace cpp
             out << "std::pow(" << this->print_operands(expr, ",", use_count) << ")";
             return std::string{};
           }
+
+        // set up aliases for base and exponent expressions
+        const auto& base_expr = expr.op(0);
+        const auto& exponent_expr = expr.op(1);
     
         // perform use-counting on exponent, which is necessary since its values may have been
         // used elsewhere in the CSE tree, even if it is an integer that we will unroll and not use explicitly
         std::string exponent;
-        if(use_count) exponent = this->get_symbol_with_use_count(expr.op(1));
-        else exponent = this->get_symbol_without_use_count(expr.op(1));
+        if(use_count) exponent = this->get_symbol_with_use_count(exponent_expr);
+        else exponent = this->get_symbol_without_use_count(exponent_expr);
 
-        const GiNaC::ex& exp_generic = expr.op(1);
-    
-        if(GiNaC::is_a<GiNaC::numeric>(exp_generic))
+        if(GiNaC::is_a<GiNaC::numeric>(exponent_expr))
           {
-            const auto& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exp_generic);
+            const auto& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exponent_expr);
         
             std::string base;
             if(use_count) base = this->get_symbol_with_use_count(expr.op(0));
             else base = this->get_symbol_without_use_count(expr.op(0));
-        
+
             if(GiNaC::is_integer(exp_numeric))
               {
-            
                 if(GiNaC::is_nonneg_integer(exp_numeric))
                   {
                     if(exp_numeric.to_int() == 0) out << "1.0";
-                    else if(exp_numeric.to_int() == 1) out << base;
-                    else if(exp_numeric.to_int() == 2) out << base << "*" << base;
-                    else if(exp_numeric.to_int() == 3) out << base << "*" << base << "*" << base;
-                    else if(exp_numeric.to_int() == 4) out << base << "*" << base << "*" << base << "*" << base;
+                    else if(exp_numeric.to_int() == 1) out << unwrap_power(base, base_expr, 1);
+                    else if(exp_numeric.to_int() == 2) out << "(" << unwrap_power(base, base_expr, 2) << ")";
+                    else if(exp_numeric.to_int() == 3) out << "(" << unwrap_power(base, base_expr, 3) << ")";
+                    else if(exp_numeric.to_int() == 4) out << "(" << unwrap_power(base, base_expr, 4) << ")";
                     else out << "std::pow(" << base << "," << exp_numeric.to_int() << ")";
                   }
                 else  // negative integer
                   {
-                    out << "1.0/";
                     if(exp_numeric.to_int() == -0) out << "1.0";
-                    else if(exp_numeric.to_int() == -1) out << base;
-                    else if(exp_numeric.to_int() == -2) out << "(" << base << "*" << base << ")";
-                    else if(exp_numeric.to_int() == -3) out << "(" << base << "*" << base << "*" << base << ")";
-                    else if(exp_numeric.to_int() == -4)
-                      out << "(" << base << "*" << base << "*" << base << "*" << base << ")";
-                    else out << "std::pow(" << base << "," << -exp_numeric.to_int() << ")";
+                    else if(exp_numeric.to_int() == -1) out << "1.0/" << unwrap_power(base, base_expr, 1);
+                    else if(exp_numeric.to_int() == -2) out << "1.0/" << "(" << unwrap_power(base, base_expr, 2) << ")";
+                    else if(exp_numeric.to_int() == -3) out << "1.0/" << "(" << unwrap_power(base, base_expr, 3) << ")";
+                    else if(exp_numeric.to_int() == -4) out << "1.0/" << "(" << unwrap_power(base, base_expr, 4) << ")";
+                    else out << "std::pow(" << base << "," << exp_numeric.to_int() << ")";
                   }
               }
             else  // not an integer
