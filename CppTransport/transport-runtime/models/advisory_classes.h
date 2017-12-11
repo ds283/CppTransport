@@ -52,54 +52,127 @@ namespace transport
       };
 
 
-    //! advisory class thrown when Hsq is negative
-    class Hsq_is_negative: public std::exception
+    //! generic advisory class associated with an integration event
+    class advisory_event: public std::exception
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-		    Hsq_is_negative(double N)
-			    : efolds(N)
-			    {
-		        std::ostringstream str;
+        //! constructor captures e-folding number associated with event
+        advisory_event(double N)
+          : efolds(N)
+          {
+            std::ostringstream str;
 
-		        str << CPPTRANSPORT_ADVISORY_DETECTED_AT << efolds << " " << CPPTRANSPORT_ADVISORY_EFOLDS;
-		        message = str.str();
-			    }
+            str << CPPTRANSPORT_ADVISORY_DETECTED_AT << efolds << " " << CPPTRANSPORT_ADVISORY_EFOLDS;
+            message = str.str();
+          }
 
+
+        //! std::exception interface
+
+      public:
+
+        //! return message
         virtual const char* what() const noexcept override { return(this->message.c_str()); }
+
+
+        // INTERNAL DATA
 
       private:
 
+        //! capture e-folding number of event
         double efolds;
 
-		    std::string message;
+        //! message returned by what()
+        std::string message;
+
+      };
+
+
+    //! advisory class thrown when Hsq is negative
+    class Hsq_is_negative: public advisory_event
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+		    Hsq_is_negative(double N)
+			    : advisory_event(N)
+			    {
+			    }
 
       };
 
 
     //! advisory class thrown if backend produces a NAN during integration
-    class integration_produced_nan: public std::exception
+    class integration_produced_nan: public advisory_event
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
+        //! constructor
 		    integration_produced_nan(double N)
-			    : efolds(N)
+			    : advisory_event(N)
 			    {
-		        std::ostringstream str;
-
-            str << CPPTRANSPORT_ADVISORY_DETECTED_AT << efolds << " " << CPPTRANSPORT_ADVISORY_EFOLDS;
-		        message = str.str();
 			    }
 
-        virtual const char* what() const noexcept override { return(this->message.c_str()); }
+      };
 
-      private:
 
-        double efolds;
+    //! advisory class thrown if epsilon becomes negative during integration
+    class eps_is_negative: public advisory_event
+      {
 
-		    std::string message;
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        eps_is_negative(double N)
+          : advisory_event(N)
+          {
+          }
+
+      };
+
+
+    //! advisory class thrown if epsilon becomes too large (ie. exceeds 3) during intgeration
+    class eps_too_large: public advisory_event
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        eps_too_large(double N)
+          : advisory_event(N)
+          {
+          }
+
+      };
+
+
+    //! advisory class thrown if potential evaluates to a negative number during integration
+    class V_is_negative: public advisory_event
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        V_is_negative(double N)
+          : advisory_event(N)
+          {
+          }
 
       };
 

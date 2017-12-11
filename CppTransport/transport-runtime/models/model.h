@@ -505,6 +505,30 @@ namespace transport
     
                 throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
               }
+            catch(eps_is_negative& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EPS_IS_NEGATIVE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(eps_too_large& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EPS_TOO_LARGE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(V_is_negative& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_V_IS_NEGATIVE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
 
             if(history.size() > 0)
               {
@@ -568,6 +592,30 @@ namespace transport
             msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
             this->error_h(msg.str());
     
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(eps_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_EPS_IS_NEGATIVE << " " << xe.what();
+            this->error_h(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(eps_too_large& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_EPS_TOO_LARGE << " " << xe.what();
+            this->error_h(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(V_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_V_IS_NEGATIVE << " " << xe.what();
+            this->error_h(msg.str());
+
             throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
 

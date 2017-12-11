@@ -1972,6 +1972,15 @@ namespace transport
 
         const auto __Hsq = $HUBBLE_SQ;
 
+        // check whether 0 < epsilon < 3
+        const auto __eps = $EPSILON;
+        if(__eps < 0.0) throw eps_is_negative(static_cast<double>(__t));
+        if(__eps > 3.0) throw eps_too_large(static_cast<double>(__t));
+
+        // check whether potential is +ve definite
+        const auto __V = $POTENTIAL;
+        if(__V < 0.0) throw V_is_negative(static_cast<double>(__t));
+
         // check whether Hsq is positive
         if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t));
 

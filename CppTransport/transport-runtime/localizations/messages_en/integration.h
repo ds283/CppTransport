@@ -28,26 +28,30 @@
 #define CPPTRANSPORT_MESSAGES_EN_INTERGRATION_H
 
 
-#define CPPTRANSPORT_OBSERVER_SLOW_INTEGRATION "Detected slow integration in progress"
-#define CPPTRANSPORT_OBSERVER_UPDATE           "Progress update"
-#define CPPTRANSPORT_OBSERVER_TIME             ": current stepper position is N"
-#define CPPTRANSPORT_OBSERVER_ELAPSED_FIRST    "| time elapsed since beginning of integration"
-#define CPPTRANSPORT_OBSERVER_ELAPSED_LATER    "| time elapsed since last report"
+constexpr auto CPPTRANSPORT_OBSERVER_SLOW_INTEGRATION = "Detected slow integration in progress";
+constexpr auto CPPTRANSPORT_OBSERVER_UPDATE           = "Progress update";
+constexpr auto CPPTRANSPORT_OBSERVER_TIME             = ": current stepper position is N";
+constexpr auto CPPTRANSPORT_OBSERVER_ELAPSED_FIRST    = "| time elapsed since beginning of integration";
+constexpr auto CPPTRANSPORT_OBSERVER_ELAPSED_LATER    = "| time elapsed since last report";
 
-#define CPPTRANSPORT_NO_TIMES                  "Fatal: no times specified for integration"
+constexpr auto CPPTRANSPORT_NO_TIMES                  = "Fatal: no times specified for integration";
 
-#define CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A "Fatal: sample times begin before the initial time"
-#define CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B "earliest sample time"
-#define CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C "initial time"
+constexpr auto CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A = "Fatal: sample times begin before the initial time";
+constexpr auto CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B = "earliest sample time";
+constexpr auto CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C = "initial time";
 
-#define CPPTRANSPORT_NO_DEVICES                "Fatal: no devices specified in context"
+constexpr auto CPPTRANSPORT_NO_DEVICES                = "Fatal: no devices specified in context";
 
-#define CPPTRANSPORT_SINGLE_GPU_ONLY           "GPU error: only a single GPU device is currently supported per worker process"
+constexpr auto CPPTRANSPORT_SINGLE_GPU_ONLY           = "GPU error: only a single GPU device is currently supported per worker process";
 
-#define CPPTRANSPORT_INTEGRATION_FAIL          "Fatal: integration failure"
+constexpr auto CPPTRANSPORT_INTEGRATION_FAIL          = "Fatal: integration failure";
 
-#define CPPTRANSPORT_HSQ_IS_NEGATIVE           "H^2 became negative"
-#define CPPTRANSPORT_INTEGRATION_PRODUCED_NAN  "Integration produced NaN"
+constexpr auto CPPTRANSPORT_HSQ_IS_NEGATIVE           = "H^2 became negative";
+constexpr auto CPPTRANSPORT_INTEGRATION_PRODUCED_NAN  = "Integration produced NaN";
+constexpr auto CPPTRANSPORT_EPS_IS_NEGATIVE           = "epsilon became negative";
+constexpr auto CPPTRANSPORT_EPS_TOO_LARGE             = "espilon became too large (exceeded eps=3.0)";
+constexpr auto CPPTRANSPORT_V_IS_NEGATIVE             = "potential became negative";
+
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_INTEGRATION_H
