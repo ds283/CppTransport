@@ -50,11 +50,8 @@ class symbol_factory
 
   public:
 
-		//! get a symbol
-		GiNaC::symbol get_symbol(const std::string& name);
-
-		//! get a symbol, specifying a LaTeX equivalent
-		GiNaC::symbol get_symbol(const std::string& name, const std::string& LaTeX);
+		//! get a symbol, optionally specifying a LaTeX label
+		GiNaC::symbol get_symbol(const std::string& name, std::string LaTeX = std::string{});
 
 
 		// INTERNAL DATA
