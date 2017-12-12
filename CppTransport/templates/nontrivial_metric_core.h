@@ -1975,17 +1975,17 @@ namespace transport
         const auto __V = $POTENTIAL;
 
         // check whether 0 < epsilon < 3
-        if(__eps < 0.0) throw eps_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
-        if(__eps > 3.0) throw eps_too_large(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
+        if(__eps < 0.0) throw eps_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
+        if(__eps > 3.0) throw eps_too_large(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
 
         // check whether potential is +ve definite
-        if(__V < 0.0) throw V_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
+        if(__V < 0.0) throw V_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
 
         // check whether Hsq is positive
-        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
+        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
 
         // check for nan being produced
-        if(std::isnan(__x[$^A])) throw integration_produced_nan(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
+        if(std::isnan(__x[$^A])) throw integration_produced_nan(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
         
         __dxdt[FLATTEN($^A)] = $U1_TENSOR[^A];
 

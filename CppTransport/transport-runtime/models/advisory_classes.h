@@ -61,13 +61,25 @@ namespace transport
       public:
 
         //! constructor captures e-folding number associated with event
-        advisory_event(double N, double Hsq, double eps, double V)
+        template <typename StateValues, typename StateNames>
+        advisory_event(double N, double Hsq, double eps, double V, const StateValues& vevs, const StateNames& names)
           : efolds(N)
           {
             std::ostringstream str;
 
             str << CPPTRANSPORT_ADVISORY_DETECTED_AT << efolds << " " << CPPTRANSPORT_ADVISORY_EFOLDS << " | "
-                << " H^2 = " << Hsq << ", eps = " << eps << ", V = " << V;
+                << " H^2 = " << Hsq << ", eps = " << eps << ", V = " << V << '\n';
+
+            auto u = vevs.begin();
+            auto v = names.begin();
+            while(u != vevs.end() && v != names.end())
+              {
+                str << "  * " << *v << " = " << *u << '\n';
+                ++u;
+                ++v;
+              }
+
+
             message = str.str();
           }
 
@@ -102,8 +114,9 @@ namespace transport
       public:
 
         //! constructor
-		    Hsq_is_negative(double N, double Hsq, double eps, double V)
-			    : advisory_event(N, Hsq, eps, V)
+        template <typename StateValues, typename StateNames>
+		    Hsq_is_negative(double N, double Hsq, double eps, double V, const StateValues& vevs, const StateNames& names)
+			    : advisory_event(N, Hsq, eps, V, vevs, names)
 			    {
 			    }
 
@@ -119,8 +132,9 @@ namespace transport
       public:
 
         //! constructor
-		    integration_produced_nan(double N, double Hsq, double eps, double V)
-			    : advisory_event(N, Hsq, eps, V)
+        template <typename StateValues, typename StateNames>
+		    integration_produced_nan(double N, double Hsq, double eps, double V, const StateValues& vevs, const StateNames& names)
+			    : advisory_event(N, Hsq, eps, V, vevs, names)
 			    {
 			    }
 
@@ -136,8 +150,9 @@ namespace transport
       public:
 
         //! constructor
-        eps_is_negative(double N, double Hsq, double eps, double V)
-          : advisory_event(N, Hsq, eps, V)
+        template <typename StateValues, typename StateNames>
+        eps_is_negative(double N, double Hsq, double eps, double V, const StateValues& vevs, const StateNames& names)
+          : advisory_event(N, Hsq, eps, V, vevs, names)
           {
           }
 
@@ -153,8 +168,9 @@ namespace transport
       public:
 
         //! constructor
-        eps_too_large(double N, double Hsq, double eps, double V)
-          : advisory_event(N, Hsq, eps, V)
+        template <typename StateValues, typename StateNames>
+        eps_too_large(double N, double Hsq, double eps, double V, const StateValues& vevs, const StateNames& names)
+          : advisory_event(N, Hsq, eps, V, vevs, names)
           {
           }
 
@@ -170,8 +186,9 @@ namespace transport
       public:
 
         //! constructor
-        V_is_negative(double N, double Hsq, double eps, double V)
-          : advisory_event(N, Hsq, eps, V)
+        template <typename StateValues, typename StateNames>
+        V_is_negative(double N, double Hsq, double eps, double V, const StateValues& vevs, const StateNames& names)
+          : advisory_event(N, Hsq, eps, V, vevs, names)
           {
           }
 
