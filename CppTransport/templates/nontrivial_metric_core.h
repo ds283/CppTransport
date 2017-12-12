@@ -1971,21 +1971,21 @@ namespace transport
         $GAMMA_DECLARE[^a_b] $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
 
         const auto __Hsq = $HUBBLE_SQ;
+        const auto __eps = $EPSILON;
+        const auto __V = $POTENTIAL;
 
         // check whether 0 < epsilon < 3
-        const auto __eps = $EPSILON;
-        if(__eps < 0.0) throw eps_is_negative(static_cast<double>(__t));
-        if(__eps > 3.0) throw eps_too_large(static_cast<double>(__t));
+        if(__eps < 0.0) throw eps_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
+        if(__eps > 3.0) throw eps_too_large(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
 
         // check whether potential is +ve definite
-        const auto __V = $POTENTIAL;
-        if(__V < 0.0) throw V_is_negative(static_cast<double>(__t));
+        if(__V < 0.0) throw V_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
 
         // check whether Hsq is positive
-        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t));
+        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
 
         // check for nan being produced
-        if(std::isnan(__x[$^A])) throw integration_produced_nan(static_cast<double>(__t));
+        if(std::isnan(__x[$^A])) throw integration_produced_nan(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V));
         
         __dxdt[FLATTEN($^A)] = $U1_TENSOR[^A];
 

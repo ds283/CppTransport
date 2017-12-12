@@ -61,12 +61,13 @@ namespace transport
       public:
 
         //! constructor captures e-folding number associated with event
-        advisory_event(double N)
+        advisory_event(double N, double Hsq, double eps, double V)
           : efolds(N)
           {
             std::ostringstream str;
 
-            str << CPPTRANSPORT_ADVISORY_DETECTED_AT << efolds << " " << CPPTRANSPORT_ADVISORY_EFOLDS;
+            str << CPPTRANSPORT_ADVISORY_DETECTED_AT << efolds << " " << CPPTRANSPORT_ADVISORY_EFOLDS << " | "
+                << " H^2 = " << Hsq << ", eps = " << eps << ", V = " << V;
             message = str.str();
           }
 
@@ -101,8 +102,8 @@ namespace transport
       public:
 
         //! constructor
-		    Hsq_is_negative(double N)
-			    : advisory_event(N)
+		    Hsq_is_negative(double N, double Hsq, double eps, double V)
+			    : advisory_event(N, Hsq, eps, V)
 			    {
 			    }
 
@@ -118,8 +119,8 @@ namespace transport
       public:
 
         //! constructor
-		    integration_produced_nan(double N)
-			    : advisory_event(N)
+		    integration_produced_nan(double N, double Hsq, double eps, double V)
+			    : advisory_event(N, Hsq, eps, V)
 			    {
 			    }
 
@@ -135,8 +136,8 @@ namespace transport
       public:
 
         //! constructor
-        eps_is_negative(double N)
-          : advisory_event(N)
+        eps_is_negative(double N, double Hsq, double eps, double V)
+          : advisory_event(N, Hsq, eps, V)
           {
           }
 
@@ -152,8 +153,8 @@ namespace transport
       public:
 
         //! constructor
-        eps_too_large(double N)
-          : advisory_event(N)
+        eps_too_large(double N, double Hsq, double eps, double V)
+          : advisory_event(N, Hsq, eps, V)
           {
           }
 
@@ -169,8 +170,8 @@ namespace transport
       public:
 
         //! constructor
-        V_is_negative(double N)
-          : advisory_event(N)
+        V_is_negative(double N, double Hsq, double eps, double V)
+          : advisory_event(N, Hsq, eps, V)
           {
           }
 
