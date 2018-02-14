@@ -380,6 +380,7 @@ constexpr auto ERROR_SPECIES_TO_SPECIES_FAIL         = "Internal error: species-
 constexpr auto ERROR_MOMENTUM_TO_SPECIES_FAIL        = "Internal error: momentum-to-species map must be applied to a phase-space index";
 
 constexpr auto ERROR_UNIMPLEMENTED_MATHS_FUNCTION    = "Unimplemented mathematical function";
+constexpr auto ERROR_USED_IN_EXPRESSION              = "used in expression";
 
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";

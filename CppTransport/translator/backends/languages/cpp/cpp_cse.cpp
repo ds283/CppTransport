@@ -88,7 +88,8 @@ namespace cpp
             error_context err_ctx = this->data_payload.make_error_context();
 
             std::ostringstream msg;
-            msg << ERROR_UNIMPLEMENTED_MATHS_FUNCTION << " '" << name << "'";
+            msg << ERROR_UNIMPLEMENTED_MATHS_FUNCTION << " '" << name << "', "
+                << ERROR_USED_IN_EXPRESSION << " '" << expr << "'";
             err_ctx.error(msg.str());
 
             return std::string{};
