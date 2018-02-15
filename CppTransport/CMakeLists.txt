@@ -29,6 +29,9 @@ FIND_PACKAGE(MPI REQUIRED)
 # minimum version is 1.56 to get support for Boost.Optional with move-only types
 FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
 
+# we need pthreads for Boost-Thread
+FIND_PACKAGE(Threads)
+
 # find OpenSSL libraries
 FIND_PACKAGE(OpenSSL REQUIRED)
 

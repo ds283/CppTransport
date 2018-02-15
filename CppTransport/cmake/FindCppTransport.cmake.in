@@ -10,6 +10,9 @@ FIND_LIBRARY(CPPTRANSPORT_SQLITE_LIBRARY   NAMES sqlite3)
 # determine paths for system installation of Boost
 FIND_PACKAGE(Boost REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
 
+# Boost threads requires threading library
+FIND_PACKAGE(Threads)
+
 # determine paths for system installation of MPI
 FIND_PACKAGE(MPI REQUIRED)
 
@@ -29,6 +32,7 @@ SET(CPPTRANSPORT_LIBRARIES
   ${CPPTRANSPORT_SQLITE_LIBRARY}
   ${Boost_LIBRARIES}
   ${MPI_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}}
 )
 
 
