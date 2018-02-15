@@ -212,7 +212,7 @@ namespace transport
 				template <typename number>
 				void background_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE);
+						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string{CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE};
 
 						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
 
@@ -220,25 +220,25 @@ namespace transport
 					    {
 				        case background_quantity::epsilon:
                   {
-                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON);
+                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string{CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON};
                     break;
                   }
 
-                case background_quantity::eta
+                case background_quantity::eta:
                   {
-                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_ETA);
+                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string{CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_ETA};
                     break;
                   }
 
 				        case background_quantity::Hubble:
                   {
-                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE);
+                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string{CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE};
                     break;
                   }
 
                 case background_quantity::aHubble:
                   {
-                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE);
+                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string{CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE};
                     break;
                   }
 					    }
@@ -406,25 +406,25 @@ namespace transport
 									{
 								    case background_quantity::epsilon:
                       {
-                        label = "$" + std::string(CPPTRANSPORT_LATEX_EPSILON_SYMBOL) + "$";
+                        label = "$" + std::string{CPPTRANSPORT_LATEX_EPSILON_SYMBOL} + "$";
                         break;
                       }
 
                     case background_quantity::eta:
                       {
-                        label = "$" + std::string(CPPTRANSPORT_LATEX_ETA_SYMBOL) + "$";
+                        label = "$" + std::string{CPPTRANSPORT_LATEX_ETA_SYMBOL} + "$";
                         break;
                       }
                     
                     case background_quantity::Hubble:
                       {
-                        label = "$" + std::string(CPPTRANSPORT_LATEX_HUBBLE_SYMBOL) + "$";
+                        label = "$" + std::string{CPPTRANSPORT_LATEX_HUBBLE_SYMBOL} + "$";
                         break;
                       }
                     
                     case background_quantity::aHubble:
                       {
-                        label = "$" + std::string(CPPTRANSPORT_LATEX_A_HUBBLE_SYMBOL) + "$";
+                        label = "$" + std::string{CPPTRANSPORT_LATEX_A_HUBBLE_SYMBOL} + "$";
                         break;
                       }
                   }
@@ -449,25 +449,25 @@ std::string background_line<number>::get_non_LaTeX_label() const
           {
             case background_quantity::epsilon:
               {
-                label = std::string(CPPTRANSPORT_NONLATEX_EPSILON_SYMBOL);
+                label = std::string{CPPTRANSPORT_NONLATEX_EPSILON_SYMBOL};
                 break;
               }
 
             case background_quantity::eta:
               {
-                label = std::string(CPPTRANSPORT_NONLATEX_ETA_SYMBOL);
+                label = std::string{CPPTRANSPORT_NONLATEX_ETA_SYMBOL};
                 break;
               }
 
             case background_quantity::Hubble:
               {
-                label = std::string(CPPTRANSPORT_NONLATEX_HUBBLE_SYMBOL);
+                label = std::string{CPPTRANSPORT_NONLATEX_HUBBLE_SYMBOL};
                 break;
               }
     
             case background_quantity::aHubble:
               {
-                label = std::string(CPPTRANSPORT_NONLATEX_A_HUBBLE_SYMBOL);
+                label = std::string{CPPTRANSPORT_NONLATEX_A_HUBBLE_SYMBOL};
                 break;
               }
           }
