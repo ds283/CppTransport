@@ -41,7 +41,7 @@ namespace nontrivial_metric
         //! build argument list and tag as a covariant index
         auto args = res.generate_cache_arguments(printer);
         
-        GiNaC::varidx idx_i(res.sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max), true);
+        GiNaC::varidx idx_i(res.sym_factory.get_real_symbol(I_INDEX_NAME), static_cast<unsigned int>(max), true);
         args += idx_i;
         
         // obtain a resource cache for the components of the potential
@@ -59,7 +59,7 @@ namespace nontrivial_metric
                 const GiNaC::ex& V = cache.get_V();
                 const symbol_list& f_list = cache.get_symbol_list();
                 
-                const GiNaC::symbol& x1 = f_list[res.fl.flatten(i)];
+                const symbol_wrapper& x1 = f_list[res.fl.flatten(i)];
                 dV = GiNaC::diff(V, x1);
                 
                 res.cache.store(expression_item_types::dV_item, index, args, dV);

@@ -64,7 +64,7 @@ namespace canonical
 
             // Eq. (6.4) of Mulryne 1302.3842
             field_index i_species = this->traits.to_species(i);
-            result = -(1/(2*dotH)) * diff(Hsq, (*fields)[this->fl.flatten(i_species)]);
+            result = -(1/(2*dotH)) * diff(Hsq, (*fields)[this->fl.flatten(i_species)].get());
 
             this->cache.store(expression_item_types::dN1_item, index, args, result);
           }

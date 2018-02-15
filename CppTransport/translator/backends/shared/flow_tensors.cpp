@@ -43,6 +43,7 @@ namespace macro_packages
         EMPLACE(pre_package, BIND(replace_V, "POTENTIAL"));
         EMPLACE(pre_package, BIND(replace_Hsq, "HUBBLE_SQ"));
         EMPLACE(pre_package, BIND(replace_eps, "EPSILON"));
+        EMPLACE(pre_package, BIND(replace_eta, "ETA"));
 
         EMPLACE(index_package, BIND(replace_parameter, "PARAMETER"));
         EMPLACE(index_package, BIND(replace_field, "FIELD"));
@@ -91,6 +92,18 @@ namespace macro_packages
 
         // emit
         return this->cse_worker.get_symbol_with_use_count(eps);
+      }
+
+
+    std::string replace_eta::evaluate(const macro_argument_list& args)
+      {
+        GiNaC::ex eta = this->Hubble_obj->compute_eta();
+
+        // pass to CSE module for evaluation
+        this->cse_worker.parse(eta);
+
+        // emit
+        return this->cse_worker.get_symbol_with_use_count(eta);
       }
 
 

@@ -45,7 +45,7 @@ namespace y
         
         if(id) // lex points to a valid identifier
           {
-            GiNaC::symbol sym = sym_factory(*id, a->get_latex());
+            auto sym = sym_factory(*id, a->get_latex());
             insert(*id, sym, lex, a);
           }
         else

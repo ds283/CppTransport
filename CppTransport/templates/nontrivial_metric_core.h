@@ -1,4 +1,4 @@
-// backend = cpp, minver = 201701, lagrangian = nontrivial_metric
+// backend = cpp, minver = 201801, lagrangian = nontrivial_metric
 //
 // --@@
 // Copyright (c) 2017 University of Sussex. All rights reserved.
@@ -248,6 +248,7 @@ namespace transport
         // Over-ride functions inherited from 'model'
         number H(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
         number epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
+        number eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
 
         // Over-ride functions inherited from 'nontrivial_metric_model'
         number V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
@@ -545,7 +546,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -570,7 +571,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -589,13 +590,38 @@ namespace transport
 
 
     template <typename number>
+    number $MODEL<number>::eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
+      {
+        assert(__coords.size() == 2*$NUMBER_FIELDS);
+        if(__coords.size() != 2*$NUMBER_FIELDS)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            throw std::out_of_range(msg.str());
+          }
+
+        DEFINE_INDEX_TOOLS
+        $RESOURCE_RELEASE
+        const auto __Mp = __params.get_Mp();
+        const auto& __param_vector = __params.get_vector();
+
+        $RESOURCE_PARAMETERS{__param_vector}
+        $RESOURCE_COORDINATES{__coords}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+
+        return $ETA;
+      }
+
+
+    template <typename number>
     number $MODEL<number>::V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -621,7 +647,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -648,7 +674,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -1971,12 +1997,21 @@ namespace transport
         $GAMMA_DECLARE[^a_b] $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
 
         const auto __Hsq = $HUBBLE_SQ;
+        const auto __eps = $EPSILON;
+        const auto __V = $POTENTIAL;
+
+        // check whether 0 < epsilon < 3
+        if(__eps < 0.0) throw eps_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
+        if(__eps > 3.0) throw eps_too_large(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
+
+        // check whether potential is +ve definite
+        if(__V < 0.0) throw V_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
 
         // check whether Hsq is positive
-        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t));
+        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
 
         // check for nan being produced
-        if(std::isnan(__x[$^A])) throw integration_produced_nan(static_cast<double>(__t));
+        if(std::isnan(__x[$^A])) throw integration_produced_nan(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
         
         __dxdt[FLATTEN($^A)] = $U1_TENSOR[^A];
 

@@ -68,13 +68,16 @@ namespace nontrivial_metric
       public:
 
         //! evaluate potential
-        virtual GiNaC::ex compute_V() override;
+        GiNaC::ex compute_V() override;
 
         //! evaluate Hubble parameter
-        virtual GiNaC::ex compute_Hsq() override;
+        GiNaC::ex compute_Hsq() override;
 
         //! evaluate epsilon parameter
-        virtual GiNaC::ex compute_eps() override;
+        GiNaC::ex compute_eps() override;
+
+        //! evaluate eta parameter
+        GiNaC::ex compute_eta() override;
 
 
         // INTERNAL DATA

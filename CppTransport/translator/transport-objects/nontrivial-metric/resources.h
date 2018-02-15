@@ -119,6 +119,10 @@ namespace nontrivial_metric
         //! returns raw expression, without applying any CSE
         GiNaC::ex raw_eps_resource(const language_printer& printer) const;
 
+        //! generate eta resource
+        //! returns raw expression, without applying any CSE
+        GiNaC::ex raw_eta_resource(GiNaC::ex eps, GiNaC::ex Hsq, const language_printer& printer) const;
+
         //! generate Hubble-squared resource
         //! returns raw expression, without applying any CSE
         GiNaC::ex raw_Hsq_resource(const language_printer& printer) const;
@@ -144,6 +148,9 @@ namespace nontrivial_metric
 
         //! generate epsilon resource
         GiNaC::ex eps_resource(cse& cse_worker, const language_printer& printer) const;
+
+        //! generate eta resource
+        GiNaC::ex eta_resource(cse& cse_worker, const language_printer& printer) const;
 
         //! generate Hubble-squared resource
         GiNaC::ex Hsq_resource(cse& cse_worker, const language_printer& printer) const;
@@ -473,7 +480,7 @@ namespace nontrivial_metric
       {
         if(resource)   // no need to push arguments if no resource available
           {
-            GiNaC::symbol sym = sym_factory.get_symbol(resource.get());
+            auto sym = sym_factory.get_real_symbol(resource.get());
             args += sym;
           }
       }
@@ -485,7 +492,7 @@ namespace nontrivial_metric
       {
         if(resource)   // no need to push arguments if no resource available
           {
-            GiNaC::symbol sym = sym_factory.get_symbol(resource.get().second);
+            auto sym = sym_factory.get_real_symbol(resource.get().second);
             args += sym;
           }
       }
@@ -507,7 +514,6 @@ namespace nontrivial_metric
           {
             this->push_resource_tag(args, this->mgr.metric());
             this->push_resource_tag(args, this->mgr.metric_inverse());
-            
           }
         
         std::array<variance, 1> v{ idxs[0].get_variance() };
@@ -534,7 +540,6 @@ namespace nontrivial_metric
           {
             this->push_resource_tag(args, this->mgr.metric());
             this->push_resource_tag(args, this->mgr.metric_inverse());
-            
           }
     
         std::array<variance, 1> v1{ idxs[0].get_variance() };
@@ -574,7 +579,6 @@ namespace nontrivial_metric
           {
             this->push_resource_tag(args, this->mgr.metric());
             this->push_resource_tag(args, this->mgr.metric_inverse());
-            
           }
     
         std::array<variance, 1> v1{ idxs[0].get_variance() };

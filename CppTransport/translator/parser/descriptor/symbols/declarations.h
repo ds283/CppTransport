@@ -30,6 +30,7 @@
 
 #include "contexted_value.h"
 #include "semantic_values.h"
+#include "symbol_factory.h"
 #include "y_common.h"
 
 #include "ginac/ginac.h"
@@ -44,7 +45,7 @@ class declaration    // is an abstract class
   public:
     
     //! constructor
-    declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l);
+    declaration(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l);
     
     //! destructor is default
     virtual ~declaration() = default;
@@ -58,7 +59,7 @@ class declaration    // is an abstract class
     const std::string& get_name() const { return(this->name); }
     
     //! get GiNaC symbol association with declaration/symbol
-    const GiNaC::symbol& get_ginac_symbol() const { return(this->symbol); }
+    const symbol_wrapper& get_ginac_symbol() const { return(this->symbol); }
     
     //! return GiNaC expression to be substituted when this declaration is used;
     //! often this will just be the GiNaC symbol, but may be more complex
@@ -88,7 +89,7 @@ class declaration    // is an abstract class
     std::string name;
     
     //! GiNaC symbol for object
-    GiNaC::symbol symbol;
+    symbol_wrapper symbol;
     
     //! reference to lexeme specifying declaration point, used for
     //! reporting context-aware errors
@@ -111,7 +112,7 @@ class field_declaration : public declaration
   public:
     
     //! constructor
-    field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, std::shared_ptr<attributes> a);
+    field_declaration(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l, std::shared_ptr<attributes> a);
     
     //! destructor is default
     virtual ~field_declaration() = default;
@@ -125,7 +126,7 @@ class field_declaration : public declaration
     std::string get_latex_name() const;
     
     //! get GiNaC expression for field
-    virtual GiNaC::ex get_expression() const override { return GiNaC::ex(this->symbol); }
+    virtual GiNaC::ex get_expression() const override { return this->symbol.get(); }
     
     
     // PRINT TO STANDARD STREAM
@@ -154,7 +155,7 @@ class parameter_declaration : public declaration
   public:
     
     //! constructor
-    parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, std::shared_ptr<attributes> a);
+    parameter_declaration(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l, std::shared_ptr<attributes> a);
     
     //! destructor is default
     ~parameter_declaration() = default;
@@ -168,7 +169,7 @@ class parameter_declaration : public declaration
     std::string get_latex_name() const;
     
     //! get GiNaC expression for parameter
-    virtual GiNaC::ex get_expression() const override { return GiNaC::ex(this->symbol); }
+    virtual GiNaC::ex get_expression() const override { return this->symbol.get(); }
     
     
     // PRINT TO STANDARD STREAM
@@ -197,7 +198,7 @@ class subexpr_declaration : public declaration
   public:
     
     //! constructor
-    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, std::shared_ptr<subexpr> e);
+    subexpr_declaration(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l, std::shared_ptr<subexpr> e);
     
     //! destructor is default
     ~subexpr_declaration() = default;

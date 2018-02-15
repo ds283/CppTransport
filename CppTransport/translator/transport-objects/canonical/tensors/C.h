@@ -67,18 +67,18 @@ namespace canonical
 
         //! evaluate full tensor, returning a flattened list
         std::unique_ptr<flattened_tensor>
-        compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-                GiNaC::symbol& a) override;
+        compute(const index_literal_list& indices, symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3,
+                symbol_wrapper& a) override;
 
         //! evaluate component of tensor
         GiNaC::ex
         compute_component(field_index i, field_index j, field_index k,
-                          GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+                          symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3, symbol_wrapper& a) override;
 
         //! evaluate lambda for tensor
         std::unique_ptr<atomic_lambda>
         compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+                       symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3, symbol_wrapper& a) override;
 
 
         // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
@@ -105,8 +105,8 @@ namespace canonical
         //! underlying symbolic expression
         GiNaC::ex expr(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::idx& k,
                        const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
-                       const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3,
-                       const GiNaC::symbol& a);
+                       const symbol_wrapper& k1, const symbol_wrapper& k2, const symbol_wrapper& k3,
+                       const symbol_wrapper& a);
 
 
         // INTERNAL DATA
@@ -153,7 +153,7 @@ namespace canonical
         std::unique_ptr<flattened_tensor> derivs;
 
         //! Planck mass
-        GiNaC::symbol Mp;
+        symbol_wrapper Mp;
 
         //! cache status
         bool cached;

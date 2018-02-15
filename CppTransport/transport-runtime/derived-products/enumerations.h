@@ -91,7 +91,7 @@ namespace transport
         //! background objects
         enum class background_quantity
           {
-            epsilon, Hubble, aHubble
+            epsilon, eta, Hubble, aHubble
           };
 
         inline std::string background_quantity_to_string(background_quantity object)
@@ -100,6 +100,9 @@ namespace transport
               {
                 case background_quantity::epsilon:
                   return std::string(CPPTRANSPORT_BACKGROUND_QUANTITY_EPSILON);
+
+                case background_quantity::eta:
+                  return std::string(CPPTRANSPORT_BACKGROUND_QUANTITY_ETA);
 
                 case background_quantity::Hubble:
                   return std::string(CPPTRANSPORT_BACKGROUND_QUANTITY_HUBBLE);

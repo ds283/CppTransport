@@ -29,9 +29,9 @@
 
 constexpr auto POLICY_DEFAULT_VERSION = 201603;
 
-// versions of CppTransport prior to 201701 computed UUIDs incorrectly
+// versions of CppTransport prior to 201801 computed UUIDs incorrectly
 constexpr auto POLICY_HEX_UUID = 1;
-constexpr auto POLICY_HEX_UUID_VERSION = 201701;
+constexpr auto POLICY_HEX_UUID_VERSION = 201801;
 
 
 #endif //CPPTRANSPORT_POLICIES_H

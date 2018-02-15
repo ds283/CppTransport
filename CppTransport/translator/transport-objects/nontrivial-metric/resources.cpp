@@ -168,7 +168,7 @@ namespace nontrivial_metric
         if(!resource || !flatten) throw resource_failure("coordinate vector");
 
         std::string variable = printer.array_subscript(*resource, idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 
@@ -265,7 +265,7 @@ namespace nontrivial_metric
                       {
                         if(!Ginv) throw resource_failure("metric inverse");
                         auto factor = printer.array_subscript(*Ginv, reqd[j].get(), v, **field_flatten);
-                        auto sym = this->sym_factory.get_symbol(factor);
+                        auto sym = this->sym_factory.get_real_symbol(factor);
                         
                         // apply offset to label index, if one is present
                         index_values[j] = to_index_string(v + static_cast<int>(N)*offsets[j]);
@@ -278,7 +278,7 @@ namespace nontrivial_metric
                         
                         // apply offset to label index, if one is present
                         index_values[j] = to_index_string(v + static_cast<int>(N)*offsets[j]);
-                        auto sym = this->sym_factory.get_symbol(factor);
+                        auto sym = this->sym_factory.get_real_symbol(factor);
                         term *= sym;
                       }
                     else
@@ -305,7 +305,7 @@ namespace nontrivial_metric
 
             // finally, include copy of resource label with appropriate indices
             auto factor = position_indices_label(label, index_values, std::make_index_sequence<Indices>{}, flatten, printer);
-            auto sym = this->sym_factory.get_symbol(factor);
+            auto sym = this->sym_factory.get_real_symbol(factor);
             term *= sym;
 
             res += term;
@@ -449,8 +449,8 @@ namespace nontrivial_metric
         // of CSE temporaries, and then return a *different* symbolic expression representing this collection
         if(this->payload.do_cse())
           {
-            GiNaC::symbol V = this->share.generate_V();
-            GiNaC::ex raw_V = this->raw_V_resource(printer);
+            auto V = this->share.generate_V();
+            auto raw_V = this->raw_V_resource(printer);
 
             // parse raw expression, assigning result to correct symbolic name
             cse_worker.parse(raw_V, V.get_name());
@@ -532,8 +532,8 @@ namespace nontrivial_metric
       {
         if(this->payload.do_cse())
           {
-            GiNaC::symbol eps = this->share.generate_eps();
-            GiNaC::ex raw_eps = this->raw_eps_resource(printer);
+            auto eps = this->share.generate_eps();
+            auto raw_eps = this->raw_eps_resource(printer);
 
             // parse raw expression, assigning result to the correct symbolic name
             cse_worker.parse(raw_eps, eps.get_name());
@@ -556,21 +556,24 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            std::unique_ptr<symbol_list> derivs = this->share.generate_deriv_symbols(printer);
-            GiNaC::symbol Mp = this->share.generate_Mp();
+            auto derivs = this->share.generate_deriv_symbols(printer);
+            auto Mp = this->share.generate_Mp();
 
             eps = 0;
             
             if(derivs->size() != this->G->rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
             if(derivs->size() != this->G->cols()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
 
-            const unsigned int max = derivs->size();
-            
-            for(unsigned int i = 0; i < max; ++i)
+            field_index max = this->share.get_max_field_index(variance::none);
+
+            for(field_index i = field_index(0, variance::none); i < max; ++i)
               {
-                for(unsigned int j = 0; j < max; ++j)
+                for(field_index j = field_index(0, variance::none); j < max; ++j)
                   {
-                    eps += (*this->G)(i,j) * (*derivs)[i] * (*derivs)[j];
+                    auto iv = this->fl.flatten(i);
+                    auto jv = this->fl.flatten(j);
+
+                    eps += (*this->G)(iv,jv) * (*derivs)[iv] * (*derivs)[jv];
                   }
               }
             
@@ -590,12 +593,74 @@ namespace nontrivial_metric
       }
 
 
+    GiNaC::ex resources::eta_resource(cse& cse_worker, const language_printer& printer) const
+      {
+        auto eps = this->eps_resource(cse_worker, printer);
+        auto Hsq = this->Hsq_resource(cse_worker, printer);
+
+        if(this->payload.do_cse())
+          {
+            auto eta = this->share.generate_eta();
+            auto raw_eta = this->raw_eta_resource(eps, Hsq, printer);
+
+            // parse raw expression, assigning result to the correct symbolic name
+            cse_worker.parse(raw_eta, eta.get_name());
+
+            // return symbol
+            return eta;
+          }
+
+        return this->raw_eta_resource(eps, Hsq, printer);
+      }
+
+
+    GiNaC::ex resources::raw_eta_resource(GiNaC::ex eps, GiNaC::ex Hsq, const language_printer& printer) const
+      {
+        auto args = this->generate_cache_arguments(printer);
+
+        GiNaC::ex eta;
+
+        if(!this->cache.query(expression_item_types::eta_item, 0, args, eta))
+          {
+            timing_instrument timer(this->compute_timer);
+
+            auto derivs = this->share.generate_deriv_symbols(printer);
+            auto dV = this->dV_resource(variance::covariant, printer);
+            auto Mp = this->share.generate_Mp();
+
+            if(derivs->size() != this->G->rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+            if(derivs->size() != this->G->cols()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+
+            if(dV->size() != this->G->rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+            if(dV->size() != this->G->cols()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+
+            GiNaC::ex depsdN = 2*eps*(eps-3);
+
+            field_index max_i = this->share.get_max_field_index(variance::none);
+
+            for(field_index i = field_index(0, variance::none); i < max_i; ++i)
+              {
+                // dV is covariant and derivative is contravariant, so this is a proper invariant
+                depsdN -= (*derivs)[this->fl.flatten(i)] * (*dV)[this->fl.flatten(i)] / (Hsq*Mp*Mp);
+              }
+
+            // no need to perform parameter/coordinate substitution here, since eps and H will already have been
+            // substituted individually
+            eta = depsdN / eps;
+
+            this->cache.store(expression_item_types::eta_item, 0, args, eta);
+          }
+
+        return eta;
+      }
+
+
     GiNaC::ex resources::Hsq_resource(cse& cse_worker, const language_printer& printer) const
       {
         if(this->payload.do_cse())
           {
-            GiNaC::symbol Hsq = this->share.generate_Hsq();
-            GiNaC::ex raw_Hsq = this->raw_Hsq_resource(printer);
+            auto Hsq = this->share.generate_Hsq();
+            auto raw_Hsq = this->raw_Hsq_resource(printer);
 
             // parse raw expression, assigning result to the correct symbolic name
             cse_worker.parse(raw_Hsq, Hsq.get_name());
@@ -618,9 +683,9 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex V = this->raw_V_resource(printer);
-            GiNaC::ex eps = this->raw_eps_resource(printer);
-            GiNaC::symbol Mp = this->share.generate_Mp();
+            auto V = this->raw_V_resource(printer);
+            auto eps = this->raw_eps_resource(printer);
+            auto Mp = this->share.generate_Mp();
 
             // no need to perform parameter/coordinate substitution here, since V and eps will already have been
             // substituted individually
@@ -1064,7 +1129,7 @@ namespace nontrivial_metric
         // build argument list and tag with index variance information
         auto args = this->generate_cache_arguments(printer);
 
-        GiNaC::varidx idx_i(this->sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max), reqd[0] == variance::covariant);
+        GiNaC::varidx idx_i(this->sym_factory.get_real_symbol(I_INDEX_NAME), static_cast<unsigned int>(max), reqd[0] == variance::covariant);
         args += idx_i;
 
         for(field_index i = field_index(0, reqd[0]); i < max; ++i)
@@ -1101,8 +1166,8 @@ namespace nontrivial_metric
         // build argument list and tag with index variance information
         auto args = this->generate_cache_arguments(printer);
 
-        GiNaC::varidx idx_i(this->sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max_i), reqd[0] == variance::covariant);
-        GiNaC::varidx idx_j(this->sym_factory.get_symbol(J_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[1] == variance::covariant);
+        GiNaC::varidx idx_i(this->sym_factory.get_real_symbol(I_INDEX_NAME), static_cast<unsigned int>(max_i), reqd[0] == variance::covariant);
+        GiNaC::varidx idx_j(this->sym_factory.get_real_symbol(J_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[1] == variance::covariant);
         args += { idx_i, idx_j };
 
         for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
@@ -1143,9 +1208,9 @@ namespace nontrivial_metric
         // build argument list and tag with index variance information
         auto args = this->generate_cache_arguments(printer);
 
-        GiNaC::varidx idx_i(this->sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max_i), reqd[0] == variance::covariant);
-        GiNaC::varidx idx_j(this->sym_factory.get_symbol(J_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[1] == variance::covariant);
-        GiNaC::varidx idx_k(this->sym_factory.get_symbol(K_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[2] == variance::covariant);
+        GiNaC::varidx idx_i(this->sym_factory.get_real_symbol(I_INDEX_NAME), static_cast<unsigned int>(max_i), reqd[0] == variance::covariant);
+        GiNaC::varidx idx_j(this->sym_factory.get_real_symbol(J_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[1] == variance::covariant);
+        GiNaC::varidx idx_k(this->sym_factory.get_real_symbol(K_INDEX_NAME), static_cast<unsigned int>(max_j), reqd[2] == variance::covariant);
         args += { idx_i, idx_j, idx_k };
 
         for(field_index i = field_index(0, reqd[0]); i < max_i; ++i)
@@ -1210,7 +1275,7 @@ namespace nontrivial_metric
         if(!resource || !flatten) throw resource_failure("metric");
 
         std::string variable = printer.array_subscript(*resource, a, b, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 
@@ -1245,7 +1310,7 @@ namespace nontrivial_metric
         if(!resource || !flatten) throw resource_failure("metric inverse");
 
         std::string variable = printer.array_subscript(*resource, a, b, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 
@@ -1281,7 +1346,7 @@ namespace nontrivial_metric
         if(!resource || !flatten) throw resource_failure("connexion");
 
         std::string variable = printer.array_subscript(*resource, a, b, c, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 
@@ -1299,7 +1364,7 @@ namespace nontrivial_metric
                 unsigned int index = this->fl.flatten(i,j);
                 std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
                                                                *flatten);
-                list[index] = this->sym_factory.get_symbol(variable);
+                list[index] = this->sym_factory.get_real_symbol(variable);
               }
           }
       }
@@ -1322,7 +1387,7 @@ namespace nontrivial_metric
                     unsigned int index = this->fl.flatten(i,j,k);
                     std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
                                                                    this->fl.flatten(k), *flatten);
-                    list[index] = this->sym_factory.get_symbol(variable);
+                    list[index] = this->sym_factory.get_real_symbol(variable);
                   }
               }
           }

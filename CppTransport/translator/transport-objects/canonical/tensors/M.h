@@ -163,7 +163,7 @@ namespace canonical
         GiNaC::ex eps;
 
         //! Planck mass
-        GiNaC::symbol Mp;
+        symbol_wrapper Mp;
 
         //! cache status
         bool cached;

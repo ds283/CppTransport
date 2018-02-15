@@ -31,6 +31,7 @@
 #include <string>
 #include <sstream>
 
+#include "symbol_factory.h"
 #include "parse_error.h"
 
 #include "ginac/ginac.h"
@@ -38,7 +39,7 @@
 
 template <typename SymbolChecker, typename SymbolInserter, typename AttributeBlock>
 bool GenericInsertSymbol(SymbolChecker check, SymbolInserter insert,
-                         const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, AttributeBlock& a,
+                         const std::string& n, symbol_wrapper& s, const y::lexeme_type& l, AttributeBlock& a,
                          std::string err_msg, std::string dupl_msg)
   {
     // search for an existing entry in the symbol table

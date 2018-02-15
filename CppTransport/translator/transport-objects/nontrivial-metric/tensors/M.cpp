@@ -213,9 +213,9 @@ namespace nontrivial_metric
         derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
         dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); }),
         ddV([&](auto k) -> auto { return res.ddV_resource(k[0], k[1], printer); }),
-        A2([&](auto k) -> auto { return res.Riemann_A2_resource(k[0], k[1], printer); })
+        A2([&](auto k) -> auto { return res.Riemann_A2_resource(k[0], k[1], printer); }),
+        Mp(s.generate_Mp())
       {
-        Mp = this->shared.generate_Mp();
       }
 
   }   // namespace nontrivial_metric

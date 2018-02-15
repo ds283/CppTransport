@@ -83,58 +83,88 @@ void cse::clear()
   }
 
 
-void cse::parse(const GiNaC::ex& expr, std::string name)
+void cse::deposit(cse_impl::symbol_record& record)
+  {
+    if(!record.is_written())
+      {
+        this->decls.emplace_back(record.get_symbol(), record.get_target());
+        record.mark_written();
+      }
+  }
+
+
+void cse::parse(const GiNaC::ex& expr, const boost::optional<std::string> name)
   {
     // no effect if CSE is disabled
     if(!this->data_payload.do_cse()) return;
 
+    // enable parsing timer
     timing_instrument instrument(timer);
 
-    // was a name supplied?
-    // (eg. "name" might be __InternalHsq or __InternalEps, for when we are trying to simplify
-    // expressions used in client code
-    const bool use_name = !name.empty();
-    
-    // if a name was supplied, find iterator to entire expression
-    // technically this is --expr.postorder_end(), however these iterators
-    // are forward-directed only so we have to do a search
-    GiNaC::const_postorder_iterator last;
-    if(use_name)    // avoid performing possibly expensive search if no name supplied
-      {
-        for(auto t = expr.postorder_begin(); t != expr.postorder_end(); ++t) last = t;
-      }
-
+    // loop over all subexpressions in the tree, beginning with the leaves and building up to
+    // more complex expressions
     for(auto t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
       {
-        // print this expression without use counting (false means that print will use get_symbol_without_use_count)
-        std::string e = this->print(*t, false);
+        // print this subexpression *without* use counting
+        // (false means that print will use get_symbol_without_use_count)
+        std::string target_string = this->print(*t, false);
 
-        // does this expression already exist in the lookup table?
-        auto u = this->symbols.find(e);
+        // does this subexpression already exist in the lookup table?
+        auto u = this->symbols.find(target_string);
 
-        // if not, we should insert it
-        if(u != this->symbols.end()) continue;
-    
-        // get a name for this symbol. If it is the top-level expression and a name was supplied then we use it,
-        // otherwise we make a temporary
-        std::string nm;
-        if(use_name && t == last) nm = name;
-        else nm = this->make_symbol();
-    
-        // perform insertion
-        auto result = this->symbols.emplace(e, cse_impl::symbol_record{e, nm});
-        
-        // check whether insertion took place; failure could be due to aliasing
-        if(!result.second) throw cse_exception(name);
-    
+        // if not, insert a new subexpression
+
         // if a name was supplied, we automatically deposit everything to the pool, because typically clients
         // further up the stack will only get a GiNaC symbol corresponding to this name;
-        // they won't have an explicit expression to print which could cause these temporaries to be deposited
-        cse_impl::symbol_record& record = result.first->second;
-        if(use_name && !record.is_written())
+        // they won't have an explicit expression to print which would cause these temporaries to be deposited
+
+        // work out whether we are looking at the total expression, or just one of the component subexpressions
+        auto w = t;
+        ++w;
+        bool last_subexpr = (w == expr.postorder_end());
+
+        if(u == this->symbols.end())
           {
-            this->decls.emplace_back(record.get_symbol(), record.get_target());
-            record.set_written();
+            // Assign a name for this subexpression.
+            // If it is the top-level expression and a name was supplied then we use it,
+            // otherwise we set up a label for a new temporary object
+            std::string symbol_name{name && last_subexpr ? *name : this->make_symbol()};
+
+            // perform insertion
+            auto result = this->symbols.emplace(target_string, cse_impl::symbol_record{target_string, symbol_name});
+
+            // check whether insertion took place; failure could be due to aliasing, so take no risks and
+            // raise an exception
+            if(!result.second) throw cse_exception(*name);
+
+            if(name) deposit(result.first->second);
+          }
+        else
+          {
+            // otherwise, no need to insert, but we should check whether the write flag needs to be set
+            // and we should also check
+            if(name)
+              {
+                cse_impl::symbol_record& rec = u->second;
+                deposit(rec);
+
+                // if this is the total subexpression, check whether the record we've matched has the assigned name
+                if(last_subexpr && rec.get_symbol() != *name)
+                  {
+                    // check whether we've emitted a declaration for this named symbol before
+                    auto v = this->named_symbols.find(*name);
+
+                    if(v == this->named_symbols.end())
+                      {
+                        // if not, then assign the temporary we've matched to the intended name
+
+                        // *don't* inject into the symbol table, though, otherwise we'll end up with *two*
+                        // entries that match the same subexpression -- this is inconsistent
+                        this->decls.emplace_back(*name, rec.get_symbol());
+                        this->named_symbols.insert(*name);
+                      }
+                  }
+              }
           }
       }
   }
@@ -200,8 +230,8 @@ std::string cse::get_symbol_with_use_count(const GiNaC::ex& expr)
 
     if(!t->second.is_written())
       {
-        this->decls.push_back(std::make_pair(t->second.get_symbol(), t->second.get_target()));
-        t->second.set_written();
+        this->decls.emplace_back(t->second.get_symbol(), t->second.get_target());
+        t->second.mark_written();
       }
 
     return t->second.get_symbol();

@@ -31,9 +31,9 @@
 #include "msg_en.h"
 
 constexpr auto CPPTRANSPORT_NAME                     = "CppTransport";
-constexpr auto CPPTRANSPORT_VERSION                  = "2017.1";
-constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 201701;
-constexpr auto CPPTRANSPORT_COPYRIGHT                = "(c) University of Sussex 2016, 2017";
+constexpr auto CPPTRANSPORT_VERSION                  = "2018.1";
+constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 201801;
+constexpr auto CPPTRANSPORT_COPYRIGHT                = "(c) University of Sussex 2016-2018";
 
 constexpr auto TEMPLATE_TAG_SUFFIX                   = "_";
 
@@ -45,10 +45,11 @@ constexpr auto MPLANCK_SYMBOL                        = "__Mp";
 constexpr auto MPLANCK_LATEX_SYMBOL                  = "M_{\\mathrm{P}}";
 constexpr auto MPLANCK_TEXT_NAME                     = "M_P";
 
-constexpr auto HSQ_SYMBOL_NAME                       = "__InternalHsq";
-constexpr auto EPS_SYMBOL_NAME                       = "__InternalEps";
-constexpr auto V_SYMBOL_NAME                         = "__InternalV";
-constexpr auto ZETA2_P_SYMBOL_NAME                   = "__InternalZ2p";
+constexpr auto HSQ_SYMBOL_NAME                       = "_InternalHsq";
+constexpr auto EPS_SYMBOL_NAME                       = "_InternalEps";
+constexpr auto ETA_SYMBOL_NAME                       = "_InternalEta";
+constexpr auto V_SYMBOL_NAME                         = "_InternalV";
+constexpr auto ZETA2_P_SYMBOL_NAME                   = "_InternalZ2p";
 
 constexpr auto DEFAULT_RECURSION_DEPTH               = (127);
 constexpr auto DEFAULT_MODEL_NAME                    = "UNKNOWN_MODEL";

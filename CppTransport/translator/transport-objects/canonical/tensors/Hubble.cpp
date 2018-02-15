@@ -47,5 +47,11 @@ namespace canonical
         return this->res.eps_resource(this->cse_worker, this->printer);
       }
 
+
+    GiNaC::ex Hubble::compute_eta()
+      {
+        return this->res.eta_resource(this->cse_worker, this->printer);
+      }
+
   }   // namespace canonical
 
