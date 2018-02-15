@@ -40,6 +40,7 @@
 #define CPPTRANSPORT_WRONG_PARAMS_B        "] does not match expected number [= "
 
 #define CPPTRANSPORT_WRONG_ICS_A           "Error: supplied number of initial conditions [= "
+#define CPPTRANSPORT_WRONG_COORDS_A        "Error: supplied number of phase-space coordinates [= "
 #define CPPTRANSPORT_WRONG_ICS_B           "] does not match expected number [= "
 #define CPPTRANSPORT_WRONG_ICS_C           " or "
 

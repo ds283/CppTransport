@@ -248,6 +248,7 @@ namespace transport
         // Over-ride functions inherited from 'model'
         number H(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
         number epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
+        number eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
 
         // Over-ride functions inherited from 'nontrivial_metric_model'
         number V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
@@ -545,7 +546,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -570,7 +571,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -589,13 +590,38 @@ namespace transport
 
 
     template <typename number>
+    number $MODEL<number>::eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
+      {
+        assert(__coords.size() == 2*$NUMBER_FIELDS);
+        if(__coords.size() != 2*$NUMBER_FIELDS)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            throw std::out_of_range(msg.str());
+          }
+
+        DEFINE_INDEX_TOOLS
+        $RESOURCE_RELEASE
+        const auto __Mp = __params.get_Mp();
+        const auto& __param_vector = __params.get_vector();
+
+        $RESOURCE_PARAMETERS{__param_vector}
+        $RESOURCE_COORDINATES{__coords}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+
+        return $ETA;
+      }
+
+
+    template <typename number>
     number $MODEL<number>::V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -621,7 +647,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -648,7 +674,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     

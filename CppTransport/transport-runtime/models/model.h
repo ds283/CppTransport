@@ -239,6 +239,9 @@ namespace transport
         //! Compute slow-roll parameter epsilon given a phase-space configuration
         virtual number epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const = 0;
 
+        //! Compute slow-roll parameter eta given a phase-space configuration
+        virtual number eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const = 0;
+
 
         // INITIAL CONDITIONS HANDLING
 
