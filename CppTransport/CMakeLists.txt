@@ -1188,7 +1188,7 @@ SET(TRANSPORT_RUNTIME_SQLITE3_DETAIL_FILES
   )
 
 SET(TRANSPORT_RUNTIME_SQLITE3_UPGRADEKIT_FILES
-  transport-runtime/sqlite3/upgradekit/update_201701.h
+  transport-runtime/sqlite3/upgradekit/update_201801.h
   )
 
 SET(TRANSPORT_RUNTIME_SQLITE3_FILES

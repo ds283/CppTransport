@@ -28,7 +28,7 @@
 
 
 #include "transport-runtime/repository/repository_upgradekit.h"
-#include "transport-runtime/sqlite3/upgradekit/update_201701.h"
+#include "transport-runtime/sqlite3/upgradekit/update_201801.h"
 
 #include "transport-runtime/transactions/transaction_manager.h"
 
@@ -350,10 +350,10 @@ namespace transport
         // construct notification gadget
         upgradekit_impl::NotifyGadget notify{ctr, this->msg};
         
-        // perform upgrades introduced in 2017.1§
-        sqlite3_operations::update_201701 h201701;
-        h201701.integration_container(db, mgr, notify);
-        
+        // perform upgrades introduced in 2018.1
+        sqlite3_operations::update_201801 h201801;
+        h201801.integration_container(db, mgr, notify);
+
         // release container clock
         mgr.commit();
       }

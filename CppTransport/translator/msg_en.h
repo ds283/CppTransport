@@ -53,7 +53,7 @@ constexpr auto ERROR_MISSING_TEMPLATE                = "Could not find specified
 constexpr auto ERROR_READING_TEMPLATE                = "Error reading from template file";
 constexpr auto ERROR_EXPECTED_EQUALS                 = "Expected '=' symbol";
 constexpr auto ERROR_EXPECTED_BACKEND_IDENTIFIER     = "Expected backend identifier";
-constexpr auto ERROR_EXPECTED_CPPTRANSPORT_VERSION   = "Expected CppTransport version number in format 201701";
+constexpr auto ERROR_EXPECTED_CPPTRANSPORT_VERSION   = "Expected CppTransport version number in format 201801";
 constexpr auto ERROR_EXPECTED_TEMPLATE_TYPE          = "Expected template type specifier";
 constexpr auto ERROR_IMPROPER_TEMPLATE_HEADER        = "Improperly formed header line in template";
 constexpr auto ERROR_TEMPLATE_TOO_RECENT_A           = "Template requires more recent version of CppTransport (>=";
