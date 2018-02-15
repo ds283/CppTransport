@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(dquad)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport201701/share/cmake/")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "~/.cpptransport201801/share/cmake/")
 
 INCLUDE(CompilerFlags)
 
