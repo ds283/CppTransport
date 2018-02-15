@@ -49,6 +49,7 @@
 #define CPPTRANSPORT_KLABEL_TYPE_CONVENTIONAL                "conventional"
 #define CPPTRANSPORT_KLABEL_TYPE_COMOVING                    "comoving"
 #define CPPTRANSPORT_BACKGROUND_QUANTITY_EPSILON             "epsilon"
+#define CPPTRANSPORT_BACKGROUND_QUANTITY_ETA                 "eta"
 #define CPPTRANSPORT_BACKGROUND_QUANTITY_HUBBLE              "H"
 #define CPPTRANSPORT_BACKGROUND_QUANTITY_A_HUBBLE            "aH"
 #define CPPTRANSPORT_LINE_TYPE_SCATTERED                     "scattered"
