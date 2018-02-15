@@ -127,7 +127,7 @@ GiNaC::ex operator+(const symbol_wrapper& a, const GiNaC::ex& b)
 
 GiNaC::ex operator+(const GiNaC::ex& a, const symbol_wrapper& b)
   {
-    return a - b.get();
+    return a + b.get();
   }
 
 
@@ -163,7 +163,7 @@ GiNaC::ex operator*(const symbol_wrapper& a, const GiNaC::ex& b)
 
 GiNaC::ex operator*(const GiNaC::ex& a, const symbol_wrapper& b)
   {
-    return a - b.get();
+    return a * b.get();
   }
 
 
