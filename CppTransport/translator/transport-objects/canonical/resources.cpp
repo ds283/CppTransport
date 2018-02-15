@@ -245,11 +245,11 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            std::unique_ptr<symbol_list> derivs = this->share.generate_deriv_symbols(printer);
+            auto derivs = this->share.generate_deriv_symbols(printer);
             auto Mp = this->share.generate_Mp();
 
             eps = 0;
-            for(symbol_wrapper& dv: *derivs)
+            for(const auto& dv: *derivs)
               {
                 eps += dv*dv;
               }
@@ -258,7 +258,59 @@ namespace canonical
             this->cache.store(expression_item_types::epsilon_item, 0, args, eps);
           }
 
-        return(eps);
+        return eps;
+      }
+
+
+    GiNaC::ex resources::eta_resource(cse& cse_worker, const language_printer& printer) const
+      {
+        auto eps = this->eps_resource(cse_worker, printer);
+        auto Hsq = this->Hsq_resource(cse_worker, printer);
+
+        if(this->payload.do_cse())
+          {
+            auto eta = this->share.generate_eta();
+            auto raw_eta = this->raw_eta_resource(eps, Hsq, printer);
+
+            // parse raw expression, assigning result to the correct symbolic name
+            cse_worker.parse(raw_eta, eta.get_name());
+
+            // return symbol
+            return eta;
+          }
+
+        return this->raw_eta_resource(eps, Hsq, printer);
+      }
+
+
+    GiNaC::ex resources::raw_eta_resource(GiNaC::ex eps, GiNaC::ex Hsq, const language_printer& printer) const
+      {
+        auto args = this->generate_cache_arguments(printer);
+
+        GiNaC::ex eta;
+
+        if(!this->cache.query(expression_item_types::eta_item, 0, args, eta))
+          {
+            timing_instrument timer(this->compute_timer);
+
+            auto derivs = this->share.generate_deriv_symbols(printer);
+            auto dV = this->dV_resource(printer);
+            auto Mp = this->share.generate_Mp();
+
+            GiNaC::ex depsdN = 2*eps*(eps-3);
+
+            field_index max_i = this->share.get_max_field_index(variance::none);
+
+            for(field_index i = field_index(0, variance::none); i < max_i; ++i)
+              {
+                depsdN -= (*derivs)[this->fl.flatten(i)] * (*dV)[this->fl.flatten(i)] / (Hsq*Mp*Mp);
+              }
+
+            eta = depsdN / eps;
+            this->cache.store(expression_item_types::eta_item, 0, args, eta);
+          }
+
+        return eta;
       }
 
 

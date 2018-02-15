@@ -83,6 +83,10 @@ namespace canonical
         //! returns raw expression, without applying any CSE
         GiNaC::ex raw_eps_resource(const language_printer& printer) const;
 
+        //! generate eta resource
+        //! returns raw expression, without applying any CSE
+        GiNaC::ex raw_eta_resource(GiNaC::ex eps, GiNaC::ex Hsq, const language_printer& printer) const;
+
         //! generate Hubble-squared resource
         //! returns raw expression, without applying any CSE
         GiNaC::ex raw_Hsq_resource(const language_printer& printer) const;
@@ -98,6 +102,9 @@ namespace canonical
 
         //! generate epsilon resource
         GiNaC::ex eps_resource(cse& cse_worker, const language_printer& printer) const;
+
+        //! generate eta resource
+        GiNaC::ex eta_resource(cse& cse_worker, const language_printer& printer) const;
 
         //! generate Hubble-squared resource
         GiNaC::ex Hsq_resource(cse& cse_worker, const language_printer& printer) const;

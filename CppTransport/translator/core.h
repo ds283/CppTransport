@@ -47,6 +47,7 @@ constexpr auto MPLANCK_TEXT_NAME                     = "M_P";
 
 constexpr auto HSQ_SYMBOL_NAME                       = "_InternalHsq";
 constexpr auto EPS_SYMBOL_NAME                       = "_InternalEps";
+constexpr auto ETA_SYMBOL_NAME                       = "_InternalEta";
 constexpr auto V_SYMBOL_NAME                         = "_InternalV";
 constexpr auto ZETA2_P_SYMBOL_NAME                   = "_InternalZ2p";
 

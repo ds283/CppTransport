@@ -50,7 +50,7 @@ enum class expression_item_types
     ddV_item, ddV_lambda,
     dddV_item, dddV_lambda,
     Hubble2_item,
-    epsilon_item,
+    epsilon_item, eta_item,
     metric_item, metric_lambda,
     metric_inverse_item, metric_inverse_lambda,
     connexion_item, connexion_lambda,

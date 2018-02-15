@@ -94,6 +94,9 @@ class shared_resources
     //! generate epsilon symbol resource
     symbol_wrapper generate_eps() const { return this->sym_factory.get_real_symbol(EPS_SYMBOL_NAME); }
 
+    //! generate eta symbol resource
+    symbol_wrapper generate_eta() const { return this->sym_factory.get_real_symbol(ETA_SYMBOL_NAME); }
+
     //! generate V symbol resource
     symbol_wrapper generate_V() const { return this->sym_factory.get_real_symbol(V_SYMBOL_NAME); }
 

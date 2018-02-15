@@ -556,7 +556,7 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            std::unique_ptr<symbol_list> derivs = this->share.generate_deriv_symbols(printer);
+            auto derivs = this->share.generate_deriv_symbols(printer);
             auto Mp = this->share.generate_Mp();
 
             eps = 0;
@@ -564,13 +564,16 @@ namespace nontrivial_metric
             if(derivs->size() != this->G->rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
             if(derivs->size() != this->G->cols()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
 
-            const unsigned int max = derivs->size();
-            
-            for(unsigned int i = 0; i < max; ++i)
+            field_index max = this->share.get_max_field_index(variance::none);
+
+            for(field_index i = field_index(0, variance::none); i < max; ++i)
               {
-                for(unsigned int j = 0; j < max; ++j)
+                for(field_index j = field_index(0, variance::none); j < max; ++j)
                   {
-                    eps += (*this->G)(i,j) * (*derivs)[i] * (*derivs)[j];
+                    auto iv = this->fl.flatten(i);
+                    auto jv = this->fl.flatten(j);
+
+                    eps += (*this->G)(iv,jv) * (*derivs)[iv] * (*derivs)[jv];
                   }
               }
             
@@ -587,6 +590,68 @@ namespace nontrivial_metric
           }
 
         return(eps);
+      }
+
+
+    GiNaC::ex resources::eta_resource(cse& cse_worker, const language_printer& printer) const
+      {
+        auto eps = this->eps_resource(cse_worker, printer);
+        auto Hsq = this->Hsq_resource(cse_worker, printer);
+
+        if(this->payload.do_cse())
+          {
+            auto eta = this->share.generate_eta();
+            auto raw_eta = this->raw_eta_resource(eps, Hsq, printer);
+
+            // parse raw expression, assigning result to the correct symbolic name
+            cse_worker.parse(raw_eta, eta.get_name());
+
+            // return symbol
+            return eta;
+          }
+
+        return this->raw_eta_resource(eps, Hsq, printer);
+      }
+
+
+    GiNaC::ex resources::raw_eta_resource(GiNaC::ex eps, GiNaC::ex Hsq, const language_printer& printer) const
+      {
+        auto args = this->generate_cache_arguments(printer);
+
+        GiNaC::ex eta;
+
+        if(!this->cache.query(expression_item_types::eta_item, 0, args, eta))
+          {
+            timing_instrument timer(this->compute_timer);
+
+            auto derivs = this->share.generate_deriv_symbols(printer);
+            auto dV = this->dV_resource(variance::covariant, printer);
+            auto Mp = this->share.generate_Mp();
+
+            if(derivs->size() != this->G->rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+            if(derivs->size() != this->G->cols()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+
+            if(dV->size() != this->G->rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+            if(dV->size() != this->G->cols()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+
+            GiNaC::ex depsdN = 2*eps*(eps-3);
+
+            field_index max_i = this->share.get_max_field_index(variance::none);
+
+            for(field_index i = field_index(0, variance::none); i < max_i; ++i)
+              {
+                // dV is covariant and derivative is contravariant, so this is a proper invariant
+                depsdN -= (*derivs)[this->fl.flatten(i)] * (*dV)[this->fl.flatten(i)] / (Hsq*Mp*Mp);
+              }
+
+            // no need to perform parameter/coordinate substitution here, since eps and H will already have been
+            // substituted individually
+            eta = depsdN / eps;
+
+            this->cache.store(expression_item_types::eta_item, 0, args, eta);
+          }
+
+        return eta;
       }
 
 

@@ -133,7 +133,7 @@ namespace nontrivial_metric
           {
             this->p += diff(1 / (2 * dotH), (*fields)[this->fl.flatten(i)]) * (*derivs)[this->fl.flatten(i)];
 
-            // derivs is contravariance, dV is covariant
+            // derivs is contravarianct, dV is covariant
             GiNaC::ex dXdN = (eps - 3) * (*derivs)[this->fl.flatten(i)] - (*dV)[this->fl.flatten(i)] / Hsq;
 
             this->p += diff(1 / (2 * dotH), (*derivs)[this->fl.flatten(i)]) * dXdN;
