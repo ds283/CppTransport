@@ -283,7 +283,7 @@ namespace canonical
       {
         if(resource)   // no need to push arguments if no resource available
           {
-            GiNaC::symbol sym = sym_factory.get_real_symbol(resource.get());
+            auto sym = sym_factory.get_real_symbol(resource.get());
             args += sym;
           }
       }
@@ -295,7 +295,7 @@ namespace canonical
       {
         if(resource)   // no need to push arguments if no resource available
           {
-            GiNaC::symbol sym = sym_factory.get_real_symbol(resource.get().second);
+            auto sym = sym_factory.get_real_symbol(resource.get().second);
             args += sym;
           }
       }

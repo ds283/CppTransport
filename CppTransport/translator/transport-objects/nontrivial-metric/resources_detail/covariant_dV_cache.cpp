@@ -59,7 +59,7 @@ namespace nontrivial_metric
                 const GiNaC::ex& V = cache.get_V();
                 const symbol_list& f_list = cache.get_symbol_list();
                 
-                const GiNaC::symbol& x1 = f_list[res.fl.flatten(i)];
+                const symbol_wrapper& x1 = f_list[res.fl.flatten(i)];
                 dV = GiNaC::diff(V, x1);
                 
                 res.cache.store(expression_item_types::dV_item, index, args, dV);

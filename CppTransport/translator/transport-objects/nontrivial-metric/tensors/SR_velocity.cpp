@@ -134,7 +134,8 @@ namespace nontrivial_metric
         fl(f),
         compute_timer(tm),
         cached(false),
-        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); })
+        dV([&](auto k) -> auto { return res.dV_resource(k[0], printer); }),
+        Mp(s.generate_Mp())
       {
       }
     
@@ -152,7 +153,6 @@ namespace nontrivial_metric
     void SR_velocity::pre_lambda()
       {
         V = this->res.V_resource(this->cse_worker, this->printer);
-        Mp = this->shared.generate_Mp();
       }
     
     

@@ -30,8 +30,8 @@ namespace canonical
   {
 
     std::unique_ptr<flattened_tensor>
-    u3::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-                GiNaC::symbol& a)
+    u3::compute(const index_literal_list& indices, symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3,
+                symbol_wrapper& a)
       {
         if(indices.size() != U3_TENSOR_INDICES) throw tensor_exception("U3 indices");
 
@@ -60,7 +60,7 @@ namespace canonical
     
     
     GiNaC::ex u3::compute_component(phase_index i, phase_index j, phase_index k,
-                                    GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+                                    symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3, symbol_wrapper& a)
       {
         if(!this->cached) throw tensor_exception("U3 cache not ready");
 
@@ -135,7 +135,7 @@ namespace canonical
 
     std::unique_ptr<map_lambda>
     u3::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+                       symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3, symbol_wrapper& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
         if(j.get_class() != index_class::full) throw tensor_exception("U3");

@@ -45,9 +45,15 @@ namespace y
       {
         try
           {
-            auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_real_symbol(name,
-                                                                                                                 latex); };
-            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.model.add_field(name, symbol, lexeme, attrs); };
+            auto SymbolFactory = [&](auto& name, auto& latex) -> auto
+              {
+                return this->sym_factory.get_real_symbol(name, latex);
+              };
+
+            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto
+              {
+                return this->root.model.add_field(name, symbol, lexeme, attrs);
+              };
     
             GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, a);
           }
@@ -62,9 +68,15 @@ namespace y
       {
         try
           {
-            auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_real_symbol(name,
-                                                                                                                 latex); };
-            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto { return this->root.model.add_parameter(name, symbol, lexeme, attrs); };
+            auto SymbolFactory = [&](auto& name, auto& latex) -> auto
+              {
+                return this->sym_factory.get_real_symbol(name, latex);
+              };
+
+            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& attrs) -> auto
+              {
+                return this->root.model.add_parameter(name, symbol, lexeme, attrs);
+              };
     
             GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, a);
           }
@@ -79,9 +91,15 @@ namespace y
       {
         try
           {
-            auto SymbolFactory = [&](auto& name, auto& latex) -> auto { return this->sym_factory.get_real_symbol(name,
-                                                                                                                 latex); };
-            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto { return this->root.model.add_subexpr(name, symbol, lexeme, expr); };
+            auto SymbolFactory = [&](auto& name, auto& latex) -> auto
+              {
+                return this->sym_factory.get_real_symbol(name, latex);
+              };
+
+            auto InsertSymbol = [&](auto& name, auto& symbol, auto& lexeme, auto& expr) -> auto
+              {
+                return this->root.model.add_subexpr(name, symbol, lexeme, expr);
+              };
     
             GenericInsertSymbol(SymbolFactory, InsertSymbol, lex, e);
           }

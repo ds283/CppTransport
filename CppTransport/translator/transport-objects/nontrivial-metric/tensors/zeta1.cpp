@@ -145,9 +145,9 @@ namespace nontrivial_metric
         traits(t),
         compute_timer(tm),
         cached(false),
-        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); })
+        derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
+        Mp(s.generate_Mp())
       {
-        Mp = this->shared.generate_Mp();
       }
     
     

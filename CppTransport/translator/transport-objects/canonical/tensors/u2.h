@@ -67,16 +67,16 @@ namespace canonical
 
         //! evaluate full tensor, returning a flattened list
         std::unique_ptr<flattened_tensor>
-        compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& a) override;
+        compute(const index_literal_list& indices, symbol_wrapper& k, symbol_wrapper& a) override;
 
         //! evaluate component of tensor
         GiNaC::ex
-        compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a) override;
+        compute_component(phase_index i, phase_index j, symbol_wrapper& k, symbol_wrapper& a) override;
 
         //! evaluate lambda for tensor
         std::unique_ptr<map_lambda>
         compute_lambda(const index_literal& i, const index_literal& j,
-                       GiNaC::symbol& k, GiNaC::symbol& a) override;
+                       symbol_wrapper& k, symbol_wrapper& a) override;
 
 
         // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
@@ -106,8 +106,8 @@ namespace canonical
         //! underlying symbolic expression
         GiNaC::ex expr_momentum_field(const GiNaC::idx& i, const GiNaC::idx& j, const GiNaC::ex& Vij,
                                       const GiNaC::ex& Vi, const GiNaC::ex& Vj,
-                                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::symbol& k,
-                                      const GiNaC::symbol& a);
+                                      const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const symbol_wrapper& k,
+                                      const symbol_wrapper& a);
 
 
         // INTERNAL DATA
@@ -166,7 +166,7 @@ namespace canonical
         GiNaC::ex eps;
 
         //! Planck mass
-        GiNaC::symbol Mp;
+        symbol_wrapper Mp;
 
         //! cache status
         bool cached;

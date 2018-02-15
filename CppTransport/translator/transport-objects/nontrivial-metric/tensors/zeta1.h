@@ -153,7 +153,7 @@ namespace nontrivial_metric
         GiNaC::ex eps;
 
         //! Planck mass
-        GiNaC::symbol Mp;
+        symbol_wrapper Mp;
 
         //! cache status
         bool cached;

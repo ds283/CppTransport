@@ -34,8 +34,7 @@
 
 
 template <bool real_valued>
-typename std::conditional<real_valued, GiNaC::realsymbol&, GiNaC::symbol&>::type
-symbol_factory::get_symbol(const std::string& name, std::string LaTeX)
+symbol_wrapper symbol_factory::get_symbol(const std::string& name, std::string LaTeX)
 	{
     // symbol type is realsymbol or symbol, depending which is required
     using symbol_type = typename std::conditional<real_valued, GiNaC::realsymbol, GiNaC::symbol>::type;
@@ -62,7 +61,7 @@ symbol_factory::get_symbol(const std::string& name, std::string LaTeX)
           }
 
         // explicit cast makes me uneasy but alternative solutions are just as unpalatable
-        return record.get_symbol<symbol_type>();
+        return symbol_wrapper{record.get_symbol<symbol_type>()};
       }
 
     symbol_type rval{name, std::move(LaTeX)};
@@ -77,17 +76,17 @@ symbol_factory::get_symbol(const std::string& name, std::string LaTeX)
         throw std::runtime_error(msg.str());
       }
 
-    return u.first->second.template get_symbol<symbol_type>();
+    return symbol_wrapper{u.first->second.template get_symbol<symbol_type>()};
 	}
 
 
-GiNaC::realsymbol& symbol_factory::get_real_symbol(const std::string& name, std::string LaTeX)
+symbol_wrapper symbol_factory::get_real_symbol(const std::string& name, std::string LaTeX)
   {
     return this->get_symbol<true>(name, std::move(LaTeX));
   }
 
 
-GiNaC::symbol& symbol_factory::get_complex_symbol(const std::string& name, std::string LaTeX)
+symbol_wrapper symbol_factory::get_complex_symbol(const std::string& name, std::string LaTeX)
   {
     return this->get_symbol<false>(name, std::move(LaTeX));
   }
@@ -99,4 +98,88 @@ symbol_factory_impl::symbol_record::symbol_record(std::string n, SymbolType& s, 
     symbol(std::make_unique<SymbolType>(s)),
     real_valued(rv)
   {
+  }
+
+
+symbol_wrapper::symbol_wrapper(GiNaC::symbol& s)
+  : symbol(s)
+  {
+  }
+
+
+GiNaC::ex operator-(const symbol_wrapper& a)
+  {
+    return -a.get();
+  }
+
+
+GiNaC::ex operator+(const symbol_wrapper& a, const symbol_wrapper& b)
+  {
+    return a.get() + b.get();
+  }
+
+
+GiNaC::ex operator+(const symbol_wrapper& a, const GiNaC::ex& b)
+  {
+    return a.get() + b;
+  }
+
+
+GiNaC::ex operator+(const GiNaC::ex& a, const symbol_wrapper& b)
+  {
+    return a - b.get();
+  }
+
+
+GiNaC::ex operator-(const symbol_wrapper& a, const symbol_wrapper& b)
+  {
+    return a.get() - b.get();
+  }
+
+
+GiNaC::ex operator-(const symbol_wrapper& a, const GiNaC::ex& b)
+  {
+    return a.get() - b;
+  }
+
+
+GiNaC::ex operator-(const GiNaC::ex& a, const symbol_wrapper& b)
+  {
+    return a - b.get();
+  }
+
+
+GiNaC::ex operator*(const symbol_wrapper& a, const symbol_wrapper& b)
+  {
+    return a.get() * b.get();
+  }
+
+
+GiNaC::ex operator*(const symbol_wrapper& a, const GiNaC::ex& b)
+  {
+    return a.get() * b;
+  }
+
+
+GiNaC::ex operator*(const GiNaC::ex& a, const symbol_wrapper& b)
+  {
+    return a - b.get();
+  }
+
+
+GiNaC::ex operator/(const symbol_wrapper& a, const symbol_wrapper& b)
+  {
+    return a.get() / b.get();
+  }
+
+
+GiNaC::ex operator/(const symbol_wrapper& a, const GiNaC::ex& b)
+  {
+    return a.get() / b;
+  }
+
+
+GiNaC::ex operator/(const GiNaC::ex& a, const symbol_wrapper& b)
+  {
+    return a / b.get();
   }

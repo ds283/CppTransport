@@ -59,7 +59,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_parameter_symbols(const 
         for(param_index i = param_index(0); i < max_i; ++i)
           {
             std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), boost::none);
-            GiNaC::symbol sym = this->sym_factory.get_real_symbol(variable);
+            auto sym = this->sym_factory.get_real_symbol(variable);
             list->push_back(sym);
           }
       }
@@ -90,7 +90,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_field_symbols(const lang
         for(field_index i = field_index(0); i < max_i; ++i)
           {
             std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), **flatten);
-            GiNaC::symbol sym = this->sym_factory.get_real_symbol(variable);
+            auto sym = this->sym_factory.get_real_symbol(variable);
             list->push_back(sym);
           }
       }
@@ -120,7 +120,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_deriv_symbols(const lang
         for(phase_index i = phase_index(this->num_fields); i < max_i; ++i)
           {
             std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), **flatten);
-            GiNaC::symbol sym = this->sym_factory.get_real_symbol(variable);
+            auto sym = this->sym_factory.get_real_symbol(variable);
             list->push_back(sym);
           }
       }
@@ -155,7 +155,7 @@ bool shared_resources::can_roll_coordinates() const
   }
 
 
-GiNaC::symbol shared_resources::generate_parameter_vector(const abstract_index& idx, const language_printer& printer) const
+symbol_wrapper shared_resources::generate_parameter_vector(const abstract_index& idx, const language_printer& printer) const
   {
     const auto& resource = this->mgr.parameters();
 
@@ -214,7 +214,7 @@ GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const index_literal& i)
     const abstract_index& idx = i;
 
     std::string name = idx.get_loop_variable();
-    GiNaC::symbol sym = this->sym_factory.get_real_symbol(name);
+    auto sym = this->sym_factory.get_real_symbol(name);
 
     unsigned int size = 0;
     switch(idx.get_class())
@@ -238,7 +238,7 @@ GiNaC::idx shared_resources::generate_index<GiNaC::idx>(const index_literal& i)
           }
       }
 
-    return GiNaC::idx(sym, size);
+    return GiNaC::idx(sym.get(), size);
   }
 
 
@@ -248,7 +248,7 @@ GiNaC::varidx shared_resources::generate_index<GiNaC::varidx>(const index_litera
     const abstract_index& idx = i;
 
     std::string name = idx.get_loop_variable();
-    GiNaC::symbol sym = this->sym_factory.get_real_symbol(name);
+    auto sym = this->sym_factory.get_real_symbol(name);
 
     unsigned int size = 0;
     switch(idx.get_class())
@@ -272,5 +272,5 @@ GiNaC::varidx shared_resources::generate_index<GiNaC::varidx>(const index_litera
           }
       }
 
-    return GiNaC::varidx(sym, size, i.get_variance() == variance::covariant);
+    return GiNaC::varidx(sym.get(), size, i.get_variance() == variance::covariant);
   }

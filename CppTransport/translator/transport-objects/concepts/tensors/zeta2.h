@@ -58,17 +58,17 @@ class zeta2: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor>
-    compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a) = 0;
+    compute(const index_literal_list& indices, symbol_wrapper& k, symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& a) = 0;
 
     //! evaluate component of tensor
     virtual GiNaC::ex
     compute_component(phase_index i, phase_index j,
-                      GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a) = 0;
+                      symbol_wrapper& k, symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& a) = 0;
 
     //! evaluate lambda for tensor
     virtual std::unique_ptr<map_lambda>
     compute_lambda(const index_literal& i, const index_literal& j,
-                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a) = 0;
+                   symbol_wrapper& k, symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& a) = 0;
 
   };
 

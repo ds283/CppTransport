@@ -29,8 +29,8 @@
 namespace nontrivial_metric
   {
     
-    std::unique_ptr<flattened_tensor> u2::compute(const index_literal_list& indices, GiNaC::symbol& k,
-                                                  GiNaC::symbol& a)
+    std::unique_ptr<flattened_tensor> u2::compute(const index_literal_list& indices, symbol_wrapper& k,
+                                                  symbol_wrapper& a)
       {
         if(indices.size() != U2_TENSOR_INDICES) throw tensor_exception("U2 indices");
 
@@ -54,7 +54,7 @@ namespace nontrivial_metric
       }
     
     
-    GiNaC::ex u2::compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a)
+    GiNaC::ex u2::compute_component(phase_index i, phase_index j, symbol_wrapper& k, symbol_wrapper& a)
       {
         if(!this->cached) throw tensor_exception("U2 cache not ready");
 
@@ -120,7 +120,7 @@ namespace nontrivial_metric
     GiNaC::ex
     u2::expr_momentum_field(const GiNaC::ex& delta_ij, const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj,
                             const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& A2_ij,
-                            const GiNaC::symbol& k, const GiNaC::symbol& a)
+                            const symbol_wrapper& k, const symbol_wrapper& a)
       {
         GiNaC::ex result = delta_ij * ( -k*k / (a*a * Hsq) );
 
@@ -166,7 +166,7 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<map_lambda>
-    u2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k, GiNaC::symbol& a)
+    u2::compute_lambda(const index_literal& i, const index_literal& j, symbol_wrapper& k, symbol_wrapper& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U2");
         if(j.get_class() != index_class::full) throw tensor_exception("U2");
@@ -241,9 +241,9 @@ namespace nontrivial_metric
               { return res.ddV_resource(k[0], k[1], printer); }),
         A2([&](auto k) -> auto
              { return res.Riemann_A2_resource(k[0], k[1], printer); }),
-        G(r, s, f, p)
+        G(r, s, f, p),
+        Mp(s.generate_Mp())
       {
-        Mp = this->shared.generate_Mp();
       }
     
     

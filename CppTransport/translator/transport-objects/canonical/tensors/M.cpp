@@ -179,9 +179,9 @@ namespace canonical
         fl(f),
         traits(t),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        Mp(s.generate_Mp())
       {
-        Mp = this->shared.generate_Mp();
       }
 
   }   // namespace canonical

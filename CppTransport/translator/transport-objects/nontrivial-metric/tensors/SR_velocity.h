@@ -151,7 +151,7 @@ namespace nontrivial_metric
         dV_cache dV;
 
         //! Planck mass
-        GiNaC::symbol Mp;
+        symbol_wrapper Mp;
 
         //! cache status
         bool cached;

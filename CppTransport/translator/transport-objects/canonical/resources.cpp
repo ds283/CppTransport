@@ -106,7 +106,7 @@ namespace canonical
         if(!resource || !flatten) throw resource_failure("coordinate vector");
 
         std::string variable = printer.array_subscript(*resource, idx, **flatten);
-        return this->sym_factory.get_real_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable).get();
       }
 
 
@@ -127,7 +127,7 @@ namespace canonical
         idx_offset.convert_species_to_momentum();
 
         std::string variable = printer.array_subscript(*resource, idx_offset, **flatten);
-        return this->sym_factory.get_real_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable).get();
       }
 
 
@@ -138,8 +138,8 @@ namespace canonical
         // of CSE temporaries, and then return a *different* symbolic expression representing this collection
         if(this->payload.do_cse())
           {
-            GiNaC::symbol V = this->share.generate_V();
-            GiNaC::ex raw_V = this->raw_V_resource(printer);
+            auto V = this->share.generate_V();
+            auto raw_V = this->raw_V_resource(printer);
 
             // parse raw expression, assigning result to correct symbolic name
             cse_worker.parse(raw_V, V.get_name());
@@ -221,8 +221,8 @@ namespace canonical
       {
         if(this->payload.do_cse())
           {
-            GiNaC::symbol eps = this->share.generate_eps();
-            GiNaC::ex raw_eps = this->raw_eps_resource(printer);
+            auto eps = this->share.generate_eps();
+            auto raw_eps = this->raw_eps_resource(printer);
 
             // parse raw expression, assigning result to the correct symbolic name
             cse_worker.parse(raw_eps, eps.get_name());
@@ -246,10 +246,10 @@ namespace canonical
             timing_instrument timer(this->compute_timer);
 
             std::unique_ptr<symbol_list> derivs = this->share.generate_deriv_symbols(printer);
-            GiNaC::symbol Mp = this->share.generate_Mp();
+            auto Mp = this->share.generate_Mp();
 
             eps = 0;
-            for(GiNaC::symbol& dv: *derivs)
+            for(symbol_wrapper& dv: *derivs)
               {
                 eps += dv*dv;
               }
@@ -266,8 +266,8 @@ namespace canonical
       {
         if(this->payload.do_cse())
           {
-            GiNaC::symbol Hsq = this->share.generate_Hsq();
-            GiNaC::ex raw_Hsq = this->raw_Hsq_resource(printer);
+            auto Hsq = this->share.generate_Hsq();
+            auto raw_Hsq = this->raw_Hsq_resource(printer);
 
             // parse raw expression, assigning result to the correct symbolic name
             cse_worker.parse(raw_Hsq, Hsq.get_name());
@@ -290,9 +290,9 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex V = this->raw_V_resource(printer);
-            GiNaC::ex eps = this->raw_eps_resource(printer);
-            GiNaC::symbol Mp = this->share.generate_Mp();
+            auto V = this->raw_V_resource(printer);
+            auto eps = this->raw_eps_resource(printer);
+            auto Mp = this->share.generate_Mp();
 
             Hsq = V / ((3-eps)*Mp*Mp);
             this->cache.store(expression_item_types::Hubble2_item, 0, args, Hsq);
@@ -359,10 +359,10 @@ namespace canonical
               {
                 timing_instrument timer(this->compute_timer);
     
-                const GiNaC::ex& V = cache.get_V();
-                const symbol_list& f_list = cache.get_symbol_list();
+                const auto& V = cache.get_V();
+                const auto& f_list = cache.get_symbol_list();
 
-                const GiNaC::symbol& x1 = f_list[this->fl.flatten(i)];
+                const auto& x1 = f_list[this->fl.flatten(i)];
                 dV = GiNaC::diff(V, x1);
 
                 this->cache.store(expression_item_types::dV_item, index, args, dV);
@@ -441,8 +441,8 @@ namespace canonical
                     const GiNaC::ex& V = cache.get_V();
                     const symbol_list& f_list = cache.get_symbol_list();
 
-                    const GiNaC::symbol& x1 = f_list[this->fl.flatten(i)];
-                    const GiNaC::symbol& x2 = f_list[this->fl.flatten(j)];
+                    const symbol_wrapper& x1 = f_list[this->fl.flatten(i)];
+                    const symbol_wrapper& x2 = f_list[this->fl.flatten(j)];
                     ddV = GiNaC::diff(GiNaC::diff(V, x1), x2);
 
                     this->cache.store(expression_item_types::ddV_item, index, args, ddV);
@@ -529,9 +529,9 @@ namespace canonical
                         const GiNaC::ex& V = cache.get_V();
                         const symbol_list& f_list = cache.get_symbol_list();
 
-                        const GiNaC::symbol& x1 = f_list[this->fl.flatten(i)];
-                        const GiNaC::symbol& x2 = f_list[this->fl.flatten(j)];
-                        const GiNaC::symbol& x3 = f_list[this->fl.flatten(k)];
+                        const symbol_wrapper& x1 = f_list[this->fl.flatten(i)];
+                        const symbol_wrapper& x2 = f_list[this->fl.flatten(j)];
+                        const symbol_wrapper& x3 = f_list[this->fl.flatten(k)];
                         dddV = GiNaC::diff(GiNaC::diff(GiNaC::diff(V, x1), x2), x3);
 
                         this->cache.store(expression_item_types::dddV_item, index, args, dddV);

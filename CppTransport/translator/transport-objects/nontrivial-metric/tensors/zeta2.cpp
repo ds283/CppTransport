@@ -30,8 +30,8 @@ namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor>
-    zeta2::compute(const index_literal_list& indices, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                   GiNaC::symbol& a)
+    zeta2::compute(const index_literal_list& indices, symbol_wrapper& k, symbol_wrapper& k1, symbol_wrapper& k2,
+                   symbol_wrapper& a)
       {
         if(indices.size() != ZETA2_TENSOR_INDICES) throw tensor_exception("zeta2 indices");
 
@@ -56,8 +56,8 @@ namespace nontrivial_metric
     
     
     GiNaC::ex zeta2::compute_component(phase_index i, phase_index j,
-                                       GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
-                                       GiNaC::symbol& a)
+                                       symbol_wrapper& k, symbol_wrapper& k1, symbol_wrapper& k2,
+                                       symbol_wrapper& a)
       {
         if(!this->cached) throw tensor_exception("zeta2 cache not ready");
 
@@ -124,7 +124,6 @@ namespace nontrivial_metric
       {
         Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         eps = this->res.eps_resource(this->cse_worker, this->printer);
-        Mp = this->shared.generate_Mp();
 
         // formulae from DS calculation 28 May 2014
 
@@ -142,7 +141,7 @@ namespace nontrivial_metric
           }
         p_ex = p_ex / (Mp*Mp*Hsq);
 
-        GiNaC::symbol p_sym = this->shared.generate_symbol(ZETA2_P_SYMBOL_NAME);
+        symbol_wrapper p_sym = this->shared.generate_symbol(ZETA2_P_SYMBOL_NAME);
         p = p_ex;
         this->cse_worker.parse(p_ex, p_sym.get_name());
       }
@@ -161,8 +160,8 @@ namespace nontrivial_metric
     
     
     GiNaC::ex zeta2::expr_field_field(const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
-                                      const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
-                                      const GiNaC::symbol& a)
+                                      const symbol_wrapper& k, const symbol_wrapper& k1, const symbol_wrapper& k2,
+                                      const symbol_wrapper& a)
       {
         // nontrivial metric version of this formula from DS calculation 30 June 2017
         GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * deriv_i * deriv_j / (Mp*Mp*Mp*Mp*eps);
@@ -171,8 +170,8 @@ namespace nontrivial_metric
     
     
     GiNaC::ex zeta2::expr_field_momentum(const GiNaC::ex& delta_ij, const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j,
-                                         const GiNaC::symbol& k, const GiNaC::symbol& k1, const GiNaC::symbol& k2,
-                                         const GiNaC::symbol& a)
+                                         const symbol_wrapper& k, const symbol_wrapper& k1, const symbol_wrapper& k2,
+                                         const symbol_wrapper& a)
       {
         // nontrivial metric version of this formula from DS calculation 30 June 2017
         GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2) / 2;
@@ -211,8 +210,8 @@ namespace nontrivial_metric
 
 
     std::unique_ptr<map_lambda>
-    zeta2::compute_lambda(const index_literal& i, const index_literal& j, GiNaC::symbol& k,
-                          GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
+    zeta2::compute_lambda(const index_literal& i, const index_literal& j, symbol_wrapper& k,
+                          symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& a)
       {
         if(i.get_class() != index_class::full) throw tensor_exception("zeta2");
         if(j.get_class() != index_class::full) throw tensor_exception("zeta2");
@@ -291,7 +290,8 @@ namespace nontrivial_metric
         compute_timer(tm),
         cached(false),
         derivs([&](auto k) -> auto { return res.generate_deriv_vector(k[0], printer); }),
-        G(r, s, f, p)
+        G(r, s, f, p),
+        Mp(s.generate_Mp())
       {
       }
 

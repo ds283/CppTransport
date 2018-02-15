@@ -29,6 +29,7 @@
 
 
 #include <unordered_map>
+#include <functional>
 
 #include "disable_warnings.h"
 #include "ginac/ginac.h"
@@ -90,6 +91,86 @@ namespace symbol_factory_impl
   }
 
 
+class symbol_wrapper
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor accepts a GiNaC symbol reference; this may resolve to a subclass of GiNaC::symbol
+    //! and the point of the symbol_wrapper class is to prevent any slicing occurring during copying
+    symbol_wrapper(GiNaC::symbol& s);
+
+    //! destructor is default
+    ~symbol_wrapper() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    //! allow implicit conversion to GiNaC::symbol&
+    operator GiNaC::symbol&() { return this->symbol.get(); }
+
+    //! allow implicit conversion to GiNaC::symbol& (const version)
+    operator const GiNaC::symbol&() const { return this->symbol.get(); }
+
+    //! allow implicit conversion to GiNaC::ex
+    operator GiNaC::ex() const { return GiNaC::ex{this->symbol.get()}; }
+
+    //! get() returns reference to underlying symbol
+    GiNaC::symbol& get() { return this->symbol.get(); }
+
+    //! const version
+    const GiNaC::symbol& get() const { return this->symbol.get(); }
+
+    //! return symbol name
+    std::string get_name() const { return this->symbol.get().get_name(); };
+
+
+    // INTERNAL DATA
+
+  private:
+
+    //! reference to symbol object; use std::reference wrapper to allow copying
+    std::reference_wrapper<GiNaC::symbol> symbol;
+
+  };
+
+
+//! unary minus
+GiNaC::ex operator-(const symbol_wrapper& a);
+
+//! allow symbol_wrapper objects to be summed to a GiNaC expression
+GiNaC::ex operator+(const symbol_wrapper& a, const symbol_wrapper& b);
+
+//! allow symbol_wrapper objects to be summed with GiNaC::ex objects
+GiNaC::ex operator+(const symbol_wrapper& a, const GiNaC::ex& b);
+GiNaC::ex operator+(const GiNaC::ex& a, const symbol_wrapper& b);
+
+//! allow symbol_wrapper objects to be subtracted to a GiNaC expression
+GiNaC::ex operator-(const symbol_wrapper& a, const symbol_wrapper& b);
+
+//! allow symbol_wrapper objects to be subtracted with GiNaC::ex objects
+GiNaC::ex operator-(const symbol_wrapper& a, const GiNaC::ex& b);
+GiNaC::ex operator-(const GiNaC::ex& a, const symbol_wrapper& b);
+
+//! allow symbol wrapper objects to be multiplied to a GiNaC expression
+GiNaC::ex operator*(const symbol_wrapper& a, const symbol_wrapper& b);
+
+//! allow symbol_wrapper objects to be multiplied with GiNaC::ex objects
+GiNaC::ex operator*(const symbol_wrapper& a, const GiNaC::ex& b);
+GiNaC::ex operator*(const GiNaC::ex& a, const symbol_wrapper& b);
+
+//! allow symbol wrapper objects to be divided to a GiNaC expression
+GiNaC::ex operator/(const symbol_wrapper& a, const symbol_wrapper& b);
+
+//! allow symbol_wrapper objects to be divided with GiNaC::ex objects
+GiNaC::ex operator/(const symbol_wrapper& a, const GiNaC::ex& b);
+GiNaC::ex operator/(const GiNaC::ex& a, const symbol_wrapper& b);
+
+
 class symbol_factory
 	{
 
@@ -109,10 +190,10 @@ class symbol_factory
   public:
 
 		//! get a real-valued symbol, optionally specifying a LaTeX label
-    GiNaC::realsymbol& get_real_symbol(const std::string& name, std::string LaTeX = std::string{});
+    symbol_wrapper get_real_symbol(const std::string& name, std::string LaTeX = std::string{});
 
     //! get a complex-valued symbol, optionally specifying a LaTeX label
-    GiNaC::symbol& get_complex_symbol(const std::string& name, std::string LaTeX = std::string{});
+    symbol_wrapper get_complex_symbol(const std::string& name, std::string LaTeX = std::string{});
 
 
     // INTERNAL API
@@ -121,8 +202,7 @@ class symbol_factory
 
     //! generic implementation of get_symbol
     template <bool real_valued>
-    typename std::conditional<real_valued, GiNaC::realsymbol&, GiNaC::symbol&>::type
-    get_symbol(const std::string& name, std::string LaTeX);
+    symbol_wrapper get_symbol(const std::string& name, std::string LaTeX);
 
 
 		// INTERNAL DATA

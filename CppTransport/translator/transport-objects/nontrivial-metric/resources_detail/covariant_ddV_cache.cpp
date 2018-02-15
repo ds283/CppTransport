@@ -68,7 +68,7 @@ namespace nontrivial_metric
                     const symbol_list& f_list = cache.get_symbol_list();
 
                     // partial derivative term is partial_j V;i
-                    const GiNaC::symbol& x2 = f_list[res.fl.flatten(j)];
+                    const symbol_wrapper& x2 = f_list[res.fl.flatten(j)];
                     ddV = GiNaC::diff(dV[res.fl.flatten(i)], x2);
                     
                     // include connexion term -Gamma^k_ij V;k

@@ -123,7 +123,8 @@ namespace canonical
         shared(s),
         fl(f),
         compute_timer(tm),
-        cached(false)
+        cached(false),
+        Mp(s.generate_Mp())
       {
       }
     
@@ -142,7 +143,6 @@ namespace canonical
     void SR_velocity::pre_lambda()
       {
         V = this->res.V_resource(this->cse_worker, this->printer);
-        Mp = this->shared.generate_Mp();
       }
     
     

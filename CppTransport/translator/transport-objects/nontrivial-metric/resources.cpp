@@ -449,8 +449,8 @@ namespace nontrivial_metric
         // of CSE temporaries, and then return a *different* symbolic expression representing this collection
         if(this->payload.do_cse())
           {
-            GiNaC::symbol V = this->share.generate_V();
-            GiNaC::ex raw_V = this->raw_V_resource(printer);
+            auto V = this->share.generate_V();
+            auto raw_V = this->raw_V_resource(printer);
 
             // parse raw expression, assigning result to correct symbolic name
             cse_worker.parse(raw_V, V.get_name());
@@ -532,8 +532,8 @@ namespace nontrivial_metric
       {
         if(this->payload.do_cse())
           {
-            GiNaC::symbol eps = this->share.generate_eps();
-            GiNaC::ex raw_eps = this->raw_eps_resource(printer);
+            auto eps = this->share.generate_eps();
+            auto raw_eps = this->raw_eps_resource(printer);
 
             // parse raw expression, assigning result to the correct symbolic name
             cse_worker.parse(raw_eps, eps.get_name());
@@ -557,7 +557,7 @@ namespace nontrivial_metric
             timing_instrument timer(this->compute_timer);
 
             std::unique_ptr<symbol_list> derivs = this->share.generate_deriv_symbols(printer);
-            GiNaC::symbol Mp = this->share.generate_Mp();
+            auto Mp = this->share.generate_Mp();
 
             eps = 0;
             
@@ -594,8 +594,8 @@ namespace nontrivial_metric
       {
         if(this->payload.do_cse())
           {
-            GiNaC::symbol Hsq = this->share.generate_Hsq();
-            GiNaC::ex raw_Hsq = this->raw_Hsq_resource(printer);
+            auto Hsq = this->share.generate_Hsq();
+            auto raw_Hsq = this->raw_Hsq_resource(printer);
 
             // parse raw expression, assigning result to the correct symbolic name
             cse_worker.parse(raw_Hsq, Hsq.get_name());
@@ -618,9 +618,9 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex V = this->raw_V_resource(printer);
-            GiNaC::ex eps = this->raw_eps_resource(printer);
-            GiNaC::symbol Mp = this->share.generate_Mp();
+            auto V = this->raw_V_resource(printer);
+            auto eps = this->raw_eps_resource(printer);
+            auto Mp = this->share.generate_Mp();
 
             // no need to perform parameter/coordinate substitution here, since V and eps will already have been
             // substituted individually
