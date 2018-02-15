@@ -473,7 +473,7 @@ namespace nontrivial_metric
       {
         if(resource)   // no need to push arguments if no resource available
           {
-            GiNaC::symbol sym = sym_factory.get_symbol(resource.get());
+            GiNaC::symbol sym = sym_factory.get_real_symbol(resource.get());
             args += sym;
           }
       }
@@ -485,7 +485,7 @@ namespace nontrivial_metric
       {
         if(resource)   // no need to push arguments if no resource available
           {
-            GiNaC::symbol sym = sym_factory.get_symbol(resource.get().second);
+            GiNaC::symbol sym = sym_factory.get_real_symbol(resource.get().second);
             args += sym;
           }
       }

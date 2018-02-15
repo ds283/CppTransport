@@ -78,7 +78,7 @@ class shared_resources
   public:
 
     //! generate named symbol resource
-    GiNaC::symbol generate_symbol(const std::string& name) const { return this->sym_factory.get_symbol(name); }
+    GiNaC::symbol generate_symbol(const std::string& name) const { return this->sym_factory.get_real_symbol(name); }
 
 
     // GENERATE RESOURCES -- SCALARS
@@ -89,13 +89,13 @@ class shared_resources
     GiNaC::symbol generate_Mp() const { return this->M_Planck; }
 
     //! generate Hsq symbol resource
-    GiNaC::symbol generate_Hsq() const { return this->sym_factory.get_symbol(HSQ_SYMBOL_NAME); }
+    GiNaC::symbol generate_Hsq() const { return this->sym_factory.get_real_symbol(HSQ_SYMBOL_NAME); }
 
     //! generate epsilon symbol resource
-    GiNaC::symbol generate_eps() const { return this->sym_factory.get_symbol(EPS_SYMBOL_NAME); }
+    GiNaC::symbol generate_eps() const { return this->sym_factory.get_real_symbol(EPS_SYMBOL_NAME); }
 
     //! generate V symbol resource
-    GiNaC::symbol generate_V() const { return this->sym_factory.get_symbol(V_SYMBOL_NAME); }
+    GiNaC::symbol generate_V() const { return this->sym_factory.get_real_symbol(V_SYMBOL_NAME); }
 
 
     // GENERATE RESOURCES -- PARAMETERS

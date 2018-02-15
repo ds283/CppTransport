@@ -382,6 +382,10 @@ constexpr auto ERROR_MOMENTUM_TO_SPECIES_FAIL        = "Internal error: momentum
 constexpr auto ERROR_UNIMPLEMENTED_MATHS_FUNCTION    = "Unimplemented mathematical function";
 constexpr auto ERROR_USED_IN_EXPRESSION              = "used in expression";
 
+constexpr auto ERROR_SYMBOL_PREVIOUSLY_COMPLEX       = "symbol was previously declared complex";
+constexpr auto ERROR_SYMBOL_PREVIOUSLY_REAL          = "symbol was previously declared real";
+constexpr auto ERROR_SYMBOL_RECORD_INSERTION         = "Internal error: emplace to symbol record database failed";
+
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";
 constexpr auto MESSAGE_SECOND_LABEL                  = "s";

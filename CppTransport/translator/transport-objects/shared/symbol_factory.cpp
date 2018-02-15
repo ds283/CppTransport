@@ -23,17 +23,80 @@
 // --@@
 //
 
+
+#include <sstream>
+#include <stdexcept>
+#include <type_traits>
+
 #include "symbol_factory.h"
 
+#include "msg_en.h"
 
-GiNaC::symbol symbol_factory::get_symbol(const std::string& name, std::string LaTeX)
+
+template <bool real_valued>
+typename std::conditional<real_valued, GiNaC::realsymbol&, GiNaC::symbol&>::type
+symbol_factory::get_symbol(const std::string& name, std::string LaTeX)
 	{
+    // symbol type is realsymbol or symbol, depending which is required
+    using symbol_type = typename std::conditional<real_valued, GiNaC::realsymbol, GiNaC::symbol>::type;
+    using symbol_factory_impl::symbol_record;
+
     auto t = this->cache.find(name);
 
-		if(t != this->cache.end()) return(t->second);
+		if(t != this->cache.end())
+      {
+        const auto& record = t->second;
 
-    GiNaC::symbol rval(name, std::move(LaTeX));
-		this->cache[name] = rval;
+        // check whether symbol was previously defined as real
+        if(real_valued && !record.is_real_valued())
+          {
+            std::ostringstream msg;
+            msg << "'" << name << "': " << ERROR_SYMBOL_PREVIOUSLY_COMPLEX;
+            throw std::runtime_error(msg.str());
+          }
+        else if(!real_valued && !record.is_complex_valued())
+          {
+            std::ostringstream msg;
+            msg << "'" << name << "': " << ERROR_SYMBOL_PREVIOUSLY_REAL;
+            throw std::runtime_error(msg.str());
+          }
 
-		return(rval);
+        // explicit cast makes me uneasy but alternative solutions are just as unpalatable
+        return record.get_symbol<symbol_type>();
+      }
+
+    symbol_type rval{name, std::move(LaTeX)};
+
+    auto u = this->cache.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(name),
+                                 std::forward_as_tuple(name, rval, real_valued));
+    if(!u.second)
+      {
+        std::ostringstream msg;
+        msg << "'" << name << "': " << ERROR_SYMBOL_RECORD_INSERTION;
+        throw std::runtime_error(msg.str());
+      }
+
+    return u.first->second.template get_symbol<symbol_type>();
 	}
+
+
+GiNaC::realsymbol& symbol_factory::get_real_symbol(const std::string& name, std::string LaTeX)
+  {
+    return this->get_symbol<true>(name, std::move(LaTeX));
+  }
+
+
+GiNaC::symbol& symbol_factory::get_complex_symbol(const std::string& name, std::string LaTeX)
+  {
+    return this->get_symbol<false>(name, std::move(LaTeX));
+  }
+
+
+template <typename SymbolType>
+symbol_factory_impl::symbol_record::symbol_record(std::string n, SymbolType& s, bool rv)
+  : name(std::move(n)),
+    symbol(std::make_unique<SymbolType>(s)),
+    real_valued(rv)
+  {
+  }

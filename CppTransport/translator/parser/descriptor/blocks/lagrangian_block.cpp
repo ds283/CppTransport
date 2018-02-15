@@ -43,7 +43,7 @@ lagrangian_block::lagrangian_block(symbol_factory& s, version_policy& vp, error_
     policy(vp)
   {
     // set up reserved symbol for Planck mass
-    M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
+    M_Planck = sym_factory.get_real_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
 
     // manufacture fake lexeme representing 'location' of Planck mass declaration
     lexeme::lexeme_buffer MPlanck_buffer(MPLANCK_TEXT_NAME, lexeme::lexeme_buffer::type::string_literal, nullptr, 0);

@@ -106,7 +106,7 @@ namespace canonical
         if(!resource || !flatten) throw resource_failure("coordinate vector");
 
         std::string variable = printer.array_subscript(*resource, idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 
@@ -127,7 +127,7 @@ namespace canonical
         idx_offset.convert_species_to_momentum();
 
         std::string variable = printer.array_subscript(*resource, idx_offset, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 
@@ -335,7 +335,7 @@ namespace canonical
 
             std::string variable = printer.array_subscript(resource, this->fl.flatten(i), *flatten);
 
-            list[index] = this->sym_factory.get_symbol(variable);
+            list[index] = this->sym_factory.get_real_symbol(variable);
           }
       }
 
@@ -410,7 +410,7 @@ namespace canonical
                 std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
                                                                *flatten);
 
-                list[index] = this->sym_factory.get_symbol(variable);
+                list[index] = this->sym_factory.get_real_symbol(variable);
               }
           }
     }
@@ -494,7 +494,7 @@ namespace canonical
                     std::string variable = printer.array_subscript(resource, this->fl.flatten(i), this->fl.flatten(j),
                                                                    this->fl.flatten(k), *flatten);
 
-                    list[index] = this->sym_factory.get_symbol(variable);
+                    list[index] = this->sym_factory.get_real_symbol(variable);
                   }
               }
           }
@@ -615,7 +615,7 @@ namespace canonical
         if(!resource || !flatten) throw resource_failure("dV");
 
         std::string variable = printer.array_subscript(resource.get().second, a_idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 
@@ -630,7 +630,7 @@ namespace canonical
         if(!resource || !flatten) throw resource_failure("ddV");
 
         std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 
@@ -647,7 +647,7 @@ namespace canonical
         if(!resource || !flatten) throw resource_failure("dddV");
 
         std::string variable = printer.array_subscript(resource.get().second, a_idx, b_idx, c_idx, **flatten);
-        return this->sym_factory.get_symbol(variable);
+        return this->sym_factory.get_real_symbol(variable);
       }
 
 

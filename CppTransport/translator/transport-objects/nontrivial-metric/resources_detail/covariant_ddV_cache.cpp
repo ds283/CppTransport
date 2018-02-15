@@ -44,8 +44,8 @@ namespace nontrivial_metric
         // build argument list and tag as two covariant indices
         auto args = res.generate_cache_arguments(printer);
         
-        GiNaC::varidx idx_i(res.sym_factory.get_symbol(I_INDEX_NAME), static_cast<unsigned int>(max), true);
-        GiNaC::varidx idx_j(res.sym_factory.get_symbol(J_INDEX_NAME), static_cast<unsigned int>(max), true);
+        GiNaC::varidx idx_i(res.sym_factory.get_real_symbol(I_INDEX_NAME), static_cast<unsigned int>(max), true);
+        GiNaC::varidx idx_j(res.sym_factory.get_real_symbol(J_INDEX_NAME), static_cast<unsigned int>(max), true);
         args += { idx_i, idx_j };
         
         // obtain resource caches
