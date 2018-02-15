@@ -199,6 +199,50 @@ namespace macro_packages
       };
 
 
+    class replace_eta : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_eta(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
+          : replacement_rule_simple(std::move(n), EPSILON_TOTAL_ARGUMENTS),
+            cse_worker(cw),
+            lambda_mgr(lm)
+          {
+            Hubble_obj = f.make_Hubble(prn, cw);
+          }
+
+        //! destructor
+        virtual ~replace_eta() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! Hubble object
+        std::unique_ptr<Hubble> Hubble_obj;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
+      };
+
+
     class replace_parameter : public replacement_rule_index
       {
 

@@ -59,6 +59,9 @@ class Hubble
     //! evaluate epsilon parameter
     virtual GiNaC::ex compute_eps() = 0;
 
+    //! evaluate eta parameter
+    virtual GiNaC::ex compute_eta() = 0;
+
   };
 
 
