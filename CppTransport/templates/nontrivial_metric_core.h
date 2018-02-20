@@ -1715,7 +1715,7 @@ namespace transport
 
             const auto __Hsq = $HUBBLE_SQ;
 
-            __E[$a] = __E[$a] / __Hsq;
+            __E[$^a] = __E[$^a] / __Hsq;
           };
       }
 
@@ -1730,7 +1730,7 @@ namespace transport
         this->M(__task, __fields, __N, __M);
 
         // copy elements of the mass matrix into an Eigen matrix
-        __mass_matrix($a,$b) = __M[FIELDS_FLATTEN($a,$b)];
+        __mass_matrix($^a,$_b) = __M[FIELDS_FLATTEN($^a,$_b)];
 
         // extract eigenvalues from this matrix
         // In general Eigen would give us complex results, which we'd like to avoid. That can be done by
@@ -1738,7 +1738,7 @@ namespace transport
         auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
 
         // copy eigenvalues into output matrix
-        __E[FIELDS_FLATTEN($a)] = __evalues($a);
+        __E[FIELDS_FLATTEN($^a)] = __evalues($^a);
       }
 
 
@@ -1897,7 +1897,7 @@ namespace transport
                 // step through eigenvalue vector, extracting largest absolute value
                 number largest_eigenvalue = -std::numeric_limits<number>().max();
 
-                if(std::abs(this->flat_E[$a]) > largest_eigenvalue) { largest_eigenvalue = std::abs(this->flat_E[$a]); }
+                if(std::abs(this->flat_E[$^a]) > largest_eigenvalue) { largest_eigenvalue = std::abs(this->flat_E[$^a]); }
 
                 return largest_eigenvalue;
               }
