@@ -289,6 +289,12 @@ namespace transport
         // calculate mass matrix
         void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) override;
 
+        // calculate raw mass spectrum
+        void mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+
+        // calculate the sorted mass spectrum, normalized to H^2 if desired
+        void sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
       public:
@@ -355,6 +361,9 @@ namespace transport
         $ENDIF
 
         number* __raw_params;
+
+        //! workspace: Eigen matrix representing mass matrix
+        Eigen::Matrix<number, $NUMBER_FIELDS, $NUMBER_FIELDS> __mass_matrix;
 
       };
 
@@ -1679,6 +1688,61 @@ namespace transport
 
 
     template <typename number>
+    void $MODEL<number>::sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
+                                              double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+      {
+        // get raw, unsorted mass spectrum in __E
+        this->mass_spectrum(__task, __fields, __N, __M, __E);
+
+        // sort mass spectrum into order
+        std::sort(__E.begin(), __E.end());
+
+        // if normalized values requested, divide through by 1/H^2
+        if(__norm)
+          {
+            DEFINE_INDEX_TOOLS
+
+            $RESOURCE_RELEASE
+            const auto& __pvector = __task->get_params().get_vector();
+            __raw_params[$1] = __pvector[$1];
+
+            const auto __Mp = __task->get_params().get_Mp();
+
+            $TEMP_POOL{"const auto $1 = $2;"}
+
+            $RESOURCE_PARAMETERS{__raw_params};
+            $RESOURCE_COORDINATES{__fields};
+
+            const auto __Hsq = $HUBBLE_SQ;
+
+            __E[$a] = __E[$a] / __Hsq;
+          };
+      }
+
+
+    template <typename number>
+    void $MODEL<number>::mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
+                                       double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+      {
+        DEFINE_INDEX_TOOLS
+
+        // write mass matrix (in canonical format) into __M
+        this->M(__task, __fields, __N, __M);
+
+        // copy elements of the mass matrix into an Eigen matrix
+        __mass_matrix($a,$b) = __M[FIELDS_FLATTEN($a,$b)];
+
+        // extract eigenvalues from this matrix
+        // In general Eigen would give us complex results, which we'd like to avoid. That can be done by
+        // forcing Eigen to use a self-adjoint matrix, which has guaranteed real eigenvalues
+        auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+
+        // copy eigenvalues into output matrix
+        __E[FIELDS_FLATTEN($a)] = __evalues($a);
+      }
+
+
+    template <typename number>
     void $MODEL<number>::backend_process_backg(const background_task<number>* tk, backg_history<number>& solution, bool silent)
       {
         DEFINE_INDEX_TOOLS
@@ -1818,6 +1882,7 @@ namespace transport
                 log_a2H2M_vector(log_a2H2M),
                 largest_k(lk),
                 flat_M($NUMBER_FIELDS*$NUMBER_FIELDS),
+                flat_E($NUMBER_FIELDS),
                 N_horizon_crossing(tk->get_N_horizon_crossing()),
                 astar_normalization(tk->get_astar_normalization()),
                 __Mp(params.get_Mp()),
@@ -1827,18 +1892,12 @@ namespace transport
 
             number largest_evalue(const backg_state<number>& fields, number N)
               {
-                DEFINE_INDEX_TOOLS
-                
-                // compupte M matrix with first index up, last index down
-                this->mdl->M(this->task, fields, static_cast<double>(N), this->flat_M);
+                this->mdl->mass_spectrum(this->task, fields, static_cast<double>(N), this->flat_M, this->flat_E);
 
-                mass_matrix($^a,$_b) = flat_M[FIELDS_FLATTEN($^a,$_b)];
-
-                // result of computing eigenvalues is a vector of complex numbers
-                auto evalues = mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+                // step through eigenvalue vector, extracting largest absolute value
                 number largest_eigenvalue = -std::numeric_limits<number>().max();
 
-                if(std::abs(evalues($_a)) > largest_eigenvalue) { largest_eigenvalue = std::abs(evalues($_a)); }
+                if(std::abs(this->flat_E[$a]) > largest_eigenvalue) { largest_eigenvalue = std::abs(this->flat_E[$a]); }
 
                 return largest_eigenvalue;
               }
@@ -1896,8 +1955,8 @@ namespace transport
             //! working space for calculation of mass matrix
             flattened_tensor<number> flat_M;
 
-            //! Eigen matrix representing mass matrix
-            Eigen::Matrix<number, $NUMBER_FIELDS, $NUMBER_FIELDS> mass_matrix;
+            //! working space for calculation of mass eigenvalues
+            flattened_tensor<number> flat_E;
 
             //! largest k-mode for which we are trying to find a horizon-exit time
             const double largest_k;

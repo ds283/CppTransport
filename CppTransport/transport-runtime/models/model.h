@@ -329,6 +329,15 @@ namespace transport
         virtual void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) = 0;
 
 
+        // MASS SPECTRUM
+
+        //! compute the raw mass spectrum
+        virtual void mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+
+        //! obtain the sorted mass spectrum, normalized to the Hubble rate^2 if desired
+        virtual void sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+
+
         // BACKEND
 
       public:
