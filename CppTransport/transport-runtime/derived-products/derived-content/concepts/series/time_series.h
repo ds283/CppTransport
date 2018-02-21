@@ -156,14 +156,15 @@ namespace transport
 
             const std::vector< time_config >& t_values = handle.lookup_tag(tag);
 
-            std::vector<double> t_axis(t_values.size());
-            unsigned int i = 0;
-            for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t, ++i)
+            std::vector<double> t_axis;
+            t_axis.reserve(t_values.size());
+
+            for(auto t = t_values.begin(); t != t_values.end(); ++t)
               {
-                t_axis[i] = t->t;
+                t_axis.push_back(t->t);
               }
 
-				    return(t_axis);
+				    return t_axis;
 			    }
 
 

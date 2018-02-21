@@ -45,18 +45,19 @@
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE       "type"
-#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON    "epsilon"
-#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_ETA        "eta"
-#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE     "hubble"
-#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE   "a-hubble"
-
-
 namespace transport
 	{
 
 		namespace derived_data
 			{
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE                     = "type";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON                  = "epsilon";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_ETA                      = "eta";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE                   = "hubble";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE                 = "a-hubble";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_MASS_SPECTRUM            = "mass-spectrum";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_NORM_MASS_SPECTRUM = "normalized-mass-spectrum";
 
 				template <typename number=default_number_type>
 		    class background_line: public time_series<number>
@@ -131,6 +132,21 @@ namespace transport
                               const std::list<std::string>& tags, slave_message_buffer& messages,
 		                          const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
+            //! generate lines for the mass spectrum
+            void mass_spectrum_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
+                                    const std::list<std::string>& tags, slave_message_buffer& messages,
+                                    const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
+
+            //! generate lines for the normalized mass spectrum, ie. M_i/H
+            void norm_mass_spectrum_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
+                                         const std::list<std::string>& tags, slave_message_buffer& messages,
+                                         const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
+
+            //! common mass spectrum implementation
+            void mass_spectrum(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
+                               const std::list<std::string>& tags, slave_message_buffer& messages,
+                               const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data, bool norm) const;
+
 		        //! generate a LaTeX label
 		        std::string get_LaTeX_label() const;
 
@@ -201,11 +217,21 @@ namespace transport
 
 				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE].asString();
 						type = background_quantity::epsilon;
-						if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON)         type = background_quantity::epsilon;
-            else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_ETA)        type = background_quantity::eta;
-						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE)     type = background_quantity::Hubble;
-						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE)   type = background_quantity::aHubble;
-						else assert(false); // TODO: raise exception
+
+            if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON)
+              type = background_quantity::epsilon;
+            else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_ETA)
+              type = background_quantity::eta;
+            else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE)
+              type = background_quantity::Hubble;
+            else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE)
+              type = background_quantity::aHubble;
+            else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_MASS_SPECTRUM)
+              type = background_quantity::mass_spectrum;
+            else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_NORM_MASS_SPECTRUM)
+              type = background_quantity::norm_mass_spectrum;
+            else
+              assert(false); // TODO: raise exception
 					}
 
 
@@ -239,6 +265,18 @@ namespace transport
                 case background_quantity::aHubble:
                   {
                     writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string{CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE};
+                    break;
+                  }
+
+                case background_quantity::mass_spectrum:
+                  {
+                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string{CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_MASS_SPECTRUM};
+                    break;
+                  }
+
+                case background_quantity::norm_mass_spectrum:
+                  {
+                    writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string{CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_NORM_MASS_SPECTRUM};
                     break;
                   }
 					    }
@@ -300,6 +338,18 @@ namespace transport
                     this->aHubble_line(group, pipe, lines, tags, messages, t_axis, bg_data);
                     break;
                   }
+
+                case background_quantity::mass_spectrum:
+                  {
+                    this->mass_spectrum_line(group, pipe, lines, tags, messages, t_axis, bg_data);
+                    break;
+                  }
+
+                case background_quantity::norm_mass_spectrum:
+                  {
+                    this->norm_mass_spectrum_line(group, pipe, lines, tags, messages, t_axis, bg_data);
+                    break;
+                  }
 					    }
 
 				    this->detach(pipe);
@@ -358,10 +408,10 @@ namespace transport
 
 		        for(unsigned int j = 0; j < line_data.size(); ++j)
 			        {
-		            line_data[j] = mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
+		            line_data[j] = mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]);
 			        }
 
-            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
+            lines.emplace_back(group, this->x_type, value_type::mass, t_axis, line_data,
                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
 
@@ -374,21 +424,86 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->tquery);
-            time_config_tag<number>  tc_tag                          = pipe.new_time_config_tag();
-            std::vector<time_config> t_configs                       = tc_handle.lookup_tag(tc_tag);
-
 		        std::vector<number> line_data(t_axis.size());
+
+            auto tcross = this->gadget.get_integration_task()->get_N_horizon_crossing();
 
 		        for(unsigned int j = 0; j < line_data.size(); ++j)
 			        {
-		            number a = exp(t_configs[j].t - this->gadget.get_integration_task()->get_N_horizon_crossing());
-		            line_data[j] = a * mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
+		            number a = exp(t_axis[j] - tcross);
+		            line_data[j] = a * mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]);
 			        }
 
-            lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
+            lines.emplace_back(group, this->x_type, value_type::mass, t_axis, line_data,
                                this->get_LaTeX_label(), this->get_non_LaTeX_label(), messages);
 			    }
+
+
+        template <typename number>
+        void background_line<number>::mass_spectrum_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                                         const std::list<std::string>& tags, slave_message_buffer& messages,
+                                                         const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
+          {
+            this->mass_spectrum(group, pipe, lines, tags, messages, t_axis, bg_data, false);
+          }
+
+
+        template <typename number>
+        void background_line<number>::norm_mass_spectrum_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                                              const std::list<std::string>& tags, slave_message_buffer& messages,
+                                                              const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
+          {
+            this->mass_spectrum(group, pipe, lines, tags, messages, t_axis, bg_data, true);
+          }
+
+
+        template <typename number>
+        void background_line<number>::mass_spectrum(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
+                                                    const std::list<std::string>& tags, slave_message_buffer& messages,
+                                                    const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data, bool norm) const
+          {
+            model<number>* mdl = this->gadget.get_model();
+            assert(mdl != nullptr);
+
+            auto N = this->gadget.get_N_fields();
+
+            // each element of line_data holds the time history of one mass eigenvalue
+            std::vector< std::vector<number> > line_data{N};
+
+            // resize elements of line_data accordingly
+            for(unsigned int j = 0; j < N; ++j)
+              {
+                line_data[j].resize(t_axis.size());
+              }
+
+            // allocate workspace for computation
+            std::vector<number> M(2*N * 2*N);
+            std::vector<number> E(N);
+
+            // for each time sample point, compute mass spectrum and store in line_data
+            for(unsigned int j = 0; j < t_axis.size(); ++j)
+              {
+                mdl->sorted_mass_spectrum(this->gadget.get_integration_task(), bg_data[j], t_axis[j], false, M, E);
+
+                for(unsigned int i = 0; i < N; ++i)
+                  {
+                    line_data[i][j] = std::sqrt(E[i]);
+                  }
+              }
+
+            // loop through all lines, adding them to the line group
+            for(unsigned int j = 0; j < N; ++j)
+              {
+                std::ostringstream latex_label;
+                latex_label << "$" << CPPTRANSPORT_MASS_SPECTRUM_SYMBOL << "_{" << j << "}$";
+              
+                std::ostringstream text_label;
+                text_label << CPPTRANSPORT_MASS_SPECTRUM_SYMBOL << "{" << j << "}";
+
+                lines.emplace_back(group, this->x_type, norm ? value_type::dimensionless : value_type::mass,
+                                   t_axis, line_data[j], latex_label.str(), text_label.str(), messages);
+              }
+          }
 
 
 				template <typename number>
@@ -426,6 +541,17 @@ namespace transport
                       {
                         label = "$" + std::string{CPPTRANSPORT_LATEX_A_HUBBLE_SYMBOL} + "$";
                         break;
+                      }
+
+                    case background_quantity::mass_spectrum:
+                      {
+                        label = "$" + std::string{CPPTRANSPORT_LATEX_MASS_SPECTRUM_SYMBOL} + "$";
+                        break;
+                      }
+
+                    case background_quantity::norm_mass_spectrum:
+                      {
+                        label = "$" + std::string{CPPTRANSPORT_LATEX_NORM_MASS_SPECTRUM_SYMBOL} + "$";
                       }
                   }
               }
@@ -469,6 +595,17 @@ std::string background_line<number>::get_non_LaTeX_label() const
               {
                 label = std::string{CPPTRANSPORT_NONLATEX_A_HUBBLE_SYMBOL};
                 break;
+              }
+
+            case background_quantity::mass_spectrum:
+              {
+                label = "$" + std::string{CPPTRANSPORT_NONLATEX_MASS_SPECTRUM_SYMBOL} + "$";
+                break;
+              }
+
+            case background_quantity::norm_mass_spectrum:
+              {
+                label = "$" + std::string{CPPTRANSPORT_NONLATEX_NORM_MASS_SPECTRUM_SYMBOL} + "$";
               }
           }
       }
