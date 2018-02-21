@@ -465,7 +465,7 @@ namespace transport
             model<number>* mdl = this->gadget.get_model();
             assert(mdl != nullptr);
 
-            auto N = this->gadget.get_N_fields();
+            const auto N = this->gadget.get_N_fields();
 
             // each element of line_data holds the time history of one mass eigenvalue
             std::vector< std::vector<number> > line_data{N};
@@ -497,10 +497,10 @@ namespace transport
             for(unsigned int j = 0; j < N; ++j)
               {
                 std::ostringstream latex_label;
-                latex_label << "$" << CPPTRANSPORT_MASS_SPECTRUM_SYMBOL << "_{" << j << "}$";
+                latex_label << "$" << CPPTRANSPORT_MASS_SPECTRUM_SYMBOL << "_{" << j+1 << "}$";
               
                 std::ostringstream text_label;
-                text_label << CPPTRANSPORT_MASS_SPECTRUM_SYMBOL << "{" << j << "}";
+                text_label << CPPTRANSPORT_MASS_SPECTRUM_SYMBOL << "{" << j+2 << "}";
 
                 lines.emplace_back(group, this->x_type, norm ? value_type::dimensionless : value_type::mass,
                                    t_axis, line_data[j], latex_label.str(), text_label.str(), messages);
