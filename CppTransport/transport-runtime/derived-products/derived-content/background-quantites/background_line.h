@@ -487,7 +487,9 @@ namespace transport
 
                 for(unsigned int i = 0; i < N; ++i)
                   {
-                    line_data[i][j] = std::sqrt(E[i]);
+                    auto absE = std::abs(E[i]);
+                    auto sign = E[i] / absE;
+                    line_data[i][j] = sign * std::sqrt(absE);
                   }
               }
 
