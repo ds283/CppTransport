@@ -1,1 +1,1 @@
-version = "2018_01_beta1"
+version = "2018_01"

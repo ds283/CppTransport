@@ -22,16 +22,16 @@ A number of different tools implementing the same formalism, but with slightly d
 
 # Releases
 
-The current release of CppTransport is 2017.1 (X August 2017). This release can be identified via a DOI linking to a deposit at [zenodo.org](https://zenodo.org/record/59403). The same .tar.gz archives for each release are also available directly from [GitHub](https://github.com/ds283/CppTransport/releases), but for citations please use the [zenodo.org](https://zenodo.org) versions.
+The current release of CppTransport is 2018.1 (23 February 2018). This release can be identified via a DOI linking to a deposit at [zenodo.org](https://zenodo.org/record/1183518). The same .tar.gz archives for each release are also available directly from [GitHub](https://github.com/ds283/CppTransport/releases), but for citations please use the [zenodo.org](https://zenodo.org) versions.
 
-- 2017.1 (X August 2017) [Source code]() | [User guide]()
+* 2018.1 (23 February 2018) [Source code DOI:10.5281/zenodo.1183518](https://doi.org/10.5281/zenodo.1183518) [user guide being updated]
 * 2016.3 (31 August 2016) [Source code DOI:10.5281/zenodo.61237](http://dx.doi.org/10.5281/zenodo.61237) | [User guide DOI:10.5281/zenodo.61239](http://dx.doi.org/10.5281/zenodo.61239)
 * 2016.2 (3 August 2016) [Source code DOI:10.5281/zenodo.59403](http://dx.doi.org/10.5281/zenodo.59403) | [User guide DOI:10.5281/zenodo.59406](http://dx.doi.org/10.5281/zenodo.59406)
 * 2016.1 (26 July 2016) [Source code DOI:10.5281/zenodo.58710](http://dx.doi.org/10.5281/zenodo.58710) | [User guide DOI:10.5281/zenodo.58714](http://dx.doi.org/10.5281/zenodo.58714)
 
 # Upgrading repositories from 2016.3 and earlier
 
-Version 2017.1 introduces a [small change](https://github.com/ds283/CppTransport/commit/1a61ecc7d1003fff20b662648f709ce0e7bcf220) in the repository database. This is backwards compatible: it is generally possible to use repositories from <= 2016.3 with >= 2017.1, and vice-versa, *except* for generating HTML reports. In this case, **CppTransport** versions 2017.1 and above will produce an error:
+Version 2018.1 introduces a [small change](https://github.com/ds283/CppTransport/commit/1a61ecc7d1003fff20b662648f709ce0e7bcf220) in the repository database. This is backwards compatible: it is generally possible to use repositories from <= 2016.3 with >= 2018.1, and vice-versa, *except* for generating HTML reports. In this case, **CppTransport** versions 2018.1 and above will produce an error:
 ```
 SQLite error: no such column: cpu_brand
 ```
@@ -82,11 +82,11 @@ A full list of references is given in the **CppTransport** documentation, or can
 
 # Acknowledgments
 
-Development of the **CppTransport** platform has been supported by the grant *Precision tests of the inflationary scenario*, funded by the European Union’s Seventh Framework Programme (FP/2007–2013) and ERC Grant Agreement No. 308082.
+Development of the **CppTransport** platform was supported between October 2012 and September 2017 by the grant *Precision tests of the inflationary scenario*, funded by the European Union’s Seventh Framework Programme (FP/2007–2013) and ERC Grant Agreement No. 308082.
 
 Some development has been supported by other sources, including:
 
-* The UK Science and Technology Facilities Council via grants ST/I000976/1 and ST/L000652/1, which funded the science programme at the University of Sussex Astronomy Centre from April 2011-March 2014 and April 2014-March 2017, respectively.
+* The UK Science and Technology Facilities Council via grants ST/I000976/1, ST/L000652/1 and ST/P000525/1 which funded the science programme at the University of Sussex Astronomy Centre between April 2011 abd March 2020.
 
 * The Leverhulme Trust via a Philip Leverhulme Prize.
 
