@@ -44,143 +44,105 @@ namespace transport
 
     namespace repository_toolkit_impl
       {
-
-        //! template method to extract a content group
+    
+        //! template method to get content group record from repository
         template <typename number, typename Payload>
-        std::unique_ptr< content_group_record<Payload> > get_rw_content_group(repository<number>& repo, const std::string& name, transaction_manager& mgr);
+        struct get_rw_content_group
+          {
+            
+            std::unique_ptr< content_group_record<Payload> >
+            get(repository<number>& repo, const std::string& name, transaction_manager& mgr);
+            
+          };
 
 
         //! specialize for integration payloads
-        template <>
-        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        template <typename number>
+        struct get_rw_content_group<number, integration_payload>
           {
-            return repo.query_integration_content(name, mgr);
-          }
 
-        template <>
-        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_integration_content(name, mgr);
-          }
-
-        template <>
-        std::unique_ptr< content_group_record< integration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_integration_content(name, mgr);
-          }
-
+            std::unique_ptr< content_group_record< integration_payload > >
+            get(repository<number>& repo, const std::string& name, transaction_manager& mgr)
+              {
+                return repo.query_integration_content(name, mgr);
+              }
+            
+          };
 
         //! specialize for postintegration payloads
-        template <>
-        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        template <typename number>
+        struct get_rw_content_group<number, postintegration_payload>
           {
-            return repo.query_postintegration_content(name, mgr);
-          }
 
-        template <>
-        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_postintegration_content(name, mgr);
-          }
-
-        template <>
-        std::unique_ptr< content_group_record< postintegration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_postintegration_content(name, mgr);
-          }
-
+            std::unique_ptr< content_group_record< postintegration_payload > >
+            get(repository<number>& repo, const std::string& name, transaction_manager& mgr)
+              {
+                return repo.query_postintegration_content(name, mgr);
+              }
+            
+          };
 
         //! specialize for output payloads
-        template <>
-        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
+        template <typename number>
+        struct get_rw_content_group<number, output_payload>
           {
-            return repo.query_output_content(name, mgr);
-          }
 
-        template <>
-        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_output_content(name, mgr);
-          }
-
-        template <>
-        std::unique_ptr< content_group_record< output_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
-          {
-            return repo.query_output_content(name, mgr);
-          }
+            std::unique_ptr< content_group_record< output_payload > >
+            get(repository<number>& repo, const std::string& name, transaction_manager& mgr)
+              {
+                return repo.query_output_content(name, mgr);
+              }
+            
+          };
 
 
         //! template method to delete a content group
         template <typename number, typename Payload>
-        void erase_repository_record(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr);
+        struct erase_repository_record
+          {
+    
+            void erase(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr);
+            
+          };
 
 
         // specialize for integration payloads
-        template <>
-        void erase_repository_record<double, integration_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+        template <typename number>
+        struct erase_repository_record<number, integration_payload>
           {
-            repo.delete_integration_content(name, task_name, mgr);
-          }
 
-        template <>
-        void erase_repository_record<float, integration_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_integration_content(name, task_name, mgr);
-          }
-
-        template <>
-        void erase_repository_record<long double, integration_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_integration_content(name, task_name, mgr);
-          }
-
+            void erase(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+              {
+                repo.delete_integration_content(name, task_name, mgr);
+              }
+            
+          };
 
         // specialize for postintegration payloads
-        template <>
-        void erase_repository_record<double, postintegration_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+        template <typename number>
+        struct erase_repository_record<number, postintegration_payload>
           {
-            repo.delete_postintegration_content(name, task_name, mgr);
-          }
 
-        template <>
-        void erase_repository_record<float, postintegration_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_postintegration_content(name, task_name, mgr);
-          }
-
-        template <>
-        void erase_repository_record<long double, postintegration_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_postintegration_content(name, task_name, mgr);
-          }
-
+            void erase(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+              {
+                repo.delete_postintegration_content(name, task_name, mgr);
+              }
+            
+          };
 
         // specialize for output payloads
-        template <>
-        void erase_repository_record<double, output_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+        template <typename number>
+        struct erase_repository_record<number, output_payload>
           {
-            repo.delete_output_content(name, task_name, mgr);
-          }
 
-        template <>
-        void erase_repository_record<float, output_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_output_content(name, task_name, mgr);
-          }
-
-        template <>
-        void erase_repository_record<long double, output_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
-          {
-            repo.delete_output_content(name, task_name, mgr);
-          }
+            void erase(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+              {
+                repo.delete_output_content(name, task_name, mgr);
+              }
+            
+          };
 
       }   // namespace repository_toolkit_impl
-
-
-    // pull in repository_toolkit_impl for this scope
-    using namespace repository_toolkit_impl;
-
-
 
 
     //! repository_toolkit provides tools to manipulate repository records,
@@ -198,9 +160,9 @@ namespace transport
         repository_toolkit(repository<number>& r, error_handler eh, warning_handler wh, message_handler mh)
           : repo(r),
             graphkit(r, eh, wh, mh),
-            err(eh),
-            warn(wh),
-            msg(mh)
+            err(std::move(eh)),
+            warn(std::move(wh)),
+            msg(std::move(mh))
           {
           }
 
@@ -282,7 +244,7 @@ namespace transport
       {
         // make local copy of objects to process; we will tag items in this list as 'processed' as we go
         std::map<std::string, bool> items;
-        for(const std::string& item : objects)
+        for(const auto& item : objects)
           {
             items[item] = false;
           }
@@ -296,7 +258,7 @@ namespace transport
         this->update_tags_notes(postintegration_content, items, tags_add, tags_remove, notes_add, notes_remove);
         this->update_tags_notes(output_content, items, tags_add, tags_remove, notes_add, notes_remove);
 
-        for(const std::pair< const std::string, bool >& item : items)
+        for(const auto& item : items)
           {
             if(!item.second)
               {
@@ -318,14 +280,14 @@ namespace transport
         transaction_manager mgr = this->repo.transaction_factory();
 
         // step through records in content database
-        for(const typename ContentDatabase::value_type& item : db)
+        for(const auto& item : db)
           {
             // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
             // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
-            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+            const auto& record = *item.second;
 
             // step through objects in match list
-            for(std::pair< const std::string, bool >& t : items)
+            for(auto& t : items)
               {
                 const std::string& match_expr = t.first;
                 if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
@@ -333,7 +295,11 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
+                    using repository_toolkit_impl::get_rw_content_group;
+                    auto rw_record =
+                      get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
+                        this->repo, record.get_name(), mgr
+                      );
 
                     if(rw_record->get_lock_status())
                       {
@@ -343,10 +309,10 @@ namespace transport
                       }
                     else
                       {
-                        for(const std::string& tag : tags_remove)   rw_record->remove_tag(tag);
-                        for(const std::string& tag : tags_add)      rw_record->add_tag(tag);
-                        for(const std::string& note : notes_remove) rw_record->remove_note(boost::lexical_cast<unsigned int>(note));
-                        for(const std::string& note : notes_add)    rw_record->add_note(note);
+                        for(const auto& tag : tags_remove)   rw_record->remove_tag(tag);
+                        for(const auto& tag : tags_add)      rw_record->add_tag(tag);
+                        for(const auto& note : notes_remove) rw_record->remove_note(boost::lexical_cast<unsigned int>(note));
+                        for(const auto& note : notes_add)    rw_record->add_note(note);
 
                         // recommit record
                         // in the current implementation there is no need to re-read the value in the enumerated database
@@ -370,13 +336,13 @@ namespace transport
       {
         // make local copy of objects to process; we will tag items in this list as 'processed' as we go
         std::map<std::string, bool> items;
-        for(const std::string& item : objects)
+        for(const auto& item : objects)
           {
             items[item] = false;
           }
 
         // cache distance matrix for the content group graph
-        std::unique_ptr<repository_distance_matrix> dmat = this->graphkit.content_group_distance_matrix();
+        auto dmat = this->graphkit.content_group_distance_matrix();
 
         // cache content databases
         integration_content_db integration_content = this->repo.enumerate_integration_task_content();
@@ -390,7 +356,7 @@ namespace transport
         this->delete_content(postintegration_content, items, dmat);
         this->delete_content(integration_content, items, dmat);
 
-        for(const std::pair< const std::string, bool >& item : items)
+        for(const auto& item : items)
           {
             if(!item.second)
               {
@@ -411,20 +377,20 @@ namespace transport
         transaction_manager mgr = this->repo.transaction_factory();
 
         // step through records in content database
-        for(typename ContentDatabase::const_iterator t = db.begin(); t != db.end(); /* intentionally empty increment field */)
+        for(auto t = db.cbegin(); t != db.cend(); /* intentionally empty increment field */)
           {
-            const typename ContentDatabase::value_type& item = *t;
+            const auto& item = *t;
             // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
             // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
-            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+            const auto& record = *item.second;
 
             // step through objects in match list
-            for(std::pair< const std::string, bool >& item : items)
+            for(auto& item : items)
               {
                 if(check_match(record.get_name(), item.first, true))    // true = insist on exact match
                   {
                     item.second = true;   // mark as a match for this item
-                    std::unique_ptr< std::set<std::string> > dependent_groups = dmat->find_dependent_objects(record.get_name());
+                    auto dependent_groups = dmat->find_dependent_objects(record.get_name());
 
                     if(dependent_groups)
                       {
@@ -443,13 +409,15 @@ namespace transport
                                 msg << CPPTRANSPORT_REPO_TOOLKIT_DELETING_OBJECT << " '" << record.get_name() << "'";
                                 this->msg(msg.str());
 
-                                erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), record.get_task_name(),mgr);
+                                using repository_toolkit_impl::erase_repository_record;
+                                erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.erase(
+                                  this->repo, record.get_name(), record.get_task_name(),mgr);
 
                                 // erase record and reset iterator to point to following element
                                 t = db.erase(t);
 
                                 // delete this record from the repository enumeration, and then recompute the distance matrix
-                                std::unique_ptr<repository_distance_matrix> new_dmat = this->graphkit.content_group_distance_matrix();
+                                auto new_dmat = this->graphkit.content_group_distance_matrix();
                                 dmat.swap(new_dmat);
                               }
                           }
@@ -460,7 +428,7 @@ namespace transport
                                 << CPPTRANSPORT_REPO_TOOLKIT_CANNOT_DELETE_DEPENDENT_B << " ";
 
                             unsigned int count = 0;
-                            for(const std::string& group : *dependent_groups)
+                            for(const auto& group : *dependent_groups)
                               {
                                 if(count > 0) msg << ", ";
                                 msg << group;
@@ -489,7 +457,7 @@ namespace transport
       {
         // make local copy of objects to process; we will tag items in this list as 'processed' as we go
         std::map<std::string, bool> items;
-        for(const std::string& item : objects)
+        for(const auto& item : objects)
           {
             items[item] = false;
           }
@@ -503,7 +471,7 @@ namespace transport
         this->lock_content(postintegration_content, items);
         this->lock_content(output_content, items);
 
-        for(const std::pair< const std::string, bool >& item : items)
+        for(const auto& item : items)
           {
             if(!item.second)
               {
@@ -523,14 +491,14 @@ namespace transport
         transaction_manager mgr = this->repo.transaction_factory();
 
         // step through records in content database
-        for(const typename ContentDatabase::value_type& item : db)
+        for(const auto& item : db)
           {
             // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
             // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
-            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+            const auto& record = *item.second;
 
             // step through objects in match list
-            for(std::pair< const std::string, bool >& t : items)
+            for(auto& t : items)
               {
                 const std::string& match_expr = t.first;
                 if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
@@ -538,7 +506,11 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
+                    using repository_toolkit_impl::get_rw_content_group;
+                    auto rw_record =
+                      get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
+                        this->repo, record.get_name(), mgr
+                      );
 
                     rw_record->set_lock_status(true);
 
@@ -558,7 +530,7 @@ namespace transport
       {
         // make local copy of objects to process; we will tag items in this list as 'processed' as we go
         std::map<std::string, bool> items;
-        for(const std::string& item : objects)
+        for(const auto& item : objects)
           {
             items[item] = false;
           }
@@ -572,7 +544,7 @@ namespace transport
         this->unlock_content(postintegration_content, items);
         this->unlock_content(output_content, items);
 
-        for(const std::pair< const std::string, bool >& item : items)
+        for(const auto& item : items)
           {
             if(!item.second)
               {
@@ -592,14 +564,14 @@ namespace transport
         transaction_manager mgr = this->repo.transaction_factory();
 
         // step through records in content database
-        for(const typename ContentDatabase::value_type& item : db)
+        for(const auto& item : db)
           {
             // ContentDatabase has mapped_type equal to std::unique_ptr< content_group_record<PayloadType> >
             // to get the content_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
-            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+            const auto& record = *item.second;
 
             // step through objects in match list
-            for(std::pair< const std::string, bool >& t : items)
+            for(auto& t : items)
               {
                 const std::string& match_expr = t.first;
                 if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
@@ -607,7 +579,11 @@ namespace transport
                     t.second = true;
 
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
+                    using repository_toolkit_impl::get_rw_content_group;
+                    auto rw_record =
+                      get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>{}.get(
+                        this->repo, record.get_name(), mgr
+                      );
 
                     rw_record->set_lock_status(false);
 
@@ -626,4 +602,3 @@ namespace transport
 
 
 #endif //CPPTRANSPORT_REPOSITORY_TOOLKIT_H
-

@@ -31,6 +31,7 @@
 #include <string>
 #include <list>
 
+#include "boost/optional.hpp"
 #include "boost/filesystem/operations.hpp"
 
 
@@ -41,12 +42,9 @@ class finder
 
   public:
 
-    //! default constructor; sets search path to be current working direcotry
-    finder();
-
-    //! value constructor; sets search path as specified, but does not include current working directory
-    finder(boost::filesystem::path path);
-
+    //! default constructor
+    finder() = default;
+    
     //! destructor is default
     ~finder() = default;
 
@@ -56,18 +54,27 @@ class finder
   public:
 
     //! add a path to the search list
-    void add(boost::filesystem::path p);
+    finder& add(boost::filesystem::path p);
 
-    //! add a list of paths to the search list
-    void add(const std::list<boost::filesystem::path>& plist);
+    //! add a container of paths to the search list
+    template <typename Container>
+    finder& add(const Container& plist, const boost::filesystem::path tail = boost::filesystem::path{});
+    
+    //! add the current working directory to the list of search paths
+    finder& add_cwd();
+    
+    //! add a :-separated list from a system environment variable, optionally offset
+    //! by a fixed relative path
+    finder& add_environment_variable(const std::string var, const boost::filesystem::path tail = boost::filesystem::path{});
 
 
-    // INTERFACE-- FIND FULLY-QUALIFIED PATHS
+    // INTERFACE -- FIND FULLY-QUALIFIED PATHS
 
   public:
 
-    // find fully-qualified path name corresponding to a given leafname
-    bool fqpn(const boost::filesystem::path& leaf, boost::filesystem::path& fqpn);
+    // find fully-qualified path name corresponding to a given leafname;
+    // if present, returns the FQPN, otherwise returns boost::none
+    boost::optional< boost::filesystem::path > find(const boost::filesystem::path& leaf) const;
 
 
     // INTERNAL DATA
@@ -78,6 +85,19 @@ class finder
     std::list<boost::filesystem::path> paths;
 
   };
+
+
+template <typename Container>
+finder& finder::add(const Container& plist, const boost::filesystem::path tail)
+  {
+    for(const auto& t : plist)
+      {
+        if(!tail.empty()) this->add(t / tail);
+        else this->add(t);
+      }
+    
+    return *this;
+  }
 
 
 #endif //CPPTRANSPORT_FINDER_H

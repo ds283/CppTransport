@@ -63,14 +63,15 @@ namespace transport
     // specialize for the basic data types; if more complex types are used,
     // separate specializations will need to be provided
     template <>
-    std::string data_type_name<float>() { return("float"); }
+    std::string data_type_name<float>() { return std::string{"float"}; }
 
     template <>
-    std::string data_type_name<double>() { return("double"); }
+    std::string data_type_name<double>() { return std::string{"double"}; }
 
     template <>
-    std::string data_type_name<long double>() { return("long double"); }
+    std::string data_type_name<long double>() { return std::string{"long double"}; }
 
+    
 
     // forward-declare integration writer
     template <typename number> class integration_writer;

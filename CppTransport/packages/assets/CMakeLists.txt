@@ -3,59 +3,39 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(CppTransport)
 
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
-INCLUDE(BuildDeps)
+INCLUDE(BuildCatch)
+INCLUDE(BuildGiNaC)
+INCLUDE(BuildJsonCPP)
+INCLUDE(BuildOdeint)
+INCLUDE(BuildSPLINTER)
+INCLUDE(CompilerFlags)
 
-# Attempt some platform/compiler introspection
-STRING(COMPARE EQUAL "Linux" ${CMAKE_SYSTEM_NAME} LINUX)
-STRING(COMPARE EQUAL "Windows" ${CMAKE_SYSTEM_NAME} WINDOWS)
-STRING(COMPARE EQUAL "Darwin" ${CMAKE_SYSTEM_NAME} OS_X)
+# detect toolchain and set compiler flags appropriately
+SET_COMPILER_FLAGS()
 
-IF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  SET(CLANG TRUE)
-ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  SET(CLANG TRUE)
-ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  SET(GCC TRUE)
-ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-  SET(INTEL TRUE)
-ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  SET(MSVC TRUE)
-ENDIF()
+# RESOLVE DEPENDENCIES
 
-
-IF(CLANG)
-
-  # suppress missing override warnings which are automatically enabled in recent
-  # versions of Clang. These produce a slew of warnings from GiNaC >= 1.7
-  # also suppress unknown attribute warnings which produce errors for GiNaC_deprecated
-  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -Wno-inconsistent-missing-override -Wno-unknown-attributes")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast -Wno-inconsistent-missing-override -Wno-unknown-attributes")
-
-ELSEIF(GCC)
-
-  SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-O3")
-
-ELSEIF(INTEL)
-
-  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
-  SET(CMAKE_C_FLAGS_RELEASE "-Ofast")
-
-ENDIF()
-
+# some libraries require system-level installation (MPI, Boost.Mpi) and are things that
+# we shouldn't try to build ourseves. We insist that these are already available
+# at configure time
 
 # find MPI library
 FIND_PACKAGE(MPI REQUIRED)
 
 # find required Boost libraries
-FIND_PACKAGE(Boost REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
-
-# find GiNaC library
-FIND_PACKAGE(GiNaC REQUIRED)
+# minimum version is 1.56 to get support for Boost.Optional with move-only types
+FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
 
 # find OpenSSL libraries
 FIND_PACKAGE(OpenSSL REQUIRED)
 
+# GiNaC we allow to be pre-installed or not. If it isn't already available then we
+# fall back to building a copy ourselves
+
+# find GiNaC library unless explicitly prevented by the user
+IF(NOT FORCE_BUILD_GINAC)
+  FIND_PACKAGE(GiNaC)
+ENDIF()
 
 # handle non-standard external dependencies
 ADD_CUSTOM_TARGET(DEPS ALL)
@@ -63,6 +43,13 @@ SET(EXTERNAL_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/thirdparty/dist")
 
 BUILD_JSONCPP(${CMAKE_BINARY_DIR}/thirdparty/jsoncpp ${EXTERNAL_INSTALL_PREFIX})
 BUILD_SPLINTER(${CMAKE_BINARY_DIR}/thirdparty/SPLINTER ${EXTERNAL_INSTALL_PREFIX})
+BUILD_ODEINT(${CMAKE_BINARY_DIR}/thirdparty/odeint-v2)
+
+IF(NOT GINAC_FOUND)
+  # GiNaC was not found, so attempt to build it from source
+  BUILD_CLN(${CMAKE_BINARY_DIR}/thirdparty/CLN ${EXTERNAL_INSTALL_PREFIX})
+  BUILD_GINAC(${CMAKE_BINARY_DIR}/thirdparty/GiNaC ${CLN_INCLUDE_DIRS} ${CLN_LIBRARY_DIRS} ${CLN_LIBRARIES} ${EXTERNAL_INSTALL_PREFIX})
+ENDIF()
 
 
 # configure build_data.h
@@ -85,15 +72,19 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/infrastructure/language_concepts/lambda_manager.cpp
   translator/backends/infrastructure/macro_substitution/index_assignment.cpp
   translator/backends/infrastructure/macro_substitution/macro.cpp
-  translator/backends/infrastructure/macro_substitution/macro_tokenizer.cpp
+  translator/backends/infrastructure/macro_substitution/token_list.cpp
+  translator/backends/infrastructure/macro_substitution/macro_tokens.cpp
   translator/backends/infrastructure/macro_substitution/abstract_index.cpp
+  translator/backends/infrastructure/macro_substitution/index_literal.cpp
   translator/backends/infrastructure/macro_substitution/index_class.cpp
   translator/backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
   translator/backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
   translator/backends/infrastructure/replacement_rules/package_group.cpp
   translator/backends/infrastructure/replacement_rules/package_group_factory.cpp
-  translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
   translator/backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/replacement_rule_package.cpp
+  translator/backends/infrastructure/replacement_rules/directive_definitions.cpp
+  translator/backends/infrastructure/replacement_rules/directive_package.cpp
   translator/backends/languages/cpp/core/cpp_group.cpp
   translator/backends/languages/cpp/core/cpp_steppers.cpp
   translator/backends/languages/cpp/vexcl/vexcl_group.cpp
@@ -107,6 +98,7 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/languages/opencl/opencl_printer.cpp
   translator/backends/languages/shared/C_style_printer.cpp
   translator/backends/languages/shared/kernel_argument_macros.cpp
+  translator/backends/shared/curvature_tensors.cpp
   translator/backends/shared/directives.cpp
   translator/backends/shared/flow_tensors.cpp
   translator/backends/shared/fundamental.cpp
@@ -116,37 +108,99 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/shared/temporary_pool.cpp
   translator/backends/shared/utensors.cpp
   translator/parser/y_parser.cpp
+  translator/parser/descriptor/blocks/lagrangian_block.cpp
+  translator/parser/descriptor/blocks/metadata_block.cpp
+  translator/parser/descriptor/blocks/templates_block.cpp
+  translator/parser/descriptor/blocks/misc_block.cpp
+  translator/parser/descriptor/symbols/declarations.cpp
+  translator/parser/descriptor/model_descriptor.cpp
+  translator/parser/driver/expression_tree_driver.cpp
+  translator/parser/driver/lagrangian_driver.cpp
+  translator/parser/driver/metadata_driver.cpp
+  translator/parser/driver/templates_driver.cpp
+  translator/parser/driver/misc_driver.cpp
+  translator/parser/driver/y_driver.cpp
+  translator/parser/semantic-values/attributes.cpp
+  translator/parser/semantic-values/author.cpp
+  translator/parser/semantic-values/metric.cpp
+  translator/parser/semantic-values/stepper.cpp
+  translator/parser/semantic-values/string_array.cpp
+  translator/parser/semantic-values/subexpr.cpp
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
-  translator/parser/script.cpp
-  translator/parser/y_driver.cpp
   translator/parser/y_lexer.cpp
-  translator/transport-objects/canonical/resources.cpp
-  translator/transport-objects/canonical/Hubble.cpp
-  translator/transport-objects/canonical/dV.cpp
-  translator/transport-objects/canonical/ddV.cpp
-  translator/transport-objects/canonical/dddV.cpp
-  translator/transport-objects/canonical/SR_velocity.cpp
-  translator/transport-objects/canonical/A.cpp
-  translator/transport-objects/canonical/Atilde.cpp
-  translator/transport-objects/canonical/B.cpp
-  translator/transport-objects/canonical/C.cpp
-  translator/transport-objects/canonical/M.cpp
-  translator/transport-objects/canonical/u1.cpp
-  translator/transport-objects/canonical/u2.cpp
-  translator/transport-objects/canonical/u3.cpp
-  translator/transport-objects/canonical/zeta1.cpp
-  translator/transport-objects/canonical/zeta2.cpp
-  translator/transport-objects/canonical/dN1.cpp
-  translator/transport-objects/canonical/dN2.cpp
+  translator/transport-objects/canonical/resources_detail/potential_cache.cpp
+  translator/transport-objects/canonical/tensors/A.cpp
+  translator/transport-objects/canonical/tensors/Atilde.cpp
+  translator/transport-objects/canonical/tensors/B.cpp
+  translator/transport-objects/canonical/tensors/C.cpp
+  translator/transport-objects/canonical/tensors/coordinates.cpp
+  translator/transport-objects/canonical/tensors/dV.cpp
+  translator/transport-objects/canonical/tensors/ddV.cpp
+  translator/transport-objects/canonical/tensors/dddV.cpp
+  translator/transport-objects/canonical/tensors/dN1.cpp
+  translator/transport-objects/canonical/tensors/dN2.cpp
+  translator/transport-objects/canonical/tensors/fields.cpp
+  translator/transport-objects/canonical/tensors/Hubble.cpp
+  translator/transport-objects/canonical/tensors/SR_velocity.cpp
+  translator/transport-objects/canonical/tensors/M.cpp
+  translator/transport-objects/canonical/tensors/momenta.cpp
+  translator/transport-objects/canonical/tensors/u1.cpp
+  translator/transport-objects/canonical/tensors/u2.cpp
+  translator/transport-objects/canonical/tensors/u3.cpp
+  translator/transport-objects/canonical/tensors/zeta1.cpp
+  translator/transport-objects/canonical/tensors/zeta2.cpp
   translator/transport-objects/canonical/tensor_factory.cpp
-  translator/transport-objects/resource_manager.cpp
-  translator/transport-objects/concepts/transport_tensor.cpp
+  translator/transport-objects/canonical/resources.cpp
+  translator/transport-objects/canonical/resource_manager.cpp
+  translator/transport-objects/concepts/tensors/parameters.cpp
   translator/transport-objects/indices/indices.cpp
   translator/transport-objects/indices/index_flatten.cpp
   translator/transport-objects/indices/index_traits.cpp
-  translator/transport-objects/utilities/symbol_factory.cpp
-  translator/transport-objects/utilities/shared_resources.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/connexion_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_ddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_dddV_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA2_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannA3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/covariant_RiemannB3_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/derivative_symbols.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/potential_cache.cpp
+  translator/transport-objects/nontrivial-metric/resources_detail/substitution_map_cache.cpp
+  translator/transport-objects/nontrivial-metric/tensors/A.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Atilde.cpp
+  translator/transport-objects/nontrivial-metric/tensors/B.cpp
+  translator/transport-objects/nontrivial-metric/tensors/C.cpp
+  translator/transport-objects/nontrivial-metric/tensors/connexion.cpp
+  translator/transport-objects/nontrivial-metric/tensors/coordinates.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/ddV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dddV.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dN1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/dN2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/fields.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Hubble.cpp
+  translator/transport-objects/nontrivial-metric/tensors/M.cpp
+  translator/transport-objects/nontrivial-metric/tensors/metric.cpp
+  translator/transport-objects/nontrivial-metric/tensors/metric_inverse.cpp
+  translator/transport-objects/nontrivial-metric/tensors/momenta.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_A2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_A3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/Riemann_B3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/SR_velocity.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u2.cpp
+  translator/transport-objects/nontrivial-metric/tensors/u3.cpp
+  translator/transport-objects/nontrivial-metric/tensors/zeta1.cpp
+  translator/transport-objects/nontrivial-metric/tensors/zeta2.cpp
+  translator/transport-objects/nontrivial-metric/metric_resource.cpp
+  translator/transport-objects/nontrivial-metric/tensor_factory.cpp
+  translator/transport-objects/nontrivial-metric/resources.cpp
+  translator/transport-objects/nontrivial-metric/resource_manager.cpp
+  translator/transport-objects/nontrivial-metric/curvature_classes.cpp
+  translator/transport-objects/shared/cache_detail/cache_tags.cpp
+  translator/transport-objects/shared/symbol_factory.cpp
+  translator/transport-objects/shared/shared_resources.cpp
   translator/utilities/error.cpp
   translator/utilities/error_context.cpp
   translator/utilities/finder.cpp
@@ -155,12 +209,17 @@ ADD_EXECUTABLE(CppTransport
   translator/utilities/to_printable.cpp
   translator/utilities/local_environment.cpp
   translator/utilities/argument_cache.cpp
+  translator/version-policy/version_policy.cpp
   )
 
 ADD_DEPENDENCIES(CppTransport DEPS)
 
 TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
-TARGET_COMPILE_OPTIONS(CppTransport PRIVATE -std=c++14)
+SET_TARGET_PROPERTIES(CppTransport PROPERTIES
+  CXX_STANDARD 14
+  CXX_STANDARD_REQUIRED YES
+  CXX_EXTENSIONS NO
+  )
 
 TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator
@@ -178,22 +237,39 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   translator/backends/languages/opencl
   translator/backends/languages/shared
   translator/backends/shared
-  translator/concepts
   translator/instruments
   translator/parser
+  translator/parser/descriptor/blocks
+  translator/parser/descriptor/symbols
+  translator/parser/descriptor
+  translator/parser/driver
+  translator/parser/semantic-values
   translator/transport-objects
   translator/transport-objects/indices
-  translator/transport-objects/utilities
+  translator/transport-objects/concepts/resources_detail
+  translator/transport-objects/shared
   translator/utilities
+  translator/version-policy
   ${Boost_INCLUDE_DIRS}
   ${GINAC_INCLUDE_DIRS}
+  ${OPENSSL_INCLUDE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   )
 
 
-# install targets for CppTransport translator, templates, and header-only library/runtime API
-INSTALL(TARGETS CppTransport DESTINATION bin)
+# install targets for CppTransport translator, templates, and runtime system
+# note that CppTransport-sendmail has more restrictive permissions since it may contain a password
+INSTALL(TARGETS CppTransport DESTINATION bin PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ)
 INSTALL(DIRECTORY templates DESTINATION share/cpptransport)
+INSTALL(DIRECTORY transport-runtime DESTINATION include/cpptransport)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/build_data.h DESTINATION include/cpptransport/transport-runtime)
+
+IF(EMAIL_SMTP_SERVER AND EMAIL_FROM AND EMAIL_PASSWORD)
+  CONFIGURE_FILE(configure_assets/CppTransport-sendmail.in ${CMAKE_BINARY_DIR}/CppTransport-sendmail)
+  INSTALL(FILES ${CMAKE_BINARY_DIR}/CppTransport-sendmail DESTINATION bin PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ)
+ELSE()
+  MESSAGE(WARNING "CppTransport-sendmail script has not been configured. CppTransport will not issue email notifications unless a suitable script is installed manually. If you wish the script to be automatically configured, please re-run CMake and set the EMAIL_SMTP_SERVER, EMAIL_FROM and EMAIL_PASSWORD variables.")
+ENDIF()
 
 # install HTML, CSS and JavaScript assets
 INSTALL(DIRECTORY thirdparty/bootstrap DESTINATION share/cpptransport/HTML)
@@ -203,15 +279,13 @@ INSTALL(DIRECTORY thirdparty/prism DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY thirdparty/DataTables DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
 
-# install runtime system
-INSTALL(DIRECTORY transport-runtime DESTINATION include/cpptransport)
-INSTALL(FILES ${CMAKE_BINARY_DIR}/build_data.h DESTINATION include/cpptransport/transport-runtime)
-
-# emplace JsonCpp and SPLINTER assets into runtime system folders
+# emplace JsonCpp, SPLINTER and odeint-v2 assets into runtime system folders
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/json DESTINATION include/cpptransport)
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/SPLINTER DESTINATION include/cpptransport)
+INSTALL(DIRECTORY ${ODEINT_INCLUDE_DIRS}/boost DESTINATION include/cpptransport)
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib DESTINATION lib/cpptransport)
 
 # install CMake finder script for all these assets
 CONFIGURE_FILE(cmake/FindCppTransport.cmake.in ${CMAKE_BINARY_DIR}/FindCppTransport.cmake @ONLY)
 INSTALL(FILES ${CMAKE_BINARY_DIR}/FindCppTransport.cmake DESTINATION share/cmake)
+INSTALL(FILES cmake/CompilerFlags.cmake DESTINATION share/cmake)

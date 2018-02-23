@@ -50,9 +50,20 @@ class u_tensor_factory;
 namespace macro_packages
   {
 
-    // abstract replacement_rule_package class
+    //! abstract replacement_rule_package class
     class replacement_rule_package
       {
+        
+        // TYPES
+        
+      public:
+        
+        //! package of simple rules
+        typedef std::vector< std::unique_ptr<replacement_rule_simple> > simple_rule_package;
+        
+        //! package of index rules
+        typedef std::vector< std::unique_ptr<replacement_rule_index> > index_rule_package;
+        
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -65,21 +76,27 @@ namespace macro_packages
         virtual ~replacement_rule_package() = default;
 
 
-        // INTERFACE
+        // EMPLACE RULE
 
       public:
 
-        // these methods must be overridden by derived classes which implement the replacement_rule_package concept
+        //! emplace a rule into a rule package
+        template <typename RulePackage>
+        void emplace_rule(RulePackage& pkg, typename RulePackage::value_type rule);
 
+
+        // GET RULE PACKAGES
+
+      public:
 
         //! return pre- macros package
-        const std::vector< std::unique_ptr<replacement_rule_simple> >& get_pre_rules()  { return(this->pre_package); }
+        const simple_rule_package& get_pre_rules() const { return this->pre_package; }
 
         //! return post- macros package
-        const std::vector< std::unique_ptr<replacement_rule_simple> >& get_post_rules() { return(this->post_package); }
+        const simple_rule_package& get_post_rules() const { return this->post_package; }
 
         //! get index-macro package
-        const std::vector< std::unique_ptr<replacement_rule_index> >& get_index_rules() { return(this->index_package); }
+        const index_rule_package& get_index_rules() const { return this->index_package; }
 
 
         // INTERFACE -- END OF INPUT
@@ -95,20 +112,20 @@ namespace macro_packages
 
       protected:
 
-        // MACRO PACKAGES
+        // REPLACEMENT RULE PACKAGES
 
         // held as a container of std::unique_ptr<>, because ownership of these
         // replacement rules is vested in this package.
-        // They are shared with clients as raw pointers or references.
+        // They are shared with clients as references.
 
         //! package of pre- macros
-        std::vector< std::unique_ptr<replacement_rule_simple> > pre_package;
+        simple_rule_package pre_package;
 
         //! package of post- macros
-        std::vector< std::unique_ptr<replacement_rule_simple> > post_package;
+        simple_rule_package post_package;
 
         //! package of index-macros
-        std::vector< std::unique_ptr<replacement_rule_index> > index_package;
+        index_rule_package index_package;
 
 
         // REFERENCES TO EXTERNALLY-SUPPLIED AGENTS
@@ -141,6 +158,13 @@ namespace macro_packages
         index_flatten fl;
 
       };
+
+
+    template <typename RulePackage>
+    void replacement_rule_package::emplace_rule(RulePackage& pkg, typename RulePackage::value_type rule)
+      {
+        pkg.emplace_back(std::move(rule));
+      }
 
   }
 

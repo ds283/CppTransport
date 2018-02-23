@@ -1,0 +1,6 @@
+include = /cpptransport201801/share/cpptransport
+plot-style = seaborn
+mpl-backend = agg
+report-when = bpe
+report-interval = 1d
+checkpoint = 30m

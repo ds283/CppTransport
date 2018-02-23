@@ -53,6 +53,19 @@ unsigned int index_flatten::get_flattened_size<phase_index>(unsigned int d) cons
   }
 
 
+template <>
+unsigned int index_flatten::get_flattened_size<param_index>(unsigned int d) const
+  {
+    unsigned int s = 1;
+    while(d > 0)
+      {
+        s *= this->num_params;
+        --d;
+      }
+    return(s);
+  }
+
+
 // allow only 1-index flattening of parameter indices
 template <>
 unsigned int index_flatten::flatten(const param_index& a) const

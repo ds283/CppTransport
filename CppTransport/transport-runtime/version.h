@@ -28,12 +28,18 @@
 #define CPPTRANSPORT_VERSION_H
 
 
-constexpr auto         CPPTRANSPORT_NAME                = "built using CppTransport";
-constexpr auto         CPPTRANSPORT_VERSION             = "2016.3";
-constexpr auto         CPPTRANSPORT_COPYRIGHT           = "(c) University of Sussex 2016";
+namespace transport
+  {
 
-constexpr auto         CPPTRANSPORT_RUNTIME_API         = "runtime version 2016.3";
-constexpr unsigned int CPPTRANSPORT_RUNTIME_API_VERSION = 201603;
+    constexpr auto         CPPTRANSPORT_BUILT_USING         = "built using CppTransport";
+    constexpr auto         CPPTRANSPORT_NAME                = "CppTransport";
+    constexpr auto         CPPTRANSPORT_VERSION             = "2018.1";
+    constexpr auto         CPPTRANSPORT_COPYRIGHT           = "(c) University of Sussex 2016-2018";
+    
+    constexpr auto         CPPTRANSPORT_RUNTIME_API         = "runtime version 2018.1";
+    constexpr unsigned int CPPTRANSPORT_RUNTIME_API_VERSION = 201801;
+    
+  }   // namespace transport
 
 
 #endif //CPPTRANSPORT_VERSION_H

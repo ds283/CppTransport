@@ -40,7 +40,7 @@ void input_stack::push(const boost::filesystem::path name)
 
 void input_stack::set_line(unsigned int line)
   {
-    if(inclusions.size() == 0) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
+    if(inclusions.empty()) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
 
     this->inclusions.front().line = line;
   }
@@ -48,7 +48,7 @@ void input_stack::set_line(unsigned int line)
 
 unsigned int input_stack::increment_line()
   {
-    if(inclusions.size() == 0) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
+    if(inclusions.empty()) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
 
     return ++this->inclusions.front().line;
   }
@@ -56,7 +56,7 @@ unsigned int input_stack::increment_line()
 
 unsigned int input_stack::get_line() const
   {
-    if(inclusions.size() == 0) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
+    if(inclusions.empty()) throw std::runtime_error(ERROR_FILESTACK_EMPTY);
 
     return this->inclusions.front().line;
   }
@@ -64,7 +64,7 @@ unsigned int input_stack::get_line() const
 
 void input_stack::pop()
   {
-    if(inclusions.size() == 0) throw std::runtime_error(ERROR_FILESTACK_TOO_SHORT);
+    if(inclusions.empty()) throw std::runtime_error(ERROR_FILESTACK_TOO_SHORT);
 
     this->inclusions.pop_front();
   }
@@ -89,7 +89,7 @@ std::string input_stack::write(size_t level) const
       }
 
     unsigned int level_counter = 1;
-    for(inclusion_stack::const_iterator t = ++this->inclusions.begin(); t != this->inclusions.end() && level_counter < level; ++t)
+    for(auto t = ++this->inclusions.begin(); t != this->inclusions.end() && level_counter < level; ++t)
       {
         const inclusion& item = *t;
         out << '\n'

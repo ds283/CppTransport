@@ -30,13 +30,26 @@
 #include "backend_data.h"
 
 #include "canonical/tensor_factory.h"
+#include "nontrivial-metric/tensor_factory.h"
+
 
 // generate an appropriate tensor_factory instance
-inline std::unique_ptr<tensor_factory> make_tensor_factory(backend_data& backend, translator_data& p, expression_cache& cache)
+inline std::unique_ptr<tensor_factory> make_tensor_factory(translator_data& p, expression_cache& cache)
   {
+    switch(p.model.get_lagrangian_type())
+      {
+        case model_type::canonical:
+          {
+            return std::make_unique<canonical::tensor_factory>(p, cache);
+          }
+
+        case model_type::nontrivial_metric:
+          {
+            return std::make_unique<nontrivial_metric::tensor_factory>(p, cache);
+          }
+      }
+
     // at the moment, nothing to do - only canonical models implemented
-    std::unique_ptr<canonical::tensor_factory> obj = std::make_unique<canonical::tensor_factory>(p, cache);
-    return std::move(obj);      // std::move() required because no implicit conversion for upcast
   }
 
 

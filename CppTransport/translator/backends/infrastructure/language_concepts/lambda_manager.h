@@ -30,6 +30,7 @@
 #include "lambdas.h"
 #include "language_printer.h"
 #include "translator_data.h"
+#include "cse.h"
 
 #include "boost/timer/timer.hpp"
 
@@ -67,7 +68,9 @@ class lambda_record
     const lambda_type& get_lambda() const { return(*this->lambda); }
 
     //! make temporary object for deposition into a pool
-    std::string make_temporary(const std::string& left, const std::string& mid, const std::string& right, language_printer& printer) const;
+    std::unique_ptr<std::list<std::string>>
+    make_temporary(const std::string& left, const std::string& mid, const std::string& right,
+                   language_printer& printer, cse& cse_worker) const;
 
 
     // INTERNAL DATA
@@ -87,13 +90,53 @@ class lambda_record
 
 
 template <typename LambdaItem>
-std::string lambda_record<LambdaItem>::make_temporary(const std::string& left, const std::string& mid, const std::string& right, language_printer& printer) const
+std::unique_ptr<std::list<std::string> >
+lambda_record<LambdaItem>::make_temporary(const std::string& left, const std::string& mid, const std::string& right,
+                                          language_printer& printer, cse& cse_worker) const
   {
     std::ostringstream out;
 
-    out << left << this->name << mid << lambda->make_temporary(printer, this->num_fields) << right << '\n';
+    auto rval = std::make_unique< std::list<std::string> >();
 
-    return(out.str());
+    // ask this lambda to format itself for deposition into the temporary pool
+    auto v = lambda->make_temporary(left, mid, right, printer, cse_worker, this->num_fields);
+
+    if(!v || v->size() == 0) return rval;
+
+    if(v->size() == 1)
+      {
+        std::ostringstream out;
+        const std::string& l = v->front();
+
+        out << left << this->name << mid << l << right;
+        rval->push_back(out.str());
+      }
+    else
+      {
+        std::ostringstream first;
+        const std::string& l = v->front();
+
+        first << left << this->name << mid << l;
+        rval->push_back(first.str());
+
+        auto t = v->begin();
+        ++t;                    // points at second element in list, which is guaranteed to exist
+        auto u = t;
+        ++u;                    // points at third element in list, which may be end()
+
+        while(u != v->end())
+          {
+            rval->push_back(*t);
+            ++t;
+            ++u;
+          }
+
+        std::ostringstream last;
+        last << *t << right;
+        rval->push_back(last.str());
+      }
+
+    return rval;
   }
 
 
@@ -106,12 +149,24 @@ typedef lambda_record<map_lambda> map_lambda_record;
 class lambda_manager
   {
 
+    // TYPES
+
+  protected:
+
+    //! cache for atomic-type lambda records
+    using atomic_cache_type = std::list< std::unique_ptr<atomic_lambda_record> >;
+
+    //! cache for map-type lambda records
+    using map_cache_type = std::list< std::unique_ptr<map_lambda_record> >;
+
     // CONSTRUCTOR, DESTRUCTOR
 
   public:
 
     //! constructor
-    lambda_manager(unsigned int s, language_printer& p, translator_data& pd, std::string k= OUTPUT_DEFAULT_LAMBDA_TEMPORARY_NAME);
+    lambda_manager(unsigned int s, language_printer& p, translator_data& pd, std::unique_ptr<cse> cw,
+                   std::string k = OUTPUT_DEFAULT_LAMBDA_TEMPORARY_NAME,
+                   std::string lt = OUTPUT_DEFAULT_LAMBDA_CSE_NAME);
 
     //! destructor is default
     ~lambda_manager() = default;
@@ -130,10 +185,28 @@ class lambda_manager
     std::string cache(std::unique_ptr<map_lambda> lambda);
 
     //! compute list of temporaries which should be deposited in the current pool
-    std::unique_ptr< std::list<std::string> > temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
+    std::unique_ptr< std::list<std::string> >
+    temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
 
     //! reset lambda manager on replacement of a temporary pool
     void clear();
+
+
+    // STATISTICS
+
+  public:
+
+    //! get number of hits
+    unsigned int get_hits() const { return(this->hits); }
+
+    //! get number of misses
+    unsigned int get_misses() const { return(this->misses); }
+
+    //! get time spent performing queries
+    boost::timer::nanosecond_type get_query_time() const { return(this->query_timer.elapsed().wall); }
+
+    //! get time spent performing insertions
+    boost::timer::nanosecond_type get_insert_time() const { return(this->insert_timer.elapsed().wall); }
 
 
     // INTERNAL API
@@ -141,13 +214,12 @@ class lambda_manager
   protected:
 
     //! search for a lambda record
-    template <typename RecordType>
-    typename std::list<std::unique_ptr<RecordType> >::const_iterator find(typename std::list<std::unique_ptr<RecordType> >::const_iterator begin,
-                                                                          typename std::list<std::unique_ptr<RecordType> >::const_iterator end,
-                                                                          const typename RecordType::lambda_type& lambda) const;
+    template <typename Iterator>
+    Iterator find(Iterator begin, Iterator end, const typename Iterator::value_type::element_type::lambda_type& lambda);
 
     //! make a lambda name
     std::string make_name();
+
 
     // INTERNAL DATA
 
@@ -169,20 +241,35 @@ class lambda_manager
     //! kernel of lambda identifiers
     std::string temporary_name_kernel;
 
-    // timer
-    boost::timer::cpu_timer timer;
+
+    // STATISTICS
+
+    //! record number of cache hits
+    unsigned int hits;
+
+    //! record number of cache misses
+    unsigned int misses;
+
+    // query timer
+    boost::timer::cpu_timer query_timer;
+
+    // insert timer
+    boost::timer::cpu_timer insert_timer;
 
 
     // CACHES
-
-    typedef std::list< std::unique_ptr<atomic_lambda_record> > atomic_cache_type;
-    typedef std::list< std::unique_ptr<map_lambda_record> > map_cache_type;
 
     //! atomic lambda cache
     atomic_cache_type atomic_cache;
 
     //! map lambda cache
     map_cache_type map_cache;
+
+
+    // SERVICE OBJECTS
+
+    // CSE worker
+    std::unique_ptr<cse> cse_worker;
 
   };
 

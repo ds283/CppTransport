@@ -39,20 +39,30 @@ namespace transport
     template <typename number>
     data_manager_sqlite3<number>::~data_manager_sqlite3()
       {
-        // close any remaining open containers
+        // close any remaining open containers, reporting any failures
+        bool fail = false;
 
+        error_handler msg(this->env, this->args);
+        
         for(sqlite3* h : this->open_containers)
           {
             int status = sqlite3_close(h);
 
             if(status != SQLITE_OK)
               {
-                if(status == SQLITE_BUSY) throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATACTR_NOT_CLOSED);
+                if(status == SQLITE_BUSY)
+                  {
+                    if(!fail)
+                      {
+                        fail = true;
+                        msg(CPPTRANSPORT_DATACTR_NOT_CLOSED);
+                      }
+                  }
                 else
                   {
-                    std::ostringstream msg;
-                    msg << CPPTRANSPORT_DATACTR_CLOSE << status << ")";
-                    throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
+                    std::ostringstream report_msg;
+                    report_msg << CPPTRANSPORT_DATACTR_CLOSE << status << ")";
+                    msg(report_msg.str());
                   }
               }
           }
@@ -133,7 +143,7 @@ namespace transport
     transaction_manager data_manager_sqlite3<number>::transaction_factory(sqlite3* db, const boost::filesystem::path lockfile)
       {
         // generate a transaction handler bundle
-        std::unique_ptr< data_manager_sqlite3_transaction_handler<number> > handle = std::make_unique< data_manager_sqlite3_transaction_handler<number> >(*this, db);
+        auto handle = std::make_unique< data_manager_sqlite3_transaction_handler<number> >(*this, db);
 
         // construct transaction manager
         return this->data_manager<number>::generate_transaction_manager(std::move(lockfile), std::move(handle));
@@ -412,19 +422,22 @@ namespace transport
         boost::uintmax_t container_size = boost::filesystem::file_size(writer.get_abs_container_path());
         if(container_size < CPPTRANSPORT_MAX_VACUUMABLE_SIZE)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+              << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
             boost::timer::cpu_timer timer;
             char* errmsg;
             sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
             timer.stop();
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+              << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
           }
         else
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '"
-                                                                                     << writer.get_abs_container_path().string() << "' of size "
-                                                                                     << format_memory(container_size)
-                                                                                     << " is very large; automatic maintenance disabled";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+              << "** SQLite3 container '"
+              << writer.get_abs_container_path().string() << "' of size "
+              << format_memory(container_size)
+              << " is very large; automatic maintenance disabled";
           }
 
         this->open_containers.remove(db);
@@ -574,8 +587,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
-        << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
@@ -596,7 +610,8 @@ namespace transport
         mgr.commit();
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -607,8 +622,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
-        << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
@@ -635,7 +651,8 @@ namespace transport
         mgr.commit();
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -646,8 +663,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
-        << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
@@ -660,7 +678,8 @@ namespace transport
         mgr.commit();
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -671,8 +690,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
-        << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
@@ -690,7 +710,8 @@ namespace transport
         mgr.commit();
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1009,9 +1030,9 @@ namespace transport
                                                                     bool ics, generic_batcher& batcher, replacement_action action)
       {
         sqlite3* db = nullptr;
-
+    
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary twopf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1047,7 +1068,7 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary threepf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1083,7 +1104,7 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary zeta twopf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1119,7 +1140,7 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary zeta threepf container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1155,7 +1176,7 @@ namespace transport
         sqlite3* db = nullptr;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
-          << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
+          << "** " << (action == replacement_action::action_replace ? std::string{"Replacing"} : std::string{"Closing"})
           << " temporary " << derived_data::template_type_to_string(type) << " container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
@@ -1773,7 +1794,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for twopf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for twopf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1792,7 +1814,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1801,7 +1824,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for threepf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for threepf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1820,7 +1844,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1829,7 +1854,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1848,7 +1874,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1857,7 +1884,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1876,7 +1904,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1885,7 +1914,8 @@ namespace transport
       {
         transaction_manager mgr = this->transaction_factory(writer);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing finalization for fNL container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing finalization for fNL container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -1904,7 +1934,8 @@ namespace transport
         sqlite3_operations::force_truncate_journal(db);
 
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Finalization complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Finalization complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -2333,7 +2364,7 @@ namespace transport
 
         this->datapipe_attach_container(pipe, ctr_path);
 
-        return(std::move(group));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        return std::move(group);   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
@@ -2355,7 +2386,7 @@ namespace transport
 
         this->datapipe_attach_container(pipe, ctr_path);
 
-        return(std::move(group));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        return std::move(group);   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
@@ -2381,7 +2412,7 @@ namespace transport
         worker_information_db worker_db = sqlite3_operations::read_worker_table(db);
         this->close_container(db);
 
-        return(std::move(worker_db));
+        return std::move(worker_db);
       }
 
 
@@ -2392,7 +2423,7 @@ namespace transport
         timing_db timing_data = sqlite3_operations::read_statistics_table(db);
         this->close_container(db);
 
-        return(std::move(timing_data));
+        return std::move(timing_data);
       }
 
 
@@ -2432,8 +2463,8 @@ namespace transport
 
         //
         this->open_containers.push_back(db);
-
-        return(db);
+        
+        return db;
       }
 
 

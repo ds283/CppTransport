@@ -40,7 +40,9 @@ namespace transport
         template <typename ConfigurationType>
         class ConfigurationFinder
           {
+
           public:
+
             ConfigurationFinder(unsigned int s)
               : serial(s)
               {
@@ -54,14 +56,18 @@ namespace transport
 
 
           private:
+
             unsigned int serial;
+
           };
 
 
         template <typename RecordData>
         class RecordFinder
           {
+
           public:
+
             RecordFinder(unsigned int s)
               : serial(s)
               {
@@ -75,7 +81,9 @@ namespace transport
 
 
           private:
+
             unsigned int serial;
+
           };
 
       }   // namespace integrity_check_impl
@@ -113,7 +121,7 @@ namespace transport
     template <typename WriterObject, typename Database>
     void data_manager<number>::advise_missing_content(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db)
       {
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Detected missing data in container";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning) << "** Detected missing data in container";
         writer.set_fail(true);
 
         for(unsigned int serial : serials)
@@ -127,7 +135,7 @@ namespace transport
             msg << *u;
             std::string msg_str = msg.str();
             boost::algorithm::trim_right(msg_str);
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** " << msg_str;
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning) << "** " << msg_str;
           }
       };
 
@@ -213,7 +221,8 @@ namespace transport
 
         twopf_task<number>& tk = dynamic_cast< twopf_task<number>& >(itk);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for twopf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing integrity check for twopf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -233,7 +242,8 @@ namespace transport
         std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk.get_twopf_database());
         if(failed.size() > 0)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning)
+              << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
 
             // merge any remainder with our own list of auto-detected missing serials
             total_serials.insert(failed.begin(), failed.end());
@@ -257,7 +267,8 @@ namespace transport
 
         mgr.commit();
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -268,7 +279,8 @@ namespace transport
 
         threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(itk);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for threepf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing integrity check for threepf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -300,7 +312,8 @@ namespace transport
         std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk.get_threepf_database());
         if(failed.size() > 0)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra threepf configurations not missing from container, but advised as failed by backend:";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning)
+              << '\n' << "** Dropping extra threepf configurations not missing from container, but advised as failed by backend:";
 
             // merge any remainder with our list of auto-detected missing serials
             threepf_total_serials.insert(failed.begin(), failed.end());
@@ -337,7 +350,8 @@ namespace transport
 
         mgr.commit();
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -348,7 +362,8 @@ namespace transport
 
         zeta_twopf_task<number>& tk = dynamic_cast< zeta_twopf_task<number>& >(ptk);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing integrity check for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -368,7 +383,8 @@ namespace transport
         std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk.get_twopf_database());
         if(failed.size() > 0)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning)
+              << '\n' << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
 
             // merge any remainder with auto-detected list
             total_serials.insert(failed.begin(), failed.end());
@@ -390,7 +406,8 @@ namespace transport
 
         mgr.commit();
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -401,7 +418,8 @@ namespace transport
 
         zeta_threepf_task<number>& tk = dynamic_cast< zeta_threepf_task<number>& >(ptk);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing integrity check for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
 
         boost::timer::cpu_timer timer;
 
@@ -437,7 +455,8 @@ namespace transport
         std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk.get_threepf_database());
         if(failed.size() > 0)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning)
+              << '\n' << "** Dropping extra configurations not missing from container, but advised as failed by backend:";
 
             // merge any remainder with our auto-detected list of missing serials
             threepf_total_serials.insert(failed.begin(), failed.end());
@@ -473,14 +492,16 @@ namespace transport
 
         mgr.commit();
         timer.stop();
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << "** Integrity check complete in time " << format_time(timer.elapsed().wall);
       }
 
 
     template <typename number>
     void data_manager<number>::check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>& tk)
       {
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing integrity check for fNL container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
+          << '\n' << "** Performing integrity check for fNL container '" << writer.get_abs_container_path().string() << "'";
       }
 
 
@@ -499,22 +520,28 @@ namespace transport
         // check for discrepancies
         std::set<unsigned int> integration_discrepant;
         std::set_difference(total_missing.begin(), total_missing.end(),
-                            integration_missing.begin(), integration_missing.end(), std::inserter(integration_discrepant, integration_discrepant.begin()));
+                            integration_missing.begin(), integration_missing.end(),
+                            std::inserter(integration_discrepant, integration_discrepant.begin()));
 
         if(integration_discrepant.size() > 0)
           {
-            BOOST_LOG_SEV(i_writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
+            BOOST_LOG_SEV(i_writer.get_log(), base_writer::log_severity_level::notification)
+              << '\n' << "** Synchronizing " << integration_discrepant.size()
+              << " configurations in integration container which are missing in postintegration container";
             i_writer.merge_failure_list(integration_discrepant);
             i_writer.check_integrity();   // run manual integrity check; will take account of discrepant serials numbers which have just been added
           }
 
         std::set<unsigned int> postintegration_discrepant;
         std::set_difference(total_missing.begin(), total_missing.end(),
-                            postintegration_missing.begin(), postintegration_missing.end(), std::inserter(postintegration_discrepant, postintegration_discrepant.begin()));
+                            postintegration_missing.begin(), postintegration_missing.end(),
+                            std::inserter(postintegration_discrepant, postintegration_discrepant.begin()));
 
         if(postintegration_discrepant.size() > 0)
           {
-            BOOST_LOG_SEV(p_writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
+            BOOST_LOG_SEV(p_writer.get_log(), base_writer::log_severity_level::notification)
+              << '\n' << "** Synchronizing " << postintegration_discrepant.size()
+              << " configurations in postintegration container which are missing in integration container";
             p_writer.merge_failure_list(postintegration_discrepant);
             p_writer.check_integrity();   // run manual integrity check; will take account of discrepant serials numbers which have just been added
           }

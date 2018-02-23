@@ -32,6 +32,7 @@
 #include "transport-runtime/manager/detail/aggregation.h"
 
 #include "transport-runtime/manager/detail/master_controller_core.h"
+#include "transport-runtime/manager/detail/master_controller_switches.h"
 #include "transport-runtime/manager/detail/master_controller_integration.h"
 #include "transport-runtime/manager/detail/master_controller_postintegration.h"
 #include "transport-runtime/manager/detail/master_controller_output.h"

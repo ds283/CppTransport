@@ -84,10 +84,11 @@ namespace transport
         //! Slave node: initialize ourselves
         void initialize(const MPI::slave_setup_payload& payload);
 
-        //! Slave node: Pass scheduling data to the master node
+        //! Slave node: Pass scheduling data to the master node given a model instance
         void send_worker_data(model<number>* m);
 
-        //! Slave node: Pass scheduling data to the master node
+        //! Slave node: Pass scheduling data to the master node, no known model instance
+        //! This defaults to identifying ourselves as a CPU node
         void send_worker_data(void);
 
 
@@ -102,8 +103,8 @@ namespace transport
         void dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload);
 
         //! Slave node: process an integration queue
-        template <typename TaskObject, typename BatchObject>
-        void schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, unsigned int state_size);
+        template <typename TaskObject, typename BatchObject, typename PayloadObject>
+        void schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, const PayloadObject& payload, unsigned int state_size);
 
         //! Push a temporary container to the master process
         void push_temp_container(generic_batcher& batcher, unsigned int message, std::string log_message);
@@ -208,6 +209,12 @@ namespace transport
 
         //! message callback
         message_handler msg;
+        
+        
+        // TIMERS
+        
+        //! track time spent performing work
+        busyidle_timer_set busyidle_timers;
 
       };
 

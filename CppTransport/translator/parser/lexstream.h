@@ -41,19 +41,40 @@
 #include "input_stack.h"
 #include "lexstream_data.h"
 
+#include "boost/optional.hpp"
 
-template <class Keywords, class Characters>
+
+//! lexstream parses a specified input file into a traversable list of lexemes
+template <typename Keywords, typename Characters>
 class lexstream
-	{
+  {
+
+    // TYPES
+
+  public:
+
+    //! shorthand for basic lexeme
+    typedef lexeme::lexeme<Keywords, Characters> lexeme_type;
+
+    
+  protected:
+
+    //! lexeme table
+    typedef std::deque< std::shared_ptr<lexeme_type> > lexeme_table_type;
+
+    //! lexeme table iterator
+    typedef typename lexeme_table_type::iterator lexeme_table_ptr;
+
 
     // CONSTRUCTOR, DESTRUCTOR
 
   public:
 
-    lexstream(lexstream_data& p,
-              const std::vector<std::string>& kt, const std::vector<Keywords>& km,
-              const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx);
+    //! constructor
+    lexstream(lexstream_data& p, const typename lexeme_type::keyword_map& km,
+              const typename lexeme_type::character_map& cm);
 
+    //! destructor
     ~lexstream() = default;
 
 
@@ -61,14 +82,21 @@ class lexstream
 
   public:
 
+    //! reset stream to beginning
     void reset();
 
-    lexeme::lexeme<Keywords, Characters>* get();
+    //! get next lexeme from the stream; either use get() or dereference -- these are synonymous
+    std::shared_ptr<lexeme_type> get();
+    std::shared_ptr<lexeme_type> operator*() { return this->get(); }
 
-    bool eat();
+    //! consume current lexeme, ie. moves to next lexeme
+    lexstream<Keywords, Characters>& operator++();
 
+    //! interrogate current state: true if get() will return a valid lexeme,
+    //! false otherwise
     bool state();
 
+    //! dump contents to specified stream
     void print(std::ostream& stream);
 
 
@@ -83,33 +111,47 @@ class lexstream
     //! called by parse()
     void lexicalize(lexfile& input);
 
-    std::string get_lexeme(lexfile& input, enum lexeme::buffer_type& type);
+    //! identify and handle directives
+    void handle_directive(lexfile& input);
+
+    //! parse a lexeme from a specified lexfile descriptor
+    lexeme::lexeme_buffer get_lexeme(lexfile& input);
 
 
     // INTERNAL DATA
 
   private:
 
-    // data object passed to us by the translation unit
+    // DELEGATES
+
+    //! data object passed to us by the translation unit
     lexstream_data& data_payload;
 
-    input_stack stack;       // stack of included files
+    //! input filestack, used for generating contexted messages
+    input_stack stack;
 
-    std::deque< lexeme::lexeme<Keywords, Characters> > lexeme_list; // list of lexemes obtained from the file
 
-    typename std::deque< lexeme::lexeme<Keywords, Characters> >::iterator ptr;         // pointer to current lexeme position (when reading)
-    bool                                                                  ptr_valid;   // sentry - validity of ptr?
+    // LEXEME DATA
 
+    //! list of lexemes parsed from the input file
+    lexeme_table_type lexeme_list;
+
+    //! current position of the stream within this list
+    lexeme_table_ptr ptr;
+
+    //! counter to assign unique numbers to lexemes
     unsigned int unique;
 
-    const std::vector<std::string>& ktable;      // table of Keywords
-    const std::vector<Keywords>&    kmap;        // table of keyword token types
 
-    const std::vector<std::string>& ctable;      // table of 'characters'
-    const std::vector<Characters>&  cmap;        // table of character token types
-    const std::vector<bool>&        ccontext;    // keeps track of 'unary' context; true if can precede a unary minus
+    // PARSING TABLES
 
-	};
+    //! keyword-to-lexeme table
+    const typename lexeme_type::keyword_map& keywords;
+    
+    //! character-to-lexeme table
+    const typename lexeme_type::character_map& symbols;
+
+  };
 
 
 // IMPLEMENTATION
@@ -120,23 +162,18 @@ class lexstream
 
 // convert the contents of 'filename' to a string of lexemes, descending into
 // included files as necessary
-template <class Keywords, class Characters>
-lexstream<Keywords, Characters>::lexstream(lexstream_data& p,
-                                           const std::vector<std::string>& kt, const std::vector<Keywords>& km,
-                                           const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx)
-  : ptr_valid(false),
-    ktable(kt),
-    kmap(km),
-    ctable(ct),
-    cmap(cm),
-    ccontext(ctx),
+template <typename Keywords, typename Characters>
+lexstream<Keywords, Characters>::lexstream(lexstream_data& p, const typename lexeme_type::keyword_map& km,
+                                           const typename lexeme_type::character_map& cm)
+  : keywords(km),
+    symbols(cm),
     data_payload(p),
     unique(1)
   {
-    if(!this->parse(data_payload.get_model_input()))
+    if(!this->parse(data_payload.get_input_file()))
       {
         std::ostringstream msg;
-        msg << ERROR_OPEN_TOPLEVEL << " '" << data_payload.get_model_input().string() << "'";
+        msg << ERROR_OPEN_TOPLEVEL << " '" << data_payload.get_input_file().string() << "'";
 
         error_context err_context(stack, data_payload.get_error_handler(), data_payload.get_warning_handler());
         err_context.error(msg.str());
@@ -148,12 +185,12 @@ lexstream<Keywords, Characters>::lexstream(lexstream_data& p,
 
 
 // output list of lexemes
-template <class Keywords, class Characters>
+template <typename Keywords, typename Characters>
 void lexstream<Keywords, Characters>::print(std::ostream& stream)
   {
-    for(int i = 0; i < this->lexeme_list.size(); ++i)
+    for(const auto& lex : this->lexeme_list)
       {
-        this->lexeme_list[i].dump(stream);
+        lex->dump(stream);
       }
   }
 
@@ -161,303 +198,347 @@ void lexstream<Keywords, Characters>::print(std::ostream& stream)
 // ******************************************************************
 
 
-template <class Keywords, class Characters>
+template <typename Keywords, typename Characters>
 void lexstream<Keywords, Characters>::reset()
   {
-    if(this->lexeme_list.size() > 0)
-      {
-        this->ptr       = this->lexeme_list.begin();
-        this->ptr_valid = true;
-      }
-    else
-      {
-        this->ptr_valid = false;
-      }
+    this->ptr = this->lexeme_list.begin();
   }
 
-template <class Keywords, class Characters>
-lexeme::lexeme<Keywords, Characters>* lexstream<Keywords, Characters>::get()
+
+template <typename Keywords, typename Characters>
+std::shared_ptr< typename lexstream<Keywords, Characters>::lexeme_type > lexstream<Keywords, Characters>::get()
   {
-    lexeme::lexeme<Keywords, Characters>* rval = nullptr;
+    if(this->state()) return *this->ptr;
 
-    if(this->ptr_valid)
-      {
-        rval = &(*(this->ptr));
-      }
-
-    return(rval);
+    return nullptr;
   }
 
-template <class Keywords, class Characters>
-bool lexstream<Keywords, Characters>::eat()
+
+template <typename Keywords, typename Characters>
+lexstream<Keywords, Characters>& lexstream<Keywords, Characters>::operator++()
   {
-    if(this->ptr_valid)
-      {
-        this->ptr++;
-        if(this->ptr == this->lexeme_list.end())
-          {
-            this->ptr_valid = false;
-          }
-      }
-    else
-      {
-        this->ptr_valid = false;
-      }
+    if(this->state()) ++this->ptr;
 
-    return(this->ptr_valid);
-  }
+    return *this;
+  };
 
-template <class Keywords, class Characters>
+
+template <typename Keywords, typename Characters>
 bool lexstream<Keywords, Characters>::state()
   {
-    return(this->ptr_valid);
+    return this->ptr != this->lexeme_list.end();
   }
 
 
 // ******************************************************************
 
 
-template <class Keywords, class Characters>
+template <typename Keywords, typename Characters>
 bool lexstream<Keywords, Characters>::parse(const boost::filesystem::path& file)
   {
-    boost::filesystem::path path;
-    bool found = this->data_payload.get_finder().fqpn(file, path);
+    boost::optional< boost::filesystem::path > path;
+    
+    path = this->data_payload.get_finder().find(file);
 
-    if(found)
+    if(!path) return false;
+
+    // push parent directory into search paths
+    if(path->has_parent_path())
       {
-        // the lexfile object reponsible for reading in a file persists only within this block,
-        // but the lines it reads in are managed with std::shared_ptr<>
-
-        // the lexemes which are generated during lexicalization
-        // then inherit ownership of these lines, so even though the
-        // lexfile object itself is destroyed we are not left with dangling pointers
-
-        // push parent directory into search paths
-        if(path.has_parent_path())
-          {
-            this->data_payload.get_finder().add(path.parent_path());
-          }
-
-        lexfile input(path, this->stack);
-
-        this->stack.push(path);
-        this->lexicalize(input);
-        this->stack.pop();
+        this->data_payload.get_finder().add(path->parent_path());
       }
 
-    return(found);
+    // the lexfile object responsible for reading in a file persists only within this block,
+    // but the lines it reads in are managed with std::shared_ptr<>
+    // the lexemes which are generated during lexicalization
+    // then inherit ownership of these lines, so even though the
+    // lexfile object itself is destroyed we are not left with dangling pointers
+    lexfile input(*path, this->stack, this->data_payload.get_max_lines());
+
+    this->stack.push(*path);
+    this->lexicalize(input);
+    this->stack.pop();
+
+    return (true);
   }
 
-template <class Keywords, class Characters>
+
+template <typename Keywords, typename Characters>
 void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
   {
-    enum lexeme::minus_context context = lexeme::minus_context::unary;      // keep track of whether we expect unary or binary minus sign
+    // keep track of whether we expect unary or binary minus sign
+    typename lexeme_type::minus_context context = lexeme_type::minus_context::unary;
 
-    while(input.current_state() == lexfile_outcome::ok)
+    while(input.get_state() == lexfile::status::ok)
       {
-        // cache current input line and character position, so error messages are contexted at the *start* of each lexeme rather than the end
-        std::shared_ptr<std::string> context_line = input.get_current_line();
-        unsigned int                 context_pos  = input.get_current_char_pos();
-        
-        enum lexeme::buffer_type type;
-        std::string              word = this->get_lexeme(input, type);
+        // get next lexeme from input stream
+        auto word = this->get_lexeme(input);
 
-        if(word != "")
+        // if no token read, skip
+        if(word.empty()) continue;
+
+        switch(word.get_type())
           {
-            switch(type)
+            case lexeme::lexeme_buffer::type::character:
               {
-                case lexeme::buffer_type::character:
+                if(word == "#") // treat as a preprocessor directive
                   {
-                    if(word == "#")                                               // treat as a preprocessor directive
-                      {
-                        word = this->get_lexeme(input, type);                     // get next lexeme
-
-                        if(word == "include")                                     // inclusion directive
-                          {
-                            // recache context data
-                            std::shared_ptr<std::string> include_context_line = input.get_current_line();
-                            unsigned int                 include_context_pos  = input.get_current_char_pos();
-                            
-                            word = this->get_lexeme(input, type);
-
-                            if(type != lexeme::buffer_type::string_literal)
-                              {
-                                error_context err_ctx(this->stack, include_context_line, include_context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                                err_ctx.error(ERROR_INCLUDE_DIRECTIVE);
-                              }
-                            else
-                              {
-                                if(!this->parse(word))
-                                  {
-                                    error_context err_ctx(this->stack, context_line, context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-
-                                    std::ostringstream msg;
-                                    msg << ERROR_INCLUDE_FILE << " '" << word << "'";
-                                    err_ctx.error(msg.str());
-                                  }
-                              }
-                          }
-                      }
-                    else
-                      {
-                        // note: this updates context, depending what the lexeme is recognized as
-                        error_context err_ctx(this->stack, context_line, context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                        this->lexeme_list.emplace_back(word, type, context, this->unique++, err_ctx,
-                                                       this->ktable, this->kmap, this->ctable, this->cmap, this->ccontext);
-                      }
-                    break;
-                  }
-
-                case lexeme::buffer_type::string:
-                case lexeme::buffer_type::number:
-                case lexeme::buffer_type::string_literal:
-                  {
-                    // note: this updates context, depending what the lexeme is recognized as
-                    error_context err_ctx(this->stack, context_line, context_pos, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                    this->lexeme_list.emplace_back(word, type, context, this->unique++, err_ctx,
-                                                   this->ktable, this->kmap, this->ctable, this->cmap, this->ccontext);
-                    break;
-                  }
-              }
-          }
-      }
-  }
-
-template <class Keywords, class Characters>
-std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lexeme::buffer_type& type)
-  {
-    enum lexfile_outcome state = lexfile_outcome::ok;
-    char                 c     = 0;
-
-    std::string          word   = "";
-
-	  while(word == "" && state == lexfile_outcome::ok)
-      {
-        c = input.get(state);
-
-        if(state == lexfile_outcome::ok)
-          {
-            if(isalpha(c) || c == '_' || c == '$')            // looks like identifier or reserved work
-              {
-                word = c;
-                input.eat();
-
-                while((isalnum(c = input.get(state)) || c == '_' || c == '$') && state == lexfile_outcome::ok)
-                  { word += c;
-                    input.eat();
-                  }
-                type = lexeme::buffer_type::string;
-              }
-            else if(isdigit(c))                               // looks like a number
-              {
-                bool dot = false;                             // does the number have a decimal point?
-                bool hex = false;                             // is this number in hexadecimal?
-                bool eng = false;                             // expecting an exponent?
-
-                word = c;
-                input.eat();
-
-                while((isdigit(c = input.get(state))
-                       || (dot == false && c == '.')
-                       || (hex == false && dot == false && c == 'x')
-                       || (hex == true  && (c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'e' || c == 'f'
-                                            || c == 'A' || c == 'B' || c == 'D' || c == 'E' || c == 'F'))
-                       || (hex == false && (c == 'e' || c == 'E'))
-                       || (eng == true  && (c == '+' || c == '-')))
-                      && state == lexfile_outcome::ok)
-                  {
-                    word += c;
-
-                    if(c == '.') dot = true;
-                    if(c == 'x') hex = true;
-    
-                    // not expecting an exponent (so '+' and '-' should not be considered part of this lexeme, unless
-                    // they immediately follow an 'e' or an 'E'
-                    eng = false;
-                    if((c == 'e' || c == 'E') && hex == false) eng = true;
-
-                    input.eat();
-                  }
-                type = lexeme::buffer_type::number;
-              }
-            else if(c == '%')                                 // single-line comment
-              {
-                input.eat();
-
-                while((c = input.get(state)) != '\n' && state == lexfile_outcome::ok)
-                  {
-                    input.eat();
-                  }
-                input.eat();
-              }
-            else if(c == ' ' || c == '\t' || c == '\n')       // skip over white-space characters
-              {
-                input.eat();
-              }
-            else if(c == '-')                                 // could be a '-' sign, or could be the first char of '->'
-              {
-                word = c;
-                input.eat();
-                if((c = input.get(state)) == '>' && state == lexfile_outcome::ok)
-                  {
-                    word += c;
-                    input.eat();
-                  }
-                type = lexeme::buffer_type::character;
-              }
-            else if(c == '.')                                 // could be a '.', or could be the first char of '...'
-              {
-                word = c;
-                input.eat();
-                if((c = input.get(state)) == '.' && state == lexfile_outcome::ok)
-                  {
-                    word += c;
-                    input.eat();
-                    if((c = input.get(state)) == '.' && state == lexfile_outcome::ok)
-                      {
-                        word += c;
-                        input.eat();
-                      }
-                    else
-                      {
-                        error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                        err_ctx.error(ERROR_EXPECTED_ELLIPSIS);
-                        word += '.';                          // make up to a proper ellipsis anyway
-                      }
-                  }
-                type = lexeme::buffer_type::character;
-              }
-            else if(c == '"')                                 // looks like a string literal
-              {
-                input.eat();
-                c = input.get(state);
-                while(c != '"' && state == lexfile_outcome::ok)
-                  {
-                    word += c;
-                    input.eat();
-                    c = input.get(state);
-                  }
-                if(c == '"')
-                  {
-                    input.eat();
+                    this->handle_directive(input);
                   }
                 else
                   {
-                    error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                    err_ctx.error(ERROR_EXPECTED_CLOSE_QUOTE);
+                    error_context err_ctx(this->stack, word.get_context_line(),
+                                          word.get_context_start_position(), word.get_context_end_position(),
+                                          this->data_payload.get_error_handler(),
+                                          this->data_payload.get_warning_handler());
+
+                    this->lexeme_list.emplace_back(
+                      std::make_shared<lexeme_type>(word, context, this->unique++, err_ctx, this->keywords, this->symbols));
                   }
-                type = lexeme::buffer_type::string_literal;
+                break;
               }
-            else
+
+            case lexeme::lexeme_buffer::type::string:
+            case lexeme::lexeme_buffer::type::number:
+            case lexeme::lexeme_buffer::type::string_literal:
               {
-                word = c;
-                input.eat();
-                type = lexeme::buffer_type::character;
+                error_context err_ctx(this->stack, word.get_context_line(),
+                                      word.get_context_start_position(), word.get_context_end_position(),
+                                      this->data_payload.get_error_handler(),
+                                      this->data_payload.get_warning_handler());
+
+                this->lexeme_list.emplace_back(
+                  std::make_shared<lexeme_type>(word, context, this->unique++, err_ctx, this->keywords, this->symbols));
+                break;
               }
           }
       }
+  }
 
-    return(word);
+
+template <typename Keywords, typename Characters>
+void lexstream<Keywords, Characters>::handle_directive(lexfile& input)
+  {
+    // get next lexeme
+    auto word = this->get_lexeme(input);
+
+    if(word == "include") // inclusion directive
+      {
+        auto file = this->get_lexeme(input);
+
+        if(file.get_type() != lexeme::lexeme_buffer::type::string_literal)
+          {
+            error_context err_ctx(this->stack, word.get_context_line(),
+                                  word.get_context_start_position(), word.get_context_end_position(),
+                                  this->data_payload.get_error_handler(),
+                                  this->data_payload.get_warning_handler());
+
+            std::ostringstream msg;
+            msg << ERROR_INCLUDE_DIRECTIVE << " '" << *word << "'";
+            err_ctx.error(msg.str());
+          }
+        else
+          {
+            if(!this->parse(*file))
+              {
+                error_context err_ctx(this->stack, file.get_context_line(),
+                                      file.get_context_start_position(), file.get_context_end_position(),
+                                      this->data_payload.get_error_handler(),
+                                      this->data_payload.get_warning_handler());
+
+                std::ostringstream msg;
+                msg << ERROR_INCLUDE_FILE << " '" << *file << "'";
+                err_ctx.error(msg.str());
+              }
+          }
+      }
+    else
+      {
+        error_context err_ctx(this->stack, word.get_context_line(),
+                              word.get_context_start_position(), word.get_context_end_position(),
+                              this->data_payload.get_error_handler(),
+                              this->data_payload.get_warning_handler());
+
+        std::ostringstream msg;
+        msg << ERROR_UNKNOWN_DIRECTIVE << " '" << *word << "'";
+        err_ctx.error(msg.str());
+      }
+  }
+
+
+template <typename Keywords, typename Characters>
+lexeme::lexeme_buffer lexstream<Keywords, Characters>::get_lexeme(lexfile& input)
+  {
+    lexfile::status state = lexfile::status::ok;
+    char c = 0;
+
+    lexeme::lexeme_buffer word;
+
+    // skip over white space characters and comments
+    while(state == lexfile::status::ok)
+      {
+        std::tie(c, state) = *input;
+
+        if(c == '%')
+          {
+            ++input;
+    
+            std::tie(c, state) = *input;
+            while(c != '\n' && state == lexfile::status::ok)
+              {
+                ++input;
+                std::tie(c, state) = *input;
+              }
+    
+            ++input;  // skip past final '\n';
+          }
+        else if(c == ' ' || c == '\t' || c == '\n')
+          {
+            ++input;
+          }
+        else break;
+      }
+
+    if(state != lexfile::status::ok) return word;
+    
+    // cache current input position
+    word.set_context_line(input.get_current_line());
+    word.set_context_end_position(input.get_current_char_pos());
+    
+    // extract lexeme from next characters on the input stream
+
+    if(isalpha(c) || c == '_' || c == '$')            // looks like identifier or reserved work
+      {
+        word = c;
+        ++input;
+
+        std::tie(c, state) = *input;
+        while((isalnum(c) || c == '_' || c == '$') && state == lexfile::status::ok)
+          {
+            word += c;
+            ++input;
+            std::tie(c, state) = *input;
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::string);
+      }
+    else if(isdigit(c))                               // looks like a number
+      {
+        bool dot = false;                             // does the number have a decimal point?
+        bool hex = false;                             // is this number in hexadecimal?
+        bool eng = false;                             // expecting an exponent?
+
+        word = c;
+        ++input;
+
+        std::tie(c, state) = *input;
+        while((isdigit(c)
+               || (dot == false && c == '.')
+               || (hex == false && dot == false && c == 'x')
+               || (hex == true && (c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'e' || c == 'f'
+                                   || c == 'A' || c == 'B' || c == 'D' || c == 'E' || c == 'F'))
+               || (hex == false && (c == 'e' || c == 'E'))
+               || (eng == true && (c == '+' || c == '-')))
+              && state == lexfile::status::ok)
+          {
+            word += c;
+
+            if(c == '.') dot = true;
+            if(c == 'x') hex = true;
+
+            // not expecting an exponent (so '+' and '-' should not be considered part of this lexeme, unless
+            // they immediately follow an 'e' or an 'E'
+            eng = false;
+            if((c == 'e' || c == 'E') && hex == false) eng = true;
+
+            ++input;
+            std::tie(c, state) = *input;
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::number);
+      }
+    else if(c == '-')                                 // could be a '-' sign, or could be the first char of '->'
+      {
+        word = c;
+        ++input;
+
+        std::tie(c, state) = *input;
+        if(c == '>' && state == lexfile::status::ok)
+          {
+            word += c;
+            ++input;
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::character);
+      }
+    else if(c == '.')                                 // could be a '.', or could be the first char of '...'
+      {
+        word = c;
+        ++input;
+
+        std::tie(c, state) = *input;
+        if(c == '.' && state == lexfile::status::ok)
+          {
+            word += c;
+            ++input;
+
+            std::tie(c, state) = *input;
+            if(c == '.' && state == lexfile::status::ok)
+              {
+                word += c;
+                ++input;
+              }
+            else
+              {
+                error_context err_ctx(this->stack, word.get_context_line(),
+                                      word.get_context_start_position(), input.get_current_char_pos(),
+                                      this->data_payload.get_error_handler(),
+                                      this->data_payload.get_warning_handler());
+                err_ctx.error(ERROR_EXPECTED_ELLIPSIS);
+                word += '.';                          // make up to a proper ellipsis anyway
+              }
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::character);
+      }
+    else if(c == '"')                                 // looks like a string literal
+      {
+        ++input;
+
+        std::tie(c, state) = *input;
+        while(c != '"' && state == lexfile::status::ok)
+          {
+            word += c;
+            ++input;
+            std::tie(c, state) = *input;
+          }
+
+        if(c == '"')
+          {
+            ++input;
+          }
+        else
+          {
+            error_context err_ctx(this->stack, word.get_context_line(),
+                                  word.get_context_start_position(), input.get_current_char_pos(),
+                                  this->data_payload.get_error_handler(),
+                                  this->data_payload.get_warning_handler());
+            err_ctx.error(ERROR_EXPECTED_CLOSE_QUOTE);
+          }
+
+        word.set_type(lexeme::lexeme_buffer::type::string_literal);
+      }
+    else
+      {
+        word = c;
+        ++input;
+
+        word.set_type(lexeme::lexeme_buffer::type::character);
+      }
+    
+    word.set_current_end_position(input.get_current_char_pos());
+    
+    return word;
   }
 
 

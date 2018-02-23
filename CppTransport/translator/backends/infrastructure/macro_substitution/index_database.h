@@ -323,6 +323,7 @@ class index_database
 
   public:
 
+    //! write the database state to stdout
     void write_database() const;
 
 

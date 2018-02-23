@@ -30,9 +30,9 @@
 
 #include <stack>
 
-#include "replacement_rule_package.h"
+#include "directive_package.h"
 
-#include "macro_tokenizer.h"
+#include "token_list.h"
 
 
 namespace macro_packages
@@ -61,10 +61,10 @@ namespace macro_packages
           public:
 
             //! constructor
-            user_macro(std::string n, std::unique_ptr<token_list> t, const abstract_index_list& i, error_context d)
+            user_macro(std::string n, std::unique_ptr<token_list> t, index_literal_list i, error_context d)
               : replacement_rule_index(n, 0, i.size()),
                 tokens(std::move(t)),
-                indices(i),
+                indices(std::move(i)),
                 declaration_point(std::move(d))
               {
               }
@@ -78,7 +78,7 @@ namespace macro_packages
           public:
 
             //! determined unroll status, which is inherited from the unroll status of the token list we contain
-            enum unroll_behaviour get_unroll() const override { return this->tokens->unroll_status(); }
+            unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->tokens->unroll_status(); }
 
             //! get declaration point
             const error_context& get_declaration_point() const { return(this->declaration_point); }
@@ -89,17 +89,17 @@ namespace macro_packages
           protected:
 
             //! pre-hook required to call all pre-macros
-            virtual void pre_hook(const macro_argument_list& args) override;
+            void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
             //! post-hook, required to call post-hook of all tokens we contain
             //! should reset token list to pristine state for next evaluation
-            virtual void post_hook(const macro_argument_list& args) override;
+            void post_hook(const macro_argument_list& args) override;
 
             //! unrolled evaluation
-            virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+            std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) override;
 
             //! roll-up evaluation
-            virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+            std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
             // INTERNAL DATA
@@ -107,10 +107,11 @@ namespace macro_packages
           private:
 
             //! tokenized version of macro definition
+            //! (contains an abstract_index_database that defines the indices associated with this macro)
             std::unique_ptr<token_list> tokens;
 
-            //! list of indices defining this macro
-            abstract_index_list indices;
+            //! index literal list for this macro
+            const index_literal_list indices;
 
             //! record declaration point
             const error_context declaration_point;
@@ -178,18 +179,23 @@ namespace macro_packages
       }   // namespace directives_impl
 
 
-    class set_directive: public replacement_rule_index
+    class set_directive: public directive_index
       {
+        
+        // TYPES
+        
+      protected:
+    
+        //! symbol table for user-defined replacement rules
+        typedef std::unordered_map< std::string, std::unique_ptr<directives_impl::user_macro> > macro_table;
 
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! constructor
-        set_directive(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_index(n, SET_DIRECTIVE_TOTAL_ARGUMENTS),
-            payload(p),
-            printer(prn)
+        set_directive(std::string n, translator_data& p)
+          : directive_index(n, SET_DIRECTIVE_TOTAL_ARGUMENTS, p)
           {
           }
 
@@ -197,48 +203,20 @@ namespace macro_packages
         virtual ~set_directive() = default;
 
 
-        // INTERFACE
-
-      public:
-
-        //! determine unroll status; meaningless for a directive, so we always return 'prevent'
-        //! in order to guarantee being provided with an abstract index list
-        enum unroll_behaviour get_unroll() const override { return unroll_behaviour::prevent; }
-
-
-        // INTERNAL API -- implements a 'replacement_rule_index' interface
+        // INTERNAL API -- implements a 'directive_index' interface
 
       protected:
 
-        //! evaluate unrolled; has no meaning here, so throws an exception
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
-
-        //! evaluate directive
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
-
-
-        // INTERNAL API
-
-      protected:
-
-        //! validate indices discovered during tokenization against a supplied index list
-        void validate_discovered_indices(const abstract_index_list& supplied, const abstract_index_list& discovered);
+        //! apply directive
+        std::string apply(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
 
       private:
 
-        //! reference to data payload provided by translator
-        translator_data& payload;
-
-        //! reference to language printer object
-        language_printer& printer;
-
-        typedef std::unordered_map< std::string, std::unique_ptr<directives_impl::user_macro> > macro_table;
-
         //! symbol table for macros
-        macro_table macros;
+        macro_table rules;
 
       };
 
@@ -246,7 +224,7 @@ namespace macro_packages
     typedef std::stack< directives_impl::if_record > if_stack;
 
 
-    class if_directive: public replacement_rule_simple
+    class if_directive: public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -254,10 +232,8 @@ namespace macro_packages
       public:
 
         //! constructor
-        if_directive(std::string n, translator_data& p, language_printer& prn, if_stack& is)
-          : replacement_rule_simple(n, IF_DIRECTIVE_TOTAL_ARGUMENTS),
-            payload(p),
-            printer(prn),
+        if_directive(std::string n, translator_data& p, if_stack& is)
+          : directive_simple(n, IF_DIRECTIVE_TOTAL_ARGUMENTS, p),
             istack(is)
           {
           }
@@ -270,19 +246,16 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        //! apply
+        std::string apply(const macro_argument_list& args) override;
 
+        //! force evaluation even when output is disabled
+        bool always_apply() const override { return true; }
+        
 
         // INTERNAL DATA
 
       private:
-
-        //! reference to data payload provided by translator
-        translator_data& payload;
-
-        //! reference to language printer object
-        language_printer& printer;
 
         //! reference to parent if_stack
         if_stack& istack;
@@ -290,7 +263,7 @@ namespace macro_packages
       };
 
 
-    class else_directive: public replacement_rule_simple
+    class else_directive: public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -298,10 +271,8 @@ namespace macro_packages
       public:
 
         //! constructor
-        else_directive(std::string n, translator_data& p, language_printer& prn, if_stack& is)
-          : replacement_rule_simple(n, ELSE_DIRECTIVE_TOTAL_ARGUMENTS),
-            payload(p),
-            printer(prn),
+        else_directive(std::string n, translator_data& p, if_stack& is)
+          : directive_simple(n, ELSE_DIRECTIVE_TOTAL_ARGUMENTS, p),
             istack(is)
           {
           }
@@ -314,22 +285,16 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
-
-        //! evaluate else clause after tokenization
-        virtual void post_tokenize_hook(const macro_argument_list& args) override;
-
-
+        //! apply
+        std::string apply(const macro_argument_list& args) override;
+    
+        //! force evaluation even when output is disabled
+        bool always_apply() const override { return true; }
+    
+    
         // INTERNAL DATA
 
       private:
-
-        //! reference to data payload provided by translator
-        translator_data& payload;
-
-        //! reference to language printer object
-        language_printer& printer;
 
         //! reference to parent if_stack
         if_stack& istack;
@@ -337,7 +302,7 @@ namespace macro_packages
       };
 
 
-    class endif_directive: public replacement_rule_simple
+    class endif_directive: public directive_simple
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -345,10 +310,8 @@ namespace macro_packages
       public:
 
         //! constructor
-        endif_directive(std::string n, translator_data& p, language_printer& prn, if_stack& is)
-          : replacement_rule_simple(n, ENDIF_DIRECTIVE_TOTAL_ARGUMENTS),
-            payload(p),
-            printer(prn),
+        endif_directive(std::string n, translator_data& p, if_stack& is)
+          : directive_simple(n, ENDIF_DIRECTIVE_TOTAL_ARGUMENTS, p),
             istack(is)
           {
           }
@@ -361,33 +324,24 @@ namespace macro_packages
 
       protected:
 
-        //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
-
-        //! evaluate endif clause after tokenization
-        virtual void post_tokenize_hook(const macro_argument_list& args) override;
-
-
+        //! apply
+        std::string apply(const macro_argument_list& args) override;
+        
+        //! force evaluation even when output is disabled
+        bool always_apply() const override { return true; }
+    
+    
         // INTERNAL DATA
 
       private:
 
-        //! reference to data payload provided by translator
-        translator_data& payload;
-
-        //! reference to language printer object
-        language_printer& printer;
-
         //! reference to parent if_stack
         if_stack& istack;
-
-        //! condition cache, used for formatting comment string for output
-        std::string condition_cache;
 
       };
 
 
-    class directives: public replacement_rule_package
+    class directives: public directive_package
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -395,7 +349,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        directives(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
+        directives(translator_data& p);
 
         //! destructor
         virtual ~directives() = default;

@@ -126,18 +126,27 @@ namespace transport
     //! indexed list of author_record records
     typedef std::map< std::string, std::unique_ptr<author_record> > author_db;
 
-
+    
+    // TEMPLATED ALIASES FOR TENSOR TYPES
+    
+    template <typename number>
+    using flattened_tensor = std::vector<number>;
+    
+    template <typename number>
+    using backg_state = flattened_tensor<number>;
+    
+    template <typename number>
+    using backg_history = std::vector< backg_state<number> >;
+    
+    
+    // ABSTRACT MODEL CLASS
+    
     //! abstract base class from which all other model representations are derived;
     //! defines a common interface for all models
     template <typename number>
     class model: public abstract_flattener
       {
-
-      public:
-
-        //! data type for storing integration of a background field-space trajectory
-        typedef std::vector< std::vector<number> > backg_history;
-
+        
         // CONSTRUCTORS, DESTRUCTORS
 
       public:
@@ -153,7 +162,7 @@ namespace transport
 
       public:
 
-        //! Return UID identifying the model
+        //! Return UUID identifying the model
         const std::string& get_identity_string() const { return (this->uid); }
 
         //! Return version of translator used to produce the header
@@ -225,10 +234,13 @@ namespace transport
       public:
 
         //! Compute Hubble rate H given a phase-space configuration
-        virtual number H(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
+        virtual number H(const parameters<number>& __params, const flattened_tensor<number>& __coords) const = 0;
 
         //! Compute slow-roll parameter epsilon given a phase-space configuration
-        virtual number epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
+        virtual number epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const = 0;
+
+        //! Compute slow-roll parameter eta given a phase-space configuration
+        virtual number eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const = 0;
 
 
         // INITIAL CONDITIONS HANDLING
@@ -236,12 +248,12 @@ namespace transport
       public:
 
 		    //! Validate initial conditions
-		    virtual void validate_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0;
+		    virtual void validate_ics(const parameters<number>& params, const flattened_tensor<number>& input, flattened_tensor<number>& output) = 0;
 
         //! Compute initial conditions which give horizon-crossing at time Ncross,
         //! if we allow Npre e-folds before horizon-crossing.
         //! The supplied parameters should have been validated.
-        void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
+        void offset_ics(const parameters<number>& params, const flattened_tensor<number>& input, flattened_tensor<number>& output,
                         double Ninit, double Ncross, double Npre,
                         double tolerance = CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
                         unsigned int time_steps = CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
@@ -262,40 +274,68 @@ namespace transport
         //! at internally-chosen values of N -- also returned in the corresponding vector
         //! Also computes log(a^2 * H^2 largest eigenvalue of the mass matrix) and returns this in
         //! log_a2H2M. Note that the mass matrix used in the code is M^2/H^2, ie. is dimensionless
-		    virtual void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k) = 0;
+		    virtual void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING
 
       public:
 
-		    virtual void validate_params(const std::vector<number>& input, std::vector<number>& output) = 0;
+        //! validate a set of parameters
+		    virtual void validate_params(const flattened_tensor<number>& input, flattened_tensor<number>& output) = 0;
 
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES
 
       public:
 
-        // calculate shape-dependent gauge transformations using full cosmological perturbation theory
-        // pure virtual, so must be implemented by derived class
-        virtual void compute_gauge_xfm_1(const twopf_db_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
+        // GAUGE TRANSFORMATIONS
+        
+        // these calculate configuration-dependent gauge transformations using full cosmological perturbation theory
+        
+        //! compute first-order gauge transformation
+        virtual void compute_gauge_xfm_1(const twopf_db_task<number>* __task, const flattened_tensor<number>& __state, flattened_tensor<number>& __dN) = 0;
 
-        virtual void compute_gauge_xfm_2(const twopf_db_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) = 0;
+        //! compute second-order gauge transformation
+        virtual void compute_gauge_xfm_2(const twopf_db_task<number>* __task, const flattened_tensor<number>& __state, double __k, double __k1, double __k2, double __N, flattened_tensor<number>& __ddN) = 0;
 
+        
+        // TENSORS
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-		    // pure virtual, so must be implemented by derived class
-        virtual void u2(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) = 0;
 
-        virtual void u3(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) = 0;
+        //! compute u2 tensor in 'standard' index configuration (first index up, remaining indices down)
+        virtual void u2(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k, double __N, flattened_tensor<number>& __u2) = 0;
 
-        virtual void A(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) = 0;
+        //! compute u3 tensor in 'standard' index configuration (first index up, remaining indices down)
+        virtual void u3(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __u3) = 0;
+    
+        //! compute A tensor in 'standard' index configuration (all indices down)
+        //! currently A isn't used by the platform, so the precise index arrangement is arbitrary
+        virtual void A(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __A) = 0;
+    
+        //! compute B tensor in 'standard' index configuration (last index up, first two indices down)
+        //! this is the index configuration needed for shifting a correlation function from momenta
+        //! to time derivatives
+        virtual void B(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __B) = 0;
+    
+        //! compute C tensor in 'standard' index configuration (first index up, last two indices down)
+        //! this is the index configuration needed for shifting a correlation function from momenta
+        //! to time derivatives
+        virtual void C(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) = 0;
+    
+        //! compute M tensor in 'standard' index configuration (first index up, second index down)
+        //! this is the arrangement needed to compute the mass spectrum
+        virtual void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) = 0;
 
-        virtual void B(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) = 0;
 
-        virtual void C(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) = 0;
+        // MASS SPECTRUM
 
-        virtual void M(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __N, std::vector<number>& __M) = 0;
+        //! compute the raw mass spectrum
+        virtual void mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+
+        //! obtain the sorted mass spectrum, normalized to the Hubble rate^2 if desired
+        virtual void sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
 
 
         // BACKEND
@@ -319,7 +359,7 @@ namespace transport
         // process a background computation
         // unlike the twopf and threepf cases, we assume this can be done in memory
         // suitable storage is passed in soln
-        virtual void backend_process_backg(const background_task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
+        virtual void backend_process_backg(const background_task<number>* tk, std::vector< flattened_tensor<number> >& solution, bool silent=false) = 0;
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
@@ -428,7 +468,7 @@ namespace transport
 
 
     template <typename number>
-    void model<number>::offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
+    void model<number>::offset_ics(const parameters<number>& params, const flattened_tensor<number>& input, flattened_tensor<number>& output,
                                    double Ninit, double Ncross, double Npre, double tolerance, unsigned int time_steps)
       {
 				assert(Ncross - Npre >= Ninit);
@@ -446,7 +486,7 @@ namespace transport
             // and the 'offset time' Ncross-Npre
 
             // allocate space for the solution on this interval
-            std::vector< std::vector<number> > history;
+            backg_history<number> history;
 
             // set up times at which we wish to sample -- we just need a few
             basic_range<double> times(Ninit, Ncross-Npre, time_steps);
@@ -475,6 +515,30 @@ namespace transport
                 msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
                 this->error_h(msg.str());
     
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(eps_is_negative& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EPS_IS_NEGATIVE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(eps_too_large& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EPS_TOO_LARGE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(V_is_negative& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_V_IS_NEGATIVE << " " << xe.what();
+                this->error_h(msg.str());
+
                 throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
               }
 
@@ -513,7 +577,7 @@ namespace transport
         // integrate for a small interval up to horizon-crossing,
         // and extract the value of H there
 
-        std::vector< std::vector<number> > history;
+        backg_history<number> history;
 
         // set up times at which we wish to sample -- we just need a few scattered between the initial time and the horizon-crossing time
         basic_range<double> times(tk->get_N_initial(), tk->get_N_horizon_crossing(), time_steps);
@@ -542,16 +606,45 @@ namespace transport
     
             throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
+        catch(eps_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_EPS_IS_NEGATIVE << " " << xe.what();
+            this->error_h(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(eps_too_large& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_EPS_TOO_LARGE << " " << xe.what();
+            this->error_h(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(V_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_V_IS_NEGATIVE << " " << xe.what();
+            this->error_h(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
 
         if(history.size() > 0)
           {
+            // H() is defined to return a number, which must be downcast to double if needed
+            double H = static_cast<double>(this->H(tk->get_params(), history.back()));
+
             // the wavenumbers supplied to the twopf, threepf integration routines
             // use k=1 for the wavenumber which crosses the horizon at time Nstar.
             // This wavenumber should have comoving value k=aH
             // To avoid numbers becoming too large or small, and also because the integrator has
             // noticeably better performance for correlation-function amplitudes in a
             // certain range, use a fixed normalization which can be adjusted in twopf_db_task
-            return( this->H(tk->get_params(), history.back()) * exp(tk->get_astar_normalization()) );
+            double a = exp(tk->get_astar_normalization());
+
+            return(a*H);
           }
         else
           {

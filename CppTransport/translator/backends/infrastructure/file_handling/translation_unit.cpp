@@ -25,8 +25,9 @@
 
 
 #include "core.h"
+#include "defaults.h"
 #include "translation_unit.h"
-#include "script.h"
+#include "model_descriptor.h"
 #include "output_stack.h"
 
 #include "boost/algorithm/string.hpp"
@@ -42,171 +43,213 @@
 // lexical analyser data
 
 
-const std::vector<std::string> keyword_table =
+const y::lexeme_type::keyword_map keywords =
   {
-    "name", "author", "citeguide",
-    "description", "license", "revision",
-    "references", "urls", "email", "institute",
-    "field", "potential", "subexpr", "value",
-    "parameter", "latex", "templates", "settings",
-    "core", "implementation", "model",
-    "abserr", "relerr", "stepper", "stepsize",
-    "background", "perturbations",
-    "indexorder", "left", "right",
-    "abs", "step", "sqrt", "sin", "cos", "tan",
-    "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
-    "asinh", "acosh", "atanh", "exp", "log", "pow", "Li2", "Li", "G_func", "S_func",
-    "H_func",
-    "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func",
-    "factorial", "binomial"
+    { "metadata", keyword_type::metadata },
+    { "require_version", keyword_type::require_version },
+    { "lagrangian", keyword_type::lagrangian },
+    { "canonical", keyword_type::canonical },
+    { "nontrivial_metric", keyword_type::nontrivial_metric },
+    { "name", keyword_type::name },
+    { "author", keyword_type::author },
+    { "citeguide", keyword_type::citeguide },
+    { "description", keyword_type::description },
+    { "license", keyword_type::license },
+    { "revision", keyword_type::revision },
+    { "references", keyword_type::references },
+    { "urls", keyword_type::urls },
+    { "email", keyword_type::email },
+    { "institute", keyword_type::institute },
+    { "field", keyword_type::field },
+    { "potential", keyword_type::potential },
+    { "metric", keyword_type::metric },
+    { "subexpr", keyword_type::subexpr },
+    { "value", keyword_type::value },
+    { "parameter", keyword_type::parameter },
+    { "latex", keyword_type::latex },
+    { "templates", keyword_type::templates },
+    { "settings", keyword_type::settings },
+    { "core", keyword_type::core },
+    { "implementation", keyword_type::impl },
+    { "model", keyword_type::model },
+    { "abserr", keyword_type::abserr },
+    { "relerr", keyword_type::relerr },
+    { "stepper", keyword_type::stepper },
+    { "stepsize", keyword_type::stepsize },
+    { "background", keyword_type::background },
+    { "perturbations", keyword_type::perturbations },
+    { "indexorder", keyword_type::indexorder },
+    { "left", keyword_type::left },
+    { "right", keyword_type::right },
+    { "abs", keyword_type::abs },
+    { "step", keyword_type::step },
+    { "sqrt", keyword_type::sqrt },
+    { "sin", keyword_type::sin },
+    { "cos", keyword_type::cos },
+    { "tan", keyword_type::tan },
+    { "asin", keyword_type::asin },
+    { "acos", keyword_type::acos },
+    { "atan", keyword_type::atan },
+    { "atan2", keyword_type::atan2 },
+    { "sinh", keyword_type::sinh },
+    { "cosh", keyword_type::cosh },
+    { "tanh", keyword_type::tanh },
+    { "asinh", keyword_type::asinh },
+    { "acosh", keyword_type::acosh },
+    { "atanh", keyword_type::atanh },
+    { "exp", keyword_type::exp },
+    { "log", keyword_type::log },
+    { "pow", keyword_type::pow },
+    { "Li2", keyword_type::Li2 },
+    { "Li", keyword_type::Li },
+    { "G_func", keyword_type::G },
+    { "S_func", keyword_type::S },
+    { "H_func", keyword_type::H },
+    { "zeta_func", keyword_type::zeta },
+    { "zetaderiv", keyword_type::zetaderiv },
+    { "tgamma_func", keyword_type::tgamma },
+    { "lgamma_func", keyword_type::lgamma },
+    { "beta_func", keyword_type::beta },
+    { "psi_func", keyword_type::psi },
+    { "factorial", keyword_type::factorial },
+    { "binomial", keyword_type::binomial }
   };
 
-const std::vector<enum keyword_type> keyword_map =
-  {
-    keyword_type::name, keyword_type::author, keyword_type::citeguide,
-    keyword_type::description, keyword_type::license, keyword_type::revision,
-    keyword_type::references, keyword_type::urls, keyword_type::email, keyword_type::institute,
-    keyword_type::field, keyword_type::potential, keyword_type::subexpr, keyword_type::value,
-    keyword_type::parameter, keyword_type::latex, keyword_type::templates, keyword_type::settings,
-    keyword_type::core, keyword_type::impl, keyword_type::model,
-    keyword_type::abserr, keyword_type::relerr, keyword_type::stepper, keyword_type::stepsize,
-    keyword_type::background, keyword_type::perturbations,
-    keyword_type::indexorder, keyword_type::left, keyword_type::right,
-    keyword_type::abs, keyword_type::step, keyword_type::sqrt,
-    keyword_type::sin, keyword_type::cos, keyword_type::tan,
-    keyword_type::asin, keyword_type::acos, keyword_type::atan, keyword_type::atan2,
-    keyword_type::sinh, keyword_type::cosh, keyword_type::tanh,
-    keyword_type::asinh, keyword_type::acosh, keyword_type::atanh,
-    keyword_type::exp, keyword_type::log, keyword_type::pow, keyword_type::Li2,
-    keyword_type::Li, keyword_type::G, keyword_type::S, keyword_type::H,
-    keyword_type::zeta, keyword_type::zetaderiv, keyword_type::tgamma, keyword_type::lgamma,
-    keyword_type::beta, keyword_type::psi, keyword_type::factorial, keyword_type::binomial
-  };
-
-const std::vector<std::string> character_table =
-  {
-    "{", "}", "(", ")",
-    "[", "]", ",", ".", ":", ";",
-    "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
-    "&", "^", "@", "...", "->"
-  };
-
-const std::vector<enum character_type> character_map =
-  {
-    character_type::open_brace, character_type::close_brace,
-    character_type::open_bracket, character_type::close_bracket,
-    character_type::open_square, character_type::close_square,
-    character_type::comma,
-    character_type::period, character_type::colon, character_type::semicolon,
-    character_type::equals, character_type::plus,
-    character_type::binary_minus, character_type::unary_minus,
-    character_type::star, character_type::backslash, character_type::foreslash,
-    character_type::tilde, character_type::ampersand, character_type::circumflex,
-    character_type::ampersat, character_type::ellipsis,
-    character_type::rightarrow
-  };
-
-// keep track of which characters can precede a unary minus
-// this is most characters except the close bracket ')',
+// final column is *true* if the corresponding symbol can *precede*
+// a unary minus
+// This is most characters except the close bracket ')',
 // which signals the end of a subexpression and must be followed by a binary minus
 // otherwise, arithmetic operators such as +, -, *, /, ^ can all be followed by a unary minus
 // A unary minus can itself be followed by a unary minus, too
-const std::vector<bool> character_unary_context =
+const y::lexeme_type::character_map symbols =
   {
-    true, true, true, false,
-    true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true,
-    true, true, true, true, true
-  };
+    { "{", { character_type::open_brace, true } },
+    { "}", { character_type::close_brace, true } },
+    { "(", { character_type::open_bracket, true } },
+    { ")", { character_type::close_bracket, false } },
+    { "[", { character_type::open_square, true } },
+    { "]", { character_type::close_square, true } },
+    { ",", { character_type::comma, true } },
+    { ".", { character_type::period, true } },
+    { ":", { character_type::colon, true } },
+    { ";", { character_type::semicolon, true } },
+    { "=", { character_type::equals, true } },
+    { "+", { character_type::plus, true } },
+    { "-@binary", { character_type::binary_minus, true } },
+    { "-@unary", { character_type::unary_minus, true } },
+    { "*", { character_type::star, true } },
+    { "\\", { character_type::backslash, true } },
+    { "/", { character_type::foreslash, true } },
+    { "~", { character_type::tilde, true } },
+    { "&", { character_type::ampersand, true } },
+    { "^", { character_type::circumflex, true } },
+    { "@", { character_type::ampersat, true } },
+    { "...", { character_type::ellipsis, true } },
+    { "->", { character_type::rightarrow, true } }
+    };
 
 
 static std::string strip_dot_h(const std::string& pathname);
 static std::string leafname   (const std::string& pathname);
 
 
-translation_unit::translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e)
+translation_unit::translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e,
+                                   version_policy& vp)
   : name(file),
     path(p),
     cache(c),
     env(e),
+    policy(vp),
     parse_failed(false),
     errors(0),
+    file_errors(0),
     warnings(0),
     lexstream_payload(file,
                       std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                       std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
                       path, cache),
-    instream(lexstream_payload,
-             keyword_table, keyword_map, character_table, character_map, character_unary_context),
+    instream(lexstream_payload, keywords, symbols),
     lexer(instream),
-    driver(sym_factory, c, e, error_context(stack,
-                                            std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
-                                            std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2))),
+    model(sym_factory, vp,
+          error_context(stack,
+                        std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
+                        std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2))),
+    driver(model, sym_factory, c, e),
     parser(lexer, driver),
     translator_payload(file,
                        std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                        std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
                        std::bind(&translation_unit::print_advisory, this, std::placeholders::_1),
-                       path, stack, sym_factory, driver, cache),
+                       path, stack, sym_factory, model, cache, vp),
     outstream(translator_payload)
   {
-    // construction of 'instream' lexicalizes the input file
+    // 'instream' constructor lexicalizes the input file
+    
     // the instream object owns the list of lexemes, which persist as long as it exists
     // therefore the lexeme list should be persistent while all transactions involving this unit are active
-
+    
     // dump lexeme stream to output -- for debugging
     // instream.print(std::cerr);
-
-    // construction of lexer, driver and parser performs syntactic analysis
-
-    if(parser.parse() == FAIL || driver.failed())
-	    {
+    
+    // combination of lexer, driver and parser performs syntactic analysis
+    
+    if(parser.parse() == FAIL || model.failed())
+      {
         std::ostringstream msg;
         msg << WARNING_PARSING_FAILED << " " << name;
         this->warn(msg.str());
-		    parse_failed = true;
-	    }
-
+        parse_failed = true;
+      }
+    
     // dump results of syntactic analysis -- for debugging
-    // in.driver.get_script()->print(std::cerr);
+    // this->model.print(std::cerr);
+    
+    // ask model descriptor to validate itself
+    auto validation_errors = model.validate();
+    if(validation_errors.empty()) return;
+    
+    this->warn(WARNING_VALIDATION_ERRORS);
+    for(const auto& t : validation_errors)
+      {
+        if(t->first)
+          {
+            this->error(std::string(FATAL_TOKEN) + t->second);
+            this->parse_failed = true;
+          }
+        else
+          {
+            this->warn(t->second);
+          }
+      }
+  }
+  
 
-    // cache details about this translation unit
-
+void translation_unit::populate_output_filenames()
+  {
     boost::filesystem::path core_output;
     std::string             core_guard;
     boost::filesystem::path implementation_output;
     std::string             implementation_guard;
 
-    if(cache.core_out().length() > 0 )
-      {
-        core_output = cache.core_out();
-      }
+    if(this->cache.core_out().length() > 0 ) core_output = this->cache.core_out();
     else
       {
-        boost::optional< contexted_value<std::string>& > core = driver.get_script().get_core();
-        if(core)
-          {
-            core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
-          }
+        boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core_template();
+        if(core) core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
       }
     core_guard = boost::to_upper_copy(leafname(core_output.string()));
     core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), core_guard.end());
 
-    if(cache.implementation_out().length() > 0)
-      {
-        implementation_output = cache.implementation_out();
-      }
+    if(this->cache.implementation_out().length() > 0) implementation_output = this->cache.implementation_out();
     else
       {
-        boost::optional< contexted_value<std::string>& > impl = driver.get_script().get_implementation();
-        if(impl)
-          {
-            implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
-          }
+        boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation_template();
+        if(impl) implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
       }
     implementation_guard = boost::to_upper_copy(leafname(implementation_output.string()));
     implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
 
+    // assign these values to the translator data payload
     this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
   }
 
@@ -219,46 +262,61 @@ unsigned int translation_unit::apply()
     unsigned int rval = 0;
 
     // don't attempt translation if parsing failed
-		if(this->parse_failed) return rval;
+		if(this->parse_failed || this->errors > 0) return rval;
+    
+    this->populate_output_filenames();
 
-    const script& s = this->driver.get_script();
-
-    boost::optional< contexted_value<std::string>& > model = s.get_model();
-    if(!model) this->error(ERROR_NO_MODEL_BLOCK);
-
-    boost::optional< contexted_value<stepper>& > back = s.get_background_stepper();
-    if(!back) this->error(ERROR_NO_BACKGROUND_STEPPER_BLOCK);
-
-    boost::optional< contexted_value<stepper>& > pert = s.get_perturbations_stepper();
-    if(!pert) this->error(ERROR_NO_PERTURBATIONS_STEPPER_BLOCK);
-
-    boost::optional< contexted_value<GiNaC::ex>& > V = s.get_potential();
-    if(!V) this->error(ERROR_NO_POTENTIAL);
-
-    if(this->errors == 0)
+    const boost::filesystem::path& core_output = this->translator_payload.get_core_filename();
+    const boost::filesystem::path& impl_output = this->translator_payload.get_implementation_filename();
+    
+    boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core_template();
+    if(core)
       {
-        boost::optional< contexted_value<std::string>& > core = s.get_core();
-        if(core)
+        this->file_errors = 0;
+        try
           {
-            rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_type::process_core);
+            rval += this->outstream.translate(*core, (*core).get_declaration_point(), core_output, process_type::process_core);
           }
-        else
+        catch(exit_parse& xe)
           {
-            this->error(ERROR_NO_CORE_TEMPLATE);
-          }
-
-        boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
-        if(impl)
-          {
-            rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_type::process_implementation);
-          }
-        else
-          {
-            this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
+            std::ostringstream msg;
+            msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+            this->warn(msg.str());
           }
       }
+    else
+      {
+        this->error(ERROR_NO_CORE_TEMPLATE);
+      }
 
-    if(this->errors > 0) this->parse_failed = true;
+    boost::optional< contexted_value<std::string>& > impl = this->model.templates.get_implementation_template();
+    if(impl)
+      {
+        this->file_errors = 0;
+        try
+          {
+            rval += this->outstream.translate(*impl, (*impl).get_declaration_point(), impl_output, process_type::process_implementation);
+          }
+        catch(exit_parse& xe)
+          {
+            std::ostringstream msg;
+            msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+            this->warn(msg.str());
+          }
+      }
+    else
+      {
+        this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
+      }
+
+    if(this->errors > 0)
+      {
+        this->parse_failed = true;
+
+        // remove output files
+        if(boost::filesystem::exists(core_output)) boost::filesystem::remove(core_output);
+        if(boost::filesystem::exists(impl_output)) boost::filesystem::remove(impl_output);
+      }
 
     return(rval);
   }
@@ -269,7 +327,6 @@ unsigned int translation_unit::apply()
 
 boost::filesystem::path translation_unit::mangle_output_name(const boost::filesystem::path& input, const std::string& tag)
   {
-    size_t      pos = 0;
     std::string output;
 
     boost::filesystem::path h_extension(".h");
@@ -285,9 +342,9 @@ std::string translation_unit::get_template_suffix(std::string input)
   {
     size_t      pos = 0;
     std::string output;
-
-    if((pos = input.find(TEMPLATE_TAG_SUFFIX)) != std::string::npos) output = input.erase(0, pos+1);
-    else                                                             output = input;
+    
+    if((pos = input.find_last_of(TEMPLATE_TAG_SUFFIX)) != std::string::npos) output = input.erase(0, pos + 1);
+    else output = input;
 
     return(output);
   }
@@ -305,7 +362,10 @@ void translation_unit::print_advisory(const std::string& msg)
 void translation_unit::error(const std::string& msg)
 	{
 		::error(msg, this->cache, this->env);
+    
     ++this->errors;
+    ++this->file_errors;
+    if(this->file_errors > DEFAULT_MAX_ERROR_COUNT) throw exit_parse(NOTIFY_TOO_MANY_ERRORS);
 	}
 
 
@@ -319,7 +379,10 @@ void translation_unit::warn(const std::string& msg)
 void translation_unit::context_error(const std::string& msg, const error_context& ctx)
   {
     ::error(msg, this->cache, this->env, ctx);
+
     ++this->errors;
+    ++this->file_errors;
+    if(this->file_errors > DEFAULT_MAX_ERROR_COUNT) throw exit_parse(NOTIFY_TOO_MANY_ERRORS);
   }
 
 

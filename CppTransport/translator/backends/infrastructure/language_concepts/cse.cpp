@@ -83,73 +83,109 @@ void cse::clear()
   }
 
 
-void cse::parse(const GiNaC::ex& expr, std::string name)
+void cse::deposit(cse_impl::symbol_record& record)
+  {
+    if(!record.is_written())
+      {
+        this->decls.emplace_back(record.get_symbol(), record.get_target());
+        record.mark_written();
+      }
+  }
+
+
+void cse::parse(const GiNaC::ex& expr, const boost::optional<std::string> name)
   {
     // no effect if CSE is disabled
     if(!this->data_payload.do_cse()) return;
 
+    // enable parsing timer
     timing_instrument instrument(timer);
 
-    // find iterator to entire expression;
-    // used to determine whether to create an anonymous temporary name, or used the supplied string "name"
-    GiNaC::const_postorder_iterator last;
-
-    const bool use_name = name.length() > 0;
-    if(use_name)    // avoid performing possibly expensive search if no name supplied
+    // loop over all subexpressions in the tree, beginning with the leaves and building up to
+    // more complex expressions
+    for(auto t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
       {
-        for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
-          {
-            last = t;
-          }
-      }
+        // print this subexpression *without* use counting
+        // (false means that print will use get_symbol_without_use_count)
+        std::string target_string = this->print(*t, false);
 
-    for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
-      {
-        // print this expression without use counting (false means that print will use get_symbol_without_use_count)
-        std::string e = this->print(*t, false);
+        // does this subexpression already exist in the lookup table?
+        auto u = this->symbols.find(target_string);
 
-        // does this expression already exist in the lookup table?
-        symbol_table::iterator u = this->symbols.find(e);
+        // if not, insert a new subexpression
 
-        // if not, we should insert it
+        // if a name was supplied, we automatically deposit everything to the pool, because typically clients
+        // further up the stack will only get a GiNaC symbol corresponding to this name;
+        // they won't have an explicit expression to print which would cause these temporaries to be deposited
+
+        // work out whether we are looking at the total expression, or just one of the component subexpressions
+        auto w = t;
+        ++w;
+        bool last_subexpr = (w == expr.postorder_end());
+
         if(u == this->symbols.end())
           {
-            std::string nm;
-            if(use_name && t == last) nm = name;
-            else                      nm = this->make_symbol();
+            // Assign a name for this subexpression.
+            // If it is the top-level expression and a name was supplied then we use it,
+            // otherwise we set up a label for a new temporary object
+            std::string symbol_name{name && last_subexpr ? *name : this->make_symbol()};
 
             // perform insertion
-            std::pair< symbol_table::iterator, bool > result = this->symbols.emplace(std::make_pair( e, cse_impl::symbol_record(e, nm) ));
+            auto result = this->symbols.emplace(target_string, cse_impl::symbol_record{target_string, symbol_name});
 
-            // check whether insertion took place; failure could be due to aliasing
-            if(!result.second) throw cse_exception(name);
+            // check whether insertion took place; failure could be due to aliasing, so take no risks and
+            // raise an exception
+            if(!result.second) throw cse_exception(*name);
 
-            // if a name was supplied, we automatically deposit everything to the pool, because typically clients
-            // further up the stack will only get a GiNaC symbol corresponding to this name;
-            // they won't have an explicit expression to print which could cause these temporaries to be deposited
-            if(use_name && !result.first->second.is_written())
+            if(name) deposit(result.first->second);
+          }
+        else
+          {
+            // otherwise, no need to insert, but we should check whether the write flag needs to be set
+            // and we should also check
+            if(name)
               {
-                this->decls.push_back(std::make_pair(result.first->second.get_symbol(), result.first->second.get_target()));
-                result.first->second.set_written();
+                cse_impl::symbol_record& rec = u->second;
+                deposit(rec);
+
+                // if this is the total subexpression, check whether the record we've matched has the assigned name
+                if(last_subexpr && rec.get_symbol() != *name)
+                  {
+                    // check whether we've emitted a declaration for this named symbol before
+                    auto v = this->named_symbols.find(*name);
+
+                    if(v == this->named_symbols.end())
+                      {
+                        // if not, then assign the temporary we've matched to the intended name
+
+                        // *don't* inject into the symbol table, though, otherwise we'll end up with *two*
+                        // entries that match the same subexpression -- this is inconsistent
+                        this->decls.emplace_back(*name, rec.get_symbol());
+                        this->named_symbols.insert(*name);
+                      }
+                  }
               }
           }
       }
   }
 
 
-std::unique_ptr< std::list<std::string> > cse::temporaries(const std::string& left, const std::string& mid, const std::string& right) const
+std::unique_ptr< std::list<std::string> >
+cse::temporaries(const std::string& left, const std::string& mid, const std::string& right) const
   {
-    std::unique_ptr< std::list<std::string> > rval = std::make_unique< std::list<std::string> >();
+    auto rval = std::make_unique< std::list<std::string> >();
 
     // deposit each declaration into the output stream
-    for(const std::pair<std::string, std::string>& decl: this->decls)
+    for(const auto& decl: this->decls)
       {
-        std::ostringstream out;
+        std::string temp = left;
+        temp.append(decl.first);
+        temp.append(mid);
+        temp.append(decl.second);
+        temp.append(right);
+        temp.append("\n");
 
-        // replace LHS and RHS macros in the template
-        out << left << decl.first << mid << decl.second << right << '\n';
-
-        rval->push_back(out.str());
+        rval->push_back(temp);
       }
 
     return(rval);
@@ -165,7 +201,7 @@ std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
     std::string e = this->print(expr, false);
 
     // search for this expression in the lookup table
-    symbol_table::iterator t = this->symbols.find(e);
+    auto t = this->symbols.find(e);
 
     // was it present? if not, return the plain expression
     if(t == this->symbols.end()) return e;
@@ -184,18 +220,18 @@ std::string cse::get_symbol_with_use_count(const GiNaC::ex& expr)
     std::string e = this->print(expr, true);
 
     // search for this expression in the lookup table
-    symbol_table::iterator t = this->symbols.find(e);
+    auto t = this->symbols.find(e);
 
     // was it present? if not, return the plain expression
     if(t == this->symbols.end()) return e;
-
+    
     // if it was present, check whether this symbol has been written into the list
     // of declarations
 
     if(!t->second.is_written())
       {
-        this->decls.push_back(std::make_pair(t->second.get_symbol(), t->second.get_target()));
-        t->second.set_written();
+        this->decls.emplace_back(t->second.get_symbol(), t->second.get_target());
+        t->second.mark_written();
       }
 
     return t->second.get_symbol();
@@ -204,10 +240,14 @@ std::string cse::get_symbol_with_use_count(const GiNaC::ex& expr)
 
 std::string cse::make_symbol()
   {
-    std::ostringstream s;
+    std::string s{this->temporary_name_kernel};
+    
+    s.append("_");
+    s.append(std::to_string(serial_number));
+    s.append("_");
+    s.append(std::to_string(symbol_counter));
 
-    s << this->temporary_name_kernel << "_" << serial_number << "_" << symbol_counter;
-    symbol_counter++;
+    ++symbol_counter;
 
-    return(s.str());
+    return s;
   }

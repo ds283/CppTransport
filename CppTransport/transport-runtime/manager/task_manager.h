@@ -98,7 +98,7 @@ namespace transport
 
         //! Create a model instance of templated type and register it; delegate to instance manager
         template <typename Model>
-        std::shared_ptr<Model> create_model() { return(this->model_mgr.template create_model<Model>()); }
+        std::shared_ptr<Model> create_model();
 
 
         // INTERNAL DATA
@@ -171,7 +171,10 @@ namespace transport
 		template <typename number>
 		void task_manager<number>::process(void)
 			{
-        error_handler err(local_env, arg_cache);
+        // error handler must be declared after master has processed command-line arguments, so that we
+        // respect any error or warning-related command line flags -- therefore can't have a single error_handler
+        // for the whole task_manager<> class
+        error_handler err(this->local_env, this->arg_cache);
 
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
@@ -199,9 +202,9 @@ namespace transport
 
             try
               {
-                // we must get to execute_tasks() if at all possible, because it sets up a WorkerBundle
-                // instance that is responsible for issuing SETUP/TERMINATION notices to workers
-                // if the WorkerBundle never gets instantiated then no TERMINATION notices will ever be issued,
+                // we must get to execute_tasks() if at all possible, because it sets up a WorkerPool_Context
+                // instance that is responsible for issuing WORKER_SETUP/TERMINATION notices to workers
+                // if the WorkerPool_Context never gets instantiated then no TERMINATION notices will ever be issued,
                 // so the MPI job will hang even if the master node exits
                 this->master.execute_tasks();
               }
@@ -254,11 +257,77 @@ namespace transport
     template <typename GeneratorObject>
     void task_manager<number>::add_generator(GeneratorObject obj)
       {
+        error_handler err(this->local_env, this->arg_cache);
+        
         // pass through to gallery manager
-        this->gallery.add_generator(obj);
+        try
+          {
+            this->gallery.add_generator(obj);
+          }
+        catch(runtime_exception& xe)
+          {
+            if(world.rank() == MPI::RANK_MASTER)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT N" << '\n';
+#endif
+                err(xe.what());
+              }
+          }
+        catch(std::exception& xe)
+          {
+            if(world.rank() == MPI::RANK_MASTER)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT O" << '\n';
+#endif
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
+                err(msg.str());
+              }
+          }
       }
+    
+    
+    template <typename number>
+    template <typename Model>
+    std::shared_ptr<Model> task_manager<number>::create_model()
+      {
+        error_handler err(this->local_env, this->arg_cache);
 
+        std::shared_ptr<Model> m;
 
+        try
+          {
+            m = this->model_mgr.template create_model<Model>();
+          }
+        catch(runtime_exception& xe)
+          {
+            if(world.rank() == MPI::RANK_MASTER)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT P" << '\n';
+#endif
+                err(xe.what());
+              }
+          }
+        catch(std::exception& xe)
+          {
+            if(world.rank() == MPI::RANK_MASTER)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT Q" << '\n';
+#endif
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
+                err(msg.str());
+              }
+          }
+        
+        return m;
+      }
+    
+    
   } // namespace transport
 
 

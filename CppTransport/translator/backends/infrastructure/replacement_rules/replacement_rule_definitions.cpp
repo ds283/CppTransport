@@ -32,128 +32,144 @@ namespace macro_packages
 
     std::string replacement_rule_simple::operator()(const macro_argument_list& args)
       {
-        // check that correct number of arguments have been supplied
-        if(args.size() != this->num_args)
-          {
-            std::ostringstream msg;
-
-            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
-            throw argument_mismatch(msg.str());
-          }
-
+        this->validate(args);
         return this->evaluate(args);
+      }
+    
+    
+    void replacement_rule_simple::validate(const macro_argument_list& args)
+      {
+        // check that correct number of arguments have been supplied
+        if(args.size() == this->num_args) return;
+    
+        std::ostringstream msg;
+    
+        msg << ERROR_MACRO_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT
+            << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
+        throw argument_mismatch(msg.str());
       }
 
 
-    std::string replacement_rule_index::evaluate_unroll(const macro_argument_list& args, const assignment_list& indices)
+    std::string
+    replacement_rule_index::evaluate_unroll(const macro_argument_list& args, const index_literal_assignment& indices)
       {
-        this->check(args, indices);
-
+        this->validate(args);
+        this->validate(indices);
         return this->unroll(args, indices);
       }
 
 
-    void replacement_rule_index::pre(const macro_argument_list& args)
+    void replacement_rule_index::pre(const macro_argument_list& args, const index_literal_list& indices)
       {
-        // check that correct number of arguments have been supplied
-        if(args.size() != this->num_args)
-          {
-            std::ostringstream msg;
-
-            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
-            throw argument_mismatch(msg.str());
-          }
-
-        this->pre_hook(args);
+        this->validate(args);
+        this->pre_hook(args, indices);
       }
 
 
     void replacement_rule_index::post(const macro_argument_list& args)
       {
+        this->validate(args);
         this->post_hook(args);
       }
 
 
-    std::string replacement_rule_index::evaluate_roll(const macro_argument_list& args,
-                                                      const abstract_index_list& indices)
+    std::string
+    replacement_rule_index::evaluate_roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        this->check(args, indices);
-
+        this->validate(args);
+        this->validate(indices);
         return this->roll(args, indices);
       }
+    
+    
+    void replacement_rule_index::validate(const macro_argument_list& args)
+      {
+        if(args.size() == this->num_args) return;
+
+        std::ostringstream msg;
+    
+        msg << ERROR_MACRO_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " "
+            << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
+        throw argument_mismatch(msg.str());
+      }
+    
 
 
     template <typename IndexDatabase>
-    void replacement_rule_index::check(const macro_argument_list& args, const IndexDatabase& indices)
+    void replacement_rule_index::validate(const IndexDatabase& indices)
       {
-        // check that correct number of arguments have been supplied
-        if(args.size() != this->num_args)
-          {
-            std::ostringstream msg;
-
-            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
-            throw argument_mismatch(msg.str());
-          }
-
         // check that correct number of indices have been supplied
-        if(this->num_indices && indices.size() != *this->num_indices)
+        if(indices.size() != this->num_indices
+           || (this->idx_classes && indices.size() != this->idx_classes.get().size()))
           {
             std::ostringstream msg;
-
-            msg << ERROR_WRONG_INDEX_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_INDEX_COUNT << " " << *this->num_indices << ", " << ERROR_RECEIVED_INDEX_COUNT << " " << indices.size();
-            throw index_mismatch(msg.str());
+    
+            msg << ERROR_MACRO_WRONG_INDEX_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_INDEX_COUNT << " "
+                << this->num_indices << ", " << ERROR_RECEIVED_INDEX_COUNT << " " << indices.size();
+            throw rule_apply_fail(msg.str());
           }
 
         // check that index types are compatible
-        if(this->idx_class)
+        if(!this->idx_classes) return;
+    
+        const auto& expected_classes = *this->idx_classes;
+        
+        for(unsigned int i = 0; i < indices.size(); ++i)
           {
-            for(const typename IndexDatabase::underlying_type& rec : indices)
+            const auto& T = indices[i];
+            index_class expected = expected_classes[i];
+            
+            index_class cl = index_traits_impl::get_index_class<decltype(T)>(T);
+            char lb = index_traits_impl::get_index_label<decltype(T)>(T);
+            const error_context& ctx = index_traits_impl::get_index_declaration<decltype(T)>(T);
+        
+            switch(expected)
               {
-                switch(*this->idx_class)
+                case index_class::full:
                   {
-                    case index_class::full:
+                    // full is compatible with either full or field_only
+                    if(cl != index_class::full && cl != index_class::field_only)
                       {
-                        // full is compatible with either full or field_only
-                        if(rec.get_class() != index_class::full && rec.get_class() != index_class::field_only)
-                          {
-                            std::ostringstream msg;
-
-                            msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << rec.get_label() << "'";
-                            throw index_mismatch(msg.str());
-                          }
-
-                        break;
+                        std::ostringstream msg;
+                    
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
+                            << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
+                        throw index_mismatch(msg.str(), ctx);
                       }
-
-                    case index_class::field_only:
+                
+                    break;
+                  }
+            
+                case index_class::field_only:
+                  {
+                    // field_only is compatible only with field_only
+                
+                    if(cl != index_class::field_only)
                       {
-                        // field_only is compatible only with field_only
-
-                        if(rec.get_class() != index_class::field_only)
-                          {
-                            std::ostringstream msg;
-
-                            msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << rec.get_label() << "'";
-                            throw index_mismatch(msg.str());
-                          }
-
-                        break;
+                        std::ostringstream msg;
+                    
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
+                            << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
+                        throw index_mismatch(msg.str(), ctx);
                       }
-
-                    case index_class::parameter:
+                
+                    break;
+                  }
+            
+                case index_class::parameter:
+                  {
+                    // parameter is compatible only with parameter
+                
+                    if(cl != index_class::parameter)
                       {
-                        // parameter is compatible only with parameter
-
-                        if(rec.get_class() != index_class::parameter)
-                          {
-                            std::ostringstream msg;
-
-                            msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL << " '" << rec.get_label() << "'";
-                            throw index_mismatch(msg.str());
-                          }
-
-                        break;
+                        std::ostringstream msg;
+                    
+                        msg << ERROR_WRONG_INDEX_CLASS << " '" << this->name << "' " << ERROR_WRONG_INDEX_LABEL
+                            << " '" << lb << "'; " << ERROR_WRONG_INDEX_EXPECTED << " '" << to_string(expected) << "'";
+                        throw index_mismatch(msg.str(), ctx);
                       }
+                
+                    break;
                   }
               }
           }

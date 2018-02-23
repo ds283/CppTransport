@@ -30,47 +30,100 @@
 #include "boost/timer/timer.hpp"
 
 
-class timing_instrument
+namespace transport
   {
-
-    // CONSTRUCTOR, DESTRUCTOR
-
-  public:
-
-    //! constructor
-    timing_instrument(boost::timer::cpu_timer& cp)
-      : captured_timer(cp),
-        was_stopped(cp.is_stopped())
+    
+    enum class timing_instrument_mode
       {
-        if(was_stopped) captured_timer.resume();
-      }
-
-    //! destructor
-    ~timing_instrument()
+        continuous_timing,    // enforce continuous timing, so stop() has no effect
+        allow_stop            // allow timer to be stopped
+      };
+    
+    class timing_instrument
       {
-        if(was_stopped) captured_timer.stop();
-      }
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor captures timer and records its state
+        timing_instrument(boost::timer::cpu_timer& cp, timing_instrument_mode m = timing_instrument_mode::continuous_timing)
+          : captured_timer(cp),
+            mode(m),
+            was_stopped(cp.is_stopped()),
+            stopped(false)
+          {
+            // restart timer if it was previously stopped, otherwise just let it keep going
+            if(was_stopped) captured_timer.resume();
+          }
+        
+        //! destructor restores state
+        ~timing_instrument()
+          {
+            // stop timer if it was stopped on capture, provided stop() has not already been called
+            if(!this->stopped && this->was_stopped)
+              {
+                captured_timer.stop();
+              }
+              // otherwise, resume timer if it was previously running and is now stopped
+            else if(this->stopped && !this->was_stopped)
+              {
+                captured_timer.resume();
+              }
+          }
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! stop the timer if our current policies allow it
+        void stop()
+          {
+            // stop timer if it was stopped on capture, and flag that stop() has been called
+            // on this instrument
+            if(this->stopped) return;
+            if(this->mode == timing_instrument_mode::continuous_timing && !this->was_stopped) return;
 
+            this->captured_timer.stop();
+            this->stopped = true;
+          }
+        
+        //! resume the timer (if stop() has previously been called on this instrument)
+        void resume()
+          {
+            if(!this->stopped) return;
 
-    // INTERFACE
-
-  public:
-
-    //! stop the timer (if it was previously stopped)
-    void stop() { if(was_stopped) captured_timer.stop(); }
-
-
-    // INTERNAL DATA
-
-  private:
-
-    //! reference to timer we are managing
-    boost::timer::cpu_timer& captured_timer;
-
-    //! record whether timer was stopped on construction
-    bool was_stopped;
-
-  };
+            this->captured_timer.resume();
+            this->stopped = false;
+          }
+        
+        //! read elapsed time
+        boost::timer::cpu_times elapsed()
+          {
+            return this->captured_timer.elapsed();
+          }
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! reference to timer we are managing
+        boost::timer::cpu_timer& captured_timer;
+        
+        //! timing mode
+        timing_instrument_mode mode;
+        
+        //! record whether timer was stopped on construction
+        const bool was_stopped;
+        
+        //! record whether stop() has been called on this instrument
+        bool stopped;
+        
+      };
+    
+  }
 
 
 #endif //CPPTRANSPORT_TIMING_INSTRUMENT_H

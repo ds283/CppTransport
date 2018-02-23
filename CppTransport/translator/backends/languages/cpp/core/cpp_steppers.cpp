@@ -34,6 +34,7 @@
 
 
 #define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define EMPLACE(pkg, obj) try { emplace_rule(pkg, obj); } catch(std::exception& xe) { }
 
 
 namespace cpp
@@ -45,15 +46,18 @@ namespace cpp
     cpp_steppers::cpp_steppers(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
-        pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
       }
 
 
     // *******************************************************************
-
-
-    static std::string replace_stepper(boost::optional< contexted_value<stepper>& > s, std::string state_name)
+    
+    
+    static std::string
+    replace_stepper(boost::optional<contexted_value<std::shared_ptr<stepper> > > s, const std::string& state_name,
+                    const std::string& value_type, const std::string& time_type, const std::string& algebra_name,
+                    const std::string& operations_name)
       {
         std::ostringstream out;
 
@@ -80,28 +84,50 @@ namespace cpp
 
         if(s)
           {
-            stepper step = *s;
+            auto& step = ***s;
             name = step.get_name();
 
             if(name == "runge_kutta_dopri5")
               {
-                out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type << ", "
+                    << algebra_name << ", " << operations_name
+                    << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else if(name == "bulirsch_stoer_dense_out")
               {
-                out << "boost::numeric::odeint::bulirsch_stoer_dense_out< " << state_name << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::bulirsch_stoer_dense_out< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type << ", "
+                    << algebra_name << ", " << operations_name
+                    << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else if(name == "bulirsch_stoer")
               {
-                out << "boost::numeric::odeint::bulirsch_stoer< " << state_name << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::bulirsch_stoer< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type << ", "
+                    << algebra_name << ", " << operations_name
+                    << " >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else if(name == "runge_kutta_fehlberg78")
               {
-                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type << ", "
+                    << algebra_name << ", " << operations_name
+                    << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else if(name == "runge_kutta_cash_karp45")
               {
-                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< " << state_name << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type << ", "
+                    << algebra_name << ", " << operations_name
+                    << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
+              }
+            else if(name == "adams_bashforth_moulton")
+              {
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::adaptive_adams_bashforth_moulton< 4, "
+                    << state_name << ", " << value_type << ", " << state_name << ", " << time_type << ", "
+                    << algebra_name << ", " << operations_name
+                    << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
             else
               {
@@ -125,19 +151,27 @@ namespace cpp
 
     std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_background_stepper();
+        auto s = this->data_payload.templates.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
+        std::string value_type = args[BACKG_STEPPER_VALUE_TYPE_ARGUMENT];
+        std::string time_type = args[BACKG_STEPPER_TIME_TYPE_ARGUMENT];
+        std::string algebra_name = args[BACKG_STEPPER_ALGEBRA_ARGUMENT];
+        std::string operations_name = args[BACKG_STEPPER_OPERATIONS_ARGUMENT];
 
-        return(replace_stepper(s, state_name));
+        return(replace_stepper(s, state_name, value_type, time_type, algebra_name, operations_name));
       }
 
 
     std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
-        boost::optional< contexted_value<stepper>& > s = this->data_payload.get_perturbations_stepper();
+        auto s = this->data_payload.templates.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
+        std::string value_type = args[PERT_STEPPER_VALUE_TYPE_ARGUMENT];
+        std::string time_type = args[PERT_STEPPER_TIME_TYPE_ARGUMENT];
+        std::string algebra_name = args[BACKG_STEPPER_ALGEBRA_ARGUMENT];
+        std::string operations_name = args[BACKG_STEPPER_OPERATIONS_ARGUMENT];
 
-        return(replace_stepper(s, state_name));
+        return(replace_stepper(s, state_name, value_type, time_type, algebra_name, operations_name));
       }
 
 

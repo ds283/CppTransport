@@ -1,6 +1,8 @@
 model "dquad"
   {
     name        = "Double quadratic inflation";
+    lagrangian  = canonical;
+
     description = "A two-field model with quadratic potentials";
     citeguide   = "Example from the CppTransport user guide";
     license     = "CC BY";
@@ -10,6 +12,11 @@ model "dquad"
                     "astro-ph/0511041",
                     "astro-ph/0603799" ];
     urls        = [ "http://transportmethod.com" ];
+  };
+
+metadata
+  {
+    require_version = 201701;
   };
 
 templates

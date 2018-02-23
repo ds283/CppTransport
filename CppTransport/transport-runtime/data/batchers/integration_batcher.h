@@ -148,14 +148,8 @@ namespace transport
 
       public:
 
-        //! Add integration details
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
-
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement);
-
-        //! Report a failed integration
-        virtual void report_integration_failure();
 
         //! Report a failed integration for a specific serial number
         virtual void report_integration_failure(unsigned int kserial);
@@ -376,14 +370,8 @@ namespace transport
 
       public:
 
-        //! Add integration details
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching) override;
-
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
-
-        //! Report a failed integration
-        virtual void report_integration_failure() override;
 
         //! Report a failed integration for a specific serial number
         virtual void report_integration_failure(unsigned int kserial) override;
@@ -500,14 +488,8 @@ namespace transport
 
       public:
 
-        //! Add integration details
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching) override;
-
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
-
-        //! Report a failed integration
-        virtual void report_integration_failure() override;
 
         //! Report a failed integration for a specific serial number
         virtual void report_integration_failure(unsigned int kserial) override;
@@ -668,39 +650,33 @@ namespace transport
 
 
     template <typename number>
-    void integration_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
-	    {
-        this->integration_time += integration;
-        this->batching_time += batching;
-
-        this->num_integrations++;
-
-        if(this->max_integration_time == 0 || integration > this->max_integration_time) this->max_integration_time = integration;
-        if(this->min_integration_time == 0 || integration < this->min_integration_time) this->min_integration_time = integration;
-
-        if(this->max_batching_time == 0 || batching > this->max_batching_time) this->max_batching_time = batching;
-        if(this->min_batching_time == 0 || batching < this->min_batching_time) this->min_batching_time = batching;
-
-        if(this->flush_due)
-	        {
-            this->flush_due = false;
-            this->flush(replacement_action::action_replace);
-	        }
-        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
-          {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
-                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
-                << "; forcing flush";
-            this->flush(replacement_action::action_replace);
-          }
-	    }
-
-
-    template <typename number>
     void integration_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
                                                                  unsigned int kserial, size_t steps, unsigned int refinements)
 	    {
-        this->report_integration_success(integration, batching);
+        this->integration_time += integration;
+        this->batching_time += batching;
+    
+        this->num_integrations++;
+    
+        if(this->max_integration_time == 0 || integration > this->max_integration_time) this->max_integration_time = integration;
+        if(this->min_integration_time == 0 || integration < this->min_integration_time) this->min_integration_time = integration;
+    
+        if(this->max_batching_time == 0 || batching > this->max_batching_time) this->max_batching_time = batching;
+        if(this->min_batching_time == 0 || batching < this->min_batching_time) this->min_batching_time = batching;
+    
+        if(this->flush_due)
+          {
+            this->flush_due = false;
+            this->flush(replacement_action::action_replace);
+          }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal)
+              << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+              << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+              << "; forcing flush";
+            this->flush(replacement_action::action_replace);
+          }
 
 		    if(this->collect_statistics)
 			    {
@@ -733,31 +709,24 @@ namespace transport
 
 
     template <typename number>
-    void integration_batcher<number>::report_integration_failure()
-	    {
-        this->failures++;
-        this->check_for_flush();
-
-        if(this->flush_due)
-	        {
-            this->flush_due = false;
-            this->flush(replacement_action::action_replace);
-	        }
-        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
-          {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
-                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
-                << "; forcing flush";
-            this->flush(replacement_action::action_replace);
-          }
-	    }
-
-
-    template <typename number>
     void integration_batcher<number>::report_integration_failure(unsigned int kserial)
       {
         this->failed_serials.insert(kserial);
-        this->report_integration_failure();
+        this->failures++;
+        this->check_for_flush();
+    
+        if(this->flush_due)
+          {
+            this->flush_due = false;
+            this->flush(replacement_action::action_replace);
+          }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal)
+              << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+              << " exceeds checkpoint interval " << format_time(this->checkpoint_interval) << "; forcing flush";
+            this->flush(replacement_action::action_replace);
+          }
       }
 
 
@@ -969,27 +938,11 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
-      {
-        this->integration_batcher<number>::report_integration_success(integration, batching);
-        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
-      }
-
-
-    template <typename number>
     void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
                                                            unsigned int kserial, size_t steps, unsigned int refinement)
       {
         this->integration_batcher<number>::report_integration_success(integration, batching, kserial, steps, refinement);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
-      }
-
-
-    template <typename number>
-    void twopf_batcher<number>::report_integration_failure()
-      {
-        this->integration_batcher<number>::report_integration_failure();
-        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(0);
       }
 
 
@@ -1288,27 +1241,11 @@ namespace transport
 
 
     template <typename number>
-    void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
-      {
-        this->integration_batcher<number>::report_integration_success(integration, batching);
-        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
-      }
-
-
-    template <typename number>
     void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
                                                              unsigned int kserial, size_t steps, unsigned int refinement)
       {
         this->integration_batcher<number>::report_integration_success(integration, batching, kserial, steps, refinement);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
-      }
-
-
-    template <typename number>
-    void threepf_batcher<number>::report_integration_failure()
-      {
-        this->integration_batcher<number>::report_integration_failure();
-        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(0);
       }
 
 

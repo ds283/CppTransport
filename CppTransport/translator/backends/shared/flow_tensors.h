@@ -29,6 +29,7 @@
 
 
 #include "replacement_rule_package.h"
+#include "cse_map_phase_indices.h"
 #include "cse_map_field_indices.h"
 
 
@@ -46,6 +47,9 @@ namespace macro_packages
 
     constexpr unsigned int FIELD_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int FIELD_TOTAL_INDICES = 1;
+    
+    constexpr unsigned int MOMENTA_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int MOMENTA_TOTAL_INDICES = 1;
 
     constexpr unsigned int COORDINATE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int COORDINATE_TOTAL_INDICES = 1;
@@ -88,7 +92,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -132,7 +136,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -176,7 +180,51 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string evaluate(const macro_argument_list& args) override;
+        std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! Hubble object
+        std::unique_ptr<Hubble> Hubble_obj;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
+      };
+
+
+    class replace_eta : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_eta(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
+          : replacement_rule_simple(std::move(n), EPSILON_TOTAL_ARGUMENTS),
+            cse_worker(cw),
+            lambda_mgr(lm)
+          {
+            Hubble_obj = f.make_Hubble(prn, cw);
+          }
+
+        //! destructor
+        virtual ~replace_eta() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -204,12 +252,14 @@ namespace macro_packages
 
         //! constructor
         replace_parameter(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : replacement_rule_index(std::move(n), PARAMETER_TOTAL_ARGUMENTS, PARAMETER_TOTAL_INDICES, index_class::parameter),
+          : replacement_rule_index(std::move(n), PARAMETER_TOTAL_ARGUMENTS, PARAMETER_TOTAL_INDICES,
+                                   std::vector<index_class>({ index_class::parameter })),
             cse_worker(cw),
             lambda_mgr(lm),
             printer(prn),
-            shared(f.get_shared_resources())
+            fl(f.make_flatten())
           {
+            parameter_tensor = f.make_parameters(prn, cw);
           }
 
         //! destructor
@@ -221,7 +271,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return(this->shared.roll_parameters() ? unroll_behaviour::allow : unroll_behaviour::force); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->parameter_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -229,18 +279,22 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+        std::string unroll(const macro_argument_list& args, const index_literal_assignment& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
-
-
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
+    
+        //! evaluate
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! release
+        void post_hook(const macro_argument_list&) override { this->map.release(); }
+    
+    
+    
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;
@@ -250,11 +304,20 @@ namespace macro_packages
 
         //! language printer
         language_printer& printer;
+    
+        //! parameter tensor
+        std::unique_ptr<parameters> parameter_tensor;
+        
+        //! map object holds components of tensor after CSE
+        std::unique_ptr<cse_map> map;
+    
+        //! index flattener
+        index_flatten fl;
 
       };
 
 
-    class replace_field : public replacement_rule_index
+    class replace_field : public cse_map_field1
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -263,12 +326,12 @@ namespace macro_packages
 
         //! constructor
         replace_field(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : replacement_rule_index(std::move(n), FIELD_TOTAL_ARGUMENTS, FIELD_TOTAL_INDICES, index_class::field_only),
+          : cse_map_field1(std::move(n), FIELD_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
-            lambda_mgr(lm),
-            shared(f.get_shared_resources())
+            lambda_mgr(lm)
           {
+            field_tensor = f.make_fields(prn, cw);
           }
 
         //! destructor
@@ -280,26 +343,23 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return(this->shared.roll_parameters() ? unroll_behaviour::allow : unroll_behaviour::force); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->field_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
 
       protected:
+    
+        //! evaluate
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
-
-        //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;
@@ -309,11 +369,73 @@ namespace macro_packages
 
         //! language printer
         language_printer& printer;
+    
+        //! field tensor
+        std::unique_ptr<fields> field_tensor;
 
+      };
+    
+    
+    class replace_momenta : public cse_map_field1
+      {
+        
+        // CONSTRUCTOR, DESTRUCTOR
+      
+      public:
+        
+        //! constructor
+        replace_momenta(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
+          : cse_map_field1(std::move(n), MOMENTA_TOTAL_ARGUMENTS, f.make_flatten()),
+            printer(prn),
+            cse_worker(cw),
+            lambda_mgr(lm)
+          {
+            momenta_tensor = f.make_momenta(prn, cw);
+          }
+        
+        //! destructor
+        virtual ~replace_momenta() = default;
+        
+        
+        // INTERFACE
+      
+      public:
+        
+        //! determine unroll status
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->momenta_tensor->get_unroll(idx_list); }
+        
+        
+        // INTERNAL API
+      
+      protected:
+        
+        //! evaluate
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        //! evaluate
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
+        
+        
+        // INTERNAL DATA
+      
+      private:
+        
+        //! CSE worker
+        cse& cse_worker;
+        
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+        
+        //! language printer
+        language_printer& printer;
+        
+        //! field tensor
+        std::unique_ptr<momenta> momenta_tensor;
+        
       };
 
 
-    class replace_coordinate : public replacement_rule_index
+    class replace_coordinate : public cse_map_phase1
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -322,12 +444,12 @@ namespace macro_packages
 
         //! constructor
         replace_coordinate(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : replacement_rule_index(std::move(n), COORDINATE_TOTAL_ARGUMENTS, COORDINATE_TOTAL_INDICES, index_class::full),
+          : cse_map_phase1(std::move(n), COORDINATE_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
-            lambda_mgr(lm),
-            shared(f.get_shared_resources())
+            lambda_mgr(lm)
           {
+            coordinate_tensor = f.make_coordinates(prn, cw);
           }
 
         //! destructor
@@ -339,7 +461,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return(this->shared.roll_parameters() ? unroll_behaviour::allow : unroll_behaviour::force); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->coordinate_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -347,18 +469,15 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) override;
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;
@@ -368,6 +487,9 @@ namespace macro_packages
 
         //! language printer
         language_printer& printer;
+        
+        //! coordinate tensor
+        std::unique_ptr<coordinates> coordinate_tensor;
 
       };
 
@@ -381,11 +503,10 @@ namespace macro_packages
 
         //! constructor
         replace_SR_velocity(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : cse_map_field1(std::move(n), SR_VELOCITY_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field1(std::move(n), SR_VELOCITY_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
-            lambda_mgr(lm),
-            shared(f.get_shared_resources())
+            lambda_mgr(lm)
           {
             SR_velocity_tensor = f.make_SR_velocity(prn, cw);
           }
@@ -399,7 +520,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return this->SR_velocity_tensor->get_unroll(); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->SR_velocity_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -407,18 +528,15 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;
@@ -444,11 +562,10 @@ namespace macro_packages
 
         //! constructor
         replace_dV(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : cse_map_field1(std::move(n), DV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field1(std::move(n), DV_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
-            lambda_mgr(lm),
-            shared(f.get_shared_resources())
+            lambda_mgr(lm)
           {
             dV_tensor = f.make_dV(prn, cw);
           }
@@ -462,7 +579,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return this->dV_tensor->get_unroll(); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->dV_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -470,18 +587,15 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;
@@ -507,11 +621,10 @@ namespace macro_packages
 
         //! constructor
         replace_ddV(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : cse_map_field2(std::move(n), DDV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field2(std::move(n), DDV_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
-            lambda_mgr(lm),
-            shared(f.get_shared_resources())
+            lambda_mgr(lm)
           {
             ddV_tensor = f.make_ddV(prn, cw);
           }
@@ -525,7 +638,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return this->ddV_tensor->get_unroll(); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->ddV_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -533,18 +646,15 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;
@@ -570,11 +680,10 @@ namespace macro_packages
 
         //! constructor
         replace_dddV(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
-          : cse_map_field3(std::move(n), DDDV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+          : cse_map_field3(std::move(n), DDDV_TOTAL_ARGUMENTS, f.make_flatten()),
             printer(prn),
             cse_worker(cw),
-            lambda_mgr(lm),
-            shared(f.get_shared_resources())
+            lambda_mgr(lm)
           {
             dddV_tensor = f.make_dddV(prn, cw);
           }
@@ -588,7 +697,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return this->dddV_tensor->get_unroll(); }
+        unroll_state get_unroll(const index_literal_list& idx_list) const override { return this->dddV_tensor->get_unroll(idx_list); }
 
 
         // INTERNAL API
@@ -596,18 +705,15 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_hook(const macro_argument_list& args) override;
+        void pre_hook(const macro_argument_list& args, const index_literal_list& indices) override;
 
         //! evaluate
-        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) override;
+        std::string roll(const macro_argument_list& args, const index_literal_list& indices) override;
 
 
         // INTERNAL DATA
 
       private:
-
-        //! reference to shared resource
-        shared_resources& shared;
 
         //! CSE worker
         cse& cse_worker;

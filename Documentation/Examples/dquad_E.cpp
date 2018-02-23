@@ -100,11 +100,30 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
     // 1. Background fields and their momenta
 
     vis_toolkit::background_time_series<> bg_fields(tk3, vis_toolkit::index_selector<1>(num_fields).all(), all_times);
+    vis_toolkit::background_line<> bg_eps(tk3, all_times, vis_toolkit::background_quantity::epsilon);
+    vis_toolkit::background_line<> bg_eta(tk3, all_times, vis_toolkit::background_quantity::eta);
+    vis_toolkit::background_line<> bg_masses(tk3, all_times, vis_toolkit::background_quantity::mass_spectrum);
+    vis_toolkit::background_line<> bg_norm_masses(tk3, all_times, vis_toolkit::background_quantity::norm_mass_spectrum);
+    vis_toolkit::background_line<> Hub(tk3, all_times, vis_toolkit::background_quantity::Hubble);
 
     vis_toolkit::time_series_plot<> bg_plot("dquad.product.bg-plot", "background.pdf");
     bg_plot.set_legend_position(vis_toolkit::legend_pos::bottom_left);
     bg_plot.set_y_label(true);
     bg_plot += bg_fields;
+
+    vis_toolkit::time_series_plot<> bg_mass_plot("dquad.product.bg-masses", "masses.pdf");
+    bg_mass_plot.set_y_label(true);
+    bg_mass_plot.set_log_y(false).set_abs_y(false);
+    bg_mass_plot += bg_masses + Hub;
+
+    vis_toolkit::time_series_plot<> bg_norm_mass_plot("dquad.product.bg-norm-masses", "norm-masses.pdf");
+    bg_norm_mass_plot.set_y_label(true);
+    bg_norm_mass_plot.set_log_y(true).set_abs_y(true);
+    bg_norm_mass_plot += bg_norm_masses + Hub;
+
+    vis_toolkit::time_series_plot<> sr_plot("dquad.product.sr-plot", "sr.pdf");
+    sr_plot.set_y_label(true);
+    sr_plot += bg_eps + bg_eta;
 
     // 2. Zeta power spectrum
 
@@ -163,7 +182,8 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
     // Output task
 
     transport::output_task<> out_tk("dquad.output.zeta");
-    out_tk += bg_plot + zeta_twopf_plot + zeta_twopf_index_plot + zeta_redbsp_equi_plot
+    out_tk += bg_plot + bg_mass_plot + bg_norm_mass_plot + sr_plot
+              + zeta_twopf_plot + zeta_twopf_index_plot + zeta_redbsp_equi_plot
               + zeta_redbsp_equi_index_plot + zeta_redbsp_squeeze_plot
               + threepf_time_plot;
 
@@ -213,7 +233,7 @@ int main(int argc, char* argv[])
     transport::task_manager<> mgr(argc, argv);
 
     // set up an instance of the double quadratic model
-    std::shared_ptr< transport::dquad_mpi<> > model = mgr.create_model< transport::dquad_mpi<> >();
+    auto model = mgr.create_model< transport::dquad_mpi<> >();
 
     // register task writer
     mgr.add_generator([=](transport::repository<>& repo) -> void { write_tasks(repo, model.get()); });

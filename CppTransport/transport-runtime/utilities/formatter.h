@@ -79,7 +79,19 @@ inline std::string format_time(boost::timer::nanosecond_type time, unsigned int 
     constexpr boost::timer::nanosecond_type sec    = 1000*m_sec;
     constexpr boost::timer::nanosecond_type minute = 60*sec;
     constexpr boost::timer::nanosecond_type hour   = 60*minute;
+    constexpr boost::timer::nanosecond_type day    = 24*hour;
+    constexpr boost::timer::nanosecond_type week   = 7*day;
 
+    if(time > week)
+      {
+        out << time/week << CPPTRANSPORT_WEEK << " ";
+        time = time % week;
+      }
+    if(time > day)
+      {
+        out << time/day << CPPTRANSPORT_DAY << " ";
+        time = time % day;
+      }
     if(time > hour)
       {
         out << time/hour << CPPTRANSPORT_HOUR << " ";

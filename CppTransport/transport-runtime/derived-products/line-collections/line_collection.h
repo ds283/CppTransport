@@ -177,10 +177,18 @@ namespace transport
 				      public:
 
 				        //! Add a value at the back
-				        void push_back(const output_value& v) { this->values.push_back(v); }
+				        void push_back(const output_value v) { this->values.push_back(std::move(v)); }
 
 				        //! Add a value at the front
-				        void push_front(const output_value& v) { this->values.push_front(v); }
+				        void push_front(const output_value v) { this->values.push_front(std::move(v)); }
+                
+                //! Emplace a value at the back
+                template <typename ...Args>
+                void emplace_back(Args&& ... args) { this->values.emplace_back(std::forward<Args>(args) ...); }
+                
+                //! Emplace a value at the front
+                template <typename ...Args>
+                void emplace_front(Args&& ... args) { this->values.emplace_front(std::forward<Args>(args) ...); }
 
 				        //! Get values
 				        const std::deque<output_value>& get_values() const { return(this->values); }
@@ -457,19 +465,19 @@ namespace transport
 		        // and work out whether we need to take the absolute value
 		        output.clear();
 
-		        std::vector< std::vector< std::pair<double, number> > > data;
+		        std::vector< typename data_line<number>::point_list > data;
 		        std::vector<bool> data_absy;
 
             for(const data_line<number>& line : input)
 			        {
-		            const std::vector< std::pair<double, number> >& line_data = line.get_data_points();
+		            const auto& line_data = line.get_data_points();
 
 		            bool need_abs_y = false;
 		            bool nonzero_values = false;
 
 		            if(this->log_y)
 			            {
-		                for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); ++u)
+		                for(auto u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); ++u)
 			                {
 		                    if(u->second <= 0.0) need_abs_y = true;
 		                    if(u->second > 0.0 || u->second < 0.0) nonzero_values = true;
@@ -485,7 +493,7 @@ namespace transport
 				        bool nonzero_axis = true;
 				        if(this->log_x)
 					        {
-				            for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); nonzero_axis && u != line_data.end(); ++u)
+				            for(auto u = line_data.begin(); nonzero_axis && u != line_data.end(); ++u)
 					            {
 						            if(u->first <= 0.0) nonzero_axis = false;
 					            }
@@ -501,10 +509,10 @@ namespace transport
 				        //    ** the x-axis is logarithmic but there are some nonpositive points
 		            if((!this->log_x || (this->log_x && nonzero_axis)) && (!this->log_y || (this->log_y && nonzero_values)))
 			            {
-		                output.push_back(output_line(this->use_LaTeX ? line.get_LaTeX_label() : line.get_non_LaTeX_label(), line.get_value_type(), line.get_data_line_type()));
+		                output.emplace_back(this->use_LaTeX ? line.get_LaTeX_label() : line.get_non_LaTeX_label(), line.get_value_type(), line.get_data_line_type());
 		                data_absy.push_back(this->abs_y || need_abs_y);
 
-				            data.push_back(line.get_data_points());
+				            data.emplace_back(line.get_data_points());
 			            }
 			        }
 
@@ -531,7 +539,7 @@ namespace transport
 			                {
 		                    if(data[i].size() > 0)
 			                    {
-				                    const std::pair<double, number>& point = data[i].back();
+				                    const auto& point = data[i].back();
 		                        if(point.first > next_axis_point) next_axis_point = point.first;
 			                    }
 			                }
@@ -547,21 +555,27 @@ namespace transport
 		                        if(data[i].size() > 0)
 			                        {
 				                        const std::pair<double, number>& point = data[i].back();
+
 		                            if(std::abs((point.first - next_axis_point)/point.first) < CPPTRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
 			                            {
-		                                output[i].push_front(output_value(data_absy[i] ? std::abs(point.second) : point.second));
+                                    // output_value currently stores everything using double, so we may need an
+                                    // explicit downcast at this point
+                                    // TODO: consider whether output_value should retain the full 'number' type
+                                    double value = static_cast<double>(point.second);
+                                    
+		                                output[i].emplace_front(data_absy[i] ? std::abs(value) : value);
 
 		                                // remove point from this line
 		                                data[i].pop_back();
 			                            }
 		                            else
-			                            {
-		                                output[i].push_front(output_value());
+                                  {
+                                    output[i].emplace_front(output_value{});
 			                            }
 			                        }
 		                        else  // no match, add an empty component
 			                        {
-		                            output[i].push_front(output_value());
+		                            output[i].emplace_front(output_value{});
 			                        }
 			                    }
 			                }

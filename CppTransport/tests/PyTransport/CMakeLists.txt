@@ -1,0 +1,46 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+
+
+PROJECT(test-PyTransport)
+
+
+SET(TEST_NONTRIVIAL_SOURCE_MODEL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/nontrivial-metric/yvette.model)
+SET(TEST_NONTRIVIAL_OUTPUT_MODEL_CORE ${CMAKE_CURRENT_BINARY_DIR}/yvette_core.h)
+SET(TEST_NONTRIVIAL_OUTPUT_MODEL_MPI  ${CMAKE_CURRENT_BINARY_DIR}/yvette_mpi.h)
+
+ADD_CUSTOM_COMMAND(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/yvette_core.h ${CMAKE_CURRENT_BINARY_DIR}/yvette_mpi.h
+  COMMAND CppTransport --verbose --profile --Wdevelop --Wunroll --no-search-env --fast -I ${CMAKE_CURRENT_SOURCE_DIR}/../.. ${TEST_NONTRIVIAL_SOURCE_MODEL_FILE}
+  DEPENDS ${TEST_NONTRIVIAL_SOURCE_MODEL_FILE}
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../templates/nontrivial_metric_mpi.h
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../templates/nontrivial_metric_core.h
+  DEPENDS CppTransport
+)
+
+SET(TEST_NONTRIVIAL_MODEL_HEADERS
+  ${CMAKE_CURRENT_BINARY_DIR}/yvette_core.h
+  ${CMAKE_CURRENT_BINARY_DIR}/yvette_mpi.h
+)
+
+ADD_CUSTOM_TARGET(TestNontrivialModelGenerator DEPENDS ${TEST_NONTRIVIAL_MODEL_HEADERS})
+
+
+ADD_EXECUTABLE(PyTransport-testrunner
+  testrunner.t.cpp
+  nontrivial-metric/nontrivial-metric.t.cpp
+)
+
+ADD_DEPENDENCIES(PyTransport-testrunner TestNontrivialModelGenerator)
+
+TARGET_INCLUDE_DIRECTORIES(
+  PyTransport-testrunner PRIVATE
+  ${CPPTRANSPORT_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${Boost_INCLUDE_DIRS}
+  ${MPI_CXX_INCLUDE_PATH}
+  ${OPENCL_INCLUDE_DIR}
+  ${CATCH_INCLUDE_DIRS}
+)
+
+TARGET_LINK_LIBRARIES(PyTransport-testrunner sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
+TARGET_COMPILE_OPTIONS(PyTransport-testrunner PRIVATE -std=c++14)

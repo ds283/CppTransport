@@ -95,13 +95,13 @@ namespace transport
             //! deference pointer to get value
             value_type operator*()
 	            {
-                return((*this->it->second).get_value() - this->offset);
+                return(static_cast<value_type>( (*this->it->second).get_value() ) - this->offset);
 	            }
 
             //! deference pointer to get value (const version)
             const value_type operator*() const
               {
-                return((*this->it->second).get_value() - this->offset);
+                return(static_cast<value_type>( (*this->it->second).get_value() ) - this->offset);
               }
 
             //! prefix decrement

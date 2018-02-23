@@ -30,6 +30,8 @@
 #include "transport-runtime/manager/detail/slave_controller_decl.h"
 #include "transport-runtime/manager/detail/slave_message_buffer.h"
 
+#include "transport-runtime/defaults.h"
+
 
 namespace transport
   {
@@ -47,21 +49,28 @@ namespace transport
         warn(warning_handler(le, ac)),
         msg(message_handler(le, ac))
       {
+        // create global busy/idle timer
+        busyidle_timers.add_new_timer(CPPTRANSPORT_DEFAULT_TIMER);
       }
 
 
     template <typename number>
     void slave_controller<number>::wait_for_tasks(void)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         if(this->get_rank() == 0) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_WAIT_MASTER);
 
         bool finished = false;
 
         while(!finished)
           {
-            // wait until a message is available from master
+            // wait until a message is available from master, tracking the time we spend waiting
+            timers.idle();
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::NEW_INTEGRATION:
@@ -88,10 +97,10 @@ namespace transport
                     break;
                   }
 
-                case MPI::INFORMATION_REQUEST:
+                case MPI::WORKER_SETUP:
                   {
                     MPI::slave_setup_payload payload;
-                    this->world.recv(MPI::RANK_MASTER, MPI::INFORMATION_REQUEST, payload);
+                    this->world.recv(MPI::RANK_MASTER, MPI::WORKER_SETUP, payload);
                     this->initialize(payload);
                     break;
                   }
@@ -110,6 +119,15 @@ namespace transport
                     if(this->data_mgr) this->data_mgr->unset_local_checkpoint_interval();
                     break;
                   }
+                
+                case MPI::QUERY_PERFORMANCE_DATA:
+                  {
+                    this->world.recv(MPI::RANK_MASTER, MPI::QUERY_PERFORMANCE_DATA);
+                     
+                    MPI::performance_data_payload payload(this->busyidle_timers.get_load_average(CPPTRANSPORT_DEFAULT_TIMER));
+                    boost::mpi::request msg = this->world.isend(MPI::RANK_MASTER, MPI::REPORT_PERFORMANCE_DATA, payload);
+                    msg.wait();
+                  }
 
                 case MPI::TERMINATE:
                   {
@@ -119,7 +137,9 @@ namespace transport
                   }
 
                 default:
-                  throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_UNEXPECTED_MPI);
+                  {
+                    throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_UNEXPECTED_MPI);
+                  }
               }
           }
       }
@@ -128,6 +148,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::initialize(const MPI::slave_setup_payload& payload)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         try
           {
             boost::filesystem::path repo_path = payload.get_repository_path();
@@ -159,9 +182,15 @@ namespace transport
     void slave_controller<number>::send_worker_data(model<number>* m)
       {
         assert(m != nullptr);
+    
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
 
+        // interrogate model instance for capacity and priority
         MPI::slave_information_payload payload(m->get_backend_type(), m->get_backend_memory(), m->get_backend_priority());
-        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+
+        // send worker identification payload, then wait until it has been received
+        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_IDENTIFICATION, payload);
         resp_msg.wait();
       }
 
@@ -169,9 +198,14 @@ namespace transport
     template <typename number>
     void slave_controller<number>::send_worker_data(void)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
+        // no model instance, so default to a CPU with 0 capacity and unit priority
         MPI::slave_information_payload payload(worker_type::cpu, 0, 1);
 
-        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+        // send worker identification payload, then wait until it has been received
+        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_IDENTIFICATION, payload);
         resp_msg.wait();
       }
 
@@ -179,6 +213,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::process_task(const MPI::new_integration_payload& payload)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
@@ -200,6 +237,11 @@ namespace transport
                     if(int_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     integration_task<number>* tk = int_rec->get_task();
+    
+                    // create new timer for this task; the BusyIdle_Context manager
+                    // ensures the timer is removed when the context manager is destroyed
+                    BusyIdle_Context timing_context(payload.get_group_name(), this->busyidle_timers);
+
                     this->dispatch_integration_task(tk, payload);
                     break;
                   }
@@ -239,6 +281,9 @@ namespace transport
     void slave_controller<number>::dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload)
       {
         assert(tk != nullptr);
+    
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
 
         model<number>* m = tk->get_model();
         assert(m != nullptr);
@@ -260,10 +305,10 @@ namespace transport
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) <<  "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
-            this->schedule_integration(tka, m, batcher, m->backend_twopf_state_size());
+            this->schedule_integration(tka, m, batcher, payload, m->backend_twopf_state_size());
           }
         else if((tkb = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
           {
@@ -276,10 +321,10 @@ namespace transport
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
-            this->schedule_integration(tkb, m, batcher, m->backend_threepf_state_size());
+            this->schedule_integration(tkb, m, batcher, payload, m->backend_threepf_state_size());
           }
         else
           {
@@ -291,33 +336,37 @@ namespace transport
 
 
     template <typename number>
-    template <typename TaskObject, typename BatchObject>
-    void slave_controller<number>::schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, unsigned int state_size)
+    template <typename TaskObject, typename BatchObject, typename PayloadObject>
+    void slave_controller<number>::schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, const PayloadObject& payload, unsigned int state_size)
       {
-        // dispatch integration to the underlying model
-
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
+    
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
 
+        // dispatch integration to the underlying model
         bool complete = false;
         while(!complete)
           {
-            // wait for messages from scheduler
+            // wait for messages from scheduler, tracking idle time
+            timers.idle();
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::NEW_WORK_ASSIGNMENT:
                   {
-                    MPI::work_assignment_payload payload;
-                    this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, payload);
+                    MPI::work_assignment_payload assignment_payload;
+                    this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, assignment_payload);
 
                     MPI::work_acknowledgment_payload ack_payload;
                     ack_payload.set_timestamp();
                     boost::mpi::request ack_msg = this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
                     ack_msg.wait();
 
-                    const std::list<unsigned int>& work_items = payload.get_items();
+                    const std::list<unsigned int>& work_items = assignment_payload.get_items();
                     auto filter = this->work_item_filter_factory(tk, work_items);
 
                     // create work queues based on whatever devices are relevant for our backend
@@ -328,13 +377,15 @@ namespace transport
                     bool success = true;
                     batcher.begin_assignment();
 
-                    slave_message_buffer messages(this->environment, this->world, [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
+                    slave_message_buffer
+                      messages(this->environment, this->world,
+                               [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
                     slave_message_context msg_ctx(messages, tk->get_name());
 
                     // keep track of wallclock time
                     boost::timer::cpu_timer timer;
 
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW WORK ASSIGNMENT";
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
 
                     // perform the integration
                     try
@@ -353,19 +404,20 @@ namespace transport
 
                     // notify master process that all work has been finished (temporary containers will be deleted by the master node)
                     boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                    if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
-                    else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << '\n' << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+                    if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
+                    else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-                    MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
-                                                                       batcher.get_max_integration_time(), batcher.get_min_integration_time(),
-                                                                       batcher.get_batching_time(),
-                                                                       batcher.get_max_batching_time(), batcher.get_min_batching_time(),
-                                                                       timer.elapsed().wall,
-                                                                       batcher.get_reported_integrations(),
-                                                                       batcher.get_reported_refinements(), batcher.get_reported_failures(),
-                                                                       batcher.get_failed_serials());
+                    MPI::finished_integration_payload
+                      outgoing_payload{batcher.get_integration_time(), batcher.get_max_integration_time(),
+                                       batcher.get_min_integration_time(), batcher.get_batching_time(),
+                                       batcher.get_max_batching_time(), batcher.get_min_batching_time(),
+                                       timer.elapsed().wall, batcher.get_reported_integrations(),
+                                       batcher.get_reported_refinements(), batcher.get_reported_failures(),
+                                       batcher.get_failed_serials(),
+                                       this->busyidle_timers.get_load_average(payload.get_group_name())};
 
-                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
+                    boost::mpi::request finish_msg =
+                      this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
                     finish_msg.wait();
 
                     break;
@@ -375,15 +427,17 @@ namespace transport
                   {
                     this->world.recv(stat.source(), MPI::END_OF_WORK);
                     complete = true;
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Notified of end-of-work: preparing to shut down";
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Notified of end-of-work: preparing to shut down";
 
                     // close the batcher, flushing the current container to the master node if needed
                     batcher.close();
 
                     // send close-down acknowledgment to master
                     boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
-                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+                    
+                    MPI::performance_data_payload close_payload(this->busyidle_timers.get_load_average(payload.get_group_name()));
+                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN, close_payload);
                     close_msg.wait();
 
                     break;
@@ -403,6 +457,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::process_task(const MPI::new_derived_content_payload& payload)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
@@ -429,6 +486,11 @@ namespace transport
                     if(out_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     output_task<number>* tk = out_rec->get_task();
+    
+                    // create new timer for this task; the BusyIdle_Context manager
+                    // ensures the timer is removed when the context manager is destroyed
+                    BusyIdle_Context timing_context(payload.get_group_name(), this->busyidle_timers);
+
                     this->schedule_output(tk, payload);
                     break;
                   }
@@ -464,7 +526,10 @@ namespace transport
     void slave_controller<number>::schedule_output(output_task<number>* tk, const MPI::new_derived_content_payload& payload)
       {
         assert(tk != nullptr);  // should be guaranteed
-
+    
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+        
         // send scheduling information to the master process; here, report ourselves as a CPU
         // since there is currently no capacity to process output tasks on a GPU
         this->send_worker_data();
@@ -481,15 +546,17 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << *tk;
-
+        
         bool complete = false;
         while(!complete)
           {
-            // wait for messages from scheduler
+            // wait for messages from scheduler, tracking idle time
+            timers.idle();
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::NEW_WORK_ASSIGNMENT:
@@ -511,7 +578,7 @@ namespace transport
                     scheduler sch(ctx);
                     auto work = sch.make_queue(*tk, filter);
 
-                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW WORK ASSIGNMENT";
+                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
 
                     bool success = true;
 
@@ -587,22 +654,23 @@ namespace transport
 
                     // notify master process that all work has been finished
                     now = boost::posix_time::second_clock::universal_time();
-                    if(success) BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
-                    else        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error)  << '\n' << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+                    if(success) BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
+                    else        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error)  << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-                    MPI::finished_derived_payload finish_payload(content_groups, pipe->get_database_time(), timer.elapsed().wall,
-                                                                 list.size(), processing_time,
-                                                                 min_processing_time, max_processing_time,
-                                                                 pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
-                                                                 pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
-                                                                 pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
-                                                                 pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
-                                                                 pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
-                                                                 pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
-                                                                 pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
-                                                                 pipe->get_data_cache_evictions());
+                    MPI::finished_derived_payload
+                      finish_payload{content_groups, pipe->get_database_time(), timer.elapsed().wall,
+                                     static_cast<unsigned int>(list.size()), processing_time, min_processing_time, max_processing_time,
+                                     pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
+                                     pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
+                                     pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
+                                     pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
+                                     pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
+                                     pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
+                                     pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
+                                     pipe->get_data_cache_evictions(), this->busyidle_timers.get_load_average(payload.get_group_name())};
 
-                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
+                    boost::mpi::request finish_msg =
+                      this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
                     finish_msg.wait();
 
                     break;
@@ -612,15 +680,17 @@ namespace transport
                   {
                     this->world.recv(stat.source(), MPI::END_OF_WORK);
                     complete = true;
-                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Notified of end-of-work: preparing to shut down";
+                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Notified of end-of-work: preparing to shut down";
 
                     // close the datapipe
                     pipe->close();
 
                     // send close-down acknowledgment to master
                     now = boost::posix_time::second_clock::universal_time();
-                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
-                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+    
+                    MPI::performance_data_payload close_payload(this->busyidle_timers.get_load_average(payload.get_group_name()));
+                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN, close_payload);
                     close_msg.wait();
 
                     break;
@@ -641,6 +711,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::process_task(const MPI::new_postintegration_payload& payload)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
@@ -654,15 +727,11 @@ namespace transport
               {
                 case task_type::integration:
                   {
-//                    std::ostringstream msg;
-//                    msg << CPPTRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
 
                 case task_type::output:
                   {
-//                    std::ostringstream msg;
-//                    msg << CPPTRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
 
@@ -674,6 +743,11 @@ namespace transport
                     if(pint_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     postintegration_task<number>* tk = pint_rec->get_task();
+    
+                    // create new timer for this task; the BusyIdle_Context manager
+                    // ensures the timer is removed when the context manager is destroyed
+                    BusyIdle_Context timing_context(payload.get_group_name(), this->busyidle_timers);
+
                     this->dispatch_postintegration_task(tk, payload);
                     break;
                   }
@@ -703,6 +777,9 @@ namespace transport
     void slave_controller<number>::dispatch_postintegration_task(postintegration_task<number>* tk, const MPI::new_postintegration_payload& payload)
       {
         assert(tk != nullptr);
+    
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
 
         // send scheduling information to the master process; here, report ourselves as a CPU
         // since there is currently no capacity to process postintegration tasks on a GPU
@@ -747,16 +824,16 @@ namespace transport
 
                 // write log header
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << *ptk;
 
-                this->schedule_integration(ptk, m, i_batcher, m->backend_twopf_state_size());
+                this->schedule_integration(ptk, m, i_batcher, payload, m->backend_twopf_state_size());
               }
             else
               {
                 // write log header
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
                 this->schedule_postintegration(z2pf, ptk, payload, batcher);
@@ -796,16 +873,16 @@ namespace transport
 
                 // write log header
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::log_severity_level::normal) << *ptk;
 
-                this->schedule_integration(ptk, m, i_batcher, m->backend_threepf_state_size());
+                this->schedule_integration(ptk, m, i_batcher, payload, m->backend_threepf_state_size());
               }
             else
               {
                 // write log header
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
                 this->schedule_postintegration(z3pf, ptk, payload, batcher);
@@ -824,7 +901,7 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
               }
 
-            // get parent^2 task
+            // get parent task
             threepf_task<number>* pptk = dynamic_cast<threepf_task<number>*>(ptk->get_parent_task());
 
             assert(pptk != nullptr);
@@ -861,10 +938,13 @@ namespace transport
       {
         assert(tk != nullptr);    // should be guaranteed
         assert(ptk != nullptr);   // should be guaranteed
+    
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
         // set up content-group finder functions; must survive throughout lifetime of datapipe
@@ -881,9 +961,11 @@ namespace transport
         bool complete = false;
         while(!complete)
           {
-            // wait for messages from scheduler
+            // wait for messages from scheduler, tracking idle time
+            timers.idle();
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
+            timers.busy();
             switch(stat.tag())
               {
                 case MPI::NEW_WORK_ASSIGNMENT:
@@ -908,13 +990,15 @@ namespace transport
                     bool success = true;
                     batcher.begin_assignment();
 
-                    slave_message_buffer messages(this->environment, this->world, [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
+                    slave_message_buffer
+                      messages(this->environment, this->world,
+                               [&](const std::string& m) -> void { BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << m; });
                     slave_message_context msg_ctx(messages, tk->get_name());
 
                     // keep track of wallclock time
                     boost::timer::cpu_timer timer;
 
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- NEW WORK ASSIGNMENT";
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
 
                     // perform the task
                     std::string group;
@@ -938,22 +1022,24 @@ namespace transport
 
                     // notify master process that all work has been finished (temporary containers will be deleted by the master node)
                     now = boost::posix_time::second_clock::universal_time();
-                    if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
-                    else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << '\n' << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+                    if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
+                    else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-                    MPI::finished_postintegration_payload outgoing_payload(group, pipe->get_database_time(), timer.elapsed().wall,
-                                                                           batcher.get_items_processed(), batcher.get_processing_time(),
-                                                                           batcher.get_max_processing_time(), batcher.get_min_processing_time(),
-                                                                           pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
-                                                                           pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
-                                                                           pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
-                                                                           pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
-                                                                           pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
-                                                                           pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
-                                                                           pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
-                                                                           pipe->get_data_cache_evictions());
+                    MPI::finished_postintegration_payload
+                      outgoing_payload{group, pipe->get_database_time(), timer.elapsed().wall,
+                                       batcher.get_items_processed(), batcher.get_processing_time(),
+                                       batcher.get_max_processing_time(), batcher.get_min_processing_time(),
+                                       pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
+                                       pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
+                                       pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
+                                       pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
+                                       pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
+                                       pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
+                                       pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
+                                       pipe->get_data_cache_evictions(), this->busyidle_timers.get_load_average(payload.get_group_name())};
 
-                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
+                    boost::mpi::request finish_msg =
+                      this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
                     finish_msg.wait();
 
                     break;
@@ -963,15 +1049,17 @@ namespace transport
                   {
                     this->world.recv(stat.source(), MPI::END_OF_WORK);
                     complete = true;
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Notified of end-of-work: preparing to shut down";
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Notified of end-of-work: preparing to shut down";
 
                     // close the batcher, flushing the current container to the master node if required
                     batcher.close();
 
                     // send close-down acknowledgment to master
                     now = boost::posix_time::second_clock::universal_time();
-                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
-                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+    
+                    MPI::performance_data_payload close_payload(this->busyidle_timers.get_load_average(payload.get_group_name()));
+                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN, close_payload);
                     close_msg.wait();
 
                     break;
@@ -991,6 +1079,9 @@ namespace transport
     template <typename number>
     void slave_controller<number>::push_temp_container(generic_batcher& batcher, unsigned int message, std::string log_message)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Sending " << log_message << " message for container " << batcher.get_container_path();
 
         MPI::data_ready_payload payload(batcher.get_container_path());
@@ -1005,6 +1096,9 @@ namespace transport
     void slave_controller<number>::push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product,
                                                         const std::list<std::string>& used_groups)
       {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
         assert(pipe != nullptr);
         assert(product != nullptr);
 

@@ -50,10 +50,12 @@ namespace transport
 		namespace linecache
 			{
 
-				// template functions, which must be specialized later, used to obtain the size of a
-				// container in bytes, and the number of elements in the container
+				// template function, which must be specialized later, used to obtain the size of an element
+        // held by a container (measured in bytes)
 				template <typename Container> unsigned int sizeof_container_element();
-				template <typename Container> unsigned int elementsof_container(const Container& c);
+				
+        // template function, which must be specialized later, used to obtain the number of elements in a container
+        template <typename Container> unsigned int elementsof_container(const Container& c);
 
 				// forward declare constituent classes
 				template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>

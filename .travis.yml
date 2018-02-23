@@ -1,0 +1,84 @@
+sudo: required
+language: generic
+
+before_script:
+  - cd CppTransport
+  - mkdir build
+  - cd build
+  - cmake .. -DCMAKE_BUILD_TYPE=Release
+
+script:
+  - make CppTransport
+  - make test-canonical
+  - make test-nontrivial-metric
+
+matrix:
+
+  include:
+
+    - os: linux
+      dist: trusty
+      env: COMPILER_NAME=clang CXX=clang++-3.8 CC=clang-3.8
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - sourceline: ppa:samuel-bachmann/boost
+          packages:
+            - cmake
+            - libsqlite3-dev
+            - libboost1.60-dev
+            - libboost-log1.60-dev
+            - libboost-system1.60-dev
+            - libboost-filesystem1.60-dev
+            - libboost-random1.60-dev
+            - libboost-timer1.60-dev
+            - libboost-date-time1.60-dev
+            - libboost-mpi1.60-dev
+            - libboost-thread1.60-dev
+            - libboost-serialization1.60-dev
+            - libboost-program-options1.60-dev
+            - libboost-regex1.60-dev
+            - libginac-dev
+            - libopenmpi-dev
+            - libssl-dev
+            - gcc-6
+            - g++-6
+            - clang-3.8
+
+    - os: linux
+      dist: trusty
+      env: COMPILER_NAME=gcc CXX=g++-6 CC=gcc-6
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - sourceline: ppa:samuel-bachmann/boost
+          packages:
+            - cmake
+            - libsqlite3-dev
+            - libboost1.60-dev
+            - libboost-log1.60-dev
+            - libboost-system1.60-dev
+            - libboost-filesystem1.60-dev
+            - libboost-random1.60-dev
+            - libboost-timer1.60-dev
+            - libboost-date-time1.60-dev
+            - libboost-mpi1.60-dev
+            - libboost-thread1.60-dev
+            - libboost-serialization1.60-dev
+            - libboost-program-options1.60-dev
+            - libboost-regex1.60-dev
+            - libginac-dev
+            - libopenmpi-dev
+            - libssl-dev
+            - gcc-6
+            - g++-6
+
+notifications:
+
+  slack:
+    rooms:
+      - secure: ME20JZx2VjP98D3PdIOLEiQCibk3tBsGWipK0qVwMZY5yQB7Hz2yJqWL6ihvSCyfMy8HAGf+CSqUHi/J0XqPAHgAlxHkk8SjhSIf+1zKhlR8KCM1m+umfdwgRl4EfU2SlRlXosPzmjKuh6QBmupXve7QKuqIGNSHDtBbed/ggwXFZrMBYx4cfz5VGTiscXGY6FRFeNdAsbnsr6jf0GWQ5sd/r9eK7PizHpZTDAtRsAbgGxTZqsuuUKRx9GsyEmEgsjL0yQVeCnpwYnDeFNhqihcrR2tyFgCM/wh5/goqhRI90Xb1tRDZ2eC3dxRsFdNNUd9J+Uab4AD+mnTMBpiu/x11qdwCIdmc+7tIxmDtFeEWly4EZ4iFhWfkP4Hg4LqN4eI3gAi5NtIcYblFHlrJolJYNJ55fWZtGbcx6RLSrUH7swnUV/qaEiOi61D0oB3B0CM8ZunHVuOE6j0ZkZxvzI6yuJI3LDuSLLzDveae9Qq5Jx9x1OUm5zcEvWgBZ43rDXd8kvcFCiu1ezJcmAME2zu8znrnTyDFJRfz0Pfv5RSDnWyuqQcKhNmL5kA1GZ3yRRRBNDSobrYxu+oR89/XAQ7jIu4byVWypaiiFKYIMQAhJDAaPpxwuZu2XlmIyhBqviygg9+Myl+3+bNMPS94XJ9I2OTMDaOB5l4p8hClWxU=
+    on_success: change
+    on_failure: always

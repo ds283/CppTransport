@@ -31,7 +31,7 @@
 #include "disable_warnings.h"
 #include "ginac/ginac.h"
 
-typedef std::vector< GiNaC::ex > flattened_tensor;
+using flattened_tensor = std::vector< GiNaC::ex >;
 
 
 #endif //CPPTRANSPORT_FLATTENED_TENSOR_H

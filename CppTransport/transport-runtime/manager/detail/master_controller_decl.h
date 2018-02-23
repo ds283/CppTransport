@@ -44,18 +44,22 @@
 #include "transport-runtime/repository/json_repository.h"
 #include "transport-runtime/data/data_manager.h"
 
-#include "transport-runtime/manager/master_scheduler.h"
+#include "transport-runtime/manager/worker_scheduler.h"
+#include "transport-runtime/manager/worker_manager.h"
 #include "transport-runtime/manager/work_journal.h"
 #include "transport-runtime/manager/argument_cache.h"
 #include "transport-runtime/manager/environment.h"
 #include "transport-runtime/manager/message_handlers.h"
 #include "transport-runtime/manager/task_gallery.h"
+#include "transport-runtime/manager/report_manager.h"
 
 #include "transport-runtime/manager/detail/job_descriptors.h"
 #include "transport-runtime/manager/detail/aggregation_forward_declare.h"
 
 #include "transport-runtime/reporting/command_line.h"
 #include "transport-runtime/reporting/HTML_report.h"
+
+#include "transport-runtime/instruments/busyidle_timer_set.h"
 
 
 #include "boost/mpi.hpp"
@@ -68,8 +72,8 @@ namespace transport
 
     namespace master_controller_impl
       {
-        template <typename number> class CheckpointContext;
-        template <typename number> class CloseDownContext;
+        template <typename number> class Checkpoint_Context;
+        template <typename number> class CloseDown_Context;
       }
 
     // aggregator classes forward-declared in aggregation_forward_declare.h
@@ -137,6 +141,9 @@ namespace transport
 
         //! recognize plotting control switches
         void recognize_plot_switches(boost::program_options::variables_map& option_map);
+        
+        //! recognize task progress reporting switches
+        void recognize_report_switches(boost::program_options::variables_map& option_map);
 
         //! validate tasks supplied on the command line
         void validate_tasks();
@@ -167,7 +174,7 @@ namespace transport
         unsigned int get_rank(void) const { return(static_cast<unsigned int>(this->world.rank())); }
 
         //! Map worker number to communicator rank (note: has to be duplicated in WorkerBundle)
-        // TODO: replace with a better abstraction (which can be shared with WorkerBundle)
+        // TODO: replace with a better abstraction (which can be shared with WorkerPool_Context)
         constexpr unsigned int worker_rank(unsigned int worker_number) const { return(worker_number+1); }
 
         //! Map communicator rank to worker number
@@ -190,11 +197,17 @@ namespace transport
 
       protected:
 
-        //! Master node: set up workers in preparation for a new task
-        void set_up_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
+        //! Master node: capture properties reported by workers
+        //! (via WORKER_IDENTIFICATION messages) in preparation for a new task
+        template <typename WriterObject>
+        void capture_worker_properties(WriterObject& writer);
+        
+        //! Master node: query workers for global load averages
+        load_data compute_worker_loads();
 
-        //! Master node: close down workers after completion of a task
-        void close_down_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
+        //! Master node: inform workers that there is no more work associated
+        //! with the current task
+        void workers_end_of_task(base_writer::logger& log);
 
         //! Master node: main loop: poll workers for events
         template <typename WriterObject>
@@ -203,12 +216,13 @@ namespace transport
                           WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: generate new work assignments for workers
-        void assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
-
-        //! Master node: print progress update if it is required
-        template <typename WriterObject>
-        void check_for_progress_update(WriterObject& writer);
-
+        void assign_work_to_workers(base_writer::logger& log);
+        
+        //! Master node: clean up after a work assignment; updates estimate of time-to-completion
+        //! and pushes this value to the repository
+        template <typename WriterObject, typename PayloadObject>
+        void unassign_worker(unsigned int worker, WriterObject& writer, PayloadObject& payload);
+    
         //! Master node: log current worker metadata
         template <typename WriterObject>
         void log_worker_metadata(WriterObject& writer);
@@ -219,8 +233,8 @@ namespace transport
         //! Master node: instruct workers to unset any local checkpoint interval
         void unset_local_checkpoint_interval();
 
-        friend class CheckpointContext<number>;
-        friend class CloseDownContext<number>;
+        friend class Checkpoint_Context<number>;
+        friend class CloseDown_Context<number>;
 
 
         // MASTER INTEGRATION TASKS
@@ -392,12 +406,36 @@ namespace transport
 
         //! HTML reporting tool
         reporting::HTML_report HTML_reports;
+    
+    
+        // PROFILING SUPPORT
+    
+        //! list of aggregation profile records
+        std::list< aggregation_profiler > aggregation_profiles;
+    
+        //! root directory for aggregation profile report, if used
+        boost::optional< boost::filesystem::path > aggregation_profile_root;
+    
+    
+        // TIMERS
+    
+        //! track time spent performing work
+        busyidle_timer_set busyidle_timers;
+        
+        //! when was estimated completion data last pushed to the repository?
+        boost::posix_time::ptime last_push_to_repo;
 
 
-        // DATA AND STATE
+        // AGENTS
 
-        //! scheduler
-        master_scheduler work_scheduler;
+        //! work scheduler
+        worker_scheduler work_scheduler;
+        
+        //! worker manager
+        worker_manager work_manager;
+        
+        //! report manager
+        report_manager reporter;
 
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;
@@ -414,15 +452,6 @@ namespace transport
         //! message callback
         message_handler msg;
 
-
-        // PROFILING SUPPORT
-
-        //! list of aggregation profile records
-        std::list< aggregation_profiler > aggregation_profiles;
-
-        //! root directory for aggregation profile report, if used
-        boost::optional< boost::filesystem::path > aggregation_profile_root;
-
       };
 
 
@@ -430,19 +459,20 @@ namespace transport
       {
 
         template <typename number>
-        class WorkerBundle
+        class WorkerPool_Context
           {
 
             // CONSTRUCTOR, DESTRUCTOR
 
           public:
 
-            //! constructor
-            WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
-                         repository<number>* r, work_journal& j, argument_cache& a);
+            //! constructor performs setup of workers belonging to the MPI environment
+            WorkerPool_Context(boost::mpi::environment& e, boost::mpi::communicator& c,
+                         repository<number>* r, work_journal& j, argument_cache& a,
+                         busyidle_timer_set& t);
 
-            //! destructor
-            ~WorkerBundle();
+            //! destructor handles terminatiaon of workers belonging to the MPI environment
+            ~WorkerPool_Context();
 
 
             // INTERNAL FUNCTIONS
@@ -472,25 +502,33 @@ namespace transport
 
             //! reference to argument cache
             argument_cache& args;
-
+            
+            //! busy/idle timing collection
+            busyidle_timer_set& busyidle_timers;
+            
           };
 
 
         template <typename number>
-        WorkerBundle<number>::WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
-                                           repository<number>* r, work_journal& j, argument_cache& a)
+        WorkerPool_Context<number>::WorkerPool_Context(boost::mpi::environment& e, boost::mpi::communicator& c,
+                                           repository<number>* r, work_journal& j, argument_cache& a,
+                                           busyidle_timer_set& t)
           : env(e),
             world(c),
             repo(r),
             journal(j),
-            args(a)
+            args(a),
+            busyidle_timers(t)
           {
+            // capture busy/idle timers and switch to busy mode
+            busyidle_instrument timers(busyidle_timers);
+            
             // set up instrument to journal the MPI communication if needed
             journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
             std::vector<boost::mpi::request> requests(world.size()-1);
 
-            // if repository is initialized, send SETUP message
+            // if repository is initialized, send WORKER_SETUP message
             if(repo != nullptr)
               {
                 // request information from each worker, and pass all necessary setup details
@@ -498,18 +536,23 @@ namespace transport
 
                 for(unsigned int i = 0; i < world.size()-1; ++i)
                   {
-                    requests[i] = world.isend(this->worker_rank(i), MPI::INFORMATION_REQUEST, payload);
+                    requests[i] = world.isend(this->worker_rank(i), MPI::WORKER_SETUP, payload);
                   }
 
                 // wait for all messages to be received, then return
+                // there is no scheduled response to this message, so we don't need to wait for one
+                timers.idle();
                 boost::mpi::wait_all(requests.begin(), requests.end());
               }
           }
 
 
         template <typename number>
-        WorkerBundle<number>::~WorkerBundle()
+        WorkerPool_Context<number>::~WorkerPool_Context()
           {
+            // capture busy/idle timers and switch to busy mode
+            busyidle_instrument timers(this->busyidle_timers);
+
             // set up instrument to journal the MPI communication if needed
             journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
@@ -521,12 +564,13 @@ namespace transport
               }
 
             // wait for all messages to be received, then exit ourselves
+            timers.idle();
             boost::mpi::wait_all(requests.begin(), requests.end());
           }
 
 
         template <typename number>
-        class CheckpointContext
+        class Checkpoint_Context
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -534,14 +578,14 @@ namespace transport
           public:
 
             //! constructor accepts and stores reference to controller object
-            CheckpointContext(master_controller<number>& c)
+            Checkpoint_Context(master_controller<number>& c)
               : controller(c),
                 unset(false)
               {
               }
 
             //! destructor arranges for MPI message to reset checkpoint interval, if required
-            ~CheckpointContext();
+            ~Checkpoint_Context();
 
 
             // INTERFACE
@@ -566,14 +610,14 @@ namespace transport
 
 
         template <typename number>
-        CheckpointContext<number>::~CheckpointContext()
+        Checkpoint_Context<number>::~Checkpoint_Context()
           {
             if(this->unset) controller.unset_local_checkpoint_interval();
           }
 
 
         template <typename number>
-        class CloseDownContext
+        class CloseDown_Context
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -581,7 +625,7 @@ namespace transport
           public:
 
             //! constructor accepts and stores reference to controller object
-            CloseDownContext(master_controller<number>& c, boost::log::sources::severity_logger< base_writer::log_severity_level >& l)
+            CloseDown_Context(master_controller<number>& c, base_writer::logger& l)
               : controller(c),
                 log(l),
                 sent_closedown(false)
@@ -589,7 +633,7 @@ namespace transport
               }
 
             //! destructor arranges for MPI closedown message to be sent, if required
-            ~CloseDownContext() { if(!this->sent_closedown) this->send_closedown(); }
+            ~CloseDown_Context() { if(!this->sent_closedown) this->send_closedown(); }
 
 
             // INTERFACE
@@ -600,7 +644,11 @@ namespace transport
             bool operator()() const { return(this->sent_closedown); }
 
             //! send closedown message
-            void send_closedown() { this->controller.close_down_workers(log); this->sent_closedown = true; }
+            void send_closedown()
+              {
+                this->controller.workers_end_of_task(log);
+                this->sent_closedown = true;
+              }
 
 
             // INTERNAL DATA
@@ -614,7 +662,7 @@ namespace transport
             bool sent_closedown;
 
             //! reference to logger
-            boost::log::sources::severity_logger< base_writer::log_severity_level >& log;
+            base_writer::logger& log;
 
           };
 

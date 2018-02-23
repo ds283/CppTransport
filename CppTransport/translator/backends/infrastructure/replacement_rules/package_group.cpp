@@ -29,16 +29,10 @@
 #include "formatter.h"
 
 
-package_group::package_group(translator_data& p, tensor_factory& _f)
-  : data_payload(p),
-		statistics_reported(false),
-    fctry(_f)
-  {
-  }
-
-
 package_group::~package_group()
   {
+    if(!this->data_payload.get_argument_cache().show_profiling()) return;
+
 		if(this->statistics_reported)
 			{
 		    std::ostringstream msg;
@@ -50,63 +44,84 @@ package_group::~package_group()
 
 		    this->data_payload.message(msg.str());
 			}
+
+    auto hits = this->lambda_mgr->get_hits();
+    auto misses = this->lambda_mgr->get_misses();
+
+    if(hits + misses > 0)
+      {
+        double hit_rate = static_cast<double>(hits) / (static_cast<double>(hits) + static_cast<double>(misses));
+        
+        std::ostringstream lambda_msg;
+        lambda_msg << hits << " " << (hits == 1 ? MESSAGE_LAMBDA_CACHE_HIT : MESSAGE_LAMBDA_CACHE_HITS)
+                   << ", " << misses << " " << MESSAGE_LAMBDA_CACHE_MISSES;
+        auto prec = lambda_msg.precision();
+        lambda_msg.precision(3);
+        lambda_msg << " (" << 100.0*hit_rate << "%)";
+        lambda_msg.precision(prec);
+        lambda_msg << " (" << MESSAGE_LAMBDA_CACHE_QUERY_TIME << " " << format_time(this->lambda_mgr->get_query_time())
+                   << ", " << MESSAGE_LAMBDA_CACHE_INSERT_TIME << " " << format_time(this->lambda_mgr->get_insert_time())
+                   << ")";
+        this->data_payload.message(lambda_msg.str());
+      }
   }
+
+
+template <typename SourceDatabase, typename DestinationContainer, typename RuleGetter>
+void package_group::build_set(const SourceDatabase& src, DestinationContainer& dest, RuleGetter get_rules)
+  {
+    dest.clear();
+    
+    // loop over all packages in the source database
+    for(const auto& pkg : src)
+      {
+        // extract the rules provided by this package
+        const auto& rules = get_rules(pkg);
+        
+        // now push references to all of these rules into the destination container
+        dest.reserve(dest.size() + rules.size());
+        for(const auto& rule : rules)
+          {
+            dest.emplace_back(std::ref(*rule));
+          }
+      }
+  };
 
 
 void package_group::build_pre_ruleset()
   {
-    this->pre_ruleset.clear();
-
-    for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
-      {
-        const std::vector< std::unique_ptr<macro_packages::replacement_rule_simple> >& rules = pkg->get_pre_rules();
-
-        this->pre_ruleset.reserve(this->pre_ruleset.size() + rules.size());
-        for(const std::unique_ptr<macro_packages::replacement_rule_simple>& rule : rules)
-          {
-            this->pre_ruleset.emplace_back(rule.get());
-          }
-      }
+    this->build_set(this->rule_packages, this->pre_rules, [](const auto& pkg) -> auto& { return pkg->get_pre_rules(); });
   }
 
 
 void package_group::build_post_ruleset()
   {
-    this->post_ruleset.clear();
-
-    for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
-      {
-        const std::vector< std::unique_ptr<macro_packages::replacement_rule_simple> >& rules = pkg->get_post_rules();
-
-        this->post_ruleset.reserve(this->post_ruleset.size() + rules.size());
-        for(const std::unique_ptr<macro_packages::replacement_rule_simple>& rule : rules)
-          {
-            this->post_ruleset.emplace_back(rule.get());
-          }
-      }
+    this->build_set(this->rule_packages, this->post_rules, [](const auto& pkg) -> auto& { return pkg->get_post_rules(); });
   }
 
 
 void package_group::build_index_ruleset()
   {
-    this->index_ruleset.clear();
+    this->build_set(this->rule_packages, this->index_rules, [](const auto& pkg) -> auto& { return pkg->get_index_rules(); });
+  }
 
-    for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
-      {
-        const std::vector< std::unique_ptr<macro_packages::replacement_rule_index> >& rules = pkg->get_index_rules();
 
-        this->index_ruleset.reserve(this->index_ruleset.size() + rules.size());
-        for(const std::unique_ptr<macro_packages::replacement_rule_index>& rule : rules)
-          {
-            this->index_ruleset.emplace_back(rule.get());
-          }
-      }
+void package_group::build_simple_directiveset()
+  {
+    this->build_set(this->directive_packages, this->simple_directives, [](const auto& pkg) -> auto& { return pkg->get_simple(); });
+  }
+
+
+void package_group::build_index_directiveset()
+  {
+    this->build_set(this->directive_packages, this->index_directives, [](const auto& pkg) -> auto& { return pkg->get_index(); });
   }
 
 
 void package_group::report_end_of_input()
   {
-    for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
+    // we report end-of-input to replacement rule packages, but (currently) not directive packages
+    for(auto& pkg : this->rule_packages)
       {
         pkg->report_end_of_input();
       }

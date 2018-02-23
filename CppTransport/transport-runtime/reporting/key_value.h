@@ -52,7 +52,7 @@ namespace transport
             enum class print_options
               {
                 none,
-                force_simple
+                fixed_width
               };
 
 
@@ -64,7 +64,8 @@ namespace transport
             key_value(local_environment& e, argument_cache& a)
               : env(e),
                 arg_cache(a),
-                tile(false)
+                tile(false),
+                fix_width(CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH)
               {
               }
 
@@ -87,6 +88,9 @@ namespace transport
 
             //! set title
             void set_title(std::string t) { this->title = std::move(t); }
+            
+            //! set fixed width (not used unless the appropriate option given to write())
+            void set_fixed_width(size_t w) { this->fix_width = w; }
 
             //! write to a stream
             void write(std::ostream& out, print_options opts=print_options::none);
@@ -100,7 +104,8 @@ namespace transport
           protected:
 
             //! compute number of columns and column width for current terminal
-            void compute_columns(unsigned int& columns, unsigned int& column_width, print_options opts);
+            //! returns std::pair representing (number of columns per batch, width of column)
+            std::pair<unsigned int, unsigned int> compute_columns(print_options opts);
 
 
             // INTERNAL DATA
@@ -126,6 +131,9 @@ namespace transport
 
             //! tile pairs in columns, or just produce a single list?
             bool tile;
+            
+            //! fixed width, if used
+            size_t fix_width;
 
             //! title string, if used
             std::string title;
@@ -135,14 +143,17 @@ namespace transport
 
         void key_value::write(std::ostream& out, print_options opts)
           {
-            unsigned int columns = 1;
+            unsigned int columns_per_batch = 1;
             unsigned int column_width = 0;
-
+            
             // if tiling, compute number of columns and column width
-            if(tile) this->compute_columns(columns, column_width, opts);
+            if(this->tile)
+              {
+                std::tie(columns_per_batch, column_width) = this->compute_columns(opts);
+              }
 
             bool colour = this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
-            if(opts == print_options::force_simple) colour = false;
+            if(opts == print_options::fixed_width) colour = false;    // assume fixed width means we don't know anything about the terminal's properties
 
             if(!this->title.empty())
               {
@@ -153,63 +164,86 @@ namespace transport
               }
 
             unsigned int current_column = 0;
-            for(const std::pair< std::string, std::string >& elt : this->db)
+            unsigned int printed_columns = 0;
+            const unsigned int total_columns = static_cast<unsigned int>(this->db.size());
+
+            for(const auto& elt : this->db)
               {
                 if(colour) out << ColourCode(ANSI_colour::bold);
                 out << elt.first;
                 if(colour) out << ColourCode(ANSI_colour::normal);
 
-                // set column width if required by tiling
-                if(this->tile)
+                // set column width if required by tiling, provided we are not the last
+                // column
+                // If we are the last column, omit the column width specifier to avoid
+                // the end of line being padded with spaces
+                ++current_column;
+                ++printed_columns;
+                if(this->tile && current_column < columns_per_batch && printed_columns < total_columns)
                   {
-                    out << std::left << std::setw(column_width - elt.first.length());
+                    out << std::left << std::setw(column_width - static_cast<unsigned int>(elt.first.length()));
                   }
 
-                out << ": " + elt.second + "  ";
+                // emit remainder of field, omitting spacing "  " between columns if we are the
+                // last one in a batch, or the last one overall
+                // notice we have to emit everything as a *single* string, because the std::setw()
+                // field applies only to the next atomic output that appears on the stream
+                if(current_column < columns_per_batch && printed_columns < total_columns)
+                  {
+                    out << ": " + elt.second + "  ";
+                  }
+                else
+                  {
+                    out << ": " + elt.second;
+                  }
 
-                ++current_column;
-                if(current_column >= columns)
+                // emit newline if we are the end of a batch
+                if(current_column >= columns_per_batch)
                   {
                     out << '\n';
                     current_column = 0;
                   }
               }
+            
+            // emit newline if there was some output after the last one
             if(current_column != 0) out << '\n';
           }
 
 
-        void key_value::compute_columns(unsigned int& columns, unsigned int& column_width, print_options opts)
+        std::pair<unsigned int, unsigned int> key_value::compute_columns(print_options opts)
           {
-            unsigned int width = (opts == print_options::force_simple ? CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH : this->env.detect_terminal_width());
+            size_t width =
+              (opts == print_options::fixed_width ? this->fix_width
+                                                  : this->env.detect_terminal_width(this->arg_cache.get_default_terminal_width()));
 
             // set up default return values; these will be overwritten later if we use
             // a multicolumn configuration
-            columns = 1;
-            column_width = width;
+            unsigned int columns_per_batch = 1;
+            unsigned int column_width = static_cast<unsigned int>(width);
 
             // no need to do any work if no key-value pairs
-            if(this->db.empty()) return;
+            if(this->db.empty()) return std::make_pair(columns_per_batch, column_width);
 
             unsigned int max_width = 1;
-            for(const std::pair< std::string, std::string >& elt : this->db)
+            for(const auto& elt : this->db)
               {
-                unsigned int w = elt.first.length() + elt.second.length() + 2 + 2; // +2 for ': ', +2 for space between columns
-
-                if(w > max_width) max_width = w;
+                size_t w = elt.first.length() + elt.second.length() + 2 + 2; // +2 for ': ', +2 for space between columns
+                
+                if(w > max_width) max_width = static_cast<unsigned int>(w);
               }
 
             // can we fit more than one column on the terminal? if not, just return
-            if(max_width >= width/2) return;
+            if(max_width >= width/2) return std::make_pair(columns_per_batch, column_width);
 
-            columns = width / max_width;
+            columns_per_batch = static_cast<unsigned int>(width) / max_width;
             column_width = max_width;
+            
+            return std::make_pair(columns_per_batch, column_width);
           }
 
 
       }
 
   }
-
-
 
 #endif //CPPTRANSPORT_REPORTING_KEY_VALUE_H

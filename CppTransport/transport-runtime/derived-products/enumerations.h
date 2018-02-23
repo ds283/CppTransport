@@ -33,24 +33,29 @@ namespace transport
     namespace derived_data
       {
 
-
         //! which type of twopf are we using?
         enum class twopf_type
           {
             real, imaginary
           };
 
+
         inline std::string twopf_type_to_string(twopf_type type)
           {
             switch(type)
               {
                 case twopf_type::real:
-                  return std::string(CPPTRANSPORT_TWOPF_TYPE_REAL);
+                  {
+                    return std::string{CPPTRANSPORT_TWOPF_TYPE_REAL};
+                  }
 
                 case twopf_type::imaginary:
-                  return std::string(CPPTRANSPORT_TWOPF_TYPE_IMAGINARY);
+                  {
+                    return std::string{CPPTRANSPORT_TWOPF_TYPE_IMAGINARY};
+                  }
               }
           }
+
 
         //! do dots mean time derivatives or moments?
         enum class dot_type
@@ -58,17 +63,23 @@ namespace transport
             derivatives, momenta
           };
 
+
         inline std::string dot_type_to_string(dot_type type)
           {
             switch(type)
               {
                 case dot_type::derivatives:
-                  return std::string(CPPTRANSPORT_DOT_TYPE_DERIVATIVES);
+                  {
+                    return std::string{CPPTRANSPORT_DOT_TYPE_DERIVATIVES};
+                  }
 
                 case dot_type::momenta:
-                  return std::string(CPPTRANSPORT_DOT_TYPE_MOMENTA);
+                  {
+                    return std::string{CPPTRANSPORT_DOT_TYPE_MOMENTA};
+                  }
               }
           }
+
 
         //! are wavenumbers expressed in conventional or comoving units?
         enum class klabel_type
@@ -76,38 +87,67 @@ namespace transport
             conventional, comoving
           };
 
+
         inline std::string klabel_type_to_string(klabel_type type)
           {
             switch(type)
               {
                 case klabel_type::conventional:
-                  return std::string(CPPTRANSPORT_KLABEL_TYPE_CONVENTIONAL);
+                  {
+                    return std::string{CPPTRANSPORT_KLABEL_TYPE_CONVENTIONAL};
+                  }
 
                 case klabel_type::comoving:
-                  return std::string(CPPTRANSPORT_KLABEL_TYPE_COMOVING);
+                  {
+                    return std::string{CPPTRANSPORT_KLABEL_TYPE_COMOVING};
+                  }
               }
           }
+
 
         //! background objects
         enum class background_quantity
           {
-            epsilon, Hubble, aHubble
+            epsilon, eta, Hubble, aHubble, mass_spectrum, norm_mass_spectrum
           };
+
 
         inline std::string background_quantity_to_string(background_quantity object)
           {
             switch(object)
               {
                 case background_quantity::epsilon:
-                  return std::string(CPPTRANSPORT_BACKGROUND_QUANTITY_EPSILON);
+                  {
+                    return std::string{CPPTRANSPORT_BACKGROUND_QUANTITY_EPSILON};
+                  }
+
+                case background_quantity::eta:
+                  {
+                    return std::string{CPPTRANSPORT_BACKGROUND_QUANTITY_ETA};
+                  }
 
                 case background_quantity::Hubble:
-                  return std::string(CPPTRANSPORT_BACKGROUND_QUANTITY_HUBBLE);
+                  {
+                    return std::string{CPPTRANSPORT_BACKGROUND_QUANTITY_HUBBLE};
+                  }
 
                 case background_quantity::aHubble:
-                  return std::string(CPPTRANSPORT_BACKGROUND_QUANTITY_A_HUBBLE);
+                  {
+                    return std::string{CPPTRANSPORT_BACKGROUND_QUANTITY_A_HUBBLE};
+                  }
+
+                case background_quantity::mass_spectrum:
+                  {
+                    return std::string{CPPTRANSPORT_BACKGROUND_QUANTITY_MASS_SPECTRUM};
+                  }
+
+                case background_quantity::norm_mass_spectrum:
+                  {
+                    return std::string{CPPTRANSPORT_BACKGROUND_QUANTITY_NORM_MASS_SPECTRUM};
+                  }
               }
           }
+
 
         //! select scattered or continuous data line
         enum class data_line_type
@@ -115,17 +155,23 @@ namespace transport
             scattered_data, continuous_data
           };
 
+
         inline std::string data_line_type_to_string(data_line_type type)
           {
             switch(type)
               {
                 case data_line_type::scattered_data:
-                  return std::string(CPPTRANSPORT_LINE_TYPE_SCATTERED);
+                  {
+                    return std::string{CPPTRANSPORT_LINE_TYPE_SCATTERED};
+                  }
 
                 case data_line_type::continuous_data:
-                  return std::string(CPPTRANSPORT_LINE_TYPE_CONTINUOUS);
+                  {
+                    return std::string{CPPTRANSPORT_LINE_TYPE_CONTINUOUS};
+                  }
               }
           }
+
 
         //! select position of legend on plots
         enum class legend_pos
@@ -135,41 +181,63 @@ namespace transport
             upper_centre, lower_centre, centre
           };
 
+
         inline std::string legend_pos_to_string(legend_pos pos)
           {
             switch(pos)
               {
                 case legend_pos::top_left:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_TOP_LEFT);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_TOP_LEFT};
+                  }
 
                 case legend_pos::top_right:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_TOP_RIGHT);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_TOP_RIGHT};
+                  }
 
                 case legend_pos::bottom_left:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_BOTTOM_LEFT);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_BOTTOM_LEFT};
+                  }
 
                 case legend_pos::bottom_right:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_BOTTOM_RIGHT);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_BOTTOM_RIGHT};
+                  }
 
                 case legend_pos::centre_left:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_CENTRE_LEFT);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_CENTRE_LEFT};
+                  }
 
                 case legend_pos::centre_right:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_CENTRE_RIGHT);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_CENTRE_RIGHT};
+                  }
 
                 case legend_pos::upper_centre:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_UPPER_CENTRE);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_UPPER_CENTRE};
+                  }
 
                 case legend_pos::lower_centre:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_LOWER_CENTRE);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_LOWER_CENTRE};
+                  }
 
                 case legend_pos::centre:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_CENTRE);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_CENTRE};
+                  }
 
                 case legend_pos::right:
-                  return std::string(CPPTRANSPORT_LEGEND_POS_RIGHT);
+                  {
+                    return std::string{CPPTRANSPORT_LEGEND_POS_RIGHT};
+                  }
               }
           }
+
 
         //! derived lines are associated with one of three classes of axis
         enum class axis_class
@@ -177,27 +245,35 @@ namespace transport
             time, wavenumber, threepf_kconfig
           };
 
+
         inline std::string axis_class_to_string(axis_class cls)
           {
             switch(cls)
               {
                 case axis_class::time:
-                  return std::string(CPPTRANSPORT_AXIS_CLASS_TIME);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_CLASS_TIME};
+                  }
 
                 case axis_class::wavenumber:
-                  return std::string(CPPTRANSPORT_AXIS_CLASS_WAVENUMBER);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_CLASS_WAVENUMBER};
+                  }
 
                 case axis_class::threepf_kconfig:
-                  return std::string(CPPTRANSPORT_AXIS_CLASS_3PFCONFIG);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_CLASS_3PFCONFIG};
+                  }
               }
           }
+
 
         //! possible axis choices for a given derived line
         enum class axis_value
           {
             efolds,       // time in e-folds, suitable for a time axis
             k,            // wavenumber
-            efolds_exit,  // efolds between k* and horizon exit for thid mode
+            efolds_exit,  // efolds between k* and horizon exit for this mode
             alpha,
             beta,
             squeeze_k1,
@@ -206,79 +282,124 @@ namespace transport
             unset
           };
 
+
         inline std::string axis_value_to_string(axis_value value)
           {
             switch(value)
               {
                 case axis_value::efolds:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_EFOLDS);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_EFOLDS};
+                  }
 
                 case axis_value::k:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_WAVENUMBER);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_WAVENUMBER};
+                  }
 
                 case axis_value::efolds_exit:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_EFOLDS_EXIT);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_EFOLDS_EXIT};
+                  }
 
                 case axis_value::alpha:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_ALPHA);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_ALPHA};
+                  }
 
                 case axis_value::beta:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_BETA);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_BETA};
+                  }
 
                 case axis_value::squeeze_k1:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K1);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K1};
+                  }
 
                 case axis_value::squeeze_k2:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K2);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K2};
+                  }
 
                 case axis_value::squeeze_k3:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K3);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_SQUEEZING_K3};
+                  }
 
                 case axis_value::unset:
-                  return std::string(CPPTRANSPORT_AXIS_VALUE_UNSET);
+                  {
+                    return std::string{CPPTRANSPORT_AXIS_VALUE_UNSET};
+                  }
               }
           }
+
 
         //! possible value choices for a given derived line
         enum class value_type
           {
             field, momentum, correlation_function, fNL,
-            r, spectral_index, dimensionless,
+            r, spectral_index, dimensionless, mass,
             time, steps
           };
+
 
         inline std::string value_type_to_string(value_type type)
           {
             switch(type)
               {
                 case value_type::field:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_FIELD);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_FIELD};
+                  }
 
                 case value_type::momentum:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_MOMENTUM);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_MOMENTUM};
+                  }
 
                 case value_type::correlation_function:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_CORRELATION);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_CORRELATION};
+                  }
 
                 case value_type::fNL:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_FNL);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_FNL};
+                  }
 
                 case value_type::r:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_R);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_R};
+                  }
 
                 case value_type::spectral_index:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_SPECTRAL_INDEX);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_SPECTRAL_INDEX};
+                  }
 
                 case value_type::dimensionless:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_DIMENSIONLESS);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_DIMENSIONLESS};
+                  }
+
+                case value_type::mass:
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_MASS};
+                  }
 
                 case value_type::time:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_TIME);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_TIME};
+                  }
 
                 case value_type::steps:
-                  return std::string(CPPTRANSPORT_VALUE_TYPE_STEPS);
+                  {
+                    return std::string{CPPTRANSPORT_VALUE_TYPE_STEPS};
+                  }
               }
           }
+
 
         //! analysis type for integration-cost analysis
         enum class analysis_type
@@ -286,15 +407,20 @@ namespace transport
             twopf, threepf
           };
 
+
         inline std::string analysis_type_to_string(analysis_type type)
           {
             switch(type)
               {
                 case analysis_type::twopf:
-                  return std::string(CPPTRANSPORT_ANALYSIS_TYPE_2PF);
+                  {
+                    return std::string{CPPTRANSPORT_ANALYSIS_TYPE_2PF};
+                  }
 
                 case analysis_type::threepf:
-                  return std::string(CPPTRANSPORT_ANALYSIS_TYPE_3PF);
+                  {
+                    return std::string{CPPTRANSPORT_ANALYSIS_TYPE_3PF};
+                  }
               }
           }
 

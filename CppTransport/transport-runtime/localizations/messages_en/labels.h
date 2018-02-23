@@ -34,6 +34,8 @@
 
 #define CPPTRANSPORT_EFOLDS                             "e-folds"
 
+#define CPPTRANSPORT_WEEK                               "w"
+#define CPPTRANSPORT_DAY                                "d"
 #define CPPTRANSPORT_HOUR                               "h"
 #define CPPTRANSPORT_MINUTE                             "m"
 #define CPPTRANSPORT_SECOND                             "s"
@@ -144,10 +146,17 @@
 
 #define CPPTRANSPORT_LATEX_EPSILON_SYMBOL               "\\epsilon"
 #define CPPTRANSPORT_NONLATEX_EPSILON_SYMBOL            "epsilon"
+#define CPPTRANSPORT_LATEX_ETA_SYMBOL                   "\\eta"
+#define CPPTRANSPORT_NONLATEX_ETA_SYMBOL                "eta"
 #define CPPTRANSPORT_LATEX_HUBBLE_SYMBOL                "H"
 #define CPPTRANSPORT_NONLATEX_HUBBLE_SYMBOL             "H"
 #define CPPTRANSPORT_LATEX_A_HUBBLE_SYMBOL              "aH"
 #define CPPTRANSPORT_NONLATEX_A_HUBBLE_SYMBOL           "aH"
+#define CPPTRANSPORT_LATEX_MASS_SPECTRUM_SYMBOL         "M_i"
+#define CPPTRANSPORT_NONLATEX_MASS_SPECTRUM_SYMBOL      "M_i"
+#define CPPTRANSPORT_LATEX_NORM_MASS_SPECTRUM_SYMBOL    "M_i/H"
+#define CPPTRANSPORT_NONLATEX_NORM_MASS_SPECTRUM_SYMBOL "M_i/H"
+#define CPPTRANSPORT_MASS_SPECTRUM_SYMBOL               "m"
 
 #define CPPTRANSPORT_LATEX_U2_SYMBOL                    "u"
 #define CPPTRANSPORT_NONLATEX_U2_SYMBOL                 "u"

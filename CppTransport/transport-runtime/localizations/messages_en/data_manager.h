@@ -33,8 +33,6 @@
 #define CPPTRANSPORT_NFIELDS_THREEPF                             "Storage error: Unexpected number of elements when batching output of threepf"
 #define CPPTRANSPORT_NFIELDS_TENSOR_TWOPF                        "Storage error: Unexpected number of elements when batching output of tensor twopf"
 
-#define CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET         "Internal error: Could not set aggregation handler"
-
 #define CPPTRANSPORT_DATACTR_NOT_CLOSED                          "Data container error: Some containers not closed when deleting 'data_manager' object"
 #define CPPTRANSPORT_DATACTR_CLOSE                               "Data container error: Unexpected error when closing containers on destruction of 'data_manager' object (backend code="
 #define CPPTRANSPORT_DATACTR_CREATE_A                            "Data container error: Could not create data container"

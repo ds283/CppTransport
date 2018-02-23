@@ -312,7 +312,7 @@ namespace transport
 
         // write magic string consisting of current POSIX time, used to identify if lockfile has been changed
         // by another process
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         magic_string = boost::posix_time::to_iso_string(now);
         make_lock << magic_string;
 

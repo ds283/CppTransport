@@ -27,6 +27,7 @@
 #include <iostream>
 #include <fstream>
 #include <assert.h>
+#include <boost/optional.hpp>
 
 #include "lexfile.h"
 #include "msg_en.h"
@@ -35,19 +36,24 @@
 // ******************************************************************
 
 
-lexfile::lexfile(const boost::filesystem::path& fnam, filestack& s)
+lexfile::lexfile(const boost::filesystem::path& fnam, filestack& s, boost::optional<unsigned int> ml)
   : file(fnam),
     stack(s),
-    state(lexfile_state::unready),
+    max_lines(ml),
+    state(internal_state::unready),
     char_pos(0)
   {
     stream.open(fnam.string());    // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
 
-    // build up array of lines
+    // read in lines from the file and store them in the line array, up to the maximum
+    // number max_lines if that was supplied
     std::string line;
-    while(std::getline(stream, line))
+    unsigned int count = 0;
+    
+    while(std::getline(stream, line) && (max_lines ? count < *max_lines : true))
       {
         line_array.push_back(std::make_shared<std::string>(line));
+        ++count;
       }
 
     // reset to the beginning of the stream
@@ -69,99 +75,109 @@ lexfile::~lexfile()
 // ******************************************************************
 
 
-char lexfile::get(enum lexfile_outcome& state)
+void lexfile::make_ready()
+  {
+    // detect EOF condition
+    if(this->stream.eof())
+      {
+        this->state = internal_state::eof;
+        this->c = 0;
+        return;
+      }
+
+    while(this->state == internal_state::unready)
+      {
+        assert(this->stream.is_open());
+        assert(!(this->stream.fail()));
+
+        this->stream.get(this->c);
+
+        if(this->stream.eof())                // reached end-of-file
+          {
+            this->state = internal_state::eof;
+            this->c = 0;
+          }
+        else if(this->stream.fail())          // there was an error
+          {
+            this->state = internal_state::error;
+            this->c = 0;
+          }
+        else                                  // can assume this character is valid
+          {
+            this->state = internal_state::ready;
+          }
+      }
+  }
+
+
+lexfile::value_type lexfile::get()
   {
     switch(this->state)
       {
-        case lexfile_state::unready:                       // this will be the most common case; we need to read a new char
+        case internal_state::unready:                  // this will be the most common case; we need to read a new char
           {
-            if(this->stream.eof())
-              {
-                this->state = lexfile_state::eof;
-                this->c     = 0;
-                break;
-              }
-
-            while(this->state == lexfile_state::unready)
-              {
-                assert(this->stream.is_open());
-                assert(!(this->stream.fail()));
-
-                this->stream.get(this->c);
-                if(this->stream.eof())                // reached end-of-file
-                  {
-                    this->state = lexfile_state::eof;
-                    this->c     = 0;
-                  }
-                else if(this->stream.fail())          // there was an error
-                  {
-                    this->state = lexfile_state::error;
-                    this->c     = 0;
-                  }
-                else                                  // can assume this character is valid
-                  {
-                    this->state = lexfile_state::ready;
-                    if(this->c == '\n')
-                      {
-                        this->stack.increment_line();
-                        this->char_pos = 0;
-                      }
-                  }
-              }
-
+            this->make_ready();
             break;
           }
 
-        case lexfile_state::ready:
+        case internal_state::ready:
           {
             break;                                    // don't need to do anything if we are already 'ready'
           }
 
-        case lexfile_state::eof:
-        case lexfile_state::error:
+        case internal_state::eof:
+        case internal_state::error:
           {
             break;                                    // do nothing if there is already an error or eof condition
           }
       }
 
-    if(this->state == lexfile_state::eof)
-      {
-        state = lexfile_outcome::eof;
-      }
-    else if(this->state == lexfile_state::error)
-      {
-        state = lexfile_outcome::error;
-      }
-    else
-      {
-        state = lexfile_outcome::ok;
-      }
+    if(this->state == internal_state::eof) return std::make_tuple(c, status::eof);
+    if(this->state == internal_state::error) return std::make_tuple(c, status::error);
 
-    return(this->c);
+    return std::make_tuple(c, status::ok);
   }
 
-void lexfile::eat()
+
+lexfile& lexfile::operator++()
   {
     assert(this->stream.is_open());
+    
+    // do nothing if we are in an EOF or error state
+    if(this->state == internal_state::eof || this->state == internal_state::error) return *this;
+    
+    // special treatment required for moving over a newline
+    if(this->state == internal_state::ready && this->c == '\n')
+      {
+        this->stack.increment_line();
+        this->char_pos = 0;
+        this->state = internal_state::unready;
 
-    this->state = lexfile_state::unready;
-    this->char_pos++;
+        // detect whether we have read the maximum number of lines, if a maximum
+        // was supplied
+        if(!this->max_lines) return *this;
+
+        if(this->stack.get_line() > *this->max_lines)
+          {
+            this->state = internal_state::eof;
+          }
+        return *this;
+      }
+
+    // otherwise, advance character position and invalidate this->c
+    ++this->char_pos;
+    this->state = internal_state::unready;
+
+    return *this;
   }
 
-enum lexfile_outcome lexfile::current_state() const
+
+lexfile::status lexfile::get_state() const
   {
-    enum lexfile_outcome rval = lexfile_outcome::ok;
+    if(this->state == internal_state::eof) return status::eof;
+    if(this->state == internal_state::error) return status::error;
 
-    if(this->state == lexfile_state::eof)
-      {
-        rval = lexfile_outcome::eof;
-      }
-    else if(this->state == lexfile_state::error)
-      {
-        rval = lexfile_outcome::error;
-      }
-
-    return(rval);
+    return status::ok;
   }
 
 

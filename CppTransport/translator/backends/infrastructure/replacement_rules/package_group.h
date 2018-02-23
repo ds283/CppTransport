@@ -33,6 +33,7 @@
 #include "macro.h"
 #include "ginac_cache.h"
 #include "replacement_rule_package.h"
+#include "directive_package.h"
 #include "concepts/tensor_factory.h"
 #include "buffer.h"
 #include "cse.h"
@@ -40,15 +41,64 @@
 #include "error.h"
 
 
+template <typename PrinterAgent, typename CSEAgent, typename LambdaAgent>
+class PackageGroupComponentAgent
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    PackageGroupComponentAgent() = default;
+
+    //! destructor
+    ~PackageGroupComponentAgent() = default;
+
+
+    // SERVICES
+
+  public:
+
+    //! make a printer agent
+    std::unique_ptr<PrinterAgent> make_printer_agent() const
+      { return std::make_unique<PrinterAgent>(); }
+
+    //! make a CSE agent
+    std::unique_ptr<CSEAgent> make_cse_agent(language_printer& p, translator_data& d) const
+      { return std::make_unique<CSEAgent>(0, p, d); }
+
+    //! make a lambda agent
+    std::unique_ptr<LambdaAgent> make_lambda_agent(language_printer& p, translator_data& d) const
+      { return std::make_unique<LambdaAgent>(0, p, d, std::move(make_cse_agent(p, d))); }
+
+  };
+
+
 class package_group
   {
+    
+    // TYPES
+    
+  protected:
+    
+    //! database of replacement rule packages
+    typedef std::list< std::unique_ptr<macro_packages::replacement_rule_package> > replacement_rule_database;
+    
+    //! database of directive packages
+    typedef std::list< std::unique_ptr<macro_packages::directive_package> > directive_database;
+    
 
 		// CONSTRUCTOR, DESTRUCTOR
 
   public:
 
-    package_group(translator_data& p, tensor_factory& fctry);
+    //! constructor accepts a generic ComponentFactory object whose job is to
+    //! construct the langugae printer, CSE and lambda management agents that we need
+    template <typename ComponentFactory>
+    package_group(translator_data& p, tensor_factory& fctry, ComponentFactory F);
 
+    //! destructor reports statistics for replacements associated with this group
     virtual ~package_group();
 
 
@@ -65,16 +115,22 @@ class package_group
 
   public:
 
-    // return references to our ruleset caches
+    // return references to our ruleset and directiveset caches
 
     //! return reference to pre-rules
-    std::vector<macro_packages::replacement_rule_simple*>& get_pre_ruleset()   { return(this->pre_ruleset); }
+    const pre_ruleset& get_pre_ruleset() const { return this->pre_rules; }
 
     //! return reference to post-rules
-    std::vector<macro_packages::replacement_rule_simple*>& get_post_ruleset()  { return(this->post_ruleset); }
+    const post_ruleset& get_post_ruleset() const { return this->post_rules; }
 
     //! return reference to index-rules
-    std::vector<macro_packages::replacement_rule_index*>& get_index_ruleset()  { return(this->index_ruleset); }
+    const index_ruleset& get_index_ruleset() const { return this->index_rules; }
+    
+    //! return reference to simple directives
+    const simple_directiveset& get_simple_directiveset() const { return this->simple_directives; }
+    
+    //! return reference to index directives
+    const index_directiveset& get_index_directiveset() const { return this->index_directives; }
 
 
 		// INTERFACE - GET LANGUAGE PRINTER FOR THIS PACKAGE GROUP
@@ -105,8 +161,12 @@ class package_group
     //! register a replacement rule package, transfer its ownership to ourselves, and populate it
     //! with details about the u-tensor factory and CSE worker
     template <typename PackageType, typename ... Args>
-    void add_package(Args&& ... args);
-
+    void add_rule_package(Args&& ... args);
+    
+    //! register a directive package
+    template <typename PackageType, typename ... Args>
+    void add_directive_package(Args&& ... args);
+    
     //! rebuild pre-ruleset
     void build_pre_ruleset();
 
@@ -115,8 +175,18 @@ class package_group
 
     //! rebuild index ruleset
     void build_index_ruleset();
+    
+    //! rebuild simple directiveset
+    void build_simple_directiveset();
+    
+    //! rebuild index directiveset
+    void build_index_directiveset();
+    
+    //! generic rule to rebuild an indexset or directiveset
+    template <typename SourceDatabase, typename DestinationContainer, typename RuleGetter>
+    void build_set(const SourceDatabase& src, DestinationContainer& dest, RuleGetter get_rules);
 
-
+    
 		// INTERNAL DATA
 
   protected:
@@ -134,38 +204,50 @@ class package_group
     //! may depend on what kind of model is being processed, eg. canonical, noncanonical
     tensor_factory& fctry;
 
+    //! polymorphic pointer to language printer; as above, depends on what kind
+    //! of model is being processed
+    std::unique_ptr<language_printer> l_printer;
+
     //! polymorphic pointer to CSE worker; as above exactly which CSE scheme is
     //! involved may depend what kind of model is being processed
-    std::unique_ptr<cse> cse_worker;  // should be set by implementations
+    //! must be declared *after* l_printer, since depends on l_printer during construction
+    std::unique_ptr<cse> cse_worker;
 
     //! lambda manager; has to be held as a managed pointer since depends on
     //! the language printer, which isn't known until construction
+    //! must be declared *after* l_printer, since depends on l_printer during construction
     std::unique_ptr<lambda_manager> lambda_mgr;
-
-    //! polymorphic pointer to language printer; as above, depends on what kind
-    //! of model is being processed
-    std::unique_ptr<language_printer> l_printer;  // should be set by implementations
 
 
     // MACRO PACKAGE CACHE
 
-    std::list< std::unique_ptr<macro_packages::replacement_rule_package> > packages;
+    //! set of replacement rule packages
+    replacement_rule_database rule_packages;
+    
+    //! set of directive packages
+    directive_database directive_packages;
 
 
-    // RULE CACHE, BUILD BY AGGREGATING RULES FROM MACRO PACKAGES
+    // RULE CACHE, BUILT BY AGGREGATING RULES FROM MACRO PACKAGES
 
     // all these are held as raw pointers because
     // we have no ownership in these objects.
-    // They are owned by the underylying replacement_rule_package
+    // They are owned by the underlying replacement_rule_package
 
-    // rules for pre-macros
-    std::vector<macro_packages::replacement_rule_simple*> pre_ruleset;
+    //! rules for pre-macros
+    pre_ruleset pre_rules;
 
     //! rules for post-macros
-    std::vector<macro_packages::replacement_rule_simple*> post_ruleset;
+    post_ruleset post_rules;
 
     //! rules for index macros
-    std::vector<macro_packages::replacement_rule_index*> index_ruleset;
+    index_ruleset index_rules;
+    
+    //! rules for simple directives
+    simple_directiveset simple_directives;
+    
+    //! rules for index directives
+    index_directiveset index_directives;
 
 
     // STATISTICS AND METADATA
@@ -182,20 +264,47 @@ class package_group
   };
 
 
+template <typename ComponentFactory>
+package_group::package_group(translator_data& p, tensor_factory& _f, ComponentFactory F)
+  : data_payload(p),
+    statistics_reported(false),
+    fctry(_f),
+    l_printer(F.make_printer_agent()),
+    cse_worker(F.make_cse_agent(*l_printer, p)),
+    lambda_mgr(F.make_lambda_agent(*l_printer, p))
+  {
+  }
+
+
 template <typename PackageType, typename ... Args>
-void package_group::add_package(Args&& ... args)
+void package_group::add_rule_package(Args&& ... args)
   {
     // establish that everything has been set up correctly
     assert(this->cse_worker);
 
     // construct a new package of the specified type, forwarding any arguments we were given
-    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(this->fctry, *this->cse_worker, *this->lambda_mgr, std::forward<Args>(args) ...);
-    this->packages.push_back(std::move(pkg));
+    std::unique_ptr< macro_packages::replacement_rule_package > pkg =
+      std::make_unique<PackageType>(this->fctry, *this->cse_worker, *this->lambda_mgr, std::forward<Args>(args) ...);
+    this->rule_packages.push_back(std::move(pkg));
 
     // rebuild ruleset caches
     this->build_pre_ruleset();
     this->build_post_ruleset();
     this->build_index_ruleset();
+  }
+
+
+template <typename PackageType, typename ... Args>
+void package_group::add_directive_package(Args&& ... args)
+  {
+    // construct new package of the specified type
+    std::unique_ptr< macro_packages::directive_package > pkg =
+      std::make_unique<PackageType>(std::forward<Args>(args) ...);
+    this->directive_packages.push_back(std::move(pkg));
+    
+    // rebuild directiveset caches
+    this->build_simple_directiveset();
+    this->build_index_directiveset();
   }
 
 

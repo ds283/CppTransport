@@ -49,8 +49,11 @@
 #define CPPTRANSPORT_KLABEL_TYPE_CONVENTIONAL                "conventional"
 #define CPPTRANSPORT_KLABEL_TYPE_COMOVING                    "comoving"
 #define CPPTRANSPORT_BACKGROUND_QUANTITY_EPSILON             "epsilon"
+#define CPPTRANSPORT_BACKGROUND_QUANTITY_ETA                 "eta"
 #define CPPTRANSPORT_BACKGROUND_QUANTITY_HUBBLE              "H"
 #define CPPTRANSPORT_BACKGROUND_QUANTITY_A_HUBBLE            "aH"
+#define CPPTRANSPORT_BACKGROUND_QUANTITY_MASS_SPECTRUM       "mass spectrum"
+#define CPPTRANSPORT_BACKGROUND_QUANTITY_NORM_MASS_SPECTRUM  "normalized mass spectrum"
 #define CPPTRANSPORT_LINE_TYPE_SCATTERED                     "scattered"
 #define CPPTRANSPORT_LINE_TYPE_CONTINUOUS                    "continuous"
 
@@ -86,6 +89,7 @@
 #define CPPTRANSPORT_VALUE_TYPE_R                            "tensor-scalar ratio"
 #define CPPTRANSPORT_VALUE_TYPE_SPECTRAL_INDEX               "spectral index"
 #define CPPTRANSPORT_VALUE_TYPE_DIMENSIONLESS                "dimensionless quantity"
+#define CPPTRANSPORT_VALUE_TYPE_MASS                         "mass"
 #define CPPTRANSPORT_VALUE_TYPE_TIME                         "time"
 #define CPPTRANSPORT_VALUE_TYPE_STEPS                        "number of steps"
 

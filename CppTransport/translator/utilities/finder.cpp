@@ -27,71 +27,83 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <core.h>
 
 #include "finder.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/algorithm/string.hpp"
 
 
 // ******************************************************************
 
 
-finder::finder()
-  {
-    boost::filesystem::path cwd(boost::filesystem::initial_path<boost::filesystem::path>());
-
-    paths.push_back(cwd);
-  }
-
-
-finder::finder(boost::filesystem::path path)
-  {
-    paths.emplace_back(std::move(path));
-  }
-
-
-// ******************************************************************
-
-
-void finder::add(boost::filesystem::path p)
+finder& finder::add(boost::filesystem::path p)
   {
     // add path to list, if it isn't already present
-    std::list<boost::filesystem::path>::iterator t = std::find(this->paths.begin(), this->paths.end(), p);
+    auto t = std::find(this->paths.begin(), this->paths.end(), p);
 
     if(t == this->paths.end()) this->paths.emplace_back(std::move(p));
+    
+    return *this;
   }
 
 
-void finder::add(const std::list<boost::filesystem::path>& plist)
+finder& finder::add_environment_variable(const std::string var, const boost::filesystem::path tail)
   {
-    for(const boost::filesystem::path& t : plist)
+    // query value of environment variable
+    char* resource_path_cstr = std::getenv(var.c_str());
+    
+    // return if environment variable did not exist
+    if(resource_path_cstr == nullptr) return *this;
+    
+    std::string template_paths{resource_path_cstr};
+    
+    // parse environment variable into a : separated list of directories
+    for(auto t = boost::algorithm::make_split_iterator(template_paths,
+                                                       boost::algorithm::first_finder(":", boost::algorithm::is_equal()));
+        t != boost::algorithm::split_iterator<std::string::iterator>(); ++t)
       {
-        this->add(t);
+        std::string path = boost::copy_range<std::string>(*t);
+        
+        boost::filesystem::path rpath(path);
+        
+        // if path is not absolute, make relative to current working directory
+        if(!rpath.is_absolute()) rpath = boost::filesystem::absolute(rpath);
+        
+        if(!tail.empty()) this->add(rpath / tail);
+        else this->add(rpath);
       }
+    
+    return *this;
   }
 
 
-bool finder::fqpn(const boost::filesystem::path& leaf, boost::filesystem::path& fqpn)
+finder& finder::add_cwd()
+  {
+    boost::filesystem::path cwd{ boost::filesystem::initial_path<boost::filesystem::path>() };
+
+    return this->add(cwd);
+  }
+
+
+boost::optional< boost::filesystem::path >
+finder::find(const boost::filesystem::path& leaf) const
   {
     if(leaf.is_absolute())
       {
-        fqpn = boost::filesystem::canonical(leaf);
-        return(boost::filesystem::exists(leaf));
+        auto fqpn = boost::filesystem::canonical(leaf);
+        
+        if(boost::filesystem::exists(leaf)) return fqpn;
+        return boost::none;
       }
-
-    bool match = false;
-
-    for(const boost::filesystem::path& path : this->paths)
+    
+    for(const auto& path : this->paths)
       {
-        boost::filesystem::path file = path / leaf;
-
-        if(boost::filesystem::exists(file))
-          {
-            match = true;
-            fqpn  = boost::filesystem::canonical(file);
-            break;
-          }
+        auto file = path / leaf;
+        
+        if(boost::filesystem::exists(file)) return boost::filesystem::canonical(file);
       }
-
-    return(match);
+    
+    return boost::none;
   }

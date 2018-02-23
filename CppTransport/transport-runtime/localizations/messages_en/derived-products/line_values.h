@@ -34,6 +34,7 @@
 #define CPPTRANSPORT_VALUE_NON_LATEX_FNL                  "fNL"
 #define CPPTRANSPORT_VALUE_NON_LATEX_R                    "tensor-to-scalar ratio"
 #define CPPTRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX       "spectral index"
+#define CPPTRANSPORT_VALUE_NON_LATEX_MASS                 "mass scale"
 #define CPPTRANSPORT_VALUE_NON_LATEX_SECONDS              "seconds"
 #define CPPTRANSPORT_VALUE_NON_LATEX_STEPS                "steps"
 
@@ -43,6 +44,7 @@
 #define CPPTRANSPORT_VALUE_LATEX_FNL                      "$f_{\\mathrm{NL}}$"
 #define CPPTRANSPORT_VALUE_LATEX_R                        "tensor-to-scalar ratio"
 #define CPPTRANSPORT_VALUE_LATEX_SPECTRAL_INDEX           "spectral index"
+#define CPPTRANSPORT_VALUE_LATEX_MASS                     "mass scale"
 #define CPPTRANSPORT_VALUE_LATEX_SECONDS                  "seconds"
 #define CPPTRANSPORT_VALUE_LATEX_STEPS                    "steps"
 

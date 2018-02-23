@@ -31,6 +31,8 @@
 #include "argument_cache.h"
 #include "finder.h"
 
+#include "boost/optional.hpp"
+
 
 class lexstream_data
   {
@@ -40,7 +42,8 @@ class lexstream_data
   public:
 
     //! constructor
-    lexstream_data(const boost::filesystem::path& name, error_context::error_handler e, error_context::warning_handler w, finder& s, argument_cache& c);
+    lexstream_data(const boost::filesystem::path& name, error_context::error_handler e, error_context::warning_handler w,
+                   finder& s, argument_cache& c, boost::optional<unsigned int> ml = boost::none);
 
     //! destructor is default
     ~lexstream_data() = default;
@@ -51,10 +54,10 @@ class lexstream_data
   public:
 
     //! get error handler
-    error_context::error_handler& get_error_handler() { return(this->err); }
+    error_context::error_handler& get_error_handler() { return this->err; }
 
     //! get warning handler
-    error_context::warning_handler& get_warning_handler() { return(this->wrn); }
+    error_context::warning_handler& get_warning_handler() { return this->wrn; }
 
 
     // GET UTILITY OBJECTS ASSOCIATED WITH TRANSLATION UNIT
@@ -69,9 +72,11 @@ class lexstream_data
 
   public:
 
-    //! get filename of model descriptor
-    const boost::filesystem::path& get_model_input() const { return(this->filename); }
+    //! get input filename
+    const boost::filesystem::path& get_input_file() const { return this->filename; }
 
+    //! get maximum number of lines to read from input file
+    const boost::optional<unsigned int>& get_max_lines() const { return this->max_lines; }
 
     // INTERNAL DATA
 
@@ -79,6 +84,9 @@ class lexstream_data
 
     //! filename of model description
     boost::filesystem::path filename;
+    
+    //! maximum number of lines to read, if supplied
+    boost::optional<unsigned int> max_lines;
 
 
     // HANDLERS FOR ERROR_CONTEXT

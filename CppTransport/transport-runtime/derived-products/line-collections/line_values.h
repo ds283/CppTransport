@@ -57,15 +57,16 @@ namespace transport
 					{
 						switch(type)
 							{
-						    case value_type::field:                return std::string(CPPTRANSPORT_VALUE_NON_LATEX_FIELD);
-						    case value_type::momentum:             return std::string(CPPTRANSPORT_VALUE_NON_LATEX_MOMENTUM);
-						    case value_type::correlation_function: return std::string(CPPTRANSPORT_VALUE_NON_LATEX_CORRELATION_FUNCTION);
-						    case value_type::fNL:                  return std::string(CPPTRANSPORT_VALUE_NON_LATEX_FNL);
-						    case value_type::r:                    return std::string(CPPTRANSPORT_VALUE_NON_LATEX_R);
-						    case value_type::spectral_index:       return std::string(CPPTRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX);
-						    case value_type::dimensionless:        return std::string("");
-						    case value_type::time:                 return std::string(CPPTRANSPORT_VALUE_NON_LATEX_SECONDS);
-						    case value_type::steps:                return std::string(CPPTRANSPORT_VALUE_NON_LATEX_STEPS);
+						    case value_type::field:                return std::string{CPPTRANSPORT_VALUE_NON_LATEX_FIELD};
+						    case value_type::momentum:             return std::string{CPPTRANSPORT_VALUE_NON_LATEX_MOMENTUM};
+						    case value_type::correlation_function: return std::string{CPPTRANSPORT_VALUE_NON_LATEX_CORRELATION_FUNCTION};
+						    case value_type::fNL:                  return std::string{CPPTRANSPORT_VALUE_NON_LATEX_FNL};
+						    case value_type::r:                    return std::string{CPPTRANSPORT_VALUE_NON_LATEX_R};
+						    case value_type::spectral_index:       return std::string{CPPTRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX};
+						    case value_type::dimensionless:        return std::string{""};
+                case value_type::mass:                 return std::string{CPPTRANSPORT_VALUE_NON_LATEX_MASS};
+						    case value_type::time:                 return std::string{CPPTRANSPORT_VALUE_NON_LATEX_SECONDS};
+						    case value_type::steps:                return std::string{CPPTRANSPORT_VALUE_NON_LATEX_STEPS};
               }
 					}
 
@@ -73,15 +74,16 @@ namespace transport
 			    {
 		        switch(type)
 			        {
-		            case value_type::field:                return std::string(CPPTRANSPORT_VALUE_LATEX_FIELD);
-		            case value_type::momentum:             return std::string(CPPTRANSPORT_VALUE_LATEX_MOMENTUM);
-		            case value_type::correlation_function: return std::string(CPPTRANSPORT_VALUE_LATEX_CORRELATION_FUNCTION);
-		            case value_type::fNL:                  return std::string(CPPTRANSPORT_VALUE_LATEX_FNL);
-		            case value_type::r:                    return std::string(CPPTRANSPORT_VALUE_LATEX_R);
-		            case value_type::spectral_index:       return std::string(CPPTRANSPORT_VALUE_LATEX_SPECTRAL_INDEX);
-		            case value_type::dimensionless:        return std::string("");
-		            case value_type::time:                 return std::string(CPPTRANSPORT_VALUE_LATEX_SECONDS);
-		            case value_type::steps:                return std::string(CPPTRANSPORT_VALUE_LATEX_STEPS);
+		            case value_type::field:                return std::string{CPPTRANSPORT_VALUE_LATEX_FIELD};
+		            case value_type::momentum:             return std::string{CPPTRANSPORT_VALUE_LATEX_MOMENTUM};
+		            case value_type::correlation_function: return std::string{CPPTRANSPORT_VALUE_LATEX_CORRELATION_FUNCTION};
+		            case value_type::fNL:                  return std::string{CPPTRANSPORT_VALUE_LATEX_FNL};
+		            case value_type::r:                    return std::string{CPPTRANSPORT_VALUE_LATEX_R};
+		            case value_type::spectral_index:       return std::string{CPPTRANSPORT_VALUE_LATEX_SPECTRAL_INDEX};
+		            case value_type::dimensionless:        return std::string{""};
+                case value_type::mass:                 return std::string{CPPTRANSPORT_VALUE_LATEX_MASS};
+		            case value_type::time:                 return std::string{CPPTRANSPORT_VALUE_LATEX_SECONDS};
+		            case value_type::steps:                return std::string{CPPTRANSPORT_VALUE_LATEX_STEPS};
               }
 			    }
 

@@ -1,0 +1,24 @@
+metadata
+ { require_version = 201701;
+ };
+
+% specify which class template should be used with this model
+templates
+ { core           = "canonical_core";
+   implementation = "canonical_mpi";
+ };
+
+% fix properties of the steppers
+background
+ { abserr   = 1E-12;
+   relerr   = 1E-12;
+   stepsize = 1E-10;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+perturbations
+ { abserr   = 1E-12;
+   relerr   = 1E-12;
+   stepsize = 1E-15;
+   stepper  = "runge_kutta_dopri5";
+ };

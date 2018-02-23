@@ -30,11 +30,12 @@
 #include "msg_en.h"
 
 
-error_context::error_context(filestack& p, std::shared_ptr<std::string> ln, unsigned int cpos,
+error_context::error_context(filestack& p, std::shared_ptr<std::string> ln, unsigned int sp, unsigned int ep,
                              error_handler e, warning_handler w)
   : stack(p.clone()),
     line(std::move(ln)),
-    character_position(cpos),
+    start_position(sp),
+    end_position(ep),
     err_handle(std::move(e)),
     wrn_handle(std::move(w)),
     full_context(true)
@@ -79,8 +80,20 @@ const std::string& error_context::get_line() const
   }
 
 
-unsigned int error_context::get_position() const
+size_t error_context::get_context_start_position() const
   {
     if(!this->full_context) throw std::runtime_error(ERROR_NOT_FULL_CONTEXT);
-    return(this->character_position);
+
+    if(this->start_position < this->line->length()) return this->start_position;
+    return this->line->length()-1;
+  }
+
+
+size_t error_context::get_context_end_position() const
+  {
+    if(!this->full_context) throw std::runtime_error(ERROR_NOT_FULL_CONTEXT);
+
+    if(this->end_position > this->start_position && this->end_position < this->line->length()+1) return this->end_position;
+    if(this->start_position < this->line->length()) return this->start_position+1;
+    return this->line->length();
   }

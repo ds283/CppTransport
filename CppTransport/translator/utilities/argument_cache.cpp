@@ -23,6 +23,7 @@
 // --@@
 //
 
+
 #include <iostream>
 #include <fstream>
 
@@ -30,6 +31,7 @@
 
 #include "core.h"
 #include "switches.h"
+#include "msg_en.h"
 
 #include "build_data.h"
 
@@ -92,48 +94,64 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     no_search_environment(false),
     annotate_flag(false),
     unroll_policy_size(DEFAULT_UNROLL_MAX),
-    fast_flag(false)
+    fast_flag(false),
+    profile_flag(false),
+    develop_warnings(false),
+    unroll_warnings(false),
+    reposition_warnings(false)
   {
     // set up Boost::program_options descriptors for command-line arguments
     boost::program_options::options_description generic(MISC_OPTIONS);
     generic.add_options()
       (VERSION_SWITCH, VERSION_HELP)
       (HELP_SWITCH,    HELP_HELP)
-      (LICENSE_SWITCH, LICENSE_HELP);
+      (LICENSE_SWITCH, LICENSE_HELP)
+      ;
 
     boost::program_options::options_description configuration(CONFIG_OPTIONS);
     configuration.add_options()
       (VERBOSE_SWITCH,                                                                                         VERBOSE_HELP)
+      (NO_COLOUR_SWITCH,                                                                                       NO_COLOUR_HELP)
       (INCLUDE_SWITCH,               boost::program_options::value< std::vector<std::string> >()->composing(), INCLUDE_HELP)
       (NO_ENV_SEARCH_SWITCH,                                                                                   NO_ENV_SEARCH_HELP)
       (CORE_OUTPUT_SWITCH,           boost::program_options::value< std::string >()->default_value(""),        CORE_OUTPUT_HELP)
       (IMPLEMENTATION_OUTPUT_SWITCH, boost::program_options::value< std::string >()->default_value(""),        IMPLEMENTATION_OUTPUT_HELP)
-      (NO_COLOUR_SWITCH,                                                                                       NO_COLOUR_HELP);
+      ;
 
     boost::program_options::options_description generation(GENERATION_OPTIONS);
     generation.add_options()
       (NO_CSE_SWITCH,                                                                                            NO_CSE_HELP)
       (ANNOTATE_SWITCH,                                                                                          ANNOTATE_HELP)
       (UNROLL_POLICY_SWITCH, boost::program_options::value< unsigned int >()->default_value(DEFAULT_UNROLL_MAX), UNROLL_POLICY_HELP)
-      (FAST_SWITCH,                                                                                              FAST_HELP);
+      (FAST_SWITCH,                                                                                              FAST_HELP)
+      ;
+
+    boost::program_options::options_description warnings(WARNING_OPTIONS);
+    warnings.add_options()
+      (PROFILING_SWITCH,    PROFILING_HELP)
+      (DEVELOP_WARNINGS,    DEVELOP_WARN_HELP)
+      (UNROLL_WARNINGS,     UNROLL_WARN_HELP)
+      (REPOSITION_WARNINGS, REPOSITION_WARN_HELP)
+      ;
 
     boost::program_options::options_description hidden(HIDDEN_OPTIONS);
     hidden.add_options()
       (INPUT_FILE_SWITCH, boost::program_options::value< std::vector<std::string> >(), INPUT_FILE_HELP)
       (NO_COLOR_SWITCH,                                                                NO_COLOR_HELP)
-      (BUILDDATA_SWITCH,                                                               BUILDDATA_HELP);
+      (BUILDDATA_SWITCH,                                                               BUILDDATA_HELP)
+      ;
 
     boost::program_options::positional_options_description positional_options;
     positional_options.add(INPUT_FILE_SWITCH, -1);
 
     boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic).add(configuration).add(hidden).add(generation);
+    cmdline_options.add(generic).add(configuration).add(hidden).add(generation).add(warnings);
 
     boost::program_options::options_description config_file_options;
-    config_file_options.add(configuration).add(generation);
+    config_file_options.add(configuration).add(generation).add(warnings);
 
     boost::program_options::options_description visible;
-    visible.add(generic).add(configuration).add(generation);
+    visible.add(generic).add(configuration).add(generation).add(warnings);
 
     boost::program_options::variables_map option_map;
 
@@ -150,25 +168,27 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
           {
             for(const std::string& option : unrecognized_cmdline_options)
               {
-                std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'";
+                this->err_msgs.push_back(std::make_pair(false, msg.str()));
               }
           }
       }
     catch(boost::program_options::ambiguous_option& xe)
       {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+        this->err_msgs.push_back(std::make_pair(true, xe.what()));
       }
     catch(boost::program_options::invalid_command_line_style& xe)
       {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+        this->err_msgs.push_back(std::make_pair(true, xe.what()));
       }
     catch(boost::program_options::invalid_command_line_syntax& xe)
       {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+        this->err_msgs.push_back(std::make_pair(true, xe.what()));
       }
     catch(boost::program_options::invalid_syntax& xe)
       {
-        std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+        this->err_msgs.push_back(std::make_pair(true, xe.what()));
       }
 
 
@@ -193,21 +213,23 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
                       {
                         for(const std::string& option : unrecognized_config_options)
                           {
-                            std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                            std::ostringstream msg;
+                            msg << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
+                            this->err_msgs.push_back(std::make_pair(false, msg.str()));
                           }
                       }
                   }
                 catch(boost::program_options::ambiguous_option& xe)
                   {
-                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+                    this->err_msgs.push_back(std::make_pair(true, xe.what()));
                   }
                 catch(boost::program_options::invalid_config_file_syntax& xe)
                   {
-                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+                    this->err_msgs.push_back(std::make_pair(true, xe.what()));
                   }
                 catch(boost::program_options::invalid_syntax& xe)
                   {
-                    std::cout << CPPTRANSPORT_NAME << ": " << xe.what() << '\n';
+                    this->err_msgs.push_back(std::make_pair(true, xe.what()));
                   }
               }
           }
@@ -265,6 +287,13 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
             boost::filesystem::path p = path;
             if(!p.is_absolute()) p = boost::filesystem::absolute(p);
 
+            if(p.has_leaf() && p.leaf() == boost::filesystem::path(CPPTRANSPORT_TEMPLATE_PATH))
+              {
+                std::ostringstream msg;
+                msg << NOTIFY_PATH_INCLUDES_TEMPLATES << ": '" << p.string() << "'";
+                this->err_msgs.push_back(std::make_pair(false, msg.str()));
+              }
+
             this->search_path_list.emplace_back(p / CPPTRANSPORT_TEMPLATE_PATH);
           }
       }
@@ -274,4 +303,9 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
         std::vector<std::string> input_files = option_map[INPUT_FILE_SWITCH].as< std::vector<std::string> >();
         std::copy(input_files.cbegin(), input_files.cend(), std::back_inserter(this->input_file_list));
       }
+
+    // WARNING OPTIONS
+    if(option_map.count(PROFILING_SWITCH)) this->profile_flag = true;
+    if(option_map.count(DEVELOP_WARNINGS)) this->develop_warnings = true;
+    if(option_map.count(UNROLL_WARNINGS)) this->unroll_warnings = true;
   }

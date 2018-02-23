@@ -51,7 +51,7 @@ namespace transport
     constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_DATABASE_PRECISION    = 6;
     constexpr unsigned int CPPTRANSPORT_DEFAULT_HTML_PAGEABLE_TABLE_SIZE   = 10;
 
-    constexpr unsigned int CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH             = (80);
+    constexpr unsigned int CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH             = (135);
 
     constexpr double       CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE          = (1E-8);
     constexpr unsigned int CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS             = (5);
@@ -72,15 +72,27 @@ namespace transport
     // store wavenumbers to a relative precision of 1 part in 1E5
     constexpr double       CPPTRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION   = (1E-5);
 
+    constexpr auto         CPPTRANSPORT_PYTHON_EXECUTABLE                  = "python";
+    constexpr auto         CPPTRANSPORT_DOT_EXECUTABLE                     = "dot";
+    constexpr auto         CPPTRANSPORT_SENDMAIL_EXECUTABLE                = "CppTransport-sendmail";
+    
     constexpr auto         CPPTRANSPORT_DEFAULT_PYTHON_PATH                = "/usr/bin/python";
     constexpr auto         CPPTRANSPORT_DEFAULT_DOT_PATH                   = "/usr/bin/dot";
+    constexpr auto         CPPTRANSPORT_DEFAULT_SENDMAIL_PATH              = "/usr/bin/CppTransport-sendmail";
 
     constexpr auto         CPPTRANSPORT_HOME_ENV                           = "HOME";
     constexpr auto         CPPTRANSPORT_PATH_ENV                           = "CPPTRANSPORT_PATH";
+    constexpr auto         CPPTRANSPORT_SHELL_PATH_ENV                     = "PATH";
+    constexpr auto         CPPTRANSPORT_TERM_ENV                           = "TERM";
+    constexpr auto         CPPTRANSPORT_COLUMNS_ENV                        = "COLUMNS";
     constexpr auto         CPPTRANSPORT_RUNTIME_CONFIG_FILE                = ".cpptransport_runtime";
+    constexpr auto         CPPTRANSPORT_PROFILE_CONFIG_FILE                = ".profile";
     constexpr auto         CPPTRANSPORT_HTML_RESOURCE_DIRECTORY            = "HTML";
 
     constexpr auto         CPPTRANSPORT_DEFAULT_COMPLETION_UNSET           = "unset";
+    
+    // name of global timer used in master and slave controllers
+    constexpr auto         CPPTRANSPORT_DEFAULT_TIMER                      = "global";
 
     // default storage limit on nodes - 500 Mb
     // on a machine with 8 workers, that would give 4000 Mb or 4 Gb
@@ -94,6 +106,11 @@ namespace transport
 
     // default checkpointing interval measured in seconds. 0 indicates that checkpointing is disabled
     constexpr unsigned int CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL        = (0);
+    
+    // default intervals at which to issue progress reports during tasks
+    constexpr unsigned int CPPTRANSPORT_DEFAULT_REPORT_PERCENT_INTERVAL    = (10);
+    constexpr unsigned int CPPTRANSPORT_DEFAULT_REPORT_TIME_INTERVAL       = (0);
+    constexpr unsigned int CPPTRANSPORT_DEFAULT_REPORT_TIME_DELAY          = (60*5);
 
     // tolerance when merging axis points; points closer than this are considered equivalent
     constexpr double       CPPTRANSPORT_AXIS_MERGE_TOLERANCE               = (1E-8);
@@ -102,19 +119,21 @@ namespace transport
     // currently 1E-8, which allows about |ln(1E-8)| ~ 18 e-folds of squeezing
     constexpr double       CPPTRANSPORT_DEFAULT_SMALLEST_SQUEEZING         = (1E-8);
 
-    // tolerance to use when testing whether kc-configurations match our constrints
+    // tolerance to use when testing whether kc-configurations match our constraints
     constexpr double       CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE          = (1E-10);
 
     // log file name
     constexpr auto         CPPTRANSPORT_LOG_FILENAME_A                     = "worker_";
     constexpr auto         CPPTRANSPORT_LOG_FILENAME_B                     = "_%3N.log";
-
+    
+    constexpr auto         CPPTRANSPORT_REPORT_FILENAME_A                  = "reports.txt";
+    
     // maximum number of attempts to gain a database lick
     constexpr unsigned int CPPTRANSPORT_DEFAULT_LOCKFILE_ATTEMPTS          = (50);
 
     // maximum number of iterations and search tolerance to use when root-finding to compute horizon exit times
     constexpr boost::uintmax_t CPPTRANSPORT_MAX_ITERATIONS                 = 500;
-    constexpr double           CPPTRANSPORT_ROOT_FIND_TOLERANCE            = 1E-5;
+    constexpr double           CPPTRANSPORT_ROOT_FIND_TOLERANCE            = 5E-6;
     constexpr double           CPPTRANSPORT_ROOT_FIND_ACCURACY             = 1E-3;
 
     // default maximum size which can be automatically VACUUMed

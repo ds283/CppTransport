@@ -27,34 +27,66 @@
 #define CPPTRANSPORT_INDICES_H
 
 
-namespace index_impl
+#include <stdexcept>
+
+#include "index_literal.h"
+
+#include "msg_en.h"
+
+
+class tensor_index_error : public std::runtime_error
+  {
+    
+    // CONSTRUCTOR, DESTRUCTOR
+  
+  public:
+    
+    //! constructor
+    tensor_index_error(std::string msg)
+      : std::runtime_error(std::move(msg))
+      {
+      }
+    
+    //! destructor is default
+    ~tensor_index_error() = default;
+    
+  };
+
+
+namespace tensor_index_impl
   {
 
     template <unsigned int type>
-    struct index_type
+    struct tensor_index_type
       {
         enum { IndexTypeIdentifier = type };
       };
 
 
     // declare template functions which will need to be friended in index declaration
-    template <typename IndexType> class index;
+    
+    // forward-declare index class
+    template <typename IndexType> class tensor_index;
 
-    // allow < comparison between two different indices of the same class
+    //! allow < comparison between two different indices of the same class
     template <typename IndexType>
-    constexpr bool operator<(const index<IndexType>& l, const index<IndexType>& r);
+    constexpr bool operator<(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r);
 
     //! allow <= comparison between two different indices of the same class
     template <typename IndexType>
-    constexpr bool operator<=(const index<IndexType>& l, const index<IndexType>& r);
+    constexpr bool operator<=(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r);
 
     //! allow equality comparison between two different indices of the same class
     template <typename IndexType>
-    constexpr bool operator==(const index<IndexType>& l, const index<IndexType>& r);
+    constexpr bool operator==(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r);
+
+    //! allow inequality comparison between two different indices of the same class
+    template <typename IndexType>
+    constexpr bool operator!=(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r);
 
 
     template <typename IndexType>
-    class index
+    class tensor_index
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -62,9 +94,11 @@ namespace index_impl
       public:
 
         //! value constructor
-        constexpr index(unsigned int v)
-          : index_value(v)
+        constexpr tensor_index(unsigned int N, variance v = variance::none)
+          : index_value(N),
+            index_variance(v)
           {
+            // TODO: consider validating that variance is non for parameter indices
           }
 
 
@@ -75,37 +109,46 @@ namespace index_impl
         //! allow explicit cast to unsigned int
         explicit constexpr operator unsigned int() const { return(this->index_value); }
 
+        //! get value
+        unsigned int get() const { return this->index_value; }
+
+        //! get variance
+        variance get_variance() const { return this->index_variance; }
+        
+        //! convert to string
+        std::string to_string() const;
+
 
         // INCREMENT, DECREMENT
 
       public:
 
         //! preincrement
-        index& operator++()
+        tensor_index& operator++()
           {
             ++this->index_value;
             return(*this);
           }
 
         //! predecrement
-        index& operator--()
+        tensor_index& operator--()
           {
             --this->index_value;
             return(*this);
           }
 
         //! postincrement
-        index operator++(int)
+        tensor_index operator++(int)
           {
-            const index old(*this);
+            const tensor_index old(*this);
             ++this->index_value;
             return(old);
           }
 
         //! postdecrement
-        index operator--(int)
+        tensor_index operator--(int)
           {
-            const index old(*this);
+            const tensor_index old(*this);
             --this->index_value;
             return(old);
           }
@@ -116,56 +159,76 @@ namespace index_impl
       public:
 
         //! < comparison operator
-        friend bool operator< <> (const index& l, const index& r);
+        friend bool operator< <> (const tensor_index& l, const tensor_index& r);
 
         //! <= comparison operator
-        friend bool operator<= <> (const index& l, const index& r);
+        friend bool operator<= <> (const tensor_index& l, const tensor_index& r);
 
         //! == comparison operator
-        friend bool operator== <> (const index& l, const index& r);
+        friend bool operator== <> (const tensor_index& l, const tensor_index& r);
 
 
         // INTERNAL DATA
 
       private:
 
-        // value of index
+        //! numerical value of index
         unsigned int index_value;
+        
+        //! variance of index
+        variance index_variance;
 
       };
 
 
     template <typename IndexType>
-    constexpr bool operator<(const index<IndexType>& l, const index<IndexType>& r)
+    constexpr bool operator<(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
       {
-        return(l.index_value < r.index_value);
+        if(l.index_variance != r.index_variance) throw tensor_index_error(ERROR_MISMATCHED_TENSOR_INDICES);
+        return l.index_value < r.index_value;
       }
 
 
     template <typename IndexType>
-    constexpr bool operator<=(const index<IndexType>& l, const index<IndexType>& r)
+    constexpr bool operator<=(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
       {
-        return(l.index_value <= r.index_value);
+        if(l.index_variance != r.index_variance) throw tensor_index_error(ERROR_MISMATCHED_TENSOR_INDICES);
+        return l.index_value <= r.index_value;
       }
 
 
     template <typename IndexType>
-    constexpr bool operator==(const index<IndexType>& l, const index<IndexType>& r)
+    constexpr bool operator==(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
       {
-        return(l.index_value == r.index_value);
+        if(l.index_variance != r.index_variance) throw tensor_index_error(ERROR_MISMATCHED_TENSOR_INDICES);
+        return l.index_value == r.index_value;
+      }
+    
+    
+    template <typename IndexType>
+    std::string tensor_index<IndexType>::to_string() const
+      {
+        return ::to_string(this->index_variance) + std::to_string(this->index_value);
+      }
+    
+    
+    template <typename IndexType>
+    constexpr bool operator!=(const tensor_index<IndexType>& l, const tensor_index<IndexType>& r)
+      {
+        return !(l==r);
       }
 
 
-    using ParameterIndexClass  = index_impl::index_type<3>;
-    using FieldSpaceIndexClass = index_impl::index_type<1>;
-    using PhaseSpaceIndexClass = index_impl::index_type<2>;
+    using ParameterIndexClass  = tensor_index_impl::tensor_index_type<3>;
+    using FieldSpaceIndexClass = tensor_index_impl::tensor_index_type<1>;
+    using PhaseSpaceIndexClass = tensor_index_impl::tensor_index_type<2>;
 
-  }   // namespace index_impl
+  }   // namespace tensor_index_impl
 
 
-using param_index = index_impl::index<index_impl::ParameterIndexClass>;
-using field_index = index_impl::index<index_impl::FieldSpaceIndexClass>;
-using phase_index = index_impl::index<index_impl::PhaseSpaceIndexClass>;
+using param_index = tensor_index_impl::tensor_index<tensor_index_impl::ParameterIndexClass>;
+using field_index = tensor_index_impl::tensor_index<tensor_index_impl::FieldSpaceIndexClass>;
+using phase_index = tensor_index_impl::tensor_index<tensor_index_impl::PhaseSpaceIndexClass>;
 
 
 #endif //CPPTRANSPORT_INDICES_H

@@ -58,23 +58,39 @@ namespace transport
     namespace task_impl
       {
 
+        template <typename number>
         class TolerancePredicate
           {
+
+            // CONSTRUCTOR, DESTRUCTOR
+            
           public:
-            TolerancePredicate(std::string n, double t)
+
+            //! constructor
+            TolerancePredicate(std::string n, number t)
               : name(std::move(n)),
                 tol(t)
               {
               }
+            
+            //! destructor is default
+            ~TolerancePredicate() = default;
 
-            bool operator()(const double& a, const double& b)
+            
+            // INTERFACE
+            
+          public:
+            
+            bool operator()(const number& a, const number& b)
               {
                 return(this->fractional_diff(a,b) - this->tol < 0);
               }
+            
+          protected:
 
-            double fractional_diff(const double& a, const double& b)
+            number fractional_diff(const number& a, const number& b)
               {
-                double frac = 2.0*(a-b)/(std::abs(a)+std::abs(b));
+                number frac = 2.0*(a-b)/(std::abs(a)+std::abs(b));
 
                 assert(!std::isinf(frac));
                 assert(!std::isnan(frac));
@@ -97,16 +113,25 @@ namespace transport
               }
 
           private:
-            double tol;
+
+            //! cache required tolerance
+            number tol;
+
+            //! cache job name, for use in emitting error messages
             std::string name;
+
           };
-
-
+    
+    
         template <typename SplineObject, typename TolerancePolicy>
-        double find_zero_of_spline(const std::string& task_name, std::string bracket_error, SplineObject& sp, TolerancePolicy& tol)
+        double find_zero_of_spline(const std::string& task_name, std::string bracket_error, SplineObject& sp,
+                                   TolerancePolicy& tol)
           {
-            // find root; note use of std::ref, because root finder would normally would take a copy of
-            // its system function and this is slow -- we have to copy the whole spline
+            // boost::math::tools::bisect assumes that value type and domain type are the same, so we need to
+            // promote our domain variables to the value tpye
+            using number = typename SplineObject::value_type;
+            
+            // check extreme values bracket the root
             assert(sp(sp.get_min_x()) * sp(sp.get_max_x()) < 0.0);
             if(sp(sp.get_min_x()) * sp(sp.get_max_x()) >= 0.0)
               {
@@ -114,11 +139,42 @@ namespace transport
                 msg << "'" << task_name << "': " << bracket_error;
                 throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
-
+            
+            // boost::math::tools::bisect expects domain and value types to agree, so we need an adapter
+            // class to interface the SplineObject
+            class spline_adapter
+              {
+              
+              public:
+                
+                spline_adapter(SplineObject& sp_)
+                  : sp(sp_)
+                  {
+                  }
+                
+                ~spline_adapter() = default;
+                
+                typename SplineObject::value_type operator()(typename SplineObject::value_type x)
+                  {
+                    return this->sp(static_cast<typename SplineObject::domain_type>(x));
+                  }
+                
+              private:
+                
+                SplineObject& sp;
+                
+              };
+    
+            // find root; note use of std::ref, because root finder would normally would take a copy of
+            // its system function and this is slow -- we have to copy the whole spline
             boost::uintmax_t max_iter = CPPTRANSPORT_MAX_ITERATIONS;
-            std::pair< double, double > result = boost::math::tools::bisect(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
+            spline_adapter adapted_sp{sp};
+            std::pair< number, number > result =
+              boost::math::tools::bisect(std::ref(adapted_sp), static_cast<number>(sp.get_min_x()),
+                                         static_cast<number>(sp.get_max_x()), tol, max_iter);
 
-            double res = (result.first + result.second)/2.0;
+            // may require explicit cast down to double
+            double res = static_cast<double>((result.first + result.second)/2.0);
 
             assert(max_iter < CPPTRANSPORT_MAX_ITERATIONS);
 
@@ -167,7 +223,7 @@ namespace transport
                 throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
 
-            return(res);
+            return res;
           };
 
 
@@ -532,7 +588,7 @@ namespace transport
 		    double earliest_crossing = std::numeric_limits<double>::max();
 		    double latest_crossing   = -std::numeric_limits<double>::max();
 
-        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
+        for(auto t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 	        {
 		        if(t->t_exit < earliest_crossing) earliest_crossing = t->t_exit;
 		        if(t->t_exit > latest_crossing)   latest_crossing = t->t_exit;
@@ -544,8 +600,12 @@ namespace transport
 
         kv.insert_back(CPPTRANSPORT_TASK_DATA_SMALLEST, format_number(this->twopf_db->get_kmin_conventional()));
         kv.insert_back(CPPTRANSPORT_TASK_DATA_LARGEST, format_number(this->twopf_db->get_kmax_conventional()));
-        kv.insert_back(CPPTRANSPORT_TASK_DATA_EARLIEST, std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (earliest_crossing > 0 ? "+" : "") + format_number(earliest_crossing, 4));
-        kv.insert_back(CPPTRANSPORT_TASK_DATA_LATEST, std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (latest_crossing > 0 ? "+" : "") + format_number(latest_crossing, 4));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_EARLIEST,
+                       std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (earliest_crossing > 0 ? "+" : "") +
+                       format_number(earliest_crossing, 4));
+        kv.insert_back(CPPTRANSPORT_TASK_DATA_LATEST,
+                       std::string(CPPTRANSPORT_TASK_DATA_NSTAR) + (latest_crossing > 0 ? "+" : "") +
+                       format_number(latest_crossing, 4));
 
         this->validate_subhorizon_efolds();
 
@@ -579,7 +639,7 @@ namespace transport
         double earliest_required = std::numeric_limits<double>::max();
         double earliest_tmassless = std::numeric_limits<double>::max();
 
-        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
+        for(auto t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 	        {
             double ics_time = this->get_initial_time(*t);
             if(ics_time < earliest_required) earliest_required = ics_time;
@@ -748,7 +808,8 @@ namespace transport
             spline1d<number> log_aH_sp(N, log_aH);
             spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
-            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_compute_horizon_exit_times
+              (log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate<number>{this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE});
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -771,6 +832,30 @@ namespace transport
     
             throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
+        catch(eps_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_EPS_IS_NEGATIVE << " " << xe.what();
+            this->get_model()->error(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(eps_too_large& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_EPS_TOO_LARGE << " " << xe.what();
+            this->get_model()->error(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(V_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_V_IS_NEGATIVE << " " << xe.what();
+            this->get_model()->error(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
 			};
 
 
@@ -778,7 +863,7 @@ namespace transport
 		template <typename SplineObject, typename TolerancePolicy>
 		void twopf_db_task<number>::twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_a2H2M, TolerancePolicy tol)
 			{
-		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
+		    for(auto t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate log(aH)-log(k) and then solve for N which makes this
             // zero, hence k = aH
@@ -794,16 +879,18 @@ namespace transport
     template <typename number>
     template <typename SplineObject, typename TolerancePolicy>
     double twopf_db_task<number>::compute_t_massless(const twopf_kconfig& config, double t_exit,
-                                                       SplineObject& log_a2H2M, TolerancePolicy tol)
+                                                     SplineObject& log_a2H2M, TolerancePolicy tol)
       {
-        double log_k = std::log(config.k_comoving);
+        // k-modes are conceptually 'double's, but the values returned from model functions such as
+        // log_a2H2M are 'number'. So here, we promote log_k to 'number'
+        number log_k = std::log(config.k_comoving);
 
         // test whether this k-mode is heavy at the initial time
-        double kM_ratio_init = 2.0*log_k - log_a2H2M(this->ics.get_N_initial());
+        number kM_ratio_init = 2.0*log_k - log_a2H2M(this->ics.get_N_initial());
         bool light_at_init = kM_ratio_init > 0.0;
 
         // test whether this k-mode is heavy at horizon exit
-        double kM_ratio_exit = 2.0*log_k - log_a2H2M(t_exit);
+        number kM_ratio_exit = 2.0*log_k - log_a2H2M(t_exit);
         bool light_at_exit = kM_ratio_exit > 0.0;
 
         // sensible default for initial time; to be updated later
@@ -820,7 +907,9 @@ namespace transport
             // mass matrix becomes relevant some time before horizon exit
 
             log_a2H2M.set_offset(2.0*log_k);
+
             t_massless = task_impl::find_zero_of_spline(this->name, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET_MASSLESS, log_a2H2M, tol);
+
             log_a2H2M.set_offset(0.0);
           }
         else if(!light_at_init && light_at_exit)
@@ -828,13 +917,15 @@ namespace transport
             // mode is heavy at initial time but becomes light by horizon exit;
             // does this ever happen in practice?
 
-            throw no_massless_time(kM_ratio_init, kM_ratio_exit, t_exit, config.k_conventional);
+            throw no_massless_time(static_cast<double>(kM_ratio_init), static_cast<double>(kM_ratio_exit),
+                                   t_exit, config.k_conventional);
           }
         else if(!light_at_init && !light_at_exit)
           {
             // mode is never light
 
-            throw no_massless_time(kM_ratio_init, kM_ratio_exit, t_exit, config.k_conventional);
+            throw no_massless_time(static_cast<double>(kM_ratio_init), static_cast<double>(kM_ratio_exit),
+                                   t_exit, config.k_conventional);
           }
 
         return(t_massless);

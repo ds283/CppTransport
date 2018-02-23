@@ -23,51 +23,88 @@
 // --@@
 //
 
+
 #include "lambda_manager.h"
 
 #include "timing_instrument.h"
 
 
-lambda_manager::lambda_manager(unsigned int s, language_printer& p, translator_data& pd, std::string k)
+lambda_manager::lambda_manager(unsigned int s, language_printer& p, translator_data& pd, std::unique_ptr<cse> cw,
+                               std::string k, std::string lt)
   : serial_number(s),
     symbol_counter(0),
     temporary_name_kernel(k),
     printer(p),
-    data_payload(pd)
+    data_payload(pd),
+    cse_worker(std::move(cw)),
+    hits(0),
+    misses(0)
   {
-    timer.stop();
+    // stop timers
+    query_timer.stop();
+    insert_timer.stop();
+
+    cse_worker->set_temporary_kernel(lt);
   }
 
 
 std::string lambda_manager::cache(std::unique_ptr<atomic_lambda> lambda)
   {
-    timing_instrument(this->timer);
-
-    atomic_cache_type::const_iterator t = this->find<atomic_lambda_record>(this->atomic_cache.cbegin(), this->atomic_cache.cend(), *lambda);
+    auto t = this->find(this->atomic_cache.cbegin(), this->atomic_cache.cend(), *lambda);
+    
+    // make a copy of the lambda index list before it is (potentially) moved
+    const abstract_index_database& indices = lambda->get_index_list();
 
     if(t == this->atomic_cache.end())
       {
-        this->atomic_cache.emplace_front(std::make_unique<atomic_lambda_record>(this->make_name(), std::move(lambda), this->data_payload.get_number_fields()));
+        timing_instrument mgr(this->insert_timer);
+
+        this->atomic_cache.emplace_front(
+          std::make_unique<atomic_lambda_record>(this->make_name(), std::move(lambda),
+                                                 this->data_payload.model.get_number_fields()));
         t = this->atomic_cache.begin();
+
+        ++misses;
+      }
+    else
+      {
+        ++hits;
       }
 
-    return this->printer.lambda_invokation((*t)->get_name(), (*t)->get_lambda());
+    // format an invokation of this lambda, remembering that the index set being used here
+    // (supplied in 'lambda') may not agree with the index set the lambda was defined with
+    // (stored in the record pointed to by t)
+    return this->printer.lambda_invokation(t->get()->get_name(), t->get()->get_lambda(), indices);
   }
 
 
 std::string lambda_manager::cache(std::unique_ptr<map_lambda> lambda)
   {
-    timing_instrument(this->timer);
+    auto t = this->find(this->map_cache.cbegin(), this->map_cache.cend(), *lambda);
 
-    map_cache_type::const_iterator t = this->find<map_lambda_record>(this->map_cache.cbegin(), this->map_cache.cend(), *lambda);
-
+    // make a copy of the lambda index list before it is (potentially) moved
+    const abstract_index_database& indices = lambda->get_index_list();
+    
     if(t == this->map_cache.end())
       {
-        this->map_cache.emplace_front(std::make_unique<map_lambda_record>(this->make_name(), std::move(lambda), this->data_payload.get_number_fields()));
+        timing_instrument mgr(this->insert_timer);
+
+        this->map_cache.emplace_front(
+          std::make_unique<map_lambda_record>(this->make_name(), std::move(lambda),
+                                              this->data_payload.model.get_number_fields()));
         t = this->map_cache.begin();
+
+        ++misses;
+      }
+    else
+      {
+        ++hits;
       }
 
-    return this->printer.lambda_invokation((*t)->get_name(), (*t)->get_lambda());
+    // format an invokation of this lambda, remembering that the index string being used here
+    // (supplied in 'lambda') may not agree with the index set the lambda was defined with
+    // (stored in the record pointed to by t)
+    return this->printer.lambda_invokation(t->get()->get_name(), t->get()->get_lambda(), indices);
   }
 
 
@@ -82,37 +119,38 @@ namespace lambda_manager_impl
 
       public:
 
+        //! constructor
         LambdaRecordComparator(const typename RecordType::lambda_type& a)
           : rhs(a)
           {
           }
+
+        //! destructor is default
+        ~LambdaRecordComparator() = default;
 
 
         // INTERFACE
 
       public:
 
+        //! perform lambda comparison
         bool operator()(const std::unique_ptr<RecordType>& b)
           {
             const typename RecordType::lambda_type& lhs = b->get_lambda();
 
+            // lambdas are not equal if they are of different types
+            // ('type' here means the expression type, eg. ddV or u2_tensor,
+            // taken from the enumeration expression_item_types)
             if(lhs.get_type() != rhs.get_type()) return false;
 
+            // lambdas are not equal if their tags disagree; the tags are a list of GiNaC
+            // symbols similar to those used to identify expressions in the expression cache
             auto lhs_tags = lhs.get_tags();
             auto rhs_tags = rhs.get_tags();
 
-            if(lhs_tags.size() != rhs_tags.size()) return false;
+            if(lhs_tags != rhs_tags) return false;
 
-            auto lhs_it = lhs_tags.begin();
-            auto rhs_it = rhs_tags.begin();
-
-            while(lhs_it != lhs_tags.end() && rhs_it != rhs_tags.end())
-              {
-                if(*lhs_it != *rhs_it) return false;
-                ++lhs_it;
-                ++rhs_it;
-              }
-
+            // otherwise, expression type agrees and tags agree, so lambda must also agree
             return(true);
           }
 
@@ -121,6 +159,7 @@ namespace lambda_manager_impl
 
       protected:
 
+        //! lambda record to compare
         const typename RecordType::lambda_type& rhs;
 
       };
@@ -128,11 +167,13 @@ namespace lambda_manager_impl
   }   // namespace lambda_manager_impl
 
 
-template <typename RecordType>
-typename std::list< std::unique_ptr<RecordType> >::const_iterator lambda_manager::find(typename std::list< std::unique_ptr<RecordType> >::const_iterator begin,
-                                                                                       typename std::list< std::unique_ptr<RecordType> >::const_iterator end,
-                                                                                       const typename RecordType::lambda_type& lambda) const
+template <typename Iterator>
+Iterator lambda_manager::find(Iterator begin, Iterator end, const typename Iterator::value_type::element_type::lambda_type& lambda)
   {
+    timing_instrument mgr(this->query_timer);
+
+    using RecordType = typename Iterator::value_type::element_type;
+
     return std::find_if(begin, end, lambda_manager_impl::LambdaRecordComparator<RecordType>(lambda));
   }
 
@@ -162,16 +203,21 @@ void lambda_manager::clear()
 
 std::unique_ptr< std::list<std::string> > lambda_manager::temporaries(const std::string& left, const std::string& mid, const std::string& right) const
   {
-    std::unique_ptr< std::list<std::string> > rval = std::make_unique< std::list<std::string> >();
 
+    auto rval = std::make_unique< std::list<std::string> >();
+
+    // CSE worker is cleared by the lambdas after output of their temporaries, so there is no need
+    // to perform a clear here
     for(const std::unique_ptr<atomic_lambda_record>& rec : this->atomic_cache)
       {
-        rval->push_back(rec->make_temporary(left, mid, right, this->printer));
+        auto v = rec->make_temporary(left, mid, right, this->printer, *this->cse_worker);
+        rval->splice(rval->end(), *v);
       }
 
     for(const std::unique_ptr<map_lambda_record>& rec : this->map_cache)
       {
-        rval->push_back(rec->make_temporary(left, mid, right, this->printer));
+        auto v = rec->make_temporary(left, mid, right, this->printer, *this->cse_worker);
+        rval->splice(rval->end(), *v);
       }
 
     return(rval);

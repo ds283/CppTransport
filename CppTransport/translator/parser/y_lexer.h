@@ -60,14 +60,18 @@ namespace y
         //! get next lexeme
         int yylex(y::y_parser::semantic_type* lval);
 
-		    //! return current lexeme
-		    lexeme_type* get_current_lexeme() { return(this->current_lex); }
+		    //! return current lexeme, if a valid one exists.
+				//! Used to inform the parser error handler about our current
+				//! location in the input stream
+		    boost::optional< lexeme_type& > get_current_lexeme() { return current; }
 
       private:
 
+				//! lexeme stream container
         lexstream_type& stream;
 
-		    lexeme_type* current_lex;
+				//! cache current lexeme; returned via get_current_lexeme() method
+				boost::optional< lexeme_type& > current;
 
 	    };
 

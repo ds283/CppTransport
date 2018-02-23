@@ -323,7 +323,7 @@ namespace transport
 
 
 		work_event::work_event()
-			: timestamp(boost::posix_time::second_clock::universal_time()),
+			: timestamp(boost::posix_time::second_clock::local_time()),
 				id(0)
 			{
 			}
@@ -418,28 +418,40 @@ namespace transport
         switch(this->get_type())
           {
             case master_work_event::event_type::aggregate_begin:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_AGGREGATE_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_AGGREGATE_BEGIN);
+                break;
+              }
 
             case master_work_event::event_type::aggregate_end:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_AGGREGATE_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_AGGREGATE_END);
+                break;
+              }
 
             case master_work_event::event_type::MPI_begin:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_MPI_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_MPI_BEGIN);
+                break;
+              }
 
             case master_work_event::event_type::MPI_end:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_MPI_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_MPI_END);
+                break;
+              }
 
             case master_work_event::event_type::database_begin:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_DATABASE_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_DATABASE_BEGIN);
+                break;
+              }
 
             case master_work_event::event_type::database_end:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_DATABASE_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_DATABASE_END);
+                break;
+              }
           }
       }
 
@@ -580,68 +592,94 @@ namespace transport
         switch(this->get_type())
           {
             case slave_work_event::event_type::begin_twopf_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_TWOPF_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_TWOPF_BEGIN);
+                break;
+              }
 
             case slave_work_event::event_type::end_twopf_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_TWOPF_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_TWOPF_END);
+                break;
+              }
 
             case slave_work_event::event_type::begin_threepf_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_THREEPF_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_THREEPF_BEGIN);
+                break;
+              }
 
             case slave_work_event::event_type::end_threepf_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_THREEPF_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_THREEPF_END);
+                break;
+              }
 
             case slave_work_event::event_type::begin_zeta_twopf_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_TWOPF_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_TWOPF_BEGIN);
+                break;
+              }
 
             case slave_work_event::event_type::end_zeta_twopf_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_TWOPF_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_TWOPF_END);
+                break;
+              }
 
             case slave_work_event::event_type::begin_zeta_threepf_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_THREEPF_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_THREEPF_BEGIN);
+                break;
+              }
 
             case slave_work_event::event_type::end_zeta_threepf_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_THREEPF_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_THREEPF_END);
+                break;
+              }
 
             case slave_work_event::event_type::begin_fNL_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_FNL_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_FNL_BEGIN);
+                break;
+              }
 
             case slave_work_event::event_type::end_fNL_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_FNL_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_FNL_END);
+                break;
+              }
 
             case slave_work_event::event_type::begin_output_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_BEGIN);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_BEGIN);
+                break;
+              }
 
             case slave_work_event::event_type::end_output_assignment:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_END);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_END);
+                break;
+              }
 
             case slave_work_event::event_type::integration_aggregation:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_INTEGRATION_AGG);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_INTEGRATION_AGG);
+                break;
+              }
 
             case slave_work_event::event_type::postintegration_aggregation:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_POSTINTEGRATION_AGG);
-              break;
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_POSTINTEGRATION_AGG);
+                break;
+              }
 
             case slave_work_event::event_type::derived_content_aggregation:
-              writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_AGG);
-              break;
-
-            default:
-              assert(false);
-              throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+              {
+                writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_AGG);
+                break;
+              }
           }
       }
 
@@ -760,18 +798,18 @@ namespace transport
 			{
 				// strip out master duration-bracketing events and sort them in order
 		    master_event_journal master_events;
-				for(event_journal::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+				for(auto& event : this->journal)
 					{
-						if((*t)->is_master())
+						if(event->is_master())
 							{
-                std::shared_ptr<master_work_event> event = std::dynamic_pointer_cast<master_work_event>(*t);
-								if(is_duration_delimiter(event->get_type())) master_events.push_back(event);
+                std::shared_ptr<master_work_event> mevent = std::dynamic_pointer_cast<master_work_event>(event);
+								if(is_duration_delimiter(mevent->get_type())) master_events.push_back(mevent);
 							}
 					}
 				master_events.sort(work_journal_impl::WorkItemSorter());
 
 				list.resize(list.size()+1);
-		    std::list< std::list<Gantt_bar> >::iterator current_bin = --list.end();
+        auto current_bin = --list.end();
 
 				// work through master events, pairing them up
 				for(master_event_journal::const_iterator t = master_events.begin(); t != master_events.end(); ++t)
@@ -781,7 +819,7 @@ namespace transport
 						    case master_work_event::event_type::aggregate_begin:
 							    {
 						        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
-						        t++;
+						        ++t;
 						        if(t == master_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_AGGREGATE_TOO_FEW);
 						        if((*t)->get_type() != master_work_event::event_type::aggregate_end) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_AGGREGATE_END_MISSING);
 						        current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "black"));
@@ -791,7 +829,7 @@ namespace transport
 						    case master_work_event::event_type::MPI_begin:
 							    {
 						        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
-								    t++;
+								    ++t;
 								    if(t == master_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_MPI_TOO_FEW);
 								    if((*t)->get_type() != master_work_event::event_type::MPI_end) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_MPI_END_MISSING);
 								    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
@@ -801,7 +839,7 @@ namespace transport
                 case master_work_event::event_type::database_begin:
                   {
                     boost::posix_time::ptime begin_time = (*t)->get_timestamp();
-                    t++;
+                    ++t;
                     if(t == master_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_DATABASE_TOO_FEW);
                     if((*t)->get_type() != master_work_event::event_type::database_end) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_DATABASE_END_MISSING);
                     current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "aquamarine"));
@@ -809,8 +847,10 @@ namespace transport
                   }
 
 						    default:
-							    assert(false);
-							    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+									{
+										assert(false);
+										throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+									}
 							};
 					}
 			}
@@ -823,18 +863,18 @@ namespace transport
 				for(unsigned int i = 0; i < this->N_workers; ++i)
 					{
 				    worker_events.clear();
-						for(event_journal::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+						for(auto& event : this->journal)
 							{
-								if(!(*t)->is_master())
+								if(!event->is_master())
 									{
-                    std::shared_ptr<slave_work_event> event = std::dynamic_pointer_cast<slave_work_event>(*t);
-								    if(event->get_worker_number() == i && is_duration_delimiter(event->get_type())) worker_events.push_back(event);
+                    std::shared_ptr<slave_work_event> mevent = std::dynamic_pointer_cast<slave_work_event>(event);
+								    if(mevent->get_worker_number() == i && is_duration_delimiter(mevent->get_type())) worker_events.push_back(mevent);
 									}
 							}
 						worker_events.sort(work_journal_impl::WorkItemSorter());
 
 				    list.resize(list.size()+1);
-				    std::list< std::list<Gantt_bar> >::iterator current_bin = --list.end();
+						auto current_bin = --list.end();
 
 						// work through events, pairing them up
 						for(slave_event_journal::const_iterator t = worker_events.begin(); t != worker_events.end(); ++t)
@@ -902,7 +942,10 @@ namespace transport
 									    }
 
 								    default:
-									    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+											{
+												assert(false);
+												throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+											}
 									};
 							}
 					}
@@ -922,26 +965,28 @@ namespace transport
 			{
 				// strip out milestones from master list
 		    master_event_journal master_events;
-				for(event_journal::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+				for(auto& event : this->journal)
 					{
-						if((*t)->is_master())
+						if(event->is_master())
 							{
-                std::shared_ptr<master_work_event> event = std::dynamic_pointer_cast<master_work_event>(*t);
-						    if(is_milestone(event->get_type())) master_events.push_back(event);
+                std::shared_ptr<master_work_event> mevent = std::dynamic_pointer_cast<master_work_event>(event);
+						    if(is_milestone(mevent->get_type())) master_events.push_back(mevent);
 							}
 					}
 		    master_events.sort(work_journal_impl::WorkItemSorter());
 
 				list.resize(list.size()+1);
-		    std::list< std::list<Gantt_milestone> >::iterator current_bin = --list.end();
+				auto current_bin = --list.end();
 
-				for(master_event_journal::const_iterator t = master_events.begin(); t != master_events.end(); ++t)
+				for(const auto& event : master_events)
 					{
-						switch((*t)->get_type())
+						switch(event->get_type())
 							{
 						    default:
-							    assert(false);
-							    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+                  {
+                    assert(false);
+                    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+                  }
 							}
 					}
 			}
@@ -954,38 +999,46 @@ namespace transport
 				for(unsigned int i = 0; i < this->N_workers; ++i)
 					{
 						worker_events.clear();
-						for(event_journal::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+						for(auto& event : this->journal)
 							{
-								if(!(*t)->is_master())
+								if(!event->is_master())
 									{
-                    std::shared_ptr<slave_work_event> event = std::dynamic_pointer_cast<slave_work_event>(*t);
-										if(event->get_worker_number() == i && is_milestone(event->get_type())) worker_events.push_back(event);
+                    std::shared_ptr<slave_work_event> mevent = std::dynamic_pointer_cast<slave_work_event>(event);
+										if(mevent->get_worker_number() == i && is_milestone(mevent->get_type())) worker_events.push_back(mevent);
 									}
 							}
 						worker_events.sort(work_journal_impl::WorkItemSorter());
 
 						list.resize(list.size()+1);
-				    std::list< std::list<Gantt_milestone> >::iterator current_bin = --list.end();
+						auto current_bin = --list.end();
 
-						for(slave_event_journal::const_iterator t = worker_events.begin(); t != worker_events.end(); ++t)
+						for(const auto& event : worker_events)
 							{
-								switch((*t)->get_type())
+								switch(event->get_type())
 									{
 								    case slave_work_event::event_type::integration_aggregation:
-									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "green"));
-                      break;
+											{
+												current_bin->push_back(Gantt_milestone(event->get_timestamp(), "green"));
+												break;
+											}
 
 								    case slave_work_event::event_type::postintegration_aggregation:
-									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "red"));
-									    break;
+											{
+												current_bin->push_back(Gantt_milestone(event->get_timestamp(), "red"));
+												break;
+											}
 
                     case slave_work_event::event_type::derived_content_aggregation:
-									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "yellow"));
-									    break;
+											{
+												current_bin->push_back(Gantt_milestone(event->get_timestamp(), "yellow"));
+												break;
+											}
 
-								    default:
-									    assert(false);
-									    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+										default:
+											{
+												assert(false);
+												throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+											}
 									};
 							}
 					}
@@ -1008,7 +1061,7 @@ namespace transport
 				// check if out_file already exists; if so, rename it uniquely
 		    if(boost::filesystem::exists(out_file))
 			    {
-		        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+		        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
 		        boost::filesystem::path out_dir = out_file;
 		        out_dir.remove_filename();
@@ -1062,42 +1115,34 @@ namespace transport
 
 		    // output the bar-chart part of the gantt chart
 
-		    std::list< std::list<Gantt_bar> >::const_iterator t = bars_list.begin();
 				unsigned int process_count = 0;       // number of processes appearing on the chart
 				unsigned int total_count = 0;         // number of individual bars appearing on the chart (each process may have several bars)
 
-		    while(t != bars_list.end())
+        for(const auto& line : bars_list)
 			    {
-		        std::list<Gantt_bar>::const_iterator u = t->begin();
-		        while(u != t->end())
+            for(const auto& bar : line)
 			        {
-		            out << u->format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << '\n';
-		            ++u;
+		            out << bar.format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << '\n';
 		            ++total_count;
 			        }
 
 		        ++process_count;
-		        ++t;
 			    }
 
 				// output milestones
 
-		    std::list< std::list<Gantt_milestone> >::const_iterator v = milestones_list.begin();
 				process_count = 0;
 				total_count = 0;
 
-				while(v != milestones_list.end())
+        for(const auto& line : milestones_list)
 					{
-				    std::list<Gantt_milestone>::const_iterator w = v->begin();
-						while(w != v->end())
+            for(const auto& milestone : line)
 							{
-								out << w->format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << '\n';
-								++w;
+								out << milestone.format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << '\n';
 								++total_count;
 							}
 
 						++process_count;
-						++v;
 					}
 
 				// label y-axis by worker if there are not too many labels
@@ -1173,10 +1218,10 @@ namespace transport
       {
         Json::Value entries(Json::arrayValue);
 
-        for(event_journal::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+				for(auto& event : this->journal)
           {
             Json::Value item(Json::objectValue);
-            (*t)->as_JSON(item);
+            event->as_JSON(item);
             entries.append(item);
           }
 
@@ -1186,7 +1231,7 @@ namespace transport
         // check if out_file already exists; if so, rename it uniquely
         if(boost::filesystem::exists(out_file))
           {
-            boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
             boost::filesystem::path out_dir = out_file;
             out_dir.remove_filename();
@@ -1223,6 +1268,9 @@ namespace transport
 		//! It stores its creation time, and on destruction it generates a pair of journal entries
 		//! recording when it was created and when it was destroyed.
 		//! An optional resolution can be supplied which is the minimum timespan that is actually journalled.
+    //! This instrument is used only for master work events, because only the master holds the work journal
+    //! and can write into it directly -- slave work events are added using the add_entry() method
+    //! and constructed using timestamps provided by the MPI payloads
     class journal_instrument
 	    {
 
@@ -1239,7 +1287,7 @@ namespace transport
 
       public:
 
-		    void stop() { this->stop_time = boost::posix_time::second_clock::universal_time(); this->stopped = true; }
+		    void stop() { this->stop_time = boost::posix_time::second_clock::local_time(); this->stopped = true; }
 
 
 		    // INTERNAL DATA
@@ -1281,14 +1329,14 @@ namespace transport
 	      minimum_interval(m),
 	      stopped(false)
 	    {
-        this->start_time = boost::posix_time::second_clock::universal_time();
+        this->start_time = boost::posix_time::second_clock::local_time();
         this->stop_time  = this->start_time;
 	    }
 
 
 		journal_instrument::~journal_instrument()
 			{
-				if(!this->stopped) this->stop_time = boost::posix_time::second_clock::universal_time();
+				if(!this->stopped) this->stop_time = boost::posix_time::second_clock::local_time();
 
 		    boost::posix_time::time_duration duration = this->stop_time - this->start_time;
 
