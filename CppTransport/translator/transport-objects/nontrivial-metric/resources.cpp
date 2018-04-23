@@ -92,8 +92,44 @@ namespace nontrivial_metric
                   }
               }
 
-            // construct inverse metric
-            *this->Ginv = GiNaC::ex_to<GiNaC::matrix>(this->G->inverse());
+            // construct inverse metric by hand
+            GiNaC::ex Ginv00 = ((Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4))*xi)))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv01 = (-6*Power(chi1,2)*Power(phi,2)*Power(xi,2)*(Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv02 = (-6*Power(chi2,2)*Power(phi,2)*Power(xi,2)*(Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv03 = (-6*Power(chi3,2)*Power(phi,2)*Power(xi,2)*(Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv11 = ((Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv12 = (-6*Power(chi1,2)*Power(chi2,2)*Power(xi,2)*(Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv13 = (-6*Power(chi1,2)*Power(chi3,2)*Power(xi,2)*(Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv22 = ((Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi3,4) + Power(phi,4))*xi)))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv23 = (-6*Power(chi2,2)*Power(chi3,2)*Power(xi,2)*(Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+            GiNaC::ex Ginv33 = ((Power(M,2) + (Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2))*xi)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(phi,4))*xi)))/
+                               (Power(M,2)*(Power(M,2) + xi*(Power(chi1,2) + Power(chi2,2) + Power(chi3,2) + Power(phi,2) + 6*(Power(chi1,4) + Power(chi2,4) + Power(chi3,4) + Power(phi,4))*xi)));
+
+            this->Ginv->set(0, 0, Ginv00);
+            this->Ginv->set(0, 1, Ginv01);
+            this->Ginv->set(0, 2, Ginv02);
+            this->Ginv->set(0, 3, Ginv03);
+            this->Ginv->set(1, 0, Ginv01);
+            this->Ginv->set(1, 1, Ginv11);
+            this->Ginv->set(1, 2, Ginv12);
+            this->Ginv->set(1, 3, Ginv13);
+            this->Ginv->set(2, 0, Ginv02);
+            this->Ginv->set(2, 1, Ginv12);
+            this->Ginv->set(2, 2, Ginv22);
+            this->Ginv->set(2, 3, Ginv23);
+            this->Ginv->set(3, 0, Ginv03);
+            this->Ginv->set(3, 1, Ginv13);
+            this->Ginv->set(3, 2, Ginv23);
+            this->Ginv->set(3, 3, Ginv33);
           }
         else    // unexpected case that no metric has been provided; attempt to recover gracefully (errors should have been emitted before this stage)
           {
