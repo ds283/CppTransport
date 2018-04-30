@@ -93,26 +93,34 @@ namespace nontrivial_metric
               }
 
             // construct inverse metric by hand
-            GiNaC::ex Ginv00 = ((std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4))*xi)))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv01 = (-6*std::pow(chi1,2)*std::pow(phi,2)*std::pow(xi,2)*(std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv02 = (-6*std::pow(chi2,2)*std::pow(phi,2)*std::pow(xi,2)*(std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv03 = (-6*std::pow(chi3,2)*std::pow(phi,2)*std::pow(xi,2)*(std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv11 = ((std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv12 = (-6*std::pow(chi1,2)*std::pow(chi2,2)*std::pow(xi,2)*(std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv13 = (-6*std::pow(chi1,2)*std::pow(chi3,2)*std::pow(xi,2)*(std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv22 = ((std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv23 = (-6*std::pow(chi2,2)*std::pow(chi3,2)*std::pow(xi,2)*(std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
-            GiNaC::ex Ginv33 = ((std::pow(M,2) + (std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2))*xi)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(phi,4))*xi)))/
-                               (std::pow(M,2)*(std::pow(M,2) + xi*(std::pow(chi1,2) + std::pow(chi2,2) + std::pow(chi3,2) + std::pow(phi,2) + 6*(std::pow(chi1,4) + std::pow(chi2,4) + std::pow(chi3,4) + std::pow(phi,4))*xi)));
+            const GiNaC::symbol& phi = field_list[0];
+            const GiNaC::symbol& chi1 = field_list[1];
+            const GiNaC::symbol& chi2 = field_list[2];
+            const GiNaC::symbol& chi3 = field_list[3];
+
+            const GiNaC::symbol& xi = param_list[3];
+            const GiNaC::symbol& M = param_list[4];
+
+            GiNaC::ex Ginv00 = ((M*M + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3))*xi)))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv01 = (-6*(chi1*chi1)*(phi*phi)*(xi*xi)*((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv02 = (-6*(chi2*chi2)*(phi*phi)*(xi*xi)*((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv03 = (-6*(chi3*chi3)*(phi*phi)*(xi*xi)*((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv11 = (((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv12 = (-6*(chi1*chi1)*(chi2*chi2)*(xi*xi)*((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv13 = (-6*(chi1*chi1)*(chi3*chi3)*(xi*xi)*((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv22 = (((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv23 = (-6*(chi2*chi2)*(chi3*chi3)*(xi*xi)*((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
+            GiNaC::ex Ginv33 = (((M*M) + ((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi))*xi)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (phi*phi*phi*phi))*xi)))/
+                               ((M*M)*((M*M) + xi*((chi1*chi1) + (chi2*chi2) + (chi3*chi3) + (phi*phi) + 6*((chi1*chi1*chi1*chi1) + (chi2*chi2*chi2*chi2) + (chi3*chi3*chi3*chi3) + (phi*phi*phi*phi))*xi)));
 
             this->Ginv->set(0, 0, Ginv00);
             this->Ginv->set(0, 1, Ginv01);
