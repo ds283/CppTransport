@@ -25,9 +25,9 @@ A number of different tools implementing the same formalism, but with slightly d
 The current release of CppTransport is 2018.1 (23 February 2018). This release can be identified via a DOI linking to a deposit at [zenodo.org](https://zenodo.org/record/1183518). The same .tar.gz archives for each release are also available directly from [GitHub](https://github.com/ds283/CppTransport/releases), but for citations please use the [zenodo.org](https://zenodo.org) versions.
 
 * 2018.1 (23 February 2018) [Source code DOI:10.5281/zenodo.1183518](https://doi.org/10.5281/zenodo.1183518) [user guide being updated]
-* 2016.3 (31 August 2016) [Source code DOI:10.5281/zenodo.61237](http://dx.doi.org/10.5281/zenodo.61237) | [User guide DOI:10.5281/zenodo.61239](http://dx.doi.org/10.5281/zenodo.61239)
-* 2016.2 (3 August 2016) [Source code DOI:10.5281/zenodo.59403](http://dx.doi.org/10.5281/zenodo.59403) | [User guide DOI:10.5281/zenodo.59406](http://dx.doi.org/10.5281/zenodo.59406)
-* 2016.1 (26 July 2016) [Source code DOI:10.5281/zenodo.58710](http://dx.doi.org/10.5281/zenodo.58710) | [User guide DOI:10.5281/zenodo.58714](http://dx.doi.org/10.5281/zenodo.58714)
+* 2016.3 (31 August 2016) [Source code DOI:10.5281/zenodo.61237](https://doi.org/10.5281/zenodo.61237) | [User guide DOI:10.5281/zenodo.61239](https://doi.org/10.5281/zenodo.61239)
+* 2016.2 (3 August 2016) [Source code DOI:10.5281/zenodo.59403](https://doi.org/10.5281/zenodo.59403) | [User guide DOI:10.5281/zenodo.59406](https://doi.org/10.5281/zenodo.59406)
+* 2016.1 (26 July 2016) [Source code DOI:10.5281/zenodo.58710](https://doi.org/10.5281/zenodo.58710) | [User guide DOI:10.5281/zenodo.58714](https://doi.org/10.5281/zenodo.58714)
 
 # Upgrading repositories from 2016.3 and earlier
 
@@ -52,7 +52,7 @@ The **CppTransport** platform depends on, or incorporates, portions of other ope
 
 # Examples and cookbook
 
-An extensive worked example of double-quadratic inflation is included in the [user guide](http://dx.doi.org/10.5281/zenodo.58714).
+An extensive worked example of double-quadratic inflation is included in the [user guide](https://doi.org/10.5281/zenodo.58714).
 
 Alternatively, the C++ codes and model description files required to reproduce the plots in Dias et al. (2016) are available in a [separate GitHub repository](https://github.com/ds283/transport-paper).
 
@@ -66,17 +66,17 @@ Further development of **CppTransport** depends on demonstrating its usefulness 
 
 The **CppTransport** platform itself can be cited using the DOI for the 2016.3 user guide:
 
-* *CppTransport: a platform to automate calculation of inflationary correlation functions*, David Seery. [arXiv:1609.00380](https://arXiv.org/abs/1609.00380) [DOI:10.5281/zenodo.61239](http://dx.doi.org/10.5281/zenodo.61239)
+* *CppTransport: a platform to automate calculation of inflationary correlation functions*, David Seery. [arXiv:1609.00380](https://arXiv.org/abs/1609.00380) [DOI:10.5281/zenodo.61239](https://doi.org/10.5281/zenodo.61239)
 
 ### Original literature
 
 The use of evolution equations to compute n-point functions synthesized during an inflationary epoch (including all quantum effects) was described in:
 
-* *Transporting non-Gaussianity from sub to super-horizon scales*, David J. Mulryne. JCAP 1309 (2013) 010 [arXiv:1302.3842](http://arxiv.org/abs/arXiv:1302.3842) [DOI:10.1088/1475-7516/2013/09/010](http://dx.doi.org/10.1088/1475-7516/2013/09/010)
+* *Transporting non-Gaussianity from sub to super-horizon scales*, David J. Mulryne. JCAP 1309 (2013) 010 [arXiv:1302.3842](http://arxiv.org/abs/arXiv:1302.3842) [DOI:10.1088/1475-7516/2013/09/010](https://doi.org/10.1088/1475-7516/2013/09/010)
 
 Concrete numerical details are described in the paper [*Numerical evaluation of the bispectrum in multiple-field inflation*](http://arXiv.org/abs/1609.00379) listed above, or were first given for the two-point function in:
 
-* *Computing observables in curved multifield models of inflation - A guide (with code) to the transport method*, Mafalda Dias, Jonathan Frazer and David Seery. JCAP 1512 (2015) 12 030 [arXiv:1502.03125](http://arxiv.org/abs/arXiv:1502.03125) [DOI:10.1088/1475-7516/2015/12/030](http://dx.doi.org/10.1088/1475-7516/2015/12/030)
+* *Computing observables in curved multifield models of inflation - A guide (with code) to the transport method*, Mafalda Dias, Jonathan Frazer and David Seery. JCAP 1512 (2015) 12 030 [arXiv:1502.03125](http://arxiv.org/abs/arXiv:1502.03125) [DOI:10.1088/1475-7516/2015/12/030](https://doi.org/10.1088/1475-7516/2015/12/030)
 
 A full list of references is given in the **CppTransport** documentation, or can be found at [transportmethod.com](https://transportmethod.com/method/).
 
