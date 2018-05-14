@@ -1,0 +1,183 @@
+model "higgs_goldstone"
+  { name = "Higgs' Inflation Model With Goldstone Modes";
+    lagrangian = nontrivial_metric;
+
+    description = "Higgs model by Greenwood et al";
+    license = "CC BY";
+    revision = 1;
+
+    references = [ "arXiv:1210.8190v2"];
+    urls = ["http://transportmethod.com"];
+  };
+
+metadata
+  { require_version = 201701;
+  };
+
+author "David Seery"
+ { email     = "D.Seery@sussex.ac.uk";
+   institute = "University of Sussex";
+ };
+
+author "Sean Butchers"
+ { email     = "smlb20@sussex.ac.uk";
+   institute = "University of Sussex";
+ };
+
+% specify which class template should be used with this model
+templates
+ { core           = "nontrivial_metric_core";
+   implementation = "nontrivial_metric_mpi";
+ };
+
+% fix properties of the steppers
+background
+ { abserr   = 1E-12;
+   relerr   = 1E-12;
+   stepsize = 1E-10;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+perturbations
+ { abserr   = 1E-14;
+   relerr   = 1E-14;
+   stepsize = 1E-15;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+% set up the fields
+field phi
+ { latex = "\phi";
+ };
+
+field chi1
+ { latex = "\chi_1";
+ };
+
+field chi2
+ { latex = "\chi_2";
+ };
+
+field chi3
+ { latex = "\chi_3";
+ };
+
+% set up the parameters
+parameter m_H
+  { latex = "m_H";
+    %value = 5.137E-18;
+  };
+
+parameter v
+  { latex = "v";
+    %value = 1.01E-16;
+  };
+
+parameter lambda
+  { latex = "\lambda";
+    %value = 0.129;
+  };
+
+parameter xi
+  { latex = "\xi";
+    %value = 1E4;
+  };
+
+parameter M_0
+  { latex = "M_0";
+    %value = M_P;
+  };
+
+% set up the potential expressions
+subexpr V_numerator
+  { latex = "\lambda M_p^4 (\phi^2 + \vec{\chi}^2 - v^2)^2";
+    value = lambda * M_P^4 * (phi^2 + chi1^2 + chi2^2 +chi3^2 - v^2)^2;
+  };
+
+subexpr V_denominator
+  { latex = "4 [M_p^2 + \xi(\phi^2 + \vec{\chi}^2)]^2";
+    value = 4.0 * (M_P^2 + xi * (phi^2 + chi1^2 + chi2^2 + chi3^2))^2;
+  };
+
+% set up the field metric expressions
+subexpr nonmin_func
+  { latex = "f(\phi^I)";
+    value = (M_P^2 + xi * (phi^2 + chi1^2 + chi2^2 + chi3^2))/2;
+  };
+
+subexpr diag_const
+  { latex = "\frac{M_p^2}{2 f(\phi^I)}";
+    value = M_P^2 / (2 * nonmin_func);
+  };
+
+subexpr const2
+  { latex = "\frac{3 M_p^2 \xi^2}{2 f^2(\phi^I)}";
+    value = (3 * M_P^2 * xi^2) / (2 * nonmin_func^2);
+  };
+
+subexpr G00
+  { latex = "G_{00}";
+    value = diag_const + (const2 * phi^4);
+  };
+
+subexpr G01
+  { latex = "G_{01}";
+    value = (const2 * phi^2 * chi1^2);
+  };
+
+subexpr G02
+  { latex = "G_{02}";
+    value = (const2 * phi^2 * chi2^2);
+  };
+
+subexpr G03
+  { latex = "G_{03}";
+    value = (const2 * phi^2 * chi3^2);
+  };
+
+subexpr G11
+  { latex = "G_{11}";
+    value = diag_const + (const2 * chi1^4);
+  };
+
+subexpr G12
+  { latex = "G_{12}";
+    value = (const2 * chi1^2 * chi2^2);
+  };
+
+subexpr G13
+  { latex = "G_{13}";
+    value = (const2 * chi1^2 * chi3^2);
+  };
+
+subexpr G22
+  { latex = "G_{22}";
+    value = diag_const + (const2 * chi2^4);
+  };
+
+subexpr G23
+  { latex = "G_{23}";
+    value = (const2 * chi2^2 * chi3^2);
+  };
+
+subexpr G33
+  { latex = "G_{33}";
+    value = diag_const + (const2 * chi3^4);
+  };
+
+% Give the potential and metric
+potential = V_numerator/V_denominator;
+
+metric =
+  [
+      phi, phi = G00;
+      phi, chi1 = G01;
+      phi, chi2 = G02;
+      phi, chi3 = G03;
+      chi1, chi1 = G11;
+      chi1, chi2 = G12;
+      chi1, chi3 = G13;
+      chi2, chi2 = G22;
+      chi2, chi3 = G23;
+      chi3, chi3 = G33;
+  ];
