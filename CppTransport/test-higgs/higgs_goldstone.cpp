@@ -10,22 +10,40 @@ void write_tasks(transport::repository<DataType>& repo, transport::higgs_goldsto
     {
         // parameter choices
         const double M_P = 1.0;
+        const double m_H = 5.137E-18;
+        const double v = 1.01E-16;
+        const double lambda = 0.129;
+        const double xi = 1E4;
+        const double M_0 = (M_P^2 - xi*v^2)^0.5;
 
         // field initial conditions
+        const double phi_init = 0.1;
+        const double chi1_init = 0.0;
+        const double chi2_init = 0.0;
+        const double chi3_init = 0.0;
+
+        const double phi_dot_init = -2E-6;
+        const double chi_dot_init = 2E-2;
 
         // time initial conditions
         const double N_init        = 0.0;
         const double N_pre         = 8.0;
-        const double N_max         = 28.0;
+        const double N_max         = 70.7;
 
         // set-up parameters and initial conditions
+        transport::parameters<> params(M_P, { m_H, v, lambda, xi, M_0 }, model);
+        transport::initial_conditions<> ics("higgs_goldstone", params, {phi_init, chi1_init, chi2_init, chi3_init,
+                                                                        phi_dot_init, chi_dot_init, chi_dot_init, chi_dot_init}, N_init, N_pre);
 
         // time spacing
         transport::basic_range<double> times{N_init, N_max, 500, transport::spacing::linear};
 
         // set up k values for equilateral configurations
-        transport::basic_range<double> ks{exp(10.0), exp(18.5), 1000, transport::spacing::log_bottom};
-        transport::basic_range<double> kts{exp(10.0), exp(17.0), 100, transport::spacing::log_bottom};
+        const double kt_lo = std::exp(7.0);
+        const double kt_hi = std::exp(12.5)
+
+        transport::basic_range<double> ks{kt_lo, kt_hi, 400, transport::spacing::log_bottom};
+        transport::basic_range<double> kts{3.0*kt_lo, 3.0*kt_hi, 100, transport::spacing::log_bottom};
         transport::basic_range<double> alphas{0.0, 0.0, 0, transport::spacing::linear};
         transport::basic_range<double> betas{1.0/3.0, 1.0/3.0, 0, transport::spacing::linear};
 
@@ -50,6 +68,104 @@ void write_tasks(transport::repository<DataType>& repo, transport::higgs_goldsto
         vis_toolkit::SQL_threepf_query k3query{"kt_comoving IN (SELECT MAX(kt_comoving) FROM threepf_samples UNION SELECT MIN(kt_comoving) FROM threepf_samples)"};
         vis_toolkit::SQL_twopf_query k2all{"1=1"};
         vis_toolkit::SQL_threepf_query k3all("1=1");
+
+        // Plots of background quantities
+        vis_toolkit::index_selector<1> phi_index{model->get_N_fields()};
+        phi_index.none().set_on({0});
+        vis_toolkit::index_selector<1> chi1_index{model->get_N_fields()};
+        chi_index.none().set_on({1});
+        vis_toolkit::index_selector<1> chi2_index{model->get_N_fields()};
+        chi_index.none().set_on({2});
+        vis_toolkit::index_selector<1> chi3_index{model->get_N_fields()};
+        chi_index.none().set_on({3});
+
+        vis_toolkit::background_time_series<DataType> tk2_phi{tk2, phi_index, tquery};
+        vis_toolkit::background_time_series<DataType> tk2_chi1{tk2, chi1_index, tquery};
+        vis_toolkit::background_time_series<DataType> tk2_chi2{tk2, chi2_index, tquery};
+        vis_toolkit::background_time_series<DataType> tk2_chi3{tk2, chi3_index, tquery};
+        vis_toolkit::background_line<DataType> tk2_eps{tk2, tquery, vis_toolkit::background_quantity::epsilon};
+        vis_toolkit::background_line<DataType> tk2_H{tk2, tquery, vis_toolkit::background_quantity::Hubble};
+
+        vis_toolkit::time_series_plot<DataType> tk2_phi_plot{"higgs_goldstone.twopf-1.bg-phi", "bg-phi.pdf"};
+        tk2_phi_plot.set_log_y(false);
+        tk2_phi_plot += tk2_phi;
+        vis_toolkit::time_series_plot<DataType> tk2_chi1_plot{"higgs_goldstone.twopf-1.bg-chi1", "bg-chi1.pdf"};
+        tk2_chi1_plot.set_log_y(false);
+        tk2_chi1_plot += tk2_chi1;
+        vis_toolkit::time_series_plot<DataType> tk2_chi2_plot{"higgs_goldstone.twopf-1.bg-chi2", "bg-chi2.pdf"};
+        tk2_chi2_plot.set_log_y(false);
+        tk2_chi2_plot += tk2_chi2;
+        vis_toolkit::time_series_plot<DataType> tk2_chi3_plot{"higgs_goldstone.twopf-1.bg-chi3", "bg-chi3.pdf"};
+        tk2_chi3_plot.set_log_y(false);
+        tk2_chi3_plot += tk2_chi3;
+        vis_toolkit::time_series_plot<DataType> tk2_allF_plot{"higgs_goldstone.twopf-1.bgFields", "bg-allFields.pdf"};
+        tk2_allF_plot.set_log_y(true);
+        tk2_allF_plot += (tk2_phi + tk2_chi1 + tk2_chi2 + tk2_chi3);
+        vis_toolkit::time_series_plot<DataType> tk2_eps_plot{"higgs_goldstone.twopf-1.epsilon", "epsilon.pdf"};
+        tk2_eps_plot.set_log_y(false);
+        tk2_eps_plot += tk2_eps;
+        vis_toolkit::time_series_plot<DataType> tk2_H_plot{"higgs_goldstone.twopf-1.Hubble", "Hubble.pdf"};
+        tk2_H_plot.set_log_y(false);
+        tk2_H_plot += tk2_H;
+
+        // table of background quantities above
+        vis_toolkit::time_series_table<DataType> tk2_bg_table{"higgs_goldstone.twopf-1.bg-table", "bg-table.csv"};
+        tk2_bg_table += tk2_phi + tk2_chi1 + tk2_chi2 + tk2_chi3 + tk2_eps + tk2_H;
+
+        // dimensionless bispectrum of field perturbations (phi, chi1, chi2, chi3)
+        vis_toolkit::index_selector<3> fsel(model->get_N_fields());
+        fsel.none().set_on({0,0,0}).set_on({1,1,1}).set_on({2,2,2}).set_on({3,3,3});
+        vis_toolkit::threepf_time_series<> tpf(tk3, fsel, tquery, k3query);
+
+        vis_toolkit::time_series_plot<DataType> thrpf_field_plot("higgs_goldstone.threepf-fields", "threepf-fields.pdf");
+        thrpf_field_plot += tpf;
+
+        // Plots of f_NL on the last time and all k3 configs
+        vis_toolkit::zeta_reduced_bispectrum_wavenumber_series<DataType> fNL(ztk3, tlast, k3all);
+        fNL.set_current_x_axis_value(vis_toolkit::axis_value::efolds_exit);
+
+        vis_toolkit::wavenumber_series_plot<DataType> fNLplot("higgs_goldstone.fNL", "fNL.pdf");
+        fNLplot.set_log_y(false);
+        fNLplot += fNL;
+
+        // Table of f_NL on last time and all k3 configs
+        vis_toolkit::wavenumber_series_table<DataType> fNL_table("higgs_goldstone.fNL-table", "fNL_table.csv");
+        fNL_table += fNL;
+
+        // Plots of zeta 2pf, 3pf and red. bispectrum.
+        vis_toolkit::zeta_twopf_time_series<DataType> ztwpf{ztk2, tquery, k2query};
+        vis_toolkit::zeta_threepf_time_series<DataType> zthpf{ztk3, tquery, k3query};
+        vis_toolkit::zeta_reduced_bispectrum_time_series<DataType> zrbsp(ztk3, tquery, k3query);
+
+        vis_toolkit::time_series_plot<DataType> z3pf_plot{"higgs_goldstone.threepf-zeta", "threepf-zeta.pdf"};
+        z3pf_plot += zthpf;
+        vis_toolkit::time_series_plot<DataType> z2pf_plot{"higgs_goldstone.twopf-zeta", "twopf-zeta.pdf"};
+        z2pf_plot += ztwpf;
+        vis_toolkit::time_series_plot<DataType> red_bispec_plot("higgs_goldstone.threepf-redbsp", "threepf-redbsp.pdf");
+        red_bispec_plot.set_log_y(false);
+        red_bispec_plot += zrbsp;
+
+        // Wavenumber plot of zeta 2pf
+        vis_toolkit::zeta_twopf_wavenumber_series<DataType> zeta2pf{ztk2, tlast, k2all};
+        zeta2pf.set_dimensionless(true);
+        //zeta2pf.set_current_x_axis_value(vis_toolkit::axis_value::efolds_exit);
+        vis_toolkit::wavenumber_series_plot<DataType> zeta2pf_plot{"higgs_goldstone.threepf-1.zeta_2pf", "zeta2pf-plot.pdf"};
+        zeta2pf_plot.set_log_x(true);
+        zeta2pf_plot.set_log_y(false);
+        zeta2pf_plot.set_abs_y(false);
+        zeta2pf_plot.set_typeset_with_LaTeX(true);
+        zeta2pf_plot += zeta2pf;
+
+        // Table of 2pf, 3pf dimensionless spectra
+        vis_toolkit::time_series_table<DataType> tk3_spec_table{"higgs_goldstone.specs-table", "specs_table.csv"};
+        tk3_spec_table += ztwpf + zthpf;
+
+        // Dump all derived products to higgs_goldstone.output output task and commit to repo
+        transport::output_task<DataType> otk("higgs_goldstone.output");
+        otk += tk2_phi_plot + tk2_chi1_plot + tk2_chi2_plot + tk2_chi3_plot + tk2_allF_plot + tk2_eps_plot + tk2_H_plot 
+                + tk2_bg_table + thrpf_field_plot + fNLplot + fNL_table + z3pf_plot + z2pf_plot + red_bispec_plot 
+                + zeta2pf_plot + tk3_spec_table;
+
     }
 
 int main(int argc, char* argv[])
