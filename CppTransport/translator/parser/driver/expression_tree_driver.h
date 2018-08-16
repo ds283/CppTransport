@@ -89,6 +89,12 @@ namespace y
         std::shared_ptr<GiNaC::ex> cos(GiNaC::ex& arg);
     
         std::shared_ptr<GiNaC::ex> tan(GiNaC::ex& arg);
+        
+        std::shared_ptr<GiNaC::ex> sec(GiNaC::ex& arg);
+
+        std::shared_ptr<GiNaC::ex> cosec(GiNaC::ex& arg);
+
+        std::shared_ptr<GiNaC::ex> cot(GiNaC::ex& arg);
     
         std::shared_ptr<GiNaC::ex> asin(GiNaC::ex& arg);
     
@@ -103,7 +109,13 @@ namespace y
         std::shared_ptr<GiNaC::ex> cosh(GiNaC::ex& arg);
     
         std::shared_ptr<GiNaC::ex> tanh(GiNaC::ex& arg);
-    
+
+        std::shared_ptr<GiNaC::ex> sech(GiNaC::ex& arg);
+
+        std::shared_ptr<GiNaC::ex> cosech(GiNaC::ex& arg);
+
+        std::shared_ptr<GiNaC::ex> coth(GiNaC::ex& arg);
+
         std::shared_ptr<GiNaC::ex> asinh(GiNaC::ex& arg);
     
         std::shared_ptr<GiNaC::ex> acosh(GiNaC::ex& arg);

@@ -102,6 +102,9 @@
 %token                                      sin
 %token                                      cos
 %token                                      tan
+%token                                      sec
+%token                                      cosec
+%token                                      cot
 %token                                      asin
 %token                                      acos
 %token                                      atan
@@ -109,6 +112,9 @@
 %token                                      sinh
 %token                                      cosh
 %token                                      tanh
+%token                                      sech
+%token                                      cosech
+%token                                      coth
 %token                                      asinh
 %token                                      acosh
 %token                                      atanh
@@ -318,6 +324,9 @@ built_in_function: abs open_bracket expression close_bracket                    
         | sin open_bracket expression close_bracket                                     { $$ = driver.expr.sin(*$3); }
         | cos open_bracket expression close_bracket                                     { $$ = driver.expr.cos(*$3); }
         | tan open_bracket expression close_bracket                                     { $$ = driver.expr.tan(*$3); }
+        | sec open_bracket expression close_bracket                                     { $$ = driver.expr.sec(*$3); }
+        | cosec open_bracket expression close_bracket                                   { $$ = driver.expr.cosec(*$3); }
+        | cot open_bracket expression close_bracket                                     { $$ = driver.expr.cot(*$3); }
         | asin open_bracket expression close_bracket                                    { $$ = driver.expr.asin(*$3); }
         | acos open_bracket expression close_bracket                                    { $$ = driver.expr.acos(*$3); }
         | atan open_bracket expression close_bracket                                    { $$ = driver.expr.atan(*$3); }
@@ -325,6 +334,9 @@ built_in_function: abs open_bracket expression close_bracket                    
         | sinh open_bracket expression close_bracket                                    { $$ = driver.expr.sinh(*$3); }
         | cosh open_bracket expression close_bracket                                    { $$ = driver.expr.cosh(*$3); }
         | tanh open_bracket expression close_bracket                                    { $$ = driver.expr.tanh(*$3); }
+        | sech open_bracket expression close_bracket                                    { $$ = driver.expr.sech(*$3); }
+        | cosech open_bracket expression close_bracket                                  { $$ = driver.expr.cosech(*$3); }
+        | coth open_bracket expression close_bracket                                    { $$ = driver.expr.coth(*$3); }
         | asinh open_bracket expression close_bracket                                   { $$ = driver.expr.asinh(*$3); }
         | acosh open_bracket expression close_bracket                                   { $$ = driver.expr.acosh(*$3); }
         | atanh open_bracket expression close_bracket                                   { $$ = driver.expr.atanh(*$3); }
