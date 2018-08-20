@@ -47,6 +47,7 @@
 
 #include "boost/numeric/odeint.hpp"
 #include "boost/range/algorithm.hpp"
+#include "boost/optional.hpp"
 
 #include "Eigen/Core"
 
@@ -303,7 +304,9 @@ namespace transport
 
         double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
 
-		    void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k) override;
+		    void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N,
+		                    flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
+		                    boost::optional<double> largest_k = boost::none) override;
 
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
@@ -1873,7 +1876,8 @@ namespace transport
           {
           public:
             aHAggregatorPredicate(const twopf_db_task<number>* tk, model<number>* m, std::vector<double>& N,
-                                  flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double lk)
+                                  flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
+                                  boost::optional<double>& lk)
               : params(tk->get_params()),
                 task(tk),
                 mdl(m),
@@ -1921,9 +1925,12 @@ namespace transport
                 this->log_a2H2M_vector.push_back(2.0*__N + 2.0*std::log(__H)
                                                  + std::log(this->largest_evalue(__x.first, __x.second))); // = log(a^2 H^2 * largest eigenvalue)
 
-                // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
-                if(std::log(largest_k) - __N - std::log(__H) < -0.5) return(true);
-                return(false);
+                // if a largest k-mode was provided,
+                // are we now at a point where we have comfortably covered the horizon crossing time for it?
+                if(!this->largest_k) return false;
+
+                if(std::log(*largest_k) - __N - std::log(__H) < -0.5) return true;
+                return false;
               }
 
           private:
@@ -1959,7 +1966,7 @@ namespace transport
             flattened_tensor<number> flat_E;
 
             //! largest k-mode for which we are trying to find a horizon-exit time
-            const double largest_k;
+            const boost::optional<double>& largest_k;
 
             //! time of horizon crossing
             const double N_horizon_crossing;
@@ -1973,7 +1980,9 @@ namespace transport
 
 
 		template <typename number>
-		void $MODEL<number>::compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k)
+		void $MODEL<number>::compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N,
+		                                flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
+		                                boost::optional<double> largest_k)
 			{
         DEFINE_INDEX_TOOLS
         
@@ -2017,12 +2026,12 @@ namespace transport
 
 				// if we got to the end of the range, then we didn't cover all exit times up to largest_k
 				// so something has gone wrong
-				if(iter == boost::end(range))
+				if(iter == boost::end(range) && largest_k)
 					{
             throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_aH.size(),
                                                  (N.size() > 0 ? N.back() : 0.0),
                                                  (log_aH.size() > 0 ? static_cast<double>(log_aH.back()) : 0.0),
-                                                 largest_k);
+                                                 largest_k.get());
 					}
 
         system.close_down_workspace();

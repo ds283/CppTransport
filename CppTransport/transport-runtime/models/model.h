@@ -63,6 +63,8 @@
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
 
+#include "boost/optional.hpp"
+
 
 namespace transport
   {
@@ -264,17 +266,21 @@ namespace transport
       public:
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double compute_kstar(const twopf_db_task<number>* tk, unsigned int time_steps=CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double compute_kstar(const twopf_db_task<number>* tk,
+                             unsigned int time_steps = CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Compute when the end of inflation occurs relative to the initial conditions
-        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
+        virtual double compute_end_of_inflation(const integration_task<number>* tk,
+                                                double search_time = CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
 
 		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber.
         //! Samples of log(aH) and the fields are returned in the supplied vector, with samples taken
         //! at internally-chosen values of N -- also returned in the corresponding vector
         //! Also computes log(a^2 * H^2 largest eigenvalue of the mass matrix) and returns this in
         //! log_a2H2M. Note that the mass matrix used in the code is M^2/H^2, ie. is dimensionless
-		    virtual void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k) = 0;
+		    virtual void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N,
+		                            flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
+		                            boost::optional<double> largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING
