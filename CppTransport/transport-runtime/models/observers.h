@@ -107,7 +107,7 @@ namespace transport
 
     //! A timing observer is a more sophisticated type of observer; it keeps track
     //! of how long is spent during the integration (and the batching process)
-    template <typename number>
+    template <typename number, typename BatchObject>
     class timing_observer: public stepping_observer<number>
       {
 
@@ -124,8 +124,7 @@ namespace transport
       public:
 
         //! Prepare for a batching step
-        template <typename Level>
-        void start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev);
+        void start_batching(double t, typename BatchObject::logger& logger, typename BatchObject::log_severity_level lev);
 
         //! Conclude a batching step
         void stop_batching();
@@ -145,7 +144,7 @@ namespace transport
       private:
 
         //! Do we generate output during observations?
-        bool                          silent;
+        bool silent;
 
         //! Is this the first batching step? Used to decide whether to issue output
         bool first_output;
@@ -159,16 +158,17 @@ namespace transport
         boost::timer::nanosecond_type output_interval;
 
         //! Timer for the integration
-        boost::timer::cpu_timer       integration_timer;
+        boost::timer::cpu_timer integration_timer;
 
         //! Timer for batching
-        boost::timer::cpu_timer       batching_timer;
+        boost::timer::cpu_timer batching_timer;
 
       };
 
 
-    template <typename number>
-    timing_observer<number>::timing_observer(const time_config_database& t, boost::timer::nanosecond_type t_int, bool s, unsigned int p)
+    template <typename number, typename BatchObject>
+    timing_observer<number, BatchObject>::timing_observer
+      (const time_config_database& t, boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : stepping_observer<number>(t,p),
         output_interval(t_int),
         silent(s),
@@ -182,9 +182,9 @@ namespace transport
       }
 
 
-    template <typename number>
-    template <typename Level>
-    void timing_observer<number>::start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev)
+    template <typename number, typename BatchObject>
+    void timing_observer<number, BatchObject>::start_batching
+      (double t, typename BatchObject::logger& logger, typename BatchObject::log_severity_level lev)
 	    {
         this->integration_timer.stop();
         this->batching_timer.resume();
@@ -226,16 +226,16 @@ namespace transport
 	    }
 
 
-    template <typename number>
-    void timing_observer<number>::stop_batching()
+    template <typename number, typename BatchObject>
+    void timing_observer<number, BatchObject>::stop_batching()
       {
         this->batching_timer.stop();
         this->integration_timer.resume();
       }
 
 
-    template <typename number>
-    void timing_observer<number>::stop_timers(size_t steps, unsigned int refinement)
+    template <typename number, typename BatchObject>
+    void timing_observer<number, BatchObject>::stop_timers(size_t steps, unsigned int refinement)
       {
         this->batching_timer.stop();
         this->integration_timer.stop();
@@ -245,13 +245,13 @@ namespace transport
     // Observer: records results from a single twopf k-configuration
     // this is suitable for an OpenMP or MPI type integrator
 
-    template <typename number>
-    class twopf_singleconfig_batch_observer: public timing_observer<number>
+    template <typename number, typename BatchObject>
+    class twopf_singleconfig_batch_observer: public timing_observer<number, BatchObject>
       {
 
       public:
 
-        twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
+        twopf_singleconfig_batch_observer(BatchObject& b, const twopf_kconfig_record& c,
                                           double t_ics, const time_config_database& t,
                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
@@ -268,7 +268,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        generic_batcher::logger& get_log() { return(this->batcher.get_log()); }
+        typename BatchObject::logger& get_log() { return(this->batcher.get_log()); }
 
 
         // STOP TIMERS - OVERRIDES A 'timing observer' interface
@@ -287,7 +287,7 @@ namespace transport
 
         const double t_initial;
 
-        twopf_batcher<number>& batcher;
+        BatchObject& batcher;
 
         const unsigned int backg_size;
         const unsigned int tensor_size;
@@ -300,13 +300,13 @@ namespace transport
       };
 
 
-    template <typename number>
-    twopf_singleconfig_batch_observer<number>::twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
-                                                                                 double t_ics, const time_config_database& t,
-                                                                                 unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
-                                                                                 unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
-                                                                                 boost::timer::nanosecond_type t_int, bool s, unsigned int p)
-      : timing_observer<number>(t, t_int, s, p),
+    template <typename number, typename BatchObject>
+    twopf_singleconfig_batch_observer<number, BatchObject>::twopf_singleconfig_batch_observer
+      (BatchObject& b, const twopf_kconfig_record& c, double t_ics, const time_config_database& t,
+       unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+       unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
+       boost::timer::nanosecond_type t_int, bool s, unsigned int p)
+      : timing_observer<number, BatchObject>(t, t_int, s, p),
         batcher(b),
         k_config(c),
         t_initial(t_ics),
@@ -320,9 +320,9 @@ namespace transport
       }
 
 
-    template <typename number>
+    template <typename number, typename BatchObject>
     template <typename State>
-    void twopf_singleconfig_batch_observer<number>::push(const State& x)
+    void twopf_singleconfig_batch_observer<number, BatchObject>::push(const State& x)
       {
         if(this->store_time_step())
           {
@@ -349,10 +349,10 @@ namespace transport
       }
 
 
-    template <typename number>
-    void twopf_singleconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
+    template <typename number, typename BatchObject>
+    void twopf_singleconfig_batch_observer<number, BatchObject>::stop_timers(size_t steps, unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers(steps, refinement);
+        this->timing_observer<number, BatchObject>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
 
         std::ostringstream init_time;
@@ -384,13 +384,13 @@ namespace transport
     // Observer: records results from a single threepf k-configuration
     // this is suitable for an OpenMP or MPI type integrator
 
-    template <typename number>
-    class threepf_singleconfig_batch_observer: public timing_observer<number>
+    template <typename number, typename BatchObject>
+    class threepf_singleconfig_batch_observer: public timing_observer<number, BatchObject>
       {
 
       public:
 
-        threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
+        threepf_singleconfig_batch_observer(BatchObject& b, const threepf_kconfig_record& c,
                                             double t_ics, const time_config_database& t,
                                             unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                             unsigned int bg_st,
@@ -412,7 +412,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        generic_batcher::logger& get_log() { return(this->batcher.get_log()); }
+        typename BatchObject::logger& get_log() { return(this->batcher.get_log()); }
 
 
         // STOP TIMERS - OVERRIDES A 'timing observer' interface
@@ -458,18 +458,16 @@ namespace transport
       };
 
 
-    template <typename number>
-    threepf_singleconfig_batch_observer<number>::threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
-                                                                                     double t_ics, const time_config_database& t,
-                                                                                     unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
-                                                                                     unsigned int bg_st,
-                                                                                     unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
-                                                                                     unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
-                                                                                     unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
-                                                                                     unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
-                                                                                     unsigned int th_st,
-                                                                                     boost::timer::nanosecond_type t_int, bool s, unsigned int p)
-      : timing_observer<number>(t, t_int, s, p),
+    template <typename number, typename BatchObject>
+    threepf_singleconfig_batch_observer<number, BatchObject>::threepf_singleconfig_batch_observer(
+      BatchObject& b, const threepf_kconfig_record& c, double t_ics, const time_config_database& t,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
+      unsigned int bg_st, unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st, unsigned int th_st,
+      boost::timer::nanosecond_type t_int, bool s, unsigned int p)
+      : timing_observer<number, BatchObject>(t, t_int, s, p),
         batcher(b),
         k_config(c),
         t_initial(t_ics),
@@ -503,9 +501,9 @@ namespace transport
       }
 
 
-    template <typename number>
+    template <typename number, typename BatchObject>
     template <typename State>
-    void threepf_singleconfig_batch_observer<number>::push(const State& x)
+    void threepf_singleconfig_batch_observer<number, BatchObject>::push(const State& x)
       {
         if(this->store_time_step())
           {
@@ -576,10 +574,10 @@ namespace transport
       }
 
 
-    template <typename number>
-    void threepf_singleconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
+    template <typename number, typename BatchObject>
+    void threepf_singleconfig_batch_observer<number, BatchObject>::stop_timers(size_t steps, unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers(steps, refinement);
+        this->timing_observer<number, BatchObject>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
 
         std::ostringstream init_time;
@@ -612,7 +610,7 @@ namespace transport
     // this is suitable for a GPU type integrator
 
     template <typename number>
-    class twopf_groupconfig_batch_observer: public timing_observer<number>
+    class twopf_groupconfig_batch_observer: public timing_observer<number, twopf_batcher<number>>
       {
 
       public:
@@ -675,7 +673,7 @@ namespace transport
                                                                                unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                                                                boost::timer::nanosecond_type t_int, bool s, unsigned int p)
-      : timing_observer<number>(t, t_int, s, p),
+      : timing_observer<number, twopf_batcher<number>>(t, t_int, s, p),
         batcher(b),
         work_list(c),
         backg_size(bg_sz),
@@ -726,7 +724,7 @@ namespace transport
     template <typename number>
     void twopf_groupconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers(steps, refinement);
+        this->timing_observer<number, twopf_batcher<number>>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), steps, refinement);
       }
 
@@ -735,7 +733,7 @@ namespace transport
     // this is suitable for a GPU type integrator
 
     template <typename number>
-    class threepf_groupconfig_batch_observer: public timing_observer<number>
+    class threepf_groupconfig_batch_observer: public timing_observer<number, threepf_batcher<number>>
       {
 
       public:
@@ -817,7 +815,7 @@ namespace transport
                                                                                    unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                                                                    unsigned int th_st,
                                                                                    boost::timer::nanosecond_type t_int, bool s, unsigned int p)
-      : timing_observer<number>(t, t_int, s, p),
+      : timing_observer<number, threepf_batcher<number>&>(t, t_int, s, p),
         batcher(b),
         work_list(c),
         backg_size(bg_sz),
@@ -931,7 +929,7 @@ namespace transport
     template <typename number>
     void threepf_groupconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers(steps, refinement);
+        this->timing_observer<number, threepf_batcher<number>>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), steps, refinement);
       }
 
