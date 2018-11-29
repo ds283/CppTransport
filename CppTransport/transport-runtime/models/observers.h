@@ -370,7 +370,7 @@ namespace transport
         std::ostringstream subh_efolds;
         subh_efolds << std::scientific << std::setprecision(this->precision) << (this->k_config->t_exit - this->t_initial);
 
-        BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::log_severity_level::normal)
+        BOOST_LOG_SEV(this->batcher.get_log(), BatchObject::log_severity_level::normal)
 	        << "** " << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
 	        << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time()) << ", "
           << CPPTRANSPORT_INITIAL_TIME << " = " << init_time.str() << ", "
