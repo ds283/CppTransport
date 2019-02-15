@@ -304,7 +304,7 @@ namespace transport
 
         double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
 
-		    void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N,
+		    void compute_aH(const integration_task<number>* tk, std::vector<double>& N,
 		                    flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
 		                    boost::optional<double> largest_k = boost::none) override;
 
@@ -1980,7 +1980,7 @@ namespace transport
 
 
 		template <typename number>
-		void $MODEL<number>::compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N,
+		void $MODEL<number>::compute_aH(const integration_task<number>* tk, std::vector<double>& N,
 		                                flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
 		                                boost::optional<double> largest_k)
 			{
@@ -1994,7 +1994,7 @@ namespace transport
 				$MODEL_background_functor<number> system(tk->get_params());
         system.set_up_workspace();
 
-				auto ics = tk->integration_task<number>::get_ics_vector();
+				auto ics = tk->get_ics_vector();
 
 				backg_state<number> x($MODEL_pool::backg_state_size);
 				x[FLATTEN($^A)] = ics[$^A];

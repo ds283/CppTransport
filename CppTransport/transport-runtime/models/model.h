@@ -278,7 +278,7 @@ namespace transport
         //! at internally-chosen values of N -- also returned in the corresponding vector
         //! Also computes log(a^2 * H^2 largest eigenvalue of the mass matrix) and returns this in
         //! log_a2H2M. Note that the mass matrix used in the code is M^2/H^2, ie. is dimensionless
-		    virtual void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N,
+		    virtual void compute_aH(const integration_task<number>* tk, std::vector<double>& N,
 		                            flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
 		                            boost::optional<double> largest_k) = 0;
 
