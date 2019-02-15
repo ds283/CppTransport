@@ -252,15 +252,19 @@ namespace transport
 
         // INTERNAL API
 
-      protected:
+      public:
 
         //! integrate a single 2pf k-configuration
+        template <typename BatchObject>
         void twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_db_task<number>* tk,
-                         twopf_batcher<number>& batcher, unsigned int refinement_level);
+                         BatchObject& batcher, unsigned int refinement_level);
 
         //! integrate a single 3pf k-configuration
+        template <typename BatchObject>
         void threepf_kmode(const threepf_kconfig_record&, const threepf_task<number>* tk,
-                           threepf_batcher<number>& batcher, unsigned int refinement_level);
+                           BatchObject& batcher, unsigned int refinement_level);
+
+      protected:
 
         //! populate initial values for a 2pf configuration
         void populate_twopf_ic(twopf_state& x, unsigned int start, double kmode, double Ninit,
@@ -420,8 +424,8 @@ namespace transport
 
 
     // integration - observer object for 2pf
-    template <typename Model>
-    class $MODEL_mpi_twopf_observer: public twopf_singleconfig_batch_observer<typename Model::value_type>
+    template <typename Model, typename BatchObject>
+    class $MODEL_mpi_twopf_observer: public twopf_singleconfig_batch_observer<typename Model::value_type, BatchObject>
       {
   
       public:
@@ -435,11 +439,12 @@ namespace transport
         
       public:
 
-        $MODEL_mpi_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
+        $MODEL_mpi_twopf_observer(BatchObject& b, const twopf_kconfig_record& c,
                                   double t_ics, const time_config_database& t)
-          : twopf_singleconfig_batch_observer<number>(b, c, t_ics, t,
-                                                      $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
-                                                      $MODEL_pool::backg_start, $MODEL_pool::tensor_start, $MODEL_pool::twopf_start)
+          : twopf_singleconfig_batch_observer<number, BatchObject>
+              (b, c, t_ics, t,
+               $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
+               $MODEL_pool::backg_start, $MODEL_pool::tensor_start, $MODEL_pool::twopf_start)
           {
           }
 
@@ -598,8 +603,8 @@ namespace transport
 
 
     // integration - observer object for 3pf
-    template <typename Model>
-    class $MODEL_mpi_threepf_observer: public threepf_singleconfig_batch_observer<typename Model::value_type>
+    template <typename Model, typename BatchObject>
+    class $MODEL_mpi_threepf_observer: public threepf_singleconfig_batch_observer<typename Model::value_type, BatchObject>
       {
   
       public:
@@ -612,17 +617,18 @@ namespace transport
 
         
       public:
-        $MODEL_mpi_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
+        $MODEL_mpi_threepf_observer(BatchObject& b, const threepf_kconfig_record& c,
                                     double t_ics, const time_config_database& t)
-          : threepf_singleconfig_batch_observer<number>(b, c, t_ics, t,
-                                                        $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
-                                                        $MODEL_pool::twopf_size, $MODEL_pool::threepf_size,
-                                                        $MODEL_pool::backg_start,
-                                                        $MODEL_pool::tensor_k1_start, $MODEL_pool::tensor_k2_start, $MODEL_pool::tensor_k3_start,
-                                                        $MODEL_pool::twopf_re_k1_start, $MODEL_pool::twopf_im_k1_start,
-                                                        $MODEL_pool::twopf_re_k2_start, $MODEL_pool::twopf_im_k2_start,
-                                                        $MODEL_pool::twopf_re_k3_start, $MODEL_pool::twopf_im_k3_start,
-                                                        $MODEL_pool::threepf_start)
+          : threepf_singleconfig_batch_observer<number, BatchObject>
+              (b, c, t_ics, t,
+               $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
+               $MODEL_pool::twopf_size, $MODEL_pool::threepf_size,
+               $MODEL_pool::backg_start,
+               $MODEL_pool::tensor_k1_start, $MODEL_pool::tensor_k2_start, $MODEL_pool::tensor_k3_start,
+               $MODEL_pool::twopf_re_k1_start, $MODEL_pool::twopf_im_k1_start,
+               $MODEL_pool::twopf_re_k2_start, $MODEL_pool::twopf_im_k2_start,
+               $MODEL_pool::twopf_re_k3_start, $MODEL_pool::twopf_im_k3_start,
+               $MODEL_pool::threepf_start)
           {
           }
 
@@ -733,9 +739,10 @@ namespace transport
 
 
     template <typename number, typename StateType>
+    template <typename BatchObject>
     void $MODEL_mpi<number, StateType>::twopf_kmode(const twopf_kconfig_record& kconfig,
-                                                    const twopf_db_task<number>* tk,
-                                                    twopf_batcher<number>& batcher, unsigned int refinement_level)
+                                                    const twopf_db_task<number>* tk, BatchObject& batcher,
+                                                    unsigned int refinement_level)
       {
         DEFINE_INDEX_TOOLS
 
@@ -746,7 +753,7 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_mpi_twopf_observer< $MODEL_mpi<number, StateType> > obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
+        $MODEL_mpi_twopf_observer< $MODEL_mpi<number, StateType>, BatchObject > obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
 
         // set up a functor to evolve this system
         $MODEL_mpi_twopf_functor< $MODEL_mpi<number, StateType> > rhs(tk, *kconfig
@@ -915,9 +922,10 @@ namespace transport
 
 
     template <typename number, typename StateType>
+    template <typename BatchObject>
     void $MODEL_mpi<number, StateType>::threepf_kmode(const threepf_kconfig_record& kconfig,
                                                       const threepf_task<number>* tk,
-                                                      threepf_batcher<number>& batcher, unsigned int refinement_level)
+                                                      BatchObject& batcher, unsigned int refinement_level)
       {
         DEFINE_INDEX_TOOLS
 
@@ -928,7 +936,7 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_mpi_threepf_observer< $MODEL_mpi<number, StateType> > obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
+        $MODEL_mpi_threepf_observer< $MODEL_mpi<number, StateType>, BatchObject > obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
 
         // set up a functor to evolve this system
         $MODEL_mpi_threepf_functor< $MODEL_mpi<number, StateType> >  rhs(tk, *kconfig
@@ -1123,14 +1131,14 @@ namespace transport
     // IMPLEMENTATION - FUNCTOR FOR 2PF OBSERVATION
 
 
-    template <typename Model>
-    void $MODEL_mpi_twopf_observer<Model>::operator()(const twopf_state& x, number t)
+    template <typename Model, typename BatchObject>
+    void $MODEL_mpi_twopf_observer<Model, BatchObject>::operator()(const twopf_state& x, number t)
       {
         DEFINE_INDEX_TOOLS
         
 #undef __background
 #undef __twopf
-#undef __dtwopf_tensor
+#undef __twopf_tensor
 
 #define __background(a)      x[$MODEL_pool::backg_start + FLATTEN(a)]
 #define __twopf(a,b)         x[$MODEL_pool::twopf_start + FLATTEN(a,b)]
@@ -1147,7 +1155,7 @@ namespace transport
         if(std::isnan(__twopf($A, $B)) || std::isinf(__twopf($A, $B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 #endif
 
-        this->start_batching(static_cast<double>(t), this->get_log(), generic_batcher::log_severity_level::normal);
+        this->start_batching(static_cast<double>(t), this->get_log(), BatchObject::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
       }
@@ -1342,8 +1350,8 @@ namespace transport
     // IMPLEMENTATION - FUNCTOR FOR 3PF OBSERVATION
 
 
-    template <typename Model>
-    void $MODEL_mpi_threepf_observer<Model>::operator()(const threepf_state& x, number t)
+    template <typename Model, typename BatchObject>
+    void $MODEL_mpi_threepf_observer<Model, BatchObject>::operator()(const threepf_state& x, number t)
       {
         DEFINE_INDEX_TOOLS
 
@@ -1401,7 +1409,7 @@ namespace transport
         if(std::isnan(__threepf($A, $B, $C)) || std::isinf(__threepf($A, $B, $C))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 #endif
 
-        this->start_batching(static_cast<double>(t), this->get_log(), generic_batcher::log_severity_level::normal);
+        this->start_batching(static_cast<double>(t), this->get_log(), BatchObject::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
       }

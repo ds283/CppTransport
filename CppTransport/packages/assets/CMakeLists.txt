@@ -26,6 +26,9 @@ FIND_PACKAGE(MPI REQUIRED)
 # minimum version is 1.56 to get support for Boost.Optional with move-only types
 FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS log system filesystem random timer date_time mpi thread serialization program_options regex)
 
+# we need pthreads for Boost-Thread
+FIND_PACKAGE(Threads)
+
 # find OpenSSL libraries
 FIND_PACKAGE(OpenSSL REQUIRED)
 
@@ -48,7 +51,7 @@ BUILD_ODEINT(${CMAKE_BINARY_DIR}/thirdparty/odeint-v2)
 IF(NOT GINAC_FOUND)
   # GiNaC was not found, so attempt to build it from source
   BUILD_CLN(${CMAKE_BINARY_DIR}/thirdparty/CLN ${EXTERNAL_INSTALL_PREFIX})
-  BUILD_GINAC(${CMAKE_BINARY_DIR}/thirdparty/GiNaC ${CLN_INCLUDE_DIRS} ${CLN_LIBRARY_DIRS} ${CLN_LIBRARIES} ${EXTERNAL_INSTALL_PREFIX})
+  BUILD_GINAC(${CMAKE_BINARY_DIR}/thirdparty/GiNaC ${CMAKE_BINARY_DIR}/thirdparty/CLN ${CLN_INCLUDE_DIRS} ${CLN_LIBRARY_DIRS} ${CLN_LIBRARIES} ${EXTERNAL_INSTALL_PREFIX})
 ENDIF()
 
 

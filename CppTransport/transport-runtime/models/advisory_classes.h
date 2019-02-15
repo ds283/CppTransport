@@ -313,6 +313,43 @@ namespace transport
 
       };
 
+    //! advisory class thrown if adaptive initial conditions needs to integrate before N_initial
+    class adaptive_ics_before_Ninit: public std::exception
+      {
+      public:
+        adaptive_ics_before_Ninit(std::string task_name, double adaptive_efolds, double earliest_required, double N_initial)
+          : t_name(task_name),
+            a_efolds(adaptive_efolds),
+            e_req_time(earliest_required),
+            N_i(N_initial)
+          {
+            std::ostringstream str;
+            str << "'" << task_name << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << adaptive_efolds << " "
+              << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << earliest_required << " "
+              << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_C << N_initial;
+
+            message = str.str();
+          }
+
+        const char* what()      const noexcept override { return(this->message.c_str()); }
+
+      private:
+        //! task name we're trying to perform e.g. model.twopf, model.threepf, etc.
+        std::string t_name;
+
+        //! number of adaptive e-folds assigned in this task
+        double a_efolds;
+
+        //! earliest required time given from the background solution
+        double e_req_time;
+
+        //! initial time set by the user
+        double N_i;
+
+        //! exception message
+        std::string message;
+      };
+
   }
 
 

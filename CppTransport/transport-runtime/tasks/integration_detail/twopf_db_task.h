@@ -664,11 +664,7 @@ namespace transport
             // time is always the initial time anyway
             if(earliest_required < this->get_N_initial())
               {
-                std::ostringstream msg;
-                msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << format_number(this->adaptive_efolds, 4) << " "
-                  << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << format_number(earliest_required, 4) << " "
-                  << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_C << format_number(this->get_N_initial(), 4);
-                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+                throw adaptive_ics_before_Ninit(this->get_name(), this-> adaptive_efolds, earliest_required, this->get_N_initial());
               }
 
             // does the initial time allow for 'settling'?

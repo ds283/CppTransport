@@ -110,10 +110,10 @@ namespace transport
 		        //! Get data points
 		        const point_list& get_data_points() const { return(this->data); }
 
-		        //! Get axis type
-		        axis_class get_axis_value() const { return(this->x_type); }
+		        //! Get x value-type
+		        axis_value get_axis_value() const { return(this->x_type); }
 
-		        //! Get value type
+		        //! Get y value-type
 		        value_type get_value_type() const { return(this->y_type); }
 
             //! Get type of data - scattered or continuous?

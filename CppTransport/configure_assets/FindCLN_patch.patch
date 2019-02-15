@@ -1,0 +1,20 @@
+--- FindCLN.cmake	2018-12-06 17:09:04.000000000 +0000
++++ FindCLN2.cmake	2018-12-06 17:12:51.000000000 +0000
+@@ -42,12 +42,12 @@
+ endif()
+ 
+ find_path(CLN_INCLUDE_DIR NAMES cln/cln.h
+-			  HINTS ${_cln_INCLUDE_DIRS}
+-				$ENV{CLN_DIR}/include)
++			$ENV{CLN_DIR}/include
++			HINTS ${_cln_INCLUDE_DIRS})
+ find_library(CLN_LIBRARIES NAMES libcln cln
+-			   HINTS ${_cln_LIBRARY_DIR}
+-			         ${_cln_LIBRARY_DIRS}
+-				 $ENV{CLN_DIR}/lib)
++			$ENV{CLN_DIR}/lib
++			HINTS ${_cln_LIBRARY_DIR}
++				  ${_cln_LIBRARY_DIRS})
+ 
+ if (CLN_INCLUDE_DIR)
+ 	_cl_get_version(CLN_VERSION_MAJOR
