@@ -72,13 +72,13 @@ class lagrangian_block
   public:
 
     //! add symbol representing a field
-    bool add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, std::shared_ptr<attributes> a);
+    bool add_field(const std::string& n, symbol_wrapper& s, const y::lexeme_type& p, std::shared_ptr<attributes> a);
 
     //! add symbol representing a parameter
-    bool add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, std::shared_ptr<attributes> a);
+    bool add_parameter(const std::string& n, symbol_wrapper& s, const y::lexeme_type& p, std::shared_ptr<attributes> a);
 
     //! add symbol representing a subexpression
-    bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, std::shared_ptr<subexpr> e);
+    bool add_subexpr(const std::string& n, symbol_wrapper& s, const y::lexeme_type& p, std::shared_ptr<subexpr> e);
 
     //! check whether a given symbol name has been declared
     //! if the symbol exists, returns a boost::optional<> containing a reference
@@ -149,7 +149,7 @@ class lagrangian_block
     symbol_list get_param_symbols() const;
 
     //! get symbol for Planck mass M_P
-    const GiNaC::symbol& get_Mp_symbol() const;
+    const symbol_wrapper& get_Mp_symbol() const;
 
 
     // INTERNAL DATA
@@ -206,7 +206,7 @@ class lagrangian_block
     // SPECIAL RESERVED SYMBOLS
 
     //! symbol representing Planck mass
-    GiNaC::symbol M_Planck;
+    symbol_wrapper M_Planck;
 
   };
 

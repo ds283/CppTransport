@@ -43,7 +43,7 @@ void version_policy::advise_minimum_version(unsigned int version)
 
 bool version_policy::adjudicate_policy(unsigned int number) const
   {
-    policy_table::const_iterator t = this->policies.find(number);
+    auto t = this->policies.find(number);
     
     // return false if no policy with the specified number has been registered
     if(t == this->policies.cend()) return false;

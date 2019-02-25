@@ -119,7 +119,7 @@ namespace transport
     // currently 1E-8, which allows about |ln(1E-8)| ~ 18 e-folds of squeezing
     constexpr double       CPPTRANSPORT_DEFAULT_SMALLEST_SQUEEZING         = (1E-8);
 
-    // tolerance to use when testing whether kc-configurations match our constrints
+    // tolerance to use when testing whether kc-configurations match our constraints
     constexpr double       CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE          = (1E-10);
 
     // log file name

@@ -66,6 +66,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <set>
 #include <utility>
 #include <stdexcept>
 
@@ -76,6 +77,7 @@
 #include "translator_data.h"
 #include "msg_en.h"
 
+#include "boost/optional.hpp"
 #include "boost/timer/timer.hpp"
 
 
@@ -85,31 +87,48 @@ namespace cse_impl
     class symbol_record
       {
 
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
 
-        symbol_record(const std::string& t, const std::string& s)
-          : target(t),
-            symbol(s),
-            written(false)
+        //! constructor
+        symbol_record(std::string t, std::string s)
+          : target(std::move(t)),
+            symbol(std::move(s))
           {
           }
 
+        //! destuctor is default
+        ~symbol_record() = default;
+
 
       public:
 
+        //! return printed expression that this symbol resolves to
         const std::string get_target() const { return(this->target); }
 
+        //! return symbol name
         const std::string get_symbol() const { return(this->symbol); }
 
+        //! has this symbol record been written to the declaration stream?
         bool is_written() const { return(this->written); }
 
-        void set_written() { this->written = true; }
+        //! mark this symbol as written
+        void mark_written() { this->written = true; }
+
+
+        // INTERNAL DATA
 
       protected:
 
+        //! expression this symbol resolves to
         std::string target;
+
+        //! symbol name
         std::string symbol;
-        bool        written;
+
+        //! writeen flag
+        bool written{false};
 
       };
 
@@ -128,10 +147,10 @@ class cse
     //! p  = printer appropriate for language
     //! pd = payload from translation_unit
     //! k  = kernel name for temporary identifiers
-    cse(unsigned int s, language_printer& p, translator_data& pd, std::string k= OUTPUT_DEFAULT_CSE_TEMPORARY_NAME)
+    cse(unsigned int s, language_printer& p, translator_data& pd, std::string k = OUTPUT_DEFAULT_CSE_TEMPORARY_NAME)
       : serial_number(s),
         printer(p),
-        temporary_name_kernel(k),
+        temporary_name_kernel(std::move(k)),
         symbol_counter(0),
         data_payload(pd)
       {
@@ -152,7 +171,7 @@ class cse
     //! it is tagged using get_symbol_with_use_count()
     //! the second argument is optional and can be used to assign a fixed temporary
     //! name to the entire expression, if desired
-    void parse(const GiNaC::ex& expr, std::string name="");
+    void parse(const GiNaC::ex& expr, const boost::optional<std::string> name = boost::none);
 
     //! obtain list of temporary definitions which should be deposited in the current pool
     std::unique_ptr< std::list<std::string> >
@@ -168,6 +187,11 @@ class cse
     //! typically called when closing one pool and opening another
     void clear();
 
+  protected:
+
+    //! deposit a symbol record to the declaration list
+    void deposit(cse_impl::symbol_record& record);
+
 
 		// INTERFACE - GET/SET NAME USED FOR TEMPORARIES
 
@@ -176,7 +200,7 @@ class cse
     //! get current temporary name kernel
     const std::string& get_temporary_kernel() const { return (this->temporary_name_kernel); }
 
-    //! set current temporary name kerne
+    //! set current temporary name kernel
     void set_temporary_kernel(const std::string& k) { this->temporary_name_kernel = k; }
 
 
@@ -244,14 +268,24 @@ class cse
     //! current kernel for making names of temporaries
     std::string temporary_name_kernel;
 
-    typedef std::unordered_map< std::string, cse_impl::symbol_record > symbol_table;
-    typedef std::vector< std::pair<std::string, std::string> > declaration_table;
+    //! symbol table type
+    using symbol_table = std::unordered_map< std::string, cse_impl::symbol_record >;
 
-    //! symbol table: maps printed GiNaC expressions to temporary names
+    //! declaration list type (note we use a vector because we want to preserve insertion order)
+    using declaration_table = std::vector< std::pair<std::string, std::string> >;
+
+    //! named symbol list type
+    using named_symbol_table = std::set< std::string >;
+
+    //! symbol table: maps printed GiNaC expressions to temporary definitions
     symbol_table symbols;
 
     //! declaration table: maps temporary names to printed GiNaC expressions
     declaration_table decls;
+
+    //! named symbols: tracks named symbols that have been declared but aren't in the symbol table
+    //! this is to avoid duplicate declarations
+    named_symbol_table named_symbols;
 
 		// work timer
 		boost::timer::cpu_timer timer;

@@ -4,6 +4,8 @@ import os
 import tarfile
 import subprocess
 
+import deploy
+
 
 def list_files(path):
     # returns a list of names (with extension, without full path) of all files
@@ -157,7 +159,7 @@ def package_examples(package_dir, archive_file, version_string):
         archive.close()
 
 
-version = "2017_01_beta1_Apollo"
+version = deploy.version
 
 package_dir = os.path.join("packages", "pkg")
 version_dir = os.path.join(package_dir, version)

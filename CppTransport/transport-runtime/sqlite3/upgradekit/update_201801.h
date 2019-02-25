@@ -23,8 +23,8 @@
 // --@@
 //
 
-#ifndef CPPTRANSPORT_UPGRADEKIT_UPDATE_201701_H
-#define CPPTRANSPORT_UPGRADEKIT_UPDATE_201701_H
+#ifndef CPPTRANSPORT_UPGRADEKIT_UPDATE_201801_H
+#define CPPTRANSPORT_UPGRADEKIT_UPDATE_201801_H
 
 
 #include "transport-runtime/transactions/transaction_manager.h"
@@ -40,7 +40,7 @@ namespace transport
     namespace sqlite3_operations
       {
     
-        class update_201701
+        class update_201801
           {
         
             // CONSTRUCTOR, DESTRUCTOR
@@ -48,10 +48,10 @@ namespace transport
           public:
         
             //! constructor is default
-            update_201701() = default;
+            update_201801() = default;
         
             //! destructor
-            ~update_201701() = default;
+            ~update_201801() = default;
         
         
             // INTERFACE
@@ -72,13 +72,13 @@ namespace transport
           };
     
     
-        void update_201701::integration_container(sqlite3* db, transaction_manager& mgr, upgradekit_impl::NotifyGadget& notify)
+        void update_201801::integration_container(sqlite3* db, transaction_manager& mgr, upgradekit_impl::NotifyGadget& notify)
           {
             this->update_worker_table(db, mgr, notify);
           }
     
     
-        void update_201701::update_worker_table(sqlite3* db, transaction_manager& mgr, upgradekit_impl::NotifyGadget& notify)
+        void update_201801::update_worker_table(sqlite3* db, transaction_manager& mgr, upgradekit_impl::NotifyGadget& notify)
           {
             // determine whether cpu_brand column is present
             bool present = false;
@@ -123,4 +123,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_UPGRADEKIT_UPDATE_201701_H
+#endif //CPPTRANSPORT_UPGRADEKIT_UPDATE_201801_H

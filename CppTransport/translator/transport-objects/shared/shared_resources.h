@@ -78,7 +78,7 @@ class shared_resources
   public:
 
     //! generate named symbol resource
-    GiNaC::symbol generate_symbol(const std::string& name) const { return this->sym_factory.get_symbol(name); }
+    symbol_wrapper generate_symbol(const std::string& name) const { return this->sym_factory.get_real_symbol(name); }
 
 
     // GENERATE RESOURCES -- SCALARS
@@ -86,16 +86,19 @@ class shared_resources
   public:
 
     //! generate Mp symbol resource
-    GiNaC::symbol generate_Mp() const { return this->M_Planck; }
+    symbol_wrapper generate_Mp() const { return this->M_Planck; }
 
     //! generate Hsq symbol resource
-    GiNaC::symbol generate_Hsq() const { return this->sym_factory.get_symbol(HSQ_SYMBOL_NAME); }
+    symbol_wrapper generate_Hsq() const { return this->sym_factory.get_real_symbol(HSQ_SYMBOL_NAME); }
 
     //! generate epsilon symbol resource
-    GiNaC::symbol generate_eps() const { return this->sym_factory.get_symbol(EPS_SYMBOL_NAME); }
+    symbol_wrapper generate_eps() const { return this->sym_factory.get_real_symbol(EPS_SYMBOL_NAME); }
+
+    //! generate eta symbol resource
+    symbol_wrapper generate_eta() const { return this->sym_factory.get_real_symbol(ETA_SYMBOL_NAME); }
 
     //! generate V symbol resource
-    GiNaC::symbol generate_V() const { return this->sym_factory.get_symbol(V_SYMBOL_NAME); }
+    symbol_wrapper generate_V() const { return this->sym_factory.get_real_symbol(V_SYMBOL_NAME); }
 
 
     // GENERATE RESOURCES -- PARAMETERS
@@ -111,7 +114,7 @@ class shared_resources
     //! by shared_resources (which knows nothing about model-dependent details)
     //! even though the equivalent field_# and deriv_# versions have to be handled
     //! by a model-specific resource manager
-    GiNaC::symbol generate_parameter_vector(const abstract_index& idx, const language_printer& printer) const;
+    symbol_wrapper generate_parameter_vector(const abstract_index& idx, const language_printer& printer) const;
 
 
     // GENERATE RESOURCES -- FIELD- AND PHASE-SPACE COORDINATE SYMBOLS
@@ -199,7 +202,7 @@ class shared_resources
     const symbol_list param_list;
 
     //! Mp symbol
-    const GiNaC::symbol M_Planck;
+    const symbol_wrapper M_Planck;
 
 
     // LOCAL COPIES OF MODEL DATA

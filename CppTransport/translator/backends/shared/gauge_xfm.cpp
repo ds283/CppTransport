@@ -60,10 +60,10 @@ namespace macro_packages
 
     std::string replace_zeta2::roll(const macro_argument_list& args, const index_literal_list& indices)
       {
-        GiNaC::symbol  k = sym_factory.get_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
-        GiNaC::symbol k1 = sym_factory.get_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args[ZETA_XFM_2_K2_ARGUMENT]);
-        GiNaC::symbol  a = sym_factory.get_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
+        auto  k = sym_factory.get_real_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
+        auto k1 = sym_factory.get_real_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
+        auto k2 = sym_factory.get_real_symbol(args[ZETA_XFM_2_K2_ARGUMENT]);
+        auto  a = sym_factory.get_real_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
 
         std::unique_ptr<map_lambda> lambda = this->zeta2_tensor->compute_lambda(*indices[0], *indices[1], k, k1, k2, a);
         return this->lambda_mgr.cache(std::move(lambda));
@@ -94,10 +94,10 @@ namespace macro_packages
 
     void replace_zeta2::pre_hook(const macro_argument_list& args, const index_literal_list& indices)
       {
-        GiNaC::symbol  k = sym_factory.get_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
-        GiNaC::symbol k1 = sym_factory.get_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args[ZETA_XFM_2_K2_ARGUMENT]);
-        GiNaC::symbol  a = sym_factory.get_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
+        auto  k = sym_factory.get_real_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
+        auto k1 = sym_factory.get_real_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
+        auto k2 = sym_factory.get_real_symbol(args[ZETA_XFM_2_K2_ARGUMENT]);
+        auto  a = sym_factory.get_real_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
 
         std::unique_ptr<flattened_tensor> container = this->zeta2_tensor->compute(indices, k, k1, k2, a);
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);

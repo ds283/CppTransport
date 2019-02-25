@@ -150,7 +150,7 @@ namespace canonical
         std::unique_ptr<flattened_tensor> dV;
 
         //! Planck mass
-        GiNaC::symbol Mp;
+        symbol_wrapper Mp;
 
         //! cache status
         bool cached;

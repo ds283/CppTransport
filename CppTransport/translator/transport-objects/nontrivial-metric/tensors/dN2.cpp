@@ -73,8 +73,8 @@ namespace nontrivial_metric
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::symbol coord_i = this->traits.is_species(i) ? (*fields)[this->fl.flatten(i)] : (*derivs)[this->fl.flatten(this->traits.to_species(i))];
-            GiNaC::symbol coord_j = this->traits.is_species(j) ? (*fields)[this->fl.flatten(j)] : (*derivs)[this->fl.flatten(this->traits.to_species(j))];
+            symbol_wrapper coord_i = this->traits.is_species(i) ? (*fields)[this->fl.flatten(i)] : (*derivs)[this->fl.flatten(this->traits.to_species(i))];
+            symbol_wrapper coord_j = this->traits.is_species(j) ? (*fields)[this->fl.flatten(j)] : (*derivs)[this->fl.flatten(this->traits.to_species(j))];
 
             // Eq. (6.5) of Mulryne 1302.3842;
             // p is the combination (d/dX_gamma[1/2dot(H)] * dX_gamma/dN
@@ -133,7 +133,7 @@ namespace nontrivial_metric
           {
             this->p += diff(1 / (2 * dotH), (*fields)[this->fl.flatten(i)]) * (*derivs)[this->fl.flatten(i)];
 
-            // derivs is contravariance, dV is covariant
+            // derivs is contravarianct, dV is covariant
             GiNaC::ex dXdN = (eps - 3) * (*derivs)[this->fl.flatten(i)] - (*dV)[this->fl.flatten(i)] / Hsq;
 
             this->p += diff(1 / (2 * dotH), (*derivs)[this->fl.flatten(i)]) * dXdN;

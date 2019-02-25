@@ -1,4 +1,4 @@
-// backend = cpp, minver = 201701, lagrangian = nontrivial_metric
+// backend = cpp, minver = 201801, lagrangian = nontrivial_metric
 //
 // --@@
 // Copyright (c) 2017 University of Sussex. All rights reserved.
@@ -47,6 +47,7 @@
 
 #include "boost/numeric/odeint.hpp"
 #include "boost/range/algorithm.hpp"
+#include "boost/optional.hpp"
 
 #include "Eigen/Core"
 
@@ -248,6 +249,7 @@ namespace transport
         // Over-ride functions inherited from 'model'
         number H(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
         number epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
+        number eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
 
         // Over-ride functions inherited from 'nontrivial_metric_model'
         number V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const override;
@@ -288,6 +290,12 @@ namespace transport
         // calculate mass matrix
         void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) override;
 
+        // calculate raw mass spectrum
+        void mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+
+        // calculate the sorted mass spectrum, normalized to H^2 if desired
+        void sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
       public:
@@ -296,7 +304,9 @@ namespace transport
 
         double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
 
-		    void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k) override;
+		    void compute_aH(const integration_task<number>* tk, std::vector<double>& N,
+		                    flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
+		                    boost::optional<double> largest_k = boost::none) override;
 
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
@@ -354,6 +364,9 @@ namespace transport
         $ENDIF
 
         number* __raw_params;
+
+        //! workspace: Eigen matrix representing mass matrix
+        Eigen::Matrix<number, $NUMBER_FIELDS, $NUMBER_FIELDS> __mass_matrix;
 
       };
 
@@ -545,7 +558,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -570,7 +583,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -589,13 +602,38 @@ namespace transport
 
 
     template <typename number>
+    number $MODEL<number>::eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
+      {
+        assert(__coords.size() == 2*$NUMBER_FIELDS);
+        if(__coords.size() != 2*$NUMBER_FIELDS)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            throw std::out_of_range(msg.str());
+          }
+
+        DEFINE_INDEX_TOOLS
+        $RESOURCE_RELEASE
+        const auto __Mp = __params.get_Mp();
+        const auto& __param_vector = __params.get_vector();
+
+        $RESOURCE_PARAMETERS{__param_vector}
+        $RESOURCE_COORDINATES{__coords}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
+
+        return $ETA;
+      }
+
+
+    template <typename number>
     number $MODEL<number>::V(const parameters<number>& __params, const flattened_tensor<number>& __coords) const
       {
         assert(__coords.size() == 2*$NUMBER_FIELDS);
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -621,7 +659,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -648,7 +686,7 @@ namespace transport
         if(__coords.size() != 2*$NUMBER_FIELDS)
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_COORDS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
     
@@ -1653,6 +1691,61 @@ namespace transport
 
 
     template <typename number>
+    void $MODEL<number>::sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
+                                              double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+      {
+        // get raw, unsorted mass spectrum in __E
+        this->mass_spectrum(__task, __fields, __N, __M, __E);
+
+        // sort mass spectrum into order
+        std::sort(__E.begin(), __E.end());
+
+        // if normalized values requested, divide through by 1/H^2
+        if(__norm)
+          {
+            DEFINE_INDEX_TOOLS
+
+            $RESOURCE_RELEASE
+            const auto& __pvector = __task->get_params().get_vector();
+            __raw_params[$1] = __pvector[$1];
+
+            const auto __Mp = __task->get_params().get_Mp();
+
+            $TEMP_POOL{"const auto $1 = $2;"}
+
+            $RESOURCE_PARAMETERS{__raw_params};
+            $RESOURCE_COORDINATES{__fields};
+
+            const auto __Hsq = $HUBBLE_SQ;
+
+            __E[$^a] = __E[$^a] / __Hsq;
+          };
+      }
+
+
+    template <typename number>
+    void $MODEL<number>::mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
+                                       double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+      {
+        DEFINE_INDEX_TOOLS
+
+        // write mass matrix (in canonical format) into __M
+        this->M(__task, __fields, __N, __M);
+
+        // copy elements of the mass matrix into an Eigen matrix
+        __mass_matrix($^a,$_b) = __M[FIELDS_FLATTEN($^a,$_b)];
+
+        // extract eigenvalues from this matrix
+        // In general Eigen would give us complex results, which we'd like to avoid. That can be done by
+        // forcing Eigen to use a self-adjoint matrix, which has guaranteed real eigenvalues
+        auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+
+        // copy eigenvalues into output matrix
+        __E[FIELDS_FLATTEN($^a)] = __evalues($^a);
+      }
+
+
+    template <typename number>
     void $MODEL<number>::backend_process_backg(const background_task<number>* tk, backg_history<number>& solution, bool silent)
       {
         DEFINE_INDEX_TOOLS
@@ -1783,7 +1876,8 @@ namespace transport
           {
           public:
             aHAggregatorPredicate(const twopf_db_task<number>* tk, model<number>* m, std::vector<double>& N,
-                                  flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double lk)
+                                  flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
+                                  boost::optional<double>& lk)
               : params(tk->get_params()),
                 task(tk),
                 mdl(m),
@@ -1792,6 +1886,7 @@ namespace transport
                 log_a2H2M_vector(log_a2H2M),
                 largest_k(lk),
                 flat_M($NUMBER_FIELDS*$NUMBER_FIELDS),
+                flat_E($NUMBER_FIELDS),
                 N_horizon_crossing(tk->get_N_horizon_crossing()),
                 astar_normalization(tk->get_astar_normalization()),
                 __Mp(params.get_Mp()),
@@ -1801,18 +1896,12 @@ namespace transport
 
             number largest_evalue(const backg_state<number>& fields, number N)
               {
-                DEFINE_INDEX_TOOLS
-                
-                // compupte M matrix with first index up, last index down
-                this->mdl->M(this->task, fields, static_cast<double>(N), this->flat_M);
+                this->mdl->mass_spectrum(this->task, fields, static_cast<double>(N), this->flat_M, this->flat_E);
 
-                mass_matrix($^a,$_b) = flat_M[FIELDS_FLATTEN($^a,$_b)];
-
-                // result of computing eigenvalues is a vector of complex numbers
-                auto evalues = mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+                // step through eigenvalue vector, extracting largest absolute value
                 number largest_eigenvalue = -std::numeric_limits<number>().max();
 
-                if(std::abs(evalues($_a)) > largest_eigenvalue) { largest_eigenvalue = std::abs(evalues($_a)); }
+                if(std::abs(this->flat_E[$^a]) > largest_eigenvalue) { largest_eigenvalue = std::abs(this->flat_E[$^a]); }
 
                 return largest_eigenvalue;
               }
@@ -1836,9 +1925,12 @@ namespace transport
                 this->log_a2H2M_vector.push_back(2.0*__N + 2.0*std::log(__H)
                                                  + std::log(this->largest_evalue(__x.first, __x.second))); // = log(a^2 H^2 * largest eigenvalue)
 
-                // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
-                if(std::log(largest_k) - __N - std::log(__H) < -0.5) return(true);
-                return(false);
+                // if a largest k-mode was provided,
+                // are we now at a point where we have comfortably covered the horizon crossing time for it?
+                if(!this->largest_k) return false;
+
+                if(std::log(*largest_k) - __N - std::log(__H) < -0.5) return true;
+                return false;
               }
 
           private:
@@ -1870,11 +1962,11 @@ namespace transport
             //! working space for calculation of mass matrix
             flattened_tensor<number> flat_M;
 
-            //! Eigen matrix representing mass matrix
-            Eigen::Matrix<number, $NUMBER_FIELDS, $NUMBER_FIELDS> mass_matrix;
+            //! working space for calculation of mass eigenvalues
+            flattened_tensor<number> flat_E;
 
             //! largest k-mode for which we are trying to find a horizon-exit time
-            const double largest_k;
+            const boost::optional<double>& largest_k;
 
             //! time of horizon crossing
             const double N_horizon_crossing;
@@ -1888,7 +1980,9 @@ namespace transport
 
 
 		template <typename number>
-		void $MODEL<number>::compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k)
+		void $MODEL<number>::compute_aH(const integration_task<number>* tk, std::vector<double>& N,
+		                                flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
+		                                boost::optional<double> largest_k)
 			{
         DEFINE_INDEX_TOOLS
         
@@ -1900,7 +1994,7 @@ namespace transport
 				$MODEL_background_functor<number> system(tk->get_params());
         system.set_up_workspace();
 
-				auto ics = tk->integration_task<number>::get_ics_vector();
+				auto ics = tk->get_ics_vector();
 
 				backg_state<number> x($MODEL_pool::backg_state_size);
 				x[FLATTEN($^A)] = ics[$^A];
@@ -1932,12 +2026,12 @@ namespace transport
 
 				// if we got to the end of the range, then we didn't cover all exit times up to largest_k
 				// so something has gone wrong
-				if(iter == boost::end(range))
+				if(iter == boost::end(range) && largest_k)
 					{
             throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_aH.size(),
                                                  (N.size() > 0 ? N.back() : 0.0),
                                                  (log_aH.size() > 0 ? static_cast<double>(log_aH.back()) : 0.0),
-                                                 largest_k);
+                                                 largest_k.get());
 					}
 
         system.close_down_workspace();
@@ -1971,12 +2065,21 @@ namespace transport
         $GAMMA_DECLARE[^a_b] $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
 
         const auto __Hsq = $HUBBLE_SQ;
+        const auto __eps = $EPSILON;
+        const auto __V = $POTENTIAL;
+
+        // check whether 0 < epsilon < 3
+        if(__eps < 0.0) throw eps_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
+        if(__eps > 3.0) throw eps_too_large(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
+
+        // check whether potential is +ve definite
+        if(__V < 0.0) throw V_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
 
         // check whether Hsq is positive
-        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t));
+        if(__Hsq < 0) throw Hsq_is_negative(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
 
         // check for nan being produced
-        if(std::isnan(__x[$^A])) throw integration_produced_nan(static_cast<double>(__t));
+        if(std::isnan(__x[$^A])) throw integration_produced_nan(static_cast<double>(__t), static_cast<double>(__Hsq), static_cast<double>(__eps), static_cast<double>(__V), __x, $MODEL_pool::state_names);
         
         __dxdt[FLATTEN($^A)] = $U1_TENSOR[^A];
 

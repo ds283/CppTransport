@@ -26,19 +26,20 @@
 #include "cache_tags.h"
 
 
-cache_tags& cache_tags::operator+=(GiNaC::symbol sym)
+cache_tags& cache_tags::operator+=(symbol_wrapper sym)
   {
-    this->symbols.emplace_back(std::make_shared<GiNaC::symbol>(std::move(sym)));
+    this->symbols.emplace_back(std::make_shared<symbol_wrapper>(std::move(sym)));
     return *this;
   }
 
 
-cache_tags& cache_tags::operator+=(std::initializer_list<GiNaC::symbol> syms)
+cache_tags& cache_tags::operator+=(std::initializer_list<symbol_wrapper> syms)
   {
     for(const auto& sym : syms)
       {
-        this->symbols.emplace_back(std::make_shared<GiNaC::symbol>(sym));
+        this->symbols.emplace_back(std::make_shared<symbol_wrapper>(sym));
       }
+
     return *this;
   }
 
@@ -85,7 +86,7 @@ bool operator==(const cache_tags& A, const cache_tags& B)
 
     for(unsigned int i = 0; i < A.symbols.size(); ++i)
       {
-        GiNaC::ex test = (*A.symbols[i] - *B.symbols[i]).eval();
+        GiNaC::ex test = (*(A.symbols[i]) - *(B.symbols[i])).eval();
         if(!static_cast<bool>(test == 0)) return false;
       }
 
@@ -118,7 +119,7 @@ std::ostream& operator<<(std::ostream& out, const cache_tags& tags)
         out << "Symbol tags:" << '\n';
         for(const auto& tag : tags.symbols)
           {
-            out << "  " << *tag << '\n';
+            out << "  " << tag->get() << '\n';
           }
       }
     if(!tags.indices.empty())

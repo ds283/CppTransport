@@ -53,7 +53,7 @@ constexpr auto ERROR_MISSING_TEMPLATE                = "Could not find specified
 constexpr auto ERROR_READING_TEMPLATE                = "Error reading from template file";
 constexpr auto ERROR_EXPECTED_EQUALS                 = "Expected '=' symbol";
 constexpr auto ERROR_EXPECTED_BACKEND_IDENTIFIER     = "Expected backend identifier";
-constexpr auto ERROR_EXPECTED_CPPTRANSPORT_VERSION   = "Expected CppTransport version number in format 201701";
+constexpr auto ERROR_EXPECTED_CPPTRANSPORT_VERSION   = "Expected CppTransport version number in format 201801";
 constexpr auto ERROR_EXPECTED_TEMPLATE_TYPE          = "Expected template type specifier";
 constexpr auto ERROR_IMPROPER_TEMPLATE_HEADER        = "Improperly formed header line in template";
 constexpr auto ERROR_TEMPLATE_TOO_RECENT_A           = "Template requires more recent version of CppTransport (>=";
@@ -380,6 +380,11 @@ constexpr auto ERROR_SPECIES_TO_SPECIES_FAIL         = "Internal error: species-
 constexpr auto ERROR_MOMENTUM_TO_SPECIES_FAIL        = "Internal error: momentum-to-species map must be applied to a phase-space index";
 
 constexpr auto ERROR_UNIMPLEMENTED_MATHS_FUNCTION    = "Unimplemented mathematical function";
+constexpr auto ERROR_USED_IN_EXPRESSION              = "used in expression";
+
+constexpr auto ERROR_SYMBOL_PREVIOUSLY_COMPLEX       = "symbol was previously declared complex";
+constexpr auto ERROR_SYMBOL_PREVIOUSLY_REAL          = "symbol was previously declared real";
+constexpr auto ERROR_SYMBOL_RECORD_INSERTION         = "Internal error: emplace to symbol record database failed";
 
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";

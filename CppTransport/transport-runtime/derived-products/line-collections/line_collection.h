@@ -465,19 +465,19 @@ namespace transport
 		        // and work out whether we need to take the absolute value
 		        output.clear();
 
-		        std::vector< std::vector< std::pair<double, number> > > data;
+		        std::vector< typename data_line<number>::point_list > data;
 		        std::vector<bool> data_absy;
 
             for(const data_line<number>& line : input)
 			        {
-		            const std::vector< std::pair<double, number> >& line_data = line.get_data_points();
+		            const auto& line_data = line.get_data_points();
 
 		            bool need_abs_y = false;
 		            bool nonzero_values = false;
 
 		            if(this->log_y)
 			            {
-		                for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); ++u)
+		                for(auto u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); ++u)
 			                {
 		                    if(u->second <= 0.0) need_abs_y = true;
 		                    if(u->second > 0.0 || u->second < 0.0) nonzero_values = true;
@@ -493,7 +493,7 @@ namespace transport
 				        bool nonzero_axis = true;
 				        if(this->log_x)
 					        {
-				            for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); nonzero_axis && u != line_data.end(); ++u)
+				            for(auto u = line_data.begin(); nonzero_axis && u != line_data.end(); ++u)
 					            {
 						            if(u->first <= 0.0) nonzero_axis = false;
 					            }
@@ -539,7 +539,7 @@ namespace transport
 			                {
 		                    if(data[i].size() > 0)
 			                    {
-				                    const std::pair<double, number>& point = data[i].back();
+				                    const auto& point = data[i].back();
 		                        if(point.first > next_axis_point) next_axis_point = point.first;
 			                    }
 			                }

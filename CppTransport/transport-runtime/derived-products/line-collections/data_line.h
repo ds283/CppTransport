@@ -52,6 +52,16 @@ namespace transport
         class data_line
           {
 
+            // TYPES
+
+          public:
+
+            //! list of points
+            using point_list = std::vector< std::pair<double, number> >;
+
+
+            // CONSTRUCTOR, DESTRUCTOR
+
           public:
 
 		        //! Construct a dataline object from a sequence of axis and data points
@@ -98,12 +108,12 @@ namespace transport
 		        const std::string& get_non_LaTeX_label() const { return(this->non_LaTeX_label); }
 
 		        //! Get data points
-		        const std::vector< std::pair<double, number> >& get_data_points() const { return(this->data); }
+		        const point_list& get_data_points() const { return(this->data); }
 
-		        //! Get axis type
-		        axis_class get_axis_value() const { return(this->x_type); }
+		        //! Get x value-type
+		        axis_value get_axis_value() const { return(this->x_type); }
 
-		        //! Get value type
+		        //! Get y value-type
 		        value_type get_value_type() const { return(this->y_type); }
 
             //! Get type of data - scattered or continuous?
@@ -120,7 +130,8 @@ namespace transport
 
           protected:
 
-            void zip(const std::vector<double>& a, const std::vector<number>& d, std::vector< std::pair<double, number> >& zipped);
+            //! zip a pair of lists representing x,y coordinates into a point_list
+            void zip(const std::vector<double>& a, const std::vector<number>& d, point_list& zipped);
 
 
             // INTERNAL DATA
@@ -145,7 +156,7 @@ namespace transport
 		        const value_type y_type;
 
 		        //! vector of data
-		        std::vector< std::pair<double, number> > data;
+		        point_list data;
 
 		        //! type of data - is it scattered or continuous?
 		        data_line_type data_type;
@@ -250,7 +261,7 @@ namespace transport
 
 
         template <typename number>
-        void data_line<number>::zip(const std::vector<double>& a, const std::vector<number>& d, std::vector< std::pair<double, number> >& zipped)
+        void data_line<number>::zip(const std::vector<double>& a, const std::vector<number>& d, point_list& zipped)
           {
             zipped.clear();
             zipped.reserve(a.size());

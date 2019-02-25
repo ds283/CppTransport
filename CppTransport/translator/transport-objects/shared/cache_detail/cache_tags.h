@@ -31,6 +31,8 @@
 #include <vector>
 #include <initializer_list>
 
+#include "symbol_factory.h"
+
 #include "ginac/ginac.h"
 
 
@@ -66,10 +68,10 @@ class cache_tags
   public:
 
     //! assignment - add GiNaC symbol
-    cache_tags& operator+=(GiNaC::symbol sym);
+    cache_tags& operator+=(symbol_wrapper sym);
 
     //! assignment - list of GiNaC symbols
-    cache_tags& operator+=(std::initializer_list<GiNaC::symbol> syms);
+    cache_tags& operator+=(std::initializer_list<symbol_wrapper> syms);
 
     //! assignment - add GiNaC index with variance
     cache_tags& operator+=(GiNaC::varidx idx);
@@ -107,7 +109,7 @@ class cache_tags
   private:
 
     //! symbol tags
-    std::vector< std::shared_ptr<GiNaC::symbol> > symbols;
+    std::vector< std::shared_ptr<symbol_wrapper> > symbols;
 
     //! index tags
     std::vector< std::shared_ptr<GiNaC::idx> > indices;

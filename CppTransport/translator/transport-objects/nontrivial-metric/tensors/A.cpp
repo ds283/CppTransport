@@ -30,8 +30,8 @@ namespace nontrivial_metric
   {
 
     std::unique_ptr<flattened_tensor>
-    A::compute(const index_literal_list& indices, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-               GiNaC::symbol& a)
+    A::compute(const index_literal_list& indices, symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3,
+               symbol_wrapper& a)
       {
         if(indices.size() != A_TENSOR_INDICES) throw tensor_exception("A indices");
 
@@ -60,7 +60,7 @@ namespace nontrivial_metric
     
     
     GiNaC::ex A::compute_component(field_index i, field_index j, field_index k,
-                                   GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+                                   symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3, symbol_wrapper& a)
       {
         if(!this->cached) throw tensor_exception("A cache not ready");
 
@@ -131,7 +131,7 @@ namespace nontrivial_metric
                       const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& Vk, const GiNaC::ex& A2_ij,
                       const GiNaC::ex& A2_jk, const GiNaC::ex& A2_ik, const GiNaC::ex& A3_ijk,
                       const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j, const GiNaC::ex& deriv_k,
-                      const GiNaC::symbol& k1, const GiNaC::symbol& k2, const GiNaC::symbol& k3, const GiNaC::symbol& a)
+                      const symbol_wrapper& k1, const symbol_wrapper& k2, const symbol_wrapper& k3, const symbol_wrapper& a)
       {
         GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
         GiNaC::ex xi_j = -2*(3-eps) * deriv_j - 2 * Vj/Hsq;
@@ -232,7 +232,7 @@ namespace nontrivial_metric
 
     std::unique_ptr<atomic_lambda>
     A::compute_lambda(const index_literal& i, const index_literal& j, const index_literal& k,
-                      GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+                      symbol_wrapper& k1, symbol_wrapper& k2, symbol_wrapper& k3, symbol_wrapper& a)
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("A");
         if(j.get_class() != index_class::field_only) throw tensor_exception("A");
@@ -351,9 +351,9 @@ namespace nontrivial_metric
         dddV([&](auto k) -> auto { return res.dddV_resource(k[0], k[1], k[2], printer); }),
         A2([&](auto k) -> auto { return res.Riemann_A2_resource(k[0], k[1], printer); }),
         A3([&](auto k) -> auto { return res.Riemann_A3_resource(k[0], k[1], k[2], printer); }),
-        G(r, s, f, p)
+        G(r, s, f, p),
+        Mp(s.generate_Mp())
       {
-        Mp = this->shared.generate_Mp();
       }
 
   }   // namespace nontrivial_metric

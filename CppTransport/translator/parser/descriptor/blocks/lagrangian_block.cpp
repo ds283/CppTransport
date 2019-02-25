@@ -40,11 +40,9 @@ y::lexeme_type::character_map symbols;
 
 lagrangian_block::lagrangian_block(symbol_factory& s, version_policy& vp, error_context err_ctx)
   : sym_factory(s),
-    policy(vp)
+    policy(vp),
+    M_Planck(sym_factory.get_real_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL))
   {
-    // set up reserved symbol for Planck mass
-    M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
-
     // manufacture fake lexeme representing 'location' of Planck mass declaration
     lexeme::lexeme_buffer MPlanck_buffer(MPLANCK_TEXT_NAME, lexeme::lexeme_buffer::type::string_literal, nullptr, 0);
     y::lexeme_type::minus_context mctx = y::lexeme_type::minus_context::unary;
@@ -56,14 +54,16 @@ lagrangian_block::lagrangian_block(symbol_factory& s, version_policy& vp, error_
     Mp_attrs->set_latex(MPLANCK_LATEX_SYMBOL, fake_MPlanck_lexeme);
 
     // emplace faked symbol table entry
-    reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, fake_MPlanck_lexeme, Mp_attrs)));
+    reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME,
+                                    std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck,
+                                                                            fake_MPlanck_lexeme, Mp_attrs)));
   }
 
 
 // SYMBOL SERVICES
 
 
-bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l,
                                  std::shared_ptr<attributes> a)
   {
     if(this->symbols_frozen) return this->report_frozen(l);
@@ -75,7 +75,7 @@ bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y
         this->fields.emplace(std::make_pair(name, std::make_unique<field_declaration>(name, symbol, lexeme, attr)));
 
         // also need to generate a symbol for the momentum corresponding to this field
-        GiNaC::symbol deriv_symbol(DERIV_PREFIX + symbol.get_name());
+        auto deriv_symbol = this->sym_factory.get_real_symbol(DERIV_PREFIX + symbol.get_name());
         this->deriv_symbols.push_back(deriv_symbol);
       };
 
@@ -83,7 +83,7 @@ bool lagrangian_block::add_field(const std::string& n, GiNaC::symbol& s, const y
   }
 
 
-bool lagrangian_block::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+bool lagrangian_block::add_parameter(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l,
                                      std::shared_ptr<attributes> a)
   {
     if(this->symbols_frozen) return this->report_frozen(l);
@@ -99,7 +99,7 @@ bool lagrangian_block::add_parameter(const std::string& n, GiNaC::symbol& s, con
   }
 
 
-bool lagrangian_block::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+bool lagrangian_block::add_subexpr(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l,
                                    std::shared_ptr<subexpr> e)
   {
     if(this->symbols_frozen) return this->report_frozen(l);
@@ -244,7 +244,7 @@ symbol_list lagrangian_block::get_param_symbols() const
   }
 
 
-const GiNaC::symbol& lagrangian_block::get_Mp_symbol() const
+const symbol_wrapper& lagrangian_block::get_Mp_symbol() const
   {
     return(this->M_Planck);
   }

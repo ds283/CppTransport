@@ -63,6 +63,8 @@
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
 
+#include "boost/optional.hpp"
+
 
 namespace transport
   {
@@ -239,6 +241,9 @@ namespace transport
         //! Compute slow-roll parameter epsilon given a phase-space configuration
         virtual number epsilon(const parameters<number>& __params, const flattened_tensor<number>& __coords) const = 0;
 
+        //! Compute slow-roll parameter eta given a phase-space configuration
+        virtual number eta(const parameters<number>& __params, const flattened_tensor<number>& __coords) const = 0;
+
 
         // INITIAL CONDITIONS HANDLING
 
@@ -261,17 +266,21 @@ namespace transport
       public:
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double compute_kstar(const twopf_db_task<number>* tk, unsigned int time_steps=CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double compute_kstar(const twopf_db_task<number>* tk,
+                             unsigned int time_steps = CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Compute when the end of inflation occurs relative to the initial conditions
-        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
+        virtual double compute_end_of_inflation(const integration_task<number>* tk,
+                                                double search_time = CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
 
 		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber.
         //! Samples of log(aH) and the fields are returned in the supplied vector, with samples taken
         //! at internally-chosen values of N -- also returned in the corresponding vector
         //! Also computes log(a^2 * H^2 largest eigenvalue of the mass matrix) and returns this in
         //! log_a2H2M. Note that the mass matrix used in the code is M^2/H^2, ie. is dimensionless
-		    virtual void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M, double largest_k) = 0;
+		    virtual void compute_aH(const integration_task<number>* tk, std::vector<double>& N,
+		                            flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
+		                            boost::optional<double> largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING
@@ -324,6 +333,15 @@ namespace transport
         //! compute M tensor in 'standard' index configuration (first index up, second index down)
         //! this is the arrangement needed to compute the mass spectrum
         virtual void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) = 0;
+
+
+        // MASS SPECTRUM
+
+        //! compute the raw mass spectrum
+        virtual void mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+
+        //! obtain the sorted mass spectrum, normalized to the Hubble rate^2 if desired
+        virtual void sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
 
 
         // BACKEND
@@ -505,6 +523,30 @@ namespace transport
     
                 throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
               }
+            catch(eps_is_negative& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EPS_IS_NEGATIVE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(eps_too_large& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EPS_TOO_LARGE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
+            catch(V_is_negative& xe)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_V_IS_NEGATIVE << " " << xe.what();
+                this->error_h(msg.str());
+
+                throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+              }
 
             if(history.size() > 0)
               {
@@ -568,6 +610,30 @@ namespace transport
             msg << CPPTRANSPORT_INTEGRATION_PRODUCED_NAN << " " << xe.what();
             this->error_h(msg.str());
     
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(eps_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_EPS_IS_NEGATIVE << " " << xe.what();
+            this->error_h(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(eps_too_large& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_EPS_TOO_LARGE << " " << xe.what();
+            this->error_h(msg.str());
+
+            throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+          }
+        catch(V_is_negative& xe)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_V_IS_NEGATIVE << " " << xe.what();
+            this->error_h(msg.str());
+
             throw runtime_exception(exception_type::FATAL_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
 

@@ -30,7 +30,7 @@
 // ******************************************************************
 
 
-declaration::declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l)
+declaration::declaration(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l)
   : name(n),
     symbol(s),
     declaration_point(l),
@@ -45,7 +45,7 @@ unsigned int declaration::current_id = 0;
 // ******************************************************************
 
 
-field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+field_declaration::field_declaration(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l,
                                      std::shared_ptr<attributes> a)
   : declaration(n, s, l),
     attrs(a)
@@ -66,14 +66,14 @@ std::string field_declaration::get_latex_name() const
 void field_declaration::print(std::ostream& stream) const
   {
     stream << "Field declaration for symbol '" << this->get_name()
-           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
+           << "', GiNaC symbol '" << this->get_ginac_symbol().get() << "'" << '\n';
   }
 
 
 // ******************************************************************
 
 
-parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+parameter_declaration::parameter_declaration(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l,
                                              std::shared_ptr<attributes> a)
   : declaration(n, s, l),
     attrs(a)
@@ -94,14 +94,14 @@ std::string parameter_declaration::get_latex_name() const
 void parameter_declaration::print(std::ostream& stream) const
   {
     stream << "Parameter declaration for symbol '" << this->get_name()
-           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
+           << "', GiNaC symbol '" << this->get_ginac_symbol().get() << "'" << '\n';
   }
 
 
 // ******************************************************************
 
 
-subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l,
+subexpr_declaration::subexpr_declaration(const std::string& n, symbol_wrapper& s, const y::lexeme_type& l,
                                          std::shared_ptr<subexpr> e)
   : declaration(n, s, l),
     sexpr(e)
@@ -128,5 +128,5 @@ GiNaC::ex subexpr_declaration::get_value() const
 void subexpr_declaration::print(std::ostream& stream) const
   {
     stream << "Subexpression declaration for symbol '" << this->get_name()
-           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
+           << "', GiNaC symbol '" << this->get_ginac_symbol().get() << "'" << '\n';
   }

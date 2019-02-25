@@ -28,11 +28,13 @@
 
 
 #include <vector>
+
+#include "symbol_factory.h"
+
 #include "disable_warnings.h"
-#include "ginac/ginac.h"
 
 
-typedef std::vector<GiNaC::symbol> symbol_list;
+typedef std::vector< symbol_wrapper > symbol_list;
 
 
 #endif //CPPTRANSPORT_SYMBOL_LIST_H

@@ -148,7 +148,7 @@ map_lambda::make_temporary(const std::string& left, const std::string& mid, cons
         // calculate the appropriate conditions for this index assignment from the current position in the map, and push them to the list
         for(abstract_index_database::const_reverse_iterator t = this->index_list.crbegin(); t != this->index_list.crend(); ++t)
           {
-            GiNaC::symbol sym(t->get_loop_variable());
+            GiNaC::realsymbol sym(t->get_loop_variable());
             GiNaC::ex rel = state % 2 == 1 ? sym >= num_fields : sym < num_fields;
             conditions.push_back(rel);
             state = state / 2;
