@@ -1875,7 +1875,7 @@ namespace transport
         class aHAggregatorPredicate
           {
           public:
-            aHAggregatorPredicate(const twopf_db_task<number>* tk, model<number>* m, std::vector<double>& N,
+            aHAggregatorPredicate(const integration_task<number>* tk, model<number>* m, std::vector<double>& N,
                                   flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
                                   boost::optional<double>& lk)
               : params(tk->get_params()),
