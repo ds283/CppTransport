@@ -288,13 +288,13 @@ namespace transport
         void C(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) override;
 
         // calculate mass matrix
-        void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) override;
+        void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) override;
 
         // calculate raw mass spectrum
-        void mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+        void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
 
         // calculate the sorted mass spectrum, normalized to H^2 if desired
-        void sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+        void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
@@ -1657,7 +1657,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N,
+    void $MODEL<number>::M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N,
                            flattened_tensor<number>& __M)
       {
         DEFINE_INDEX_TOOLS
@@ -1691,7 +1691,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
+    void $MODEL<number>::sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
                                               double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
       {
         // get raw, unsorted mass spectrum in __E
@@ -1724,7 +1724,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
+    void $MODEL<number>::mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
                                        double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
       {
         DEFINE_INDEX_TOOLS
@@ -1939,7 +1939,7 @@ namespace transport
             model<number>* mdl;
 
             //! point to task object
-            const twopf_db_task<number>* task;
+            const integration_task<number>* task;
 
             //! parameters for the model in use
             const parameters<number>& params;

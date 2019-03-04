@@ -38,6 +38,8 @@
 
 #include "sqlite3.h"
 
+#include "transport-runtime/defaults.h"
+
 
 namespace transport
 	{
@@ -69,7 +71,8 @@ namespace transport
       public:
 
         //! Construct a named integration task with supplied initial conditions and sample times
-        integration_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t);
+        integration_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
+                         double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! Construct an anonymized integration task with supplied initial conditions.
         //! Anonymized tasks are used for things like constructing initial conditions,
@@ -144,6 +147,14 @@ namespace transport
 
         //! Get time of end of inflation -- const version; cannot cache result
         double get_N_end_of_inflation() const;
+
+        //! Get horizon-crossing time
+        double get_N_horizon_crossing() const { return(this->ics.get_N_horizon_crossing()); }
+
+        //! Get current a* normalization
+        //! This determines the value of the scale factor a(t) at the distinguished scale k*.
+        //! The value supplied is ln(a*), so it can be positive or negative
+        double get_astar_normalization() const { return(this->astar_normalization); }
 
 
         // INTERFACE - INTEGRATION MANAGEMENT
@@ -225,6 +236,11 @@ namespace transport
         //! default checkpoint interval in minutes, if used
         unsigned int default_checkpoint;
 
+        //! during integration, we need to have a normalization for a* = a(t*).
+        //! In principle this can be anything (and could be set by the user's time choice),
+        //! but in practice the integrator performs best in a fairly narrow range of choices.
+        double astar_normalization;
+
 
         // STORED TIME CONFIGURATION DATABASE
 
@@ -235,14 +251,16 @@ namespace transport
 
 
     template <typename number>
-    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t)
+    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
+                                               double ast)
 	    : derivable_task<number>(nm),
 	      ics(i),
 	      times(t.clone()),
         end_of_inflation(0.0),
         cached_end_of_inflation(false),
         default_checkpoint(0),
-        default_checkpoint_set(false)
+        default_checkpoint_set(false),
+        astar_normalization(ast)
 	    {
         // validate relation between Nstar and the sampling time
         assert(times->size() > 0);
