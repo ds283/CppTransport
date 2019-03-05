@@ -294,6 +294,9 @@ namespace transport
 		                    flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
 		                    boost::optional<double> largest_k = boost::none) override;
 
+        void compute_H(const integration_task<number>* tk, std::vector<double>& N,
+                       flattened_tensor<number>& log_H, boost::optional<double> largest_k = boost::none) override;
+
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
 
@@ -1687,6 +1690,78 @@ namespace transport
 
           };
 
+        template <typename number>
+        class HAggregatorPredicate
+        {
+        public:
+          HAggregatorPredicate(const integration_task<number>* tk, model<number>* m, std::vector<double>& N,
+                               flattened_tensor<number>& log_H, boost::optional<double>& lk)
+            : params(tk->get_params()),
+              task(tk),
+              mdl(m),
+              N_vector(N),
+              log_H_vector(log_H),
+              largest_k(lk),
+              __Mp(params.get_Mp()),
+              __params(params.get_vector())
+          {
+          }
+
+          bool operator()(const std::pair< backg_state<number>, number >& __x)
+          {
+            DEFINE_INDEX_TOOLS
+            $RESOURCE_RELEASE
+            $TEMP_POOL{"const auto $1 = $2;"}
+
+            $RESOURCE_PARAMETERS{__params}
+            $RESOURCE_COORDINATES{__x.first}
+
+            const auto __Hsq = $HUBBLE_SQ;
+            const auto __H   = std::sqrt(__Hsq);
+
+            this->N_vector.push_back(static_cast<double>(__x.second));
+            this->log_H_vector.push_back(std::log(__H)); // = log(H)
+
+            // if a largest k-mode was provided,
+            // are we now at a point where we have comfortably covered the horizon crossing time for it?
+            if(!this->largest_k) return false;
+
+            // if(std::log(*largest_k) - __N - std::log(__H) < -0.5) return true;
+            // return false;
+          }
+
+        private:
+          //! pointer to model object
+          model<number>* mdl;
+
+          //! point to task object
+          const integration_task<number>* task;
+
+          //! parameters for the model in use
+          const parameters<number>& params;
+
+          //! cache parameters vectors
+          const flattened_tensor<number>& __params;
+
+          //! cache Planck mass
+          const number __Mp;
+
+          //! output vector for times N
+          std::vector<double>& N_vector;
+
+          //! output vector for values log(aH)
+          flattened_tensor<number>& log_H_vector;
+
+          //! largest k-mode for which we are trying to find a horizon-exit time
+          const boost::optional<double>& largest_k;
+
+          //! time of horizon crossing
+          const double N_horizon_crossing;
+
+          //! normalization of ln(a) at horizon crossing time
+          const double astar_normalization;
+        };
+
       }   // namespace $MODEL_impl
 
 
@@ -1748,6 +1823,61 @@ namespace transport
         system.close_down_workspace();
 			}
 
+    template <typename number>
+    void $MODEL<number>::compute_H(const integration_task<number>* tk, std::vector<double>& N,
+                                   flattened_tensor<number>& log_H, boost::optional<double> largest_k)
+    {
+      DEFINE_INDEX_TOOLS
+
+      N.clear();
+      log_H.clear();
+
+      // set up a functor to evolve the system
+      $MODEL_background_functor<number> system(tk->get_params());
+      system.set_up_workspace();
+
+      auto ics = tk->get_ics_vector();
+
+      backg_state<number> x($MODEL_pool::backg_state_size);
+      x[FLATTEN($^A)] = ics[$^A];
+
+      double N_range = 0.0;
+      bool found_end = false;
+      try
+      {
+        N_range   = tk->get_N_end_of_inflation();
+        found_end = true;
+      }
+      catch(end_of_inflation_not_found& xe)
+      {
+        // try to fall back on a sensible default
+        N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
+      }
+
+      using boost::numeric::odeint::make_adaptive_time_range;
+
+      auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>, number, number, CPPTRANSPORT_ALGEBRA_NAME(backg_state<number>), CPPTRANSPORT_OPERATIONS_NAME(backg_state<number>)};
+      auto range = make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $BACKG_STEP_SIZE);
+
+      $MODEL_impl::HAggregatorPredicate<number> aggregator(tk, this, N, log_H, largest_k);
+
+      // step through iterators, finding first point which is comfortably after time when largest_k has left
+      // the horizon
+      // aggregator writes N, log_aH and the field values into the output vectors at each iteration
+      auto iter = boost::find_if(range, aggregator);
+
+      // if we got to the end of the range, then we didn't cover all exit times up to largest_k
+      // so something has gone wrong
+      if(iter == boost::end(range) && largest_k)
+      {
+        throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_H.size(),
+                                             (N.size() > 0 ? N.back() : 0.0),
+                                             (log_H.size() > 0 ? static_cast<double>(log_H.back()) : 0.0),
+                                             largest_k.get());
+      }
+
+      system.close_down_workspace();
+    }
 
     // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
 

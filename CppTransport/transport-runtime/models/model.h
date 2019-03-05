@@ -282,6 +282,12 @@ namespace transport
 		                            flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
 		                            boost::optional<double> largest_k) = 0;
 
+		    //! Compute H as a function of N similarly to the compute_aH function above. Samples of log(H) are returned
+		    //! in the supplied log_H vector with samples taken from the N vector. This will be useful for computing
+		    //! physical wavenumbers using the matching equation as H is the important dynamical quantity.
+        virtual void compute_H(const integration_task<number>* tk, std::vector<double>& N,
+                       flattened_tensor<number>& log_H, boost::optional<double> largest_k) = 0;
+
 
         // INTERFACE - PARAMETER HANDLING
 
