@@ -1754,12 +1754,6 @@ namespace transport
 
           //! largest k-mode for which we are trying to find a horizon-exit time
           const boost::optional<double>& largest_k;
-
-          //! time of horizon crossing
-          const double N_horizon_crossing;
-
-          //! normalization of ln(a) at horizon crossing time
-          const double astar_normalization;
         };
 
       }   // namespace $MODEL_impl
