@@ -1833,7 +1833,7 @@ namespace transport
       auto ics = tk->get_ics_vector();
 
       backg_state<number> x($MODEL_pool::backg_state_size);
-      x[FLATTEN($^A)] = ics[$^A];
+      x[FLATTEN($A)] = ics[$A];
 
       double N_range = 0.0;
       bool found_end = false;
