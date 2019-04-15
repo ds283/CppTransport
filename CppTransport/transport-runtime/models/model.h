@@ -282,6 +282,12 @@ namespace transport
 		                            flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
 		                            boost::optional<double> largest_k) = 0;
 
+		    //! Compute H as a function of N similarly to the compute_aH function above. Samples of log(H) are returned
+		    //! in the supplied log_H vector with samples taken from the N vector. This will be useful for computing
+		    //! physical wavenumbers using the matching equation as H is the important dynamical quantity.
+        virtual void compute_H(const integration_task<number>* tk, std::vector<double>& N,
+                       flattened_tensor<number>& log_H, boost::optional<double> largest_k) = 0;
+
 
         // INTERFACE - PARAMETER HANDLING
 
@@ -332,16 +338,16 @@ namespace transport
     
         //! compute M tensor in 'standard' index configuration (first index up, second index down)
         //! this is the arrangement needed to compute the mass spectrum
-        virtual void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) = 0;
+        virtual void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) = 0;
 
 
         // MASS SPECTRUM
 
         //! compute the raw mass spectrum
-        virtual void mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+        virtual void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
 
         //! obtain the sorted mass spectrum, normalized to the Hubble rate^2 if desired
-        virtual void sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+        virtual void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
 
 
         // BACKEND
