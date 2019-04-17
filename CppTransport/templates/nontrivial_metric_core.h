@@ -276,16 +276,16 @@ namespace transport
       public:
 
         // calculate gauge transformations to zeta
-        void compute_gauge_xfm_1(const twopf_db_task<number>* __task, const flattened_tensor<number>& __state, flattened_tensor<number>& __dN) override;
-        void compute_gauge_xfm_2(const twopf_db_task<number>* __task, const flattened_tensor<number>& __state, double __k, double __k1, double __k2, double __N, flattened_tensor<number>& __ddN) override;
+        void compute_gauge_xfm_1(const integration_task<number>* __task, const flattened_tensor<number>& __state, flattened_tensor<number>& __dN) override;
+        void compute_gauge_xfm_2(const integration_task<number>* __task, const flattened_tensor<number>& __state, double __k, double __k1, double __k2, double __N, flattened_tensor<number>& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        void u2(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k, double __N, flattened_tensor<number>& __u2) override;
-        void u3(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __u3) override;
+        void u2(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __k, double __N, flattened_tensor<number>& __u2) override;
+        void u3(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __u3) override;
 
-        void A(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __A) override;
-        void B(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __B) override;
-        void C(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) override;
+        void A(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __A) override;
+        void B(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __B) override;
+        void C(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) override;
 
         // calculate mass matrix
         void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) override;
@@ -1425,7 +1425,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::compute_gauge_xfm_1(const twopf_db_task<number>* __task,
+    void $MODEL<number>::compute_gauge_xfm_1(const integration_task<number>* __task,
                                              const flattened_tensor<number>& __state,
                                              flattened_tensor<number>& __dN)
       {
@@ -1451,7 +1451,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::compute_gauge_xfm_2(const twopf_db_task<number>* __task,
+    void $MODEL<number>::compute_gauge_xfm_2(const integration_task<number>* __task,
                                              const flattened_tensor<number>& __state,
                                              double __k, double __k1, double __k2, double __N,
                                              flattened_tensor<number>& __ddN)
@@ -1483,7 +1483,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::u2(const twopf_db_task<number>* __task,
+    void $MODEL<number>::u2(const integration_task<number>* __task,
                             const flattened_tensor<number>& __fields, double __k, double __N,
                             flattened_tensor<number>& __u2)
       {
@@ -1517,7 +1517,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::u3(const twopf_db_task<number>* __task,
+    void $MODEL<number>::u3(const integration_task<number>* __task,
                             const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
                             flattened_tensor<number>& __u3)
       {
@@ -1557,7 +1557,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::A(const twopf_db_task<number>* __task,
+    void $MODEL<number>::A(const integration_task<number>* __task,
                            const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            flattened_tensor<number>& __A)
       {
@@ -1595,7 +1595,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::B(const twopf_db_task<number>* __task,
+    void $MODEL<number>::B(const integration_task<number>* __task,
                            const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            flattened_tensor<number>& __B)
       {
@@ -1629,7 +1629,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::C(const twopf_db_task<number>* __task,
+    void $MODEL<number>::C(const integration_task<number>* __task,
                            const flattened_tensor<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            flattened_tensor<number>& __C)
       {
