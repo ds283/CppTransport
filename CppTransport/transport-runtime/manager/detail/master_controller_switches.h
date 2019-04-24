@@ -440,13 +440,25 @@ namespace transport
         if(option_map.count(CPPTRANSPORT_SWITCH_REJECT_FAILED)) this->arg_cache.set_commit_failed(false);
 
         if(option_map.count(CPPTRANSPORT_SWITCH_PYTHON_EXECUTABLE))
-          this->local_env.set_python_executable(option_map[CPPTRANSPORT_SWITCH_PYTHON_EXECUTABLE].as<std::string>());
+          {
+            auto e = option_map[CPPTRANSPORT_SWITCH_PYTHON_EXECUTABLE].as<std::string>();
+            this->arg_cache.set_python_executable(e);
+            this->local_env.set_python_executable(e);
+          }
 
         if(option_map.count(CPPTRANSPORT_SWITCH_DOT_EXECUTABLE))
-          this->local_env.set_dot_executable(option_map[CPPTRANSPORT_SWITCH_DOT_EXECUTABLE].as<std::string>());
+          {
+            auto e = option_map[CPPTRANSPORT_SWITCH_DOT_EXECUTABLE].as<std::string>();
+            this->arg_cache.set_dot_executable(e);
+            this->local_env.set_dot_executable(e);
+          }
 
         if(option_map.count(CPPTRANSPORT_SWITCH_MAIL_EXECUTABLE))
-          this->local_env.set_sendmail_executable(option_map[CPPTRANSPORT_SWITCH_MAIL_EXECUTABLE].as<std::string>());
+          {
+            auto e = option_map[CPPTRANSPORT_SWITCH_MAIL_EXECUTABLE].as<std::string>();
+            this->arg_cache.set_sendmail_executable(e);
+            this->local_env.set_sendmail_executable(e);
+          }
 
         // process global capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))

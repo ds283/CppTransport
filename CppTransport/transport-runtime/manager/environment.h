@@ -80,10 +80,10 @@ namespace transport
       public:
 
         //! set name of dot executable
-        void set_dot_executable(std::string e) { this->dot_executable = std::move(e); }
+        void set_dot_executable(std::string e);
 
         //! determine whether dot is available
-        bool has_dot() const { return this->dot_available; }
+        bool has_dot() { if(!this->graphviz_cached) this->detect_graphviz(); return this->dot_available; }
 
         //! execute a dot script
         //! returns exit code provided by system()
@@ -100,7 +100,7 @@ namespace transport
       public:
 
         //! set name of python executable
-        void set_python_executable(std::string e) { this->python_executable = std::move(e); }
+        void set_python_executable(std::string e);
 
         //! determine whether a Python interpreter is available
         bool has_python() { if(!this->python_cached) this->detect_python(); return(this->python_available); }
@@ -160,10 +160,10 @@ namespace transport
       public:
 
         //! set name of sendmail executable (usually a script)
-        void set_sendmail_executable(std::string e) { this->sendmail_executable = std::move(e); }
+        void set_sendmail_executable(std::string e);
         
         //! determine whether send email script is available
-        bool has_sendmail() const { return sendmail_available; }
+        bool has_sendmail() { if(!this->sendmail_cached) this->detect_sendmail(); return sendmail_available; }
         
         //! execute sendmail script
         int execute_sendmail(const std::string& body, const std::string& to);
@@ -231,6 +231,9 @@ namespace transport
     
         // GRAPHVIZ SUPPORT
 
+        //! has the status of dot support been cached
+        bool graphviz_cached{false};
+
         //! is dot available?
         bool dot_available{false};
 
@@ -278,6 +281,9 @@ namespace transport
         
         
         // SEND EMAIL SUPPORT
+
+        //! has the status of sendmail support been cached
+        bool sendmail_cached{false};
         
         //! is the sendmail script available?
         bool sendmail_available{false};
@@ -311,14 +317,10 @@ namespace transport
         // detect terminal colour support
         this->detect_terminal_type();
 
-        // detect Graphviz installation
-        this->detect_graphviz();
-        
-        // detect our sendmail script
-        this->detect_sendmail();
-
         // detection of Python support (Python interpreter, Matplotlib, style sheets, Seaborn, etc.) is
         // deferred until needed, since it slows down program initialization
+
+        // detection of Graphviz and sendmail support is also deferred until needed
       }
 
 
@@ -372,10 +374,42 @@ namespace transport
       }
 
 
+    void local_environment::set_python_executable(std::string e)
+      {
+        this->python_executable = std::move(e);
+
+        this->python_cached = false;
+        this->python_available = false;
+        this->python_location.clear();
+      }
+
+
+    void local_environment::set_dot_executable(std::string e)
+      {
+        this->dot_executable = std::move(e);
+
+        this->dot_available = false;
+        this->graphviz_cached = false;
+        this->dot_location.clear();
+      }
+
+
+    void local_environment::set_sendmail_executable(std::string e)
+      {
+        this->sendmail_executable = std::move(e);
+
+        this->sendmail_available = false;
+        this->sendmail_cached = false;
+        this->sendmail_location.clear();
+      }
+
+
     void local_environment::detect_graphviz()
       {
         // TODO: platform introspection
         auto dot = this->find.find(this->dot_executable);
+
+        this->graphviz_cached = true;
 
         if(!dot)
           {
@@ -387,13 +421,15 @@ namespace transport
         this->dot_available = true;
         this->dot_location = *dot;
       }
-    
-    
+
+
     void local_environment::detect_sendmail()
       {
         // TODO: platform introspection
         auto sendmail = this->find.find(this->sendmail_executable);
-        
+
+        this->sendmail_cached = true;
+
         if(!sendmail)
           {
             this->sendmail_available = false;
@@ -412,6 +448,8 @@ namespace transport
         // TODO: Platform introspection
         auto python = this->find.find(this->python_executable);
 
+        this->python_cached = true;
+
         if(!python)
           {
             this->python_available = false;
@@ -422,13 +460,14 @@ namespace transport
         
         this->python_available = true;
         this->python_location = *python;
-
-        this->python_cached = true;
       }
 
 
     void local_environment::detect_matplotlib()
       {
+        // python detection is lazy; we don't look for it until we need it
+        if(!this->python_cached) this->detect_python();
+
         if(!this->python_available)
           {
             this->matplotlib_available = false;
@@ -506,6 +545,9 @@ namespace transport
 
     void local_environment::detect_seaborn()
       {
+        // python detection is lazy; we don't look for it until we need it
+        if(!this->python_cached) this->detect_python();
+
         if(!this->python_available)
           {
             this->seaborn_available = false;
@@ -526,8 +568,7 @@ namespace transport
       }
     
     
-    inline boost::optional< std::string >
-    source_profile()
+    inline boost::optional<std::string> source_profile()
       {
         // TODO: Platform introspection
         const char* user_home = std::getenv(CPPTRANSPORT_HOME_ENV);
@@ -567,6 +608,9 @@ namespace transport
 
     int local_environment::execute_dot(const boost::filesystem::path& script, const boost::filesystem::path& output, const std::string& format)
       {
+        // detection is lazy
+        if(!this->graphviz_cached) this->detect_graphviz();
+
         if(!this->dot_available) return EXIT_FAILURE;
 
         std::ostringstream command;
@@ -582,6 +626,9 @@ namespace transport
     
     int local_environment::execute_sendmail(const std::string& body, const std::string& to)
       {
+        // detection is lazy
+        if(!this->sendmail_cached) this->detect_sendmail();
+
         if(!this->sendmail_available) return EXIT_FAILURE;
 
         std::ostringstream command;
@@ -650,8 +697,8 @@ namespace transport
         
         return default_width;
       }
-    
-    
+
+
   }   // namespace transport
 
 #endif //CPPTRANSPORT_ENVIRONMENT_H
