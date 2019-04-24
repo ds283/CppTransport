@@ -194,6 +194,13 @@ namespace transport
           (CPPTRANSPORT_SWITCH_BUILDDATA, CPPTRANSPORT_HELP_BUILDDATA)
           (CPPTRANSPORT_SWITCH_PROF_AGGREGATE, boost::program_options::value<std::string>(), CPPTRANSPORT_HELP_PROF_AGGREGATE)
           ;
+
+        boost::program_options::options_description config_file_only;
+        config_file_only.add_options()
+          (CPPTRANSPORT_SWITCH_PYTHON_EXECUTABLE, CPPTRANSPORT_HELP_PYTHON_EXECUTABLE)
+          (CPPTRANSPORT_SWITCH_DOT_EXECUTABLE, CPPTRANSPORT_HELP_DOT_EXECUTABLE)
+          (CPPTRANSPORT_SWITCH_MAIL_EXECUTABLE, CPPTRANSPORT_HELP_MAIL_EXECUTABLE)
+          ;
         
         boost::program_options::options_description cmdline_options;
         cmdline_options.add(generic).add(configuration).add(job_options)
@@ -203,7 +210,7 @@ namespace transport
         boost::program_options::options_description config_file_options;
         config_file_options.add(configuration).add(job_options)
           .add(task_reporting).add(action_options).add(report_options).add(plotting)
-          .add(journaling).add(hidden_options);
+          .add(journaling).add(hidden_options).add(config_file_only);
         
         boost::program_options::options_description output_options;
         output_options.add(generic).add(configuration).add(job_options)
@@ -250,8 +257,9 @@ namespace transport
                     try
                       {
                         // parse contents of file; 'true' means allow unregistered options
-                        boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(
-                          instream, config_file_options, true);
+                        boost::program_options::parsed_options file_parsed =
+                          boost::program_options::parse_config_file(instream, config_file_options, true);
+
                         boost::program_options::store(file_parsed, this->option_map);
                         this->warn_unrecognized_switches(file_parsed);
                       }
@@ -414,8 +422,8 @@ namespace transport
             if(w > 0) this->arg_cache.set_default_terminal_width(w);
           }
       }
-    
-    
+
+
     template <typename number>
     void master_controller<number>::recognize_configuration_switches(boost::program_options::variables_map& option_map)
       {
@@ -426,99 +434,82 @@ namespace transport
         
         // add search paths if any were specified
         if(option_map.count(CPPTRANSPORT_SWITCH_INCLUDE_LONG))
-          this->arg_cache.set_search_paths(
-            option_map[CPPTRANSPORT_SWITCH_INCLUDE_LONG].as<std::vector<std::string> >());
+          this->arg_cache.set_search_paths(option_map[CPPTRANSPORT_SWITCH_INCLUDE_LONG].as< std::vector<std::string> >());
         
         if(option_map.count(CPPTRANSPORT_SWITCH_NETWORK_MODE)) this->arg_cache.set_network_mode(true);
         if(option_map.count(CPPTRANSPORT_SWITCH_REJECT_FAILED)) this->arg_cache.set_commit_failed(false);
-        
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_PYTHON_EXECUTABLE))
+          this->local_env.set_python_executable(option_map[CPPTRANSPORT_SWITCH_PYTHON_EXECUTABLE].as<std::string>());
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_DOT_EXECUTABLE))
+          this->local_env.set_dot_executable(option_map[CPPTRANSPORT_SWITCH_DOT_EXECUTABLE].as<std::string>());
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_MAIL_EXECUTABLE))
+          this->local_env.set_sendmail_executable(option_map[CPPTRANSPORT_SWITCH_MAIL_EXECUTABLE].as<std::string>());
+
         // process global capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))
           {
-            long int capacity = -1;
-            try
+            auto cp = this->parse_capacity(option_map, CPPTRANSPORT_SWITCH_CAPACITY);
+            if(cp > 0)
               {
-                capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as < long
-                int > () * 1024 * 1024;            // argument size interpreted in Mb
-              }
-            catch(boost::exception& xe)
-              {
-              }
-            
-            if(capacity > 0)
-              {
-                size_t cp = static_cast<size_t>(capacity);
-                
+                // no need to inform data_manager of the change in capacity, since it will pick it up via the argument_cache object
                 this->arg_cache.set_batcher_capacity(cp);
                 this->arg_cache.set_datapipe_capacity(cp);
-                // no need to inform data_manager of the change in capacity, since it will pick it up via the argument_cache object
               }
-            else
-              {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CAPACITY;
-                this->err(msg.str());
-              }
+
           }
         
         // process datapipe capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CACHE_CAPACITY))
           {
-            long int capacity = -1;
-            try
+            auto cp = this->parse_capacity(option_map, CPPTRANSPORT_SWITCH_CACHE_CAPACITY);
+            if(cp > 0)
               {
-                capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as < long
-                int > () * 1024 * 1024;      // argument size interpreted in Mb
-              }
-            catch(boost::exception& xe)
-              {
-              }
-            
-            if(capacity > 0)
-              {
-                size_t cp = static_cast<size_t>(capacity);
-                
-                this->arg_cache.set_datapipe_capacity(cp);
                 // no need to inform data_manager of the change in capacity, since it will pick it up via the argument_cache object
-              }
-            else
-              {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CACHE_CAPACITY;
-                this->err(msg.str());
+                this->arg_cache.set_datapipe_capacity(cp);
               }
           }
         
         // process batcher capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_BATCHER_CAPACITY))
           {
-            long int capacity = -1;
-            try
+            auto cp = this->parse_capacity(option_map, CPPTRANSPORT_SWITCH_BATCHER_CAPACITY);
+            if(cp > 0)
               {
-                capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as < long
-                int > () * 1024 * 1024;    // argument size interpreted in Mb
-              }
-            catch(boost::exception& xe)
-              {
-              }
-            
-            if(capacity > 0)
-              {
-                size_t cp = static_cast<size_t>(capacity);
-                
-                this->arg_cache.set_batcher_capacity(cp);
                 // no need to inform data_manager of the change in capacity, since it will pick it up via the argument_cache object
-              }
-            else
-              {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_BATCHER_CAPACITY;
-                this->err(msg.str());
+                this->arg_cache.set_batcher_capacity(cp);
               }
           }
       }
-    
-    
+
+
+    template <typename number>
+    size_t master_controller<number>::parse_capacity(const boost::program_options::variables_map& option_map,
+                                                     std::string switch_name)
+      {
+        long int capacity = -1;
+
+        try
+          {
+            // argument size interpreted in Mb
+            capacity = option_map[switch_name].as<long int>() * 1024 * 1024;
+          }
+        catch(boost::exception& xe)
+          {
+          }
+
+        if(capacity > 0) return static_cast<size_t>(capacity);
+
+        std::ostringstream msg;
+        msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << switch_name;
+        this->err(msg.str());
+
+        return -1;
+      }
+
+
     template <typename number>
     void master_controller<number>::recognize_repository_switches(boost::program_options::variables_map& option_map)
       {
@@ -684,7 +675,7 @@ namespace transport
               }
           }
         
-        // process Matplotlib environment, if provided
+        // process Matplotlib backend, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_MPL_BACKEND))
           {
             if(!this->arg_cache.set_matplotlib_backend(option_map[CPPTRANSPORT_SWITCH_MPL_BACKEND].as<std::string>()))
