@@ -165,6 +165,24 @@ namespace y
       {
         return std::make_shared<GiNaC::ex>(GiNaC::tan(arg));
       }
+
+
+    std::shared_ptr<GiNaC::ex> expression_tree_driver::sec(GiNaC::ex& arg)
+      {
+        return std::make_shared<GiNaC::ex>(1.0/GiNaC::cos(arg));
+      }
+
+
+    std::shared_ptr<GiNaC::ex> expression_tree_driver::cosec(GiNaC::ex& arg)
+      {
+        return std::make_shared<GiNaC::ex>(1.0/GiNaC::sin(arg));
+      }
+
+
+    std::shared_ptr<GiNaC::ex> expression_tree_driver::cot(GiNaC::ex& arg)
+      {
+        return std::make_shared<GiNaC::ex>(1.0/GiNaC::tan(arg));
+      }
     
     
     std::shared_ptr<GiNaC::ex> expression_tree_driver::asin(GiNaC::ex& arg)
@@ -206,6 +224,24 @@ namespace y
     std::shared_ptr<GiNaC::ex> expression_tree_driver::tanh(GiNaC::ex& arg)
       {
         return std::make_shared<GiNaC::ex>(GiNaC::tanh(arg));
+      }
+
+
+    std::shared_ptr<GiNaC::ex> expression_tree_driver::sech(GiNaC::ex& arg)
+      {
+        return std::make_shared<GiNaC::ex>(1.0/GiNaC::cosh(arg));
+      }
+
+
+    std::shared_ptr<GiNaC::ex> expression_tree_driver::cosech(GiNaC::ex& arg)
+      {
+        return std::make_shared<GiNaC::ex>(1.0/GiNaC::sinh(arg));
+      }
+
+
+    std::shared_ptr<GiNaC::ex> expression_tree_driver::coth(GiNaC::ex& arg)
+      {
+        return std::make_shared<GiNaC::ex>(1.0/GiNaC::tanh(arg));
       }
     
     

@@ -81,8 +81,10 @@ namespace cpp
         // not a standard operation, so assume it must be a special function
         // look up its C++ form in func_map, and then format its arguments,
         // taking care to keep track of use counts
-        
         auto t = func_convert.find(name);
+
+        // if no match was found, we don't know what to do
+        // give up in despair
         if(t == func_convert.end())
           {
             error_context err_ctx = this->data_payload.make_error_context();
