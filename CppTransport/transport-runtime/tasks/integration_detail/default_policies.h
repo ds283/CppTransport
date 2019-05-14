@@ -83,7 +83,6 @@ namespace transport
           };
 
 
-        // default cubic triangle policy requires ordering k1 > k2 > k3
         class DefaultCubicTrianglePolicy
           {
 
@@ -123,7 +122,6 @@ namespace transport
           };
 
 
-        // default alpha-beta triangle policy required ordering k1 > k2 > k3
         class DefaultAlphaBetaTrianglePolicy
           {
 
