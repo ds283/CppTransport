@@ -342,7 +342,7 @@ built_in_function: abs open_bracket expression close_bracket                    
         | atanh open_bracket expression close_bracket                                   { $$ = driver.expr.atanh(*$3); }
         | exp open_bracket expression close_bracket                                     { $$ = driver.expr.exp(*$3); }
         | log open_bracket expression close_bracket                                     { $$ = driver.expr.log(*$3); }
-				| pow open_bracket expression comma expression close_bracket                    { $$ = driver.expr.pow(*$3, *$5); }
+		| pow open_bracket expression comma expression close_bracket                    { $$ = driver.expr.pow(*$3, *$5); }
         | Li2 open_bracket expression close_bracket                                     { $$ = driver.expr.Li2(*$3); }
         | Li open_bracket expression comma expression close_bracket                     { $$ = driver.expr.Li(*$3, *$5); }
         | G open_bracket expression comma expression close_bracket                      { $$ = driver.expr.G(*$3, *$5); }
