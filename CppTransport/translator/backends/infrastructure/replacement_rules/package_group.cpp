@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -111,6 +112,10 @@ void package_group::build_simple_directiveset()
     this->build_set(this->directive_packages, this->simple_directives, [](const auto& pkg) -> auto& { return pkg->get_simple(); });
   }
 
+void package_group::build_for_directiveset()
+{
+  this->build_set(this->directive_packages, this->for_directives, [](const auto& pkg) -> auto& { return pkg->get_for(); });
+}
 
 void package_group::build_index_directiveset()
   {

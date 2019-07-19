@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -60,6 +61,10 @@ namespace y
         void set_core(lexeme_type& lex);
     
         void set_implementation(lexeme_type& lex);
+
+        void set_sampling(lexeme_type& lex);
+
+        void set_sampling_template(lexeme_type& lex);
     
         void set_abserr(struct stepper& s, lexeme_type& lex);
     

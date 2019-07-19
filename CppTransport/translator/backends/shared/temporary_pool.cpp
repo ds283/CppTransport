@@ -69,6 +69,7 @@ namespace macro_packages
       {
         if(!this->tag_set)
           {
+            // TODO: Fix this error being triggered here for the sampling template file
             error_context err_ctx = this->data_payload.make_error_context();
             err_ctx.warn(WARNING_TEMPORARY_NO_TAG_SET);
           }

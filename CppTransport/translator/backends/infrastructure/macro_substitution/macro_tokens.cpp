@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -381,6 +382,87 @@ namespace token_list_impl
     void simple_directive_token::evaluate()
       {
       }
+
+    for_macro_token::for_macro_token(const std::string& m, const forloop_argument_list& a,
+                                           macro_packages::replacement_rule_for& r, for_macro_type t,
+                                           error_context ec)
+            : generic_token(m, std::move(ec)),
+              name(m),
+              args(a),
+              rule(r),
+              type(t),
+              argument_error(false)
+    {
+    }
+
+
+    void for_macro_token::evaluate()
+    {
+      // evaluate the macro, and cache the result
+      try
+      {
+        this->conversion = this->rule(this->args);
+      }
+      catch(macro_packages::argument_mismatch& xe)
+      {
+        if(!this->argument_error)
+        {
+          this->error(xe.what());
+          this->argument_error = true;
+        }
+      }
+      catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
+    }
+
+    for_directive_token::for_directive_token(const std::string& m, const forloop_argument_list& a,
+                                                   macro_packages::directive_for& r, error_context ec)
+            : generic_token(m, std::move(ec)),
+              name(m),
+              args(a),
+              rule(r),
+              argument_error(false)
+    {
+      // evaluation occurs on construction in order to guarantee that
+      // each directive is evaluated exactly once
+      try
+      {
+        conversion = rule(args);
+      }
+      catch(macro_packages::argument_mismatch& xe)
+      {
+        this->error(xe.what());
+        argument_error = true;
+      }
+      catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
+    }
+
+
+    void for_directive_token::evaluate()
+    {
+      // evaluate the macro, and cache the result
+      try
+      {
+        this->conversion = this->rule(this->args);
+      }
+      catch(macro_packages::argument_mismatch& xe)
+      {
+        if(!this->argument_error)
+        {
+          this->error(xe.what());
+          this->argument_error = true;
+        }
+      }
+      catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
+    }
     
     
     index_directive_token::index_directive_token(const std::string& m, const index_literal_list& i,

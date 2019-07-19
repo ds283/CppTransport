@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -32,7 +33,7 @@
 #include <string>
 
 
-std::string to_printable(const std::string& input, bool quote=true, bool allow_newlines=false);
+std::string to_printable(const std::string& input, bool quote=true, bool allow_newlines=false, bool init = false);
 
 
 #endif //CPPTRANSPORT_TO_PRINTABLE_H
