@@ -72,13 +72,13 @@ namespace transport
     // store wavenumbers to a relative precision of 1 part in 1E5
     constexpr double       CPPTRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION   = (1E-5);
 
-    constexpr auto         CPPTRANSPORT_PYTHON_EXECUTABLE                  = "python";
-    constexpr auto         CPPTRANSPORT_DOT_EXECUTABLE                     = "dot";
-    constexpr auto         CPPTRANSPORT_SENDMAIL_EXECUTABLE                = "CppTransport-sendmail";
+    constexpr auto         CPPTRANSPORT_DEFAULT_PYTHON_EXECUTABLE          = "python";
+    constexpr auto         CPPTRANSPORT_DEFAULT_DOT_EXECUTABLE             = "dot";
+    constexpr auto         CPPTRANSPORT_DEFAULT_SENDMAIL_EXECUTABLE        = "CppTransport-sendmail";
     
-    constexpr auto         CPPTRANSPORT_DEFAULT_PYTHON_PATH                = "/usr/bin/python";
-    constexpr auto         CPPTRANSPORT_DEFAULT_DOT_PATH                   = "/usr/bin/dot";
-    constexpr auto         CPPTRANSPORT_DEFAULT_SENDMAIL_PATH              = "/usr/bin/CppTransport-sendmail";
+    constexpr auto         CPPTRANSPORT_DEFAULT_PYTHON_LOCATION            = "/usr/bin";
+    constexpr auto         CPPTRANSPORT_DEFAULT_DOT_LOCATION               = "/usr/bin";
+    constexpr auto         CPPTRANSPORT_DEFAULT_SENDMAIL_LOCATION          = "/usr/bin";
 
     constexpr auto         CPPTRANSPORT_HOME_ENV                           = "HOME";
     constexpr auto         CPPTRANSPORT_PATH_ENV                           = "CPPTRANSPORT_PATH";

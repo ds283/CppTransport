@@ -74,7 +74,7 @@ namespace transport
         //! Notice that argument_cache is a dependency of the error, warning and message handlers and therefore
         //! cannot itself handle errors; all errors should be pushed back to the caller by status flags or
         //! using exceptions. Then they have to be handled at the call-site rather than within argument_cache.
-        argument_cache();
+        argument_cache() = default;
 
 		    //! destructor is default
         ~argument_cache() = default;
@@ -101,10 +101,10 @@ namespace transport
 
         //! Set colourized output status
         void set_colour_output(bool g)                            { this->colour_output = g; }
-        
+
         //! Get default terminal width
         unsigned int get_default_terminal_width() const           { return this->terminal_width; }
-        
+
         //! Set default terminal width
         void set_default_terminal_width(unsigned int w)           { this->terminal_width = w; }
 
@@ -113,10 +113,10 @@ namespace transport
 
         //! Set network mode
         void set_network_mode(bool m)                             { this->network_mode = m; }
-        
+
         //! Commit failed integrations?
         bool get_commit_failed() const                            { return this->commit_failed; }
-        
+
         //! Set commit-failed mode
         void set_commit_failed(bool c)                            { this->commit_failed = c; }
 
@@ -130,10 +130,10 @@ namespace transport
 
         //! Get create mode status
         bool get_create_model() const                             { return(this->create); }
-        
+
         //! Set upgrade mode
         void set_upgrade_mode(bool u)                             { this->upgrade = u; }
-        
+
         //! Get upgrade mode
         bool get_upgrade_mode() const                             { return upgrade; }
 
@@ -216,48 +216,49 @@ namespace transport
 
         /// Get Matplotlib backend
         matplotlib_backend get_matplotlib_backend() const { return this->mpl_backend; }
-        
-        
+
+
         // TASK PROGRESS REPORTING
-        
+
       public:
-        
+
         //! Set percent interval between progress reports
         bool set_report_percent_interval(unsigned int interval);
-        
+
         //! Set time interval between progress reports; returns true if interval was recognized, or false if not
         bool set_report_time_interval(std::string interval);
-    
+
         //! Set time delay before first report is issued
         bool set_report_time_delay(std::string interval);
-        
+
         //! Get percent interval between progress reports
         unsigned int get_report_percent_interval() const { return this->report_percent_interval; }
-        
+
         //! Get time interval between progress reports; returned in seconds
         unsigned int get_report_time_interval() const { return this->report_time_interval; }
-        
+
         //! Get time interval before first report is issued; returned in seconds
         unsigned int get_report_time_delay() const { return this->report_time_delay; }
-        
+
         //! Set email address used for progress reports
         void set_report_email(const std::vector<std::string>& email);
-        
+
         //! Get email address used for progress reports (may be null if no email address is set)
         const std::list< std::string >& get_report_email() const { return this->report_email; }
-        
+
         //! Set flags for email events
         bool set_email_flags(const std::string& flags);
-        
+
         //! Send email at begin task events?
         bool email_begin() const { return this->mail_begin; }
-        
+
         //! Send email at end task events?
         bool email_end() const { return this->mail_end; }
-        
+
         //! Send email at periodic reporting events?
         bool email_periodic() const { return this->mail_periodic; }
-        
+
+
         // SEARCH PATHS
 
       public:
@@ -268,12 +269,35 @@ namespace transport
 
         //! get search paths
         const std::list< boost::filesystem::path > get_search_paths();
-        
-        
+
+
+        // EXECUTABLE NAMES
+
+	    public:
+
+	      //! set Python executable name
+	      void set_python_executable(std::string e) { this->python_executable = std::move(e); }
+
+	      //! get Python executable name
+	      const std::string& get_python_executable() { return this->python_executable; }
+
+	      //! set dot (Graphvix) executable name
+	      void set_dot_executable(std::string e) { this->dot_executable = std::move(e); }
+
+	      //! get dot (Graphviz) executable name
+	      const std::string& get_dot_executable() { return this->dot_executable; }
+
+	      //! set CppTransport-sendmail executable
+	      void set_sendmail_executable(std::string e) { this->sendmail_executable = std::move(e); }
+
+	      //! get CppTransport-sendmail executable
+	      const std::string& get_sendmail_executable() { return this->sendmail_executable; }
+
+
         // UTILITY FUNCTIONS
-  
+
       private:
-    
+
         //! parse a time interval string into a number of seconds
         //! unit is the default unit (in seconds) if no unit is specified
         //! available units are s, m, h, d for seconds, minutes, hours, days
@@ -285,83 +309,96 @@ namespace transport
       private:
 
         //! produce Gantt chart?
-        bool gantt_chart;
+        bool gantt_chart{false};
 
         //! filename for Gantt chart, if so
         std::string gantt_filename;
 
         //! produce journal
-        bool journal;
+        bool journal{false};
 
         //! filename for journal, if so
         std::string journal_filename;
 
         //! verbose output?
-        bool verbose;
+        bool verbose{false};
 
         //! write out model information?
-        bool list_models;
+        bool list_models{false};
 
         //! recovery mode?
-        bool recovery;
-        
+        bool recovery{false};
+
         //! upgrade mode
-        bool upgrade;
+        bool upgrade{false};
 
         //! create mode?
-        bool create;
+        bool create{false};
 
         //! colour output?
-        bool colour_output;
-        
+        bool colour_output{false};
+
         //! default terminal width
-        unsigned int terminal_width;
+        unsigned int terminal_width{CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH};
 
         //! network mode?
-        bool network_mode;
-        
+        bool network_mode{false};
+
         //! commit integrations with failures?
-        bool commit_failed;
+        bool commit_failed{false};
 
         //! Storage capacity per batcher
-        size_t batcher_capacity;
+        size_t batcher_capacity{CPPTRANSPORT_DEFAULT_BATCHER_STORAGE};
 
         //! Data cache capacity per datapipe
-        size_t pipe_capacity;
+        size_t pipe_capacity{CPPTRANSPORT_DEFAULT_PIPE_STORAGE};
 
         //! checkpoint interval in seconds. Zero indicates that checkpointing is disabled
-        unsigned int checkpoint_interval;
+        unsigned int checkpoint_interval{CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL};
 
         //! plotting environment
-        plot_style plot_env;
+        plot_style plot_env{plot_style::raw_matplotlib};
 
         //! Matplotlib backend
-        matplotlib_backend mpl_backend;
+        matplotlib_backend mpl_backend{matplotlib_backend::unset};
 
         //! search paths for assets, eg. jQuery, bootstrap ...
         //! have to use std::string internally since boost::filesystem::path won't serialize
         std::list< std::string > search_paths;
-        
+
         //! percentage interval between updates
-        unsigned int report_percent_interval;
-        
+        unsigned int report_percent_interval{CPPTRANSPORT_DEFAULT_REPORT_PERCENT_INTERVAL};
+
         //! time interval between updates (value quoted in seconds)
-        unsigned int report_time_interval;
-        
+        unsigned int report_time_interval{CPPTRANSPORT_DEFAULT_REPORT_TIME_INTERVAL};
+
         //! time interval before first report is issued (value quoted in seconds)
-        unsigned int report_time_delay;
-        
+        unsigned int report_time_delay{CPPTRANSPORT_DEFAULT_REPORT_TIME_DELAY};
+
         //! email address used for updates
         std::list< std::string > report_email;
-        
+
         //! send emails at begin task events?
-        bool mail_begin;
-        
+        bool mail_begin{true};
+
         //! send emails at end task events?
-        bool mail_end;
-        
+        bool mail_end{true};
+
         //! send emails at periodic task events?
-        bool mail_periodic;
+        bool mail_periodic{true};
+
+
+        // executable names
+
+        //! Python executable
+        std::string python_executable{CPPTRANSPORT_DEFAULT_PYTHON_EXECUTABLE};
+
+        //! dot (Graphviz) executable
+        std::string dot_executable{CPPTRANSPORT_DEFAULT_DOT_EXECUTABLE};
+
+        //! sendmail executable
+        std::string sendmail_executable{CPPTRANSPORT_DEFAULT_SENDMAIL_EXECUTABLE};
+
 
 
         // enable boost::serialization support, and hence automated packing for transmission over MPI
@@ -395,36 +432,12 @@ namespace transport
             ar & mail_begin;
             ar & mail_end;
             ar & mail_periodic;
+            ar & python_executable;
+            ar & dot_executable;
+            ar & sendmail_executable;
           }
 
 	    };
-
-
-    argument_cache::argument_cache()
-	    : gantt_chart(false),
-        journal(false),
-	      verbose(false),
-        list_models(false),
-        recovery(false),
-        upgrade(false),
-        create(false),
-        colour_output(true),
-        terminal_width(CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH),
-        network_mode(false),
-        commit_failed(true),
-        batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
-        pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),
-        checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL),
-        plot_env(plot_style::raw_matplotlib),
-        mpl_backend(matplotlib_backend::unset),
-        report_percent_interval(CPPTRANSPORT_DEFAULT_REPORT_PERCENT_INTERVAL),
-        report_time_interval(CPPTRANSPORT_DEFAULT_REPORT_TIME_INTERVAL),
-        report_time_delay(CPPTRANSPORT_DEFAULT_REPORT_TIME_DELAY),
-        mail_begin(true),
-        mail_end(true),
-        mail_periodic(true)
-	    {
-	    }
 
 
     bool argument_cache::set_plot_environment(std::string e)

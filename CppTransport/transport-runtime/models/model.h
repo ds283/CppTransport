@@ -126,7 +126,7 @@ namespace transport
 
     //! set up a typedef for the author database -- basically an
     //! indexed list of author_record records
-    typedef std::map< std::string, std::unique_ptr<author_record> > author_db;
+    using author_db = std::map< std::string, std::unique_ptr<author_record> >;
 
     
     // TEMPLATED ALIASES FOR TENSOR TYPES
@@ -278,9 +278,15 @@ namespace transport
         //! at internally-chosen values of N -- also returned in the corresponding vector
         //! Also computes log(a^2 * H^2 largest eigenvalue of the mass matrix) and returns this in
         //! log_a2H2M. Note that the mass matrix used in the code is M^2/H^2, ie. is dimensionless
-		    virtual void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N,
+		    virtual void compute_aH(const integration_task<number>* tk, std::vector<double>& N,
 		                            flattened_tensor<number>& log_aH, flattened_tensor<number>& log_a2H2M,
 		                            boost::optional<double> largest_k) = 0;
+
+		    //! Compute H as a function of N similarly to the compute_aH function above. Samples of log(H) are returned
+		    //! in the supplied log_H vector with samples taken from the N vector. This will be useful for computing
+		    //! physical wavenumbers using the matching equation as H is the important dynamical quantity.
+        virtual void compute_H(const integration_task<number>* tk, std::vector<double>& N,
+                       flattened_tensor<number>& log_H, boost::optional<double> largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING
@@ -300,10 +306,10 @@ namespace transport
         // these calculate configuration-dependent gauge transformations using full cosmological perturbation theory
         
         //! compute first-order gauge transformation
-        virtual void compute_gauge_xfm_1(const twopf_db_task<number>* __task, const flattened_tensor<number>& __state, flattened_tensor<number>& __dN) = 0;
+        virtual void compute_gauge_xfm_1(const integration_task<number>* __task, const flattened_tensor<number>& __state, flattened_tensor<number>& __dN) = 0;
 
         //! compute second-order gauge transformation
-        virtual void compute_gauge_xfm_2(const twopf_db_task<number>* __task, const flattened_tensor<number>& __state, double __k, double __k1, double __k2, double __N, flattened_tensor<number>& __ddN) = 0;
+        virtual void compute_gauge_xfm_2(const integration_task<number>* __task, const flattened_tensor<number>& __state, double __k, double __k1, double __k2, double __N, flattened_tensor<number>& __ddN) = 0;
 
         
         // TENSORS
@@ -311,37 +317,37 @@ namespace transport
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
 
         //! compute u2 tensor in 'standard' index configuration (first index up, remaining indices down)
-        virtual void u2(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k, double __N, flattened_tensor<number>& __u2) = 0;
+        virtual void u2(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __k, double __N, flattened_tensor<number>& __u2) = 0;
 
         //! compute u3 tensor in 'standard' index configuration (first index up, remaining indices down)
-        virtual void u3(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __u3) = 0;
+        virtual void u3(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __u3) = 0;
     
         //! compute A tensor in 'standard' index configuration (all indices down)
         //! currently A isn't used by the platform, so the precise index arrangement is arbitrary
-        virtual void A(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __A) = 0;
+        virtual void A(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __A) = 0;
     
         //! compute B tensor in 'standard' index configuration (last index up, first two indices down)
         //! this is the index configuration needed for shifting a correlation function from momenta
         //! to time derivatives
-        virtual void B(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __B) = 0;
+        virtual void B(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __B) = 0;
     
         //! compute C tensor in 'standard' index configuration (first index up, last two indices down)
         //! this is the index configuration needed for shifting a correlation function from momenta
         //! to time derivatives
-        virtual void C(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) = 0;
+        virtual void C(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) = 0;
     
         //! compute M tensor in 'standard' index configuration (first index up, second index down)
         //! this is the arrangement needed to compute the mass spectrum
-        virtual void M(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) = 0;
+        virtual void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) = 0;
 
 
         // MASS SPECTRUM
 
         //! compute the raw mass spectrum
-        virtual void mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+        virtual void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
 
         //! obtain the sorted mass spectrum, normalized to the Hubble rate^2 if desired
-        virtual void sorted_mass_spectrum(const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+        virtual void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
 
 
         // BACKEND

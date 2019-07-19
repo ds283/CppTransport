@@ -127,6 +127,10 @@ namespace transport
         //! recognize configuration switches
         void recognize_configuration_switches(boost::program_options::variables_map& option_map);
 
+        //! utility funciton used by recognize_configuration_switches() to read numerical capacities from the
+        //! command line
+        size_t parse_capacity(const boost::program_options::variables_map& option_map, std::string switch_name);
+
         //! recognize repository & reporting switches
         void recognize_repository_switches(boost::program_options::variables_map& option_map);
 
