@@ -304,6 +304,7 @@ INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/json DESTINATION include/cp
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/include/SPLINTER DESTINATION include/cpptransport)
 INSTALL(DIRECTORY ${ODEINT_INCLUDE_DIRS}/boost DESTINATION include/cpptransport)
 INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib DESTINATION lib/cpptransport)
+INSTALL(DIRECTORY ${EXTERNAL_INSTALL_PREFIX}/lib64 DESTINATION lib64/cpptransport)
 
 # install CMake finder script for all these assets
 CONFIGURE_FILE(cmake/FindCppTransport.cmake.in ${CMAKE_BINARY_DIR}/FindCppTransport.cmake @ONLY)
