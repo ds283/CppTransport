@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -180,8 +181,11 @@ class C_style_printer: public language_printer
 
   public:
 
-    //! generate initialization list frmo a set of strings
+    //! generate initialization list from a set of strings
     virtual std::string initialization_list(const std::vector<std::string>& list, bool quote) const override;
+
+    //! generate CpptSample style list of fields from a set of strings
+    virtual std::string cpptsample_fields_list(const std::vector<std::string>& list, bool init) const override;
 
 
     // INTERFACE -- LAMBDAS

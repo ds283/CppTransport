@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -49,6 +50,9 @@ namespace macro_packages
         
         //! package of simple directives
         typedef std::vector< std::unique_ptr<directive_simple> > simple_directive_package;
+
+        //! package of for directives
+        typedef std::vector< std::unique_ptr<directive_for> > for_directive_package;
         
         //! package of index directives
         typedef std::vector< std::unique_ptr<directive_index> > index_directive_package;
@@ -80,6 +84,9 @@ namespace macro_packages
         
         //! return simple directives package
         const simple_directive_package& get_simple() { return this->simple_package; }
+
+        //! return for directives package
+        const for_directive_package& get_for() { return this->for_package; }
         
         //! return index directives package
         const index_directive_package& get_index() const { return this->index_package; }
@@ -93,6 +100,9 @@ namespace macro_packages
         
         //! package of simple directives
         simple_directive_package simple_package;
+
+        //! package of for directives
+        for_directive_package for_package;
         
         //! package of index directives
         index_directive_package index_package;

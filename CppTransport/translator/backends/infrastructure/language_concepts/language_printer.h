@@ -134,6 +134,9 @@ class language_printer
     //! generate initialization list from a set of strings
     virtual std::string initialization_list(const std::vector<std::string>& list, bool quote) const = 0;
 
+    //! generate initialization list from a set of strings - cpptsample style
+    virtual std::string cpptsample_fields_list(const std::vector<std::string>& list, bool init) const = 0;
+
 
     // INTERFACE -- LAMBDAS
 

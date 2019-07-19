@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -57,9 +58,16 @@ namespace macro_packages
     constexpr unsigned int UUID_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int HEADER_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int CORE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int SAMPLE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int VALUES_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PRIORS_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int MCMC_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int NUMBER_FIELDS_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int NUMBER_PARAMS_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int FIELD_LIST_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int CPPTSAMPLE_FIELD_LIST_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int CPPTSAMPLE_FIELD_LIST_INIT_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PARAMS_LIST_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int LATEX_LIST_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int PARAM_LIST_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int PLATX_LIST_TOTAL_ARGUMENTS = 0;
@@ -73,6 +81,7 @@ namespace macro_packages
     constexpr unsigned int PERT_STEP_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int UNIQUE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int TEST_TOTAL_ARGUMENTS = 0;
 
 
     class replace_tool : public replacement_rule_simple
@@ -808,6 +817,126 @@ namespace macro_packages
 
       };
 
+    class replace_sample : public replacement_rule_simple
+    {
+        // CONSTRUCTOR, DESTRUCTOR
+    public:
+        //! constructor
+        replace_sample(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), SAMPLE_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+        //! destructor
+        virtual ~replace_sample() = default;
+
+        // INTERNAL API
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+        // INTERNAL DATA
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+    };
+
+    class replace_values : public replacement_rule_simple
+    {
+        // CONSTRUCTOR, DESTRUCTOR
+    public:
+        //! constructor
+        replace_values(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), VALUES_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+        //! destructor
+        virtual ~replace_values() = default;
+
+        // INTERNAL API
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+        // INTERNAL DATA
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+    };
+
+    class replace_priors : public replacement_rule_simple
+    {
+        // CONSTRUCTOR, DESTRUCTOR
+    public:
+        //! constructor
+        replace_priors(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), PRIORS_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+        //! destructor
+        virtual ~replace_priors() = default;
+
+        // INTERNAL API
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+        // INTERNAL DATA
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+    };
+
+    class replace_mcmc : public replacement_rule_simple
+    {
+        // CONSTRUCTOR, DESTRUCTOR
+    public:
+        //! constructor
+        replace_mcmc(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), MCMC_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+        //! destructor
+        virtual ~replace_mcmc() = default;
+
+        // INTERNAL API
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+        // INTERNAL DATA
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+    };
+
 
     class replace_number_fields : public replacement_rule_simple
       {
@@ -927,6 +1056,123 @@ namespace macro_packages
         language_printer& printer;
 
       };
+
+    class replace_fields : public replacement_rule_simple
+    {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+    public:
+
+        //! constructor
+        replace_fields(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), CPPTSAMPLE_FIELD_LIST_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+
+        //! destructor
+        virtual ~replace_fields() = default;
+
+
+        // INTERNAL API
+
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+    };
+
+    class replace_fields_init : public replacement_rule_simple
+    {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+    public:
+
+        //! constructor
+        replace_fields_init(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), CPPTSAMPLE_FIELD_LIST_INIT_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+
+        //! destructor
+        virtual ~replace_fields_init() = default;
+
+
+        // INTERNAL API
+
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+    };
+
+    class replace_params : public replacement_rule_simple
+    {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+    public:
+
+        //! constructor
+        replace_params(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), PARAMS_LIST_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+
+        //! destructor
+        virtual ~replace_params() = default;
+
+
+        // INTERNAL API
+
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+    };
 
 
     class replace_latex_list : public replacement_rule_simple
@@ -1407,6 +1653,45 @@ namespace macro_packages
         language_printer& printer;
 
       };
+
+    class replace_test : public replacement_rule_simple
+    {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+    public:
+
+        //! constructor
+        replace_test(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), TEST_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+
+        //! destructor
+        virtual ~replace_test() = default;
+
+
+        // INTERNAL API
+
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+    };
 
 
     class replace_unique : public replacement_rule_simple

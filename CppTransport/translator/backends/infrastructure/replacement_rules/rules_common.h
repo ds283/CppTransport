@@ -30,6 +30,8 @@
 // use vector to allow index subscripting
 typedef std::vector< contexted_value<std::string> > macro_argument_list;
 
+// use a custom type of argument lists for our for-loops
+typedef std::vector< contexted_value<std::string> > forloop_argument_list;
 
 namespace macro_packages
   {

@@ -21,6 +21,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -28,7 +29,7 @@
 #include "to_printable.h"
 
 
-std::string to_printable(const std::string& input, bool quote, bool allow_newlines)
+std::string to_printable(const std::string& input, bool quote, bool allow_newlines, bool init)
   {
     std::string result = "";
 
@@ -88,6 +89,14 @@ std::string to_printable(const std::string& input, bool quote, bool allow_newlin
       }
  
     if(quote) *out++ = '"';
+    if(init)
+    {
+      *out++ = '_';
+      *out++ = 'I';
+      *out++ = 'n';
+      *out++ = 'i';
+      *out++ = 't';
+    }
     
     return (result);
   }
