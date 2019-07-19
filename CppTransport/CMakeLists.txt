@@ -318,6 +318,10 @@ SET(TEMPLATES_FILES
   templates/canonical_mpi.h
   templates/nontrivial_metric_core.h
   templates/nontrivial_metric_mpi.h
+  templates/cosmosis_module_template.h
+  templates/cosmosis_priors_template.ini
+  templates/cosmosis_values_template.ini
+  templates/cpptsample_CMakeLists_template.txt
   )
 
 SET(TEMPLATES_VEXCL_CUDA_FILES
@@ -1242,6 +1246,7 @@ SET(TRANSPORT_RUNTIME_TASKS_FILES
   transport-runtime/tasks/task_helper.h
   transport-runtime/tasks/task_types.h
   transport-runtime/tasks/tasks_forward_declare.h
+  transport-runtime/tasks/sampling_integration_batcher.h
   )
 
 SET(TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES

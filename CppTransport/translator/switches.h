@@ -79,6 +79,9 @@
 #define FAST_SWITCH                   "fast"
 #define FAST_HELP                     "unroll all loops and optimize for speed"
 
+#define CMAKE_SWITCH                   "generate-cmake"
+#define CMAKE_HELP                     "Generated a CMakeLists.txt file in the present working directory, for use with CpptSample"
+
 #define PROFILING_SWITCH              "profile"
 #define PROFILING_HELP                "display profiling information"
 

@@ -129,11 +129,16 @@ constexpr auto ERROR_DESCRIPTION_REDECLARATION       = "Redeclaration of descrip
 
 constexpr auto ERROR_IMPLEMENTATION_REDECLARATION    = "Redeclaration of implementation template";
 constexpr auto ERROR_CORE_REDECLARATION              = "Redeclaration of core template";
+constexpr auto ERROR_SAMPLING_REDECLARATION          = "Redeclaration of sampling bool";
+constexpr auto ERROR_SAMPLING_TEMPLATE_REDECLARATION = "Redeclaration of sampling template file";
 constexpr auto ERROR_AUTHORNAME_REDECLARATION        = "Redeclaration of author name";
 constexpr auto ERROR_EMAIL_REDECLARATION             = "Redeclaration of email address (only one address per author is allowed)";
 constexpr auto ERROR_INSTITUTE_REDECLARATION         = "Redeclaration of institutional affiliation (only one affiliation per author is allowed)";
 constexpr auto ERROR_LATEX_REDECLARATION             = "Redeclaration of 'latex' attribute";
 constexpr auto ERROR_VALUE_REDECLARATION             = "Redeclaration of 'value' attribute";
+constexpr auto ERROR_PRIOR_REDECLARATION             = "Redeclaration of 'prior' attribute";
+constexpr auto ERROR_DERIVVALUE_REDECLARATION         = "Redeclaration of 'deriv_value' attribute";
+constexpr auto ERROR_DERIVPRIOR_REDECLARATION         = "Redeclaration of 'deriv_prior' attribute";
 constexpr auto ERROR_STEPPER_REDECLARATION           = "Redeclaration of stepper 'name' attribute";
 constexpr auto ERROR_ABSERR_REDECLARATION            = "Redeclaration of stepper 'abserr' attribute";
 constexpr auto ERROR_RELERR_REDECLARATION            = "Redeclaration of stepper 'relerr' attribute";

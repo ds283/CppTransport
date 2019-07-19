@@ -259,6 +259,31 @@ void translation_unit::populate_output_filenames()
 
     // assign these values to the translator data payload
     this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
+
+    // If we are doing sampling, we need to assign the sampling filenames.
+    if(*this->translator_payload.templates.get_sampling())
+    {
+      boost::filesystem::path sampling_output;
+      boost::filesystem::path sampling_values_output;
+      boost::filesystem::path sampling_priors_output;
+      boost::filesystem::path sampling_mcmc_output;
+      boost::filesystem::path sampling_cmake_output;
+      std::string             sampling_guard;
+
+      //This sets up our filepath for the sampling output file
+      sampling_output        = this->mangle_output_name(name, "sampling");
+      sampling_values_output = this->mangle_output_name(name, "values");
+      sampling_priors_output = this->mangle_output_name(name, "priors");
+      sampling_mcmc_output   = this->mangle_output_name(name, "mcmc");
+      sampling_cmake_output  = this->mangle_output_name(name, "cmake");
+
+
+      sampling_guard = boost::to_upper_copy(leafname(sampling_output.string()));
+      sampling_guard.erase(boost::remove_if(sampling_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), sampling_guard.end());
+
+      this->translator_payload.set_sampling_output(sampling_output, sampling_guard, sampling_values_output,
+              sampling_priors_output, sampling_mcmc_output, sampling_cmake_output);
+    }
   }
 
 
@@ -317,6 +342,90 @@ unsigned int translation_unit::apply()
         this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
       }
 
+    // Sampling template file parser & translator
+    if (*this->translator_payload.templates.get_sampling())
+    {
+      const boost::filesystem::path& sampling_output = this->translator_payload.get_sampling_filename();
+      boost::optional< contexted_value<std::string>& > sampling = this->model.templates.get_sampling_template();
+      if(sampling)
+      {
+        this->file_errors = 0;
+        try
+        {
+          rval += this->outstream.translate(*sampling, (*sampling).get_declaration_point(), sampling_output, process_type::process_sampling);
+        }
+        catch(exit_parse& xe)
+        {
+          std::ostringstream msg;
+          msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+          this->warn(msg.str());
+        }
+      }
+      else
+      {
+        this->error(ERROR_NO_CORE_TEMPLATE);
+      }
+
+      const boost::filesystem::path& sampling_priors_output = this->translator_payload.get_sampling_priors_filename();
+      std::string sampling_priors = "cosmosis_priors_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_priors, (*sampling).get_declaration_point(), sampling_priors_output, process_type::process_sampling_ini);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+      const boost::filesystem::path& sampling_values_output = this->translator_payload.get_sampling_values_filename();
+      std::string sampling_values = "cosmosis_values_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_values, (*sampling).get_declaration_point(), sampling_values_output, process_type::process_sampling_ini);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+      const boost::filesystem::path& sampling_mcmc_output = this->translator_payload.get_sampling_mcmc_filename();
+      std::string sampling_mcmc = "cosmosis_mcmc_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_mcmc, (*sampling).get_declaration_point(), sampling_mcmc_output, process_type::process_sampling_ini);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+      if (this->cache.do_cmake()){
+        const boost::filesystem::path& sampling_cmake_output = this->translator_payload.get_sampling_cmake_filename();
+        std::string sampling_cmake = "cpptsample_CMakeLists_template";
+        this->file_errors = 0;
+        try
+        {
+          rval += this->outstream.translate(sampling_cmake, (*sampling).get_declaration_point(), sampling_cmake_output, process_type::process_sampling_txt);
+        }
+        catch(exit_parse& xe)
+        {
+          std::ostringstream msg;
+          msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+          this->warn(msg.str());
+        }
+      }
+
+    }
+
     if(this->errors > 0)
       {
         this->parse_failed = true;
@@ -336,13 +445,53 @@ unsigned int translation_unit::apply()
 boost::filesystem::path translation_unit::mangle_output_name(const boost::filesystem::path& input, const std::string& tag)
   {
     std::string output;
+    // This is used to create a ./build directory, as I am planning to run the CppT command in the main directory.
+    boost::filesystem::path build_prefix("build");
+    const char* build_path = build_prefix.string().c_str();
+    boost::filesystem::path build_dir(build_path);
+    boost::filesystem::create_directory(build_dir);
 
-    boost::filesystem::path h_extension(".h");
+    if (tag == "core" || tag == "mpi"){
+      boost::filesystem::path h_extension(".h");
 
-    boost::filesystem::path stem = input.stem();
-    boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
+      boost::filesystem::path stem = input.stem();
+      boost::filesystem::path leaf = "./" + build_prefix.string() + "/" + stem.leaf().string() + "_" + tag; // stem.leaf().string() + "_" + tag;
+      //boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
 
-    return(leaf.replace_extension(h_extension));
+      return(leaf.replace_extension(h_extension));
+
+    } else if (tag == "sampling"){
+      boost::filesystem::path cpp_extension(".cpp");
+
+      boost::filesystem::path stem = input.stem();
+      boost::filesystem::path leaf = "./" + build_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
+      //boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
+
+      return(leaf.replace_extension(cpp_extension));
+    } else if (tag == "priors" || tag == "values" || tag == "mcmc"){
+      boost::filesystem::path ini_extension(".ini");
+
+      boost::filesystem::path stem = input.stem();
+      std::string ModelName = stem.leaf().string();
+
+
+      boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
+      const char* mcmc_path = mcmc_prefix.string().c_str();
+      boost::filesystem::path mcmc_dir(mcmc_path);
+      boost::filesystem::create_directory(mcmc_dir);
+
+      boost::filesystem::path leaf = "./" + mcmc_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
+
+      return(leaf.replace_extension(ini_extension));
+    } else if (tag == "cmake"){
+      boost::filesystem::path txt_extension(".txt");
+
+      //boost::filesystem::path stem = input.stem();
+
+      boost::filesystem::path leaf = "CMakeLists" ;// + mcmc_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
+
+      return(leaf.replace_extension(txt_extension));
+    }
   }
 
 

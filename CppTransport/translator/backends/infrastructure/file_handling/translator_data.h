@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -85,6 +86,10 @@ class translator_data
     void set_core_implementation(const boost::filesystem::path& co, const std::string& cg,
                                  const boost::filesystem::path& io, const std::string& ig);
 
+    void set_sampling_output(const boost::filesystem::path& so, const std::string& sg,
+                             const boost::filesystem::path& sv, const boost::filesystem::path& sp,
+                             const boost::filesystem::path& sm, const boost::filesystem::path& sc);
+    // in order: sampling output, guard, values, priors, mcmc, cmake
 
     // GET CORE, IMPLEMENTATION DATA
 
@@ -99,12 +104,29 @@ class translator_data
     //! get filename of translated implementation
     const boost::filesystem::path& get_implementation_filename() const { return(this->implementation_output); }
 
+    //! get filename of the sample output file
+    const boost::filesystem::path& get_sampling_filename() const { return(this->sampling_output); }
+
+    //! get filename of the sample values file
+    const boost::filesystem::path& get_sampling_values_filename() const { return(this->sampling_values_output); }
+
+    //! get filename of the sample priors file
+    const boost::filesystem::path& get_sampling_priors_filename() const { return(this->sampling_priors_output); }
+
+    //! get filename of the sample mcmc file
+    const boost::filesystem::path& get_sampling_mcmc_filename() const { return(this->sampling_mcmc_output); }
+
+    //! get filename of the sample cmake file
+    const boost::filesystem::path& get_sampling_cmake_filename() const { return(this->sampling_cmake_output); }
+
     //! get header guard for translated core
     const std::string& get_core_guard() const { return(this->core_guard); }
 
     //! get header guard for translated implementation
     const std::string& get_implementation_guard() const { return(this->implementation_guard); }
 
+    //! get header guard for the sampling output file
+    const std::string& get_sampling_guard() const { return(this->sampling_guard); }
 
     // GET CONFIGURATION OPTIONS
 
@@ -217,12 +239,29 @@ class translator_data
     //! implementation output file name
     boost::filesystem::path implementation_output;
 
+    //! sampling output file
+    boost::filesystem::path sampling_output;
+
+    //! model_mcmc.ini output file
+    boost::filesystem::path sampling_mcmc_output;
+
+    //! values.ini output file
+    boost::filesystem::path sampling_values_output;
+
+    //! priors.ini output file
+    boost::filesystem::path sampling_priors_output;
+
+    //! cpptsample CMakeLists.txt output file
+    boost::filesystem::path sampling_cmake_output;
+
     //! core header guard
     std::string core_guard;
 
     //! implementation header guard
     std::string implementation_guard;
 
+    //! core header guard
+    std::string sampling_guard;
   };
 
 
