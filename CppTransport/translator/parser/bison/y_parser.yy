@@ -54,7 +54,7 @@
     lexeme::lexeme<enum keyword_type, enum character_type>* lex;
     attributes*                                             a;
     stepper*                                                s;
-		subexpr*                                                e;
+    subexpr*                                                e;
     author*                                                 au;
     string_array*                                           sa;
     GiNaC::ex*                                              x;
@@ -80,12 +80,19 @@
 %token                                      metric
 %token                                      subexpr
 %token                                      value
+%token                                      deriv_value
 %token                                      parameter
 %token                                      latex
+%token                                      prior
+%token                                      deriv_prior
 %token                                      templates
 %token                                      settings
 %token                                      core
 %token                                      implementation
+%token                                      sampling
+%token                                      do_sampling
+%token                                      sampler
+%token                                      sampling_template
 %token                                      abserr
 %token                                      relerr
 %token                                      stepper
@@ -195,6 +202,7 @@ script: script metadata metadata_block semicolon
         | script perturbations stepper_block semicolon                                  { driver.templates.set_perturbations_stepper(*$2, $3); }
         | script author string author_block semicolon                                   { driver.meta.add_author(*$3, $4); }
         | script templates template_block semicolon
+        | script sampling sampling_block semicolon
         | script settings settings_block semicolon
         |
         ;
@@ -227,6 +235,16 @@ template_block: open_brace template_def close_brace
 
 template_def: template_def core equals string semicolon                                 { driver.templates.set_core(*$4); }
         | template_def implementation equals string semicolon                           { driver.templates.set_implementation(*$4); }
+//        | template_def sampling equals string semicolon                                 { driver.templates.set_sampling(*$4); }
+//        | template_def sampling_template equals string semicolon                        { driver.templates.set_sampling_template(*$4); }
+        |
+        ;
+
+sampling_block: open_brace sampling_def close_brace
+
+sampling_def: sampling_def do_sampling equals string semicolon                          { driver.templates.set_sampling(*$4); }
+        | sampling_def sampler equals string semicolon                                  { std::cout << "sampler " << std::endl; } //{ driver.templates.set_sampling(*$4); }
+        | sampling_def sampling_template equals string semicolon                        { driver.templates.set_sampling_template(*$4); }
         |
         ;
 
@@ -242,6 +260,10 @@ attribute_block: open_brace attributes close_brace                              
         ;
 
 attributes: attributes latex equals string semicolon                                    { driver.misc.set_attribute_latex(*$1, *$4); $$ = $1; }
+        | attributes value equals string semicolon                                      { driver.misc.set_attribute_value(*$1, *$4); $$ = $1; }
+        | attributes deriv_value equals string semicolon                                { driver.misc.set_attribute_derivvalue(*$1, *$4); $$ = $1; }
+        | attributes prior equals string semicolon                                      { driver.misc.set_attribute_prior(*$1, *$4); $$ = $1; }
+        | attributes deriv_prior equals string semicolon                                { driver.misc.set_attribute_derivprior(*$1, *$4); $$ = $1; }
         |                                                                               { $$ = std::make_shared<attributes>(); }
         ;
 
@@ -254,7 +276,7 @@ string_group: string_group comma string                                         
 
 model_block: open_brace model_attributes close_brace
 
-model_attributes: model_attributes name equals string semicolon                         { driver.meta.set_name(*$4); }
+model_attributes: model_attributes name equals string semicolon                         { driver.meta.set_name(*$4); driver.templates.set_sampling_template(*$4); driver.templates.set_sampling(*$4); }
         | model_attributes lagrangian equals lagrangian_specifier semicolon
         | model_attributes citeguide equals string semicolon                            { driver.meta.set_citeguide(*$4); }
         | model_attributes description equals string semicolon                          { driver.meta.set_description(*$4); }
@@ -289,7 +311,7 @@ stepper_attributes: stepper_attributes abserr equals decimal semicolon          
 
 subexpr_block: open_brace subexpr_def close_brace                                       { $$ = $2; }
         |                                                                               { $$ = std::make_shared<subexpr>(); }
-				;
+        ;
 
 subexpr_def: subexpr_def latex equals string semicolon                                  { driver.model.set_subexpr_latex(*$1, *$4); $$ = $1; }
         | subexpr_def value equals expression semicolon                                 { driver.model.set_subexpr_value(*$1, *$4, *$3); $$ = $1; }
@@ -330,7 +352,7 @@ built_in_function: abs open_bracket expression close_bracket                    
         | atanh open_bracket expression close_bracket                                   { $$ = driver.expr.atanh(*$3); }
         | exp open_bracket expression close_bracket                                     { $$ = driver.expr.exp(*$3); }
         | log open_bracket expression close_bracket                                     { $$ = driver.expr.log(*$3); }
-				| pow open_bracket expression comma expression close_bracket                    { $$ = driver.expr.pow(*$3, *$5); }
+        | pow open_bracket expression comma expression close_bracket                    { $$ = driver.expr.pow(*$3, *$5); }
         | Li2 open_bracket expression close_bracket                                     { $$ = driver.expr.Li2(*$3); }
         | Li open_bracket expression comma expression close_bracket                     { $$ = driver.expr.Li(*$3, *$5); }
         | G open_bracket expression comma expression close_bracket                      { $$ = driver.expr.G(*$3, *$5); }

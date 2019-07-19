@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -38,9 +39,10 @@ enum class keyword_type
     description, license, revision,
     references, urls, email, institute,
     field, potential, metric,
-    subexpr, value,
+    subexpr, value, prior, deriv_value, deriv_prior,
     parameter, latex, templates, settings,
     core, impl, model,
+    sampling, sampling_template, do_sampling, sampler,
     abserr, relerr, stepper, stepsize,
     background, perturbations,
     indexorder, left, right,
