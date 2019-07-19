@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -55,12 +56,19 @@ std::unordered_map<keyword_type, y::y_parser::token::yytokentype> keyword_tokens
     { keyword_type::metric,            y::y_parser::token::metric },
     { keyword_type::subexpr,           y::y_parser::token::subexpr },
     { keyword_type::value,             y::y_parser::token::value },
+    { keyword_type::prior,             y::y_parser::token::prior },
+    { keyword_type::deriv_value,       y::y_parser::token::deriv_value },
+    { keyword_type::deriv_prior,       y::y_parser::token::deriv_prior },
     { keyword_type::parameter,         y::y_parser::token::parameter },
     { keyword_type::latex,             y::y_parser::token::latex },
     { keyword_type::templates,         y::y_parser::token::templates },
     { keyword_type::settings,          y::y_parser::token::settings },
     { keyword_type::core,              y::y_parser::token::core },
     { keyword_type::impl,              y::y_parser::token::implementation },
+    { keyword_type::sampling,          y::y_parser::token::sampling },
+    { keyword_type::sampling_template, y::y_parser::token::sampling_template },
+    { keyword_type::do_sampling,       y::y_parser::token::do_sampling },
+    { keyword_type::sampler,           y::y_parser::token::sampler },
     { keyword_type::model,             y::y_parser::token::model },
     { keyword_type::abserr,            y::y_parser::token::abserr },
     { keyword_type::relerr,            y::y_parser::token::relerr },
