@@ -132,6 +132,10 @@ namespace transport
                   {
                     outf << "plt.style.use('ggplot')" << '\n';
                   }
+                else
+                  {
+                    outf << "# matplotlib 'ggplot' style requested, but omitted since not detected in environment" << '\n';
+                  }
                 break;
               }
 
@@ -140,6 +144,10 @@ namespace transport
                 if(env.has_matplotlib_style_sheets())
                   {
                     outf << "plt.style.use('ticks')" << '\n';
+                  }
+                else
+                  {
+                    outf << "# matplotlib 'ticks' style requested, but omitted since not detected in environment" << '\n';
                   }
                 break;
               }
@@ -150,6 +158,10 @@ namespace transport
                   {
                     outf << "import seaborn as sns" << '\n';
                     outf << "sns.set()" << '\n';
+                  }
+                else
+                  {
+                    outf << "# seaborn plot style requested, but omitted since not detected in environment" << '\n';
                   }
                 break;
               }

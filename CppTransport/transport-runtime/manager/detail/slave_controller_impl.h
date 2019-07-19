@@ -158,10 +158,16 @@ namespace transport
             // set up a repository
             this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly, this->local_env, this->arg_cache);
 
-            // replace current argument cache with the one provided in the payload
+            // overwrite current argument cache (by copy assignment) with the one provided in the payload
             // changes in the batcher/pipe capacities and the checkpoint interval will be visible to
             // the data manager, because it has a reference to the arg_cache member
             this->arg_cache = payload.get_argument_cache();
+
+            // set names of external executables in local environment; note this will invalidate the locations
+            // of any already-detected executables
+            this->local_env.set_python_executable(this->arg_cache.get_python_executable());
+            this->local_env.set_dot_executable(this->arg_cache.get_dot_executable());
+            this->local_env.set_sendmail_executable(this->arg_cache.get_sendmail_executable());
           }
         catch (runtime_exception& xe)
           {

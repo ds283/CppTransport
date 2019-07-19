@@ -545,22 +545,35 @@ token_list::token_list(const std::string& in, const std::string& pfx, unsigned i
 			{
         std::unique_ptr<token_list_impl::generic_token> tok;
 
-				if(in[position] != pfx[0]) // doesn't start with first symbol from prefix, so not a candidate to be a macro or index
+				if(in[position] != prefix[0]) // doesn't start with first symbol from prefix, so not a candidate to be a macro or index
 					{
             std::tie(tok, position) = match_string_literal(*input_string, position, prefix[0], make_context);
 					}
 				else  // possible macro, directive or index
 					{
-            if(check_match_prefix(in, position, pfx))
+            if(check_match_prefix(in, position, prefix))
               {
-								position += pfx.length();
+                // matched whole prefix, so skip past it
+                position += prefix.length();
 
-                std::tie(tok, position) = this->match_macro_or_index(position, make_context);
-							}
-						else // we did *not* match the full prefix; treat this as literal text
-							{
-                std::tie(tok, position) = match_string_literal(in, position, pfx[0], make_context);
-							}
+                // do we match the prefix again? If so, we interpret this as an 'escaped' prefix, which resolves
+                // to just the prefix itself
+                if(check_match_prefix(in, position, prefix))
+                  {
+                    auto current = position + prefix.length();
+                    tok = std::make_unique<token_list_impl::text_token>(prefix, make_context(position, current));
+
+                    position = current;
+                  }
+                else
+                  {
+                    std::tie(tok, position) = this->match_macro_or_index(position, make_context);
+                  }
+              }
+            else // we did *not* match the full prefix; treat this as literal text
+              {
+                std::tie(tok, position) = match_string_literal(in, position, prefix[0], make_context);
+              }
 					}
 
         // if a token was recognized, push it onto token list

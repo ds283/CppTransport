@@ -172,5 +172,15 @@
 #define CPPTRANSPORT_SWITCH_REPORT_WHEN_LONG  "report-when"
 #define CPPTRANSPORT_HELP_REPORT_WHEN         "specify at which times reports should be issued to email (default bpe)"
 
+// config-file only options
+#define CPPTRANSPORT_SWITCH_PYTHON_EXECUTABLE "python-executable"
+#define CPPTRANSPORT_HELP_PYTHON_EXECUTABLE   "set the name of the Python executable to use"
+
+#define CPPTRANSPORT_SWITCH_DOT_EXECUTABLE    "dot-executable"
+#define CPPTRANSPORT_HELP_DOT_EXECUTABLE      "set the name of the Graphviz 'dot' executable to use"
+
+#define CPPTRANSPORT_SWITCH_MAIL_EXECUTABLE   "sendmail-executable"
+#define CPPTRANSPORT_HELP_MAIL_EXECUTABLE     "set the name of the CppTransport 'sendmail' executable to use"
+
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H
