@@ -183,6 +183,9 @@ class cse
     //!    this method is used when actually outputting symbols
     std::string get_symbol_with_use_count(const GiNaC::ex& expr);
 
+    //! get number of temporary definitions
+    size_t number_temporaries() const { return this->decls.size(); }
+
     //! clear all current temporary definitions;
     //! typically called when closing one pool and opening another
     void clear();
