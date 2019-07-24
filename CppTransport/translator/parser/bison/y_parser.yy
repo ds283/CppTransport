@@ -1,10 +1,10 @@
 %skeleton "lalr1.cc"
-%require "3.0.2"
+%require "3.3"
 %locations
 %defines
 %define api.namespace {y}
 %define api.value.type variant
-%define parser_class_name {y_parser}
+%define api.parser.class {y_parser}
 %define parse.trace
 %define parse.error verbose
 
