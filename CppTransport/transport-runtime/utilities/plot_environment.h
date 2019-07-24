@@ -156,6 +156,8 @@ namespace transport
               {
                 if(env.has_seaborn())
                   {
+                    outf << "from pandas.plotting import register_matplotlib_converters" << '\n';
+                    outf << "register_matplotlib_converters()" << '\n';
                     outf << "import seaborn as sns" << '\n';
                     outf << "sns.set()" << '\n';
                   }

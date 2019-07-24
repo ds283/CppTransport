@@ -254,7 +254,8 @@ constexpr auto ERROR_CURRENT_LINE_EMPTY              = "Internal error: current 
 
 constexpr auto ERROR_OUT_OF_BOUNDS_CSE_MAP           = "Internal error: out of bounds subscript in CSE map";
 
-constexpr auto WARNING_TEMPORARY_NO_TAG_SET          = "Temporary pool being written, but no location set (defaults to end-of-buffer, most likely a template bug)";
+constexpr auto WARNING_TEMPORARY_NO_TAG_SET          = "End of input reached, but no location set for temporary buffer. "
+                                                       "This is most likely a template bug, and the translator output is unlikely to compile";
 
 constexpr auto WARNING_HEX_CONVERSION_A              = "Leading '0x' in ";
 constexpr auto WARNING_HEX_CONVERSION_B              = "indicates hex, but did not convert";
