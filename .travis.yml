@@ -17,8 +17,10 @@ matrix:
   include:
 
     - os: linux
-      dist: trusty
-      env: COMPILER_NAME=clang CXX=clang++-3.8 CC=clang-3.8
+      dist: bionic
+      compiler:
+        - gcc
+        - clang
       addons:
         apt:
           sources:
@@ -27,53 +29,10 @@ matrix:
           packages:
             - cmake
             - libsqlite3-dev
-            - libboost1.60-dev
-            - libboost-log1.60-dev
-            - libboost-system1.60-dev
-            - libboost-filesystem1.60-dev
-            - libboost-random1.60-dev
-            - libboost-timer1.60-dev
-            - libboost-date-time1.60-dev
-            - libboost-mpi1.60-dev
-            - libboost-thread1.60-dev
-            - libboost-serialization1.60-dev
-            - libboost-program-options1.60-dev
-            - libboost-regex1.60-dev
+            - libboost-all-dev
             - libginac-dev
             - libopenmpi-dev
             - libssl-dev
-            - gcc-6
-            - g++-6
-            - clang-3.8
-
-    - os: linux
-      dist: trusty
-      env: COMPILER_NAME=gcc CXX=g++-6 CC=gcc-6
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - sourceline: ppa:samuel-bachmann/boost
-          packages:
-            - cmake
-            - libsqlite3-dev
-            - libboost1.60-dev
-            - libboost-log1.60-dev
-            - libboost-system1.60-dev
-            - libboost-filesystem1.60-dev
-            - libboost-random1.60-dev
-            - libboost-timer1.60-dev
-            - libboost-date-time1.60-dev
-            - libboost-mpi1.60-dev
-            - libboost-thread1.60-dev
-            - libboost-serialization1.60-dev
-            - libboost-program-options1.60-dev
-            - libboost-regex1.60-dev
-            - libginac-dev
-            - libopenmpi-dev
-            - libssl-dev
-            - gcc-6
-            - g++-6
 
 notifications:
 
