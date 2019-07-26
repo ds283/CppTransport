@@ -188,6 +188,9 @@ class lambda_manager
     std::unique_ptr< std::list<std::string> >
     temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
 
+    //! get number of temporary definitions
+    size_t number_temporaries() const { return this->atomic_cache.size() + this->map_cache.size(); }
+
     //! reset lambda manager on replacement of a temporary pool
     void clear();
 
