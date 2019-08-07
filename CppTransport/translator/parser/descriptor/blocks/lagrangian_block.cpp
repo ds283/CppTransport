@@ -85,11 +85,6 @@ bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const 
         auto field_deriv = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX);
         this->fields_deriv.push_back(field_deriv);
 
-        // also need to generate a symbol for the momentum corresponding to this field - CpptSample style
-
-        auto field_value = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX);
-        this->fields_deriv.push_back(field_deriv);
-
         // If the field value and/or prior is provided, it is added to the list to be returned later for CpptSample
         if(a->get_value().length() > 0)
         {
