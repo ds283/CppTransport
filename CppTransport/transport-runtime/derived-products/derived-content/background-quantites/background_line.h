@@ -483,7 +483,7 @@ namespace transport
             // for each time sample point, compute mass spectrum and store in line_data
             for(unsigned int j = 0; j < t_axis.size(); ++j)
               {
-                mdl->sorted_mass_spectrum(this->gadget.get_integration_task(), bg_data[j], t_axis[j], norm, M, E);
+                mdl->sorted_mass_spectrum(this->gadget.get_integration_task(), bg_data[j], norm, M, E);
 
                 for(unsigned int i = 0; i < N; ++i)
                   {

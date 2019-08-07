@@ -1,4 +1,4 @@
-// backend = cpp, minver = 201801, lagrangian = nontrivial_metric
+// backend = cpp, minver = 201901, lagrangian = nontrivial_metric
 //
 // --@@
 // Copyright (c) 2017 University of Sussex. All rights reserved.
@@ -288,13 +288,13 @@ namespace transport
         void C(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) override;
 
         // calculate mass matrix
-        void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M) override;
+        void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M) override;
 
         // calculate raw mass spectrum
-        void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+        void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
 
         // calculate the sorted mass spectrum, normalized to H^2 if desired
-        void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+        void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
@@ -1659,8 +1659,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __N,
-                           flattened_tensor<number>& __M)
+    void $MODEL<number>::M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M)
       {
         DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
@@ -1694,10 +1693,10 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
-                                              double __N, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+                                              bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
       {
         // get raw, unsorted mass spectrum in __E
-        this->mass_spectrum(__task, __fields, __N, __M, __E);
+        this->mass_spectrum(__task, __fields, __M, __E);
 
         // sort mass spectrum into order
         std::sort(__E.begin(), __E.end());
@@ -1727,12 +1726,12 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
-                                       double __N, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+                                       flattened_tensor<number>& __M, flattened_tensor<number>& __E)
       {
         DEFINE_INDEX_TOOLS
 
         // write mass matrix (in canonical format) into __M
-        this->M(__task, __fields, __N, __M);
+        this->M(__task, __fields, __M);
 
         // copy elements of the mass matrix into an Eigen matrix
         __mass_matrix($^a,$_b) = __M[FIELDS_FLATTEN($^a,$_b)];
@@ -1896,9 +1895,9 @@ namespace transport
               {
               }
 
-            number largest_evalue(const backg_state<number>& fields, number N)
+            number largest_evalue(const backg_state<number>& fields)
               {
-                this->mdl->mass_spectrum(this->task, fields, static_cast<double>(N), this->flat_M, this->flat_E);
+                this->mdl->mass_spectrum(this->task, fields, this->flat_M, this->flat_E);
 
                 // step through eigenvalue vector, extracting largest absolute value
                 number largest_eigenvalue = -std::numeric_limits<number>().max();
@@ -1925,7 +1924,7 @@ namespace transport
                 this->N_vector.push_back(static_cast<double>(__x.second));
                 this->log_aH_vector.push_back(__N + std::log(__H)); // = log(aH)
                 this->log_a2H2M_vector.push_back(2.0*__N + 2.0*std::log(__H)
-                                                 + std::log(this->largest_evalue(__x.first, __x.second))); // = log(a^2 H^2 * largest eigenvalue)
+                                                 + std::log(this->largest_evalue(__x.first))); // = log(a^2 H^2 * largest eigenvalue)
 
                 // if a largest k-mode was provided,
                 // are we now at a point where we have comfortably covered the horizon crossing time for it?
