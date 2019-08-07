@@ -80,8 +80,8 @@ namespace macro_packages
     constexpr unsigned int PERT_REL_ERR_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int PERT_STEP_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int CPPT_BUILD_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int UNIQUE_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int TEST_TOTAL_ARGUMENTS = 0;
 
 
     class replace_tool : public replacement_rule_simple
@@ -1654,7 +1654,7 @@ namespace macro_packages
 
       };
 
-    class replace_test : public replacement_rule_simple
+    class replace_cppt_build_location : public replacement_rule_simple
     {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -1662,15 +1662,15 @@ namespace macro_packages
     public:
 
         //! constructor
-        replace_test(std::string n, translator_data& p, language_printer& prn)
-                : replacement_rule_simple(std::move(n), TEST_TOTAL_ARGUMENTS),
+        replace_cppt_build_location(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), CPPT_BUILD_TOTAL_ARGUMENTS),
                   data_payload(p),
                   printer(prn)
         {
         }
 
         //! destructor
-        virtual ~replace_test() = default;
+        virtual ~replace_cppt_build_location() = default;
 
 
         // INTERNAL API

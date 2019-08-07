@@ -94,7 +94,7 @@ namespace macro_packages
         EMPLACE(pre_package, BIND(replace_p_rel_err, "PERT_REL_ERR"));
         EMPLACE(pre_package, BIND(replace_p_step, "PERT_STEP_SIZE"));
         EMPLACE(pre_package, BIND(replace_p_stepper, "PERT_STEPPER"));
-        EMPLACE(pre_package, BIND(replace_test, "TEST"));
+        EMPLACE(pre_package, BIND(replace_cppt_build_location, "CPPT_BUILD_LOCATION"));
 
         EMPLACE(post_package, BIND(replace_unique, "UNIQUE"));
       }
@@ -645,20 +645,21 @@ namespace macro_packages
           }
       }
 
-    std::string replace_test::evaluate(const macro_argument_list& args)
+    std::string replace_cppt_build_location::evaluate(const macro_argument_list& args)
     {
-      //return(std::string("HELLO THERE"));
-      auto value = this->data_payload.templates.get_sampling();
-      //std::cout << *value << std::endl;
-      if(*value)
+      // Try to find where we are reading in the CMakeLists.txt template file from and then go up to the source build directory
+      finder PathFinder = this->data_payload.get_finder();
+      boost::optional<boost::filesystem::path> TemplateInstallPath;
+      TemplateInstallPath = PathFinder.find("cpptsample_CMakeLists_template.txt");
+      if (TemplateInstallPath)
       {
-        return(std::string("TRUE HELLO THERE"));
-        //return *value;
+        boost::filesystem::path CppTBuildPath =  (*TemplateInstallPath).parent_path().parent_path().parent_path().parent_path();
+        return(CppTBuildPath.string());
       }
       else
       {
-        return(std::string("IT'S OVER ANAKIN"));
-        //return(std::string(DEFAULT_MODEL_NAME));
+        // Could not find, return default location
+        return(std::string("~/.cpptransport"));
       }
     }
 
