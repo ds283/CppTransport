@@ -115,9 +115,9 @@ namespace cpp
                     << algebra_name << ", " << operations_name
                     << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
               }
-            else if(name == "runge_kutta_cash_karp45")
+            else if(name == "runge_kutta_cash_karp54")
               {
-                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< "
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp54< "
                     << state_name << ", " << value_type << ", " << state_name << ", " << time_type << ", "
                     << algebra_name << ", " << operations_name
                     << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
