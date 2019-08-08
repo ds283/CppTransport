@@ -109,11 +109,18 @@ namespace transport
 
     class worker_management_data
       {
-        
+
+        // set up database types used by this object
+        //  - contact_db is a list of worker_contact_records, used to keep track of when we have
+        //    contact from an individual worker
+        //  - load_db is a list of worker_load_records, used to track load average reports
+        //    supplied by worker nodes
       public:
-        
+
+        //! contact_db is a list of worker_contact_records
         typedef std::list< worker_contact_record > contact_db;
-        
+
+        //! load_db is a list of worker_load_records
         typedef std::list< worker_load_record > load_db;
       
       public:
@@ -121,14 +128,14 @@ namespace transport
         //! construct a worker information record
         worker_management_data()
           {
-            // tag now as time of first contact
+            // generate initial record to tag *now* as time of first contact from this worker
             contact_history.emplace_front();
             
             // generate first load-balance data point at zero
             load_history.emplace_front(0.0);
           }
         
-        //! destructor
+        //! destructor is default
         ~worker_management_data() = default;
         
         
@@ -142,7 +149,7 @@ namespace transport
             this->contact_history.emplace_front();
           }
         
-        //! get last contact time
+        //! get last reported contact time
         const boost::posix_time::ptime& get_last_contact_time() const
           {
             return *this->contact_history.front();
@@ -159,7 +166,7 @@ namespace transport
             this->load_history.emplace_front(ld);
           }
         
-        //! get current load average
+        //! get last reported load average
         double get_load_average() const
           {
             return *this->load_history.front();
@@ -170,21 +177,31 @@ namespace transport
       
       private:
         
-        //! ordered list of last-contact times
+        //! ordered list of last-contact times, most recent *at the front*
         contact_db contact_history;
         
-        //! current load average for this worker
+        //! current load average for this worker, most recent *at the front*
         load_db load_history;
         
       };
     
-    
+
+    //! worker_manager is a management policy object that handles administrative tasks for the
+    //! worker nodes, but *not scheduling*.
+    //! Scheduling is handled by the worker_scheduler policy object.
     class worker_manager
       {
-        
+
+        // TYPES
+
+      private:
+
+        //! worker_db is a map from a content group name (task identifier) to an array of
+        //! worker_management_data objects representing the management data collected from
+        //! each worker. The array is indexed by worker number with the origin moved to zero.
+        using worker_db = std::map< std::string, std::unique_ptr< std::vector<worker_management_data> > >;
+
       public:
-        
-        
         
         // CONSTRUCTOR, DESTRUCTOR
         
@@ -247,7 +264,6 @@ namespace transport
         const unsigned int number_workers;
         
         //! database of worker data, organized by content group name
-        typedef std::map< std::string, std::unique_ptr< std::vector<worker_management_data> > > worker_db;
         worker_db worker_data;
         
         //! pointer to currently active set of data records
