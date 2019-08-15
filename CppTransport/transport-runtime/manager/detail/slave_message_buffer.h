@@ -43,13 +43,14 @@ namespace transport
 
         // ASSOCIATED TYPES
 
-        typedef std::function<void(const std::string&)> notify_handler;
+        using notify_handler = std::function<void(const std::string&)>;
 
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        //! constructor caches communicator objects
+        //! constructor caches communicator objects;
+        //! notify_handler h is a callback used to journal messages in the logs
         slave_message_buffer(boost::mpi::environment& e, boost::mpi::communicator& w,
                              notify_handler h)
           : environment(e),
@@ -70,10 +71,18 @@ namespace transport
 
       public:
 
-        //! add context
+        //! Push context.
+        //! In practice, context management is handled by the slave_message_context handler
+        //! defined below.
+        //! The context string itself can be any informative name, but clients usually set it
+        //! equal to the currently executing task.
         void push_context(std::string c) { this->context.push_back(std::move(c)); }
 
-        //! pop context
+        //! Pop context.
+        //! In practice, context management is handled by the slave_message_context handler
+        //! defined below.
+        //! The context string itself can be any informative name, but clients usually set it
+        //! equal to the currently executing task.
         void pop_context() { if(this->context.size() > 0) this->context.pop_back(); }
 
         //! add message
@@ -111,7 +120,7 @@ namespace transport
           {
             msg << " (";
             unsigned int count = 0;
-            for(const std::string& ctx : this->context)
+            for(const auto& ctx : this->context)
               {
                 if(count > 0) msg << ", ";
                 msg << ctx;
@@ -139,6 +148,10 @@ namespace transport
       }
 
 
+    //! slave_message_context is a context handler for slave_message_buffer
+    //! It captures a slave_message_buffer object and a context string, and handles push/pop of the
+    //! context. The context string itself can be any informative name, but clients usually
+    //! set it equal to the currently executing task
     class slave_message_context
       {
 
