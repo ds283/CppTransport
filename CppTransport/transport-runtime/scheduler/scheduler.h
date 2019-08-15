@@ -177,7 +177,7 @@ namespace transport
       }
 
 
-    class scheduler
+    class compute_scheduler
       {
         
         // CONSTRUCTOR, DESTRUCTOR
@@ -185,13 +185,13 @@ namespace transport
       public:
         
         //! constuctor captures context
-        scheduler(compute_context& c)
+        compute_scheduler(compute_context& c)
           : ctx(c)
           {
           }
         
         //! destructor is default
-        ~scheduler() = default;
+        ~compute_scheduler() = default;
         
         
         // SET UP QUEUES
@@ -242,7 +242,7 @@ namespace transport
 
     template <typename number>
     work_queue<twopf_kconfig_record>
-    scheduler::make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F)
+    compute_scheduler::make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F)
       {
         // set up an empty queue
         work_queue<twopf_kconfig_record> work(this->ctx, size);
@@ -259,7 +259,7 @@ namespace transport
 
     template <typename number>
     work_queue<threepf_kconfig_record>
-    scheduler::make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+    compute_scheduler::make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
       {
         work_queue<threepf_kconfig_record> work(this->ctx, size);
 
@@ -275,7 +275,7 @@ namespace transport
 
     template <typename number>
     work_queue<threepf_kconfig_record>
-    scheduler::make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+    compute_scheduler::make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
 	    {
         work_queue<threepf_kconfig_record> work(this->ctx, size);
 
@@ -291,7 +291,7 @@ namespace transport
 
 		template <typename number>
 		work_queue< output_task_element<number> >
-    scheduler::make_queue(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F)
+    compute_scheduler::make_queue(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F)
 			{
 				work_queue< output_task_element<number> > work(this->ctx, 1);
 
@@ -309,21 +309,21 @@ namespace transport
 
 
     template <typename number>
-    work_queue<twopf_kconfig_record> scheduler::make_queue(unsigned int size, const twopf_task<number>& task)
+    work_queue<twopf_kconfig_record> compute_scheduler::make_queue(unsigned int size, const twopf_task<number>& task)
       {
         return this->make_queue(size, task, trivial_filter<twopf_kconfig>{});
       }
 
 
     template <typename number>
-    work_queue<threepf_kconfig_record> scheduler::make_queue(unsigned int size, const threepf_task<number>& task)
+    work_queue<threepf_kconfig_record> compute_scheduler::make_queue(unsigned int size, const threepf_task<number>& task)
       {
         return this->make_queue(size, task, trivial_filter<threepf_kconfig>{});
       }
 
 
 		template <typename number>
-		work_queue< output_task_element<number> > scheduler::make_queue(const output_task<number>& task)
+		work_queue< output_task_element<number> > compute_scheduler::make_queue(const output_task<number>& task)
 			{
 				return this->make_queue(task, trivial_filter< output_task_element<number> >{});
 			}
