@@ -386,7 +386,7 @@ namespace transport
                     compute_scheduler sch(ctx);
 
                     // build work queues for each device
-                    auto work = sch.make_device_queues(state_size, *tk, filter);
+                    auto device_queues = sch.make_device_queues(state_size, *tk, filter);
 
                     // set 'success' flag to true; it will be set to false if an exception is caught during work
                     bool success = true;
@@ -412,7 +412,7 @@ namespace transport
                     // perform the integration
                     try
                       {
-                        m->backend_process_queue(work, tk, batcher, true);    // 'true' = work silently
+                        m->backend_process_queue(device_queues, tk, batcher, true);    // 'true' = work silently
                       }
                     catch(runtime_exception& xe)
                       {
@@ -600,7 +600,7 @@ namespace transport
 
                     // set up a compute scheduler and device queue for our work assignment
                     compute_scheduler sch(ctx);
-                    auto work = sch.make_device_queues(*tk, filter);
+                    auto device_queues = sch.make_device_queues(*tk, filter);
 
                     BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
 
@@ -616,10 +616,10 @@ namespace transport
                     boost::timer::nanosecond_type max_processing_time = 0;
 
                     std::ostringstream work_msg;
-                    work_msg << work;
+                    work_msg << device_queues;
                     BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << work_msg.str();
 
-                    const typename device_queue_manager< output_task_element<number> >::device_queue queues = work[0];
+                    const typename device_queue_manager< output_task_element<number> >::device_queue queues = device_queues[0];
                     assert(queues.size() == 1);
 
                     const typename device_queue_manager< output_task_element<number> >::device_work_list list = queues[0];
