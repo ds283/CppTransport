@@ -369,7 +369,7 @@ namespace transport
 
                     // send WorkAcknowledgmentPayload to master node, to acknowledge receipt of the new
                     // work assignment.
-                    // Timestamps mean that this MPI activity can be journaled or used on a worker Gantt chart
+                    // Timestamps mean that this MPI activity can be journalled or used on a worker Gantt chart
                     MPI::work_acknowledgment_payload ack_payload;
                     ack_payload.set_timestamp();
                     boost::mpi::request ack_msg = this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
@@ -380,7 +380,7 @@ namespace transport
 
                     // determine compute context from backend
                     auto ctx = m->backend_get_context();
-                    scheduler sch(ctx);
+                    compute_scheduler sch(ctx);
                     auto work = sch.make_queue(state_size, *tk, filter);
 
                     // set 'success' flag to true; it will be set to false if an exception is caught during work
@@ -592,7 +592,7 @@ namespace transport
                     // create work queues
                     compute_context ctx;
                     ctx.add_device("CPU");
-                    scheduler sch(ctx);
+                    compute_scheduler sch(ctx);
                     auto work = sch.make_queue(*tk, filter);
 
                     BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
@@ -1001,7 +1001,7 @@ namespace transport
                     // create work queues
                     compute_context ctx;
                     ctx.add_device("CPU");
-                    scheduler sch(ctx);
+                    compute_scheduler sch(ctx);
                     auto work = sch.make_queue(sizeof(number), *ptk, filter);
 
                     bool success = true;
