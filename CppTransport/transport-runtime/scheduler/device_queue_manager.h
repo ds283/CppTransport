@@ -43,7 +43,7 @@
 namespace transport
   {
     
-    namespace work_queue_impl
+    namespace device_queue_impl
       {
     
         //! Hold a list of work items for a specific device. The queue for a device is a collection of these work lists.
@@ -112,7 +112,9 @@ namespace transport
           }
     
     
-        //! Hold a queue of work items for a specific device. The queue may be broken into a collection of work lists.
+        //! Hold a queue of work items for a specific device. The queue is broken into one or more
+        //! work lists, each of which holds the work items that can be processes 'atomically'.
+        //! For a GPU this means the work items that can be processed in parallel, ie. in a warp.
         template <typename ContextManager, typename QueueManager>
         class device_queue
           {
@@ -129,6 +131,11 @@ namespace transport
             
             //! work item type
             using item_type = typename QueueManager::item_type;
+
+          private:
+
+            //! list of work lists
+            using work_list_database = std::vector< work_list_type >;
       
             
           public:
@@ -139,11 +146,11 @@ namespace transport
                 state_size(size)
               {
                 // push empty queue onto list
-                queue_list.emplace_back(state_size);
+                work_lists.emplace_back(state_size);
               }
         
             //! Compute memory required to integrate all items in this queue
-            size_t get_memory_required() const { return(this->queue_list.back().get_memory_required()); }
+            size_t get_memory_required() const { return(this->work_lists.back().get_memory_required()); }
         
             //! Return device associated with this queue
             const device_type& get_device() const { return(this->device); }
@@ -152,7 +159,7 @@ namespace transport
             double get_weight() const { return(this->device.get_fractional_weight()); }
         
             //! Return number of work lists associated with this queue
-            size_t size() const { return(this->queue_list.size()); }
+            size_t size() const { return(this->work_lists.size()); }
         
             //! Access individual work lists
             const work_list_type& operator[](unsigned int d) const;
@@ -169,7 +176,7 @@ namespace transport
           protected:
 
             //! Create a new work list on the device
-            void new_queue() { this->queue_list.emplace_back(this->state_size); }
+            void new_work_list() { this->work_lists.emplace_back(this->state_size); }
       
             
             // INTERNAL DATA
@@ -177,7 +184,7 @@ namespace transport
           private:
         
             //! std::vector holding the work lists for this device
-            std::vector< work_list_type > queue_list;
+            work_list_database work_lists;
         
             //! device corresponding to this queue
             const device_type& device;
@@ -195,9 +202,9 @@ namespace transport
         const typename device_queue<ContextManager, QueueManager>::work_list_type&
         device_queue<ContextManager, QueueManager>::operator[](unsigned int d) const
           {
-            assert(d < this->queue_list.size());
+            assert(d < this->work_lists.size());
     
-            if(d < this->queue_list.size()) return(this->queue_list[d]);
+            if(d < this->work_lists.size()) return(this->work_lists[d]);
 
             throw std::out_of_range(CPPTRANSPORT_DEVICE_QUEUE_RANGE);
           }
@@ -209,14 +216,14 @@ namespace transport
             if(this->device.get_mem_type() == compute_context::device::memory_type::bounded
                && this->get_memory_required() > this->device.get_mem_size())
               {
-                this->new_queue();
+                this->new_work_list();
               }
 
-            this->queue_list.back().enqueue_item(item);
+            this->work_lists.back().enqueue_item(item);
             this->total_items++;
           }
     
-      }   // namespace work_queue_impl
+      }   // namespace device_queue_impl
 
 
     template <typename ItemType>
@@ -231,7 +238,7 @@ namespace transport
         using item_type = ItemType;
 
         //! type for device queue
-        using device_queue = work_queue_impl::device_queue< compute_context, device_queue_manager<ItemType> >;
+        using device_queue = device_queue_impl::device_queue< compute_context, device_queue_manager<ItemType> >;
         
         //! type for work list
         using device_work_list = typename device_queue::work_list_type;
