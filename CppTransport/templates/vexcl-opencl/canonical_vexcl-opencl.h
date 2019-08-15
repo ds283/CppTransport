@@ -151,8 +151,8 @@ namespace transport
 
         public:
 
-          // Set up a context
-          virtual context backend_get_context() override ;
+          // Set up a compute context
+          virtual compute_context backend_get_context() override ;
 
           // Integrate background and 2-point function on a OpenCL device
           virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
@@ -302,11 +302,11 @@ namespace transport
     // BACKEND INTERFACE
 
 
-    // generate a context
+    // generate a compute context
     template <typename number>
-    context $$__MODEL_vexcl<number>::backend_get_context(void)
+    compute_context $$__MODEL_vexcl<number>::backend_get_context(void)
       {
-        context work_ctx;
+        compute_context work_ctx;
 
         // add our OpenCL device to the integration context
         // assume we can use all the memory on the device for storage -- this may require revisting
@@ -316,7 +316,7 @@ namespace transport
         unsigned long global_mem = dev.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
         std::string device_name  = dev.getInfo<CL_DEVICE_NAME>();
 
-        work_ctx.add_device(device_name, global_mem/2, context::device::bounded);
+        work_ctx.add_device(device_name, global_mem/2, compute_context::device::bounded);
 
         return(work_ctx);
       }
