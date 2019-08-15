@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_WORK_QUEUE_H
-#define CPPTRANSPORT_WORK_QUEUE_H
+#ifndef CPPTRANSPORT_DEVICE_QUEUE_MANAGER_H
+#define CPPTRANSPORT_DEVICE_QUEUE_MANAGER_H
 
 
 #include <iostream>
@@ -220,7 +220,7 @@ namespace transport
 
 
     template <typename ItemType>
-    class work_queue
+    class device_queue_manager
       {
         
         // TYPES
@@ -231,21 +231,26 @@ namespace transport
         using item_type = ItemType;
 
         //! type for device queue
-        using device_queue = work_queue_impl::device_queue< compute_context, work_queue<ItemType> >;
+        using device_queue = work_queue_impl::device_queue< compute_context, device_queue_manager<ItemType> >;
         
         //! type for work list
         using device_work_list = typename device_queue::work_list_type;
 
-        
+      private:
+
+        //! database for device queues, in 1-to-1 correspondence with devices in the compute context
+        using device_queue_database = std::vector<device_queue>;
+
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! constructor captures a compute context and size of state vector
-        work_queue(const compute_context& c, unsigned int size);
+        device_queue_manager(const compute_context& c, unsigned int size);
         
         //! destructor is default
-        ~work_queue() = default;
+        ~device_queue_manager() = default;
         
         
         // QUEUE MANAGEMENT
@@ -288,7 +293,7 @@ namespace transport
         const compute_context& ctx;
 
         //! std::vector holding queues for each device
-        std::vector<device_queue> device_list;
+        device_queue_database device_list;
 
         //! Total number of work items we are holding, summed over all devices
         unsigned int total_items;
@@ -300,7 +305,7 @@ namespace transport
 
 
     template <typename ItemType>
-    work_queue<ItemType>::work_queue(const compute_context& c, unsigned int size)
+    device_queue_manager<ItemType>::device_queue_manager(const compute_context& c, unsigned int size)
       : ctx(c),
         total_items(0),
         state_size(size)
@@ -313,7 +318,7 @@ namespace transport
 
 
     template <typename ItemType>
-    void work_queue<ItemType>::clear()
+    void device_queue_manager<ItemType>::clear()
       {
         // set up queue for the number of devices in our compute context
         this->device_list.clear();
@@ -326,7 +331,7 @@ namespace transport
 
 
     template <typename ItemType>
-    void work_queue<ItemType>::enqueue_work_item(const ItemType& item)
+    void device_queue_manager<ItemType>::enqueue_work_item(const ItemType& item)
       {
         bool inserted = false;
         for(auto& q : this->device_list)
@@ -351,7 +356,7 @@ namespace transport
 
     template <typename ItemType>
     template <typename Stream>
-    void work_queue<ItemType>::write(Stream& out)
+    void device_queue_manager<ItemType>::write(Stream& out)
       {
         out << CPPTRANSPORT_WORK_QUEUE_OUTPUT_A << " " << this->ctx.size() << " "
         << (this->ctx.size() > 1 ? CPPTRANSPORT_WORK_QUEUE_OUTPUT_B : CPPTRANSPORT_WORK_QUEUE_OUTPUT_C)
@@ -378,7 +383,7 @@ namespace transport
 
             for(unsigned int i = 0; i < q.size(); ++i)
               {
-                const typename work_queue<ItemType>::device_work_list& work = q[i];
+                const typename device_queue_manager<ItemType>::device_work_list& work = q[i];
 
                 out << "   ** " << CPPTRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << '\n';
                 for(unsigned int j = 0; j < work.size(); ++j)
@@ -394,8 +399,8 @@ namespace transport
     
     
     template <typename ItemType>
-    const typename work_queue<ItemType>::device_queue&
-    work_queue<ItemType>::operator[](unsigned int d) const
+    const typename device_queue_manager<ItemType>::device_queue&
+    device_queue_manager<ItemType>::operator[](unsigned int d) const
       {
         assert(d < this->device_list.size());
     
@@ -406,7 +411,7 @@ namespace transport
     
     
     template <typename ItemType, typename Char, typename Traits>
-    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, work_queue<ItemType>& obj)
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, device_queue_manager<ItemType>& obj)
       {
         obj.write(out);
         return(out);
@@ -416,4 +421,4 @@ namespace transport
 
 
 
-#endif //CPPTRANSPORT_WORK_QUEUE_H
+#endif //CPPTRANSPORT_DEVICE_QUEUE_MANAGER_H

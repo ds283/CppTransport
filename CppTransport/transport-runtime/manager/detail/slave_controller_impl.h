@@ -380,8 +380,13 @@ namespace transport
 
                     // determine compute context from backend
                     auto ctx = m->backend_get_context();
+
+                    // a 'compute_scheduler' knows how to break a work list into separate, weighted, work queues
+                    // for each device in the context
                     compute_scheduler sch(ctx);
-                    auto work = sch.make_queue(state_size, *tk, filter);
+
+                    // build work queues for each device
+                    auto work = sch.make_device_queues(state_size, *tk, filter);
 
                     // set 'success' flag to true; it will be set to false if an exception is caught during work
                     bool success = true;
@@ -589,11 +594,13 @@ namespace transport
                     const std::list<unsigned int>& work_items = assignment_payload.get_items();
                     auto filter = this->work_item_filter_factory(tk, work_items);
 
-                    // create work queues
+                    // mock up a 'fake' compute context that just consist of the CPU running this worker
                     compute_context ctx;
                     ctx.add_device("CPU");
+
+                    // set up a compute scheduler and device queue for our work assignment
                     compute_scheduler sch(ctx);
-                    auto work = sch.make_queue(*tk, filter);
+                    auto work = sch.make_device_queues(*tk, filter);
 
                     BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- NEW WORK ASSIGNMENT";
 
@@ -612,10 +619,10 @@ namespace transport
                     work_msg << work;
                     BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << work_msg.str();
 
-                    const typename work_queue< output_task_element<number> >::device_queue queues = work[0];
+                    const typename device_queue_manager< output_task_element<number> >::device_queue queues = work[0];
                     assert(queues.size() == 1);
 
-                    const typename work_queue< output_task_element<number> >::device_work_list list = queues[0];
+                    const typename device_queue_manager< output_task_element<number> >::device_work_list list = queues[0];
 
                     for(unsigned int i = 0; i < list.size(); ++i)
                       {
@@ -1002,7 +1009,7 @@ namespace transport
                     compute_context ctx;
                     ctx.add_device("CPU");
                     compute_scheduler sch(ctx);
-                    auto work = sch.make_queue(sizeof(number), *ptk, filter);
+                    auto work = sch.make_device_queues(sizeof(number), *ptk, filter);
 
                     bool success = true;
                     batcher.begin_assignment();

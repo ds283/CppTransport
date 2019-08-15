@@ -66,15 +66,15 @@ namespace transport
       public:
 
         //! Handler: zeta twopf task
-        void postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig_record>& work,
+        void postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, device_queue_manager<twopf_kconfig_record>& work,
                                      zeta_twopf_batcher<number>& batcher, datapipe<number>& pipe);
 
         //! Handler: zeta threepf task
-        void postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig_record>& work,
+        void postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, device_queue_manager<threepf_kconfig_record>& work,
                                      zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe);
 
         //! Handler: fNL task
-        void postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, work_queue<threepf_kconfig_record>& work,
+        void postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, device_queue_manager<threepf_kconfig_record>& work,
                                      fNL_batcher<number>& batcher, datapipe<number>& pipe);
 
 
@@ -92,16 +92,16 @@ namespace transport
 
 
     template <typename number>
-    void slave_work_handler<number>::postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig_record>& work,
+    void slave_work_handler<number>::postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, device_queue_manager<twopf_kconfig_record>& work,
                                                              zeta_twopf_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename work_queue<twopf_kconfig_record>::device_queue queues = work[0];
+        const typename device_queue_manager<twopf_kconfig_record>::device_queue queues = work[0];
         assert(queues.size() == 1);
 
-        const typename work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
+        const typename device_queue_manager<twopf_kconfig_record>::device_work_list list = queues[0];
 
 		    // set up query representing time values at which to sample; we just want all of them,
 		    // so we need a condition which always evaluates to TRUE.
@@ -147,16 +147,16 @@ namespace transport
 
 
     template <typename number>
-    void slave_work_handler<number>::postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig_record>& work,
+    void slave_work_handler<number>::postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, device_queue_manager<threepf_kconfig_record>& work,
                                                              zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename work_queue<threepf_kconfig_record>::device_queue queues = work[0];
+        const typename device_queue_manager<threepf_kconfig_record>::device_queue queues = work[0];
         assert(queues.size() == 1);
 
-        const typename work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
+        const typename device_queue_manager<threepf_kconfig_record>::device_work_list list = queues[0];
 
         // set up query representing time values at which to sample
         const derived_data::SQL_time_query tquery("1=1");
@@ -259,16 +259,16 @@ namespace transport
 
 
     template <typename number>
-    void slave_work_handler<number>::postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, work_queue<threepf_kconfig_record>& work,
+    void slave_work_handler<number>::postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, device_queue_manager<threepf_kconfig_record>& work,
                                                              fNL_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename work_queue<threepf_kconfig_record>::device_queue queues = work[0];
+        const typename device_queue_manager<threepf_kconfig_record>::device_queue queues = work[0];
         assert(queues.size() == 1);
 
-        const typename work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
+        const typename device_queue_manager<threepf_kconfig_record>::device_work_list list = queues[0];
 
         boost::timer::cpu_timer timer;
 

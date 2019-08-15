@@ -60,7 +60,7 @@ namespace transport
 				        handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq, bispectrum_template ty);
 
                 handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq,
-                       bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl);
+                       bispectrum_template ty, const typename device_queue_manager<threepf_kconfig_record>::device_work_list& wl);
 
 						    ~handle() = default;
 
@@ -91,7 +91,7 @@ namespace transport
                 bool restrict_triangles;
 
                 //! subset of triangles to integrate, if used
-                typename work_queue<threepf_kconfig_record>::device_work_list work_list;
+                typename device_queue_manager<threepf_kconfig_record>::device_work_list work_list;
 
 						    friend class fNL_timeseries_compute;
 
@@ -118,7 +118,7 @@ namespace transport
 
             //! make a handle, integrate over a supplied subset of triangles
             std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq,
-                                                bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const;
+                                                bispectrum_template ty, const typename device_queue_manager<threepf_kconfig_record>::device_work_list& wl) const;
 
 
 				    // COMPUTE FNL PRODUCT
@@ -200,7 +200,7 @@ namespace transport
 
         template <typename number>
         fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t, const SQL_time_query& tq,
-                                                       bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl)
+                                                       bispectrum_template ty, const typename device_queue_manager<threepf_kconfig_record>::device_work_list& wl)
           : pipe(p),
             tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
             tquery(tq),
@@ -253,7 +253,7 @@ namespace transport
         template <typename number>
         std::unique_ptr<typename fNL_timeseries_compute<number>::handle>
         fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_query& tq,
-                                                    bispectrum_template ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const
+                                                    bispectrum_template ty, const typename device_queue_manager<threepf_kconfig_record>::device_work_list& wl) const
           {
             return std::make_unique<handle>(pipe, tk, tq, ty, wl);
           }
