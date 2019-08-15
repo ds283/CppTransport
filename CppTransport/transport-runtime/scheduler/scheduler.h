@@ -40,7 +40,7 @@
 #include "transport-runtime/tasks/integration_tasks.h"
 #include "transport-runtime/tasks/output_tasks.h"
 #include "transport-runtime/scheduler/context.h"
-#include "transport-runtime/scheduler/work_queue.h"
+#include "transport-runtime/scheduler/device_queue_manager.h"
 
 
 namespace transport
@@ -177,6 +177,8 @@ namespace transport
       }
 
 
+    //! A 'compute_scheduler' is a utility object that understands how to use a 'compute_context' to break
+    //! work over all devices in the context
     class compute_scheduler
       {
         
@@ -200,31 +202,31 @@ namespace transport
 
         //! set up a work queue for a two-point function task, using a user-provided filter function
         template <typename number>
-        work_queue<twopf_kconfig_record> make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F);
+        device_queue_manager<twopf_kconfig_record> make_device_queues(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F);
 
         //! set up a work queue for a three-point function task, using a user-provided filter function
         template <typename number>
-        work_queue<threepf_kconfig_record> make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
+        device_queue_manager<threepf_kconfig_record> make_device_queues(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
 
         //! set up a work queue for a zeta three-point function task, using a user-provided filter function
         template <typename number>
-        work_queue<threepf_kconfig_record> make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
+        device_queue_manager<threepf_kconfig_record> make_device_queues(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
 
 		    //! set up a work queue for an output task, using a user-provided filter function
 		    template <typename number>
-		    work_queue< output_task_element<number> > make_queue(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F);
+		    device_queue_manager< output_task_element<number> > make_device_queues(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F);
 
         //! set up a work queue for a two-point function task, using no filter
         template <typename number>
-        work_queue<twopf_kconfig_record> make_queue(unsigned int size, const twopf_task<number>& task);
+        device_queue_manager<twopf_kconfig_record> make_device_queues(unsigned int size, const twopf_task<number>& task);
 
         //! set up a work queue for a three-point function task, using no filter
         template <typename number>
-        work_queue<threepf_kconfig_record> make_queue(unsigned int size, const threepf_task<number>& task);
+        device_queue_manager<threepf_kconfig_record> make_device_queues(unsigned int size, const threepf_task<number>& task);
 
 		    //! set up a work queue for an output task, using no filter
 		    template <typename number>
-			  work_queue< output_task_element<number> > make_queue(const output_task<number>& task);
+			  device_queue_manager< output_task_element<number> > make_device_queues(const output_task<number>& task);
 
         
         // INTERNAL DATA
@@ -241,11 +243,11 @@ namespace transport
 
 
     template <typename number>
-    work_queue<twopf_kconfig_record>
-    compute_scheduler::make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F)
+    device_queue_manager<twopf_kconfig_record>
+    compute_scheduler::make_device_queues(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F)
       {
         // set up an empty queue
-        work_queue<twopf_kconfig_record> work(this->ctx, size);
+        device_queue_manager<twopf_kconfig_record> work(this->ctx, size);
 
         const auto& twopf_db = task.get_twopf_database();
         for(auto t = twopf_db.record_cbegin(); t != twopf_db.record_cend(); ++t)
@@ -258,10 +260,10 @@ namespace transport
 
 
     template <typename number>
-    work_queue<threepf_kconfig_record>
-    compute_scheduler::make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+    device_queue_manager<threepf_kconfig_record>
+    compute_scheduler::make_device_queues(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
       {
-        work_queue<threepf_kconfig_record> work(this->ctx, size);
+        device_queue_manager<threepf_kconfig_record> work(this->ctx, size);
 
         const auto& threepf_db = task.get_threepf_database();
         for(auto t = threepf_db.record_cbegin(); t != threepf_db.record_cend(); ++t)
@@ -274,10 +276,10 @@ namespace transport
 
 
     template <typename number>
-    work_queue<threepf_kconfig_record>
-    compute_scheduler::make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+    device_queue_manager<threepf_kconfig_record>
+    compute_scheduler::make_device_queues(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
 	    {
-        work_queue<threepf_kconfig_record> work(this->ctx, size);
+        device_queue_manager<threepf_kconfig_record> work(this->ctx, size);
 
         const auto& threepf_db = task.get_threepf_database();
         for(auto t = threepf_db.record_cbegin(); t != threepf_db.record_cend(); ++t)
@@ -290,10 +292,10 @@ namespace transport
 
 
 		template <typename number>
-		work_queue< output_task_element<number> >
-    compute_scheduler::make_queue(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F)
+		device_queue_manager< output_task_element<number> >
+    compute_scheduler::make_device_queues(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F)
 			{
-				work_queue< output_task_element<number> > work(this->ctx, 1);
+				device_queue_manager< output_task_element<number> > work(this->ctx, 1);
 
 				const auto& config_list = task.get_elements();
         for(const auto& it : config_list)
@@ -309,23 +311,23 @@ namespace transport
 
 
     template <typename number>
-    work_queue<twopf_kconfig_record> compute_scheduler::make_queue(unsigned int size, const twopf_task<number>& task)
+    device_queue_manager<twopf_kconfig_record> compute_scheduler::make_device_queues(unsigned int size, const twopf_task<number>& task)
       {
-        return this->make_queue(size, task, trivial_filter<twopf_kconfig>{});
+        return this->make_device_queues(size, task, trivial_filter<twopf_kconfig>{});
       }
 
 
     template <typename number>
-    work_queue<threepf_kconfig_record> compute_scheduler::make_queue(unsigned int size, const threepf_task<number>& task)
+    device_queue_manager<threepf_kconfig_record> compute_scheduler::make_device_queues(unsigned int size, const threepf_task<number>& task)
       {
-        return this->make_queue(size, task, trivial_filter<threepf_kconfig>{});
+        return this->make_device_queues(size, task, trivial_filter<threepf_kconfig>{});
       }
 
 
 		template <typename number>
-		work_queue< output_task_element<number> > compute_scheduler::make_queue(const output_task<number>& task)
+		device_queue_manager< output_task_element<number> > compute_scheduler::make_device_queues(const output_task<number>& task)
 			{
-				return this->make_queue(task, trivial_filter< output_task_element<number> >{});
+				return this->make_device_queues(task, trivial_filter< output_task_element<number> >{});
 			}
 
 

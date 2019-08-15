@@ -241,11 +241,11 @@ namespace transport
         unsigned int get_backend_priority() override;
 
         //! integrate background and 2-point function on the CPU
-        void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
+        void backend_process_queue(device_queue_manager<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
                                    twopf_batcher<number>& batcher, bool silent = false) override;
 
         //! integrate background, 2-point function and 3-point function on the CPU
-        void backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
+        void backend_process_queue(device_queue_manager<threepf_kconfig_record>& work, const threepf_task<number>* tk,
                                    threepf_batcher<number>& batcher, bool silent = false) override;
 
         //! report 2pf integrator state size
@@ -744,7 +744,7 @@ namespace transport
 
     // process work queue for twopf
     template <typename number, typename StateType>
-    void $MODEL_mpi<number, StateType>::backend_process_queue(work_queue<twopf_kconfig_record>& work,
+    void $MODEL_mpi<number, StateType>::backend_process_queue(device_queue_manager<twopf_kconfig_record>& work,
                                                               const twopf_db_task<number>* tk,
                                                               twopf_batcher<number>& batcher, bool silent)
       {
@@ -761,11 +761,11 @@ namespace transport
 
         // get work queue for the zeroth device (should be the only device in this backend)
         assert(work.size() == 1);
-        const work_queue<twopf_kconfig_record>::device_queue queues = work[0];
+        const device_queue_manager<twopf_kconfig_record>::device_queue queues = work[0];
 
         // we expect only one queue on this device
         assert(queues.size() == 1);
-        const work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
+        const device_queue_manager<twopf_kconfig_record>::device_work_list list = queues[0];
 
         for(unsigned int i = 0; i < list.size(); ++i)
           {
@@ -925,7 +925,7 @@ namespace transport
 
 
     template <typename number, typename StateType>
-    void $MODEL_mpi<number, StateType>::backend_process_queue(work_queue<threepf_kconfig_record>& work,
+    void $MODEL_mpi<number, StateType>::backend_process_queue(device_queue_manager<threepf_kconfig_record>& work,
                                                               const threepf_task<number>* tk,
                                                               threepf_batcher<number>& batcher, bool silent)
       {
@@ -942,11 +942,11 @@ namespace transport
 
         // get work queue for the zeroth device (should be only one device with this backend)
         assert(work.size() == 1);
-        const work_queue<threepf_kconfig_record>::device_queue queues = work[0];
+        const device_queue_manager<threepf_kconfig_record>::device_queue queues = work[0];
 
         // we expect only one queue on this device
         assert(queues.size() == 1);
-        const work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
+        const device_queue_manager<threepf_kconfig_record>::device_work_list list = queues[0];
 
         // step through the queue, solving for the three-point functions in each case
         for(unsigned int i = 0; i < list.size(); ++i)

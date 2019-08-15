@@ -42,7 +42,7 @@
 #include "transport-runtime/tasks/configuration-database/twopf_config_database.h"
 #include "transport-runtime/tasks/configuration-database/threepf_config_database.h"
 
-#include "transport-runtime/scheduler/work_queue.h"
+#include "transport-runtime/scheduler/device_queue_manager.h"
 
 #include "transport-runtime/utilities/formatter.h"
 
@@ -616,7 +616,7 @@ namespace transport
       public:
 
         twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
-                                         const work_queue<twopf_kconfig_record>::device_work_list& c,
+                                         const device_queue_manager<twopf_kconfig_record>::device_work_list& c,
                                          const time_config_database& t,
                                          unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                          unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
@@ -651,7 +651,7 @@ namespace transport
 
       private:
 
-        const work_queue<twopf_kconfig_record>::device_work_list& work_list;
+        const device_queue_manager<twopf_kconfig_record>::device_work_list& work_list;
 
         twopf_batcher<number>& batcher;
 
@@ -668,7 +668,7 @@ namespace transport
 
     template <typename number>
     twopf_groupconfig_batch_observer<number>::twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
-                                                                               const work_queue<twopf_kconfig_record>::device_work_list& c,
+                                                                               const device_queue_manager<twopf_kconfig_record>::device_work_list& c,
                                                                                const time_config_database& t,
                                                                                unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
@@ -739,7 +739,7 @@ namespace transport
       public:
 
         threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
-                                           const work_queue<threepf_kconfig_record>::device_work_list& c,
+                                           const device_queue_manager<threepf_kconfig_record>::device_work_list& c,
                                            const time_config_database& t,
                                            unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                            unsigned int bg_st,
@@ -779,7 +779,7 @@ namespace transport
 
       private:
 
-        const work_queue<threepf_kconfig_record>::device_work_list& work_list;
+        const device_queue_manager<threepf_kconfig_record>::device_work_list& work_list;
 
         threepf_batcher<number>& batcher;
 
@@ -805,7 +805,7 @@ namespace transport
 
     template <typename number>
     threepf_groupconfig_batch_observer<number>::threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
-                                                                                   const work_queue<threepf_kconfig_record>::device_work_list& c,
+                                                                                   const device_queue_manager<threepf_kconfig_record>::device_work_list& c,
                                                                                    const time_config_database& t,
                                                                                    unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                                                    unsigned int bg_st,
