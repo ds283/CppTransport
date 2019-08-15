@@ -1975,21 +1975,24 @@ namespace transport
 
             //! normalization of ln(a) at horizon crossing time
             const double astar_normalization;
-
           };
 
         template <typename number>
         class HAggregatorPredicate
         {
+
         public:
+
           HAggregatorPredicate(const integration_task<number>* tk, model<number>* m, std::vector<double>& N,
-                                flattened_tensor<number>& log_H, boost::optional<double>& lk)
+                               flattened_tensor<number>& log_H, boost::optional<double>& lk)
             : params(tk->get_params()),
               task(tk),
               mdl(m),
               N_vector(N),
               log_H_vector(log_H),
               largest_k(lk),
+              N_horizon_crossing(tk->get_N_horizon_crossing()),
+              astar_normalization(tk->get_astar_normalization()),
               __Mp(params.get_Mp()),
               __params(params.get_vector())
           {
@@ -2007,6 +2010,8 @@ namespace transport
             const auto __Hsq = $HUBBLE_SQ;
             const auto __H   = std::sqrt(__Hsq);
 
+            const auto __N   = __x.second - this->N_horizon_crossing + this->astar_normalization;
+
             this->N_vector.push_back(static_cast<double>(__x.second));
             this->log_H_vector.push_back(std::log(__H)); // = log(H)
 
@@ -2014,11 +2019,12 @@ namespace transport
             // are we now at a point where we have comfortably covered the horizon crossing time for it?
             if(!this->largest_k) return false;
 
-            // if(std::log(*largest_k) - __N - std::log(__H) < -0.5) return true;
-            // return false;
+            if(std::log(*largest_k) - __N - std::log(__H) < -0.5) return true;
+            return false;
           }
 
         private:
+
           //! pointer to model object
           model<number>* mdl;
 
@@ -2042,6 +2048,12 @@ namespace transport
 
           //! largest k-mode for which we are trying to find a horizon-exit time
           const boost::optional<double>& largest_k;
+
+          //! time of horizon crossing
+          const double N_horizon_crossing;
+
+          //! normalization of ln(a) at horizon crossing time
+          const double astar_normalization;
         };
 
       }   // namespace $MODEL_impl
