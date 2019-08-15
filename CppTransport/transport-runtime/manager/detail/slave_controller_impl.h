@@ -378,8 +378,8 @@ namespace transport
                     const std::list<unsigned int>& work_items = assignment_payload.get_items();
                     auto filter = this->work_item_filter_factory(tk, work_items);
 
-                    // create work queues based on whatever devices are relevant for our backend
-                    context ctx = m->backend_get_context();
+                    // determine compute context from backend
+                    auto ctx = m->backend_get_context();
                     scheduler sch(ctx);
                     auto work = sch.make_queue(state_size, *tk, filter);
 
@@ -590,7 +590,7 @@ namespace transport
                     auto filter = this->work_item_filter_factory(tk, work_items);
 
                     // create work queues
-                    context ctx;
+                    compute_context ctx;
                     ctx.add_device("CPU");
                     scheduler sch(ctx);
                     auto work = sch.make_queue(*tk, filter);
@@ -999,7 +999,7 @@ namespace transport
                     auto filter = this->work_item_filter_factory(ptk, work_items);
 
                     // create work queues
-                    context ctx;
+                    compute_context ctx;
                     ctx.add_device("CPU");
                     scheduler sch(ctx);
                     auto work = sch.make_queue(sizeof(number), *ptk, filter);

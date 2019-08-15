@@ -206,7 +206,7 @@ namespace transport
         template <typename ContextManager, typename QueueManager>
         void device_queue<ContextManager, QueueManager>::enqueue_item(const item_type& item)
           {
-            if(this->device.get_mem_type() == context::device::memory_type::bounded
+            if(this->device.get_mem_type() == compute_context::device::memory_type::bounded
                && this->get_memory_required() > this->device.get_mem_size())
               {
                 this->new_queue();
@@ -231,7 +231,7 @@ namespace transport
         using item_type = ItemType;
 
         //! type for device queue
-        using device_queue = work_queue_impl::device_queue< context, work_queue<ItemType> >;
+        using device_queue = work_queue_impl::device_queue< compute_context, work_queue<ItemType> >;
         
         //! type for work list
         using device_work_list = typename device_queue::work_list_type;
@@ -242,7 +242,7 @@ namespace transport
       public:
 
         //! constructor captures a compute context and size of state vector
-        work_queue(const context& c, unsigned int size);
+        work_queue(const compute_context& c, unsigned int size);
         
         //! destructor is default
         ~work_queue() = default;
@@ -285,7 +285,7 @@ namespace transport
       private:
 
         //! Device context
-        const context& ctx;
+        const compute_context& ctx;
 
         //! std::vector holding queues for each device
         std::vector<device_queue> device_list;
@@ -300,7 +300,7 @@ namespace transport
 
 
     template <typename ItemType>
-    work_queue<ItemType>::work_queue(const context& c, unsigned int size)
+    work_queue<ItemType>::work_queue(const compute_context& c, unsigned int size)
       : ctx(c),
         total_items(0),
         state_size(size)
@@ -315,7 +315,7 @@ namespace transport
     template <typename ItemType>
     void work_queue<ItemType>::clear()
       {
-        // set up queue for the number of devices in our context
+        // set up queue for the number of devices in our compute context
         this->device_list.clear();
 
         for(unsigned int i = 0; i < this->ctx.size(); ++i)
@@ -361,7 +361,7 @@ namespace transport
         for(const auto& q : this->device_list)
           {
             out << d << ". " << q.get_device().get_name() << " (" << CPPTRANSPORT_WORK_QUEUE_WEIGHT << " = " << q.get_weight() << "), ";
-            if(q.get_device().get_mem_type() == context::device::memory_type::bounded)
+            if(q.get_device().get_mem_type() == compute_context::device::memory_type::bounded)
               {
                 out << CPPTRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory(q.get_device().get_mem_size());
               }

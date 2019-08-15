@@ -151,8 +151,8 @@ namespace transport
 
       public:
 
-        // Set up a context
-        virtual context backend_get_context();
+        // Set up a compute context
+        virtual compute_context backend_get_context();
 
         // Integrate background and 2-point function on a CUDA device
         virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
@@ -302,16 +302,16 @@ namespace transport
 
     // generate a context
     template <typename number>
-    context $$__MODEL_vexcl<number>::backend_get_context(void)
+    compute_context $$__MODEL_vexcl<number>::backend_get_context(void)
       {
-        context work_ctx;
+        compute_context work_ctx;
 
-        // add our CUDA device to the integration context
+        // add our CUDA device to the integration compute context
         // assume we can use all the memory on the device for storage -- this may require revisting
         // we divide by two because we need at least two copies of the current state vector
         // (actually, shared mem per block may be a bigger concern)
         work_ctx.add_device(this->cuda_device_properties.name, this->cuda_device_properties.totalGlobalMem/2,
-                            context::device::bounded);
+                            compute_context::device::bounded);
 
         return(work_ctx);
       }

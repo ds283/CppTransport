@@ -137,7 +137,7 @@ namespace transport
     //! A context is a collection of devices, each of which carries a weight.
     //! The context can be queried for individual devices, and can compute the fractional weight
     //! of any individual device.
-    class context
+    class compute_context
       {
 
         // TYPES
@@ -146,7 +146,7 @@ namespace transport
 
         //! set up type for device record: this is a device<> record with context manager
         //! equal to ourselves
-        using device = context_impl::device<context>;
+        using device = context_impl::device<compute_context>;
 
       private:
 
@@ -159,14 +159,14 @@ namespace transport
       public:
 
         //! constructor
-        context()
+        compute_context()
           : total_weight(0)
           {
           }
 
 
         //! destructor is default
-        ~context() = default;
+        ~compute_context() = default;
 
 
         // INTERFACE
@@ -216,14 +216,14 @@ namespace transport
 
 
     void
-    context::add_device(std::string name, unsigned int mem_size, enum device::memory_type type, unsigned int weight)
+    compute_context::add_device(std::string name, unsigned int mem_size, enum device::memory_type type, unsigned int weight)
       {
         this->devices.emplace_back(name, mem_size, *this, type, weight);
         this->total_weight += weight;
       }
 
 
-    const context::device& context::get_device(unsigned int d) const
+    const compute_context::device& compute_context::get_device(unsigned int d) const
       {
         const auto size = this->devices.size();
         
@@ -236,7 +236,7 @@ namespace transport
       }
 
 
-    double context::fractional_weight(unsigned int d) const
+    double compute_context::fractional_weight(unsigned int d) const
       {
         const auto size = this->devices.size();
 

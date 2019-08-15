@@ -357,7 +357,7 @@ namespace transport
         // obtain the compute context for this calculation
         // this method must be over-ridden by a derived implementation class, and should
         // supply a suitable context for whatever compute backend is in use
-        virtual context backend_get_context(void) = 0;
+        virtual compute_context backend_get_context(void) = 0;
 
 		    // obtain backend type
 		    virtual worker_type get_backend_type(void) = 0;

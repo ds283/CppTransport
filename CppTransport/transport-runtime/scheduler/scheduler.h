@@ -185,7 +185,7 @@ namespace transport
       public:
         
         //! constuctor captures context
-        scheduler(context& c)
+        scheduler(compute_context& c)
           : ctx(c)
           {
           }
@@ -232,7 +232,7 @@ namespace transport
       protected:
         
         //! capture compute context
-        const context& ctx;
+        const compute_context& ctx;
         
       };
 
