@@ -133,7 +133,7 @@ namespace transport
 
     // maximum number of iterations and search tolerance to use when root-finding to compute horizon exit times
     constexpr boost::uintmax_t CPPTRANSPORT_MAX_ITERATIONS                 = 500;
-    constexpr double           CPPTRANSPORT_ROOT_FIND_TOLERANCE            = 5E-6;
+    constexpr double           CPPTRANSPORT_ROOT_FIND_TOLERANCE            = 1E-4;
     constexpr double           CPPTRANSPORT_ROOT_FIND_ACCURACY             = 1E-3;
 
     // default maximum size which can be automatically VACUUMed
