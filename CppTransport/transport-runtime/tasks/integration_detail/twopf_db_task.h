@@ -59,7 +59,7 @@ namespace transport
       {
 
         template <typename number>
-        class TolerancePredicate
+        class HorizonExitTolerancePredicate
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -67,14 +67,14 @@ namespace transport
           public:
 
             //! constructor
-            TolerancePredicate(std::string n, number t)
+            HorizonExitTolerancePredicate(std::string n, number t)
               : name(std::move(n)),
                 tol(t)
               {
               }
             
             //! destructor is default
-            ~TolerancePredicate() = default;
+            ~HorizonExitTolerancePredicate() = default;
 
             
             // INTERFACE
@@ -83,33 +83,32 @@ namespace transport
             
             bool operator()(const number& a, const number& b)
               {
-                return(this->fractional_diff(a,b) - this->tol < 0);
-              }
-            
-          protected:
+                // the termination condition is based on the absolute difference between the two extreme values,
+                // because our final accuracy condition log(aH/k) < 1E-3 is based on the absolute difference
+                // in the same way.
+                // if we checked for relative tolerances, as previous versions of CppTransport did, then it becomes
+                // easy to satisfy the relative tolerance condition when the e-fold number N is large,
+                // but the final accuracy condition is still violated.
+                auto unsigned_diff = std::abs(a - b);
 
-            number fractional_diff(const number& a, const number& b)
-              {
-                number frac = 2.0*(a-b)/(std::abs(a)+std::abs(b));
-
-                assert(!std::isinf(frac));
-                assert(!std::isnan(frac));
+                assert(!std::isinf(unsigned_diff));
+                assert(!std::isnan(unsigned_diff));
 
                 // check for invalid results
-                if(std::isinf(frac))
+                if(std::isinf(unsigned_diff))
                   {
                     std::ostringstream msg;
                     msg << "'" << name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_INF;
                     throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
                   }
-                if(std::isnan(frac))
+                if(std::isnan(unsigned_diff))
                   {
                     std::ostringstream msg;
                     msg << "'" << name << "': " << CPPTRANSPORT_TASK_SEARCH_ROOT_NAN;
                     throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
                   }
 
-                return(std::abs(frac));
+                return(unsigned_diff < this->tol);
               }
 
           private:
@@ -805,7 +804,7 @@ namespace transport
             spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
             this->twopf_compute_horizon_exit_times
-              (log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate<number>{this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE});
+              (log_aH_sp, log_a2H2M_sp, task_impl::HorizonExitTolerancePredicate<number>{this->name, CPPTRANSPORT_ROOT_FIND_TOLERANCE});
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
