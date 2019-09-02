@@ -344,7 +344,7 @@ namespace transport
         // MASS SPECTRUM
 
         //! compute the raw mass spectrum
-        virtual void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+        virtual void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
 
         //! obtain the sorted mass spectrum, normalized to the Hubble rate^2 if desired
         virtual void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;

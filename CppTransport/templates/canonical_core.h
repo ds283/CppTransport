@@ -277,7 +277,7 @@ namespace transport
         void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M) override;
 
         // calculate raw mass spectrum
-        void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+        void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool _norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
 
         // calculate the sorted mass spectrum, normalized to H^2 if desired
         void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
@@ -1413,12 +1413,33 @@ namespace transport
                                               bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
       {
         // get raw, unsorted mass spectrum in __E
-        this->mass_spectrum(__task, __fields, __M, __E);
+        this->mass_spectrum(__task, __fields, __norm, __M, __E);
 
         // sort mass spectrum into order
         std::sort(__E.begin(), __E.end());
+      }
 
-        // if normalized values requested, divide through by 1/H^2
+
+    template <typename number>
+    void $MODEL<number>::mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
+                                       bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+      {
+        DEFINE_INDEX_TOOLS
+
+        // write mass matrix (in canonical format) into __M
+        this->M(__task, __fields, __M);
+
+        // copy elements of the mass matrix into an Eigen matrix
+        __mass_matrix($a,$b) = __M[FIELDS_FLATTEN($a,$b)];
+
+        // extract eigenvalues from this matrix
+        // In general Eigen would give us complex results, which we'd like to avoid. That can be done by
+        // forcing Eigen to use a self-adjoint matrix, which has guaranteed real eigenvalues.
+        // Also, note that Eigen gives us back the results as an Eigen vector, not a flattened_tensor,
+        // so we have to copy between the two
+        auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+
+        // if normalized values requested, divide through by H^2
         if(__norm)
           {
             DEFINE_INDEX_TOOLS
@@ -1436,30 +1457,14 @@ namespace transport
 
             const auto __Hsq = $HUBBLE_SQ;
 
-            __E[$a] = __E[$a] / __Hsq;
-          };
-      }
-
-
-    template <typename number>
-    void $MODEL<number>::mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
-                                        flattened_tensor<number>& __M, flattened_tensor<number>& __E)
-      {
-        DEFINE_INDEX_TOOLS
-
-        // write mass matrix (in canonical format) into __M
-        this->M(__task, __fields, __M);
-
-        // copy elements of the mass matrix into an Eigen matrix
-        __mass_matrix($a,$b) = __M[FIELDS_FLATTEN($a,$b)];
-
-        // extract eigenvalues from this matrix
-        // In general Eigen would give us complex results, which we'd like to avoid. That can be done by
-        // forcing Eigen to use a self-adjoint matrix, which has guaranteed real eigenvalues
-        auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
-
-        // copy eigenvalues into output matrix
-        __E[FIELDS_FLATTEN($a)] = __evalues($a);
+            // copy eigenvalues into output matrix
+            __E[$a] = __evalues($a) / __Hsq;
+          }
+        else
+          {
+            // copy eigenvalues into output matrix
+            __E[FIELDS_FLATTEN($a)] = __evalues($a);
+          }
       }
 
 
@@ -1609,7 +1614,7 @@ namespace transport
 
             number largest_evalue(const backg_state<number>& fields)
               {
-                this->mdl->mass_spectrum(this->task, fields, this->flat_M, this->flat_E);
+                this->mdl->mass_spectrum(this->task, fields, false, this->flat_M, this->flat_E);
 
                 // step through eigenvalue vector, extracting largest absolute value
                 number largest_eigenvalue = -std::numeric_limits<number>().max();

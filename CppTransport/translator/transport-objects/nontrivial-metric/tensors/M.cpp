@@ -82,7 +82,9 @@ namespace nontrivial_metric
 
             auto& Vi = this->dV(i)[this->fl.flatten(i)];
             auto& Vj = this->dV(j)[this->fl.flatten(j)];
-            
+
+            // the Riemann A2 term is R_{l(ij)m} pi^l pi^m, where pi_i = d phi_i / dN and dN = H dt
+            // in the mass matrix, this will need to be multiplied up by H^2
             auto& A2_ij = this->A2(i,j)[this->fl.flatten(i,j)];
 
             auto idx_i = this->shared.generate_index<GiNaC::varidx>(i);
@@ -100,10 +102,15 @@ namespace nontrivial_metric
     GiNaC::ex M::expr(const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& A2_ij,
                       const GiNaC::ex& deriv_i, const GiNaC::ex& deriv_j)
       {
-        GiNaC::ex u = Vij/Hsq;
-        u += (3-eps) * deriv_i * deriv_j / (Mp*Mp);
-        u += ( deriv_i*Vj + deriv_j*Vi ) / (Mp*Mp*Hsq);
-        u += -A2_ij;
+        GiNaC::ex u = Vij;
+        u += (3-eps) * deriv_i * deriv_j * Hsq / (Mp*Mp);
+        u += ( deriv_i*Vj + deriv_j*Vi ) / (Mp*Mp);
+
+        // the Riemann A2 term is R_{l(ij)m} pi^l pi^m, where pi_i = d phi_i / dN and dN = H dt
+        // note that R_{ijkl} has mass dimension -2, so A2 is dimensionless.
+        // The term that actually appears in the mass matrix is R_{l(ij}m} dphi^l / dt dphi^m / dt,
+        // so we need to multiply by H^2
+        u += -A2_ij * Hsq;
         
         return u;
       }
@@ -155,7 +162,9 @@ namespace nontrivial_metric
     
             auto Vi = this->res.dV_resource(i, this->printer);
             auto Vj = this->res.dV_resource(j, this->printer);
-            
+
+            // the Riemann A2 term is R_{l(ij)m} pi^l pi^m, where pi_i = d phi_i / dN and dN = H dt
+            // in the mass matrix, this will need to be multiplied up by H^2
             auto A2_ij = this->res.Riemann_A2_resource(i, j, this->printer);
 
             result = this->expr(Vij, Vi, Vj, A2_ij, deriv_i, deriv_j);
