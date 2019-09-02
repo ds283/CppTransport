@@ -88,9 +88,9 @@ namespace canonical
     GiNaC::ex M::expr(const GiNaC::ex& Vij, const GiNaC::ex& Vi, const GiNaC::ex& Vj, const GiNaC::ex& deriv_i,
                       const GiNaC::ex& deriv_j)
       {
-        GiNaC::ex u = Vij/Hsq;
-        u += (3-eps) * deriv_i * deriv_j / (Mp*Mp);
-        u += ( deriv_i*Vj + deriv_j*Vi ) / (Mp*Mp*Hsq);
+        GiNaC::ex u = Vij;
+        u += (3-eps) * deriv_i * deriv_j * Hsq / (Mp*Mp);
+        u += ( deriv_i*Vj + deriv_j*Vi ) / (Mp*Mp);
 
         return u;
       }
