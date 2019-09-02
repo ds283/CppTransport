@@ -1439,7 +1439,7 @@ namespace transport
         // so we have to copy between the two
         auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
 
-        // if normalized values requested, divide through by 1/H^2
+        // if normalized values requested, divide through by H^2
         if(__norm)
           {
             DEFINE_INDEX_TOOLS
