@@ -139,6 +139,12 @@ namespace transport
     
     template <typename number>
     using backg_history = std::vector< backg_state<number> >;
+
+
+    enum class massmatrix_type
+      {
+        include_mixing, hessian_approx
+      };
     
     
     // ABSTRACT MODEL CLASS
@@ -250,13 +256,14 @@ namespace transport
       public:
 
 		    //! Validate initial conditions
-		    virtual void validate_ics(const parameters<number>& params, const flattened_tensor<number>& input, flattened_tensor<number>& output) = 0;
+        virtual void validate_ics(const parameters<number>& params, const flattened_tensor<number>& input,
+                                  flattened_tensor<number>& output) = 0;
 
         //! Compute initial conditions which give horizon-crossing at time Ncross,
         //! if we allow Npre e-folds before horizon-crossing.
         //! The supplied parameters should have been validated.
-        void offset_ics(const parameters<number>& params, const flattened_tensor<number>& input, flattened_tensor<number>& output,
-                        double Ninit, double Ncross, double Npre,
+        void offset_ics(const parameters<number>& params, const flattened_tensor<number>& input,
+                        flattened_tensor<number>& output, double Ninit, double Ncross, double Npre,
                         double tolerance = CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
                         unsigned int time_steps = CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
@@ -304,50 +311,72 @@ namespace transport
         // GAUGE TRANSFORMATIONS
         
         // these calculate configuration-dependent gauge transformations using full cosmological perturbation theory
-        
+
         //! compute first-order gauge transformation
-        virtual void compute_gauge_xfm_1(const integration_task<number>* __task, const flattened_tensor<number>& __state, flattened_tensor<number>& __dN) = 0;
+        virtual void
+        compute_gauge_xfm_1(const integration_task<number>* __task, const flattened_tensor<number>& __state,
+                            flattened_tensor<number>& __dN) = 0;
 
         //! compute second-order gauge transformation
-        virtual void compute_gauge_xfm_2(const integration_task<number>* __task, const flattened_tensor<number>& __state, double __k, double __k1, double __k2, double __N, flattened_tensor<number>& __ddN) = 0;
+        virtual void
+        compute_gauge_xfm_2(const integration_task<number>* __task, const flattened_tensor<number>& __state, double __k,
+                            double __k1, double __k2, double __N, flattened_tensor<number>& __ddN) = 0;
 
-        
+
         // TENSORS
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
 
         //! compute u2 tensor in 'standard' index configuration (first index up, remaining indices down)
-        virtual void u2(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __k, double __N, flattened_tensor<number>& __u2) = 0;
+        virtual void
+        u2(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __k, double __N,
+           flattened_tensor<number>& __u2) = 0;
 
         //! compute u3 tensor in 'standard' index configuration (first index up, remaining indices down)
-        virtual void u3(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __u3) = 0;
-    
+        virtual void
+        u3(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn,
+           double __kr, double __N, flattened_tensor<number>& __u3) = 0;
+
         //! compute A tensor in 'standard' index configuration (all indices down)
         //! currently A isn't used by the platform, so the precise index arrangement is arbitrary
-        virtual void A(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __A) = 0;
-    
+        virtual void
+        A(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn,
+          double __kr, double __N, flattened_tensor<number>& __A) = 0;
+
         //! compute B tensor in 'standard' index configuration (last index up, first two indices down)
         //! this is the index configuration needed for shifting a correlation function from momenta
         //! to time derivatives
-        virtual void B(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __B) = 0;
-    
+        virtual void
+        B(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn,
+          double __kr, double __N, flattened_tensor<number>& __B) = 0;
+
         //! compute C tensor in 'standard' index configuration (first index up, last two indices down)
         //! this is the index configuration needed for shifting a correlation function from momenta
         //! to time derivatives
-        virtual void C(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) = 0;
-    
+        virtual void
+        C(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn,
+          double __kr, double __N, flattened_tensor<number>& __C) = 0;
+
         //! compute M tensor in 'standard' index configuration (first index up, second index down)
         //! this is the arrangement needed to compute the mass spectrum
-        virtual void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M) = 0;
+        virtual void
+        M(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
+          flattened_tensor<number>& __M, massmatrix_type __type = massmatrix_type::include_mixing) = 0;
 
 
         // MASS SPECTRUM
 
         //! compute the raw mass spectrum
-        virtual void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+        virtual void
+        mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool __norm,
+                      flattened_tensor<number>& __M, flattened_tensor<number>& __E,
+                      massmatrix_type __type = massmatrix_type::include_mixing) = 0;
 
         //! obtain the sorted mass spectrum, normalized to the Hubble rate^2 if desired
-        virtual void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) = 0;
+        virtual void
+        sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
+                             bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E,
+                             massmatrix_type __type = massmatrix_type::include_mixing) = 0;
 
 
         // BACKEND
@@ -371,7 +400,9 @@ namespace transport
         // process a background computation
         // unlike the twopf and threepf cases, we assume this can be done in memory
         // suitable storage is passed in soln
-        virtual void backend_process_backg(const background_task<number>* tk, std::vector< flattened_tensor<number> >& solution, bool silent=false) = 0;
+        virtual void
+        backend_process_backg(const background_task<number>* tk, std::vector<flattened_tensor<number> >& solution,
+                              bool silent = false) = 0;
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class

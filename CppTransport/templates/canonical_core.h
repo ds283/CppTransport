@@ -274,13 +274,18 @@ namespace transport
         void C(const integration_task<number>* __task, const flattened_tensor<number>& __fields, double __km, double __kn, double __kr, double __N, flattened_tensor<number>& __C) override;
 
         // calculate mass matrix
-        void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M) override;
+        void M(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
+               flattened_tensor<number>& __M, massmatrix_type __type = massmatrix_type::include_mixing) override;
 
         // calculate raw mass spectrum
-        void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool _norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+        void mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
+                           bool _norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E,
+                           massmatrix_type __type = massmatrix_type::include_mixing) override;
 
         // calculate the sorted mass spectrum, normalized to H^2 if desired
-        void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields, bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E) override;
+        void sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
+                                  bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E,
+                                  massmatrix_type __type = massmatrix_type::include_mixing) override;
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
@@ -1384,7 +1389,8 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::M(const integration_task<number>* __task, const flattened_tensor<number>& __fields, flattened_tensor<number>& __M)
+    void $MODEL<number>::M(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
+                           flattened_tensor<number>& __M, massmatrix_type __type)
       {
         DEFINE_INDEX_TOOLS
         $RESOURCE_RELEASE
@@ -1404,16 +1410,33 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __M[FIELDS_FLATTEN($a,$b)] = $M_TENSOR[ab];
+        switch(__type)
+          {
+            case massmatrix_type::include_mixing:
+              {
+                __M[FIELDS_FLATTEN($a,$b)] = $M_TENSOR[ab];
+                break;
+              }
+
+            case massmatrix_type::hessian_approx:
+              {
+                __M[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
+                break;
+              }
+
+            default:
+              assert(false);
+          }
       }
 
 
     template <typename number>
     void $MODEL<number>::sorted_mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
-                                              bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+                                              bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E,
+                                              massmatrix_type __type)
       {
         // get raw, unsorted mass spectrum in __E
-        this->mass_spectrum(__task, __fields, __norm, __M, __E);
+        this->mass_spectrum(__task, __fields, __norm, __M, __E, __type);
 
         // sort mass spectrum into order
         std::sort(__E.begin(), __E.end());
@@ -1422,12 +1445,13 @@ namespace transport
 
     template <typename number>
     void $MODEL<number>::mass_spectrum(const integration_task<number>* __task, const flattened_tensor<number>& __fields,
-                                       bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E)
+                                       bool __norm, flattened_tensor<number>& __M, flattened_tensor<number>& __E,
+                                       massmatrix_type __type)
       {
         DEFINE_INDEX_TOOLS
 
         // write mass matrix (in canonical format) into __M
-        this->M(__task, __fields, __M);
+        this->M(__task, __fields, __M, __type);
 
         // copy elements of the mass matrix into an Eigen matrix
         __mass_matrix($a,$b) = __M[FIELDS_FLATTEN($a,$b)];
