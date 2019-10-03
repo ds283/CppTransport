@@ -261,6 +261,21 @@ namespace macro_packages
         Listy = this->payload.model.get_field_name_list();
       } else if (arg_list == "Params"){
         Listy = this->payload.model.get_param_name_list();
+      } else if (arg_list == "NumFields"){
+        int NumberofFields = this->payload.model.get_field_name_list().size();
+        for (int i = 0; i < NumberofFields; ++i){
+          std::string Output;
+          Output = std::to_string(i);
+          Listy.push_back(Output + "_1");
+          Listy.push_back(Output + "_2");
+          Listy.push_back(Output + "_3");
+          Listy.push_back(Output + "_4");
+        }
+      } else if (arg_list == "FieldNum"){
+        int NumberofFields = this->payload.model.get_field_name_list().size();
+        for (int i = 0; i < NumberofFields; ++i){
+          Listy.push_back(std::to_string(i));
+        }
       } else if (arg_list == "Values"){
         symbol_list Field_vals      = this->payload.model.get_field_val();
         symbol_list Field_derivvals = this->payload.model.get_field_derivval();
