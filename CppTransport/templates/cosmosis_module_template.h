@@ -91,8 +91,11 @@ namespace inflation {
     // User-chosen k_pivot scale [Mpc^-1]
     DataType k_pivot_choice;
 
-    //* New bool to enable debugging
+    // New bool to enable debugging
     bool Debug = false;
+
+    // Bool option to optionally report m^2/H^2 for the mass-matrix eigenvalues instead of m/H
+    bool MassEigenSquare = false;
 
     // bools for enabling the three-point function runs or not.
     bool ThreepfEqui = false;
@@ -127,7 +130,6 @@ public:
       return transport::storage_outcome::accept;
     }
 };
-
 
 struct TrianglePolicy
 {
@@ -407,13 +409,14 @@ extern "C" {
 void * setup(cosmosis::DataBlock * options)
 {
     // Read options from the CosmoSIS configuration ini file, passed via the "options" argument
-    options->get_val(inflation::sectionName, "M_P", inflation::M_P); // TODO: get rid of this option?
+    options->get_val(inflation::sectionName, "M_P", inflation::M_P);
     options->get_val(inflation::sectionName, "k_samples", inflation::num_k_samples);
     options->get_val(inflation::sectionName, "k_pivot", inflation::k_pivot_choice);
     options->get_val(inflation::sectionName, "ThreepfEqui", inflation::ThreepfEqui);
     options->get_val(inflation::sectionName, "ThreepfSqueeze", inflation::ThreepfSqueeze);
     options->get_val(inflation::sectionName, "ThreepfFold", inflation::ThreepfFold);
     options->get_val(inflation::sectionName, "Debug", inflation::Debug);
+    options->get_val(inflation::sectionName, "MassEigenSquare", inflation::MassEigenSquare);
 
     // Record any configuration information required
     model = std::make_unique< transport::$MODEL_mpi<DataType, std::vector<DataType>> > (env, arg);
@@ -857,11 +860,20 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         int k = 0;
         for (auto j = TempNormEigenValues.begin(); j != TempNormEigenValues.end(); ++j, ++k)
         {
-          auto absEigenValue = std::abs(*j);
-          auto EigenValueSign = *j / absEigenValue;
-          auto EigenValue =  EigenValueSign * std::sqrt(absEigenValue);
+          // Are we going to be reporting m^2/H^2, or just m/H. If we are reporting m/H, we need to square-root the
+          // values returned by sorted_mass_spectrum and be careful about keeping the data signed.
+          if(inflation::MassEigenSquare){
+            // Simply return the squared value
+            auto EigenValue = *j;
+          }
+          else {
+            // Square root the eigenvalue keeping the sign
+            auto absEigenValue = std::abs(*j);
+            auto EigenValueSign = *j / absEigenValue;
+            auto EigenValue =  EigenValueSign * std::sqrt(absEigenValue);
+          }
+
           EigenValues[i][k] = EigenValue;
-          // Here we have to square-root the masses, however we still want to keep track of the signs and so we are careful.
         }
 
         FieldVals.clear();
@@ -913,7 +925,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
       std::cout << "!!! RUNTIME EXCEPTION: SEE TERMINAL OUTPUT FOR REASON !!!";
       inflation::runtime_exception = 1;
     } catch (LongIntTime& xe) {
-      std::cout << "Integrations tooks over 1 min, killing :( ";
+      std::cout << "Integrations took over 1 min, killing :( ";
       inflation::runtime_exception = 1;
     } // end of try-catch block
 
