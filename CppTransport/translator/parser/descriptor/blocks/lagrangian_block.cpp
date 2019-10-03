@@ -130,13 +130,13 @@ bool lagrangian_block::add_parameter(const std::string& n, symbol_wrapper& s, co
         // If the parameter value and/or prior is provided, it is added to the list to be called later
         if(a->get_value().length() > 0)
         {
-          auto param_val = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX  + " = " + a->get_value());
+	        auto param_val = this->sym_factory.get_real_symbol(symbol.get_name() + " = " + a->get_value());
           this->params_values.push_back(param_val);
         }
 
         if(a->get_prior().length() > 0)
         {
-          auto param_prior = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX + " = " + a->get_prior() );
+          auto param_prior = this->sym_factory.get_real_symbol(symbol.get_name() + " = " + a->get_prior() );
           this->params_priors.push_back(param_prior);
         }
       };
