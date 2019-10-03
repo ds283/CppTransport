@@ -57,7 +57,7 @@ namespace transport
     constexpr unsigned int                  CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS             = (5);
 
     // default number of e-folds over which to search for end of inflation
-    constexpr double                        CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH    = (1000.0);
+    constexpr double                        CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH    = (10000.0);
 
     // default normalization of scale factor ln a(t) at horizon exit of k=1 mode
     constexpr double                        CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION        = (0.0);
