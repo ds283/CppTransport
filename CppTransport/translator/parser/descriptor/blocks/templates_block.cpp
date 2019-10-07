@@ -54,6 +54,38 @@ boost::optional< contexted_value<std::string>& > templates_block::get_implementa
     if(this->implementation) return(*this->implementation); else return(boost::none);
   }
 
+bool templates_block::set_sampling(const std::string& sample, const y::lexeme_type& l)
+{
+  // Here we have a bool that encapsulates most of the common ways of saying "true", so that way it doesn't specifically
+  // have to be set to 'True', but any one of these.
+  bool GenerateSampling = ( (sample == "True") || (sample == "true") || (sample == "T") ||
+                            (sample == "t")    || (sample == "y") );
+
+  return SetSamplingContextedValue(this->sampling, GenerateSampling, l, ERROR_SAMPLING_REDECLARATION);
+}
+
+boost::optional< contexted_value<bool>& > templates_block::get_sampling() const
+{
+  if(this->sampling) return(*this->sampling); else return(boost::none);
+}
+
+bool templates_block::set_sampling_template(const std::string& SampleTplt, const y::lexeme_type& l)
+{
+  std::string SamplingTemplate;
+
+  if(!get_sampling()){
+    SamplingTemplate = "cosmosis_module_template";
+  } else {
+    SamplingTemplate = SampleTplt;
+  }
+  return SetSamplingTemplateContextedValue(this->sampling_template, SamplingTemplate, l, ERROR_SAMPLING_TEMPLATE_REDECLARATION);
+}
+
+boost::optional< contexted_value<std::string>& > templates_block::get_sampling_template() const
+{
+  if(this->sampling_template) return(*this->sampling_template); else return(boost::none);
+}
+
 
 bool templates_block::set_model(const std::string& m, const y::lexeme_type& l)
   {
