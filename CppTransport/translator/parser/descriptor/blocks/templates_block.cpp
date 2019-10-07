@@ -57,7 +57,12 @@ boost::optional< contexted_value<std::string>& > templates_block::get_implementa
 
 bool templates_block::set_sampling(const std::string& sample, const y::lexeme_type& l)
 {
-  return SetSamplingContextedValue(this->sampling, sample == "True", l, ERROR_SAMPLING_REDECLARATION);
+  // Here we have a bool that encapsulates most of the common ways of saying "true", so that way it doesn't specifically
+  // have to be set to 'True', but any one of these.
+  bool GenerateSampling = ( (sample == "True") || (sample == "true") || (sample == "T") ||
+                            (sample == "t")    || (sample == "y") );
+
+  return SetSamplingContextedValue(this->sampling, GenerateSampling, l, ERROR_SAMPLING_REDECLARATION);
 }
 
 boost::optional< contexted_value<bool>& > templates_block::get_sampling() const

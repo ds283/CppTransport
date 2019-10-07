@@ -90,7 +90,7 @@
 %token                                      core
 %token                                      implementation
 %token                                      sampling
-%token                                      do_sampling
+%token                                      generate_sampling
 %token                                      sampler
 %token                                      sampling_template
 %token                                      abserr
@@ -246,7 +246,7 @@ template_def: template_def core equals string semicolon                         
 
 sampling_block: open_brace sampling_def close_brace
 
-sampling_def: sampling_def do_sampling equals string semicolon                          { driver.templates.set_sampling(*$4); }
+sampling_def: sampling_def generate_sampling equals string semicolon                    { driver.templates.set_sampling(*$4); }
         | sampling_def sampler equals string semicolon                                  { std::cout << "sampler " << std::endl; } //{ driver.templates.set_sampling(*$4); }
         | sampling_def sampling_template equals string semicolon                        { driver.templates.set_sampling_template(*$4); }
         |

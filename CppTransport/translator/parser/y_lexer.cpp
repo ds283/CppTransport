@@ -67,7 +67,7 @@ std::unordered_map<keyword_type, y::y_parser::token::yytokentype> keyword_tokens
     { keyword_type::impl,              y::y_parser::token::implementation },
     { keyword_type::sampling,          y::y_parser::token::sampling },
     { keyword_type::sampling_template, y::y_parser::token::sampling_template },
-    { keyword_type::do_sampling,       y::y_parser::token::do_sampling },
+    { keyword_type::generate_sampling, y::y_parser::token::generate_sampling },
     { keyword_type::sampler,           y::y_parser::token::sampler },
     { keyword_type::model,             y::y_parser::token::model },
     { keyword_type::abserr,            y::y_parser::token::abserr },

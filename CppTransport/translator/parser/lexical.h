@@ -42,7 +42,7 @@ enum class keyword_type
     subexpr, value, prior, deriv_value, deriv_prior,
     parameter, latex, templates, settings,
     core, impl, model,
-    sampling, sampling_template, do_sampling, sampler,
+    sampling, sampling_template, generate_sampling, sampler,
     abserr, relerr, stepper, stepsize,
     background, perturbations,
     indexorder, left, right,

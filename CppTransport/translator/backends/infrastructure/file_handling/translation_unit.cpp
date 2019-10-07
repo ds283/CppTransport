@@ -77,7 +77,7 @@ const y::lexeme_type::keyword_map keywords =
     { "implementation",     keyword_type::impl },
     { "sampling",           keyword_type::sampling },
     { "sampling_template",  keyword_type::sampling_template },
-    { "do_sampling",        keyword_type::do_sampling },
+    { "generate_sampling",  keyword_type::generate_sampling },
     { "sampler",            keyword_type::sampler },
     { "model",              keyword_type::model },
     { "abserr",             keyword_type::abserr },
