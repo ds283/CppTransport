@@ -1,0 +1,16 @@
+// backend = cpp, minver = 201801
+$FOR{ £PARAM, "£PARAM £PARAM ", Params, True, False}
+KPIV* k_{piv}
+NPIV* N_{piv}
+A_S* \ln(10^{10} A_s)
+A_T* \ln(10^{10} A_t)
+N_S* n_s
+N_T* n_t
+R* r
+NEFOLD* N
+B-EQUI* B^{eq}
+FNL-EQUI* f^{eq}_{NL}
+B-SQ* B^{sq}
+FNL-SQ* f^{sq}_{NL}
+B-FOLD* B^{fold}
+FNL-FOLD* f^{fold}_{NL}

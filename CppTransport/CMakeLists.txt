@@ -323,6 +323,8 @@ SET(TEMPLATES_FILES
   templates/cosmosis_priors_template.ini
   templates/cosmosis_values_template.ini
   templates/cpptsample_CMakeLists_template.txt
+  templates/cosmosis_getdist_python_template.py
+  templates/cosmosis_getdist_latex_template.txt
   )
 
 SET(TEMPLATES_VEXCL_CUDA_FILES

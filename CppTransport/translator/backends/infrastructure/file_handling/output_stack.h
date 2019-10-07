@@ -44,7 +44,8 @@ class macro_agent;
 
 enum class process_type
   {
-    process_core, process_implementation, process_sampling, process_sampling_ini, process_sampling_txt
+    process_core, process_implementation, process_sampling, process_sampling_ini, process_sampling_txt,
+    process_sampling_getdist_python, process_sampling_getdist_latex
   };
 
 

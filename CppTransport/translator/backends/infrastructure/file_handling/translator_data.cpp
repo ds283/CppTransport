@@ -84,7 +84,9 @@ void translator_data::set_core_implementation(const boost::filesystem::path& co,
 
 void translator_data::set_sampling_output(const boost::filesystem::path& so, const std::string& sg,
                                           const boost::filesystem::path& sv, const boost::filesystem::path& sp,
-                                          const boost::filesystem::path& sm, const boost::filesystem::path& sc)
+                                          const boost::filesystem::path& sm, const boost::filesystem::path& sc,
+                                          const boost::filesystem::path& samplinggetdistPy,
+                                          const boost::filesystem::path& samplinggetdistLatex)
 {
   this->sampling_output         = so;
   this->sampling_guard          = sg;
@@ -92,4 +94,6 @@ void translator_data::set_sampling_output(const boost::filesystem::path& so, con
   this->sampling_values_output  = sv;
   this->sampling_priors_output  = sp;
   this->sampling_cmake_output   = sc;
+  this->sampling_getdist_python_output = samplinggetdistPy;
+  this->sampling_getdist_latex_output  = samplinggetdistLatex;
 }

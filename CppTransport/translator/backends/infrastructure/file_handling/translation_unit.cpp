@@ -271,26 +271,31 @@ void translation_unit::populate_output_filenames()
     // If we are doing sampling, we need to assign the sampling filenames.
     if(*this->translator_payload.templates.get_sampling())
     {
+      // Initialise filepath variables for for sampling that we will write to
       boost::filesystem::path sampling_output;
       boost::filesystem::path sampling_values_output;
       boost::filesystem::path sampling_priors_output;
       boost::filesystem::path sampling_mcmc_output;
       boost::filesystem::path sampling_cmake_output;
+      boost::filesystem::path sampling_getdist_python_output;
+      boost::filesystem::path sampling_getdist_latex_output;
       std::string             sampling_guard;
 
-      //This sets up our filepath for the sampling output file
+      // This sets up our filepath for the sampling output file
       sampling_output        = this->mangle_output_name(name, "sampling");
       sampling_values_output = this->mangle_output_name(name, "values");
       sampling_priors_output = this->mangle_output_name(name, "priors");
       sampling_mcmc_output   = this->mangle_output_name(name, "mcmc");
       sampling_cmake_output  = this->mangle_output_name(name, "cmake");
-
+      sampling_getdist_python_output  = this->mangle_output_name(name, "getdist_python");
+      sampling_getdist_latex_output   = this->mangle_output_name(name, "getdist_latex");
 
       sampling_guard = boost::to_upper_copy(leafname(sampling_output.string()));
       sampling_guard.erase(boost::remove_if(sampling_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), sampling_guard.end());
 
       this->translator_payload.set_sampling_output(sampling_output, sampling_guard, sampling_values_output,
-              sampling_priors_output, sampling_mcmc_output, sampling_cmake_output);
+              sampling_priors_output, sampling_mcmc_output, sampling_cmake_output,
+              sampling_getdist_python_output, sampling_getdist_latex_output);
     }
   }
 
@@ -432,6 +437,36 @@ unsigned int translation_unit::apply()
         }
       }
 
+      // Translate the GetDist Python file
+      const boost::filesystem::path& sampling_getdist_python_output = this->translator_payload.get_sampling_getdist_python_filename();
+      std::string sampling_getdist_python = "cosmosis_getdist_python_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_getdist_python, (*sampling).get_declaration_point(), sampling_getdist_python_output, process_type::process_sampling_getdist_python);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+      // Translate the GetDist LaTeX file
+      const boost::filesystem::path& sampling_getdist_latex_output = this->translator_payload.get_sampling_getdist_latex_filename();
+      std::string sampling_getdist_latex = "cosmosis_getdist_latex_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_getdist_latex, (*sampling).get_declaration_point(), sampling_getdist_latex_output, process_type::process_sampling_getdist_latex);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
     }
 
     if(this->errors > 0)
@@ -482,7 +517,6 @@ boost::filesystem::path translation_unit::mangle_output_name(const boost::filesy
       boost::filesystem::path stem = input.stem();
       std::string ModelName = stem.leaf().string();
 
-
       boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
       const char* mcmc_path = mcmc_prefix.string().c_str();
       boost::filesystem::path mcmc_dir(mcmc_path);
@@ -499,6 +533,29 @@ boost::filesystem::path translation_unit::mangle_output_name(const boost::filesy
       boost::filesystem::path leaf = "CMakeLists" ;// + mcmc_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
 
       return(leaf.replace_extension(txt_extension));
+    } else if (tag == "getdist_python"){
+      boost::filesystem::path py_extension(".py");
+
+      boost::filesystem::path stem = input.stem();
+      std::string ModelName = stem.leaf().string();
+      boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
+
+      boost::filesystem::path leaf = "./" + mcmc_prefix.string() + "/" + stem.leaf().string() + "_GetDist";
+
+      return(leaf.replace_extension(py_extension));
+    } else if (tag == "getdist_latex"){
+      boost::filesystem::path getdist_extension(".paramnames");
+
+      boost::filesystem::path stem = input.stem();
+      std::string ModelName = stem.leaf().string();
+      boost::filesystem::path mcmc_GetDist_prefix(ModelName + "_mcmc/GetDistFiles");
+      const char* mcmc_GetDist_path = mcmc_GetDist_prefix.string().c_str();
+      boost::filesystem::path mcmc_GetDist_dir(mcmc_GetDist_path);
+      boost::filesystem::create_directory(mcmc_GetDist_dir);
+
+      boost::filesystem::path leaf = "./" + mcmc_GetDist_prefix.string() + "/" + stem.leaf().string() + "_MCMCGetDistData";
+
+      return(leaf.replace_extension(getdist_extension));
     }
   }
 

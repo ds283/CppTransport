@@ -88,8 +88,10 @@ class translator_data
 
     void set_sampling_output(const boost::filesystem::path& so, const std::string& sg,
                              const boost::filesystem::path& sv, const boost::filesystem::path& sp,
-                             const boost::filesystem::path& sm, const boost::filesystem::path& sc);
-    // in order: sampling output, guard, values, priors, mcmc, cmake
+                             const boost::filesystem::path& sm, const boost::filesystem::path& sc,
+                             const boost::filesystem::path& samplinggetdistPy,
+                             const boost::filesystem::path& samplinggetdistLatex);
+    // in order: sampling output, guard, values, priors, mcmc, cmake, GetDist python, GetDist latex
 
     // GET CORE, IMPLEMENTATION DATA
 
@@ -118,6 +120,12 @@ class translator_data
 
     //! get filename of the sample cmake file
     const boost::filesystem::path& get_sampling_cmake_filename() const { return(this->sampling_cmake_output); }
+
+    //! get filename of the sample GetDist Python output file
+    const boost::filesystem::path& get_sampling_getdist_python_filename() const { return(this->sampling_getdist_python_output); }
+
+    //! get filename of the sample GetDist LaTeX output file
+    const boost::filesystem::path& get_sampling_getdist_latex_filename() const { return(this->sampling_getdist_latex_output); }
 
     //! get header guard for translated core
     const std::string& get_core_guard() const { return(this->core_guard); }
@@ -251,8 +259,14 @@ class translator_data
     //! priors.ini output file
     boost::filesystem::path sampling_priors_output;
 
-    //! cpptsample CMakeLists.txt output file
+    //! CppTSample CMakeLists.txt output file
     boost::filesystem::path sampling_cmake_output;
+
+    //! CppTSample GetDist Python plotting output file
+    boost::filesystem::path sampling_getdist_python_output;
+
+    //! CppTSample GetDist LaTeX paramnames output file
+    boost::filesystem::path sampling_getdist_latex_output;
 
     //! core header guard
     std::string core_guard;
@@ -260,7 +274,7 @@ class translator_data
     //! implementation header guard
     std::string implementation_guard;
 
-    //! core header guard
+    //! CppTSample sampling header guard
     std::string sampling_guard;
   };
 
