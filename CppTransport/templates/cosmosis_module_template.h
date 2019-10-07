@@ -444,6 +444,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     constexpr DataType N_init        = 0.0;
     constexpr DataType N_pre_bkg     = 15.0;
     constexpr DataType Nendhigh      = 10000;
+    DataType nEND                    = 0;
 
     // Create the parameters and initial_conditions objects that CppTransport needs using
     // the two functions defined above.
@@ -508,7 +509,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     // given a specific flag for the type of problem encountered and logged in the cosmosis datablock.
     try {
         //! compute nEND-> throw exception struct defined above if we have nEND < 60.0 e-folds
-        DataType nEND = model->compute_end_of_inflation(&bkg, Nendhigh);
+        nEND = model->compute_end_of_inflation(&bkg, Nendhigh);
         if(inflation::Debug){std::cout << "Inflation lasts for: " << nEND << " e-folds." << std::endl;}
 
         if (nEND < 60.0)
@@ -562,8 +563,6 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
         // Use the bisection method to find the e-fold exit of k pivot_choice.
         N_pivot_exit = compute_Nexit_for_physical_k(inflation::k_pivot_choice, spline_match_eq, tol, nEND);
-        // std::cout << "e-fold exit for k* is: " << N_pivot_exit << std::endl;
-        // std::cout << "k* from spline is:" << spline_match_eq(N_pivot_exit) << std::endl;
 
         //! Construct the wave-numbers using a linearity relation.
         // Build CppT normalised wave-numbers by using the linear relation k_phys = gamma * k_cppt and k_cppt[Npre] == 1
@@ -636,8 +635,8 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           tk3s->set_adaptive_ics_efolds(4.5);
         }
 
-      // construct a folded threepf task based on the kt pivot scale made above, again, only if we want to
-      if (inflation::ThreepfFold){
+        // construct a folded threepf task based on the kt pivot scale made above, again, only if we want to
+        if (inflation::ThreepfFold){
           tk3f = std::make_unique<  transport::threepf_alphabeta_task<DataType> > ("$MODEL.threepf-folded", ics,
                   times_sample, kt_pivot_range, alpha_fold, beta_fold, false, StoragePolicy(), TrianglePolicy() );
           tk3f->set_adaptive_ics_efolds(4.5);
@@ -776,7 +775,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           // do this by taking the value at the end of inflation
           B_equi_piv = eq_threepf_samples.back();
           fNL_equi_piv = eq_redbsp_samples.back();
-        }
+          }
 
         //! Integrate the task for the squeezed 3-point function above, if we want to
         if (inflation::ThreepfSqueeze){
@@ -860,17 +859,19 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         int k = 0;
         for (auto j = TempNormEigenValues.begin(); j != TempNormEigenValues.end(); ++j, ++k)
         {
+          DataType EigenValue = 0;
+          
           // Are we going to be reporting m^2/H^2, or just m/H. If we are reporting m/H, we need to square-root the
           // values returned by sorted_mass_spectrum and be careful about keeping the data signed.
           if(inflation::MassEigenSquare){
             // Simply return the squared value
-            auto EigenValue = *j;
+            EigenValue = *j;
           }
           else {
             // Square root the eigenvalue keeping the sign
             auto absEigenValue = std::abs(*j);
             auto EigenValueSign = *j / absEigenValue;
-            auto EigenValue =  EigenValueSign * std::sqrt(absEigenValue);
+            EigenValue =  EigenValueSign * std::sqrt(absEigenValue);
           }
 
           EigenValues[i][k] = EigenValue;
@@ -989,7 +990,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     $FOR{ £FIELDNUM, "status = block->put_val( inflation::twopf_name£COMMA £QUOTENormMassMatrixEigenValue£FIELDNUM_1£QUOTE£COMMA EigenValues[0][£FIELDNUM] );", FieldNum , True, False }
     $FOR{ £FIELDNUM, "status = block->put_val( inflation::twopf_name£COMMA £QUOTENormMassMatrixEigenValue£FIELDNUM_2£QUOTE£COMMA EigenValues[1][£FIELDNUM] );", FieldNum , True, False }
     $FOR{ £FIELDNUM, "status = block->put_val( inflation::twopf_name£COMMA £QUOTENormMassMatrixEigenValue£FIELDNUM_3£QUOTE£COMMA EigenValues[2][£FIELDNUM] );", FieldNum , True, False }
-    $FOR{ £FIELDNUM, "status = block->put_val( inflation::twopf_name£COMMA £QUOTENormMassMatrixEigenValue£FIELDNUM_3£QUOTE£COMMA EigenValues[3][£FIELDNUM] );", FieldNum , True, False }
+    $FOR{ £FIELDNUM, "status = block->put_val( inflation::twopf_name£COMMA £QUOTENormMassMatrixEigenValue£FIELDNUM_4£QUOTE£COMMA EigenValues[3][£FIELDNUM] );", FieldNum , True, False }
 
     // Return the error-status and the end of inflation
     status = block->put_val( inflation::twopf_name, "ErrStatus", err_sum );
@@ -997,10 +998,10 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
     // Return how long each run took.
     auto CppTFinishTime = std::chrono::system_clock::now();
-    double CppTElapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(CppTStartTime - CppTFinishTime).count();
+    double CppTElapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(CppTFinishTime - CppTStartTime).count();
     status = block->put_val( inflation::twopf_name, "CppTTime", CppTElapsedSeconds );
 
-  // return status variable declared at the start of the function
+    // return status variable declared at the start of the function
     if(inflation::Debug){std::cout << "CppTSample done, returning status." << std::endl;}
     return status;
 }
