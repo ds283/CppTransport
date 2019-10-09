@@ -62,7 +62,7 @@ Data.columns = Data.columns.str.strip().str.upper()
 # If there are any NaN's in the data, then replace them with zeros so it's obvious that there's no data present in that column.
 Data.fillna(0.0, inplace = True)
 
-# We want the scalar & tensor indecies to be given as ln(10^10 * A)
+# We want the scalar & tensor indices to be given as ln(10^10 * A)
 Data["A_S"] = np.log(1E10 * Data["A_S"])
 Data["A_T"] = np.log(1E10 * Data["A_T"])
 
@@ -72,8 +72,8 @@ $FOR{ £FIELDNUM, "Data.rename(columns = {£QUOTENORMMASSMATRIXEIGENVALUE£FIELD
 $FOR{ £FIELDNUM, "Data.rename(columns = {£QUOTENORMMASSMATRIXEIGENVALUE£FIELDNUM_3£QUOTE:£QUOTEEVAL£FIELDNUM_3£QUOTE }, inplace = True)", FieldNum, True, False }
 $FOR{ £FIELDNUM, "Data.rename(columns = {£QUOTENORMMASSMATRIXEIGENVALUE£FIELDNUM_4£QUOTE:£QUOTEEVAL£FIELDNUM_4£QUOTE }, inplace = True)", FieldNum, True, False }
 
-# GetDist requires a 'weights' column as the first enetry, which for us is all ones
-# as well as having the posterior likelyhood as the second entry.
+# GetDist requires a 'weights' column as the first entry, which for us is all ones
+# as well as having the posterior likelihood as the second entry.
 cols = Data.columns.tolist()
 cols = cols[-1:] + cols[:-1]
 Data = Data[cols]
@@ -86,18 +86,21 @@ results = pd.concat(frames, axis = 1)
 results["POST"] = -1.0*results["POST"]
 
 
-# Selecting only the ouput columns that we want to write
-OutputColumns = ['weights', 'POST', $FOR{ £PARAM, "£QUOTE£PARAM£QUOTE.upper()£COMMA ", Params, False, True}, 'K_PIV', 'N_PIV', 'A_S', 'A_T', 'N_S', 'N_T', 'R', 'NEFOLD', 'B_EQUI', 'FNL_EQUI', 'B_SQU', 'FNL_SQU', 'B_FOLD', 'FNL_FOLD']
+# Selecting only the output columns that we want to write
+OutputColumns = ['weights', 'POST', $FOR{ £PRIOR, "£QUOTE£PRIOR£QUOTE.upper()£COMMA ", PriorNames, False, True}, 'K_PIV', 'N_PIV', 'A_S', 'A_T', 'N_S', 'N_T', 'R', 'NEFOLD', 'B_EQUI', 'FNL_EQUI', 'B_SQU', 'FNL_SQU', 'B_FOLD', 'FNL_FOLD']
 results = results[OutputColumns]
 results.to_csv(str(string_out_folder) + str(string_out) + '.txt', header = None, index = None, sep = " ")
-# Write the ouput to a text file using pandas
+# Write the output to a text file using pandas
 
 #----------
 # We now are going to read in the created csv above into GetDist so we can create a covarience triangle plot
-# and print to the terminal a 68% confidance interval for the parameters
+# and print to the terminal a 68% confidence interval for the parameters
 #----------
 
-samples = loadMCSamples(str(string_out_folder) + str(string_out)) # Load samples into GetDist
+DropAmount = 0.25 #! Percentage that we want to drop from the MCMC chain (between 0 and 1). Can be changed at will
+
+analysis_settings = {'ignore_rows': DropAmount}
+samples = loadMCSamples(str(string_out_folder) + str(string_out), analysis_settings = analysis_settings) # Load samples into GetDist
 
 # Print the LaTeX table of parameter limits at 68% and 95% levels
 print('\n')
@@ -114,9 +117,25 @@ print('\n\n')
 # Generate a triangle plot for the model and save it to current folder.
 g=gplot.getSubplotPlotter(chain_dir=str(string_out_folder))
 roots = [str(string_out)]
-params = ['A_S', 'A_T', 'N_S', 'N_T', 'R', 'NEFOLD']
+
+params = []
+
+$FOR{ £PRIOR, "params.append(£QUOTE£PRIOR£QUOTE)", PriorNames, True, False}
+
+params.extend(['A_S', 'A_T', 'N_S', 'N_T', 'R', 'NEFOLD'])
+
+# Now need to see if we have any fNL values, and if so then we want to add them to the triangle plot too
+if Data['FNL_EQUI'].all():
+    params.append('FNL_EQUI')
+
+if Data['FNL_SQU'].all():
+    params.append('FNL_SQU')
+
+if Data['FNL_FOLD'].all():
+    params.append('FNL_FOLD')
+
 param_3d = None
-g.triangle_plot(roots, params, plot_3d_with_param = param_3d, filled = False, shaded = True, ignore_rows = 0.25)
+g.triangle_plot(roots, params, plot_3d_with_param = param_3d, filled = False, shaded = True, line_args = {'lw':2, 'color':'darkblue'} )
 g.export('GetDist_$MODEL_TrainlgePlot.pdf')
 
 #----------
@@ -129,7 +148,6 @@ if not SeabornAvail:
 
 sns.set(font_scale=1.25)
 
-DropAmount = 0.25 #! Percentage that we want to drop from the MCMC chain (between 0 and 1). Can be changes at will
 TotalRows = Data.shape[0] + 1
 
 Data.drop(range(int(DropAmount * TotalRows)), inplace = True)
@@ -137,7 +155,7 @@ Data.drop(range(int(DropAmount * TotalRows)), inplace = True)
 print('Total data points after cuts: ' + str(Data.shape[0]))
 
 
-# Spectral index hisogram plot
+# Spectral index histogram plot
 fig, ax = plt.subplots(figsize=(13, 7))
 ax = sns.distplot(Data['N_S'], kde = False, color="#00AFAA", label="Data") #EB6BB0 #00AFAA
 plt.ylabel('Frequency')
@@ -152,7 +170,7 @@ plt.tight_layout()
 plt.savefig('NS.pdf')
 plt.close()
 
-# Tensor spectral index hisogram plot
+# Tensor spectral index histogram plot
 fig, ax = plt.subplots(figsize=(12, 7))
 ax = sns.distplot(Data['N_T'], kde = False, color="#00AFAA", label="Data") #EB6BB0 #00AFAA
 plt.ylabel('Frequency')
@@ -217,7 +235,7 @@ plt.close()
 
 # Mass Matrix Plot 1
 fig, ax = plt.subplots(figsize=(12, 7))
-$FOR{ £FIELDNUM, "ax = sns.distplot(Data[£QUOTEEVAL£FIELDNUM_1£QUOTE], kde=False, label=£QUOTEeigenvalue £FIELDNUM£QUOTE)", FieldNum, True, False }
+$FOR{ £FIELDNUM, "ax = sns.distplot(Data[£QUOTEEVAL£FIELDNUM_1£QUOTE], kde=False, label=£QUOTEeigenvalue £QUOTE + str(£FIELDNUM +1))", FieldNum, True, False }
 plt.title('Distribution of mass-matrix eigenvalues at horizon crossing')
 plt.ylabel('Relative Frequency')
 plt.xlabel(r'$$m_i/H$$')
@@ -228,7 +246,7 @@ plt.close()
 
 # Mass Matrix Plot 2
 fig, ax = plt.subplots(figsize=(12, 7))
-$FOR{ £FIELDNUM, "ax = sns.distplot(Data[£QUOTEEVAL£FIELDNUM_2£QUOTE], kde=False, label=£QUOTEeigenvalue £FIELDNUM£QUOTE)", FieldNum, True, False }
+$FOR{ £FIELDNUM, "ax = sns.distplot(Data[£QUOTEEVAL£FIELDNUM_2£QUOTE], kde=False, label=£QUOTEeigenvalue £QUOTE + str(£FIELDNUM +1))", FieldNum, True, False }
 plt.title('Distribution of mass-matrix eigenvalues 2.5 e-fold before end of inflation')
 plt.ylabel('Relative Frequency')
 plt.xlabel(r'$$m_i/H$$')
@@ -239,7 +257,7 @@ plt.close()
 
 # Mass Matrix Plot 3
 fig, ax = plt.subplots(figsize=(12, 7))
-$FOR{ £FIELDNUM, "ax = sns.distplot(Data[£QUOTEEVAL£FIELDNUM_3£QUOTE], kde=False, label=£QUOTEeigenvalue £FIELDNUM£QUOTE)", FieldNum, True, False }
+$FOR{ £FIELDNUM, "ax = sns.distplot(Data[£QUOTEEVAL£FIELDNUM_3£QUOTE], kde=False, label=£QUOTEeigenvalue £QUOTE + str(£FIELDNUM +1))", FieldNum, True, False }
 plt.title('Distribution of mass-matrix eigenvalues 1 e-fold before end of inflation')
 plt.ylabel('Relative Frequency')
 plt.xlabel(r'$$m_i/H$$')
@@ -250,7 +268,7 @@ plt.close()
 
 # Mass Matrix Plot 4
 fig, ax = plt.subplots(figsize=(12, 7))
-$FOR{ £FIELDNUM, "ax = sns.distplot(Data[£QUOTEEVAL£FIELDNUM_4£QUOTE], kde=False, label=£QUOTEeigenvalue £FIELDNUM£QUOTE)", FieldNum, True, False }
+$FOR{ £FIELDNUM, "ax = sns.distplot(Data[£QUOTEEVAL£FIELDNUM_4£QUOTE], kde=False, label=£QUOTEeigenvalue £QUOTE + str(£FIELDNUM +1))", FieldNum, True, False }
 plt.title('Distribution of mass-matrix eigenvalues at the end of inflation')
 plt.ylabel('Relative Frequency')
 plt.xlabel(r'$$m_i/H$$')

@@ -328,6 +328,18 @@ namespace macro_packages
         {
           Listy.push_back(d_list[i].get_name().append("_Init"));
         }
+      } else if (arg_list == "PriorNames") {
+        symbol_list Prior_names      = this->payload.model.get_prior_names();
+
+        for (auto &Name : Prior_names) {
+          Listy.push_back(Name.get_name());
+        }
+      } else if (arg_list == "PriorLaTeX") {
+        symbol_list Prior_Latex      = this->payload.model.get_prior_latex();
+
+        for (auto &LaTeX : Prior_Latex) {
+          Listy.push_back(LaTeX.get_name());
+        }
       }
       const int Lengthy = Listy.size();
       int itter = 1;

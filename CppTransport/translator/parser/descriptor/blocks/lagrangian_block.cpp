@@ -102,12 +102,30 @@ bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const 
         {
           auto field_prior = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX + " = " + a->get_prior() );
           this->fields_priors.push_back(field_prior);
+
+          auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX);
+          this->priors.push_back(prior_name);
+
+          std::string latex_name = a->get_latex();
+          if(latex_name.length() == 0) latex_name = symbol.get_name();
+
+          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX + " " + latex_name );
+          this->priors_with_latex.push_back(prior_latex);
         }
 
         if(a->get_derivprior().length() > 0)
         {
           auto field_derivprior = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " = " + a->get_derivprior() );
           this->fields_derivpriors.push_back(field_derivprior);
+
+          auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX );
+          this->priors.push_back(prior_name);
+
+          std::string latex_name = a->get_latex();
+          if(latex_name.length() == 0) latex_name = symbol.get_name();
+
+          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " " + latex_name + "_{init}" );
+          this->priors_with_latex.push_back(prior_latex);
         }
 
       };
@@ -138,6 +156,15 @@ bool lagrangian_block::add_parameter(const std::string& n, symbol_wrapper& s, co
         {
           auto param_prior = this->sym_factory.get_real_symbol(symbol.get_name() + " = " + a->get_prior() );
           this->params_priors.push_back(param_prior);
+
+          auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name());
+          this->priors.push_back(prior_name);
+
+          std::string latex_name = a->get_latex();
+          if(latex_name.length() == 0) latex_name = symbol.get_name();
+
+          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + " " + latex_name );
+          this->priors_with_latex.push_back(prior_latex);
         }
       };
 
@@ -292,6 +319,16 @@ symbol_list lagrangian_block::get_field_deriv() const
 symbol_list lagrangian_block::get_field_val() const
 {
   return(this->fields_vals);
+}
+
+symbol_list lagrangian_block::get_prior_names() const
+{
+  return(this->priors);
+}
+
+symbol_list lagrangian_block::get_prior_latex() const
+{
+  return(this->priors_with_latex);
 }
 
 symbol_list lagrangian_block::get_field_derivval() const

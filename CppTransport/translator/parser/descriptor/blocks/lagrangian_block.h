@@ -152,6 +152,12 @@ class lagrangian_block
     //! get list of symbols for the field initial value
     symbol_list get_field_val() const;
 
+    //! get list of symbols of prior names
+    symbol_list get_prior_names() const;
+
+    //! get list of symbols of prior names with latex
+    symbol_list get_prior_latex() const;
+
     //! get list of symbols for the field initial derivative value
     symbol_list get_field_derivval() const;
 
@@ -190,6 +196,12 @@ class lagrangian_block
 
     //! symbol table: fields
     field_symbol_table fields;
+
+    //! symbol list: names of all priors for cosmosis
+    symbol_list priors;
+
+    //! symbol list: names of all priors and associated LaTeX string for cosmosis
+    symbol_list priors_with_latex;
 
     //! symbol list: names of field derivatives
     symbol_list fields_deriv;
