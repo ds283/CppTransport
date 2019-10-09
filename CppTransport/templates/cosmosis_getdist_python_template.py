@@ -100,7 +100,7 @@ results.to_csv(str(string_out_folder) + str(string_out) + '.txt', header = None,
 DropAmount = 0.25 #! Percentage that we want to drop from the MCMC chain (between 0 and 1). Can be changed at will
 
 analysis_settings = {'ignore_rows': DropAmount}
-samples = loadMCSamples(str(string_out_folder) + str(string_out), analysis_settings = analysis_settings) # Load samples into GetDist
+samples = loadMCSamples(str(string_out_folder) + str(string_out), settings = analysis_settings) # Load samples into GetDist
 
 # Print the LaTeX table of parameter limits at 68% and 95% levels
 print('\n')

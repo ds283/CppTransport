@@ -109,7 +109,7 @@ bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const 
           std::string latex_name = a->get_latex();
           if(latex_name.length() == 0) latex_name = symbol.get_name();
 
-          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX + " " + latex_name );
+          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX + " " + latex_name + "_{init}" );
           this->priors_with_latex.push_back(prior_latex);
         }
 
@@ -124,7 +124,7 @@ bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const 
           std::string latex_name = a->get_latex();
           if(latex_name.length() == 0) latex_name = symbol.get_name();
 
-          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " " + latex_name + "_{init}" );
+          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " " + "\\dot{" + latex_name + "}_{init}" );
           this->priors_with_latex.push_back(prior_latex);
         }
 
