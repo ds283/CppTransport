@@ -72,12 +72,7 @@ boost::optional< contexted_value<bool>& > templates_block::get_sampling() const
 bool templates_block::set_sampling_template(const std::string& SampleTplt, const y::lexeme_type& l)
 {
   std::string SamplingTemplate;
-
-  if(!get_sampling()){
-    SamplingTemplate = "cosmosis_module_template";
-  } else {
-    SamplingTemplate = SampleTplt;
-  }
+  SamplingTemplate = "cosmosis_module_template";
   return SetSamplingTemplateContextedValue(this->sampling_template, SamplingTemplate, l, ERROR_SAMPLING_TEMPLATE_REDECLARATION);
 }
 

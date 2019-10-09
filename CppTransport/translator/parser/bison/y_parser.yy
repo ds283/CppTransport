@@ -248,8 +248,8 @@ template_def: template_def core equals string semicolon                         
 
 sampling_block: open_brace sampling_def close_brace
 
-sampling_def: sampling_def generate_sampling equals string semicolon                    { driver.templates.set_sampling(*$4); }
-        | sampling_def sampler equals string semicolon                                  { std::cout << "sampler " << std::endl; } //{ driver.templates.set_sampling(*$4); }
+sampling_def: sampling_def generate_sampling equals string semicolon                    { driver.templates.set_sampling_template(*$4); driver.templates.set_sampling(*$4); }
+        | sampling_def sampler equals string semicolon                                  { std::cout << "sampler " << std::endl; }
         | sampling_def sampling_template equals string semicolon                        { driver.templates.set_sampling_template(*$4); }
         |
         ;
@@ -282,7 +282,7 @@ string_group: string_group comma string                                         
 
 model_block: open_brace model_attributes close_brace
 
-model_attributes: model_attributes name equals string semicolon                         { driver.meta.set_name(*$4); driver.templates.set_sampling_template(*$4); driver.templates.set_sampling(*$4); }
+model_attributes: model_attributes name equals string semicolon                         { driver.meta.set_name(*$4); driver.templates.set_sampling(*$4); }
         | model_attributes lagrangian equals lagrangian_specifier semicolon
         | model_attributes citeguide equals string semicolon                            { driver.meta.set_citeguide(*$4); }
         | model_attributes description equals string semicolon                          { driver.meta.set_description(*$4); }
