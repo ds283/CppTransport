@@ -334,7 +334,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
         // Find the matching equation solutions across the inflation time range.
         std::vector<DataType> log_physical_k (N_H.size());
-        for (int i = 0; i < N_H.size(); ++i)
+        for (std::size_t i = 0; i != N_H.size(); ++i)
         {
             log_physical_k[i] = log_H[i] - (nEND - N_H[i]) + constants;
         }
@@ -351,14 +351,14 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         // Build CppT normalised wave-numbers by using the linear relation k_phys = gamma * k_cppt and k_cppt[Npre] == 1
         DataType gamma = spline_match_eq(N_pre);
 
-        for (int i = 0; i < k_conventional.size(); ++i)
+        for (std::size_t i = 0; i != k_conventional.size(); ++i)
         {
             k_conventional[i] = Phys_waveno_sample[i] / exp(gamma);
         }
 
         // Put these into a transport::aggregate range one-by-one
         transport::aggregate_range<DataType> ks;
-        for (int i = 0; i < k_conventional.size(); ++i)
+        for (std::size_t i = 0; i != k_conventional.size(); ++i)
         {
             transport::basic_range<DataType> k_temp{k_conventional[i], k_conventional[i], 0, transport::spacing::linear};
             ks += k_temp;
@@ -448,7 +448,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         }
 
         std::vector<DataType> k_pivots;
-        for (int i = 0; i < k_pivot_range.size(); ++i)
+        for (std::size_t i = 0; i != k_pivot_range.size(); ++i)
         {
             k_pivots.push_back(k_pivot_range[i] * std::exp(gamma) );
         }
@@ -462,7 +462,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         // take the values at index 7 (centre) to get the pivot scale.
         std::vector<DataType> A_s_spec(k_pivot_range.size());
         std::vector<DataType> A_t_spec(k_pivot_range.size());
-        for (int k = 0; k < k_pivot_range.size(); ++k)
+        for (std::size_t k = 0; k != k_pivot_range.size(); ++k)
         {
             int index = (times_sample.size() * k) + (times_sample.size() - 1);
             A_s_spec[k] = pivot_twopf_samples[index];
@@ -478,7 +478,8 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         //! Create a temporary path & file for passing the power spectrum to the datablock for the spectral indices
         boost::filesystem::path temp_spec_path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.dat");
         std::ofstream out_f(temp_spec_path.string(), std::ios_base::out | std::ios_base::trunc);
-        for (int i = 0; i < k_pivots.size(); ++i) {
+        for (std::size_t i = 0; i != k_pivots.size(); ++i)
+        {
             std::setprecision(9);
             out_f << k_pivots[i] << "\t";
             out_f << A_s_spec[i] << "\t";
@@ -522,7 +523,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
         // find A_s & A_t for each k mode exiting at Nend-10, ..., Nend etc. We take the final time value at Nend to be
         // the amplitude for the scalar and tensor modes. The tensor-to-scalar ratio r is the ratio of these values.
-        for (int k = 0; k < k_conventional.size(); ++k)
+        for (std::size_t k = 0; k != k_conventional.size(); ++k)
         {
             int index = (times_sample.size() * k) + (times_sample.size() -1);
             A_s.push_back(samples[index]);
@@ -642,7 +643,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
       transport::backg_history<DataType> history;
       model->backend_process_backg(&bckg, history, true);
 
-      for ( int i = 0; i != history.size(); ++i)
+      for (std::size_t i = 0; i != history.size(); ++i)
       {
         transport::flattened_tensor<DataType> TempMasses(NumFields*NumFields);
         transport::flattened_tensor<DataType> TempNormEigenValues(NumFields);
@@ -740,8 +741,10 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     //! Create a temporary path & file for passing wave-number information to the datablock for class
     boost::filesystem::path temp_path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.dat");
     std::ofstream outf(temp_path.string(), std::ios_base::out | std::ios_base::trunc);
-    if ( err_sum == 0) {
-      for (int i = 0; i < Phys_waveno_sample.size(); ++i) {
+    if ( err_sum == 0)
+    {
+      for (std::size_t i = 0; i != Phys_waveno_sample.size(); ++i)
+      {
         std::setprecision(9);
         outf << Phys_waveno_sample[i] << "\t";
         outf << A_s[i] << "\t";
