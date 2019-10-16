@@ -1252,6 +1252,15 @@ SET(TRANSPORT_RUNTIME_TASKS_FILES
   transport-runtime/tasks/sampling_integration_batcher.h
   )
 
+SET(TRANSPORT_RUNTIME_SAMPLING_FILES
+  transport-runtime/tasks/sampling_detail/Polyfit.cpp
+  transport-runtime/tasks/sampling_detail/SpectralIndexCalc.cpp
+  transport-runtime/tasks/sampling_detail/Dispersion.cpp
+  transport-runtime/tasks/sampling_detail/Dispersion.h
+  transport-runtime/tasks/sampling_detail/Nexit_phys_k.cpp
+  transport-runtime/tasks/sampling_detail/Logspace.cpp
+  )
+
 SET(TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES
   transport-runtime/tasks/integration_detail/abstract.h
   transport-runtime/tasks/integration_detail/background_task.h
@@ -1382,6 +1391,7 @@ SET(SOURCE_FILES
   ${TRANSPORT_RUNTIME_SQLITE3_FILES}
   ${TRANSPORT_RUNTIME_TASKS_CONFIGURATION_DATABASE_FILES}
   ${TRANSPORT_RUNTIME_TASKS_FILES}
+  ${TRANSPORT_RUNTIME_SAMPLING_FILES}
   ${TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_TRANSACTIONS_FILES}
