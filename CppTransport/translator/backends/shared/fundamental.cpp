@@ -62,6 +62,7 @@ namespace macro_packages
         EMPLACE(pre_package, BIND(replace_source, "SOURCE"));
         EMPLACE(pre_package, BIND(replace_model, "MODEL"));
         EMPLACE(pre_package, BIND(replace_name, "NAME"));
+        EMPLACE(pre_package, BIND(replace_filename, "FILENAME"));
         EMPLACE(pre_package, BIND(replace_author, "AUTHORS"));
         EMPLACE(pre_package, BIND(replace_citeguide, "CITEGUIDE"));
         EMPLACE(pre_package, BIND(replace_description, "DESCRIPTION"));
@@ -216,6 +217,11 @@ namespace macro_packages
             return(std::string("\"\""));
           }
       }
+
+    std::string replace_filename::evaluate(const macro_argument_list& args)
+    {
+      return(this->data_payload.get_source_filename().stem().string());
+    }
 
 
     std::string replace_author::evaluate(const macro_argument_list& args)

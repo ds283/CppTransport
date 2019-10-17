@@ -46,6 +46,7 @@ namespace macro_packages
     constexpr unsigned int DATE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int SOURCE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int NAME_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int FILENAME_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int AUTHOR_RECORD_CLASS_ARGUMENT = 0;
     constexpr unsigned int AUTHOR_TOTAL_ARGUMENTS = 1;
     constexpr unsigned int CITEGUIDE_TOTAL_ARGUMENTS = 0;
@@ -416,6 +417,45 @@ namespace macro_packages
         language_printer& printer;
 
       };
+
+    class replace_filename : public replacement_rule_simple
+    {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+    public:
+
+        //! constructor
+        replace_filename(std::string n, translator_data& p, language_printer& prn)
+                : replacement_rule_simple(std::move(n), FILENAME_TOTAL_ARGUMENTS),
+                  data_payload(p),
+                  printer(prn)
+        {
+        }
+
+        //! destructor
+        virtual ~replace_filename() = default;
+
+
+        // INTERNAL API
+
+    protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+    private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+    };
 
 
     class replace_author : public replacement_rule_simple
