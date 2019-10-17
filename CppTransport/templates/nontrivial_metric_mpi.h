@@ -42,7 +42,7 @@
 
 #include "transport-runtime/transport.h"
 
-#include "$MODEL_core.h"
+#include "$FILENAME_core.h"
 
 namespace transport
   {

@@ -46,7 +46,7 @@
 #include <cosmosis/datablock/section_names.h>
 
 // CppTransport includes
-#include "$MODEL_mpi.h"
+#include "$FILENAME_mpi.h"
 #include "transport-runtime/utilities/spline1d.h"
 #include "transport-runtime/tasks/integration_detail/abstract.h"
 #include "transport-runtime/models/advisory_classes.h"
