@@ -488,74 +488,99 @@ unsigned int translation_unit::apply()
 boost::filesystem::path translation_unit::mangle_output_name(const boost::filesystem::path& input, const std::string& tag)
   {
     std::string output;
-    // This is used to create a ./build directory, as I am planning to run the CppT command in the main directory.
-    boost::filesystem::path build_prefix("build");
-    const char* build_path = build_prefix.string().c_str();
-    boost::filesystem::path build_dir(build_path);
-    boost::filesystem::create_directory(build_dir);
 
-    if (tag == "core" || tag == "mpi"){
-      boost::filesystem::path h_extension(".h");
+    auto Sampling = *this->translator_payload.templates.get_sampling();
+    // Determine if we are generating sampling templates as well or not
 
-      boost::filesystem::path stem = input.stem();
-      boost::filesystem::path leaf = "./" + build_prefix.string() + "/" + stem.leaf().string() + "_" + tag; // stem.leaf().string() + "_" + tag;
-      //boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
+    if (!*Sampling)
+    {
+      if (tag == "core" || tag == "mpi")
+      {
+        boost::filesystem::path h_extension(".h");
 
-      return(leaf.replace_extension(h_extension));
+        boost::filesystem::path stem = input.stem();
+        boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
 
-    } else if (tag == "sampling"){
-      boost::filesystem::path cpp_extension(".cpp");
+        return(leaf.replace_extension(h_extension));
+      }
+    }
+    else
+    {
+      // This is used to create a ./build directory, as I am planning to run the CppT command in the main directory.
+      boost::filesystem::path build_prefix("build");
+      const char* build_path = build_prefix.string().c_str();
+      boost::filesystem::path build_dir(build_path);
+      boost::filesystem::create_directory(build_dir);
 
-      boost::filesystem::path stem = input.stem();
-      boost::filesystem::path leaf = "./" + build_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
-      //boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
+      if (tag == "core" || tag == "mpi")
+      {
+        boost::filesystem::path h_extension(".h");
 
-      return(leaf.replace_extension(cpp_extension));
-    } else if (tag == "priors" || tag == "values" || tag == "mcmc"){
-      boost::filesystem::path ini_extension(".ini");
+        boost::filesystem::path stem = input.stem();
+        boost::filesystem::path leaf = "./" + build_prefix.string() + "/" + stem.leaf().string() + "_" + tag; // stem.leaf().string() + "_" + tag;
 
-      boost::filesystem::path stem = input.stem();
-      std::string ModelName = stem.leaf().string();
+        return(leaf.replace_extension(h_extension));
 
-      boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
-      const char* mcmc_path = mcmc_prefix.string().c_str();
-      boost::filesystem::path mcmc_dir(mcmc_path);
-      boost::filesystem::create_directory(mcmc_dir);
+      }
+      else if (tag == "sampling")
+      {
+        boost::filesystem::path cpp_extension(".cpp");
 
-      boost::filesystem::path leaf = "./" + mcmc_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
+        boost::filesystem::path stem = input.stem();
+        boost::filesystem::path leaf = "./" + build_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
 
-      return(leaf.replace_extension(ini_extension));
-    } else if (tag == "cmake"){
-      boost::filesystem::path txt_extension(".txt");
+        return(leaf.replace_extension(cpp_extension));
+      }
+      else if (tag == "priors" || tag == "values" || tag == "mcmc")
+      {
+        boost::filesystem::path ini_extension(".ini");
 
-      //boost::filesystem::path stem = input.stem();
+        boost::filesystem::path stem = input.stem();
+        std::string ModelName = stem.leaf().string();
 
-      boost::filesystem::path leaf = "CMakeLists" ;// + mcmc_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
+        boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
+        const char* mcmc_path = mcmc_prefix.string().c_str();
+        boost::filesystem::path mcmc_dir(mcmc_path);
+        boost::filesystem::create_directory(mcmc_dir);
 
-      return(leaf.replace_extension(txt_extension));
-    } else if (tag == "getdist_python"){
-      boost::filesystem::path py_extension(".py");
+        boost::filesystem::path leaf = "./" + mcmc_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
 
-      boost::filesystem::path stem = input.stem();
-      std::string ModelName = stem.leaf().string();
-      boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
+        return(leaf.replace_extension(ini_extension));
+      }
+      else if (tag == "cmake")
+      {
+        boost::filesystem::path txt_extension(".txt");
+        boost::filesystem::path leaf = "CMakeLists" ;
 
-      boost::filesystem::path leaf = "./" + mcmc_prefix.string() + "/" + stem.leaf().string() + "_GetDist";
+        return(leaf.replace_extension(txt_extension));
+      }
+      else if (tag == "getdist_python")
+      {
+        boost::filesystem::path py_extension(".py");
 
-      return(leaf.replace_extension(py_extension));
-    } else if (tag == "getdist_latex"){
-      boost::filesystem::path getdist_extension(".paramnames");
+        boost::filesystem::path stem = input.stem();
+        std::string ModelName = stem.leaf().string();
+        boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
 
-      boost::filesystem::path stem = input.stem();
-      std::string ModelName = stem.leaf().string();
-      boost::filesystem::path mcmc_GetDist_prefix(ModelName + "_mcmc/GetDistFiles");
-      const char* mcmc_GetDist_path = mcmc_GetDist_prefix.string().c_str();
-      boost::filesystem::path mcmc_GetDist_dir(mcmc_GetDist_path);
-      boost::filesystem::create_directory(mcmc_GetDist_dir);
+        boost::filesystem::path leaf = "./" + mcmc_prefix.string() + "/" + stem.leaf().string() + "_GetDist";
 
-      boost::filesystem::path leaf = "./" + mcmc_GetDist_prefix.string() + "/" + stem.leaf().string() + "_MCMCGetDistData";
+        return(leaf.replace_extension(py_extension));
+      }
+      else if (tag == "getdist_latex")
+      {
+        boost::filesystem::path getdist_extension(".paramnames");
 
-      return(leaf.replace_extension(getdist_extension));
+        boost::filesystem::path stem = input.stem();
+        std::string ModelName = stem.leaf().string();
+        boost::filesystem::path mcmc_GetDist_prefix(ModelName + "_mcmc/GetDistFiles");
+        const char* mcmc_GetDist_path = mcmc_GetDist_prefix.string().c_str();
+        boost::filesystem::path mcmc_GetDist_dir(mcmc_GetDist_path);
+        boost::filesystem::create_directory(mcmc_GetDist_dir);
+
+        boost::filesystem::path leaf = "./" + mcmc_GetDist_prefix.string() + "/" + stem.leaf().string() + "_MCMCGetDistData";
+
+        return(leaf.replace_extension(getdist_extension));
+      }
     }
   }
 
