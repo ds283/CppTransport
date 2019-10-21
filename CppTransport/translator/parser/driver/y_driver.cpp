@@ -42,7 +42,8 @@ namespace y
         model(root, s, c, e),
         meta(root, s, c, e),
         templates(root, s, c, e),
-        misc(root, s, c, e)
+        misc(root, s, c, e),
+        cosmo(root, s, c, e)
 	    {
 	    }
 

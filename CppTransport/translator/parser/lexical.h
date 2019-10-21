@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -51,7 +52,10 @@ enum class keyword_type
     asinh, acosh, atanh,
     exp, log, pow, Li2, Li, G, S, H,
     zeta, zetaderiv, tgamma, lgamma,
-    beta, psi, factorial, binomial
+    beta, psi, factorial, binomial,
+    cosmology, cosmo_template,
+    H0, h0, Omega_B, Omega_Bh2,
+    Omega_CDM, Omega_CDMh2, tau, Tcmb
   };
 
 

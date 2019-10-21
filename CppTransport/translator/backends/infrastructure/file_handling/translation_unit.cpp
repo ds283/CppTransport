@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -120,7 +121,17 @@ const y::lexeme_type::keyword_map keywords =
     { "beta_func", keyword_type::beta },
     { "psi_func", keyword_type::psi },
     { "factorial", keyword_type::factorial },
-    { "binomial", keyword_type::binomial }
+    { "binomial", keyword_type::binomial },
+    { "cosmology", keyword_type::cosmology},
+    { "cosmo_template", keyword_type::cosmo_template},
+    { "H0", keyword_type::H0},
+    { "h0", keyword_type::h0},
+    { "Omega_B", keyword_type::Omega_B},
+    { "Omega_Bh2", keyword_type::Omega_Bh2},
+    { "Omega_CDM", keyword_type::Omega_CDM},
+    { "Omega_CDMh2", keyword_type::Omega_CDMh2},
+    { "tau", keyword_type::tau},
+    { "Tcmb", keyword_type::Tcmb}
   };
 
 // final column is *true* if the corresponding symbol can *precede*

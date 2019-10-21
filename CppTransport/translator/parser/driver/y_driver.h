@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -46,7 +47,7 @@
 #include "metadata_driver.h"
 #include "templates_driver.h"
 #include "misc_driver.h"
-
+#include "cosmology_driver.h"
 
 namespace y
 	{
@@ -120,6 +121,9 @@ namespace y
     
         //! miscellaneous settings and methods
         misc_driver misc;
+
+        // cosmology_block data
+        cosmology_driver cosmo;
 
 	    };
 
