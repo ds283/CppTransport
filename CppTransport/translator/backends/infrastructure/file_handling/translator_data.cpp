@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -42,6 +43,7 @@ translator_data::translator_data(const boost::filesystem::path& file, error_cont
     meta(desc.meta),
     templates(desc.templates),
     misc(desc.misc),
+    cosmo(desc.cosmo),
     cache(c),
     policy(vp)
   {

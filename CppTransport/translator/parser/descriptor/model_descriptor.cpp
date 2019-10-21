@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -40,7 +41,8 @@ model_descriptor::model_descriptor(symbol_factory& s, version_policy& vp, error_
     model(s, vp, std::move(err_ctx)),
     meta(vp),
     templates(vp),
-    misc(vp)
+    misc(vp),
+    cosmo()
   {
   }
 
