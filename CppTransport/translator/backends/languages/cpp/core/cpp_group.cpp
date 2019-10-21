@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -36,6 +37,7 @@
 #include "cpp_steppers.h"
 #include "resources.h"
 #include "curvature_tensors.h"
+#include "cosmology_macros.h"
 
 #include "cpp_cse.h"
 #include "cpp_printer.h"
@@ -56,4 +58,5 @@ cpp_group::cpp_group(translator_data& p, tensor_factory& fctry)
     this->add_rule_package<macro_packages::gauge_xfm>(p, *l_printer);
     this->add_rule_package<macro_packages::temporary_pool>(p, *l_printer);
     this->add_rule_package<cpp::cpp_steppers>(p, *l_printer);
+    this->add_rule_package<macro_packages::cosmology_macros>(p, *l_printer);
   }
