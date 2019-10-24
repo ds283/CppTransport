@@ -87,7 +87,7 @@ results["POST"] = -1.0*results["POST"]
 
 
 # Selecting only the output columns that we want to write
-OutputColumns = ['weights', 'POST', $FOR{ £PRIOR, "£QUOTE£PRIOR£QUOTE.upper()£COMMA ", PriorNames, False, True}, 'K_PIV', 'N_PIV', 'A_S', 'A_T', 'N_S', 'N_T', 'R', 'NEFOLD', 'B_EQUI', 'FNL_EQUI', 'B_SQU', 'FNL_SQU', 'B_FOLD', 'FNL_FOLD']
+OutputColumns = ['weights', 'POST', $FOR{ £PRIOR, "£QUOTE£PRIOR£QUOTE.upper()£COMMA ", PriorNames, False, True}, 'K_PIV', 'N_PIV', 'A_S', 'A_T', 'N_S', 'N_S_FULL', 'N_T', 'N_T_FULL', 'R', 'NEFOLD', 'B_EQUI', 'FNL_EQUI', 'B_SQU', 'FNL_SQU', 'B_FOLD', 'FNL_FOLD']
 results = results[OutputColumns]
 results.to_csv(str(string_out_folder) + str(string_out) + '.txt', header = None, index = None, sep = " ")
 # Write the output to a text file using pandas
@@ -122,7 +122,7 @@ params = []
 
 $FOR{ £PRIOR, "params.append(£QUOTE£PRIOR£QUOTE)", PriorNames, True, False}
 
-params.extend(['A_S', 'A_T', 'N_S', 'N_T', 'R', 'NEFOLD'])
+params.extend(['A_S', 'A_T', 'N_S_FULL', 'N_T_FULL', 'R'])
 
 # Now need to see if we have any fNL values, and if so then we want to add them to the triangle plot too
 if Data['FNL_EQUI'].all():

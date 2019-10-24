@@ -259,6 +259,8 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     DataType r_pivot;
     DataType ns_pivot;
     DataType nt_pivot;
+    DataType ns_full;
+    DataType nt_full;
     DataType ns_pivot_linear;
     DataType nt_pivot_linear;
     std::vector<DataType> r;
@@ -475,7 +477,11 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
             }
         }
 
-        //! Create a temporary path & file for passing the power spectrum to the datablock for the spectral indices
+        /*
+        // Since we are doing all spectral index computation within this single module, this block to output the
+        // pivot power spectrum is no longer needed.
+
+        // Create a temporary path & file for passing the power spectrum to the datablock for the spectral indices
         boost::filesystem::path temp_spec_path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.dat");
         std::ofstream out_f(temp_spec_path.string(), std::ios_base::out | std::ios_base::trunc);
         for (std::size_t i = 0; i != k_pivots.size(); ++i)
@@ -489,7 +495,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
         // Use put_val to write the temporary file with k, P_s(k) and P_t(k) information for spectral indices
         status = block->put_val( inflation::spec_file, "spec_index_table", temp_spec_path.string() );
-
+        */
 
         // Use the function defined above to find dA/dk and compute n_s and n_t from those
         ns_pivot = transport::spec_index_deriv(inflation::k_pivot_choice, k_pivots, A_s_spec, true);
@@ -530,6 +536,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
             A_t.push_back(tens_samples_twpf[index]);
             r.push_back( tens_samples_twpf[index] / samples[index] );
         }
+
+        ns_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks, A_s, true);
+        nt_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks, A_t, false);
 
         //! Integrate the tasks created for the equilateral 3-point function above, if we want to
         if (inflation::ThreepfEqui)
@@ -745,10 +754,10 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     {
       for (std::size_t i = 0; i != Phys_waveno_sample.size(); ++i)
       {
-        std::setprecision(9);
-        outf << Phys_waveno_sample[i] << "\t";
-        outf << A_s[i] << "\t";
-        outf << A_t[i] << "\n";
+        outf  << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+              << Phys_waveno_sample[i] << "\t"
+              << A_s[i] << "\t"
+              << A_t[i] << "\n";
       }
     }
     outf.close();
@@ -762,6 +771,8 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     status = block->put_val( inflation::twopf_name, "A_t", A_t_pivot );
     status = block->put_val( inflation::twopf_name, "n_s", ns_pivot );
     status = block->put_val( inflation::twopf_name, "n_t", nt_pivot );
+    status = block->put_val( inflation::twopf_name, "n_s_full", ns_full );
+    status = block->put_val( inflation::twopf_name, "n_t_full", nt_full );
     status = block->put_val( inflation::twopf_name, "n_s_lin", ns_pivot_linear );
     status = block->put_val( inflation::twopf_name, "n_t_lin", nt_pivot_linear );
     status = block->put_val( inflation::twopf_name, "r", r_pivot );

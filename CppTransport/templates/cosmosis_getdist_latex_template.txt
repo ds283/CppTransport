@@ -4,8 +4,8 @@ KPIV* k_{piv}
 NPIV* N_{piv}
 A_S* \ln(10^{10} A_s)
 A_T* \ln(10^{10} A_t)
-N_S* n_s
-N_T* n_t
+N_S_FULL* n_{s}^{full}
+N_T_FULL* n_{t}^{full}
 R* r
 NEFOLD* N
 B_EQUI* B^{eq}
