@@ -487,7 +487,7 @@ namespace transport
         // at complation time in the model's .cpp file if needed
         Cosmo.set_H0($COSMO_H0);
         Cosmo.set_Omega_Bh2($COSMO_OMEGA_B);
-        Cosmo.set_Omega_CDM2($COSMO_OMEGA_CDM);
+        Cosmo.set_Omega_CDMh2($COSMO_OMEGA_CDM);
         Cosmo.set_tau($COSMO_TAU);
       }
 
