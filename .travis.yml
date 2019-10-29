@@ -1,6 +1,10 @@
 sudo: required
 language: generic
 
+before_install:
+  - wget http://ge.archive.ubuntu.com/ubuntu/ubuntu/pool/main/b/bison/bison_3.4.2+dfsg-1_amd64.deb
+  - sudo dpkg -i bison_3.4.2+dfsg-1_amd64.deb
+
 before_script:
   - cd CppTransport
   - mkdir build
@@ -26,10 +30,8 @@ matrix:
           update: true
           sources:
             - ubuntu-toolchain-r-test
-            - deb http://cz.archive.ubuntu.com/ubuntu disco main
           packages:
             - cmake
-            - libbison-dev
             - libsqlite3-dev
             - libboost-all-dev
             - libginac-dev
