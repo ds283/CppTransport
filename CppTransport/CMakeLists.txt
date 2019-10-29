@@ -138,6 +138,7 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/semantic-values/stepper.cpp
   translator/parser/semantic-values/string_array.cpp
   translator/parser/semantic-values/subexpr.cpp
+  translator/parser/utilities/string_to_bool.cpp
   translator/parser/input_stack.cpp
   translator/parser/lexfile.cpp
   translator/parser/y_lexer.cpp

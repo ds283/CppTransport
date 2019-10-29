@@ -34,6 +34,6 @@ bool string_to_bool(const std::string& in)
   {
     auto in_lower = boost::algorithm::to_lower_copy(in);
 
-    return in_lower == 'true' || in_lower == 'yes' || in_lower == '1'
-           || in_lower == 't' || in_lower == 'y'
+    return in_lower == "true" || in_lower == "yes" || in_lower == "1"
+           || in_lower == "t" || in_lower == "y";
   }
