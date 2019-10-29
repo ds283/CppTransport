@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -57,6 +58,34 @@ namespace macro_packages
             << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
         throw argument_mismatch(msg.str());
       }
+
+    //! custom codes for the for_directive that is used to implement FOR loops into the CppT translator
+    std::string directive_for::operator()(const forloop_argument_list& args)
+    {
+      this->validate(args);
+
+      macro_agent& ma = this->payload.get_stack().top_macro_package();
+      if(!ma.is_enabled() && !this->always_apply())
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_DIRECTIVE_NOT_EVALUATED << " '" << this->name << "'";
+        return msg.str();
+      }
+
+      return this->apply(args);
+    }
+
+    void directive_for::validate(const forloop_argument_list& args)
+    {
+      // check that correct number of arguments have been supplied
+      if(args.size() == this->num_args) return;
+
+      std::ostringstream msg;
+
+      msg << ERROR_DIRECTIVE_WRONG_ARGUMENT_COUNT << " '" << this->name << "; " << ERROR_EXPECTED_ARGUMENT_COUNT
+          << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
+      throw argument_mismatch(msg.str());
+    }
     
     
     std::string directive_index::operator()(const macro_argument_list& args, const index_literal_list& indices)

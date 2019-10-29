@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -80,3 +81,15 @@ void translator_data::set_core_implementation(const boost::filesystem::path& co,
     this->implementation_output = io;
     this->implementation_guard = ig;
   }
+
+void translator_data::set_sampling_output(const boost::filesystem::path& so, const std::string& sg,
+                                          const boost::filesystem::path& sv, const boost::filesystem::path& sp,
+                                          const boost::filesystem::path& sm, const boost::filesystem::path& sc)
+{
+  this->sampling_output         = so;
+  this->sampling_guard          = sg;
+  this->sampling_mcmc_output    = sm;
+  this->sampling_values_output  = sv;
+  this->sampling_priors_output  = sp;
+  this->sampling_cmake_output   = sc;
+}

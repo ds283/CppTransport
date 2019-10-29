@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -115,6 +116,72 @@ namespace macro_packages
         translator_data& payload;
       
       };
+
+    //! tweaked base class for my custom 'for' directive that is used for CppT translator FOr loops
+    class directive_for
+    {
+
+    // CONSTRUCTOR, DESTRUCTOR
+    public:
+
+        //! constructor
+        directive_for(std::string nm, unsigned int n, translator_data& p)
+                : name(std::move(nm)),
+                  num_args(n),
+                  payload(p)
+        {
+        }
+
+        //! destructor
+        virtual ~directive_for() = default;
+
+
+    // INTERFACE -- EVALUATION
+    public:
+
+        //! evaluate the directive
+        std::string operator()(const forloop_argument_list& args);
+
+    // INTERFACE -- QUERY FOR DATA
+    public:
+
+        //! get number of arguments associated with this directive
+        unsigned int get_number_args() const { return this->num_args; }
+
+        //! get name associated with this directive
+        const std::string& get_name() const { return this->name; }
+
+    // INTERNAL API
+    protected:
+
+        //! apply function; has to be supplied by implementation
+        //! unlike for a macro, apply() for a directive is guaranteed to be called exactly once
+        virtual std::string apply(const forloop_argument_list& args) = 0;
+
+        //! should this directive always be evaluated, even if output is disabled?
+        //! defaults to false, but can be overridden if evaluation must always be performed,
+        //! eg. as for $IF, $ELSE, $ENDIF
+        virtual bool always_apply() const { return false; }
+
+    // VALIDATION
+    protected:
+
+        //! validate supplied arguments
+        void validate(const forloop_argument_list& args);
+
+
+    // INTERNAL DATA
+    protected:
+
+        //! name of this directive
+        std::string name;
+
+        //! number of arguments expected
+        unsigned int num_args;
+
+        //! translator data payload
+        translator_data& payload;
+    };
     
     
     //! base class for an 'index' directive that takes both arguments and indices
@@ -226,9 +293,10 @@ namespace macro_packages
 
 
 // containers for directive-sets; since we can't store references in the STL
-// containers, they must be wrapped in std::refernce_wrapper
+// containers, they must be wrapped in std::reference_wrapper
 typedef std::vector< std::reference_wrapper<macro_packages::directive_simple> > simple_directiveset;
-typedef std::vector< std::reference_wrapper<macro_packages::directive_index> > index_directiveset;
+typedef std::vector< std::reference_wrapper<macro_packages::directive_for> >    for_directiveset;
+typedef std::vector< std::reference_wrapper<macro_packages::directive_index> >  index_directiveset;
 
 
 #endif //CPPTRANSPORT_DIRECTIVE_DEFINITIONS_H

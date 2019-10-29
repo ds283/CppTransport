@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -236,6 +237,50 @@ namespace token_list_impl
 
       };
 
+    class for_macro_token : public generic_token
+    {
+
+    public:
+
+        //! constructor
+        for_macro_token(const std::string& m, const forloop_argument_list& a,
+                           macro_packages::replacement_rule_for& r, for_macro_type t, error_context ec);
+
+        //! destructor is default, but icpc fails with explicitly-default destructor
+        virtual ~for_macro_token()
+        {
+        }
+
+
+    // INTERFACE
+    public:
+
+        //! get type
+        for_macro_type get_type() const { return (this->type); }
+
+        //! evaluate and cache the result
+        void evaluate();
+
+
+    // INTERNAL DATA
+    protected:
+
+        //! macro name
+        const std::string name;
+
+        //! macro argument list
+        const forloop_argument_list args;
+
+        //! reference to owning replacement rule
+        macro_packages::replacement_rule_for& rule;
+
+        //! macro type -- pre or post?
+        for_macro_type type;
+
+        //! have argument-related errors been reported yet? if so, silence further errors
+        bool argument_error;
+    };
+
     
     class index_macro_token : public generic_token
       {
@@ -342,6 +387,42 @@ namespace token_list_impl
         bool argument_error;
         
       };
+
+    class for_directive_token : public generic_token
+    {
+
+    public:
+
+        //! constructor
+        for_directive_token(const std::string& m, const forloop_argument_list& a,
+                               macro_packages::directive_for& r, error_context ec);
+
+        //! destructor is default, but icpc fails with explicitly-default destructor
+        virtual ~for_directive_token() = default;
+
+
+    // INTERFACE
+    public:
+
+        //! evaluate and cache the result
+        void evaluate();
+
+
+    // INTERNAL DATA
+    protected:
+
+        //! directive name
+        const std::string name;
+
+        //! macro argument list
+        const forloop_argument_list args;
+
+        //! reference to owning replacement rule
+        macro_packages::directive_for& rule;
+
+        //! have argument-related errors been reported yet? if so, silence further errors
+        bool argument_error;
+    };
     
     
     class index_directive_token : public generic_token

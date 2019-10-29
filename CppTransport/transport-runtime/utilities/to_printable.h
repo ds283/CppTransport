@@ -30,7 +30,7 @@
 namespace transport
   {
     
-    inline std::string to_printable(const std::string& input, bool quote=true, bool allow_newlines=false)
+    inline std::string to_printable(const std::string& input, bool quote=true, bool allow_newlines=false, bool init = false)
       {
         std::string result = "";
         

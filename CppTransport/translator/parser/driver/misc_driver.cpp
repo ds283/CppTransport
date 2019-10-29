@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -53,7 +54,61 @@ namespace y
             this->root.report_error();
           }
       }
-    
+
+    // Four functions that allow us to set priors & values on fields + parameters in the model file for use
+    // with writing to the CosmoSIS .ini files
+    void misc_driver::set_attribute_value(attributes& a, lexeme_type& lex)
+    {
+      try
+      {
+        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_value(name, lex); };
+        SetStringValue(Setter, lex);
+      }
+      catch(parse_error& xe)
+      {
+        this->root.report_error();
+      }
+    }
+
+    void misc_driver::set_attribute_derivvalue(attributes& a, lexeme_type& lex)
+    {
+      try
+      {
+        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_derivvalue(name, lex); };
+        SetStringValue(Setter, lex);
+      }
+      catch(parse_error& xe)
+      {
+        this->root.report_error();
+      }
+    }
+
+    void misc_driver::set_attribute_prior(attributes& a, lexeme_type& lex)
+    {
+      try
+      {
+        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_prior(name, lex); };
+        SetStringValue(Setter, lex);
+      }
+      catch(parse_error& xe)
+      {
+        this->root.report_error();
+      }
+    }
+
+    void misc_driver::set_attribute_derivprior(attributes& a, lexeme_type& lex)
+    {
+      try
+      {
+        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_derivprior(name, lex); };
+        SetStringValue(Setter, lex);
+      }
+      catch(parse_error& xe)
+      {
+        this->root.report_error();
+      }
+    }
+
     
     void misc_driver::add_string(string_array& a, lexeme_type& lex)
       {

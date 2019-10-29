@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -33,6 +34,7 @@
 
 #define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, p))
 #define BIND_IF_SYMBOL(X, N) std::move(std::make_unique<X>(N, p, istack))
+#define BIND_FOR_SYMBOL(X, N) std::move(std::make_unique<X>(N, p, istack))
 #define EMPLACE(pkg, obj) try { emplace_directive(pkg, obj); } catch(std::exception& xe) { }
 
 
@@ -45,6 +47,9 @@ namespace macro_packages
         EMPLACE(simple_package, BIND_IF_SYMBOL(if_directive, "IF"));
         EMPLACE(simple_package, BIND_IF_SYMBOL(else_directive, "ELSE"));
         EMPLACE(simple_package, BIND_IF_SYMBOL(endif_directive, "ENDIF"));
+
+        //! Custom codes to try to implement FOR loops in the CppTransport translator for use with CpptSample
+        EMPLACE(for_package,    BIND_FOR_SYMBOL(for_directive, "FOR"));
 
         EMPLACE(index_package, BIND_SYMBOL(set_directive, "SET"));
       }
@@ -222,6 +227,119 @@ namespace macro_packages
 
         return msg.str();
       }
+
+    // Custom command that replaces certain strings provided in the 'from' arg to the 'to' arg as many times as
+    // there are appearances in the 'str' arg. We could replace this with a more intelligent replacer using the
+    // internal CppT translator in the future, as this would fix the indentation issues automatically.
+    bool Replace(std::string& str, const std::string& from, const std::string& to) {
+      while(str.find(from) != std::string::npos){
+        size_t start_pos = str.find(from);
+        if(start_pos == std::string::npos)
+          return false;
+        str.replace(start_pos, from.length(), to);
+      }
+      return true;
+    }
+
+    // The function that gets executed when the translator detects a FOR loop
+    std::string for_directive::apply(const forloop_argument_list& args)
+    {
+      std::string iterator    = args[FOR_DIRECTIVE_ITERATOR_ARGUMENT]; // This is what we're replacing in the provided string
+      std::string replaceme   = args[FOR_DIRECTIVE_REPLACE_ARGUMENT]; // The string that we want to replace certain key-words with
+      std::string arg_list    = args[FOR_DIRECTIVE_LIST_ARGUMENT]; // What we want to replace the iterator with
+      std::string endl_arg    = args[FOR_DIRECTIVE_ENDL_ARGUMENT]; // Do we end the line after each term in the argument_list?
+      std::string no_last_comma_arg = args[FOR_DIRECTIVE_NO_COMMA_ARGUMENT]; // Do we have a trailing comma at the end of the replacement?
+
+      // Turn the string end_arg and no_last_comma_arg into booleans
+      bool endl_bool = endl_arg == "True";
+      bool no_last_comma_bool = no_last_comma_arg == "True";
+
+      std::vector<std::string> Listy;
+      std::ostringstream msg;  // Output string
+
+      if (arg_list == "Fields"){
+        Listy = this->payload.model.get_field_name_list();
+      } else if (arg_list == "Params"){
+        Listy = this->payload.model.get_param_name_list();
+      } else if (arg_list == "Values"){
+        symbol_list Field_vals      = this->payload.model.get_field_val();
+        symbol_list Field_derivvals = this->payload.model.get_field_derivval();
+        symbol_list Param_vals      = this->payload.model.get_param_values();
+
+        if (!((Field_vals.empty()) && (Field_derivvals.empty()) && (Param_vals.empty()) )){
+          Listy.emplace_back("[inflation_parameters]");
+        }
+
+        for(auto & Field_val : Field_vals)
+        {
+          Listy.push_back(Field_val.get_name());
+        }
+        for(auto & Field_derivval : Field_derivvals)
+        {
+          Listy.push_back(Field_derivval.get_name());
+        }
+        for(auto & Param_val : Param_vals)
+        {
+          Listy.push_back(Param_val.get_name());
+        }
+      } else if (arg_list == "Priors") {
+        symbol_list Field_priors      = this->payload.model.get_field_prior();
+        symbol_list Field_derivpriors = this->payload.model.get_field_derivprior();
+        symbol_list Param_priors      = this->payload.model.get_param_priors();
+
+        if (!((Field_priors.empty()) && (Field_derivpriors.empty()) && (Param_priors.empty()) )) {
+          Listy.emplace_back("[inflation_parameters]");
+        }
+
+        for (auto &Field_prior : Field_priors) {
+          Listy.push_back(Field_prior.get_name());
+        }
+        for (auto &Field_derivprior : Field_derivpriors) {
+          Listy.push_back(Field_derivprior.get_name());
+        }
+        for (auto &Param_prior : Param_priors) {
+          Listy.push_back(Param_prior.get_name());
+        }
+      } else if (arg_list == "FieldsInit"){
+        symbol_list f_list = this->payload.model.get_field_symbols();
+        //symbol_list d_list = this->data_payload.model.get_deriv_symbols();
+        symbol_list d_list = this->payload.model.get_field_deriv();
+
+        for(int i = 0; i < f_list.size(); ++i)
+        {
+          Listy.push_back(f_list[i].get_name().append("_Init"));
+        }
+        for(int i = 0; i < d_list.size(); ++i)
+        {
+          Listy.push_back(d_list[i].get_name().append("_Init"));
+        }
+      }
+      const int Lengthy = Listy.size();
+      int itter = 1;
+      for (auto& i : Listy) {
+        auto TempReplace = replaceme;
+        Replace(TempReplace, iterator, i);
+        Replace(TempReplace, "£QUOTE", "\"");
+        if(no_last_comma_bool){
+          if(itter != Lengthy) {
+            Replace(TempReplace, "£COMMA", ",");
+          }else{
+            Replace(TempReplace, "£COMMA", "");
+          }
+        } else{
+          Replace(TempReplace, "£COMMA", ",");
+        }
+
+        if (endl_bool){
+          msg << TempReplace << std::endl;
+        }
+        else{
+          msg << TempReplace;
+        }
+        ++itter;
+      }
+      return msg.str();
+    }
 
 
     namespace directives_impl

@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -34,6 +35,8 @@
 
 
 enum class simple_macro_type { pre, post };
+
+enum class for_macro_type { pre, post };
 
 enum class unroll_state { force, prevent, allow };
 

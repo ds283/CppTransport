@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -128,6 +129,9 @@ class package_group
     
     //! return reference to simple directives
     const simple_directiveset& get_simple_directiveset() const { return this->simple_directives; }
+
+    //! return reference to for directives
+    const for_directiveset& get_for_directiveset() const { return this->for_directives; }
     
     //! return reference to index directives
     const index_directiveset& get_index_directiveset() const { return this->index_directives; }
@@ -178,6 +182,9 @@ class package_group
     
     //! rebuild simple directiveset
     void build_simple_directiveset();
+
+    //! rebuild for directiveset
+    void build_for_directiveset();
     
     //! rebuild index directiveset
     void build_index_directiveset();
@@ -245,6 +252,9 @@ class package_group
     
     //! rules for simple directives
     simple_directiveset simple_directives;
+
+    //! rules for for directives
+    for_directiveset for_directives;
     
     //! rules for index directives
     index_directiveset index_directives;
@@ -304,6 +314,7 @@ void package_group::add_directive_package(Args&& ... args)
     
     // rebuild directiveset caches
     this->build_simple_directiveset();
+    this->build_for_directiveset();
     this->build_index_directiveset();
   }
 

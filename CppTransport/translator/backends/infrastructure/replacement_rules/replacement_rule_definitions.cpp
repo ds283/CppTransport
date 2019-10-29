@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -48,6 +49,25 @@ namespace macro_packages
             << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
         throw argument_mismatch(msg.str());
       }
+
+    std::string replacement_rule_for::operator()(const forloop_argument_list& args)
+    {
+      this->validate(args);
+      return this->evaluate(args);
+    }
+
+
+    void replacement_rule_for::validate(const forloop_argument_list& args)
+    {
+      // check that correct number of arguments have been supplied
+      if(args.size() == this->num_args) return;
+
+      std::ostringstream msg;
+
+      msg << ERROR_MACRO_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT
+          << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
+      throw argument_mismatch(msg.str());
+    }
 
 
     std::string

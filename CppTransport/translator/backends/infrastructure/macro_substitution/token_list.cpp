@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -201,6 +202,139 @@ namespace macro_tokenizer_impl
 
         return std::make_pair(arg_list, current_position);
       }
+
+    // get a for loop macro argument list
+    template <typename ContextFactory>
+    std::pair<forloop_argument_list, size_t>
+    get_forloop_argument_list(const std::string& input, const std::string& macro, const size_t position, bool error_if_absent,
+                      ContextFactory make_context)
+    {
+      forloop_argument_list arg_list;
+      size_t current_position = position;
+
+      // skip over any white space characters
+      while(current_position < input.length() && isspace(input[current_position]))
+      {
+        ++current_position;
+      }
+
+      // check that an argument list is present
+      if(current_position >= input.length() || input[current_position] != '{')
+      {
+        if(error_if_absent)
+        {
+          std::ostringstream msg;
+          msg << ERROR_EXPECTED_OPEN_ARGUMENT_LIST << " '" << macro << "'";
+          error_context ctx = make_context(current_position, current_position+1);
+          ctx.error(msg.str());
+        }
+
+        return std::make_pair(arg_list, current_position);
+      }
+
+      ++current_position;   // move past opening bracket of index list
+
+      while(current_position < input.length() && input[current_position] != '}')
+      {
+        // skip over any white space characters
+        while(current_position < input.length() && isspace(input[current_position]))
+        {
+          ++current_position;
+        }
+
+        if(input[current_position] == ',')
+        {
+          std::ostringstream msg;
+          msg  << ERROR_UNEXPECTED_COMMA << " '" << macro << "'";
+          error_context ctx = make_context(current_position, current_position+1);
+          ctx.error(msg.str());
+        }
+        else if(input[current_position] == '"')
+        {
+          size_t start = current_position;
+          std::string arg;
+
+          // skip opening quote
+          ++current_position;
+
+          while(current_position < input.length() && input[current_position] != '"')
+          {
+            arg += input[current_position++];
+          }
+
+          // check closing quote is in place
+          if(!(current_position < input.length() && input[current_position] == '"'))
+          {
+            std::ostringstream msg;
+            msg  << ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE << " '" << macro << "'";
+            error_context ctx = make_context(current_position, current_position+1);
+            ctx.error(msg.str());
+          }
+          else
+          {
+            ++current_position;
+          }
+
+          error_context ctx = make_context(start, current_position);
+          arg_list.emplace_back(arg, ctx);
+        }
+        else
+        {
+          // now at the start of an argument
+          size_t start = current_position;
+          std::string arg;
+
+          while(current_position < input.length()
+                && input[current_position] != ','
+                && input[current_position] != '}'
+                && !isspace(input[current_position]))
+          {
+            arg += input[current_position];
+            ++current_position;
+          }
+
+          error_context ctx = make_context(start, current_position);
+          arg_list.emplace_back(arg, ctx);
+        }
+
+        // skip over any white space characters
+        while(current_position < input.length() && isspace(input[current_position]))
+        {
+          ++current_position;
+        }
+
+        // look for argument separator and wrap up
+        if(input[current_position] == ',')
+        {
+          ++current_position;
+          continue;
+        }
+        else if(input[current_position] == '}')
+        {
+          continue;
+        }
+
+        std::ostringstream msg;
+        msg  << ERROR_EXPECTED_COMMA << " '" << macro << "'";
+        error_context ctx = make_context(current_position, current_position+1);
+        ctx.error(msg.str());
+      }
+
+      // complain if missing closing bracket
+      if(!(current_position < input.length() && input[current_position] == '}'))
+      {
+        std::ostringstream msg;
+        msg << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << macro << "'";
+        error_context ctx = make_context(current_position, current_position + 1);
+        ctx.error(msg.str());
+      }
+      else
+      {
+        ++current_position;   // skip closing bracket '}'
+      }
+
+      return std::make_pair(arg_list, current_position);
+    }
 
 
     // get a macro index list
@@ -398,6 +532,7 @@ token_list::token_list(const std::string& in, const std::string& pfx, unsigned i
     post(pkg.get_post_ruleset()),
     index(pkg.get_index_ruleset()),
     simp_dir(pkg.get_simple_directiveset()),
+    for_dir(pkg.get_for_directiveset()),
     ind_dir(pkg.get_index_directiveset()),
     local_rules(lr)
 	{
@@ -485,7 +620,8 @@ token_list::match_macro_or_index(const size_t position, ContextFactory make_cont
         candidate += input[position+1];
         possible_match = check_for_match(candidate, this->pre) || check_for_match(candidate, this->post)
                          || check_for_match(candidate, this->index) || check_for_match(candidate, this->local_rules)
-                         || check_for_match(candidate, this->simp_dir) || check_for_match(candidate, this->ind_dir);
+                         || check_for_match(candidate, this->simp_dir) || check_for_match(candidate, this->ind_dir)
+                         || check_for_match(candidate, this->for_dir);
       }
 
     // if no possible match then this must be an index literal, so build it and return
@@ -503,6 +639,7 @@ token_list::match_macro_or_index(const size_t position, ContextFactory make_cont
               || check_for_match(candidate + input[position + candidate_length], this->index)
               || check_for_match(candidate + input[position + candidate_length], this->local_rules)
               || check_for_match(candidate + input[position + candidate_length], this->simp_dir)
+              || check_for_match(candidate + input[position + candidate_length], this->for_dir)
               || check_for_match(candidate + input[position + candidate_length], this->ind_dir)))
       {
         candidate += input[position + candidate_length];
@@ -537,6 +674,11 @@ token_list::match_macro_or_index(const size_t position, ContextFactory make_cont
             // we matched a simple directive
             return this->make_simple_directive(candidate, position, this->simp_dir, make_context);
           }
+        else if(check_for_match(candidate, this->for_dir, false))
+        {
+          // we matched a for directive
+          return this->make_for_directive(candidate, position, this->for_dir, make_context);
+        }
         else if(check_for_match(candidate, this->ind_dir, false))
           {
             // we matched an index directive
@@ -654,6 +796,49 @@ token_list::make_simple_macro(const std::string& macro, const size_t position, c
 
     return std::make_pair(std::move(tok), current_position);
   }
+
+template <typename RuleSet, typename ContextFactory>
+std::pair<std::unique_ptr<token_list_impl::for_macro_token>, size_t>
+token_list::make_for_macro(const std::string& macro, const size_t position, const RuleSet& rules, for_macro_type type,
+                              ContextFactory make_context)
+{
+  const std::string& input = *this->input_string;
+
+  // check whether we've previously seen a directive and therefore replacement rules should be disallowed
+  if(!this->validate_replacement_rule(macro, position, make_context))
+  {
+    std::unique_ptr<token_list_impl::for_macro_token> tok;
+    return std::make_pair(std::move(tok), position + macro.length());
+  }
+
+  // find rule for this macro
+  auto& rule = find_match(macro, rules);
+
+  // move position past the macro name
+  size_t current_position = position + macro.length();
+
+  // shouldn't find an index list
+  auto err_handler = [&](size_t p) -> void
+  {
+      std::ostringstream msg;
+      msg << ERROR_TOKENIZE_UNEXPECTED_LIST << " '" << macro << "'; " << ERROR_TOKENIZE_SKIPPING;
+      auto ctx = make_context(p, p+1);
+      ctx.error(msg.str());
+  };
+  current_position = check_no_index_list(input, current_position, err_handler);
+
+  // get argument list, if one is expected
+  forloop_argument_list arg_list;
+  if(rule.get_number_args() > 0)
+    std::tie(arg_list, current_position) = get_forloop_argument_list(input, macro, current_position, true, make_context);
+
+  // build token
+  auto tok = std::make_unique<token_list_impl::for_macro_token>(macro, arg_list, rule, type,
+                                                                   make_context(position, current_position));
+  this->for_macro_tokens.push_back(*tok);
+
+  return std::make_pair(std::move(tok), current_position);
+}
 
 
 template <typename RuleSet, typename ContextFactory>
@@ -867,6 +1052,51 @@ token_list::make_simple_directive(const std::string& macro, const size_t positio
 
 
 template <typename RuleSet, typename ContextFactory>
+std::pair<std::unique_ptr<token_list_impl::for_directive_token>, size_t>
+token_list::make_for_directive(const std::string& macro, const size_t position, const RuleSet& rules,
+                                  ContextFactory make_context)
+{
+  const std::string& input = *this->input_string;
+
+  // check whether we've previously seen a replacement rule and therefore directives should be disallowed
+  if(!this->validate_directive(macro, position, make_context))
+  {
+    std::unique_ptr<token_list_impl::for_directive_token> tok;
+    return std::make_pair(std::move(tok), position + macro.length());
+  }
+
+  // find rule for this directive
+  auto& rule = find_match(macro, rules);
+
+  // move position past the macro name
+  size_t current_position = position + macro.length();
+
+  // shouldn't have an index list
+  auto err_handler = [&](size_t p) -> void
+  {
+      std::ostringstream msg;
+      msg << ERROR_TOKENIZE_UNEXPECTED_LIST << " '" << macro << "'; " << ERROR_TOKENIZE_SKIPPING;
+      auto ctx = make_context(p, p+1);
+      ctx.error(msg.str());
+  };
+  current_position = check_no_index_list(input, current_position, err_handler);
+
+  // get argument list, if one is expected
+  forloop_argument_list arg_list;
+  //macro_argument_list arg_list;
+  if(rule.get_number_args() > 0)
+    std::tie(arg_list, current_position) = get_argument_list(input, macro, current_position, true, make_context);
+
+  // build token
+  auto tok = std::make_unique<token_list_impl::for_directive_token>(macro, arg_list, rule,
+                                                                       make_context(position, current_position));
+  this->for_directive_tokens.push_back(*tok);
+
+  return std::make_pair(std::move(tok), current_position);
+}
+
+
+template <typename RuleSet, typename ContextFactory>
 std::pair<std::unique_ptr<token_list_impl::index_directive_token>, size_t>
 token_list::make_index_directive(const std::string& macro, const size_t position, const RuleSet& rules,
                                  ContextFactory make_context)
@@ -976,6 +1206,23 @@ unsigned int token_list::evaluate_macros(simple_macro_type type)
 		return(replacements);
 	}
 
+unsigned int token_list::evaluate_macros(for_macro_type type)
+{
+  unsigned int replacements = 0;
+
+  for(auto& t : this->for_macro_tokens)
+  {
+    auto& T = t.get();
+
+    if(T.get_type() == type)
+    {
+      T.evaluate();
+      ++replacements;
+    }
+  }
+
+  return(replacements);
+}
 
 unsigned int token_list::evaluate_macros(const indices_assignment& a)
 	{

@@ -100,6 +100,9 @@ class argument_cache
 
     bool fast() const { return(this->fast_flag); }
 
+    // getter for if we are generating a CMakeLists.txt file for CpptSample
+    bool do_cmake() const { return(this->CMakeLists_flag); }
+
 
     // WARNINGS
 
@@ -177,6 +180,9 @@ class argument_cache
 
     //! fast setting
     bool fast_flag;
+
+    //! CMakeLists.txt generation setting - used to for compiling the model sampler
+    bool CMakeLists_flag;
 
 
     // WARNINGS

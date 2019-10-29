@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -43,7 +44,7 @@ class macro_agent;
 
 enum class process_type
   {
-    process_core, process_implementation
+    process_core, process_implementation, process_sampling, process_sampling_ini, process_sampling_txt
   };
 
 

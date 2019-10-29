@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -102,6 +103,7 @@ class token_list
     //! evaluate simple macros of a specific type, and cache the result.
     //! We only want to do this once if possible, since macro evaluation may be expensive.
     unsigned int evaluate_macros(simple_macro_type type);
+    unsigned int evaluate_macros(for_macro_type type);
 
     //! evaluate index macros on a specific assignment and cache the result;
     //! used when unrolling index sets
@@ -174,6 +176,12 @@ class token_list
     make_simple_macro(const std::string& macro, const size_t position, const RuleSet& rules, simple_macro_type type,
                       ContextFactory make_context);
 
+    //! build a for macro token
+    template <typename RuleSet, typename ContextFactory>
+    std::pair<std::unique_ptr<token_list_impl::for_macro_token>, size_t>
+    make_for_macro(const std::string& macro, const size_t position, const RuleSet& rules, for_macro_type type,
+                      ContextFactory make_context);
+
     //! build an index macro token
     template <typename RuleSet, typename ContextFactory>
     std::pair<std::unique_ptr<token_list_impl::index_macro_token>, size_t>
@@ -187,6 +195,12 @@ class token_list
     std::pair<std::unique_ptr<token_list_impl::simple_directive_token>, size_t>
     make_simple_directive(const std::string& macro, const size_t position, const RuleSet& rules,
                               ContextFactory make_context);
+
+    //! build a for directive token
+    template <typename RuleSet, typename ContextFactory>
+    std::pair<std::unique_ptr<token_list_impl::for_directive_token>, size_t>
+    make_for_directive(const std::string& macro, const size_t position, const RuleSet& rules,
+                          ContextFactory make_context);
     
     //! build an index directive token
     template <typename RuleSet, typename ContextFactory>
@@ -268,6 +282,9 @@ class token_list
     //! simple directives
     const simple_directiveset& simp_dir;
 
+    //! for directives
+    const for_directiveset& for_dir;
+
     //! index directives
     const index_directiveset& ind_dir;
 
@@ -280,12 +297,17 @@ class token_list
     using index_literal_token_database = std::list< std::reference_wrapper< token_list_impl::index_literal_token > >;
     using simple_directive_token_database = std::list< std::reference_wrapper< token_list_impl::simple_directive_token > >;
     using index_directive_token_database = std::list< std::reference_wrapper< token_list_impl::index_directive_token > >;
+    using for_macro_token_database = std::list< std::reference_wrapper< token_list_impl::for_macro_token > >;
+    using for_directive_token_database = std::list< std::reference_wrapper< token_list_impl::for_directive_token > >;
 
     //! tokenized version of input
     token_database tokens;
 
     //! auxiliary list of simple macro tokens
     simple_macro_token_database simple_macro_tokens;
+
+    //! auxiliary list of for macro tokens
+    for_macro_token_database for_macro_tokens;
 
     //! auxiliary list of index macro tokens
     index_macro_token_database index_macro_tokens;
@@ -295,6 +317,9 @@ class token_list
     
     //! auxiliary list of simple directive tokens
     simple_directive_token_database simple_directive_tokens;
+
+    //! auxiliary list of for directive tokens
+    for_directive_token_database for_directive_tokens;
     
     //! axiliary list of index directive tokens
     index_directive_token_database index_directive_tokens;

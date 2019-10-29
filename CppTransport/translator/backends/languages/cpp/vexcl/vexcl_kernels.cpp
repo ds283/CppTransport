@@ -79,7 +79,7 @@ namespace vexcl
         // The bound arguments here are:
         // * 'false' disables quoting by to_printable())
         // * 'true' allows newlines to pass through
-        std::function<std::string(const std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
+        std::function<std::string(const std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true, false);
 
         // translate into our new in-memory buffer, preserving the type of translation (ie. core or implementation)
         error_context ctx = this->data_payload.make_error_context();

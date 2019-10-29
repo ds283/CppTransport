@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -145,8 +146,29 @@ class lagrangian_block
     //! get list of symbols for field derivatives
     symbol_list get_deriv_symbols() const;
 
+    //! get list of symbols for fields
+    symbol_list get_field_deriv() const;
+
+    //! get list of symbols for the field initial value
+    symbol_list get_field_val() const;
+
+    //! get list of symbols for the field initial derivative value
+    symbol_list get_field_derivval() const;
+
+    //! get list of symbols for the field initial prior
+    symbol_list get_field_prior() const;
+
+    //! get list of symbols for the field initial derivative prior
+    symbol_list get_field_derivprior() const;
+
     //! get list of symbols for parameters
     symbol_list get_param_symbols() const;
+
+    //! get list of symbols for the parameters values
+    symbol_list get_param_values() const;
+
+    //! get list of symbols for the parameters priors
+    symbol_list get_param_priors() const;
 
     //! get symbol for Planck mass M_P
     const symbol_wrapper& get_Mp_symbol() const;
@@ -169,8 +191,29 @@ class lagrangian_block
     //! symbol table: fields
     field_symbol_table fields;
 
+    //! symbol list: names of field derivatives
+    symbol_list fields_deriv;
+
+    //! symbol list: names of field values for cosmosis
+    symbol_list fields_vals;
+
+    //! symbol list: names of field derivative values for cosmosis
+    symbol_list fields_derivvals;
+
+    //! symbol list: names of field priors for cosmosis
+    symbol_list fields_priors;
+
+    //! symbol list: names of field derivative priors for cosmosis
+    symbol_list fields_derivpriors;
+
     //! symbol table: parameters
     parameter_symbol_table parameters;
+
+    //! symbol list: names of parameters values for cosmosis
+    symbol_list params_values;
+
+    //! symbol list: names of parameters priors for cosmosis
+    symbol_list params_priors;
 
     //! symbol table: reserved symbols (such as the Planck mass)
     parameter_symbol_table reserved;

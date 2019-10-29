@@ -98,7 +98,8 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     profile_flag(false),
     develop_warnings(false),
     unroll_warnings(false),
-    reposition_warnings(false)
+    reposition_warnings(false),
+    CMakeLists_flag(false)
   {
     // set up Boost::program_options descriptors for command-line arguments
     boost::program_options::options_description generic(MISC_OPTIONS);
@@ -124,6 +125,7 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
       (ANNOTATE_SWITCH,                                                                                          ANNOTATE_HELP)
       (UNROLL_POLICY_SWITCH, boost::program_options::value< unsigned int >()->default_value(DEFAULT_UNROLL_MAX), UNROLL_POLICY_HELP)
       (FAST_SWITCH,                                                                                              FAST_HELP)
+      (CMAKE_SWITCH,                                                                                             CMAKE_HELP)
       ;
 
     boost::program_options::options_description warnings(WARNING_OPTIONS);
@@ -270,6 +272,7 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     if(option_map.count(ANNOTATE_SWITCH)) this->annotate_flag = true;
     if(option_map.count(UNROLL_POLICY_SWITCH)) this->unroll_policy_size = option_map[UNROLL_POLICY_SWITCH].as<unsigned int>();
     if(option_map.count(FAST_SWITCH)) this->fast_flag = true;
+    if(option_map.count(CMAKE_SWITCH)) this->CMakeLists_flag = true;
 
     // CONFIGURATION OPTIONS
     if(option_map.count(VERBOSE_SWITCH_LONG)) this->verbose_flag = true;
