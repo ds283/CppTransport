@@ -269,7 +269,7 @@ void translation_unit::populate_output_filenames()
     this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
 
     // If we are doing sampling, we need to assign the sampling filenames.
-    if(*this->translator_payload.templates.get_sampling())
+    if(this->translator_payload.templates.get_sampling())
     {
       // Initialise filepath variables for for sampling that we will write to
       boost::filesystem::path sampling_output;
@@ -356,7 +356,7 @@ unsigned int translation_unit::apply()
       }
 
     // Sampling template file parser & translator
-    if (*this->translator_payload.templates.get_sampling())
+    if (this->translator_payload.templates.get_sampling())
     {
       const boost::filesystem::path& sampling_output = this->translator_payload.get_sampling_filename();
       boost::optional< contexted_value<std::string>& > sampling = this->model.templates.get_sampling_template();
@@ -489,10 +489,7 @@ boost::filesystem::path translation_unit::mangle_output_name(const boost::filesy
   {
     std::string output;
 
-    auto Sampling = *this->translator_payload.templates.get_sampling();
-    // Determine if we are generating sampling templates as well or not
-
-    if (!*Sampling)
+    if (!this->translator_payload.templates.get_sampling())
     {
       if (tag == "core" || tag == "mpi")
       {

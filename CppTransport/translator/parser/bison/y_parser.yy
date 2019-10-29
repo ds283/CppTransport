@@ -280,7 +280,7 @@ string_group: string_group comma string                                         
 
 model_block: open_brace model_attributes close_brace
 
-model_attributes: model_attributes name equals string semicolon                         { driver.meta.set_name(*$4); driver.templates.set_sampling(*$4); }
+model_attributes: model_attributes name equals string semicolon                         { driver.meta.set_name(*$4); }
         | model_attributes lagrangian equals lagrangian_specifier semicolon
         | model_attributes citeguide equals string semicolon                            { driver.meta.set_citeguide(*$4); }
         | model_attributes description equals string semicolon                          { driver.meta.set_description(*$4); }
