@@ -27,6 +27,8 @@
 #include "templates_block.h"
 #include "generics_descriptor.h"
 
+#include "translator/parser/utilities/string_to_bool.h"
+
 
 // TEMPLATE SPECIFICATION
 
@@ -58,10 +60,9 @@ bool templates_block::set_sampling(const std::string& sample, const y::lexeme_ty
 {
   // Here we have a bool that encapsulates most of the common ways of saying "true", so that way it doesn't specifically
   // have to be set to 'True', but any one of these.
-  bool GenerateSampling = ( (sample == "True") || (sample == "true") || (sample == "T") ||
-                            (sample == "t")    || (sample == "y") );
+  bool generate_sampling = string_to_bool(sample);
 
-  return SetSamplingContextedValue(this->sampling, GenerateSampling, l, ERROR_SAMPLING_REDECLARATION);
+  return SetSamplingContextedValue(this->sampling, generate_sampling, l, ERROR_SAMPLING_REDECLARATION);
 }
 
 boost::optional< contexted_value<bool>& > templates_block::get_sampling() const
