@@ -26,8 +26,10 @@ matrix:
           update: true
           sources:
             - ubuntu-toolchain-r-test
+            - deb http://cz.archive.ubuntu.com/ubuntu disco main
           packages:
             - cmake
+            - libbison-dev
             - libsqlite3-dev
             - libboost-all-dev
             - libginac-dev
