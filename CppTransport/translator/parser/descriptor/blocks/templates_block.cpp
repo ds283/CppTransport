@@ -28,7 +28,7 @@
 #include "templates_block.h"
 #include "generics_descriptor.h"
 
-#include "translator/parser/utilities/string_to_bool.h"
+#include "parser/utilities/string_to_bool.h"
 
 
 // TEMPLATE SPECIFICATION
@@ -57,31 +57,34 @@ boost::optional< contexted_value<std::string>& > templates_block::get_implementa
     if(this->implementation) return(*this->implementation); else return(boost::none);
   }
 
+
 bool templates_block::set_sampling(const std::string& sample, const y::lexeme_type& l)
-{
-  // Here we have a bool that encapsulates most of the common ways of saying "true", so that way it doesn't specifically
-  // have to be set to 'True', but any one of these.
-  bool generate_sampling = string_to_bool(sample);
+  {
+    // Here we have a bool that encapsulates most of the common ways of saying "true", so that way it doesn't specifically
+    // have to be set to 'True', but any one of these.
+    bool generate_sampling = string_to_bool(sample);
 
-  return SetSamplingContextedValue(this->sampling, generate_sampling, l, ERROR_SAMPLING_REDECLARATION);
-}
+    return SetContextedValue(this->sampling, generate_sampling, l, ERROR_SAMPLING_REDECLARATION);
+  }
 
-boost::optional< contexted_value<bool>& > templates_block::get_sampling() const
-{
-  if(this->sampling) return(*this->sampling); else return(boost::none);
-}
+
+boost::optional<contexted_value<bool>&> templates_block::get_sampling() const
+  {
+    if(this->sampling) return (*this->sampling); else return (boost::none);
+  }
+
 
 bool templates_block::set_sampling_template(const std::string& SampleTplt, const y::lexeme_type& l)
-{
-  std::string SamplingTemplate;
-  SamplingTemplate = "cosmosis_module_template";
-  return SetSamplingTemplateContextedValue(this->sampling_template, SamplingTemplate, l, ERROR_SAMPLING_TEMPLATE_REDECLARATION);
-}
+  {
+    return SetContextedValue(this->sampling_template, std::string{"cosmosis_module_template"}, l,
+                             ERROR_SAMPLING_TEMPLATE_REDECLARATION);
+  }
 
-boost::optional< contexted_value<std::string>& > templates_block::get_sampling_template() const
-{
-  if(this->sampling_template) return(*this->sampling_template); else return(boost::none);
-}
+
+boost::optional<contexted_value<std::string>&> templates_block::get_sampling_template() const
+  {
+    if(this->sampling_template) return (*this->sampling_template); else return (boost::none);
+  }
 
 
 bool templates_block::set_model(const std::string& m, const y::lexeme_type& l)
