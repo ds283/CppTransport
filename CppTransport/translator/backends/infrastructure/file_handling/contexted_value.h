@@ -97,31 +97,6 @@ bool SetContextedValue(DataType& data, const ValueType& value, const LexemeType&
     
     data = std::make_unique< contexted_value<ValueType> >(value, l.get_error_context());
     return true;
-  };
-
-// set a contexted value for a single data element, but prevent overwriting -- CpptSample style
-template <typename DataType, typename ValueType, typename LexemeType>
-bool SetSamplingContextedValue(DataType& data, const ValueType& value, const LexemeType& l,
-                       std::string err_msg, std::string duplicate_msg = NOTIFY_DUPLICATION_DECLARATION_WAS)
-{
-  if(data && (value == false))   // If there is a value, and we are setting it to false - do nothing
-  {
-    return true;
-  } else{
-    // Only do something if there is no value initially set (i.e. we need to initialise it to false first)
-    // or we are setting the value to true.
-    data = std::make_unique< contexted_value<ValueType> >(value, l.get_error_context());
-    return true;
   }
-};
-
-// set a contexted value for a single data element, but prevent overwriting -- CpptSample style -- set sampling_template
-template <typename DataType, typename ValueType, typename LexemeType>
-bool SetSamplingTemplateContextedValue(DataType& data, const ValueType& value, const LexemeType& l,
-                               std::string err_msg, std::string duplicate_msg = NOTIFY_DUPLICATION_DECLARATION_WAS)
-{
-  data = std::make_unique< contexted_value<ValueType> >(value, l.get_error_context());
-  return true;
-};
 
 #endif //CPPTRANSPORT_CONTEXTED_VALUE_H
