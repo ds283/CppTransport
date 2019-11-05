@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -36,6 +37,7 @@
 #include "metadata_block.h"
 #include "templates_block.h"
 #include "misc_block.h"
+#include "cosmology_block.h"
 
 
 class model_descriptor
@@ -85,6 +87,8 @@ class model_descriptor
     //! Miscellaneous settings
     misc_block misc;
 
+    // Cosmological settings
+    cosmology_block cosmo;
 
 		// INTERNAL DATA
 

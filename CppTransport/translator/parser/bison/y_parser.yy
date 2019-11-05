@@ -169,6 +169,17 @@
 %token <std::shared_ptr<lexeme_type>>       decimal
 %token <std::shared_ptr<lexeme_type>>       string
 
+%token                                      cosmology
+%token                                      cosmo_template
+%token                                      H0
+%token                                      h0
+%token                                      Omega_B
+%token                                      Omega_Bh2
+%token                                      Omega_CDM
+%token                                      Omega_CDMh2
+%token                                      tau
+%token                                      Tcmb
+
 %type  <std::shared_ptr<attributes>>        attribute_block
 %type  <std::shared_ptr<attributes>>        attributes
 %type  <std::shared_ptr<author>>            author_block
@@ -210,6 +221,7 @@ script: script metadata metadata_block semicolon
         | script templates template_block semicolon
         | script sampling sampling_block semicolon
         | script settings settings_block semicolon
+        | script cosmology cosmology_block semicolon
         |
         ;
 
@@ -257,6 +269,19 @@ settings_block: open_brace settings_def close_brace
 settings_def: settings_def indexorder equals left semicolon                             { driver.misc.set_indexorder_left(); }
         | settings_def indexorder equals right semicolon                                { driver.misc.set_indexorder_right(); }
         |
+        ;
+
+cosmology_block: open_brace cosmology_settings close_brace
+
+cosmology_settings: cosmo_template equals string semicolon                              { driver.cosmo.set_template($3) ; }
+        | H0 equals expression semicolon                                                { driver.cosmo.set_H0($3) ; }
+        | h0 equals expression semicolon                                                { driver.cosmo.set_h0($3) ; }
+        | Omega_B equals expression semicolon                                           { driver.cosmo.set_OmegaB($3) ; }
+        | Omega_Bh2 equals expression semicolon                                         { driver.cosmo.set_OmegaBh2($3) ; }
+        | Omega_CDM equals expression semicolon                                         { driver.cosmo.set_OmegaCDM($3) ; }
+        | Omega_CDMh2 equals expression semicolon                                       { driver.cosmo.set_OmegaCDMh2($3) ; }
+        | tau equals expression semicolon                                               { driver.cosmo.set_tau($3) ; }
+        | Tcmb equals expression semicolon                                              { driver.cosmo.set_Tcmb($3) ; }
         ;
 
 attribute_block: open_brace attributes close_brace                                      { $$ = $2; }

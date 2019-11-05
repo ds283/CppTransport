@@ -119,11 +119,13 @@ ADD_EXECUTABLE(CppTransport
   translator/backends/shared/resources.cpp
   translator/backends/shared/temporary_pool.cpp
   translator/backends/shared/utensors.cpp
+  translator/backends/shared/cosmology_macros.cpp
   ${BISON_parser_OUTPUTS}
   translator/parser/descriptor/blocks/lagrangian_block.cpp
   translator/parser/descriptor/blocks/metadata_block.cpp
   translator/parser/descriptor/blocks/templates_block.cpp
   translator/parser/descriptor/blocks/misc_block.cpp
+  translator/parser/descriptor/blocks/cosmology_block.cpp
   translator/parser/descriptor/symbols/declarations.cpp
   translator/parser/descriptor/model_descriptor.cpp
   translator/parser/driver/expression_tree_driver.cpp
@@ -131,6 +133,7 @@ ADD_EXECUTABLE(CppTransport
   translator/parser/driver/metadata_driver.cpp
   translator/parser/driver/templates_driver.cpp
   translator/parser/driver/misc_driver.cpp
+  translator/parser/driver/cosmology_driver.cpp
   translator/parser/driver/y_driver.cpp
   translator/parser/semantic-values/attributes.cpp
   translator/parser/semantic-values/author.cpp
@@ -476,6 +479,8 @@ SET(TRANSLATOR_BACKENDS_SHARED_FILES
   translator/backends/shared/temporary_pool.h
   translator/backends/shared/utensors.cpp
   translator/backends/shared/utensors.h
+  translator/backends/shared/cosmology_macros.cpp
+  translator/backends/shared/cosmology_macros.h
   )
 
 SET(TRANSLATOR_FILES
@@ -533,6 +538,8 @@ SET(TRANSLATOR_PARSER_DRIVER_FILES
   translator/parser/driver/templates_driver.h
   translator/parser/driver/misc_driver.cpp
   translator/parser/driver/misc_driver.h
+  translator/parser/driver/cosmology_driver.cpp
+  translator/parser/driver/cosmology_driver.h
   translator/parser/driver/y_driver.cpp
   translator/parser/driver/y_driver.h
   translator/parser/driver/parse_error.h
@@ -1102,6 +1109,7 @@ SET(TRANSPORT_RUNTIME_MANAGER_FILES
 
 SET(TRANSPORT_RUNTIME_MODELS_FILES
   transport-runtime/models/advisory_classes.h
+  transport-runtime/cosmology/cosmology.cpp
   transport-runtime/models/canonical_model.h
   transport-runtime/models/nontrivial_metric_model.h
   transport-runtime/models/model.h

@@ -28,6 +28,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 // DO NOT EDIT: GENERATED AUTOMATICALLY BY $TOOL $VERSION
@@ -375,6 +376,13 @@ namespace transport
         //! workspace: Eigen matrix representing mass matrix
         Eigen::Matrix<number, $NUMBER_FIELDS, $NUMBER_FIELDS> __mass_matrix;
 
+      // COSMOLOGY CLASS
+
+      public:
+        // Initialise a cosmology instance as part of the model, and so we can write the specific cosmology to it
+        // later on at run-time and have access to the values in tasks
+        cosmology Cosmo;
+
       };
 
 
@@ -513,6 +521,14 @@ namespace transport
         $ENDIF
 
         __raw_params = new number[$NUMBER_PARAMS];
+
+        // Sets the model's cosmology class to the values specified in the model file. This can be overridden
+        // at complation time in the model's .cpp file if needed
+        Cosmo.set_template($COSMO_TEMPLATE);
+        Cosmo.set_H0($COSMO_H0);
+        Cosmo.set_Omega_Bh2($COSMO_OMEGA_B);
+        Cosmo.set_Omega_CDMh2($COSMO_OMEGA_CDM);
+        Cosmo.set_tau($COSMO_TAU);
       }
 
 

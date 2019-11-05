@@ -43,6 +43,7 @@ translator_data::translator_data(const boost::filesystem::path& file, error_cont
     meta(desc.meta),
     templates(desc.templates),
     misc(desc.misc),
+    cosmo(desc.cosmo),
     cache(c),
     policy(vp)
   {

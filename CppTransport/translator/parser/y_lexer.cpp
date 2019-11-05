@@ -116,7 +116,17 @@ std::unordered_map<keyword_type, y::y_parser::token::yytokentype> keyword_tokens
     { keyword_type::beta,              y::y_parser::token::beta },
     { keyword_type::psi,               y::y_parser::token::psi },
     { keyword_type::factorial,         y::y_parser::token::factorial },
-    { keyword_type::binomial,          y::y_parser::token::binomial }
+    { keyword_type::binomial,          y::y_parser::token::binomial },
+    { keyword_type::cosmology,         y::y_parser::token::cosmology},
+    { keyword_type::cosmo_template,    y::y_parser::token::cosmo_template},
+    { keyword_type::H0,                y::y_parser::token::H0},
+    { keyword_type::h0,                y::y_parser::token::h0},
+    { keyword_type::Omega_B,           y::y_parser::token::Omega_B},
+    { keyword_type::Omega_Bh2,         y::y_parser::token::Omega_Bh2},
+    { keyword_type::Omega_CDM,         y::y_parser::token::Omega_CDM},
+    { keyword_type::Omega_CDMh2,       y::y_parser::token::Omega_CDMh2},
+    { keyword_type::tau,               y::y_parser::token::tau},
+    { keyword_type::Tcmb,               y::y_parser::token::Tcmb}
   };
 
 std::unordered_map<character_type, y::y_parser::token::yytokentype> symbol_tokens =

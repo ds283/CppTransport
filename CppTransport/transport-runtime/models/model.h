@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -54,6 +55,8 @@
 #include "transport-runtime/reporting/key_value.h"
 
 #include "transport-runtime/models/advisory_classes.h"
+
+#include "transport-runtime/cosmology/cosmology.cpp"
 
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"

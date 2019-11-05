@@ -1,6 +1,10 @@
 sudo: required
 language: generic
 
+before_install:
+  - wget http://ge.archive.ubuntu.com/ubuntu/ubuntu/pool/main/b/bison/bison_3.4.2+dfsg-1_amd64.deb
+  - sudo dpkg -i bison_3.4.2+dfsg-1_amd64.deb
+
 before_script:
   - cd CppTransport
   - mkdir build
@@ -23,9 +27,9 @@ matrix:
         - clang
       addons:
         apt:
+          update: true
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: ppa:samuel-bachmann/boost
           packages:
             - cmake
             - libsqlite3-dev
@@ -40,4 +44,10 @@ notifications:
     rooms:
       - secure: ME20JZx2VjP98D3PdIOLEiQCibk3tBsGWipK0qVwMZY5yQB7Hz2yJqWL6ihvSCyfMy8HAGf+CSqUHi/J0XqPAHgAlxHkk8SjhSIf+1zKhlR8KCM1m+umfdwgRl4EfU2SlRlXosPzmjKuh6QBmupXve7QKuqIGNSHDtBbed/ggwXFZrMBYx4cfz5VGTiscXGY6FRFeNdAsbnsr6jf0GWQ5sd/r9eK7PizHpZTDAtRsAbgGxTZqsuuUKRx9GsyEmEgsjL0yQVeCnpwYnDeFNhqihcrR2tyFgCM/wh5/goqhRI90Xb1tRDZ2eC3dxRsFdNNUd9J+Uab4AD+mnTMBpiu/x11qdwCIdmc+7tIxmDtFeEWly4EZ4iFhWfkP4Hg4LqN4eI3gAi5NtIcYblFHlrJolJYNJ55fWZtGbcx6RLSrUH7swnUV/qaEiOi61D0oB3B0CM8ZunHVuOE6j0ZkZxvzI6yuJI3LDuSLLzDveae9Qq5Jx9x1OUm5zcEvWgBZ43rDXd8kvcFCiu1ezJcmAME2zu8znrnTyDFJRfz0Pfv5RSDnWyuqQcKhNmL5kA1GZ3yRRRBNDSobrYxu+oR89/XAQ7jIu4byVWypaiiFKYIMQAhJDAaPpxwuZu2XlmIyhBqviygg9+Myl+3+bNMPS94XJ9I2OTMDaOB5l4p8hClWxU=
     on_success: change
+    on_failure: always
+
+  email:
+    recipients:
+      - am963@sussex.ac.uk
+    on_success: always
     on_failure: always

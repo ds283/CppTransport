@@ -172,6 +172,10 @@ class translator_data
     //! direct access to misc block
     misc_block& misc;
 
+    // direct access to the cosmology_block block
+    cosmology_block& cosmo;
+
+
 
     // MESSAGING INTERFACE
 
