@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -114,6 +115,69 @@ namespace macro_packages
         unsigned int num_args;
 
       };
+
+    //! base class for my custom 'FOR' macro in the CppT translator
+    class replacement_rule_for
+    {
+
+    // CONSTRUCTOR, DESTRUCTOR
+    public:
+
+        //! constructor
+        replacement_rule_for(std::string nm, unsigned int n)
+                : name(std::move(nm)),
+                  num_args(n)
+        {
+        }
+
+        //! destructor
+        virtual ~replacement_rule_for() = default;
+
+
+    // INTERFACE -- EVALUATION
+    public:
+
+        //! evaluate the macro
+        std::string operator()(const forloop_argument_list& args);
+
+        //! report end of input; here a no-op but but can be overridden if needed
+        virtual void report_end_of_input() { return; }
+
+
+    // INTERFACE -- QUERY FOR DATA
+    public:
+
+        //! get number of arguments associated with this macro
+        unsigned int get_number_args() const { return this->num_args; };
+
+        //! get name associated with this macro
+        const std::string& get_name() const { return this->name; }
+
+
+
+    // INTERNAL API
+    protected:
+
+        //! evaluation function; has to be supplied by implementation
+        virtual std::string evaluate(const forloop_argument_list& args) = 0;
+
+
+    // VALIDATION
+    protected:
+
+        //! validate supplied arguments
+        void validate(const forloop_argument_list& args);
+
+
+    // INTERNAL DATA
+    protected:
+
+        //! name of this macro
+        std::string name;
+
+        //! number of arguments expected
+        unsigned int num_args;
+    };
 
 
     // base class for an 'index' macro which takes both arguments and needs an index set
@@ -240,9 +304,10 @@ namespace macro_packages
 
 // containers for rulesets; since we can't store references in the STL
 // cotainers, they must be wrapped in std::reference_wrapper<>
-typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> > pre_ruleset;
-typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> > post_ruleset;
-typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_index> > index_ruleset;
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> >  pre_ruleset;
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_simple> >  post_ruleset;
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_for> >     for_ruleset;
+typedef std::vector< std::reference_wrapper<macro_packages::replacement_rule_index> >   index_ruleset;
 
 
 #endif //CPPTRANSPORT_REPLACEMENT_RULE_DEFINITIONS_H

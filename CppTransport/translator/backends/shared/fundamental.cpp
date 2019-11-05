@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -61,6 +62,7 @@ namespace macro_packages
         EMPLACE(pre_package, BIND(replace_source, "SOURCE"));
         EMPLACE(pre_package, BIND(replace_model, "MODEL"));
         EMPLACE(pre_package, BIND(replace_name, "NAME"));
+        EMPLACE(pre_package, BIND(replace_filename, "FILENAME"));
         EMPLACE(pre_package, BIND(replace_author, "AUTHORS"));
         EMPLACE(pre_package, BIND(replace_citeguide, "CITEGUIDE"));
         EMPLACE(pre_package, BIND(replace_description, "DESCRIPTION"));
@@ -71,9 +73,16 @@ namespace macro_packages
         EMPLACE(pre_package, BIND(replace_uid, "UNIQUE_ID"));
         EMPLACE(pre_package, BIND(replace_header, "HEADER"));
         EMPLACE(pre_package, BIND(replace_core, "CORE"));
+        EMPLACE(pre_package, BIND(replace_sample, "SAMPLE"));
+        EMPLACE(pre_package, BIND(replace_values, "VALUES"));
+        EMPLACE(pre_package, BIND(replace_priors, "PRIORS"));
+        EMPLACE(pre_package, BIND(replace_mcmc, "MCMC"));
         EMPLACE(pre_package, BIND(replace_number_fields, "NUMBER_FIELDS"));
         EMPLACE(pre_package, BIND(replace_number_params, "NUMBER_PARAMS"));
         EMPLACE(pre_package, BIND(replace_field_list, "FIELD_NAME_LIST"));
+        EMPLACE(pre_package, BIND(replace_fields, "FIELD_LIST"));
+        EMPLACE(pre_package, BIND(replace_fields_init, "FIELD_LIST_INIT"));
+        EMPLACE(pre_package, BIND(replace_params, "PARAM_LIST"));
         EMPLACE(pre_package, BIND(replace_latex_list, "LATEX_NAME_LIST"));
         EMPLACE(pre_package, BIND(replace_param_list, "PARAM_NAME_LIST"));
         EMPLACE(pre_package, BIND(replace_platx_list, "PLATX_NAME_LIST"));
@@ -86,6 +95,7 @@ namespace macro_packages
         EMPLACE(pre_package, BIND(replace_p_rel_err, "PERT_REL_ERR"));
         EMPLACE(pre_package, BIND(replace_p_step, "PERT_STEP_SIZE"));
         EMPLACE(pre_package, BIND(replace_p_stepper, "PERT_STEPPER"));
+        EMPLACE(pre_package, BIND(replace_cppt_build_location, "CPPT_BUILD_LOCATION"));
 
         EMPLACE(post_package, BIND(replace_unique, "UNIQUE"));
       }
@@ -130,6 +140,10 @@ namespace macro_packages
           {
             guard = this->data_payload.get_implementation_guard();
           }
+        else if(type == process_type::process_sampling)
+        {
+          guard = this->data_payload.get_sampling_guard();
+        }
 
         return(this->tag + "_" + guard + this->guard_terminator);
       }
@@ -203,6 +217,11 @@ namespace macro_packages
             return(std::string("\"\""));
           }
       }
+
+    std::string replace_filename::evaluate(const macro_argument_list& args)
+    {
+      return(this->data_payload.get_source_filename().stem().string());
+    }
 
 
     std::string replace_author::evaluate(const macro_argument_list& args)
@@ -363,6 +382,27 @@ namespace macro_packages
       }
 
 
+    std::string replace_sample::evaluate(const macro_argument_list& args)
+    {
+      return(this->data_payload.get_sampling_filename().string());
+    }
+
+    std::string replace_values::evaluate(const macro_argument_list& args)
+    {
+      return(this->data_payload.get_sampling_values_filename().string());
+    }
+
+    std::string replace_priors::evaluate(const macro_argument_list& args)
+    {
+      return(this->data_payload.get_sampling_priors_filename().string());
+    }
+
+    std::string replace_mcmc::evaluate(const macro_argument_list& args)
+    {
+      return(this->data_payload.get_sampling_mcmc_filename().string());
+    }
+
+
     std::string replace_number_fields::evaluate(const macro_argument_list& args)
       {
         std::ostringstream out;
@@ -389,6 +429,55 @@ namespace macro_packages
 
         return this->printer.initialization_list(list, true);
       }
+
+    std::string replace_fields::evaluate(const macro_argument_list& args)
+    {
+      symbol_list f_list = this->data_payload.model.get_field_symbols();
+      //symbol_list d_list = this->data_payload.model.get_deriv_symbols();
+      symbol_list d_list = this->data_payload.model.get_field_deriv();
+
+      std::vector<std::string> list;
+
+      for(int i = 0; i < f_list.size(); ++i)
+      {
+        list.push_back(f_list[i].get_name());
+      }
+      for(int i = 0; i < d_list.size(); ++i)
+      {
+        list.push_back(d_list[i].get_name());
+      }
+
+      return this->printer.cpptsample_fields_list(list, false);
+      //return this->printer.initialization_list(list, true);
+    }
+
+    std::string replace_fields_init::evaluate(const macro_argument_list& args)
+    {
+      symbol_list f_list = this->data_payload.model.get_field_symbols();
+      //symbol_list d_list = this->data_payload.model.get_deriv_symbols();
+      symbol_list d_list = this->data_payload.model.get_field_deriv();
+
+      std::vector<std::string> list;
+
+      for(int i = 0; i < f_list.size(); ++i)
+      {
+        list.push_back(f_list[i].get_name());
+      }
+      for(int i = 0; i < d_list.size(); ++i)
+      {
+        list.push_back(d_list[i].get_name());
+      }
+
+      return this->printer.cpptsample_fields_list(list, true);
+      //return this->printer.initialization_list(list, true);
+    }
+
+    std::string replace_params::evaluate(const macro_argument_list& args)
+    {
+      std::vector<std::string> list = this->data_payload.model.get_param_name_list();
+
+      return this->printer.cpptsample_fields_list(list, false);
+    }
 
 
     std::string replace_latex_list::evaluate(const macro_argument_list& args)
@@ -561,6 +650,24 @@ namespace macro_packages
             throw macro_packages::rule_apply_fail(ERROR_UNDEFINED_STEPPER);
           }
       }
+
+    std::string replace_cppt_build_location::evaluate(const macro_argument_list& args)
+    {
+      // Try to find where we are reading in the CMakeLists.txt template file from and then go up to the source build directory
+      finder PathFinder = this->data_payload.get_finder();
+      boost::optional<boost::filesystem::path> TemplateInstallPath;
+      TemplateInstallPath = PathFinder.find("cpptsample_CMakeLists_template.txt");
+      if (TemplateInstallPath)
+      {
+        boost::filesystem::path CppTBuildPath =  (*TemplateInstallPath).parent_path().parent_path().parent_path().parent_path();
+        return(CppTBuildPath.string());
+      }
+      else
+      {
+        // Could not find, return default location
+        return(std::string("~/.cpptransport"));
+      }
+    }
 
 
     // POST macros

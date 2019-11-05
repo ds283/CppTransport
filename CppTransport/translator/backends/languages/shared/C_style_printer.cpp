@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -97,6 +98,22 @@ std::string C_style_printer::initialization_list(const std::vector<std::string>&
     stmt << " " << this->initializer_close;
     return(stmt.str());
   }
+
+std::string C_style_printer::cpptsample_fields_list(const std::vector<std::string>& list, bool init) const
+{
+  std::ostringstream stmt;
+  stmt << "";
+
+  unsigned int count = 0;
+  for(const std::string& ele : list)
+  {
+    if(count > 0) stmt << this->initializer_sep << " ";
+    stmt << to_printable(ele, false, false, init);
+    ++count;
+  }
+
+  return(stmt.str());
+}
 
 
 std::string C_style_printer::lambda_invokation(const std::string& name, const generic_lambda& lambda,

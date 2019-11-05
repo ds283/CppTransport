@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -81,6 +82,32 @@ namespace y
             this->root.report_error();
           }
       }
+
+    void templates_driver::set_sampling(lexeme_type& lex)
+    {
+      try
+      {
+        auto Setter = [&](auto& sample, auto& lex) -> auto { return this->root.templates.set_sampling(sample, lex); };
+        SetStringValue(Setter, lex);
+      }
+      catch(parse_error& xe)
+      {
+        this->root.report_error();
+      }
+    }
+
+    void templates_driver::set_sampling_template(lexeme_type& lex)
+    {
+      try
+      {
+        auto Setter = [&](auto& sample, auto& lex) -> auto { return this->root.templates.set_sampling_template(sample, lex); };
+        SetStringValue(Setter, lex);
+      }
+      catch(parse_error& xe)
+      {
+        this->root.report_error();
+      }
+    }
     
     
     void templates_driver::set_abserr(struct stepper& s, lexeme_type& lex)

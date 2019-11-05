@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -29,6 +30,8 @@
 
 
 const auto DERIV_PREFIX = "__d";
+const auto DERIV_SUFFIX = "_Dot";
+const auto INIT_SUFFIX 	= "_Init";
 
 
 // CONSTRUCTOR
@@ -77,6 +80,54 @@ bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const 
         // also need to generate a symbol for the momentum corresponding to this field
         auto deriv_symbol = this->sym_factory.get_real_symbol(DERIV_PREFIX + symbol.get_name());
         this->deriv_symbols.push_back(deriv_symbol);
+
+        // also need to generate a symbol for the momentum corresponding to this field - CpptSample style
+        auto field_deriv = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX);
+        this->fields_deriv.push_back(field_deriv);
+
+        // If the field value and/or prior is provided, it is added to the list to be returned later for CpptSample
+        if(a->get_value().length() > 0)
+        {
+          auto field_val = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX  + " = " + a->get_value());
+          this->fields_vals.push_back(field_val);
+        }
+
+        if(a->get_derivvalue().length() > 0)
+        {
+          auto field_derivval = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " = " + a->get_derivvalue() );
+          this->fields_derivvals.push_back(field_derivval);
+        }
+
+        if(a->get_prior().length() > 0)
+        {
+          auto field_prior = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX + " = " + a->get_prior() );
+          this->fields_priors.push_back(field_prior);
+
+          auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX);
+          this->priors.push_back(prior_name);
+
+          std::string latex_name = a->get_latex();
+          if(latex_name.length() == 0) latex_name = symbol.get_name();
+
+          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX + " " + latex_name + "_{init}" );
+          this->priors_with_latex.push_back(prior_latex);
+        }
+
+        if(a->get_derivprior().length() > 0)
+        {
+          auto field_derivprior = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " = " + a->get_derivprior() );
+          this->fields_derivpriors.push_back(field_derivprior);
+
+          auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX );
+          this->priors.push_back(prior_name);
+
+          std::string latex_name = a->get_latex();
+          if(latex_name.length() == 0) latex_name = symbol.get_name();
+
+          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " " + "\\dot{" + latex_name + "}_{init}" );
+          this->priors_with_latex.push_back(prior_latex);
+        }
+
       };
 
     return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS);
@@ -93,6 +144,28 @@ bool lagrangian_block::add_parameter(const std::string& n, symbol_wrapper& s, co
       {
         // add declaration to list
         this->parameters.emplace(std::make_pair(name, std::make_unique<parameter_declaration>(name, symbol, lexeme, attr)));
+
+        // If the parameter value and/or prior is provided, it is added to the list to be called later
+        if(a->get_value().length() > 0)
+        {
+	        auto param_val = this->sym_factory.get_real_symbol(symbol.get_name() + " = " + a->get_value());
+          this->params_values.push_back(param_val);
+        }
+
+        if(a->get_prior().length() > 0)
+        {
+          auto param_prior = this->sym_factory.get_real_symbol(symbol.get_name() + " = " + a->get_prior() );
+          this->params_priors.push_back(param_prior);
+
+          auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name());
+          this->priors.push_back(prior_name);
+
+          std::string latex_name = a->get_latex();
+          if(latex_name.length() == 0) latex_name = symbol.get_name();
+
+          auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + " " + latex_name );
+          this->priors_with_latex.push_back(prior_latex);
+        }
       };
 
     return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS);
@@ -236,6 +309,42 @@ symbol_list lagrangian_block::get_deriv_symbols() const
     return(this->deriv_symbols);
   }
 
+// Customised function to get my way of doing field derivatives
+symbol_list lagrangian_block::get_field_deriv() const
+{
+  return(this->fields_deriv);
+}
+
+// Four new functions that gets field values & priors, both normal and derivatives for CpptSample/cosmosis
+symbol_list lagrangian_block::get_field_val() const
+{
+  return(this->fields_vals);
+}
+
+symbol_list lagrangian_block::get_prior_names() const
+{
+  return(this->priors);
+}
+
+symbol_list lagrangian_block::get_prior_latex() const
+{
+  return(this->priors_with_latex);
+}
+
+symbol_list lagrangian_block::get_field_derivval() const
+{
+  return(this->fields_derivvals);
+}
+
+symbol_list lagrangian_block::get_field_prior() const
+{
+  return(this->fields_priors);
+}
+
+symbol_list lagrangian_block::get_field_derivprior() const
+{
+  return(this->fields_derivpriors);
+}
 
 symbol_list lagrangian_block::get_param_symbols() const
   {
@@ -243,6 +352,17 @@ symbol_list lagrangian_block::get_param_symbols() const
     return UnzipSortedZipList(this->parameters, Get);
   }
 
+// Get the list of parameter values for CpptSample/cosmosis
+symbol_list lagrangian_block::get_param_values() const
+{
+  return(this->params_values);
+}
+
+// Get the list of parameter priors for CpptSample/cosmosis
+symbol_list lagrangian_block::get_param_priors() const
+{
+  return(this->params_priors);
+}
 
 const symbol_wrapper& lagrangian_block::get_Mp_symbol() const
   {

@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -76,6 +77,18 @@ class templates_block
     //! get implementation template name as contexted value
     boost::optional< contexted_value<std::string>& > get_implementation_template() const;
 
+    //! set sampling
+    bool set_sampling(const std::string& sample, const y::lexeme_type& l);
+
+    //! get core template name as contexted value
+    boost::optional< contexted_value<bool>& > get_sampling() const;
+
+    //! set sampling header file name
+    bool set_sampling_template(const std::string& SampleTplt, const y::lexeme_type& l);
+
+    //! get sampling header file name
+    boost::optional< contexted_value<std::string>& > get_sampling_template() const;
+
 
     //! set model tag (an identifier)
     bool set_model(const std::string& m, const y::lexeme_type& l);
@@ -122,6 +135,13 @@ class templates_block
 
     //! name of implementation template
     std::unique_ptr<contexted_value<std::string> > implementation;
+
+    //! boolean to see if we want to do sampling or not
+    std::unique_ptr<contexted_value<bool> > sampling;
+
+    //! name of the sampling header file to parse in
+    std::unique_ptr<contexted_value<std::string> > sampling_template;
+
 
     //! specification of background stepper
     std::unique_ptr< contexted_value< std::shared_ptr<stepper> > > background_stepper;

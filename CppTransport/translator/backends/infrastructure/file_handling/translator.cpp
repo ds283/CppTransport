@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -153,6 +154,31 @@ unsigned int translator::translate(const std::string& in, const error_context& c
     
     template_in = path.find(in);
     if(template_in) return this->process(*template_in, buf, type, filter);
+
+    if (type == process_type::process_sampling_ini)
+    {
+      template_in = path.find(in + ".ini");
+      if(template_in) return this->process(*template_in, buf, type, filter);
+    }
+
+    if (type == process_type::process_sampling_txt)
+    {
+      template_in = path.find(in + ".txt");
+      if(template_in) return this->process(*template_in, buf, type, filter);
+    }
+
+    if (type == process_type::process_sampling_getdist_python)
+    {
+      template_in = path.find(in + ".py");
+      if(template_in) return this->process(*template_in, buf, type, filter);
+    }
+
+    if (type == process_type::process_sampling_getdist_latex)
+    {
+      template_in = path.find(in + ".txt");
+      if(template_in) return this->process(*template_in, buf, type, filter);
+    }
+
     
     std::ostringstream msg;
     msg << ERROR_MISSING_TEMPLATE << " '" << in << ".h'";

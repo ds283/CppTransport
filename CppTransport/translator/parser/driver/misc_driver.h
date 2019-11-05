@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -76,6 +77,18 @@ namespace y
     
         //! add a LaTeX name to an attribute block
         void set_attribute_latex(attributes& a, lexeme_type& lex);
+
+        //! add a value to an attribute block
+        void set_attribute_value(attributes& a, lexeme_type& lex);
+
+        //! add an inital value to an attribute block
+        void set_attribute_derivvalue(attributes& a, lexeme_type& lex);
+
+        //! add a prior to an attribute block
+        void set_attribute_prior(attributes& a, lexeme_type& lex);
+
+        //! add an inital prior to an attribute block
+        void set_attribute_derivprior(attributes& a, lexeme_type& lex);
     
         //! add a string to a string array
         void add_string(string_array& a, lexeme_type& lex);

@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -45,82 +46,89 @@
 
 const y::lexeme_type::keyword_map keywords =
   {
-    { "metadata", keyword_type::metadata },
-    { "require_version", keyword_type::require_version },
-    { "lagrangian", keyword_type::lagrangian },
-    { "canonical", keyword_type::canonical },
-    { "nontrivial_metric", keyword_type::nontrivial_metric },
-    { "name", keyword_type::name },
-    { "author", keyword_type::author },
-    { "citeguide", keyword_type::citeguide },
-    { "description", keyword_type::description },
-    { "license", keyword_type::license },
-    { "revision", keyword_type::revision },
-    { "references", keyword_type::references },
-    { "urls", keyword_type::urls },
-    { "email", keyword_type::email },
-    { "institute", keyword_type::institute },
-    { "field", keyword_type::field },
-    { "potential", keyword_type::potential },
-    { "metric", keyword_type::metric },
-    { "subexpr", keyword_type::subexpr },
-    { "value", keyword_type::value },
-    { "parameter", keyword_type::parameter },
-    { "latex", keyword_type::latex },
-    { "templates", keyword_type::templates },
-    { "settings", keyword_type::settings },
-    { "core", keyword_type::core },
-    { "implementation", keyword_type::impl },
-    { "model", keyword_type::model },
-    { "abserr", keyword_type::abserr },
-    { "relerr", keyword_type::relerr },
-    { "stepper", keyword_type::stepper },
-    { "stepsize", keyword_type::stepsize },
-    { "background", keyword_type::background },
-    { "perturbations", keyword_type::perturbations },
-    { "indexorder", keyword_type::indexorder },
-    { "left", keyword_type::left },
-    { "right", keyword_type::right },
-    { "abs", keyword_type::abs },
-    { "step", keyword_type::step },
-    { "sqrt", keyword_type::sqrt },
-    { "sin", keyword_type::sin },
-    { "cos", keyword_type::cos },
-    { "tan", keyword_type::tan },
-    { "sec", keyword_type::sec },
-    { "csc", keyword_type::cosec },
-    { "cosec", keyword_type::cosec },
-    { "cot", keyword_type::cot },
-    { "asin", keyword_type::asin },
-    { "acos", keyword_type::acos },
-    { "atan", keyword_type::atan },
-    { "atan2", keyword_type::atan2 },
-    { "sinh", keyword_type::sinh },
-    { "cosh", keyword_type::cosh },
-    { "tanh", keyword_type::tanh },
-    { "sech", keyword_type::sech },
-    { "csch", keyword_type::cosech },
-    { "cosech", keyword_type::cosech },
-    { "coth", keyword_type::coth },
-    { "asinh", keyword_type::asinh },
-    { "acosh", keyword_type::acosh },
-    { "atanh", keyword_type::atanh },
-    { "exp", keyword_type::exp },
-    { "log", keyword_type::log },
-    { "pow", keyword_type::pow },
-    { "Li2", keyword_type::Li2 },
-    { "Li", keyword_type::Li },
-    { "G_func", keyword_type::G },
-    { "S_func", keyword_type::S },
-    { "H_func", keyword_type::H },
-    { "zeta_func", keyword_type::zeta },
-    { "zetaderiv", keyword_type::zetaderiv },
-    { "tgamma_func", keyword_type::tgamma },
-    { "lgamma_func", keyword_type::lgamma },
-    { "beta_func", keyword_type::beta },
-    { "psi_func", keyword_type::psi },
-    { "factorial", keyword_type::factorial },
-    { "binomial", keyword_type::binomial }
+    { "metadata",           keyword_type::metadata },
+    { "require_version",    keyword_type::require_version },
+    { "lagrangian",         keyword_type::lagrangian },
+    { "canonical",          keyword_type::canonical },
+    { "nontrivial_metric",  keyword_type::nontrivial_metric },
+    { "name",               keyword_type::name },
+    { "author",             keyword_type::author },
+    { "citeguide",          keyword_type::citeguide },
+    { "description",        keyword_type::description },
+    { "license",            keyword_type::license },
+    { "revision",           keyword_type::revision },
+    { "references",         keyword_type::references },
+    { "urls",               keyword_type::urls },
+    { "email",              keyword_type::email },
+    { "institute",          keyword_type::institute },
+    { "field",              keyword_type::field },
+    { "potential",          keyword_type::potential },
+    { "metric",             keyword_type::metric },
+    { "subexpr",            keyword_type::subexpr },
+    { "value",              keyword_type::value },
+    { "prior",              keyword_type::prior },
+    { "deriv_value",        keyword_type::deriv_value },
+    { "deriv_prior",        keyword_type::deriv_prior },
+    { "parameter",          keyword_type::parameter },
+    { "latex",              keyword_type::latex },
+    { "templates",          keyword_type::templates },
+    { "settings",           keyword_type::settings },
+    { "core",               keyword_type::core },
+    { "implementation",     keyword_type::impl },
+    { "sampling",           keyword_type::sampling },
+    { "sampling_template",  keyword_type::sampling_template },
+    { "generate_sampling",  keyword_type::generate_sampling },
+    { "sampler",            keyword_type::sampler },
+    { "model",              keyword_type::model },
+    { "abserr",             keyword_type::abserr },
+    { "relerr",             keyword_type::relerr },
+    { "stepper",            keyword_type::stepper },
+    { "stepsize",           keyword_type::stepsize },
+    { "background",         keyword_type::background },
+    { "perturbations",      keyword_type::perturbations },
+    { "indexorder",         keyword_type::indexorder },
+    { "left",               keyword_type::left },
+    { "right",              keyword_type::right },
+    { "abs",                keyword_type::abs },
+    { "step",               keyword_type::step },
+    { "sqrt",               keyword_type::sqrt },
+    { "sin",                keyword_type::sin },
+    { "cos",                keyword_type::cos },
+    { "tan",                keyword_type::tan },
+    { "sec",                keyword_type::sec },
+    { "csc",                keyword_type::cosec },
+    { "cosec",              keyword_type::cosec },
+    { "cot",                keyword_type::cot },
+    { "asin",               keyword_type::asin },
+    { "acos",               keyword_type::acos },
+    { "atan",               keyword_type::atan },
+    { "atan2",              keyword_type::atan2 },
+    { "sinh",               keyword_type::sinh },
+    { "cosh",               keyword_type::cosh },
+    { "tanh",               keyword_type::tanh },
+    { "sech",               keyword_type::sech },
+    { "csch",               keyword_type::cosech },
+    { "cosech",             keyword_type::cosech },
+    { "coth",               keyword_type::coth },
+    { "asinh",              keyword_type::asinh },
+    { "acosh",              keyword_type::acosh },
+    { "atanh",              keyword_type::atanh },
+    { "exp",                keyword_type::exp },
+    { "log",                keyword_type::log },
+    { "pow",                keyword_type::pow },
+    { "Li2",                keyword_type::Li2 },
+    { "Li",                 keyword_type::Li },
+    { "G_func",             keyword_type::G },
+    { "S_func",             keyword_type::S },
+    { "H_func",             keyword_type::H },
+    { "zeta_func",          keyword_type::zeta },
+    { "zetaderiv",          keyword_type::zetaderiv },
+    { "tgamma_func",        keyword_type::tgamma },
+    { "lgamma_func",        keyword_type::lgamma },
+    { "beta_func",          keyword_type::beta },
+    { "psi_func",           keyword_type::psi },
+    { "factorial",          keyword_type::factorial },
+    { "binomial",           keyword_type::binomial }
   };
 
 // final column is *true* if the corresponding symbol can *precede*
@@ -259,6 +267,36 @@ void translation_unit::populate_output_filenames()
 
     // assign these values to the translator data payload
     this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
+
+    // If we are doing sampling, we need to assign the sampling filenames.
+    if(*this->translator_payload.templates.get_sampling())
+    {
+      // Initialise filepath variables for for sampling that we will write to
+      boost::filesystem::path sampling_output;
+      boost::filesystem::path sampling_values_output;
+      boost::filesystem::path sampling_priors_output;
+      boost::filesystem::path sampling_mcmc_output;
+      boost::filesystem::path sampling_cmake_output;
+      boost::filesystem::path sampling_getdist_python_output;
+      boost::filesystem::path sampling_getdist_latex_output;
+      std::string             sampling_guard;
+
+      // This sets up our filepath for the sampling output file
+      sampling_output        = this->mangle_output_name(name, "sampling");
+      sampling_values_output = this->mangle_output_name(name, "values");
+      sampling_priors_output = this->mangle_output_name(name, "priors");
+      sampling_mcmc_output   = this->mangle_output_name(name, "mcmc");
+      sampling_cmake_output  = this->mangle_output_name(name, "cmake");
+      sampling_getdist_python_output  = this->mangle_output_name(name, "getdist_python");
+      sampling_getdist_latex_output   = this->mangle_output_name(name, "getdist_latex");
+
+      sampling_guard = boost::to_upper_copy(leafname(sampling_output.string()));
+      sampling_guard.erase(boost::remove_if(sampling_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), sampling_guard.end());
+
+      this->translator_payload.set_sampling_output(sampling_output, sampling_guard, sampling_values_output,
+              sampling_priors_output, sampling_mcmc_output, sampling_cmake_output,
+              sampling_getdist_python_output, sampling_getdist_latex_output);
+    }
   }
 
 
@@ -317,6 +355,120 @@ unsigned int translation_unit::apply()
         this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
       }
 
+    // Sampling template file parser & translator
+    if (*this->translator_payload.templates.get_sampling())
+    {
+      const boost::filesystem::path& sampling_output = this->translator_payload.get_sampling_filename();
+      boost::optional< contexted_value<std::string>& > sampling = this->model.templates.get_sampling_template();
+      if(sampling)
+      {
+        this->file_errors = 0;
+        try
+        {
+          rval += this->outstream.translate(*sampling, (*sampling).get_declaration_point(), sampling_output, process_type::process_sampling);
+        }
+        catch(exit_parse& xe)
+        {
+          std::ostringstream msg;
+          msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+          this->warn(msg.str());
+        }
+      }
+      else
+      {
+        this->error(ERROR_NO_CORE_TEMPLATE);
+      }
+
+      const boost::filesystem::path& sampling_priors_output = this->translator_payload.get_sampling_priors_filename();
+      std::string sampling_priors = "cosmosis_priors_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_priors, (*sampling).get_declaration_point(), sampling_priors_output, process_type::process_sampling_ini);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+      const boost::filesystem::path& sampling_values_output = this->translator_payload.get_sampling_values_filename();
+      std::string sampling_values = "cosmosis_values_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_values, (*sampling).get_declaration_point(), sampling_values_output, process_type::process_sampling_ini);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+      const boost::filesystem::path& sampling_mcmc_output = this->translator_payload.get_sampling_mcmc_filename();
+      std::string sampling_mcmc = "cosmosis_mcmc_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_mcmc, (*sampling).get_declaration_point(), sampling_mcmc_output, process_type::process_sampling_ini);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+      if (this->cache.do_cmake()){
+        const boost::filesystem::path& sampling_cmake_output = this->translator_payload.get_sampling_cmake_filename();
+        std::string sampling_cmake = "cpptsample_CMakeLists_template";
+        this->file_errors = 0;
+        try
+        {
+          rval += this->outstream.translate(sampling_cmake, (*sampling).get_declaration_point(), sampling_cmake_output, process_type::process_sampling_txt);
+        }
+        catch(exit_parse& xe)
+        {
+          std::ostringstream msg;
+          msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+          this->warn(msg.str());
+        }
+      }
+
+      // Translate the GetDist Python file
+      const boost::filesystem::path& sampling_getdist_python_output = this->translator_payload.get_sampling_getdist_python_filename();
+      std::string sampling_getdist_python = "cosmosis_getdist_python_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_getdist_python, (*sampling).get_declaration_point(), sampling_getdist_python_output, process_type::process_sampling_getdist_python);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+      // Translate the GetDist LaTeX file
+      const boost::filesystem::path& sampling_getdist_latex_output = this->translator_payload.get_sampling_getdist_latex_filename();
+      std::string sampling_getdist_latex = "cosmosis_getdist_latex_template";
+      this->file_errors = 0;
+      try
+      {
+        rval += this->outstream.translate(sampling_getdist_latex, (*sampling).get_declaration_point(), sampling_getdist_latex_output, process_type::process_sampling_getdist_latex);
+      }
+      catch(exit_parse& xe)
+      {
+        std::ostringstream msg;
+        msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
+        this->warn(msg.str());
+      }
+
+    }
+
     if(this->errors > 0)
       {
         this->parse_failed = true;
@@ -337,12 +489,99 @@ boost::filesystem::path translation_unit::mangle_output_name(const boost::filesy
   {
     std::string output;
 
-    boost::filesystem::path h_extension(".h");
+    auto Sampling = *this->translator_payload.templates.get_sampling();
+    // Determine if we are generating sampling templates as well or not
 
-    boost::filesystem::path stem = input.stem();
-    boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
+    if (!*Sampling)
+    {
+      if (tag == "core" || tag == "mpi")
+      {
+        boost::filesystem::path h_extension(".h");
 
-    return(leaf.replace_extension(h_extension));
+        boost::filesystem::path stem = input.stem();
+        boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
+
+        return(leaf.replace_extension(h_extension));
+      }
+    }
+    else
+    {
+      // This is used to create a ./build directory, as I am planning to run the CppT command in the main directory.
+      boost::filesystem::path build_prefix("build");
+      const char* build_path = build_prefix.string().c_str();
+      boost::filesystem::path build_dir(build_path);
+      boost::filesystem::create_directory(build_dir);
+
+      if (tag == "core" || tag == "mpi")
+      {
+        boost::filesystem::path h_extension(".h");
+
+        boost::filesystem::path stem = input.stem();
+        boost::filesystem::path leaf = "./" + build_prefix.string() + "/" + stem.leaf().string() + "_" + tag; // stem.leaf().string() + "_" + tag;
+
+        return(leaf.replace_extension(h_extension));
+
+      }
+      else if (tag == "sampling")
+      {
+        boost::filesystem::path cpp_extension(".cpp");
+
+        boost::filesystem::path stem = input.stem();
+        boost::filesystem::path leaf = "./" + build_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
+
+        return(leaf.replace_extension(cpp_extension));
+      }
+      else if (tag == "priors" || tag == "values" || tag == "mcmc")
+      {
+        boost::filesystem::path ini_extension(".ini");
+
+        boost::filesystem::path stem = input.stem();
+        std::string ModelName = stem.leaf().string();
+
+        boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
+        const char* mcmc_path = mcmc_prefix.string().c_str();
+        boost::filesystem::path mcmc_dir(mcmc_path);
+        boost::filesystem::create_directory(mcmc_dir);
+
+        boost::filesystem::path leaf = "./" + mcmc_prefix.string() + "/" + stem.leaf().string() + "_" + tag;
+
+        return(leaf.replace_extension(ini_extension));
+      }
+      else if (tag == "cmake")
+      {
+        boost::filesystem::path txt_extension(".txt");
+        boost::filesystem::path leaf = "CMakeLists" ;
+
+        return(leaf.replace_extension(txt_extension));
+      }
+      else if (tag == "getdist_python")
+      {
+        boost::filesystem::path py_extension(".py");
+
+        boost::filesystem::path stem = input.stem();
+        std::string ModelName = stem.leaf().string();
+        boost::filesystem::path mcmc_prefix(ModelName + "_mcmc");
+
+        boost::filesystem::path leaf = "./" + mcmc_prefix.string() + "/" + stem.leaf().string() + "_GetDist";
+
+        return(leaf.replace_extension(py_extension));
+      }
+      else if (tag == "getdist_latex")
+      {
+        boost::filesystem::path getdist_extension(".paramnames");
+
+        boost::filesystem::path stem = input.stem();
+        std::string ModelName = stem.leaf().string();
+        boost::filesystem::path mcmc_GetDist_prefix(ModelName + "_mcmc/GetDistFiles");
+        const char* mcmc_GetDist_path = mcmc_GetDist_prefix.string().c_str();
+        boost::filesystem::path mcmc_GetDist_dir(mcmc_GetDist_path);
+        boost::filesystem::create_directory(mcmc_GetDist_dir);
+
+        boost::filesystem::path leaf = "./" + mcmc_GetDist_prefix.string() + "/" + stem.leaf().string() + "_MCMCGetDistData";
+
+        return(leaf.replace_extension(getdist_extension));
+      }
+    }
   }
 
 

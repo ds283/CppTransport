@@ -1,0 +1,16 @@
+// backend = cpp, minver = 201901
+$FOR{ £PRIORLATEX, "£PRIORLATEX", PriorLaTeX, True, False}
+KPIV* k_{piv}
+NPIV* N_{piv}
+A_S* \ln(10^{10} A_s)
+A_T* \ln(10^{10} A_t)
+N_S_FULL* n_{s}^{full}
+N_T_FULL* n_{t}^{full}
+R* r
+NEFOLD* N
+B_EQUI* B^{eq}
+FNL_EQUI* f^{eq}_{NL}
+B_SQ* B^{sq}
+FNL_SQ* f^{sq}_{NL}
+B_FOLD* B^{fold}
+FNL_FOLD* f^{fold}_{NL}

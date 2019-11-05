@@ -205,8 +205,11 @@ bool backend_data::validate(translator_data& payload) const
       }
     
     model_type T = this->get_model_type();
-    
-    if(T != payload.model.get_lagrangian_type())
+    // Since the CosmoSIS template files do not require a lagrangian type, we do not need to check it matches the model
+    if((T != payload.model.get_lagrangian_type()) && !((this->input.stem().string() == "cosmosis_priors_template") || (this->input.stem().string() == "cosmosis_module_template")
+                                                    || (this->input.stem().string() == "cosmosis_values_template") || (this->input.stem().string() == "cpptsample_CMakeLists_template")
+                                                    || (this->input.stem().string() == "cosmosis_mcmc_template")   || (this->input.stem().string() == "cosmosis_getdist_python_template")
+                                                    || (this->input.stem().string() == "cosmosis_getdist_latex_template") ))
       {
         // template type doesn't match the type required by the model
         std::ostringstream msg;

@@ -1,0 +1,62 @@
+model "chaotic"
+ { name        = "Chaotic inflation";
+
+   description = "Chaotic model with V=m^2phi^2/2";
+   citeguide   = "CppTransport user guide arXiv:16xx.yyyy";
+   license     = "CC BY";
+   revision    = 1;
+
+   urls        = [ "http://transportmethod.com" ];
+ };
+
+ author "Sean Butchers"
+   {
+     institute = "Astronomy Centre, University of Sussex";
+     email = "smlb20@sussex.ac.uk";
+   };
+
+metadata
+ { require_version = 201901;
+ };
+
+% specify which class template should be used with this model
+templates
+ { 
+   core           = "canonical_core";
+   implementation = "canonical_mpi";
+ };
+
+% enable sampling file generation
+sampling { generate_sampling 	= "True"; };
+
+% fix properties of the steppers
+background
+ { abserr   = 1E-12;
+   relerr   = 1E-12;
+   stepsize = 1E-10;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+perturbations
+ { abserr   = 1E-14;
+   relerr   = 1E-14;
+   stepsize = 1E-15;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+% set up the fields
+field phi
+ { latex = "\phi";
+   value   = "25.0";
+   deriv_value = "0.0";
+ };
+
+% set up the parameters
+parameter m
+ { latex = "m";
+   value = "1e-7   1.4e-6   3e-6";
+   prior = "uniform 1e-7 3e-6";
+ };
+
+% specify the potential
+potential = (1/2) * m^2 * phi^2;

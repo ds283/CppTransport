@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -48,6 +49,14 @@ namespace macro_packages
     constexpr unsigned int ELSE_DIRECTIVE_TOTAL_ARGUMENTS = 0;
 
     constexpr unsigned int ENDIF_DIRECTIVE_TOTAL_ARGUMENTS = 0;
+
+    //! Implementing custom CppTransport translator FOR loops
+    constexpr unsigned int FOR_DIRECTIVE_ITERATOR_ARGUMENT = 0;
+    constexpr unsigned int FOR_DIRECTIVE_REPLACE_ARGUMENT = 1;
+    constexpr unsigned int FOR_DIRECTIVE_LIST_ARGUMENT = 2;
+    constexpr unsigned int FOR_DIRECTIVE_ENDL_ARGUMENT = 3;
+    constexpr unsigned int FOR_DIRECTIVE_NO_COMMA_ARGUMENT = 4;
+    constexpr unsigned int FOR_DIRECTIVE_TOTAL_ARGUMENTS = 5;
 
 
     namespace directives_impl
@@ -340,6 +349,43 @@ namespace macro_packages
 
       };
 
+    class for_directive: public directive_for
+    {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+    public:
+
+        //! constructor
+        for_directive(std::string n, translator_data& p, if_stack& is)
+                : directive_for(n, FOR_DIRECTIVE_TOTAL_ARGUMENTS, p),
+                  istack(is)
+        {
+        }
+
+        //! destructor
+        virtual ~for_directive() = default;
+
+
+        // INTERNAL API
+
+    protected:
+
+        //! apply
+        std::string apply(const forloop_argument_list& args) override;
+
+        //! force evaluation even when output is disabled
+        bool always_apply() const override { return true; }
+
+
+        // INTERNAL DATA
+
+    private:
+
+        //! reference to parent if_stack
+        if_stack& istack;
+
+    };
 
     class directives: public directive_package
       {

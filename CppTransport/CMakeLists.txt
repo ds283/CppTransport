@@ -319,6 +319,12 @@ SET(TEMPLATES_FILES
   templates/canonical_mpi.h
   templates/nontrivial_metric_core.h
   templates/nontrivial_metric_mpi.h
+  templates/cosmosis_module_template.h
+  templates/cosmosis_priors_template.ini
+  templates/cosmosis_values_template.ini
+  templates/cpptsample_CMakeLists_template.txt
+  templates/cosmosis_getdist_python_template.py
+  templates/cosmosis_getdist_latex_template.txt
   )
 
 SET(TEMPLATES_VEXCL_CUDA_FILES
@@ -1243,6 +1249,16 @@ SET(TRANSPORT_RUNTIME_TASKS_FILES
   transport-runtime/tasks/task_helper.h
   transport-runtime/tasks/task_types.h
   transport-runtime/tasks/tasks_forward_declare.h
+  transport-runtime/tasks/sampling_integration_batcher.h
+  )
+
+SET(TRANSPORT_RUNTIME_SAMPLING_FILES
+  transport-runtime/tasks/sampling_detail/Polyfit.cpp
+  transport-runtime/tasks/sampling_detail/SpectralIndexCalc.cpp
+  transport-runtime/tasks/sampling_detail/Dispersion.cpp
+  transport-runtime/tasks/sampling_detail/Dispersion.h
+  transport-runtime/tasks/sampling_detail/Nexit_phys_k.cpp
+  transport-runtime/tasks/sampling_detail/Logspace.cpp
   )
 
 SET(TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES
@@ -1375,6 +1391,7 @@ SET(SOURCE_FILES
   ${TRANSPORT_RUNTIME_SQLITE3_FILES}
   ${TRANSPORT_RUNTIME_TASKS_CONFIGURATION_DATABASE_FILES}
   ${TRANSPORT_RUNTIME_TASKS_FILES}
+  ${TRANSPORT_RUNTIME_SAMPLING_FILES}
   ${TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_TRANSACTIONS_FILES}
