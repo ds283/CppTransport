@@ -75,12 +75,15 @@ bool translator_data::fast() const
 
 
 void translator_data::set_core_implementation(const boost::filesystem::path& co, const std::string& cg,
-                                              const boost::filesystem::path& io, const std::string& ig)
+                                              const boost::filesystem::path& io, const std::string& ig,
+                                              const boost::filesystem::path& cono, const std::string& cong)
   {
     this->core_output = co;
     this->core_guard = cg;
     this->implementation_output = io;
     this->implementation_guard = ig;
+    this->constructor_output = cono;
+    this->constructor_guard = cong;
   }
 
 void translator_data::set_sampling_output(const boost::filesystem::path& so, const std::string& sg,

@@ -209,7 +209,7 @@ bool backend_data::validate(translator_data& payload) const
     if((T != payload.model.get_lagrangian_type()) && !((this->input.stem().string() == "cosmosis_priors_template") || (this->input.stem().string() == "cosmosis_module_template")
                                                     || (this->input.stem().string() == "cosmosis_values_template") || (this->input.stem().string() == "cpptsample_CMakeLists_template")
                                                     || (this->input.stem().string() == "cosmosis_mcmc_template")   || (this->input.stem().string() == "cosmosis_getdist_python_template")
-                                                    || (this->input.stem().string() == "cosmosis_getdist_latex_template") ))
+                                                    || (this->input.stem().string() == "cosmosis_getdist_latex_template") || (this->input.stem().string() == "model_constructor_template")  ))
       {
         // template type doesn't match the type required by the model
         std::ostringstream msg;

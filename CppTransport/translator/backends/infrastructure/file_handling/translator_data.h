@@ -84,7 +84,8 @@ class translator_data
 
     //! set core and implementation paths
     void set_core_implementation(const boost::filesystem::path& co, const std::string& cg,
-                                 const boost::filesystem::path& io, const std::string& ig);
+                                 const boost::filesystem::path& io, const std::string& ig,
+                                 const boost::filesystem::path& cono, const std::string& cong);
 
     void set_sampling_output(const boost::filesystem::path& so, const std::string& sg,
                              const boost::filesystem::path& sv, const boost::filesystem::path& sp,
@@ -105,6 +106,9 @@ class translator_data
 
     //! get filename of translated implementation
     const boost::filesystem::path& get_implementation_filename() const { return(this->implementation_output); }
+
+    //! get filename of translated module constructor file
+    const boost::filesystem::path& get_constructor_filename() const { return(this->constructor_output); }
 
     //! get filename of the sample output file
     const boost::filesystem::path& get_sampling_filename() const { return(this->sampling_output); }
@@ -132,6 +136,9 @@ class translator_data
 
     //! get header guard for translated implementation
     const std::string& get_implementation_guard() const { return(this->implementation_guard); }
+
+    //! get header guard for translated core
+    const std::string& get_constructor_guard() const { return(this->constructor_guard); }
 
     //! get header guard for the sampling output file
     const std::string& get_sampling_guard() const { return(this->sampling_guard); }
@@ -251,6 +258,9 @@ class translator_data
     //! implementation output file name
     boost::filesystem::path implementation_output;
 
+    //! module constructor output file name
+    boost::filesystem::path constructor_output;
+
     //! sampling output file
     boost::filesystem::path sampling_output;
 
@@ -277,6 +287,9 @@ class translator_data
 
     //! implementation header guard
     std::string implementation_guard;
+
+    //! model constructor header guard
+    std::string constructor_guard;
 
     //! CppTSample sampling header guard
     std::string sampling_guard;
