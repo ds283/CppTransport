@@ -44,6 +44,7 @@ namespace macro_packages
     EMPLACE(pre_package, BIND(replace_omegacdm, "COSMO_OMEGA_CDM"))
     EMPLACE(pre_package, BIND(replace_tau, "COSMO_TAU"))
     EMPLACE(pre_package, BIND(replace_tcmb, "COSMO_TCMB"))
+    EMPLACE(pre_package, BIND(replace_lagrangiantype, "COSMO_LAGRANGIANTYPE"))
   }
 
   // *******************************************************************
@@ -78,6 +79,18 @@ namespace macro_packages
   std::string replace_tcmb::evaluate(const macro_argument_list& args)
   {
     return std::to_string(this->data_payload.cosmo.get_Tcmb());
+  }
+
+  std::string replace_lagrangiantype::evaluate(const macro_argument_list& args)
+  {
+    model_type modelType = this->data_payload.model.get_lagrangian_type();
+
+    switch(modelType)
+    {
+      case model_type::canonical: return "canonical_model"; break;
+      case model_type::nontrivial_metric: return "nontrivial_metric_model"; break;
+      default: this->data_payload.message("Lagrangian type not found!"); return ""; break;
+    }
   }
 
 
