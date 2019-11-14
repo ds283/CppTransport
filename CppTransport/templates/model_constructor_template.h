@@ -10,7 +10,7 @@
 
 template <typename number>
 $MODEL<number>::$MODEL(local_environment& e, argument_cache& a)
-  : canonical_model<number>("$UNIQUE_ID", $NUMERIC_VERSION, e, a)
+  : $COSMO_LAGRANGIANTYPE<number>("$UNIQUE_ID", $NUMERIC_VERSION, e, a)
 {
   __A_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
   __A_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
@@ -35,15 +35,15 @@ $MODEL<number>::$MODEL(local_environment& e, argument_cache& a)
 
   // TODO: Change these IF statements to include dependence on the model type
 
+  $IF{!fast&&canonical}
   // Canonical version
-  $IF{!fast}
   __dV = new number[$NUMBER_FIELDS];
   __ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
   __dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
   $ENDIF
 
+  $IF{!fast&&noncanonical}
   // Non-canonical version
-  $IF{!fast}
   __dV = new number[$NUMBER_FIELDS];
   __ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
   __dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
