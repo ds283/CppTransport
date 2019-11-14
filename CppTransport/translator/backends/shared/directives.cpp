@@ -154,6 +154,13 @@ namespace macro_packages
         if(condition == std::string("fast") && this->payload.fast()) truth = true;
         else if(condition == std::string("!fast") && !this->payload.fast()) truth = true;
 
+        // We now need to further bodge this by implementing custom 'and' statements to include not fast and model type
+        if(condition == std::string("!fast&&canonical") && !this->payload.fast() &&
+                        (this->payload.model.get_lagrangian_type() == model_type::canonical) ) truth = true;
+        if(condition == std::string("!fast&&noncanonical") && !this->payload.fast() &&
+           (this->payload.model.get_lagrangian_type() == model_type::nontrivial_metric) ) truth = true;
+
+
         // push a new clause onto the "if" stack, with the determined truth value
         this->istack.emplace(condition, truth);
 
