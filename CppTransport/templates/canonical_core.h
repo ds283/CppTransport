@@ -449,7 +449,7 @@ namespace transport
 
     // CLASS $MODEL -- CONSTRUCTORS, DESTRUCTORS
 
-
+    /*
     template <typename number>
     $MODEL<number>::$MODEL(local_environment& e, argument_cache& a)
       : canonical_model<number>("$UNIQUE_ID", $NUMERIC_VERSION, e, a)
@@ -490,6 +490,7 @@ namespace transport
         Cosmo.set_Omega_CDMh2($COSMO_OMEGA_CDM);
         Cosmo.set_tau($COSMO_TAU);
       }
+    */
 
 
     template <typename number>

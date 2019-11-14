@@ -140,10 +140,14 @@ namespace macro_packages
           {
             guard = this->data_payload.get_implementation_guard();
           }
+        else if(type == process_type::process_constructor)
+          {
+            guard = this->data_payload.get_constructor_guard();
+          }
         else if(type == process_type::process_sampling)
-        {
-          guard = this->data_payload.get_sampling_guard();
-        }
+          {
+            guard = this->data_payload.get_sampling_guard();
+          }
 
         return(this->tag + "_" + guard + this->guard_terminator);
       }
