@@ -541,7 +541,7 @@ boost::filesystem::path translation_unit::mangle_output_name(const boost::filesy
       boost::filesystem::path build_dir(build_path);
       boost::filesystem::create_directory(build_dir);
 
-      if (tag == "core" || tag == "mpi")
+      if (tag == "core" || tag == "mpi" || tag == "constructor" )
       {
         boost::filesystem::path h_extension(".h");
 
