@@ -611,6 +611,9 @@ boost::filesystem::path translation_unit::mangle_output_name(const boost::filesy
         return(leaf.replace_extension(getdist_extension));
       }
     }
+
+   assert(false);
+   throw exit_parse("Unknown tag type");
   }
 
 
