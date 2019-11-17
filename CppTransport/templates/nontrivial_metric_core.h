@@ -383,6 +383,12 @@ namespace transport
         // later on at run-time and have access to the values in tasks
         cosmology Cosmo;
 
+        // Initialise a parameters class to be used in the model instance k for values to be written to in the constructor template
+        parameters<number> Params;
+
+        // Initialise an initial conditions block for values to be written to in the constructor template
+        initial_conditions<number> InitConds;
+
       };
 
 
