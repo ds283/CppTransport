@@ -83,25 +83,31 @@ bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const 
 
         // also need to generate a symbol for the momentum corresponding to this field - CpptSample style
         auto field_deriv = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX);
-        this->fields_deriv.push_back(field_deriv);
+        this->fields_deriv_cosmosis.push_back(field_deriv);
 
         // If the field value and/or prior is provided, it is added to the list to be returned later for CpptSample
         if(a->get_value().length() > 0)
         {
+          auto field_value = this->sym_factory.get_real_symbol(a->get_value());
+          this->field_values.push_back(field_value);
+
           auto field_val = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX  + " = " + a->get_value());
-          this->fields_vals.push_back(field_val);
+          this->fields_vals_cosmosis.push_back(field_val);
         }
 
         if(a->get_derivvalue().length() > 0)
         {
+          auto field_deriv_value = this->sym_factory.get_real_symbol(a->get_derivvalue());
+          this->field_deriv_values.push_back(field_deriv_value);
+
           auto field_derivval = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " = " + a->get_derivvalue() );
-          this->fields_derivvals.push_back(field_derivval);
+          this->fields_derivvals_cosmosis.push_back(field_derivval);
         }
 
         if(a->get_prior().length() > 0)
         {
           auto field_prior = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX + " = " + a->get_prior() );
-          this->fields_priors.push_back(field_prior);
+          this->fields_priors_cosmosis.push_back(field_prior);
 
           auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX);
           this->priors.push_back(prior_name);
@@ -116,7 +122,7 @@ bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const 
         if(a->get_derivprior().length() > 0)
         {
           auto field_derivprior = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX + " = " + a->get_derivprior() );
-          this->fields_derivpriors.push_back(field_derivprior);
+          this->fields_derivpriors_cosmosis.push_back(field_derivprior);
 
           auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX );
           this->priors.push_back(prior_name);
@@ -148,14 +154,17 @@ bool lagrangian_block::add_parameter(const std::string& n, symbol_wrapper& s, co
         // If the parameter value and/or prior is provided, it is added to the list to be called later
         if(a->get_value().length() > 0)
         {
-	        auto param_val = this->sym_factory.get_real_symbol(symbol.get_name() + " = " + a->get_value());
-          this->params_values.push_back(param_val);
+          auto param_value = this->sym_factory.get_real_symbol(a->get_value());
+          this->param_values.push_back(param_value);
+
+          auto param_val = this->sym_factory.get_real_symbol(symbol.get_name() + " = " + a->get_value());
+          this->params_values_cosmosis.push_back(param_val);
         }
 
         if(a->get_prior().length() > 0)
         {
           auto param_prior = this->sym_factory.get_real_symbol(symbol.get_name() + " = " + a->get_prior() );
-          this->params_priors.push_back(param_prior);
+          this->params_priors_cosmosis.push_back(param_prior);
 
           auto prior_name = this->sym_factory.get_real_symbol(symbol.get_name());
           this->priors.push_back(prior_name);
@@ -312,13 +321,13 @@ symbol_list lagrangian_block::get_deriv_symbols() const
 // Customised function to get my way of doing field derivatives
 symbol_list lagrangian_block::get_field_deriv() const
 {
-  return(this->fields_deriv);
+  return(this->fields_deriv_cosmosis);
 }
 
 // Four new functions that gets field values & priors, both normal and derivatives for CpptSample/cosmosis
 symbol_list lagrangian_block::get_field_val() const
 {
-  return(this->fields_vals);
+  return(this->fields_vals_cosmosis);
 }
 
 symbol_list lagrangian_block::get_prior_names() const
@@ -333,17 +342,17 @@ symbol_list lagrangian_block::get_prior_latex() const
 
 symbol_list lagrangian_block::get_field_derivval() const
 {
-  return(this->fields_derivvals);
+  return(this->fields_derivvals_cosmosis);
 }
 
 symbol_list lagrangian_block::get_field_prior() const
 {
-  return(this->fields_priors);
+  return(this->fields_priors_cosmosis);
 }
 
 symbol_list lagrangian_block::get_field_derivprior() const
 {
-  return(this->fields_derivpriors);
+  return(this->fields_derivpriors_cosmosis);
 }
 
 symbol_list lagrangian_block::get_param_symbols() const
@@ -355,13 +364,32 @@ symbol_list lagrangian_block::get_param_symbols() const
 // Get the list of parameter values for CpptSample/cosmosis
 symbol_list lagrangian_block::get_param_values() const
 {
-  return(this->params_values);
+  return(this->params_values_cosmosis);
 }
 
 // Get the list of parameter priors for CpptSample/cosmosis
 symbol_list lagrangian_block::get_param_priors() const
 {
-  return(this->params_priors);
+  return(this->params_priors_cosmosis);
+}
+
+// Get the numerical values of the field initial values
+symbol_list lagrangian_block::get_fields_values() const
+{
+  return(this->field_values);
+}
+
+// Get the numerical values of the field initial values
+symbol_list lagrangian_block::get_fields_deriv_values() const
+{
+  return(this->field_deriv_values);
+}
+
+
+// Get the numerical values of the model's parameter values
+symbol_list lagrangian_block::get_params_values() const
+{
+  return(this->param_values);
 }
 
 const symbol_wrapper& lagrangian_block::get_Mp_symbol() const

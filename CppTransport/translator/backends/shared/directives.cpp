@@ -304,6 +304,28 @@ namespace macro_packages
         {
           Listy.push_back(Param_val.get_name());
         }
+      } else if (arg_list == "ParameterValues"){
+        symbol_list Param_values      = this->payload.model.get_params_values();
+
+        for(auto & Param_val : Param_values)
+        {
+          Listy.push_back(Param_val.get_name());
+        }
+
+      } else if (arg_list == "FieldValues"){
+        symbol_list Field_values        = this->payload.model.get_fields_values();
+        symbol_list Field_deriv_values  = this->payload.model.get_fields_deriv_values();
+
+        for(auto & Field_Val : Field_values)
+        {
+          Listy.push_back(Field_Val.get_name());
+        }
+
+        for(auto & Field_Deriv_Val : Field_deriv_values)
+        {
+          Listy.push_back(Field_Deriv_Val.get_name());
+        }
+
       } else if (arg_list == "Priors") {
         symbol_list Field_priors      = this->payload.model.get_field_prior();
         symbol_list Field_derivpriors = this->payload.model.get_field_derivprior();

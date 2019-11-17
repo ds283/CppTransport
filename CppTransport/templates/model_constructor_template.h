@@ -65,6 +65,19 @@ namespace transport {
         Cosmo.set_Omega_CDMh2($COSMO_OMEGA_CDM);
         Cosmo.set_tau($COSMO_TAU);
 
+        // Put in parameter values
+        Params.set_MPlanck(1.0);
+
+        Params.set_params( { $FOR{ £PARAM, "£PARAM£COMMA ", ParameterValues, False, True } } );
+
+        InitConds.set_N_initial(0.05);
+
+        InitConds.set_N_subhorizon_efolds(5.0);
+
+        InitConds.set_name("$MODEL default initial conditions from model file");
+
+        InitConds.set_vector( { $FOR{ £FIELD, "£FIELD£COMMA ", FieldValues, False, True } } );
+
         // TODO: add constructor objects of the parameters and initial conditions blocks here
     }
 

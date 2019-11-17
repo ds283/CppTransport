@@ -179,6 +179,15 @@ class lagrangian_block
     //! get symbol for Planck mass M_P
     const symbol_wrapper& get_Mp_symbol() const;
 
+    //! get list of symbols for the numerical field initial values
+    symbol_list get_fields_values() const;
+
+    //! get list of symbols for the numerical field initial derivative values
+    symbol_list get_fields_deriv_values() const;
+
+    //! get list of symbols for the numerical parameter values
+    symbol_list get_params_values() const;
+
 
     // INTERNAL DATA
 
@@ -203,29 +212,38 @@ class lagrangian_block
     //! symbol list: names of all priors and associated LaTeX string for cosmosis
     symbol_list priors_with_latex;
 
+    //! symbol list: numerical values of the field initial values
+    symbol_list field_values;
+
+    //! symbol list: numerical values of the field derivative initial values
+    symbol_list field_deriv_values;
+
     //! symbol list: names of field derivatives
-    symbol_list fields_deriv;
+    symbol_list fields_deriv_cosmosis;
 
     //! symbol list: names of field values for cosmosis
-    symbol_list fields_vals;
+    symbol_list fields_vals_cosmosis;
 
     //! symbol list: names of field derivative values for cosmosis
-    symbol_list fields_derivvals;
+    symbol_list fields_derivvals_cosmosis;
 
     //! symbol list: names of field priors for cosmosis
-    symbol_list fields_priors;
+    symbol_list fields_priors_cosmosis;
 
     //! symbol list: names of field derivative priors for cosmosis
-    symbol_list fields_derivpriors;
+    symbol_list fields_derivpriors_cosmosis;
 
     //! symbol table: parameters
     parameter_symbol_table parameters;
 
+    //! symbol list: numerical values of the model parameter values
+    symbol_list param_values;
+
     //! symbol list: names of parameters values for cosmosis
-    symbol_list params_values;
+    symbol_list params_values_cosmosis;
 
     //! symbol list: names of parameters priors for cosmosis
-    symbol_list params_priors;
+    symbol_list params_priors_cosmosis;
 
     //! symbol table: reserved symbols (such as the Planck mass)
     parameter_symbol_table reserved;
