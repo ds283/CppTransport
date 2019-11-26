@@ -217,6 +217,7 @@ ADD_EXECUTABLE(CppTransport
   translator/transport-objects/shared/cache_detail/cache_tags.cpp
   translator/transport-objects/shared/symbol_factory.cpp
   translator/transport-objects/shared/shared_resources.cpp
+  translator/transport-objects/shared/read_expressions.cpp
   translator/utilities/error.cpp
   translator/utilities/error_context.cpp
   translator/utilities/finder.cpp
@@ -802,6 +803,8 @@ SET(TRANSLATOR_TRANSPORT_OBJECTS_SHARED_FILES
   translator/transport-objects/shared/symbol_factory.h
   translator/transport-objects/shared/resource_failure.h
   translator/transport-objects/shared/variance_tensor_cache.h
+  translator/transport-objects/shared/read_expressions.h
+  translator/transport-objects/shared/read_expressions.cpp
   )
 
 SET(TRANSLATOR_VERSION_POLICY_FILES

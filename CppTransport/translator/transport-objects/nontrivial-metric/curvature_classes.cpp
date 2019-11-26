@@ -25,6 +25,7 @@
 
 
 #include "curvature_classes.h"
+#include "shared/read_expressions.h"
 
 #include "msg_en.h"
 
@@ -43,15 +44,15 @@ Christoffel::Christoffel(const GiNaC::matrix& G_, const GiNaC::matrix& Ginv_, co
     if(G.rows() != Ginv.rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
 
     // compute components of the connexion and cache them
-    for(unsigned int i = 0; i < N; ++i)
+    for(size_t i = 0; i < N; ++i)
       {
-        for(unsigned int j = 0; j < N; ++j)
+        for(size_t j = 0; j < N; ++j)
           {
-            for(unsigned int k = 0; k <= j; ++k)
+            for(size_t k = 0; k <= j; ++k)
               {
                 GiNaC::ex temp = 0;
 
-                for(unsigned int m = 0; m < N; ++m)
+                for(size_t m = 0; m < N; ++m)
                   {
                     temp += Ginv(i, m) * (diff(G(m, j), coords[k]) + diff(G(m, k), coords[j]) - diff(G(j, k), coords[m])) / 2;
                   }
@@ -61,6 +62,36 @@ Christoffel::Christoffel(const GiNaC::matrix& G_, const GiNaC::matrix& Ginv_, co
           }
       }
   }
+
+
+Christoffel::Christoffel(const GiNaC::matrix& G_, const GiNaC::matrix& Ginv_, const boost::filesystem::path& location,
+                         const GiNaC::symtab& subst_table, const symbol_list& c_)
+  : N(c_.size()),
+    G(G_),
+    Ginv(Ginv_),
+    coords(c_)
+  {
+    if(G.rows() != G.cols()) throw std::runtime_error(ERROR_METRIC_NOT_SQUARE);
+    if(Ginv.rows() != Ginv.cols()) throw std::runtime_error(ERROR_METRIC_NOT_SQUARE);
+    if(G.rows() != Ginv.rows()) throw std::runtime_error(ERROR_METRIC_DIMENSION);
+
+    // open text file containing Christoffel symbols
+    std::ifstream in(location.string(), std::ios::in);
+
+    for(size_t i = 0; i < N; ++i)
+      {
+        for(size_t j = 0; j < N; ++j)
+          {
+            for(size_t k = 0; k < N; ++k)
+              {
+                auto expr = reader::detail::read_expr(in, subst_table, std::initializer_list<size_t>{i, j, k});
+
+                if(k > j) continue;
+                gamma.push_back(expr);
+              }
+          }
+      }
+
 
 
 const GiNaC::ex& Christoffel::operator()(unsigned int i, unsigned int j, unsigned int k) const
@@ -89,19 +120,19 @@ Riemann_T::Riemann_T(const Christoffel& Gamma_)
     const symbol_list& coords = Gamma_.get_coords();
     const GiNaC::matrix& G = Gamma_.get_G();
 
-    for(unsigned int i = 0; i < N; ++i)
+    for(size_t i = 0; i < N; ++i)
       {
-        for(unsigned int j = 0; j < i; ++j)
+        for(size_t j = 0; j < i; ++j)
           {
-            for(unsigned int k = 0; k < N; ++k)
+            for(size_t k = 0; k < N; ++k)
               {
-                for(unsigned int l = 0; l < k; ++l)
+                for(size_t l = 0; l < k; ++l)
                   {
                     // compute the flatten of the index groups (i,j) and (k,l)
                     // since the Riemann tensor is invariant under these exchanges we need
                     // only compute the lower triangle r <= s
-                    unsigned int r = i * (i - 1) / 2 + j;
-                    unsigned int s = k * (k - 1) / 2 + l;
+                    size_t r = i * (i - 1) / 2 + j;
+                    size_t s = k * (k - 1) / 2 + l;
 
                     if(s > r) continue;
 
@@ -118,6 +149,42 @@ Riemann_T::Riemann_T(const Christoffel& Gamma_)
                       }
 
                     rie_t.push_back(temp);
+                  }
+              }
+          }
+      }
+  }
+
+
+Riemann_T::Riemann_T(const Christoffel& Gamma_, const boost::filesystem::path& location,
+                     const GiNaC::symtab& subst_table)
+  : N(Gamma_.get_number_fields()),
+    Gamma(Gamma_)
+  {
+    // open text file containing Christoffel symbols
+    std::ifstream in(location.string(), std::ios::in);
+
+    for(size_t i = 0; i < N; ++i)
+      {
+        for(size_t j = 0; j < i; ++j)
+          {
+            for(size_t k = 0; k < N; ++k)
+              {
+                for(size_t l = 0; l < k; ++l)
+                  {
+                    auto expr = reader::detail::read_expr(in, subst_table, std::initialize_list{i, j, k, l})
+
+                    if(j >= i || l >= k) continue;
+
+                    // compute the flatten of the index groups (i,j) and (k,l)
+                    // since the Riemann tensor is invariant under these exchanges we need
+                    // only compute the lower triangle r <= s
+                    unsigned int r = i * (i - 1) / 2 + j;
+                    unsigned int s = k * (k - 1) / 2 + l;
+
+                    if(s > r) continue;
+
+                    rie_t.push_back(expr);
                   }
               }
           }
@@ -181,27 +248,27 @@ DRiemann_T::DRiemann_T(const Riemann_T& R_)
     const Christoffel& Gamma = R.get_connexion();
     const symbol_list& coords = Gamma.get_coords();
     
-    for(unsigned int m = 0; m < N; ++m)
+    for(size_t m = 0; m < N; ++m)
       {
-        for(unsigned int i = 0; i < N; ++i)
+        for(size_t i = 0; i < N; ++i)
           {
-            for(unsigned int j = 0; j < i; ++j)
+            for(size_t j = 0; j < i; ++j)
               {
-                for(unsigned int k = 0; k < N; ++k)
+                for(size_t k = 0; k < N; ++k)
                   {
-                    for(unsigned int l = 0; l < k; ++l)
+                    for(size_t l = 0; l < k; ++l)
                       {
                         // compute the flatten of the index groups (i,j) and (k,l)
                         // since the Riemann tensor is invariant under these exchanges we need
                         // only compute the lower triangle r <= s
-                        unsigned int r = i * (i - 1) / 2 + j;
-                        unsigned int s = k * (k - 1) / 2 + l;
+                        size_t r = i * (i - 1) / 2 + j;
+                        size_t s = k * (k - 1) / 2 + l;
 
                         if(s > r) continue;
 
                         GiNaC::ex temp = diff(R(i, j, k, l), coords[m]);
 
-                        for(unsigned int n = 0; n < N; ++n)
+                        for(size_t n = 0; n < N; ++n)
                           {
                             temp -= Gamma(n, m, i) * R(n, j, k, l);
                             temp -= Gamma(n, m, j) * R(i, n, k, l);

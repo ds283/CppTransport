@@ -35,6 +35,8 @@
 
 #include "ginac/ginac.h"
 
+#include "boost/filesystem/operations.hpp"
+
 
 class Christoffel
   {
@@ -46,6 +48,10 @@ class Christoffel
     //! constructor accepts a GiNaC matrix and its inverse, and a list of symbols representing the fields of
     //! the model
     Christoffel(const GiNaC::matrix& G_, const GiNaC::matrix& Ginv_, const symbol_list& c_);
+
+    //! constructor reads from a file, given a name-to-symbol translation table and number of fields N
+    Christoffel(const GiNaC::matrix& G_, const GiNaC::matrix& Ginv_, const boost::filesystem::path& location,
+                const GiNaC::symtab& subst_table, const symbol_list& c_);
 
     //! destructor is default
     ~Christoffel() = default;
@@ -59,7 +65,7 @@ class Christoffel
     const GiNaC::ex& operator()(unsigned int i, unsigned int j, unsigned int k) const;
 
     //! get number of fields
-    unsigned int get_number_fields() const { return this->N; }
+    size_t get_number_fields() const { return this->N; }
 
     //! get metric
     const GiNaC::matrix& get_G() const { return this->G; }
@@ -79,7 +85,7 @@ class Christoffel
   private:
 
     //! cache number of fields
-    const unsigned int N;
+    const size_t N;
 
     //! flattened tensor representing the components of the connexion
     flattened_tensor gamma;
@@ -107,6 +113,9 @@ class Riemann_T
     //! components of the Riemann tensor
     Riemann_T(const Christoffel& Gamma_);
 
+    //! constructor reads from a file, given a name-to-symbol translation table
+    Riemann_T(const Christoffel& Gamma_, const boost::filesystem::path& location, const GiNaC::symtab& subst_leader);
+
     //! destructor is default
     ~Riemann_T() = default;
 
@@ -130,9 +139,9 @@ class Riemann_T
   private:
 
     //! cache number of fields
-    const unsigned int N;
+    const size_t N;
 
-    //! flattened tensor representing the components of the Riemann tenosr
+    //! flattened tensor representing the components of the Riemann tensor
     flattened_tensor rie_t;
 
     //! reference to Christoffel object from which the Riemann tensor is built
@@ -175,7 +184,7 @@ class DRiemann_T
   private:
     
     //! cache nubmer of fields
-    const unsigned int N;
+    const size_T N;
     
     //! cache size of the flattened Riemann tensor
     const unsigned int N_Rie_T;
