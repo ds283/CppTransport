@@ -111,7 +111,7 @@ namespace nontrivial_metric
               }
 
             // construct inverse metric
-            this->Ginv = reader::read_inverse_metric(Ginv_location, subst_table, N);
+            this->Ginv = reader::read_inverse_metric(Ginv_location, *subst_table, N);
           }
         else    // unexpected case that no metric has been provided; attempt to recover gracefully (errors should have been emitted before this stage)
           {
@@ -121,8 +121,8 @@ namespace nontrivial_metric
 
 
         // CONSTRUCT CURVATURE QUANTITIES
-        this->Crstfl = std::make_unique<Christoffel>(*this->G, *this->Ginv, Christoffel_location, subst_table, field_list);
-        this->Rie_T = std::make_unique<Riemann_T>(*this->Crstfl, Riemann_location, subst_table);
+        this->Crstfl = std::make_unique<Christoffel>(*this->G, *this->Ginv, Christoffel_location, *subst_table, field_list);
+        this->Rie_T = std::make_unique<Riemann_T>(*this->Crstfl, Riemann_location, *subst_table);
         this->DRie_T = std::make_unique<DRiemann_T>(*this->Rie_T);
 
 

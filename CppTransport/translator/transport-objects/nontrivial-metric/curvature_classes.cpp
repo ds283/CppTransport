@@ -84,14 +84,14 @@ Christoffel::Christoffel(const GiNaC::matrix& G_, const GiNaC::matrix& Ginv_, co
           {
             for(size_t k = 0; k < N; ++k)
               {
-                auto expr = reader::detail::read_expr(in, subst_table, std::initializer_list<size_t>{i, j, k});
+                auto expr = reader::detail::read_expr(in, subst_table, std::initializer_list < size_t > {i, j, k});
 
                 if(k > j) continue;
                 gamma.push_back(expr);
               }
           }
       }
-
+  }
 
 
 const GiNaC::ex& Christoffel::operator()(unsigned int i, unsigned int j, unsigned int k) const
@@ -172,7 +172,7 @@ Riemann_T::Riemann_T(const Christoffel& Gamma_, const boost::filesystem::path& l
               {
                 for(size_t l = 0; l < k; ++l)
                   {
-                    auto expr = reader::detail::read_expr(in, subst_table, std::initialize_list{i, j, k, l})
+                    auto expr = reader::detail::read_expr(in, subst_table, std::initializer_list<size_t>{i, j, k, l});
 
                     if(j >= i || l >= k) continue;
 
