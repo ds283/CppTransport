@@ -40,12 +40,14 @@
 #include "resources_detail/potential_cache.h"
 #include "resources_detail/substitution_map_cache.h"
 
+#include "shared/read_expressions.h"
+
 #include "ginac/ginac.h"
 
 
 namespace nontrivial_metric
   {
-    
+
     resources::resources(translator_data& p, resource_manager& m, expression_cache& c,
                          shared_resources& s, boost::timer::cpu_timer& t)
       : mgr(m),
@@ -59,18 +61,34 @@ namespace nontrivial_metric
         param_list(p.model.get_param_symbols()),
         fl(p.model.get_number_params(), p.model.get_number_fields())
       {
+        // extract fully qualified name of source model description and use this to anchor
+        // location of G-inverse, connection components and Riemann tensor
+        auto model_location = p.get_source_filename().parent_path();
+
+        auto Ginv_location = model_location / "inv_metric.txt";
+        auto Christoffel_location = model_location / "christoffel.txt";
+        auto Riemann_location = model_location / "riemann.txt";
+
+        // construct merged substitution table
+        auto subst_table = reader::build_total_symbol_table(field_list, deriv_list, param_list);
+
+
+        // CONSTRUCT POTENTIAL
+
         // get potential stored by the model descriptor, if one is available
         auto pot = p.model.get_potential();
         
         // if no potential was set, fail gracefully; errors should have been emitted before this point
         if(pot) V = **(pot.get()); else V = GiNaC::ex(0);
 
+
+        // CONSTRUCT METRIC AND INVERSE METRIC
+
         // get number of fields in the current model
         auto N = payload.model.get_number_fields();
 
         // populate GiNaC matrices representing the field-space metric and its inverse
         this->G = std::make_unique<GiNaC::matrix>(N, N);
-        this->Ginv = std::make_unique<GiNaC::matrix>(N, N);
 
         // get metric stored by model descriptor, if one exists
         auto metric = p.model.get_metric();
@@ -93,7 +111,7 @@ namespace nontrivial_metric
               }
 
             // construct inverse metric
-            *this->Ginv = GiNaC::ex_to<GiNaC::matrix>(this->G->inverse());
+            this->Ginv = reader::read_inverse_metric(Ginv_location, subst_table, N);
           }
         else    // unexpected case that no metric has been provided; attempt to recover gracefully (errors should have been emitted before this stage)
           {
@@ -101,10 +119,12 @@ namespace nontrivial_metric
             *(this->Ginv) = GiNaC::ex_to<GiNaC::matrix>(GiNaC::unit_matrix(N));
           }
 
-        // construct curvature tensors based on this metric
-        this->Crstfl = std::make_unique<Christoffel>(*this->G, *this->Ginv, field_list);
-        this->Rie_T = std::make_unique<Riemann_T>(*this->Crstfl);
+
+        // CONSTRUCT CURVATURE QUANTITIES
+        this->Crstfl = std::make_unique<Christoffel>(*this->G, *this->Ginv, Christoffel_location, subst_table, field_list);
+        this->Rie_T = std::make_unique<Riemann_T>(*this->Crstfl, Riemann_location, subst_table);
         this->DRie_T = std::make_unique<DRiemann_T>(*this->Rie_T);
+
 
         // switch off compute timer (it will be restarted if needed during subsequent computations)
         compute_timer.stop();
