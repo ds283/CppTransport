@@ -184,7 +184,7 @@ class DRiemann_T
   private:
     
     //! cache nubmer of fields
-    const size_T N;
+    const size_t N;
     
     //! cache size of the flattened Riemann tensor
     const unsigned int N_Rie_T;

@@ -76,8 +76,9 @@ namespace reader
         auto parameter_table = build_parameter_symbol_table(params);
 
         auto full_table = std::make_unique<GiNaC::symtab>();
-        std::move(field_table->begin(), field_table->end(), std::back_inserter(*full_table));
-        std::move(parameter_table->begin(), parameter_table->end(), std::back_inserter(*full_table));
+        full_table->merge(*field_table);
+        full_table->merge(*deriv_table);
+        full_table->merge(*parameter_table);
 
         return full_table;
       }
