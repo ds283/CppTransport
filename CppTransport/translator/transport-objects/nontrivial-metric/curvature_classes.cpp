@@ -166,11 +166,11 @@ Riemann_T::Riemann_T(const Christoffel& Gamma_, const boost::filesystem::path& l
 
     for(size_t i = 0; i < N; ++i)
       {
-        for(size_t j = 0; j < i; ++j)
+        for(size_t j = 0; j < N; ++j)
           {
             for(size_t k = 0; k < N; ++k)
               {
-                for(size_t l = 0; l < k; ++l)
+                for(size_t l = 0; l < N; ++l)
                   {
                     auto expr = reader::detail::read_expr(in, subst_table, std::initializer_list<size_t>{i, j, k, l});
 

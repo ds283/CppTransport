@@ -39,6 +39,7 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/filesystem/operations.hpp"
+#include <boost/range/adaptor/reversed.hpp>
 
 
 namespace reader
@@ -82,7 +83,8 @@ namespace reader
             if(tags[0] != "ex") throw resource_failure("Expected expression type in input file to be 'ex'");
 
             auto& label = tags[1];
-            for(const auto& item : indices)
+            // We need to reverse the indicies in this for loop as we read the indicies right-to-left in the input files
+            for(const auto& item : boost::adaptors::reverse(indices))
               {
                 if(label.size() <= 1) throw resource_failure("Unexpected formatting for left-hand side of expression");
 
@@ -90,8 +92,12 @@ namespace reader
                 auto final_char = label.back();
                 label.pop_back();
 
-                if(std::string{1, final_char} != std::to_string(item))
-                  throw resource_failure("Unexpected formatting for index part of expression name");
+                // explicitly construct s as a string and then add final_char to it - previous conversion to string failed
+                std::string s;
+                s.push_back(final_char);
+
+                if(s != std::to_string(item))
+                  throw resource_failure("Unexpected formatting for index part of expression name. \n Expected " + s + ", but got " + std::to_string(item));
               }
 
             GiNaC::parser reader{table};
