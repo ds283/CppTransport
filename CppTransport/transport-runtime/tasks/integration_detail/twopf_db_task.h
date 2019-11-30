@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -244,6 +245,10 @@ namespace transport
 
         //! construct a twopf-list-task object
         twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool adpt_ics,
+                      double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+
+        //! overload constructor for use with model class calling
+        twopf_db_task(const std::string& nm, model<number>* mdl, range<double>& t, bool adpt_ics,
                       double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
@@ -489,6 +494,21 @@ namespace transport
       {
 		    twopf_db = std::make_shared<twopf_kconfig_database>(kstar);
 	    }
+
+    // overload constructor for calling with the model, not direct initial conditions
+    template <typename number>
+    twopf_db_task<number>::twopf_db_task(const std::string& nm, model<number>* mdl, range<double>& t,
+                                         bool adpt_ics, double ast)
+      : integration_task<number>(nm, mdl, t),
+        adaptive_ics(adpt_ics),
+        adaptive_efolds(CPPTRANSPORT_DEFAULT_ADAPTIVE_ICS_EFOLDS),
+        max_refinements(CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS),
+        astar_normalization(ast),
+        collect_initial_conditions(CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
+        kstar(mdl->compute_kstar(this)) // compute k* for our choice of horizon-crossing time
+    {
+      twopf_db = std::make_shared<twopf_kconfig_database>(kstar);
+    }
 
 
     template <typename number>
@@ -792,6 +812,11 @@ namespace transport
 		    std::vector<double> N;
 		    std::vector<number> log_aH;
         std::vector<number> log_a2H2M;
+
+        if (this->ics.get_params().get_vector().empty())
+        {
+          this->ics.set_params(this->mdl->Params);
+        }
 
         try
           {

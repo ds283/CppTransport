@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -72,6 +73,10 @@ namespace transport
 
         //! Construct a named integration task with supplied initial conditions and sample times
         integration_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
+                         double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+
+        // Overload named integration task for use with model passing instead of initial conditions block
+        integration_task(const std::string& nm, model<number>* mdl, range<double>& t,
                          double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! Construct an anonymized integration task with supplied initial conditions.
@@ -211,6 +216,8 @@ namespace transport
         //! write self-details to stream
         template <typename Stream> void write(Stream& obj) const;
 
+        //! Model class instance for this integration task
+        model<number>* mdl;
 
         // INTERNAL DATA
 
@@ -283,6 +290,45 @@ namespace transport
             throw runtime_exception(exception_type::FATAL_ERROR, msg.str());
 	        }
 	    }
+
+    // Overload named integration task for use with model passing
+    template <typename number>
+    integration_task<number>::integration_task(const std::string& nm, model<number>* mdl, range<double>& t, double ast)
+      : derivable_task<number>(nm),
+        mdl(mdl),
+        ics(mdl->InitConds),
+        times(t.clone()),
+        end_of_inflation(0.0),
+        cached_end_of_inflation(false),
+        default_checkpoint(0),
+        default_checkpoint_set(false),
+        astar_normalization(ast)
+      {
+        // At this point, we can set the model class in the initial conditions and parameters block to the supplied model
+        ics.set_model(mdl);
+        mdl->Params.set_model(mdl);
+
+        // validate relation between Nstar and the sampling time
+        assert(times->size() > 0);
+        assert(times->get_min() >= ics.get_N_initial());
+
+        if(times->size() == 0)
+        {
+          std::ostringstream msg;
+          msg << "'" << this->get_name() << "': " << CPPTRANSPORT_NO_TIMES;
+          throw runtime_exception(exception_type::FATAL_ERROR, msg.str());
+        }
+
+        // the sampling points don't have to begin at the initial time, but they shouldn't be earlier than it
+        if(times->get_min() < ics.get_N_initial())
+        {
+          std::ostringstream msg;
+          msg << "'" << this->get_name() << "': " << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
+              << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
+              << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << ics.get_N_initial() << ")";
+          throw runtime_exception(exception_type::FATAL_ERROR, msg.str());
+        }
+      }
 
 
     template <typename number>

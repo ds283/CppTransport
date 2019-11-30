@@ -60,26 +60,24 @@ namespace transport {
 
         // Sets the model's cosmology class to the values specified in the model file. This can be overridden
         // at complation time in the model's .cpp file if needed
-        Cosmo.set_H0($COSMO_H0);
-        Cosmo.set_Omega_Bh2($COSMO_OMEGA_B);
-        Cosmo.set_Omega_CDMh2($COSMO_OMEGA_CDM);
-        Cosmo.set_tau($COSMO_TAU);
+        this->Cosmo.set_H0($COSMO_H0);
+        this->Cosmo.set_Omega_Bh2($COSMO_OMEGA_B);
+        this->Cosmo.set_Omega_CDMh2($COSMO_OMEGA_CDM);
+        this->Cosmo.set_tau($COSMO_TAU);
 
         // Put in parameter values
-        Params.set_MPlanck(1.0);
+        this->Params.set_MPlanck(1.0);
 
-        Params.set_params( { $FOR{ £PARAM, "£PARAM£COMMA ", ParameterValues, False, True } } );
+        this->Params.set_params( { $FOR{ £PARAM, "£PARAM£COMMA ", ParameterValues, False, True } } );
 
-        InitConds.set_N_initial(0.05);
+        this->InitConds.set_N_initial(0.0);
 
-        InitConds.set_N_subhorizon_efolds(5.0);
+        this->InitConds.set_N_subhorizon_efolds(5.0);
 
-        InitConds.set_name("$MODEL default initial conditions from model file");
+        this->InitConds.set_name("$MODEL default initial conditions from model file");
 
-        InitConds.set_vector( { $FOR{ £FIELD, "£FIELD£COMMA ", FieldValues, False, True } } );
-
-        // TODO: add constructor objects of the parameters and initial conditions blocks here
-    }
+        this->InitConds.set_vector( { $FOR{ £FIELD, "£FIELD£COMMA ", FieldValues, False, True } } );
+      }
 
 } //namespace transport
 

@@ -20,6 +20,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -73,6 +74,9 @@ namespace transport
         //! overload for std::initializer_list
         parameters(number Mp, const std::initializer_list<number> p, model<number>* m);
 
+        //! overload for model constructor template
+        parameters() = default;
+
         // ----
 
         //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
@@ -86,8 +90,8 @@ namespace transport
         //! overload for std::initializer_list
         parameters(number Mp, const std::initializer_list<number> p, std::shared_ptr< model<number> > m)
           : parameters(Mp, p, m.get())
-          {
-          }
+        {
+        }
 
         // ----
 
@@ -140,6 +144,16 @@ namespace transport
         //! Value of M_Planck, which sets the scale for all units
         number M_Planck;
 
+
+      // Setters for internal data -  used in model constructor template
+
+      public:
+
+        void set_params(const std::vector<number> &Params);
+
+        void set_model(model <number> *Mdl);
+
+        void set_MPlanck(number MPlanck);
       };
 
 
@@ -266,6 +280,25 @@ namespace transport
             out << "  " << names[i] << " = " << params[i] << '\n';
           }
       }
+
+    template<typename number>
+    void parameters<number>::set_params(const std::vector<number> &Params)
+    {
+      this->params = Params;
+    }
+
+
+    template<typename number>
+    void parameters<number>::set_model(model <number> *Mdl)
+    {
+      this->mdl = Mdl;
+    }
+
+    template<typename number>
+    void parameters<number>::set_MPlanck(number MPlanck)
+    {
+      this->M_Planck = MPlanck;
+    }
 
 
     template <typename number, typename Char, typename Traits>
