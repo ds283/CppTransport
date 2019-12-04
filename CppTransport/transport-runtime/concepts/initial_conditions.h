@@ -192,7 +192,7 @@ namespace transport
         double get_N_subhorion_efolds() const { return(this->N_sub_horizon); }
 
         // Set the value of the subhorizon efolds, for use with default model constructor
-        void set_N_subhorizon_efolds(number N_sub) { this->N_sub_horizon = N_sub; }
+        void set_N_subhorizon_efolds(number N_sub) { this->N_sub_horizon = static_cast<double>(N_sub); }
 
 
 		    // SPECIAL TIMES
@@ -202,7 +202,7 @@ namespace transport
         //! Return initial time
         double get_N_initial() const { return(this->N_init); }
 
-        void set_N_initial(number Ninit) { this->N_init = Ninit; }
+        void set_N_initial(number Ninit) { this->N_init = static_cast<double>(Ninit); }
 
         //! Return horizon-crossing time for the k=1 mode
         double get_N_horizon_crossing() const { return(this->N_init + this->N_sub_horizon); }
