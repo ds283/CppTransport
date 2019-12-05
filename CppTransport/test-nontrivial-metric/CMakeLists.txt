@@ -29,6 +29,7 @@ SET(
   ${SPLINTER_INCLUDE_DIRS}
   ${SPLINTER_INCLUDE_DIRS}/SPLINTER
   ${ODEINT_INCLUDE_DIRS}
+  ${MULTIPRECISION_INCLUDE_DIRS}
   ${CMAKE_BINARY_DIR}
   )
 
@@ -58,8 +59,8 @@ ADD_CUSTOM_TARGET(GelatonGenerator DEPENDS ${GELATON_HEADERS})
 
 ADD_EXECUTABLE(test-nontrivial-metric test-nontrivial-metric.cpp)
 ADD_DEPENDENCIES(test-nontrivial-metric GelatonGenerator)
-
-TARGET_LINK_LIBRARIES(test-nontrivial-metric sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
+TARGET_LINK_DIRECTORIES(test-nontrivial-metric PRIVATE /opt/local/lib)
+TARGET_LINK_LIBRARIES(test-nontrivial-metric sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES} mpfr gmp)
 #SET_TARGET_PROPERTIES(test-nontrivial-metric PROPERTIES
 #  CXX_STANDARD 14
 #  CXX_STANDARD_REQUIRED YES

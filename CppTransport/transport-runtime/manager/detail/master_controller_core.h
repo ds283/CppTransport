@@ -676,6 +676,7 @@ namespace transport
 
             // send message to worker with new assignment information
             msg_status[c] = this->world.isend(this->worker_rank(assgn.get_worker()), MPI::NEW_WORK_ASSIGNMENT, payload);
+            ++c;
 
             // mark this worker, and these work items, as assigned
             this->work_scheduler.mark_assigned(assgn);
@@ -691,7 +692,9 @@ namespace transport
 
         // wait for all assignments to be received
         timers.idle();
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Waiting for all assignment notifications to be received";
         boost::mpi::wait_all(msg_status.begin(), msg_status.end());
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ All assignment messages received by workers";
         timers.busy();
       }
     
@@ -727,6 +730,8 @@ namespace transport
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification) << "++ Master entering main polling loop";
 
         bool success = true;
 

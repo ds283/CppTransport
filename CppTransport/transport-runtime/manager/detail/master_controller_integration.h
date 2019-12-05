@@ -217,6 +217,8 @@ namespace transport
 
         bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification) << "++ Master preparing to close down integration task";
+
         // set wallclock time in metadata to our measured time
         wallclock_timer.stop();
         i_metadata.total_wallclock_time = wallclock_timer.elapsed().wall;

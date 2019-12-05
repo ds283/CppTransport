@@ -426,6 +426,8 @@ namespace transport
                       this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
                     finish_msg.wait();
 
+                    BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker message sent to master | reported at " << boost::posix_time::to_simple_string(now);
+
                     break;
                   };
 
