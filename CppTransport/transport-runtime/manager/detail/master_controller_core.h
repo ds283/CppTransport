@@ -676,6 +676,7 @@ namespace transport
 
             // send message to worker with new assignment information
             msg_status[c] = this->world.isend(this->worker_rank(assgn.get_worker()), MPI::NEW_WORK_ASSIGNMENT, payload);
+            ++c;
 
             // mark this worker, and these work items, as assigned
             this->work_scheduler.mark_assigned(assgn);
