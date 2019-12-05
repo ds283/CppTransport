@@ -692,7 +692,9 @@ namespace transport
 
         // wait for all assignments to be received
         timers.idle();
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Waiting for all assignment notifications to be received";
         boost::mpi::wait_all(msg_status.begin(), msg_status.end());
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ All assignment messages received by workers";
         timers.busy();
       }
     
@@ -728,6 +730,8 @@ namespace transport
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification) << "++ Master entering main polling loop";
 
         bool success = true;
 
