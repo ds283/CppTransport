@@ -329,9 +329,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
         // Set-up the different parameters needed for the matching equation
         DataType Hend = 0.5 * log_H.back(); // value of H at the end of inflation
-        constexpr DataType norm_const   = std::log(243.5363 * pow(3.0, 0.25)); // dimnless matching eq has const = (3^(1/4)*M_P)/1E16 GeV
-        constexpr DataType k_pivot      = std::log(0.05); // pivot scale defined as 0.05 Mpc^-1 in the matching eq (DO NOT CHANGE!)
-        constexpr DataType e_fold_const = 55.75; // constant defined in the matching eq.
+        const DataType norm_const   = std::log(243.5363 * pow(3.0, 0.25)); // dimnless matching eq has const = (3^(1/4)*M_P)/1E16 GeV
+        const DataType k_pivot      = std::log(0.05); // pivot scale defined as 0.05 Mpc^-1 in the matching eq (DO NOT CHANGE!)
+        const DataType e_fold_const = 55.75; // constant defined in the matching eq.
         DataType constants = e_fold_const + k_pivot + norm_const - Hend; // wrap up constants in a single term
 
         // Find the matching equation solutions across the inflation time range.
