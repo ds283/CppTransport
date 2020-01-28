@@ -27,6 +27,7 @@
 #include <functional>
 #include <time.h>
 
+#include "boost/date_time/posix_time/posix_time.hpp"
 #include "fundamental.h"
 #include "to_printable.h"
 #include "translation_unit.h"
@@ -37,7 +38,6 @@
 #include "boost/uuid/uuid.hpp"
 #include "boost/uuid/string_generator.hpp"
 #include "boost/uuid/uuid_io.hpp"
-#include "boost/date_time/posix_time/posix_time.hpp"
 
 #include "openssl/md5.h"
 
