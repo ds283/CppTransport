@@ -1660,6 +1660,8 @@ number $MODEL<number>::make_twopf_tensor_si_ic(unsigned int __i, unsigned int __
 
             // copy eigenvalues into output matrix
             __E[$a] = __evalues($a) / __Hsq;
+
+            __M[FIELDS_FLATTEN($a,$b)] = __M[FIELDS_FLATTEN($a,$b)] / __Hsq;
           }
         else
           {
