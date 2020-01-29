@@ -1774,6 +1774,8 @@ namespace transport
 
             // copy eigenvalues into output matrix
             __E[$^a] = __evalues($^a) / __Hsq;
+
+            __M[FIELDS_FLATTEN($^a,$_b)] =  __M[FIELDS_FLATTEN($^a,$_b)] / __Hsq;
           }
         else
           {
