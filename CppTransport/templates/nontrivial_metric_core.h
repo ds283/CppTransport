@@ -41,6 +41,8 @@
 
 #include <assert.h>
 #include <cmath>
+#include <complex>
+#include <chrono>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -1759,7 +1761,11 @@ namespace transport
         // extract eigenvalues from this matrix
         // In general Eigen would give us complex results, which we'd like to avoid. That can be done by
         // forcing Eigen to use a self-adjoint matrix, which has guaranteed real eigenvalues
-        auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+        //! auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+
+        // Now use an eigenvalue solver that correctly deals with the non-symettric mass-matrix for non-canoncial models
+        Eigen::EigenSolver<decltype(__mass_matrix)> __solver(__mass_matrix);
+        auto __evalues = __solver.eigenvalues();
 
         // if normalized values requested, divide through by H^2
         if(__norm)
@@ -1780,12 +1786,13 @@ namespace transport
             const auto __Hsq = $HUBBLE_SQ;
 
             // copy eigenvalues into output matrix
-            __E[$^a] = __evalues($^a) / __Hsq;
+            __E[$^a] = std::real(__evalues($^a)) / __Hsq;
+            // Now __evals will be of type std::complex, so we need to report only the real values
           }
         else
           {
             // copy eigenvalues into output matrix
-            __E[FIELDS_FLATTEN($^a)] = __evalues($^a);
+            __E[FIELDS_FLATTEN($^a)] = std::real(__evalues($^a));
           }
       }
 
@@ -1825,6 +1832,12 @@ namespace transport
         system.close_down_workspace();
       }
 
+      struct LongIntTime : public std::exception {
+        const char * what () const throw () {
+            return "Integration batching taking over 1min, killing sample and moving on...";
+        }
+      };
+
 
     namespace $MODEL_impl
       {
@@ -1850,7 +1863,28 @@ namespace transport
 
                 const auto __eps = $EPSILON;
 
-                return (__eps >= 1.0 || __eps < 0.0);
+                auto now = std::chrono::system_clock::now();
+	              auto elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - start_time).count();
+
+                if (elapsed_seconds >= 15 ) // If the integration time is over 15 seconds, then we can kill the sample and move on.
+                {
+                  throw LongIntTime();
+                }
+
+                //! Manual end-of-inflation condition that is hard-coded in for the DBrane model
+                if (__x.first[FLATTEN(0)] <= 0.02)
+                {
+                  return true;
+                }
+                else if (__x.first[FLATTEN(0)] > 1.0)
+                {
+                  return true;
+                }
+                else
+                {
+                  return (__eps >= 1.0 || __eps < 0.0);
+                  // Return the default end of inflation condition, if we hit this before x = 0.02
+                }
               }
 
           private:
@@ -1860,6 +1894,9 @@ namespace transport
             
             //! cache parameter vector
             const flattened_tensor<number>& __params;
+
+            //! start time for the background integration
+            const std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
 
           };
 
