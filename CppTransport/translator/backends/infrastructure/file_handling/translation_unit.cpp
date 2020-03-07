@@ -256,8 +256,8 @@ void translation_unit::populate_output_filenames()
     std::string             core_guard;
     boost::filesystem::path implementation_output;
     std::string             implementation_guard;
-    boost::filesystem::path constructor_output;
-    std::string             constructor_guard;
+    // boost::filesystem::path constructor_output;
+    // std::string             constructor_guard;
 
     if(this->cache.core_out().length() > 0 ) core_output = this->cache.core_out();
     else
@@ -278,13 +278,12 @@ void translation_unit::populate_output_filenames()
     implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
 
     // Produce output filename and guard string for the translated model constructor
-    constructor_output    = this->mangle_output_name(name, "constructor");
-    constructor_guard     = boost::to_upper_copy(leafname(constructor_output.string()));
-    constructor_guard.erase(boost::remove_if(constructor_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), constructor_guard.end());
+    // constructor_output    = this->mangle_output_name(name, "constructor");
+    // constructor_guard     = boost::to_upper_copy(leafname(constructor_output.string()));
+    // constructor_guard.erase(boost::remove_if(constructor_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), constructor_guard.end());
 
     // assign these values to the translator data payload
-    this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard,
-                                                     constructor_output, constructor_guard);
+    this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
 
     // If we are doing sampling, we need to assign the sampling filenames.
     if(this->translator_payload.templates.get_sampling())
@@ -332,7 +331,7 @@ unsigned int translation_unit::apply()
 
     const boost::filesystem::path& core_output = this->translator_payload.get_core_filename();
     const boost::filesystem::path& impl_output = this->translator_payload.get_implementation_filename();
-    const boost::filesystem::path& constructor_output = this->translator_payload.get_constructor_filename();
+    // const boost::filesystem::path& constructor_output = this->translator_payload.get_constructor_filename();
 
     boost::optional< contexted_value<std::string>& > core = this->model.templates.get_core_template();
     if(core)
@@ -374,6 +373,7 @@ unsigned int translation_unit::apply()
         this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
       }
 
+    /*
     std::string constructor_template = "model_constructor_template";
     this->file_errors = 0;
     try
@@ -386,6 +386,7 @@ unsigned int translation_unit::apply()
       msg << NOTIFY_PARSE_TERMINATED << ": " << xe.what();
       this->warn(msg.str());
     }
+    */
 
     // Sampling template file parser & translator
     if (this->translator_payload.templates.get_sampling())
