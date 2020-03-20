@@ -360,10 +360,12 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
         // Put these into a transport::aggregate range one-by-one
         transport::aggregate_range<DataType> ks;
+        std::vector<DataType> ks_vector;
         for (std::size_t i = 0; i != k_conventional.size(); ++i)
         {
             transport::basic_range<DataType> k_temp{k_conventional[i], k_conventional[i], 0, transport::spacing::linear};
             ks += k_temp;
+            ks_vector.push_back(k_conventional[i]);
         }
 
         // Construct a CppT normalised wave-number for the chosen pivot scale using the linearity constant
@@ -502,7 +504,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         nt_pivot = transport::spec_index_deriv(inflation::k_pivot_choice, k_pivots, A_t_spec, false);
 
         ns_pivot_linear = transport::spec_index_deriv(inflation::k_pivot_choice, k_pivots, A_s_spec, true, 1);
-        nt_pivot_linear = transport::spec_index_deriv(inflation::k_pivot_choice, k_pivots, A_s_spec, false, 1);
+        nt_pivot_linear = transport::spec_index_deriv(inflation::k_pivot_choice, k_pivots, A_t_spec, false, 1);
 
         //! Big twopf task for CLASS or CAMB
         // Add a 2pf batcher here to collect the data - this needs a vector to collect the zeta-twopf samples.
@@ -537,8 +539,8 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
             r.push_back( tens_samples_twpf[index] / samples[index] );
         }
 
-        ns_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks, A_s, true);
-        nt_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks, A_t, false);
+        ns_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks_vector, A_s, true);
+        nt_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks_vector, A_t, false);
 
         //! Integrate the tasks created for the equilateral 3-point function above, if we want to
         if (inflation::ThreepfEqui)
@@ -659,7 +661,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
         std::copy(history[i].begin(), history[i].end(), std::back_inserter(FieldVals));
 
-        model->sorted_mass_spectrum(&bckg, FieldVals, nEND-i, false, TempMasses, TempNormEigenValues);
+        model->sorted_mass_spectrum(&bckg, FieldVals, false, TempMasses, TempNormEigenValues);
 
         int k = 0;
         for (auto j = TempNormEigenValues.begin(); j != TempNormEigenValues.end(); ++j, ++k)
