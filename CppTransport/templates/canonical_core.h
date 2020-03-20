@@ -441,7 +441,6 @@ namespace transport
 
     // CLASS $MODEL -- CONSTRUCTORS, DESTRUCTORS
 
-    /*
     template <typename number>
     $MODEL<number>::$MODEL(local_environment& e, argument_cache& a)
       : canonical_model<number>("$UNIQUE_ID", $NUMERIC_VERSION, e, a)
@@ -477,12 +476,11 @@ namespace transport
 
         // Sets the model's cosmology class to the values specified in the model file. This can be overridden
         // at complation time in the model's .cpp file if needed
-        Cosmo.set_H0($COSMO_H0);
-        Cosmo.set_Omega_Bh2($COSMO_OMEGA_B);
-        Cosmo.set_Omega_CDMh2($COSMO_OMEGA_CDM);
-        Cosmo.set_tau($COSMO_TAU);
+        this->Cosmo.set_H0($COSMO_H0);
+        this->Cosmo.set_Omega_Bh2($COSMO_OMEGA_B);
+        this->Cosmo.set_Omega_CDMh2($COSMO_OMEGA_CDM);
+        this->Cosmo.set_tau($COSMO_TAU);
       }
-    */
 
 
     template <typename number>

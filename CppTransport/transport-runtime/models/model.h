@@ -20,7 +20,6 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
-// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -470,11 +469,6 @@ namespace transport
 
         cosmology Cosmo;
 
-        parameters<number> Params;
-
-        initial_conditions<number> InitConds;
-
-
         // POLICY OBJECTS
 
       protected:
@@ -638,7 +632,8 @@ namespace transport
         // set up times at which we wish to sample -- we just need a few scattered between the initial time and the horizon-crossing time
         basic_range<double> times(tk->get_N_initial(), tk->get_N_horizon_crossing(), time_steps);
 
-        initial_conditions<number> new_ics(this);
+        initial_conditions<number> new_ics(tk->get_params(), tk->get_ics().get_vector(), tk->get_N_initial(),
+                                           tk->get_N_subhorizon_efolds());
 
         background_task<number> new_task(new_ics, times);
     
@@ -690,7 +685,7 @@ namespace transport
         if(history.size() > 0)
           {
             // H() is defined to return a number, which must be downcast to double if needed
-            double H = static_cast<double>(this->H(new_ics.get_params(), history.back()));
+            double H = static_cast<double>(this->H(tk->get_params(), history.back()));
 
             // the wavenumbers supplied to the twopf, threepf integration routines
             // use k=1 for the wavenumber which crosses the horizon at time Nstar.

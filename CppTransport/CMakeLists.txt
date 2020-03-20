@@ -324,7 +324,6 @@ SET(TEMPLATES_FILES
   templates/canonical_mpi.h
   templates/nontrivial_metric_core.h
   templates/nontrivial_metric_mpi.h
-  templates/model_constructor_template.h
   templates/cosmosis_module_template.h
   templates/cosmosis_priors_template.ini
   templates/cosmosis_values_template.ini

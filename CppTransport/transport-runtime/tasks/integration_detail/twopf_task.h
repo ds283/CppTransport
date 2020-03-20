@@ -20,7 +20,6 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
-// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -51,10 +50,6 @@ namespace transport
 
         //! Construct a named two-point function task
         twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                   range<double>& t, range<double>& ks, bool adpt_ics=false);
-
-        //! Overload constructor for use with model as a parameter
-        twopf_task(const std::string& nm, model<number>* mdl,
                    range<double>& t, range<double>& ks, bool adpt_ics=false);
 
         //! deserialization constructor
@@ -126,34 +121,6 @@ namespace transport
 
         if(this->get_model()->is_verbose()) kv->write(std::cout);
 	    }
-
-    // overload of a twopf task for use with model instance
-    template <typename number>
-    twopf_task<number>::twopf_task(const std::string& nm, model<number>* mdl,
-                                   range<double>& t, range<double>& ks, bool adpt_ics)
-      : twopf_db_task<number>(nm, mdl, t, adpt_ics)
-      {
-        // the mapping from the provided list of ks to the work list is just one-to-one
-        for(unsigned int j = 0; j < ks.size(); ++j)
-        {
-          this->twopf_db_task<number>::twopf_db->add_record(ks[j]);
-        }
-
-        std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
-        kv->set_tiling(true);
-        kv->set_title(this->get_name());
-
-        kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
-
-        this->compute_horizon_exit_times();
-
-        // write_time_details() should come *after* compute_horizon_exit_times();
-        this->write_time_details(*kv);
-        this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
-
-        if(this->get_model()->is_verbose()) kv->write(std::cout);
-      }
-
 
 
     // deserialization constructor

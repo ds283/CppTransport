@@ -20,7 +20,6 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
-// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -73,9 +72,6 @@ namespace transport
 
         //! Construct a threepf-task
         threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool adpt_ics);
-
-        //! Overload threepf-task constructor for use with model instead of initial conditions
-        threepf_task(const std::string& nm, model<number>* mdl, range<double>& t, bool adpt_ics);
 
         //! deserialization constructor
         threepf_task(const std::string& n, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -221,15 +217,6 @@ namespace transport
         threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar);
 	    }
 
-    // Overload constructor for model files
-    template <typename number>
-    threepf_task<number>::threepf_task(const std::string& nm, model<number>* mdl, range<double>& t, bool adpt_ics)
-            : twopf_db_task<number>(nm, mdl, t, adpt_ics),
-              integrable(true)
-    {
-      threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar);
-    }
-
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
@@ -352,11 +339,6 @@ namespace transport
         std::vector<double> N;
         std::vector<number> log_aH;
         std::vector<number> log_a2H2M;
-
-        if (this->ics.get_params().get_vector().empty())
-        {
-          this->ics.set_params(this->mdl->Params);
-        }
 
         try
           {
@@ -481,12 +463,6 @@ namespace transport
                            range<double>& t, range<double>& ks, bool adpt_ics=false,
                            StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
 
-        // Overload for model instead of initial conditions
-        template <typename StoragePolicy = task_policy_impl::DefaultStoragePolicy, typename TrianglePolicy = task_policy_impl::DefaultCubicTrianglePolicy>
-        threepf_cubic_task(const std::string& nm, model<number>* mdl,
-                           range<double>& t, range<double>& ks, bool adpt_ics=false,
-                           StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
-
         //! Deserialization constructor
         threepf_cubic_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
 
@@ -577,56 +553,6 @@ namespace transport
 	    }
 
 
-    // Overload constructor for model files instead
-    template <typename number>
-    template <typename StoragePolicy, typename TrianglePolicy>
-    threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, model<number>* mdl,
-                                                   range<double>& t, range<double>& ks, bool adpt_ics,
-                                                   StoragePolicy policy, TrianglePolicy triangle)
-            : threepf_task<number>(nm, mdl, t, adpt_ics)
-    {
-      // step through the lattice of k-modes, recording which are viable triangular configurations
-      // we insist on ordering, so i <= j <= k
-      for(unsigned int j = 0; j < ks.size(); ++j)
-      {
-        for(unsigned int k = 0; k < ks.size(); ++k)
-        {
-          for(unsigned int l = 0; l < ks.size(); ++l)
-          {
-            if(triangle(j, k, l, ks[j], ks[k], ks[l]))      // ask policy object whether this is a triangle
-            {
-              boost::optional<threepf_kconfig_database::record_iterator> record = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
-
-              if(!record)  // storage policy declined to store this configuration
-              {
-                this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
-              }
-            }
-          }
-        }
-      }
-
-      // need linear spacing to be integrable
-      if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
-      spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
-
-      std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
-      kv->set_tiling(true);
-      kv->set_title(this->get_name());
-
-      kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
-      kv->insert_back(CPPTRANSPORT_TASK_DATA_THREEPF, boost::lexical_cast<std::string>(this->threepf_db->size()));
-
-      this->compute_horizon_exit_times();
-
-      // write_time_details() should come *after* compute_horizon_exit_times();
-      this->write_time_details(*kv);
-      this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
-
-      if(this->get_model()->is_verbose()) kv->write(std::cout);
-    }
-
-
     template <typename number>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : threepf_task<number>(nm, reader, handle, i)
@@ -658,12 +584,6 @@ namespace transport
         //! with specified storage policies
         template <typename StoragePolicy = task_policy_impl::DefaultStoragePolicy, typename TrianglePolicy = task_policy_impl::DefaultAlphaBetaTrianglePolicy>
         threepf_alphabeta_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
-                               range<double>& kts, range<double>& alphas, range<double>& betas, bool adpt_ics = false,
-                               StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
-
-        // Overload for model class instead of initial conditions
-        template <typename StoragePolicy = task_policy_impl::DefaultStoragePolicy, typename TrianglePolicy = task_policy_impl::DefaultAlphaBetaTrianglePolicy>
-        threepf_alphabeta_task(const std::string& nm, model<number>* mdl, range<double>& t,
                                range<double>& kts, range<double>& alphas, range<double>& betas, bool adpt_ics = false,
                                StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
 
@@ -764,58 +684,6 @@ namespace transport
 
         if(this->get_model()->is_verbose()) kv->write(std::cout);
 	    }
-
-
-    // Overload for model class
-    template <typename number>
-    template <typename StoragePolicy, typename TrianglePolicy>
-    threepf_alphabeta_task<number>::threepf_alphabeta_task(const std::string& nm, model<number>* mdl, range<double>& t,
-                                                           range<double>& kts, range<double>& alphas,
-                                                           range<double>& betas, bool adpt_ics,
-                                                           StoragePolicy policy, TrianglePolicy triangle)
-            : threepf_task<number>(nm, mdl, t, adpt_ics)
-    {
-      for(unsigned int j = 0; j < kts.size(); ++j)
-      {
-        for(unsigned int k = 0; k < alphas.size(); ++k)
-        {
-          for(unsigned int l = 0; l < betas.size(); ++l)
-          {
-            if(triangle(alphas[k], betas[l]))     // ask policy object to decide whether this is a triangle
-            {
-              boost::optional<threepf_kconfig_database::record_iterator> record
-                      = this->threepf_task<number>::threepf_db->add_alphabeta_record(*this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
-
-              if(!record)   // storage policy declined to store this configuration
-              {
-                this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
-              }
-            }
-          }
-        }
-      }
-
-      // need linear spacing to be integrable
-      if(!kts.is_simple_linear() || !alphas.is_simple_linear() || !betas.is_simple_linear()) this->threepf_task<number>::integrable = false;
-      kt_spacing    = (kts.get_max() - kts.get_min()) / kts.get_steps();
-      alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
-      beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();
-
-      std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
-      kv->set_tiling(true);
-      kv->set_title(this->get_name());
-
-      kv->insert_back(CPPTRANSPORT_TASK_DATA_TWOPF, boost::lexical_cast<std::string>(this->twopf_db->size()));
-      kv->insert_back(CPPTRANSPORT_TASK_DATA_THREEPF, boost::lexical_cast<std::string>(this->threepf_db->size()));
-
-      this->compute_horizon_exit_times();
-
-      // write_time_details() should come *after* compute_horizon_exit_times();
-      this->write_time_details(*kv);
-      this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
-
-      if(this->get_model()->is_verbose()) kv->write(std::cout);
-    }
 
 
     template <typename number>

@@ -84,8 +84,7 @@ class translator_data
 
     //! set core and implementation paths
     void set_core_implementation(const boost::filesystem::path& co, const std::string& cg,
-                                 const boost::filesystem::path& io, const std::string& ig,
-                                 const boost::filesystem::path& cono, const std::string& cong);
+                                 const boost::filesystem::path& io, const std::string& ig);
 
     void set_sampling_output(const boost::filesystem::path& so, const std::string& sg,
                              const boost::filesystem::path& sv, const boost::filesystem::path& sp,

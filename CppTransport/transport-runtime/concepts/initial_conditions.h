@@ -20,7 +20,6 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
-// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 
@@ -88,12 +87,6 @@ namespace transport
         initial_conditions(const std::string& nm, const parameters<number>& p, const std::initializer_list<number> i,
                            double Nini, double Npre);
 
-        // Overload for model constructor initial conditions with no arguments for model constructor
-        initial_conditions() = default;
-
-        // Overload again for model constructor initial conditions block
-        explicit initial_conditions(model<number>* model);
-
         // ----
 
         //! Construct anonymized initial conditions from directly-supplied data
@@ -156,23 +149,11 @@ namespace transport
         //! Return name of this 'package'
         const std::string& get_name() const { return(this->name); }
 
-        // Set the name of this initial conditions block
-        void set_name(const std::string& Name) { this->name = Name; }
-
         //! Return parameters associated with these initial conditions
         const parameters<number>& get_params() const { return(this->params); }
 
-        //! Return parameters associated with these initial conditions
-        parameters<number>& get_params() { return(this->params); }
-
-        //! Return parameters associated with these initial conditions
-        void set_params(const parameters<number> Params) { this->params = Params; }
-
         //! Return model associated with this package
         model<number>* get_model() const { return(this->mdl); }
-
-        // Set the model associated with this initial conditions block, for use with model constructor
-        void set_model(model<number>* Mdl) { this->mdl = Mdl; }
 
 
 		    // INITIAL CONDITIONS HANDLING
@@ -182,17 +163,11 @@ namespace transport
         //! Return std::vector of initial conditions
         const std::vector<number>& get_vector() const { return(this->ics); }
 
-        // Set the vector of initial conditions
-        void set_vector(const std::vector<number>& Ics ) { this->ics = Ics; }
-
-		    //! Return std::vector of initial conditions, offset by N e-folds from the raw ones
-		    std::vector<number> get_offset_vector(double N) const;
+        //! Return std::vector of initial conditions, offset by N e-folds from the raw ones
+        std::vector<number> get_offset_vector(double N) const;
 
         //! Return relative time of horizon-crossing
         double get_N_subhorion_efolds() const { return(this->N_sub_horizon); }
-
-        // Set the value of the subhorizon efolds, for use with default model constructor
-        void set_N_subhorizon_efolds(number N_sub) { this->N_sub_horizon = static_cast<double>(N_sub); }
 
 
 		    // SPECIAL TIMES
@@ -201,8 +176,6 @@ namespace transport
 
         //! Return initial time
         double get_N_initial() const { return(this->N_init); }
-
-        void set_N_initial(number Ninit) { this->N_init = static_cast<double>(Ninit); }
 
         //! Return horizon-crossing time for the k=1 mode
         double get_N_horizon_crossing() const { return(this->N_init + this->N_sub_horizon); }
@@ -365,30 +338,6 @@ namespace transport
         // call supplied finder function to correctly offset these ics
         mdl->offset_ics(p, validated_ics, ics, Nini, Ncross, Npre);
       }
-
-
-    // Overload for new model constructor way
-    template <typename number>
-    initial_conditions<number>::initial_conditions(model<number>* model)
-      : name(random_string()),
-        mdl(model),
-        params(model->Params),
-        N_init(model->InitConds.get_N_initial()),
-        N_sub_horizon(model->InitConds.get_N_subhorion_efolds())
-    {
-      assert(model != nullptr);
-      if(model == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
-
-      // validate supplied initial conditions - we rely on the validator to throw
-      // an exception if the supplied number of ics is incorrect
-      std::vector<number> input_ics;
-      input_ics.reserve(mdl->InitConds.get_vector().size());
-      std::copy(model->InitConds.get_vector().begin(), model->InitConds.get_vector().end(), std::back_inserter(input_ics));
-
-      mdl->validate_ics(params, input_ics, ics);
-      this->params.set_params(mdl->Params.get_vector());
-      this->params = model->Params;
-    }
 
 
     template <typename number>
