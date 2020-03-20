@@ -28,6 +28,7 @@
 //
 // @license: GPL-2
 // @contributor: David Seery <D.Seery@sussex.ac.uk>
+// @contributor: Alessandro Maraio <am963@sussex.ac.uk>
 // --@@
 //
 // DO NOT EDIT: GENERATED AUTOMATICALLY BY $TOOL $VERSION
@@ -40,6 +41,7 @@
 
 #include <assert.h>
 #include <cmath>
+#include <complex>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -1932,10 +1934,16 @@ number $MODEL<number>::make_twopf_tensor_si_ic(unsigned int __i, unsigned int __
 
         // extract eigenvalues from this matrix
         // In general Eigen would give us complex results, which we'd like to avoid. That can be done by
-        // forcing Eigen to use a self-adjoint matrix, which has guaranteed real eigenvalues.
+        // forcing Eigen to use a self-adjoint matrix, which has guaranteed real eigenvalues
+
         // Also, note that Eigen gives us back the results as an Eigen vector, not a flattened_tensor,
         // so we have to copy between the two
-        auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+
+        // auto __evalues = __mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+
+        // Now use an eigenvalue solver that correctly deals with the non-symmetric mass-matrix for non-canonical models
+        Eigen::EigenSolver<decltype(__mass_matrix)> __solver(__mass_matrix);
+        auto __evalues = __solver.eigenvalues();
 
         // if normalized values requested, divide through by H^2
         if(__norm)
@@ -1956,14 +1964,14 @@ number $MODEL<number>::make_twopf_tensor_si_ic(unsigned int __i, unsigned int __
             const auto __Hsq = $HUBBLE_SQ;
 
             // copy eigenvalues into output matrix
-            __E[$^a] = __evalues($^a) / __Hsq;
+            __E[$^a] = std::real(__evalues($^a)) / __Hsq;
 
             __M[FIELDS_FLATTEN($^a,$_b)] =  __M[FIELDS_FLATTEN($^a,$_b)] / __Hsq;
           }
         else
           {
             // copy eigenvalues into output matrix
-            __E[FIELDS_FLATTEN($^a)] = __evalues($^a);
+            __E[FIELDS_FLATTEN($^a)] = std::real(__evalues($^a));
           }
       }
 
