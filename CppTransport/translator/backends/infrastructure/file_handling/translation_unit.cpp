@@ -502,7 +502,7 @@ boost::filesystem::path translation_unit::mangle_output_name(const boost::filesy
 
     if (!this->translator_payload.templates.get_sampling())
     {
-      if (tag == "core" || tag == "mpi" || tag == "constructor" )
+      if (tag == "core" || tag == "mpi" )
       {
         boost::filesystem::path h_extension(".h");
 
@@ -520,7 +520,7 @@ boost::filesystem::path translation_unit::mangle_output_name(const boost::filesy
       boost::filesystem::path build_dir(build_path);
       boost::filesystem::create_directory(build_dir);
 
-      if (tag == "core" || tag == "mpi" || tag == "constructor" )
+      if (tag == "core" || tag == "mpi" )
       {
         boost::filesystem::path h_extension(".h");
 
