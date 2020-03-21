@@ -106,12 +106,12 @@ samples = loadMCSamples(str(string_out_folder) + str(string_out), settings = ana
 print('\n')
 print(r'Parameters at 68% limit table')
 print(samples.getTable(limit=1).tableTex())
-samples.getTable(limit=1).write('AttractorModel68Interval.tex')
+samples.getTable(limit=1).write('GetDist_$MODEL_68Interval.tex')
 print('\n\n')
 
 print(r'Parameters at 95% limit table')
 print(samples.getTable(limit=2).tableTex())
-samples.getTable(limit=2).write('AttractorModel95Interval.tex')
+samples.getTable(limit=2).write('GetDist_$MODEL_95Interval.tex')
 print('\n\n')
 
 # Generate a triangle plot for the model and save it to current folder.
