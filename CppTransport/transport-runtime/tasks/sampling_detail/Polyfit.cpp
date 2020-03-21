@@ -44,10 +44,9 @@ namespace transport
 
   // Set-up a function that fits an nDegree polynomial to equal-sized vectors oX and oY
   template <typename number = default_number_type>
-  std::vector<number> polyfit(const std::vector <number> &oX,
-                              const std::vector <number> &oY, int nDegree)
+  std::vector<number> polyfit(const std::vector<double>& oX,
+                              const std::vector<number>& oY, int nDegree)
   {
-
     using namespace boost::numeric::ublas;
 
     if (oX.size() != oY.size()) throw std::invalid_argument("X and Y vector sizes do not match");

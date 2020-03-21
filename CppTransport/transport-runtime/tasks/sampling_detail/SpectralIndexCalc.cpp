@@ -41,19 +41,19 @@ namespace transport
 {
 
   template <typename number = default_number_type>
-  number spec_index_deriv(number k_value, std::vector <number> &k, std::vector <number> &A,
+  number spec_index_deriv(double k_value, std::vector<double>& k, std::vector<number>& A,
                           bool scalar, int nDegree = 2)
   {
-
-    std::vector <number> coeffs = polyfit<number>(vector_logger<number>(k), vector_logger<number>(A), nDegree);
+    std::vector<number> coeffs = polyfit<number>(vector_logger<double>(k), vector_logger<number>(A), nDegree);
     number spectral_index = 0.0;
+
     for (std::size_t i = 1; i != coeffs.size(); i++)
     {
       number power = i - 1.0;
       spectral_index += i * std::pow(std::log(k_value), power) * coeffs[i];
     }
 
-    if (scalar) spectral_index++;
+    if(scalar) spectral_index++;
 
     return spectral_index;
   }

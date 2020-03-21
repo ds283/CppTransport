@@ -36,15 +36,15 @@
 namespace transport
   {
 
-    template <typename number = default_number_type>
+    template <typename RangeType=default_number_type, typename SamplesType=default_number_type>
     class Dispersion
       {
 
         // Constructors and destructors
         public:
           // Constructor for transport::basic_range k samples
-          Dispersion(basic_range<number>& k_samples, basic_range<number>& time_samples,
-                     std::vector<number>& spectrum_samples)
+          Dispersion(basic_range<RangeType>& k_samples, basic_range<RangeType>& time_samples,
+                     std::vector<SamplesType>& spectrum_samples)
                     : k_size(k_samples.size()),
                       time_size(time_samples.size()),
                       samples(spectrum_samples)
@@ -52,8 +52,8 @@ namespace transport
           };
 
           // Constructor for transport::aggregate_range k samples
-          Dispersion(aggregate_range<number>& k_samples, basic_range<number>& time_samples,
-                     std::vector<number>& spectrum_samples)
+          Dispersion(aggregate_range<RangeType>& k_samples, basic_range<RangeType>& time_samples,
+                     std::vector<SamplesType>& spectrum_samples)
                     : k_size(k_samples.size()),
                       time_size(time_samples.size()),
                       samples(spectrum_samples)
@@ -61,7 +61,7 @@ namespace transport
           };
 
           // move constructor
-          Dispersion(Dispersion<number>&&) = default;
+          Dispersion(Dispersion<RangeType, SamplesType>&&) = default;
 
           // destructor
           ~Dispersion() = default;
@@ -75,7 +75,7 @@ namespace transport
         protected:
           size_t k_size;
           size_t time_size;
-          std::vector<number>& samples;
+          std::vector<SamplesType>& samples;
       };
 
   } // namespace transport
