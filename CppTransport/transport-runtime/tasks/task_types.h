@@ -26,6 +26,9 @@
 #ifndef CPPTRANSPORT_TASK_TYPES_H
 #define CPPTRANSPORT_TASK_TYPES_H
 
+
+#include <stdexcept>
+
 namespace transport
   {
 
@@ -53,6 +56,9 @@ namespace transport
 
             case task_type::output:
               return std::string(CPPTRANSPORT_TASK_TYPE_OUTPUT);
+
+            default:
+              throw std::invalid_argument("Invalid task_type");
           }
       }
 
@@ -66,6 +72,9 @@ namespace transport
 
             case integration_task_type::threepf:
               return std::string(CPPTRANSPORT_TASK_TYPE_INTEGRATION_THREEPF);
+
+            default:
+              throw std::invalid_argument("Invalid integration_task_type");
           }
       }
 
@@ -82,6 +91,9 @@ namespace transport
 
             case postintegration_task_type::fNL:
               return std::string(CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION_FNL);
+
+            default:
+              throw std::invalid_argument("Invalid postintegration_task_type");
           }
       }
 

@@ -28,6 +28,8 @@
 #define CPPTRANSPORT_LINE_VALUES_H
 
 
+#include <stdexcept>
+
 #include "transport-runtime/messages.h"
 #include "transport-runtime/exceptions.h"
 
@@ -67,6 +69,7 @@ namespace transport
                 case value_type::mass:                 return std::string{CPPTRANSPORT_VALUE_NON_LATEX_MASS};
 						    case value_type::time:                 return std::string{CPPTRANSPORT_VALUE_NON_LATEX_SECONDS};
 						    case value_type::steps:                return std::string{CPPTRANSPORT_VALUE_NON_LATEX_STEPS};
+                default: throw std::invalid_argument("Invalid value_type");
               }
 					}
 
@@ -84,6 +87,7 @@ namespace transport
                 case value_type::mass:                 return std::string{CPPTRANSPORT_VALUE_LATEX_MASS};
 		            case value_type::time:                 return std::string{CPPTRANSPORT_VALUE_LATEX_SECONDS};
 		            case value_type::steps:                return std::string{CPPTRANSPORT_VALUE_LATEX_STEPS};
+                default: throw std::invalid_argument("Invalid value_type");
               }
 			    }
 

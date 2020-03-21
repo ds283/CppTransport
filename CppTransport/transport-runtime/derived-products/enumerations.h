@@ -27,6 +27,8 @@
 #define CPPTRANSPORT_DERIVED_PRODUCTS_ENUMERATIONS_H
 
 
+#include <stdexcept>
+
 namespace transport
   {
 
@@ -53,6 +55,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_TWOPF_TYPE_IMAGINARY};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid twopf_type");
               }
           }
 
@@ -77,6 +82,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_DOT_TYPE_MOMENTA};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid dot_type");
               }
           }
 
@@ -101,6 +109,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_KLABEL_TYPE_COMOVING};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid klabel_type");
               }
           }
 
@@ -145,6 +156,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_BACKGROUND_QUANTITY_NORM_MASS_SPECTRUM};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid background_quantity");
               }
           }
 
@@ -169,6 +183,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_LINE_TYPE_CONTINUOUS};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid data_line_type");
               }
           }
 
@@ -235,6 +252,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_LEGEND_POS_RIGHT};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid legend_position");
               }
           }
 
@@ -264,6 +284,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_AXIS_CLASS_3PFCONFIG};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid axis_class");
               }
           }
 
@@ -331,6 +354,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_AXIS_VALUE_UNSET};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid axis_value");
               }
           }
 
@@ -397,6 +423,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_VALUE_TYPE_STEPS};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid value_type");
               }
           }
 
@@ -421,6 +450,9 @@ namespace transport
                   {
                     return std::string{CPPTRANSPORT_ANALYSIS_TYPE_3PF};
                   }
+
+                default:
+                  throw std::invalid_argument("Invalid analysis_type");
               }
           }
 

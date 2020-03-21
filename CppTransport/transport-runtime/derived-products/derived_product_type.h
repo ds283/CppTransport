@@ -28,7 +28,7 @@
 
 
 #include <string>
-
+#include <stdexcept>
 
 #include "transport-runtime/messages.h"
 
@@ -55,6 +55,9 @@ namespace transport
 
                 case derived_product_type::line_table:
                   return std::string(CPPTRANSPORT_DERIVED_PRODUCT_LINE_TABLE);
+
+                default:
+                  throw std::invalid_argument("Invalid derived_product_type");
               }
           }
 

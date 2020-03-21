@@ -32,6 +32,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 #include "transport-runtime/tasks/task.h"
 #include "transport-runtime/derived-products/derived-content/correlation-functions/template_types.h"
@@ -149,6 +150,9 @@ namespace transport
 
                 case derived_data::bispectrum_template::DBI:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE);
+
+                default:
+                  throw std::invalid_argument("Invalid bispectrum_template type");
               }
           }
 

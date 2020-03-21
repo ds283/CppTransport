@@ -27,6 +27,9 @@
 #ifndef CPPTRANSPORT_TEMPLATE_TYPES_H
 #define CPPTRANSPORT_TEMPLATE_TYPES_H
 
+
+#include <stdexcept>
+
 #include "transport-runtime/localizations/messages_en.h"
 
 
@@ -46,6 +49,7 @@ namespace transport
 						    case bispectrum_template::equilateral:  return(std::string(CPPTRANSPORT_FNL_EQUI));
 						    case bispectrum_template::orthogonal: 	return(std::string(CPPTRANSPORT_FNL_ORTHO));
                 case bispectrum_template::DBI:   				return(std::string(CPPTRANSPORT_FNL_DBI));
+                default: throw std::invalid_argument("Invalid bispectrum_template type");
 							}
 					}
 
