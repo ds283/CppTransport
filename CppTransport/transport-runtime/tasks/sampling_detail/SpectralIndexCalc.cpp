@@ -24,6 +24,11 @@
 // --@@
 //
 
+
+#ifndef CPPTRANSPORT_SPECTRALINDEXCALC_CPP
+#define CPPTRANSPORT_SPECTRALINDEXCALC_CPP
+
+
 #include <vector>
 #include <cmath>
 
@@ -31,11 +36,14 @@
 #include "transport-runtime/tasks/sampling_detail/Logspace.cpp"
 #include "transport-runtime/tasks/sampling_detail/Polyfit.cpp"
 
-namespace transport {
+
+namespace transport
+{
 
   template <typename number = default_number_type>
   number spec_index_deriv(number k_value, std::vector <number> &k, std::vector <number> &A,
-                          bool scalar, int nDegree = 2) {
+                          bool scalar, int nDegree = 2)
+  {
 
     std::vector <number> coeffs = polyfit<number>(vector_logger<number>(k), vector_logger<number>(A), nDegree);
     number spectral_index = 0.0;
@@ -51,3 +59,6 @@ namespace transport {
   }
 
 }  // namespace transport
+
+
+#endif //CPPTRANSPORT_SPECTRALINDEXCALC_CPP

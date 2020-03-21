@@ -24,15 +24,22 @@
 // --@@
 //
 
+
+#ifndef CPPTRANSPORT_LOGSPACE_CPP
+#define CPPTRANSPORT_LOGSPACE_CPP
+
+
 #include <vector>
 #include <cmath>
 #include <algorithm>
 #include "transport-runtime/defaults.h"
 
+
 namespace transport{
 
   template <typename number = default_number_type>
-  class Logspace {
+  class Logspace
+  {
 
     public:
       Logspace(number first, number base) : curValue(first), base(base) {}
@@ -49,7 +56,8 @@ namespace transport{
   };
 
   template <typename number = default_number_type>
-  std::vector<number> pyLogspace (number start, number stop, int num, number base = 10) {
+  std::vector<number> pyLogspace (number start, number stop, int num, number base = 10)
+  {
     number logStart = pow(base, start);
     number logBase = pow(base, (stop-start)/num);
 
@@ -74,3 +82,6 @@ namespace transport{
   }
 
 } // namespace transport
+
+
+#endif //CPPTRANSPORT_LOGSPACE_CPP

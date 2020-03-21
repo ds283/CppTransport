@@ -24,6 +24,11 @@
 // --@@
 //
 
+
+#ifndef CPPTRANSPORT_NEXIT_PHYS_K_CPP
+#define CPPTRANSPORT_NEXIT_PHYS_K_CPP
+
+
 #include <cmath>
 #include <string>
 #include "transport-runtime/defaults.h"
@@ -31,12 +36,15 @@
 #include "transport-runtime/tasks/integration_detail/twopf_db_task.h"
 
 
-namespace transport {
+namespace transport
+{
 
     // definition of tolerance for the bisection of physical k values
     template <typename number = default_number_type>
-    struct ToleranceCondition {
-        bool operator () (number min, number max) {
+    struct ToleranceCondition
+    {
+        bool operator () (number min, number max)
+        {
           return abs(min - max) <= 1E-12;
         }
     };
@@ -62,3 +70,6 @@ namespace transport {
 
 
 } // namespace transport
+
+
+#endif //CPPTRANSPORT_NEXIT_PHYS_K_CPP

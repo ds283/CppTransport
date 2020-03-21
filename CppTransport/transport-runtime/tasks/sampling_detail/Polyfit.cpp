@@ -24,6 +24,11 @@
 // --@@
 //
 
+
+#ifndef CPPTRANSPORT_POLYFIT_CPP
+#define CPPTRANSPORT_POLYFIT_CPP
+
+
 #include <vector>
 #include <boost/range/adaptors.hpp>
 #include <boost/math/tools/roots.hpp>
@@ -33,12 +38,15 @@
 
 #include "transport-runtime/defaults.h"
 
-namespace transport {
+
+namespace transport
+{
 
   // Set-up a function that fits an nDegree polynomial to equal-sized vectors oX and oY
   template <typename number = default_number_type>
   std::vector<number> polyfit(const std::vector <number> &oX,
-                              const std::vector <number> &oY, int nDegree) {
+                              const std::vector <number> &oY, int nDegree)
+  {
 
     using namespace boost::numeric::ublas;
 
@@ -92,3 +100,6 @@ namespace transport {
   }
 
 }  // namespace transport
+
+
+#endif //CPPTRANSPORT_POLYFIT_CPP

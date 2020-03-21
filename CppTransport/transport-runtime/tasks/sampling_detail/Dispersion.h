@@ -29,54 +29,56 @@
 #define CPPTRANSPORT_DISPERSION_H
 
 #include <vector>
+
 #include "transport-runtime/defaults.h"
 
 
-namespace transport {
+namespace transport
+  {
 
-template <typename number = default_number_type>
-class Dispersion {
+    template <typename number = default_number_type>
+    class Dispersion
+      {
 
-    // Constructors and Destructors
-    public:
-        // Constructor for transport::basic_range k samples
-        //template <typename number = default_number_type>
-        Dispersion(basic_range<number>& k_samples, basic_range<number>& time_samples,
-                   std::vector<number>& spectrum_samples)
-                  : k_size(k_samples.size()),
-                    time_size(time_samples.size()),
-                    samples(spectrum_samples)
-        {
-        };
+        // Constructors and destructors
+        public:
+          // Constructor for transport::basic_range k samples
+          Dispersion(basic_range<number>& k_samples, basic_range<number>& time_samples,
+                     std::vector<number>& spectrum_samples)
+                    : k_size(k_samples.size()),
+                      time_size(time_samples.size()),
+                      samples(spectrum_samples)
+          {
+          };
 
-        // Constructor for transport::aggregate_range k samples
-        //template <typename number = default_number_type>
-        Dispersion(aggregate_range<number>& k_samples, basic_range<number>& time_samples,
-                   std::vector<number>& spectrum_samples)
-                  : k_size(k_samples.size()),
-                    time_size(time_samples.size()),
-                    samples(spectrum_samples)
-        {
-        };
+          // Constructor for transport::aggregate_range k samples
+          Dispersion(aggregate_range<number>& k_samples, basic_range<number>& time_samples,
+                     std::vector<number>& spectrum_samples)
+                    : k_size(k_samples.size()),
+                      time_size(time_samples.size()),
+                      samples(spectrum_samples)
+          {
+          };
 
-        // move constructor
-        Dispersion(Dispersion<number>&&) = default;
+          // move constructor
+          Dispersion(Dispersion<number>&&) = default;
 
-        // destructor
-        ~Dispersion() = default;
+          // destructor
+          ~Dispersion() = default;
 
-    // Dispersion calculation
-    public:
-        bool dispersion_check();
+        // Dispersion calculation
+        public:
+          bool dispersion_check();
 
 
-    // Internal data
-    protected:
-        size_t k_size;
-        size_t time_size;
-        std::vector<number>& samples;
-    };
+        // Internal data
+        protected:
+          size_t k_size;
+          size_t time_size;
+          std::vector<number>& samples;
+      };
 
-} // namespace transport
+  } // namespace transport
+
 
 #endif //CPPTRANSPORT_DISPERSION_H
