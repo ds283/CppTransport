@@ -25,6 +25,7 @@
 
 
 #include <ctype.h>
+#include <stdexcept>
 
 #include "index_class.h"
 #include "msg_en.h"
@@ -57,5 +58,6 @@ std::string to_string(index_class c)
         case index_class::parameter: return LABEL_INDEX_CLASS_PARAMETER;
         case index_class::field_only: return LABEL_INDEX_CLASS_FIELD;
         case index_class::full: return LABEL_INDEX_CLASS_FULL;
+        default: throw std::invalid_argument("Invalid index class");
       }
   }

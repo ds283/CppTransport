@@ -29,6 +29,7 @@
 
 
 #include <map>
+#include <stdexcept>
 
 #include "y_common.h"
 #include "semantic_values.h"
@@ -105,6 +106,7 @@ inline std::string format(model_type T)
       {
         case model_type::canonical: return "canonical"; break;
         case model_type::nontrivial_metric: return "nontrivial_metric"; break;
+        default: throw std::invalid_argument("Invalid model type");
       }
   }
 

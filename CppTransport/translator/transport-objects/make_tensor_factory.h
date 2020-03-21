@@ -27,6 +27,8 @@
 #define CPPTRANSPORT_MAKE_FACTORY_H
 
 
+#include <stdexcept>
+
 #include "backend_data.h"
 
 #include "canonical/tensor_factory.h"
@@ -47,6 +49,9 @@ inline std::unique_ptr<tensor_factory> make_tensor_factory(translator_data& p, e
           {
             return std::make_unique<nontrivial_metric::tensor_factory>(p, cache);
           }
+
+        default:
+          throw std::invalid_argument("Invalid lagrangian type");
       }
 
     // at the moment, nothing to do - only canonical models implemented

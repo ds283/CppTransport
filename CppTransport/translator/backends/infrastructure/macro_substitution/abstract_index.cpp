@@ -24,6 +24,8 @@
 //
 
 
+#include <stdexcept>
+
 #include "abstract_index.h"
 
 
@@ -69,6 +71,9 @@ unsigned int abstract_index::numeric_range() const
           {
             return(this->params);
           }
+
+        default:
+          throw std::invalid_argument("Invalid classification");
       }
   }
 

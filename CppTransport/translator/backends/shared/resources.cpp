@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <functional>
+#include <stdexcept>
 
 #include "resources.h"
 #include "concepts/resource_manager.h"
@@ -140,6 +141,7 @@ namespace macro_packages
           {
             case model_type::canonical: return 0U;
             case model_type::nontrivial_metric: return RESOURCES::DV_TOTAL_INDICES;
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 
@@ -150,6 +152,7 @@ namespace macro_packages
           {
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric: return std::vector<index_class>{ index_class::field_only };
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 
@@ -178,6 +181,7 @@ namespace macro_packages
           {
             case model_type::canonical: return 0U;
             case model_type::nontrivial_metric: return RESOURCES::DDV_TOTAL_INDICES;
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 
@@ -189,6 +193,7 @@ namespace macro_packages
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
               return std::vector<index_class>{ index_class::field_only, index_class::field_only };
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 
@@ -217,6 +222,7 @@ namespace macro_packages
           {
             case model_type::canonical: return 0U;
             case model_type::nontrivial_metric: return RESOURCES::DDDV_TOTAL_INDICES;
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 
@@ -228,6 +234,7 @@ namespace macro_packages
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
               return std::vector<index_class>{ index_class::field_only, index_class::field_only, index_class::field_only };
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 
@@ -273,6 +280,7 @@ namespace macro_packages
           {
             case model_type::canonical: return 0U;
             case model_type::nontrivial_metric: return RESOURCE_INDICES::METRIC_INDICES;
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
     
@@ -284,6 +292,7 @@ namespace macro_packages
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
               return std::vector<index_class>{ index_class::field_only, index_class::field_only};
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 
@@ -312,6 +321,7 @@ namespace macro_packages
           {
             case model_type::canonical: return 0U;
             case model_type::nontrivial_metric: return RESOURCES::RIEMANN_A2_TOTAL_INDICES;
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 
@@ -323,6 +333,7 @@ namespace macro_packages
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
               return std::vector<index_class>{ index_class::field_only, index_class::field_only };
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
     
@@ -351,6 +362,7 @@ namespace macro_packages
           {
             case model_type::canonical: return 0U;
             case model_type::nontrivial_metric: return RESOURCES::RIEMANN_A3_TOTAL_INDICES;
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
     
@@ -362,6 +374,7 @@ namespace macro_packages
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
               return std::vector<index_class>{ index_class::field_only, index_class::field_only, index_class::field_only };
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
     
@@ -390,6 +403,7 @@ namespace macro_packages
           {
             case model_type::canonical: return 0U;
             case model_type::nontrivial_metric: return RESOURCES::RIEMANN_B3_TOTAL_INDICES;
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
     
@@ -401,6 +415,7 @@ namespace macro_packages
             case model_type::canonical: return boost::none;
             case model_type::nontrivial_metric:
               return std::vector<index_class>{ index_class::field_only, index_class::field_only, index_class::field_only };
+            default: throw std::invalid_argument("Invalid model type");
           }
       }
 

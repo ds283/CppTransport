@@ -52,6 +52,7 @@ inline std::string to_string(variance v)
         case variance::none: return std::string{};
         case variance::contravariant: return std::string{ "^" };
         case variance::covariant: return std::string{ "_" };
+        default: throw std::invalid_argument("Invalid variance");
       }
   }
 
