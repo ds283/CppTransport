@@ -31,6 +31,7 @@
 #include "transport-runtime/tasks/integration_detail/background_task.h"
 #include "transport-runtime/tasks/integration_detail/twopf_task.h"
 #include "transport-runtime/tasks/integration_detail/threepf_task.h"
+#include "transport-runtime/tasks/integration_detail/CMB_tasks.h"
 
 
 #endif //CPPTRANSPORT_INTEGRATION_TASKS_H

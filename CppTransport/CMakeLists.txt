@@ -1284,6 +1284,7 @@ SET(TRANSPORT_RUNTIME_TASKS_INTEGRATION_DETAIL_FILES
   transport-runtime/tasks/integration_detail/threepf_task.h
   transport-runtime/tasks/integration_detail/twopf_db_task.h
   transport-runtime/tasks/integration_detail/twopf_task.h
+  transport-runtime/tasks/integration_detail/CMB_tasks.h
   )
 
 SET(TRANSPORT_RUNTIME_TASKS_POSTINTEGRATION_DETAIL_FILES
