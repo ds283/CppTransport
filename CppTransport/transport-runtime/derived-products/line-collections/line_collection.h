@@ -262,7 +262,7 @@ namespace transport
             //! add a vector of derived lines (eg. produced by operator+ overload between derived lines)
             virtual line_collection<number>& operator+=(const std::vector< std::shared_ptr< derived_line<number> > > list)
               {
-                for(const std::shared_ptr< derived_line<number> >& p : list) this->add_line(*p);
+                for(const auto& p : list) this->add_line(*p);
                 return *this;
               }
 
@@ -403,7 +403,7 @@ namespace transport
 			    {
 		        lines.clear();
 
-		        for(const std::unique_ptr< derived_line<number> >& line : obj.lines)
+		        for(const auto& line : obj.lines)
 			        {
 		            lines.emplace_back(line->clone());
 			        }
@@ -448,7 +448,7 @@ namespace transport
 		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags,
                                                     std::list< data_line<number> >& derived_lines, slave_message_buffer& messages) const
 			    {
-            for(const std::unique_ptr< derived_line<number> >& line : this->lines)
+            for(const auto& line : this->lines)
 			        {
 		            line->derive_lines(pipe, derived_lines, tags, messages);
 			        }
@@ -468,7 +468,7 @@ namespace transport
 		        std::vector< typename data_line<number>::point_list > data;
 		        std::vector<bool> data_absy;
 
-            for(const data_line<number>& line : input)
+            for(const auto& line : input)
 			        {
 		            const auto& line_data = line.get_data_points();
 
@@ -658,7 +658,7 @@ namespace transport
             list.clear();
 
             // collect data from each derived_line
-            for(const std::unique_ptr< derived_line<number> >& line : this->lines)
+            for(const auto& line : this->lines)
               {
                 list.push_back(line->get_parent_task());
               }
@@ -676,7 +676,7 @@ namespace transport
           {
             std::list<std::string> groups;
 
-            for(const data_line<number>& line : list)
+            for(const auto& line : list)
               {
                 std::list<std::string> line_groups = line.get_parent_groups();
                 groups.merge(line_groups);
@@ -698,7 +698,7 @@ namespace transport
 		        writer[CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
 
 		        Json::Value line_array(Json::arrayValue);
-            for(const std::unique_ptr< derived_line<number> >& line : this->lines)
+            for(const auto& line : this->lines)
 			        {
 		            Json::Value line_element(Json::objectValue);
 		            line->serialize(line_element);
@@ -730,7 +730,7 @@ namespace transport
 		        out << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << '\n' << '\n';
 
 				    unsigned int line_counter = 1;
-				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); ++t, ++line_counter)
+				    for(auto t = this->lines.begin(); t != this->lines.end(); ++t, ++line_counter)
 					    {
 						    out << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LINE << " " << line_counter << ":" << '\n';
 				        (*t)->write(out);
