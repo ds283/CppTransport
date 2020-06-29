@@ -176,48 +176,51 @@ namespace cpp
         const auto& base_expr = expr.op(0);
         const auto& exponent_expr = expr.op(1);
     
-        // perform use-counting on exponent, which is necessary since its values may have been
+        // perform use-counting on base and exponent exponent, which is necessary since their values may have been
         // used elsewhere in the CSE tree, even if it is an integer that we will unroll and not use explicitly
+        std::string base;
+        if(use_count) base = this->get_symbol_with_use_count(base_expr);
+        else base = this->get_symbol_without_use_count(base_expr);
+
         std::string exponent;
         if(use_count) exponent = this->get_symbol_with_use_count(exponent_expr);
         else exponent = this->get_symbol_without_use_count(exponent_expr);
 
-        if(GiNaC::is_a<GiNaC::numeric>(exponent_expr))
+        // if exponent is not an integer, emit a standard power directive
+        if(!GiNaC::is_a<GiNaC::numeric>(exponent_expr))
           {
-            const auto& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exponent_expr);
-        
-            std::string base;
-            if(use_count) base = this->get_symbol_with_use_count(expr.op(0));
-            else base = this->get_symbol_without_use_count(expr.op(0));
-
-            if(GiNaC::is_integer(exp_numeric))
-              {
-                if(GiNaC::is_nonneg_integer(exp_numeric))
-                  {
-                    if(exp_numeric.to_int() == 0) out << "1.0";
-                    else if(exp_numeric.to_int() == 1) out << unwrap_power(base, base_expr, 1);
-                    else if(exp_numeric.to_int() == 2) out << "(" << unwrap_power(base, base_expr, 2) << ")";
-                    else if(exp_numeric.to_int() == 3) out << "(" << unwrap_power(base, base_expr, 3) << ")";
-                    else if(exp_numeric.to_int() == 4) out << "(" << unwrap_power(base, base_expr, 4) << ")";
-                    else out << "std::pow(" << base << "," << exp_numeric.to_int() << ")";
-                  }
-                else  // negative integer
-                  {
-                    if(exp_numeric.to_int() == -0) out << "1.0";
-                    else if(exp_numeric.to_int() == -1) out << "1.0/" << unwrap_power(base, base_expr, 1);
-                    else if(exp_numeric.to_int() == -2) out << "1.0/" << "(" << unwrap_power(base, base_expr, 2) << ")";
-                    else if(exp_numeric.to_int() == -3) out << "1.0/" << "(" << unwrap_power(base, base_expr, 3) << ")";
-                    else if(exp_numeric.to_int() == -4) out << "1.0/" << "(" << unwrap_power(base, base_expr, 4) << ")";
-                    else out << "std::pow(" << base << "," << exp_numeric.to_int() << ")";
-                  }
-              }
-            else  // not an integer
-              {
-                out << "std::pow(" << base << "," << exponent << ")";
-              }
+            out << "std::pow(" << base << "," << exponent << ")";
+            return out.str();
           }
 
-        return(out.str());
+        const auto& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exponent_expr);
+
+        if(!GiNaC::is_integer(exp_numeric))
+          {
+            out << "std::pow(" << base << "," << exponent << ")";
+            return out.str();
+          }
+
+        if(GiNaC::is_nonneg_integer(exp_numeric))
+          {
+            if(exp_numeric.to_int() == 0) out << "1.0";
+            else if(exp_numeric.to_int() == 1) out << unwrap_power(base, base_expr, 1);
+            else if(exp_numeric.to_int() == 2) out << "(" << unwrap_power(base, base_expr, 2) << ")";
+            else if(exp_numeric.to_int() == 3) out << "(" << unwrap_power(base, base_expr, 3) << ")";
+            else if(exp_numeric.to_int() == 4) out << "(" << unwrap_power(base, base_expr, 4) << ")";
+            else out << "std::pow(" << base << "," << exp_numeric.to_int() << ")";
+          }
+        else  // negative integer
+          {
+            if(exp_numeric.to_int() == -0) out << "1.0";
+            else if(exp_numeric.to_int() == -1) out << "1.0/" << unwrap_power(base, base_expr, 1);
+            else if(exp_numeric.to_int() == -2) out << "1.0/" << "(" << unwrap_power(base, base_expr, 2) << ")";
+            else if(exp_numeric.to_int() == -3) out << "1.0/" << "(" << unwrap_power(base, base_expr, 3) << ")";
+            else if(exp_numeric.to_int() == -4) out << "1.0/" << "(" << unwrap_power(base, base_expr, 4) << ")";
+            else out << "std::pow(" << base << "," << exp_numeric.to_int() << ")";
+          }
+
+        return out.str();
       }
 
   } // namespace cpp
