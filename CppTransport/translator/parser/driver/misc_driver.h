@@ -89,6 +89,9 @@ namespace y
 
         //! add an inital prior to an attribute block
         void set_attribute_derivprior(attributes& a, lexeme_type& lex);
+
+        //! add an inital prior to an attribute block
+        void set_attribute_log_value(attributes& a, lexeme_type& lex);
     
         //! add a string to a string array
         void add_string(string_array& a, lexeme_type& lex);

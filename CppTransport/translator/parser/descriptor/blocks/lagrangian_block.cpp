@@ -134,6 +134,15 @@ bool lagrangian_block::add_field(const std::string& n, symbol_wrapper& s, const 
           this->priors_with_latex.push_back(prior_latex);
         }
 
+        if(a->get_log_values().length() > 0)
+        {
+          auto field_log_value = this->sym_factory.get_real_symbol(symbol.get_name() + INIT_SUFFIX);
+          this->log_values_list.push_back(field_log_value);
+
+          auto field_deriv_log_value = this->sym_factory.get_real_symbol(symbol.get_name() + DERIV_SUFFIX + INIT_SUFFIX);
+          this->log_values_list.push_back(field_deriv_log_value);
+        }
+
       };
 
     return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS);
@@ -175,6 +184,12 @@ bool lagrangian_block::add_parameter(const std::string& n, symbol_wrapper& s, co
           auto prior_latex = this->sym_factory.get_real_symbol(symbol.get_name() + " " + latex_name );
           this->priors_with_latex.push_back(prior_latex);
         }
+
+        if(a->get_log_values().length() > 0)
+          {
+            auto param_log_value = this->sym_factory.get_real_symbol(symbol.get_name());
+            this->log_values_list.push_back(param_log_value);
+          }
       };
 
     return GenericInsertSymbol(check, insert, n, s, l, a, ERROR_SYMBOL_EXISTS, NOTIFY_DUPLICATE_SYMBOL_DEFN_WAS);
@@ -390,6 +405,12 @@ symbol_list lagrangian_block::get_fields_deriv_values() const
 symbol_list lagrangian_block::get_params_values() const
 {
   return(this->param_values);
+}
+
+// Get the list of symbols that have log values
+symbol_list lagrangian_block::get_log_values_list() const
+{
+  return(this->log_values_list);
 }
 
 const symbol_wrapper& lagrangian_block::get_Mp_symbol() const

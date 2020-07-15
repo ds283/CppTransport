@@ -54,8 +54,9 @@ field phi
 % set up the parameters
 parameter m
  { latex = "m";
-   value = "1e-7   1.4e-6   3e-6";
-   prior = "uniform 1e-7 3e-6";
+   value = "-7   -6   -5";
+   prior = "uniform -7 -5";
+   log_values = "True";
  };
 
 % specify the potential

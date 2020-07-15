@@ -70,6 +70,7 @@ const y::lexeme_type::keyword_map keywords =
     { "deriv_value",        keyword_type::deriv_value },
     { "deriv_prior",        keyword_type::deriv_prior },
     { "parameter",          keyword_type::parameter },
+    { "log_values",         keyword_type::log_values},
     { "latex",              keyword_type::latex },
     { "templates",          keyword_type::templates },
     { "settings",           keyword_type::settings },

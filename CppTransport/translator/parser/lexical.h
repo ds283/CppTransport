@@ -39,7 +39,7 @@ enum class keyword_type
     description, license, revision,
     references, urls, email, institute,
     field, potential, metric,
-    subexpr, value, prior, deriv_value, deriv_prior,
+    subexpr, value, prior, deriv_value, deriv_prior, log_values,
     parameter, latex, templates, settings,
     core, impl, model,
     sampling, sampling_template, generate_sampling, sampler,

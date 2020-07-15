@@ -94,6 +94,12 @@ class attributes
     //! set attribute's derivative prior
     bool set_derivprior(const std::string& deriv_pri, const y::lexeme_type& l);
 
+    //! get attribute's log values
+    const std::string get_log_values() const { if(this->log_values) return *this->log_values; else return std::string(); }
+
+    //! set attribute's log values
+    bool set_log_values(const std::string& input, const y::lexeme_type& l);
+
 
 		// INTERNAL DATA
 
@@ -117,6 +123,9 @@ class attributes
 
     //! contexted value representing attribute's initial prior
     std::shared_ptr< contexted_value<std::string> > deriv_prior;
+
+    //! contexted value representing attribute's initial prior
+    std::shared_ptr< contexted_value<std::string> > log_values;
 
 	};
 

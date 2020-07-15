@@ -81,6 +81,7 @@
 %token                                      subexpr
 %token                                      value
 %token                                      deriv_value
+%token                                      log_values
 %token                                      parameter
 %token                                      latex
 %token                                      prior
@@ -293,6 +294,7 @@ attributes: attributes latex equals string semicolon                            
         | attributes deriv_value equals string semicolon                                { driver.misc.set_attribute_derivvalue(*$1, *$4); $$ = $1; }
         | attributes prior equals string semicolon                                      { driver.misc.set_attribute_prior(*$1, *$4); $$ = $1; }
         | attributes deriv_prior equals string semicolon                                { driver.misc.set_attribute_derivprior(*$1, *$4); $$ = $1; }
+        | attributes log_values equals string semicolon                                 { driver.misc.set_attribute_log_value(*$1, *$4); $$ = $1; }
         |                                                                               { $$ = std::make_shared<attributes>(); }
         ;
 

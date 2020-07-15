@@ -109,6 +109,19 @@ namespace y
       }
     }
 
+    void misc_driver::set_attribute_log_value(attributes &a, lexeme_type &lex)
+    {
+      try
+      {
+        auto Setter = [&](auto& name, auto& lex) -> auto { return a.set_log_values(name, lex); };
+        SetStringValue(Setter, lex);
+      }
+      catch(parse_error& xe)
+      {
+        this->root.report_error();
+      }
+    }
+
     
     void misc_driver::add_string(string_array& a, lexeme_type& lex)
       {

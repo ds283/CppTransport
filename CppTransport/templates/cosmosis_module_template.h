@@ -246,6 +246,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     $FOR{ £PARAM, "block->get_val(inflation::paramsSection£COMMA £QUOTE£PARAM£QUOTE£COMMA inflation::£PARAM);", Params, True, False }
     $FOR{ £FIELD, "block->get_val(inflation::paramsSection£COMMA £QUOTE£FIELD£QUOTE£COMMA inflation::£FIELD);", FieldsInit, True, False }
 
+    // If there are any values that are given as logarithms, then we need to exponentiate the values here
+    $FOR{ £ATTRIB, "inflation::£ATTRIB = pow(10, inflation::£ATTRIB);", LogValues, True, False}
+
     // Set-up initial time for integration (N_init) and N_pre which is used to set the amount of sub-horizon evolution
     // to integrate before the chosen mode crosses the horizon.
     constexpr DataType N_init        = 0.0;

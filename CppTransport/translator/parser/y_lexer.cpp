@@ -59,6 +59,7 @@ std::unordered_map<keyword_type, y::y_parser::token::yytokentype> keyword_tokens
     { keyword_type::prior,             y::y_parser::token::prior },
     { keyword_type::deriv_value,       y::y_parser::token::deriv_value },
     { keyword_type::deriv_prior,       y::y_parser::token::deriv_prior },
+    { keyword_type::log_values,        y::y_parser::token::log_values },
     { keyword_type::parameter,         y::y_parser::token::parameter },
     { keyword_type::latex,             y::y_parser::token::latex },
     { keyword_type::templates,         y::y_parser::token::templates },

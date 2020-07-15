@@ -176,6 +176,9 @@ class lagrangian_block
     //! get list of symbols for the parameters priors
     symbol_list get_param_priors() const;
 
+    //! get list of symbols that have log values
+    symbol_list get_log_values_list() const;
+
     //! get symbol for Planck mass M_P
     const symbol_wrapper& get_Mp_symbol() const;
 
@@ -244,6 +247,9 @@ class lagrangian_block
 
     //! symbol list: names of parameters priors for cosmosis
     symbol_list params_priors_cosmosis;
+
+    //! symbol list: names of field derivative values for cosmosis
+    symbol_list log_values_list;
 
     //! symbol table: reserved symbols (such as the Planck mass)
     parameter_symbol_table reserved;

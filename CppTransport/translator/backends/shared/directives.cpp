@@ -370,6 +370,15 @@ namespace macro_packages
           Listy.push_back(LaTeX.get_name());
         }
       }
+      else if (arg_list == "LogValues")
+      {
+        symbol_list Log_values      = this->payload.model.get_log_values_list();
+
+        for (auto &attrib : Log_values)
+        {
+          Listy.push_back(attrib.get_name());
+        }
+      }
       const int Lengthy = Listy.size();
       int itter = 1;
       for (auto& i : Listy) {

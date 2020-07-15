@@ -54,3 +54,8 @@ bool attributes::set_derivprior(const std::string& deriv_pri, const y::lexeme_ty
 {
   return SetContextedValue(this->deriv_prior, deriv_pri, l, ERROR_DERIVPRIOR_REDECLARATION);
 }
+
+bool attributes::set_log_values(const std::string &input, const y::lexeme_type &l)
+{
+  return SetContextedValue(this->log_values, input, l, ERROR_LOGVALS_REDECLARATION);
+}
