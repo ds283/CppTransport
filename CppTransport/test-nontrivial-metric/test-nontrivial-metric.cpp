@@ -25,27 +25,27 @@
 
 #include "boost/multiprecision/mpfr.hpp"
 
-using mpfr50 = boost::multiprecision::number< boost::multiprecision::mpfr_float_backend<50>, boost::multiprecision::et_off >;
+//using mpfr50 = boost::multiprecision::number< boost::multiprecision::mpfr_float_backend<50>, boost::multiprecision::et_off >;
 //using mpfr50 = boost::multiprecision::mpfr_float_50;
 
-namespace std
-  {
-
-    using boost::multiprecision::sqrt;
-    using boost::multiprecision::log;
-    using boost::multiprecision::pow;
-    using boost::multiprecision::exp;
-
-    using boost::multiprecision::abs;
-    using boost::multiprecision::sinh;
-    using boost::multiprecision::cosh;
-    using boost::multiprecision::tanh;
-
-    bool isnan(const mpfr50& x) { return boost::math::isnan(x); }
-    bool isinf(const mpfr50& x) { return boost::math::isinf(x); }
-    mpfr50 max(const mpfr50& a, const mpfr50& b) { return (a < b) ? b : a; }
-
-  }
+//namespace std
+//  {
+//
+//    using boost::multiprecision::sqrt;
+//    using boost::multiprecision::log;
+//    using boost::multiprecision::pow;
+//    using boost::multiprecision::exp;
+//
+//    using boost::multiprecision::abs;
+//    using boost::multiprecision::sinh;
+//    using boost::multiprecision::cosh;
+//    using boost::multiprecision::tanh;
+//
+//    bool isnan(const mpfr50& x) { return boost::math::isnan(x); }
+//    bool isinf(const mpfr50& x) { return boost::math::isinf(x); }
+//    mpfr50 max(const mpfr50& a, const mpfr50& b) { return (a < b) ? b : a; }
+//
+//  }
 
 //#include "boost/numeric/odeint/external/mkl/mkl_operations.hpp"
 //
@@ -54,16 +54,17 @@ namespace std
 
 #include "gelaton_mpi.h"
 
-using DataType = mpfr50;
+//using DataType = mpfr50;
+using DataType = double;
 using StateType = std::vector<DataType>;
 
-namespace transport
-  {
-
-    template <>
-    inline std::string data_type_name<mpfr50>() { return std::string{"boost::multiprecision::mpfr_float_50 without expression templates"}; }
-
-  }
+//namespace transport
+//  {
+//
+//    template <>
+//    inline std::string data_type_name<mpfr50>() { return std::string{"boost::multiprecision::mpfr_float_50 without expression templates"}; }
+//
+//  }
 
 
 void write_tasks(transport::repository<DataType>& repo, transport::gelaton_mpi<DataType, StateType>* model)
