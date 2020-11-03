@@ -86,8 +86,8 @@ namespace transport
         //! overload for std::initializer_list
         parameters(number Mp, const std::initializer_list<number> p, std::shared_ptr< model<number> > m)
           : parameters(Mp, p, m.get())
-        {
-        }
+          {
+          }
 
         // ----
 

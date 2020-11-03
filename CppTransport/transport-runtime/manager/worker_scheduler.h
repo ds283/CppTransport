@@ -135,7 +135,7 @@ namespace transport
         unsigned int get_number() const { return(this->number); }
     
         //! get worker capacity
-        unsigned int get_capacity() const { return(this->capacity); }
+        size_t get_capacity() const { return(this->capacity); }
     
         //! get worker priority
         unsigned int get_priority() const { return(this->priority); }
@@ -147,7 +147,7 @@ namespace transport
         
         //! set data for this worker
         //! this is a private method; only friend classes may use it
-        void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p)
+        void set_data(unsigned int n, worker_type t, size_t c, unsigned int p)
           {
             this->number = n;
             this->type = t;
@@ -214,7 +214,7 @@ namespace transport
         worker_type type;
     
         //! worker's memory capacity (for integrations only)
-        unsigned int capacity;
+        size_t capacity;
     
         //! worker's priority
         unsigned int priority;

@@ -118,7 +118,7 @@ namespace transport
       public:
 
         //! Construct a datapipe
-        datapipe(unsigned int cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
+        datapipe(size_t cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
                  data_manager<number>& dm, utility_callbacks& u, bool no_log=false);
 
         //! Destroy a datapipe
@@ -435,7 +435,7 @@ namespace transport
         // PROPERTIES
 
         //! Maximum capacity to use (approximately--we don't try to do a detailed accounting of memory use)
-        unsigned int capacity;
+        size_t capacity;
 
         //! Unique serial number identifying the worker process owning this datapipe
         const unsigned int worker_number;

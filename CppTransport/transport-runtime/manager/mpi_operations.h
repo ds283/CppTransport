@@ -172,7 +172,7 @@ namespace transport
 				        slave_information_payload() = default;
 
 				        //! Value constructor (used for constructing messages to send)
-				        slave_information_payload(worker_type t, unsigned int c, unsigned int p)
+				        slave_information_payload(worker_type t, size_t c, unsigned int p)
 				          : type(t),
 		                capacity(c),
 		                priority(p)
@@ -183,7 +183,7 @@ namespace transport
                 worker_type get_type() const { return(this->type); }
 
 				        //! Get worker capacity
-				        unsigned int get_capacity() const { return(this->capacity); }
+				        size_t get_capacity() const { return(this->capacity); }
 
 				        //! Get worker priority
 				        unsigned int get_priority() const { return(this->priority); }
@@ -194,7 +194,7 @@ namespace transport
                 worker_type type;
 
 				        //! Worker memory capacity (integrations only)
-				        unsigned int capacity;
+				        size_t capacity;
 
 				        //! Worker priority
 				        unsigned int priority;

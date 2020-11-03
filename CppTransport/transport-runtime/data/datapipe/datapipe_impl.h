@@ -37,7 +37,7 @@ namespace transport
 
 
     template <typename number>
-    datapipe<number>::datapipe(unsigned int cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
+    datapipe<number>::datapipe(size_t cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
                                data_manager<number>& dm, utility_callbacks& u, bool no_log)
       : logdir_path(lp),
         temporary_path(tp),
