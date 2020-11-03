@@ -93,7 +93,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        generic_batcher(unsigned int cap, unsigned int ckp,
+        generic_batcher(size_t cap, unsigned int ckp,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                         handle_type h, unsigned int w, unsigned int g=0, bool no_log=false);
@@ -190,7 +190,7 @@ namespace transport
         // OTHER INTERNAL DATA
     
         //! Capacity available
-        unsigned int capacity;
+        size_t capacity;
     
         //! Container path
         boost::filesystem::path container_path;
@@ -278,7 +278,7 @@ namespace transport
 
 
     template <typename handle_type>
-    generic_batcher::generic_batcher(unsigned int cap, unsigned int ckp,
+    generic_batcher::generic_batcher(size_t cap, unsigned int ckp,
                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                      std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                      handle_type h, unsigned int w, unsigned int g, bool no_log)

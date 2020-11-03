@@ -43,7 +43,7 @@
 #define BUFFER_MAGIC_TAG "MAGIC_TAG"
 
 
-buffer::buffer(boost::filesystem::path fn, unsigned int cp)
+buffer::buffer(boost::filesystem::path fn, size_t cp)
 	: in_memory(false),
 	  filename(std::move(fn)),
 		capacity(cp),

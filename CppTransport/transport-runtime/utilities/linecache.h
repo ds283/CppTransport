@@ -81,7 +81,7 @@ namespace transport
 		      public:
 
 		        //! Create a cache object
-		        cache(unsigned int cap)
+		        cache(size_t cap)
 		          : capacity(cap), data_size(0), hit_counter(0), unload_counter(0)
 #ifdef CPPTRANSPORT_LINECACHE_DEBUG
 			        , copied(0)
@@ -133,10 +133,10 @@ namespace transport
 				    void hit() { this->hit_counter++; }
 
 				    //! Read total capacity of the cache
-				    unsigned int get_capacity() const { return(this->capacity); }
+				    size_t get_capacity() const { return(this->capacity); }
 
 				    //! Read total size of the cache
-				    unsigned int get_size() const { return(this->data_size); }
+				    size_t get_size() const { return(this->data_size); }
 
 				    //! Read total number of cache hits
 				    unsigned int get_hits() const { return(this->hit_counter); }
@@ -164,10 +164,10 @@ namespace transport
 
 		        //! Capacity of the cache. The cache evicts cachelines when memory use exceeds the
 		        //! stated capacity
-		        unsigned int capacity;
+		        size_t capacity;
 
 		        //! Current memory usage
-		        unsigned int data_size;
+		        size_t data_size;
 
 				    //! Hit counter -- how many times do we hit a cache line, saving us from going out to the database?
 				    unsigned int hit_counter;
@@ -539,8 +539,8 @@ namespace transport
                 // Because there is an overhead in building the clean-up list (and sorting it),
                 // we evict more items than are necessary in order that repeated requests
                 // for cache line of a similar size don't all result in clean_up operations
-						    typename std::list< typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::cache_line::iterator >::iterator t = clean_up_list.begin();
-                unsigned int target_size = static_cast<unsigned int>(std::max(static_cast<int>(this->capacity) - 10*static_cast<int>(this->data_size), 0));
+						    auto t = clean_up_list.begin();
+                auto target_size = static_cast<size_t>(std::max(static_cast<int>(this->capacity) - 10*static_cast<int>(this->data_size), 0));
 								while(this->data_size > target_size && t != clean_up_list.end())
 									{
 								    if(!(*(*t)).get_locked())   // can't evict this item if it is locked

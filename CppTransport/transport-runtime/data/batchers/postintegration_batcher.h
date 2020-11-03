@@ -92,7 +92,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        postintegration_batcher(unsigned int cap, unsigned int ckp, model<number>* m, postintegration_task<number>* tk,
+        postintegration_batcher(size_t cap, unsigned int ckp, model<number>* m, postintegration_task<number>* tk,
                                 const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                 std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                 handle_type h, unsigned int w);
@@ -198,7 +198,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        zeta_twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, zeta_twopf_task<number>* tk,
+        zeta_twopf_batcher(size_t cap, unsigned int ckp, model<number>* m, zeta_twopf_task<number>* tk,
                            const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                            const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                            std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn);
@@ -285,7 +285,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        zeta_threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, zeta_threepf_task<number>* tk,
+        zeta_threepf_batcher(size_t cap, unsigned int ckp, model<number>* m, zeta_threepf_task<number>* tk,
                              const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                              const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                              std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn);
@@ -386,7 +386,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        fNL_batcher(unsigned int cap, unsigned int ckp, model<number>* m, fNL_task<number>* tk,
+        fNL_batcher(size_t cap, unsigned int ckp, model<number>* m, fNL_task<number>* tk,
                     const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                     const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                     std::unique_ptr<container_replace_function> r,
@@ -449,7 +449,7 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    postintegration_batcher<number>::postintegration_batcher(unsigned int cap, unsigned int ckp, model<number>* m, postintegration_task<number>* tk,
+    postintegration_batcher<number>::postintegration_batcher(size_t cap, unsigned int ckp, model<number>* m, postintegration_task<number>* tk,
                                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                              std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                                              handle_type h, unsigned int w)
@@ -517,7 +517,7 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    zeta_twopf_batcher<number>::zeta_twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, zeta_twopf_task<number>* tk,
+    zeta_twopf_batcher<number>::zeta_twopf_batcher(size_t cap, unsigned int ckp, model<number>* m, zeta_twopf_task<number>* tk,
                                                    const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                    const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                                                    std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn)
@@ -606,7 +606,7 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    zeta_threepf_batcher<number>::zeta_threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, zeta_threepf_task<number>* tk,
+    zeta_threepf_batcher<number>::zeta_threepf_batcher(size_t cap, unsigned int ckp, model<number>* m, zeta_threepf_task<number>* tk,
                                                        const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                        const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                                                        std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn)
@@ -753,7 +753,7 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    fNL_batcher<number>::fNL_batcher(unsigned int cap, unsigned int ckp, model<number>* m, fNL_task<number>* tk,
+    fNL_batcher<number>::fNL_batcher(size_t cap, unsigned int ckp, model<number>* m, fNL_task<number>* tk,
                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                      const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                                      std::unique_ptr<container_replace_function> r,

@@ -106,7 +106,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m, integration_task<number>* tk,
+        integration_batcher(size_t cap, unsigned int ckp, model<number>* m, integration_task<number>* tk,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                             handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
@@ -329,7 +329,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
+        twopf_batcher(size_t cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                       const writer_group& w,
                       std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
@@ -471,7 +471,7 @@ namespace transport
 
         //! constructor
         template <typename handle_type>
-        threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
+        threepf_batcher(size_t cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         const writer_group& w,
                         std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
@@ -625,7 +625,7 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    integration_batcher<number>::integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m, integration_task<number>* tk,
+    integration_batcher<number>::integration_batcher(size_t cap, unsigned int ckp, model<number>* m, integration_task<number>* tk,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                                      handle_type h, unsigned int w, unsigned int g, bool ics)
@@ -792,7 +792,7 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    twopf_batcher<number>::twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
+    twopf_batcher<number>::twopf_batcher(size_t cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                          std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                          handle_type h, unsigned int wn, unsigned int wg)
@@ -959,7 +959,7 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    threepf_batcher<number>::threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
+    threepf_batcher<number>::threepf_batcher(size_t cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                              std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                              handle_type h, unsigned int wn, unsigned int wg)

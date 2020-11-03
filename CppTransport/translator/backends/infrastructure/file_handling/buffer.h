@@ -60,7 +60,7 @@ class buffer
   public:
 
 		//! construct a buffer with a named output file and capacity
-    buffer(boost::filesystem::path file, unsigned int capacity = DEFAULT_BUFFER_CAPACITY);
+    buffer(boost::filesystem::path file, size_t capacity = DEFAULT_BUFFER_CAPACITY);
 
 		//! construct a purely in-memory buffer
 		buffer();
@@ -147,10 +147,10 @@ class buffer
 		const boost::filesystem::path filename;
 
 		//! current size
-		unsigned size;
+		size_t size;
 
 		//! capacity, if relevant
-		const unsigned capacity;
+		const size_t capacity;
 
 		//! std::stream representing the file to which we are connected
 		std::ofstream out_stream;
