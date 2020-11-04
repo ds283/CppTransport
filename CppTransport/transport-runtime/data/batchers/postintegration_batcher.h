@@ -540,7 +540,7 @@ namespace transport
     template <typename number>
     void zeta_twopf_batcher<number>::push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
       {
-        this->gauge_xfm1_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size));
+        this->gauge_xfm1_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
@@ -637,7 +637,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
       {
-        this->gauge_xfm1_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size));
+        this->gauge_xfm1_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
@@ -645,7 +645,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_gauge_xfm2_123(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_123_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_123_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size));
+        this->gauge_xfm2_123_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_123_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
@@ -653,7 +653,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_gauge_xfm2_213(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_213_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_213_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size));
+        this->gauge_xfm2_213_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_213_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
@@ -661,7 +661,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_gauge_xfm2_312(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_312_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_312_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size));
+        this->gauge_xfm2_312_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_312_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
@@ -685,16 +685,25 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** A";
         transaction_manager mgr = this->writers.factory(this);
 
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** B";
         this->writers.twopf(mgr, this, this->twopf_batch);
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** C";
         this->writers.threepf(mgr, this, this->threepf_batch);
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** D";
         this->writers.gauge_xfm1(mgr, this, this->gauge_xfm1_batch);
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** E";
         this->writers.gauge_xfm2_123(mgr, this, this->gauge_xfm2_123_batch);
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** F";
         this->writers.gauge_xfm2_213(mgr, this, this->gauge_xfm2_213_batch);
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** G";
         this->writers.gauge_xfm2_312(mgr, this, this->gauge_xfm2_312_batch);
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** H";
 
         mgr.commit();
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** A";
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
@@ -769,23 +778,23 @@ namespace transport
     template <typename number>
     void fNL_batcher<number>::push_fNL(unsigned int time_serial, number BB, number BT, number TT)
 	    {
-        std::unique_ptr<typename postintegration_items<number>::fNL_item> item = std::make_unique<typename postintegration_items<number>::fNL_item>(time_serial, BB, BT, TT);
+        // if an existing item with this serial number exists, we want to accumulate the BB, BT and TT values
+        // we then have to remove the existing record before inserting an updated one -- elements in a std::set
+        // are always const and therefore read-only, so we can't do the update in-place.
 
-		    // if an existing item with this serial number exists, we want to accumulate the BT and TT values
-		    // we then have to remove the existing record before inserting an updated one -- elements in a std::set
-		    // are always const and therefore read-only
         // at least searching in a set is fairly efficient, O(log N)
-        typename postintegration_items<number>::fNL_cache::iterator t = this->fNL_batch.find(item);
+        auto light_comparison_key = std::make_unique<typename postintegration_items<number>::fNL_item_keyonly>(time_serial);
+        auto t = this->fNL_batch.find(light_comparison_key);
 
-		    if(t != this->fNL_batch.end())
-			    {
-            item->BB += (*t)->BB;
-				    item->BT += (*t)->BT;
-				    item->TT += (*t)->TT;
-				    this->fNL_batch.erase(t);
-			    }
+        if(t != this->fNL_batch.end())
+          {
+            BB += (*t)->BB;
+            BT += (*t)->BT;
+            TT += (*t)->TT;
+            this->fNL_batch.erase(t);
+          }
 
-        this->fNL_batch.insert(std::move(item));
+        this->fNL_batch.emplace(std::make_unique<typename postintegration_items<number>::fNL_item>(time_serial, BB, BT, TT));
         this->check_for_flush();
 	    }
 

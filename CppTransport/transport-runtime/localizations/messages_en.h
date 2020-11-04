@@ -37,6 +37,7 @@
 
 #include "transport-runtime/localizations/messages_en/models.h"
 #include "transport-runtime/localizations/messages_en/integration.h"
+#include "transport-runtime/localizations/messages_en/batchers.h"
 #include "transport-runtime/localizations/messages_en/advisory_classes.h"
 
 #include "transport-runtime/localizations/messages_en/parameters.h"

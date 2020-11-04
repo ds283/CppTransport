@@ -210,7 +210,7 @@ namespace transport
             std::vector<std::string> coord_names(num_cols);
             for(unsigned int i = 0; i < num_cols; ++i)
               {
-                std::string id = std::string("@coord") + boost::lexical_cast<std::string>(i);
+                std::string id = std::string("@coord") + std::to_string(i);
                 coord_names[i] = id;
                 insert_stmt << ", " << id;
               }
@@ -304,7 +304,7 @@ namespace transport
             std::vector<std::string> ele_names(num_cols);
 		        for(unsigned int i = 0; i < num_cols; ++i)
 			        {
-                std::string id = std::string("@ele") + boost::lexical_cast<std::string>(i);
+                std::string id = std::string("@ele") + std::to_string(i);
                 ele_names[i] = id;
                 insert_stmt << ", " << id;
 			        }
@@ -332,6 +332,14 @@ namespace transport
 
             for(const std::unique_ptr<ValueType>& item : batch)
 			        {
+			          auto item_num_elements = item->elements.size();
+			          if(item_num_elements != num_elements)
+                  {
+                    BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::error) << "!! expected " << num_elements
+                      << " elements per batch item, but element with (tserial, kserial) = (" << item->time_serial << ", " << item->kconfig_serial << ")"
+                      << " has " << item_num_elements << " elements";
+                  }
+
 		            for(unsigned int page = 0; page < num_pages; ++page)
 			            {
 #ifdef CPPTRANSPORT_STRICT_CONSISTENCY
@@ -341,10 +349,10 @@ namespace transport
 		                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, page_id, page));
 
-		                for(unsigned int i = 0; i < num_cols; ++i)
+                    for(unsigned int i = 0; i < num_cols; ++i)
 			                {
 		                    unsigned int index = page*num_cols + i;
-		                    number       value = index < num_elements ? item->elements[index] : 0.0;
+		                    number       value = index < item_num_elements ? item->elements[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, ele_ids[i], static_cast<double>(value)));    // 'number' must be castable to double
 			                }

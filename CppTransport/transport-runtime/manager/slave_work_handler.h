@@ -171,31 +171,45 @@ namespace transport
         std::unique_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, N_fields);
 
 		    // buffer for computed values
-        std::vector<number> zeta_npf;
-        std::vector<number> redbsp;
-        std::vector< std::vector<number> > gauge_xfm2_123(time_values.size());
-        std::vector< std::vector<number> > gauge_xfm2_213(time_values.size());
-        std::vector< std::vector<number> > gauge_xfm2_312(time_values.size());
+        const auto time_size = time_values.size();
+        const auto gauge_xfm1_size = 2*N_fields;
+        const auto gauge_xfm2_size = 2*N_fields * 2*N_fields;
+
+        std::vector<number> zeta_npf(time_size);
+        std::vector<number> redbsp(time_size);
+        std::vector< std::vector<number> > gauge_xfm1(time_size);
+        std::vector< std::vector<number> > gauge_xfm2_123(time_size);
+        std::vector< std::vector<number> > gauge_xfm2_213(time_size);
+        std::vector< std::vector<number> > gauge_xfm2_312(time_size);
 
         // size gauge xfm caches appropriately
-        for(unsigned int j = 0; j < time_values.size(); ++j)
+        for(unsigned int j = 0; j < time_size; ++j)
           {
-            gauge_xfm2_123[j].resize(2*N_fields * 2*N_fields);
-            gauge_xfm2_213[j].resize(2*N_fields * 2*N_fields);
-            gauge_xfm2_312[j].resize(2*N_fields * 2*N_fields);
+            gauge_xfm1[j].resize(gauge_xfm1_size);
+            gauge_xfm2_123[j].resize(gauge_xfm2_size);
+            gauge_xfm2_213[j].resize(gauge_xfm2_size);
+            gauge_xfm2_312[j].resize(gauge_xfm2_size);
           }
 
         for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
-            // zeta_npf and redbsp are cleared by zeta_computer.threepf() and reallocated, but gauge_xfm_nnn must be sized correctly on entry
             this->zeta_computer.threepf(*handle, zeta_npf, redbsp, gauge_xfm2_123, gauge_xfm2_213, gauge_xfm2_312, *(list[i]));
-		        assert(zeta_npf.size() == time_values.size());
+		        assert(zeta_npf.size() == time_size);
+		        assert(redbsp.size() == time_size);
+		        assert(gauge_xfm1.size() == time_size);
+		        assert(gauge_xfm2_123.size() == time_size);
+		        assert(gauge_xfm2_213.size() == time_size);
+		        assert(gauge_xfm2_312.size() == time_size);
 
-            for(unsigned int j = 0; j < time_values.size(); ++j)
+            for(unsigned int j = 0; j < time_size; ++j)
 	            {
                 batcher.push_threepf(time_values[j].serial, list[i]->serial, zeta_npf[j], redbsp[j]);
+
+                assert(gauge_xfm2_123[j].size() == gauge_xfm2_size);
+                assert(gauge_xfm2_213[j].size() == gauge_xfm2_size);
+                assert(gauge_xfm2_312[j].size() == gauge_xfm2_size);
                 batcher.push_gauge_xfm2_123(time_values[j].serial, list[i]->serial, gauge_xfm2_123[j]);
                 batcher.push_gauge_xfm2_213(time_values[j].serial, list[i]->serial, gauge_xfm2_213[j]);
                 batcher.push_gauge_xfm2_312(time_values[j].serial, list[i]->serial, gauge_xfm2_312[j]);
@@ -209,11 +223,11 @@ namespace transport
                 k1.k_comoving     = list[i]->k1_comoving;
                 k1.k_conventional = list[i]->k1_conventional;
 
-		            this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm2_123, k1);
-                for(unsigned int j = 0; j < time_values.size(); ++j)
+		            this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm1, k1);
+                for(unsigned int j = 0; j < time_size; ++j)
 	                {
                     batcher.push_twopf(time_values[j].serial, k1.serial, zeta_npf[j]);
-                    batcher.push_gauge_xfm1(time_values[j].serial, k1.serial, gauge_xfm2_123[j]);
+                    batcher.push_gauge_xfm1(time_values[j].serial, k1.serial, gauge_xfm1[j]);
 	                }
 	            }
 
@@ -225,11 +239,11 @@ namespace transport
                 k2.k_comoving     = list[i]->k2_comoving;
                 k2.k_conventional = list[i]->k2_conventional;
 
-                this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm2_123, k2);
-                for(unsigned int j = 0; j < time_values.size(); ++j)
+                this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm1, k2);
+                for(unsigned int j = 0; j < time_size; ++j)
 	                {
                     batcher.push_twopf(time_values[j].serial, k2.serial, zeta_npf[j]);
-                    batcher.push_gauge_xfm1(time_values[j].serial, k2.serial, gauge_xfm2_123[j]);
+                    batcher.push_gauge_xfm1(time_values[j].serial, k2.serial, gauge_xfm1[j]);
 	                }
 	            }
 
@@ -241,11 +255,11 @@ namespace transport
                 k3.k_comoving     = list[i]->k3_comoving;
                 k3.k_conventional = list[i]->k3_conventional;
 
-                this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm2_123, k3);
-                for(unsigned int j = 0; j < time_values.size(); ++j)
+                this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm1, k3);
+                for(unsigned int j = 0; j < time_size; ++j)
 	                {
                     batcher.push_twopf(time_values[j].serial, k3.serial, zeta_npf[j]);
-                    batcher.push_gauge_xfm1(time_values[j].serial, k3.serial, gauge_xfm2_123[j]);
+                    batcher.push_gauge_xfm1(time_values[j].serial, k3.serial, gauge_xfm1[j]);
 	                }
 	            }
 

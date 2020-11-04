@@ -701,9 +701,7 @@ namespace transport
     template <typename number>
     void integration_batcher<number>::push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values)
 	    {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
-
-        this->backg_batch.emplace_back(std::make_unique<typename integration_items<number>::backg_item>(time_serial, source_serial, values, this->time_db_size));
+        this->backg_batch.emplace_back(std::make_unique<typename integration_items<number>::backg_item>(time_serial, source_serial, values, this->time_db_size, this->Nfields));
         this->check_for_flush();
 	    }
 
@@ -813,9 +811,7 @@ namespace transport
     void twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                            const std::vector<number>& values, const std::vector<number>& backg)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
-
-        this->twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_re_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
+        this->twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_re_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size, this->Nfields));
         if(this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
 
         this->check_for_flush();
@@ -841,8 +837,6 @@ namespace transport
     void twopf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                                   const std::vector<number>& values)
 	    {
-        if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
-
         this->tensor_twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::tensor_twopf_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
@@ -851,11 +845,9 @@ namespace transport
     template <typename number>
     void twopf_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
       {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
-
         if(this->collect_initial_conditions)
           {
-            this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size));
+            this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size, this->Nfields));
             this->check_for_flush();
           }
       }
@@ -984,19 +976,17 @@ namespace transport
     void threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                              const std::vector<number>& values, const std::vector<number>& backg, twopf_type t)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
-
         switch(t)
           {
             case twopf_type::real:
               {
-                this->twopf_re_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_re_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
+                this->twopf_re_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_re_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size, this->Nfields));
                 break;
               }
 
             case twopf_type::imag:
               {
-                this->twopf_im_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_im_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
+                this->twopf_im_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_im_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size, this->Nfields));
                 break;
               }
           }
@@ -1029,10 +1019,10 @@ namespace transport
                                                const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                                const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
-
         // momentum three-point function can be copied across directly
-        this->threepf_momentum_batch.emplace_back(std::make_unique<typename integration_items<number>::threepf_momentum_item>(time_serial, kconfig.serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
+        this->threepf_momentum_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::threepf_momentum_item>(
+            time_serial, kconfig.serial, source_serial, values, this->time_db_size, this->kconfig_db_size, this->Nfields));
 
         // derivative three-point function needs extra shifts in order to convert any momentum insertions
         // into time-derivative insertions
@@ -1052,7 +1042,9 @@ namespace transport
               }
           }
 
-        this->threepf_Nderiv_batch.emplace_back(std::make_unique<typename integration_items<number>::threepf_Nderiv_item>(time_serial, kconfig.serial, source_serial, Nderiv_values, this->time_db_size, this->kconfig_db_size));
+        this->threepf_Nderiv_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::threepf_Nderiv_item>(
+            time_serial, kconfig.serial, source_serial, Nderiv_values, this->time_db_size, this->kconfig_db_size, this->Nfields));
 
         if(this->paired_batcher != nullptr)
           this->push_paired_threepf(time_serial, t, kconfig, source_serial, values,
@@ -1090,8 +1082,6 @@ namespace transport
     void threepf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                                     const std::vector<number>& values)
 	    {
-        if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
-
         this->tensor_twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::tensor_twopf_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
@@ -1114,11 +1104,9 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
       {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
-
         if(this->collect_initial_conditions)
           {
-            this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size));
+            this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size, this->Nfields));
             this->check_for_flush();
           }
       }
@@ -1127,11 +1115,9 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 	    {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
-
         if(this->collect_initial_conditions)
 	        {
-            this->kt_ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_kt_item>(k_serial, t_exit, values, this->kconfig_db_size));
+            this->kt_ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_kt_item>(k_serial, t_exit, values, this->kconfig_db_size, this->Nfields));
             this->check_for_flush();
 	        }
 	    }

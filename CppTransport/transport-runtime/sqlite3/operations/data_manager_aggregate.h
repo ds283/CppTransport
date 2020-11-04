@@ -179,7 +179,7 @@ namespace transport
             exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_BACKGROUND_COPY);
 
             timer.stop();
-            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
+            return {timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db))};
           }
 
 
@@ -197,7 +197,7 @@ namespace transport
 				    exec(db, copy_stmt.str(), data_traits<number, ValueType>::copy_error_msg());
 
             timer.stop();
-            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
+            return {timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db))};
 			    }
 
 
@@ -242,7 +242,7 @@ namespace transport
             exec(db, drop_stmt.str(), CPPTRANSPORT_DATACTR_FNL_COPY);
 
             timer.stop();
-            return aggregation_table_data(timer.elapsed().wall, changes);
+            return {timer.elapsed().wall, changes};
           }
 
 
@@ -261,7 +261,7 @@ namespace transport
             exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_WORKERS_COPY);
 
             timer.stop();
-            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
+            return {timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db))};
 	        }
 
 
@@ -280,7 +280,7 @@ namespace transport
             exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_STATISTICS_COPY);
 
             timer.stop();
-            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
+            return {timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db))};
 	        }
 
 
@@ -299,7 +299,7 @@ namespace transport
             exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_ICS_COPY);
 
             timer.stop();
-            return aggregation_table_data(timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db)));
+            return {timer.elapsed().wall, static_cast<size_t>(sqlite3_changes(db))};
 	        }
 
 

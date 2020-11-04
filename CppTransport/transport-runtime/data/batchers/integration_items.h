@@ -49,30 +49,40 @@ namespace transport
         class backg_item
 	        {
           public:
-            backg_item(unsigned ts, unsigned int ss, const std::vector<number>& co, unsigned int ti)
+            backg_item(unsigned ts, unsigned int ss, const std::vector<number>& co, unsigned int ti, unsigned int Nf)
               : time_serial(ts),
                 source_serial(ss),
                 coords(co),
-                time_items(ti)
+                time_items(ti),
+                Nfields(Nf)
               {
+                if(coords.size() != 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_BACKG_SIZE << " (" << coords.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(time_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             unsigned int get_serial() const { return (this->time_serial); }
 
             //! values
-            std::vector<number> coords;
+            const std::vector<number> coords;
 
             //! kconfig serial number for the integration which produced this. Used when unwinding a batch.
-            unsigned int        source_serial;
+            const unsigned int source_serial;
 
 		        //! get_texit() not needed for backg_item but allowed here to prevent template specialization failure
 		        //! TODO: would be nice to simplify this
@@ -85,36 +95,46 @@ namespace transport
         class twopf_re_item
 	        {
           public:
-            twopf_re_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+            twopf_re_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
               : time_serial(ts),
                 kconfig_serial(ks),
                 source_serial(ss),
                 elements(e),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(elements.size() != 2*Nfields * 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_TWOPF_SIZE << " (" << elements.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             // values
-            std::vector<number> elements;
+            const std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
 	        };
 
@@ -124,36 +144,46 @@ namespace transport
         class twopf_im_item
 	        {
           public:
-            twopf_im_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+            twopf_im_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
               : time_serial(ts),
                 kconfig_serial(ks),
                 source_serial(ss),
                 elements(e),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(elements.size() != 2*Nfields * 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_TWOPF_SIZE << " (" << elements.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             // values
-            std::vector<number> elements;
+            const std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
 	        };
 
@@ -170,28 +200,34 @@ namespace transport
                 time_items(ti),
                 kconfig_items(ki)
               {
+                if(elements.size() != 2*2)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_TENSOR_TWOPF_SIZE << " (" << elements.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             // values
-            std::vector<number> elements;
+            const std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 	        };
 
 
@@ -200,36 +236,46 @@ namespace transport
         class threepf_momentum_item
 	        {
           public:
-            threepf_momentum_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+            threepf_momentum_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
               : time_serial(ts),
                 kconfig_serial(ks),
                 source_serial(ss),
                 elements(e),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(elements.size() != 2*Nfields * 2*Nfields * 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_THREEPF_SIZE << " (" << elements.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! values
-            std::vector<number> elements;
+            const std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch
-            unsigned int source_serial;
+            const unsigned int source_serial;
 	        };
 
 
@@ -238,36 +284,46 @@ namespace transport
         class threepf_Nderiv_item
           {
           public:
-            threepf_Nderiv_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+            threepf_Nderiv_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
               : time_serial(ts),
                 kconfig_serial(ks),
                 source_serial(ss),
                 elements(e),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(elements.size() != 2*Nfields * 2*Nfields * 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_THREEPF_SIZE << " (" << elements.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! values
-            std::vector<number> elements;
+            const std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch
-            unsigned int source_serial;
+            const unsigned int source_serial;
           };
 
 
@@ -286,19 +342,19 @@ namespace transport
               }
 
             //! kconfig serial number for this configuration
-            unsigned int serial;
+            const unsigned int serial;
 
             //! time spent integrating, in nanoseconds
-            boost::timer::nanosecond_type integration;
+            const boost::timer::nanosecond_type integration;
 
             //! time spent batching, in nanoseconds
-            boost::timer::nanosecond_type batching;
+            const boost::timer::nanosecond_type batching;
 
             //! number of stepsize refinements needed for this configuration
-            unsigned int refinements;
+            const unsigned int refinements;
 
             //! number of steps taken by the stepper
-            size_t steps;
+            const size_t steps;
 	        };
 
 
@@ -307,66 +363,86 @@ namespace transport
 		    class ics_item
 			    {
 		      public:
-            ics_item(unsigned int ss, double tx, const std::vector<number>& co, unsigned int ki)
+            ics_item(unsigned int ss, double tx, const std::vector<number>& co, unsigned int ki, unsigned int Nf)
               : source_serial(ss),
                 texit(tx),
                 coords(co),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(coords.size() != 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_ICS_SIZE << " (" << coords.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(source_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
 				    //! kconfig serial number
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
             unsigned int get_serial() const { return (this->source_serial); }
 
 				    //! time of horizon exit
-            double texit;
+            const double texit;
             
             double get_texit() const { return (this->texit); }
 
 		        //! values
-		        std::vector<number> coords;
+		        const std::vector<number> coords;
 			    };
 
 
         //! Stores information about the initial conditions for each k-configuration
-        //! (there are separate types for ics_item and ics_kt_item so we can adjust template behaviour via type traits)
+        //! (there are separate types for ics_item and ics_kt_item in order that we can adjust template behaviour via type traits)
         class ics_kt_item
 	        {
           public:
-            ics_kt_item(unsigned int ss, double tx, const std::vector<number>& co, unsigned int ki)
+            ics_kt_item(unsigned int ss, double tx, const std::vector<number>& co, unsigned int ki, unsigned int Nf)
               : source_serial(ss),
                 texit(tx),
                 coords(co),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(coords.size() != 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_ICS_SIZE << " (" << coords.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(source_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! kconfig serial number
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
             unsigned int get_serial() const { return (this->source_serial); }
 
             //! time of horizon exit
-            double texit;
+            const double texit;
 
             double get_texit() const { return (this->texit); }
 
             //! values
-            std::vector<number> coords;
+            const std::vector<number> coords;
 	        };
 
 	    };

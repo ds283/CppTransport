@@ -1030,6 +1030,7 @@ SET(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES
 SET(TRANSPORT_RUNTIME_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime/localizations/messages_en/advisory_classes.h
   transport-runtime/localizations/messages_en/asciitable.h
+  transport-runtime/localizations/messages_en/batchers.h
   transport-runtime/localizations/messages_en/command_line.h
   transport-runtime/localizations/messages_en/data_manager.h
   transport-runtime/localizations/messages_en/initial_conditions.h
