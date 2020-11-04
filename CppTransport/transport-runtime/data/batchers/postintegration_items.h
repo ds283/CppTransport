@@ -33,7 +33,7 @@ namespace transport
 
     // data structures for storing individual sample points from each integration
 
-    // NOTE when generating unique identifiers, it's important that they in approximately increasing order
+    // NOTE when generating unique identifiers, it's important that they are in approximately increasing order
     // This speeds up INSERT performance dramatically and is critical for getting good aggregation speeds
     // see http://stackoverflow.com/questions/788568/sqlite3-disabling-primary-key-index-while-inserting
 
@@ -55,33 +55,34 @@ namespace transport
                 source_serial(ss),
                 value(v),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                redbsp(0.0)
               {
               }
 
             //! make unique identifier
-            unsigned long int get_unique() const { return(kconfig_serial*time_items + time_serial); }
+            const unsigned long int get_unique() const { return(kconfig_serial*time_items + time_serial); }
 
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number of this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
             //! twopf value
-            number value;
+            const number value;
 
             //! reduced bispectrum not used, but included here to prevent template specialization failure
-            number redbsp;
+            const number redbsp;
 	        };
 
 
@@ -106,25 +107,25 @@ namespace transport
             unsigned long int get_unique() const { return(kconfig_serial*time_items + time_serial); }
 
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number of this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
             //! threepf
-            number value;
+            const number value;
 
             //! reduced bispectrum
-            number redbsp;
+            const number redbsp;
 	        };
 
 
@@ -148,53 +149,77 @@ namespace transport
               }
 
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
-            // bispectrum.bispectrum
-            number BB;
+            // bispectrum.bispectrum value
+            const number BB;
 
             // bispectrum.template
-            number BT;
+            const number BT;
 
             // template.template
-            number TT;
+            const number TT;
 	        };
+
+
+        //! Lightweight fNL-like item for performing comparisons using std::set::find only
+        class fNL_item_keyonly
+          {
+          public:
+            fNL_item_keyonly(unsigned int ts)
+              : time_serial(ts)
+              {
+              }
+
+            //! time serial number for this configuration
+            const unsigned int time_serial;
+          };
 
 
         //! Stores a linear gauge transformation
         class gauge_xfm1_item
           {
           public:
-            gauge_xfm1_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+            gauge_xfm1_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
               : time_serial(ts),
                 kconfig_serial(ks),
                 source_serial(ss),
                 elements(e),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(elements.size() != 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_ZETA_BATCHER_GAUGEXFM1_SIZE << " (" << elements.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
+            //! cache number of fields in parent model
+
+            const unsigned int Nfields;
 
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
             // values
-            std::vector<number> elements;
+            const std::vector<number> elements;
           };
 
 
@@ -202,36 +227,46 @@ namespace transport
         class gauge_xfm2_123_item
           {
           public:
-            gauge_xfm2_123_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+            gauge_xfm2_123_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
               : time_serial(ts),
                 kconfig_serial(ks),
                 source_serial(ss),
                 elements(e),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(elements.size() != 2*Nfields * 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_ZETA_BATCHER_GAUGEXFM2_SIZE << " (" << elements.size() << ", type=123)";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
             // values
-            std::vector<number> elements;
+            const std::vector<number> elements;
           };
 
 
@@ -239,36 +274,46 @@ namespace transport
         class gauge_xfm2_213_item
           {
           public:
-            gauge_xfm2_213_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+            gauge_xfm2_213_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
               : time_serial(ts),
                 kconfig_serial(ks),
                 source_serial(ss),
                 elements(e),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(elements.size() != 2*Nfields * 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_ZETA_BATCHER_GAUGEXFM2_SIZE << " (" << elements.size() << ", type=213)";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
 
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
             // values
-            std::vector<number> elements;
+            const std::vector<number> elements;
           };
 
 
@@ -276,46 +321,69 @@ namespace transport
         class gauge_xfm2_312_item
           {
           public:
-            gauge_xfm2_312_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+            gauge_xfm2_312_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
               : time_serial(ts),
                 kconfig_serial(ks),
                 source_serial(ss),
                 elements(e),
                 time_items(ti),
-                kconfig_items(ki)
+                kconfig_items(ki),
+                Nfields(Nf)
               {
+                if(elements.size() != 2*Nfields * 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_ZETA_BATCHER_GAUGEXFM2_SIZE << " (" << elements.size() << ", type=312)";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
               }
 
             //! make unique identifier
             unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
+            //! cache number of fields in parent model
+
+            const unsigned int Nfields;
 
             //! time serial number for this configuration
-            unsigned int time_serial;
+            const unsigned int time_serial;
 
             //! kconfig serial number for this configuration
-            unsigned int kconfig_serial;
+            const unsigned int kconfig_serial;
 
             //! number of time serial numbers in job
-            unsigned int time_items;
+            const unsigned int time_items;
 
             //! number of kconfiguration serial numbers in job
-            unsigned int kconfig_items;
+            const unsigned int kconfig_items;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
+            const unsigned int source_serial;
 
             // values
-            std::vector<number> elements;
+            const std::vector<number> elements;
           };
 
 
 		    struct fNL_item_comparator
 			    {
 		      public:
+			      // enable searching on heterogeneous keys
+			      using is_transparent = void;
+
 				    bool operator() (const std::unique_ptr<fNL_item>& A, const std::unique_ptr<fNL_item>& B)
 					    {
 						    return(A->time_serial < B->time_serial);
 					    }
+
+            bool operator() (const std::unique_ptr<fNL_item>& A, const std::unique_ptr<fNL_item_keyonly>& B) const
+              {
+                return(A->time_serial < B->time_serial);
+              }
+
+            bool operator() (const std::unique_ptr<fNL_item_keyonly>& A, const std::unique_ptr<fNL_item>& B) const
+              {
+                return(A->time_serial < B->time_serial);
+              }
 			    };
 
 

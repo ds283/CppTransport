@@ -246,11 +246,6 @@ namespace transport
           {
             unsigned int N_fields = h.N_fields;
 
-            zeta_threepf.clear();
-            zeta_threepf.assign(h.t_axis.size(), 0.0);
-            redbsp.clear();
-            redbsp.assign(h.t_axis.size(), 0.0);
-
             const double k1 = k.k1_comoving;
             const double k2 = k.k2_comoving;
             const double k3 = k.k3_comoving;
@@ -259,12 +254,25 @@ namespace transport
             const double k1k3 = k2*k2/(k1*k3);
             const double k2k3 = k1*k1/(k2*k3);
 
+            // zeta_threepf, redbsp, gauge_xfm2_123, gauge_xfm2_213, gauge_xfm2_312 should be sized appropriately:
+            // first axis is t_axis.size()
+            // for gauge xfm2 values, second axis should be 2*Nfields * 2*Nfields
+            assert(zeta_threepf.size() == h.t_axis.size());
+            assert(redbsp.size() == h.t_axis.size());
+            assert(gauge_xfm2_123.size() == h.t_axis.size());
+            assert(gauge_xfm2_213.size() == h.t_axis.size());
+            assert(gauge_xfm2_312.size() == h.t_axis.size());
+
             // cache gauge transformation coefficients
             // these have to be recomputed for each k-configuration, because they are time and shape-dependent
             // we take advantage of the caller-provided caches to store them; they should be correctly sized
 
             for(unsigned int j = 0; j < h.t_axis.size(); ++j)
               {
+                assert(gauge_xfm2_123[j].size() == 2*N_fields * 2*N_fields);
+                assert(gauge_xfm2_213[j].size() == 2*N_fields * 2*N_fields);
+                assert(gauge_xfm2_312[j].size() == 2*N_fields * 2*N_fields);
+
                 h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k1, k2, k3, h.t_axis[j].t, gauge_xfm2_123[j]);
                 h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k2, k1, k3, h.t_axis[j].t, gauge_xfm2_213[j]);
                 h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k3, k1, k2, h.t_axis[j].t, gauge_xfm2_312[j]);
