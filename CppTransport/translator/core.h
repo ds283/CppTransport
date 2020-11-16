@@ -31,8 +31,8 @@
 #include "msg_en.h"
 
 constexpr auto CPPTRANSPORT_NAME                     = "CppTransport";
-constexpr auto CPPTRANSPORT_VERSION                  = "2019.1";
-constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 201901;
+constexpr auto CPPTRANSPORT_VERSION                  = "2021.1";
+constexpr auto CPPTRANSPORT_NUMERIC_VERSION          = 202101;
 constexpr auto CPPTRANSPORT_COPYRIGHT                = "(c) University of Sussex 2016-2019";
 
 constexpr auto TEMPLATE_TAG_SUFFIX                   = "_";
