@@ -64,6 +64,7 @@ namespace transport
 		        //! deserialization constructor
 		        r_wavenumber_series(Json::Value& reader, task_finder<number>& finder);
 
+		        //! destructor is default
 		        virtual ~r_wavenumber_series() = default;
 
 
@@ -189,7 +190,7 @@ namespace transport
 
 				    // for each t-configuration, pull zeta data from the database and cache it
             unsigned int i = 0;
-				    for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t, ++i)
+				    for(auto t = t_values.begin(); t != t_values.end(); ++t, ++i)
 					    {
 						    zeta_twopf_kconfig_data_tag<number> zeta_tag = pipe.new_zeta_twopf_kconfig_data_tag(t->serial);
 
@@ -200,7 +201,7 @@ namespace transport
 				    pipe.detach();
 
 				    // attach datapipe to a content group for the tensor part of r
-				    postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
+				    auto* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
 				    assert(ptk != nullptr);
 
 				    group = this->attach(pipe, tags, ptk->get_parent_task());
@@ -211,7 +212,7 @@ namespace transport
 
 				    // for each t-configuration, pull tensor data from the database and create a data_line<> for r
 				    i = 0; // reset counter
-				    for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t, ++i)
+				    for(auto t = t_values.begin(); t != t_values.end(); ++t, ++i)
 					    {
 				        cf_kconfig_data_tag<number> tensor_tag =
 					                                    pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), t->serial);
@@ -224,7 +225,12 @@ namespace transport
 
 				        for(unsigned int j = 0; j < tensor_data.size(); ++j)
 					        {
-				            line_data[j] = tensor_data[j] / zeta_data[i][j];
+                    // The factor of 4.0 is required because CppTransport stores the power spectrum for a single
+                    // tensor polarization.
+                    // The conventionally-defined tensor power spectrum is the sum over polarizations, which yields
+                    // a factor of 2. But also, in our normalization there is another factor of 2 that comes from
+                    // tracing over the polarization tensors.
+				            line_data[j] = 4.0 * tensor_data[j] / zeta_data[i][j];
 					        }
 
                 lines.emplace_back(groups, this->x_type, value_type::r, w_axis, line_data,

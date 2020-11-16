@@ -65,6 +65,7 @@ namespace transport
 				    //! deserialization constructor
 				    r_time_series(Json::Value& reader, task_finder<number>& finder);
 
+				    //! destructor is default
 				    virtual ~r_time_series() = default;
 
 
@@ -194,7 +195,7 @@ namespace transport
 
 				    // for each k-configuration, pull data from the database
             unsigned int i = 0;
-				    for(std::vector<twopf_kconfig>::const_iterator t = k_values.begin(); t != k_values.end(); ++t, ++i)
+				    for(auto t = k_values.begin(); t != k_values.end(); ++t, ++i)
 					    {
 				        zeta_twopf_time_data_tag<number> zeta_tag = pipe.new_zeta_twopf_time_data_tag(*t);
 
@@ -205,7 +206,7 @@ namespace transport
 				    pipe.detach();
 
 				    // attach datapipe to a content group for the tensor part of r
-				    postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
+				    auto* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
 				    assert(ptk != nullptr);
 
             group = this->attach(pipe, tags, ptk->get_parent_task());
@@ -215,7 +216,7 @@ namespace transport
 				    i = 0;  // reset counter
 		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->tquery);
 
-				    for(std::vector<twopf_kconfig>::const_iterator t = k_values.begin(); t != k_values.end(); ++t)
+				    for(auto t = k_values.begin(); t != k_values.end(); ++t)
 					    {
 				        cf_time_data_tag<number> tensor_tag = pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), t->serial);
 
@@ -227,7 +228,12 @@ namespace transport
 
 				        for(unsigned int j = 0; j < tensor_data.size(); ++j)
 					        {
-				            line_data[j] = tensor_data[j] / zeta_data[i][j];
+					          // The factor of 4.0 is required because CppTransport stores the power spectrum for a single
+					          // tensor polarization.
+					          // The conventionally-defined tensor power spectrum is the sum over polarizations, which yields
+					          // a factor of 2. But also, in our normalization there is another factor of 2 that comes from
+					          // tracing over the polarization tensors.
+				            line_data[j] = 4.0 * tensor_data[j] / zeta_data[i][j];
 					        }
 
 				        lines.emplace_back(groups, this->x_type, value_type::r, t_axis, line_data,
