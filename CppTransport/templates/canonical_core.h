@@ -1,4 +1,4 @@
-// backend = cpp, minver = 201901, lagrangian = canonical
+// backend = cpp, minver = 202101, lagrangian = canonical
 //
 // --@@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
@@ -86,31 +86,45 @@ namespace transport
 
         static std::string              unique_id   = "$UNIQUE_ID";
 
-        constexpr unsigned int backg_size         = (2*$NUMBER_FIELDS);
-        constexpr unsigned int twopf_size         = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
-        constexpr unsigned int tensor_size        = (4);
-        constexpr unsigned int threepf_size       = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
+        constexpr unsigned int backg_size           = (2*$NUMBER_FIELDS);
+        constexpr unsigned int twopf_size           = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
+        constexpr unsigned int tensor_size          = (4);
+        constexpr unsigned int threepf_size         = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
 
-        constexpr unsigned int backg_start        = 0;
-        constexpr unsigned int tensor_start       = backg_start + backg_size;         // for twopf state vector
-        constexpr unsigned int tensor_k1_start    = tensor_start;                     // for threepf state vector
-        constexpr unsigned int tensor_k2_start    = tensor_k1_start + tensor_size;
-        constexpr unsigned int tensor_k3_start    = tensor_k2_start + tensor_size;
-        constexpr unsigned int twopf_start        = tensor_k1_start + tensor_size;    // for twopf state vector
-        constexpr unsigned int twopf_re_k1_start  = tensor_k3_start + tensor_size;    // for threepf state vector
-        constexpr unsigned int twopf_im_k1_start  = twopf_re_k1_start + twopf_size;
-        constexpr unsigned int twopf_re_k2_start  = twopf_im_k1_start + twopf_size;
-        constexpr unsigned int twopf_im_k2_start  = twopf_re_k2_start + twopf_size;
-        constexpr unsigned int twopf_re_k3_start  = twopf_im_k2_start + twopf_size;
-        constexpr unsigned int twopf_im_k3_start  = twopf_re_k3_start + twopf_size;
-        constexpr unsigned int threepf_start      = twopf_im_k3_start + twopf_size;
+        // shared twopf/threepf layout
+        constexpr unsigned int backg_start          = 0;
 
-        constexpr unsigned int backg_state_size   = backg_size;
-        constexpr unsigned int twopf_state_size   = backg_size + tensor_size + twopf_size;
-        constexpr unsigned int threepf_state_size = backg_size + 3*tensor_size + 6*twopf_size + threepf_size;
+        // twopf layout
+        constexpr unsigned int tensor_start         = backg_start + backg_size;
+        constexpr unsigned int tensor_si_start      = tensor_start + tensor_size;
+        constexpr unsigned int twopf_start          = tensor_si_start + tensor_size;
+        constexpr unsigned int twopf_si_start       = twopf_start + twopf_size;
 
-        constexpr unsigned int u2_size            = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
-        constexpr unsigned int u3_size            = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
+        // threepf layout
+        constexpr unsigned int tensor_k1_start      = backg_start + backg_size;
+        constexpr unsigned int tensor_k2_start      = tensor_k1_start + tensor_size;
+        constexpr unsigned int tensor_k3_start      = tensor_k2_start + tensor_size;
+        constexpr unsigned int tensor_si_k1_start   = tensor_k3_start + tensor_size;
+        constexpr unsigned int tensor_si_k2_start   = tensor_si_k1_start + tensor_size;
+        constexpr unsigned int tensor_si_k3_start   = tensor_si_k2_start + tensor_size;
+        constexpr unsigned int twopf_re_k1_start    = tensor_si_k3_start + tensor_size;
+        constexpr unsigned int twopf_im_k1_start    = twopf_re_k1_start + twopf_size;
+        constexpr unsigned int twopf_re_k2_start    = twopf_im_k1_start + twopf_size;
+        constexpr unsigned int twopf_im_k2_start    = twopf_re_k2_start + twopf_size;
+        constexpr unsigned int twopf_re_k3_start    = twopf_im_k2_start + twopf_size;
+        constexpr unsigned int twopf_im_k3_start    = twopf_re_k3_start + twopf_size;
+        constexpr unsigned int twopf_si_re_k1_start = twopf_im_k3_start + twopf_size;
+        constexpr unsigned int twopf_si_re_k2_start = twopf_si_re_k1_start + twopf_size;
+        constexpr unsigned int twopf_si_re_k3_start = twopf_si_re_k2_start + twopf_size;
+
+        constexpr unsigned int threepf_start        = twopf_si_re_k3_start + twopf_size;
+
+        constexpr unsigned int backg_state_size     = backg_size;
+        constexpr unsigned int twopf_state_size     = backg_size + 2*tensor_size + 2*twopf_size;
+        constexpr unsigned int threepf_state_size   = backg_size + 3*tensor_size + 3*tensor_size + 6*twopf_size + 3*twopf_size + threepf_size;
+
+        constexpr unsigned int u2_size              = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
+        constexpr unsigned int u3_size              = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
     
     
         // FLATTENING FUNCTIONS
@@ -313,8 +327,14 @@ namespace transport
         number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                 const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k_norm);
 
+        number make_twopf_si_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k_norm);
+
         number make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                     const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k_norm);
+
+        number make_twopf_tensor_si_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                       const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields, double __k_norm);
 
         number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                double kmode_1, double kmode_2, double kmode_3, double __Ninit,
@@ -722,9 +742,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-
             msg << CPPTRANSPORT_WRONG_PARAMS_A << input.size() << CPPTRANSPORT_WRONG_PARAMS_B << $NUMBER_PARAMS << "]";
-
             throw std::out_of_range(msg.str());
           }
       }
@@ -754,7 +772,7 @@ namespace transport
         $TEMP_POOL{"const auto $1 = $2;"}
 
         const auto __Hsq = $HUBBLE_SQ;
-        const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
+//        const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
         number __tpf = 0.0;
 
@@ -816,6 +834,7 @@ namespace transport
         else
           {
             assert(false);
+            throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_INDICES_OUT_OF_RANGE);
           }
 
         // return value, rescaled to give dimensionless correlation function
@@ -843,7 +862,7 @@ namespace transport
       $TEMP_POOL{"const auto $1 = $2;"}
 
       const auto __Hsq = $HUBBLE_SQ;
-      const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
+//      const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
       number __tpf = 0.0;
 
@@ -868,10 +887,69 @@ namespace transport
 
           __tpf = - __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
+      else if(!(IS_FIELD(__i) && IS_FIELD(__j)) && !(IS_MOMENTUM(__i) && IS_MOMENTUM(__j)))
+        {
+          assert(false);
+          throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_INDICES_OUT_OF_RANGE);
+        }
 
       // return value, rescaled to give dimensionless correlation function
       return(__tpf * __k_norm*__k_norm*__k_norm);
     }
+
+
+// set up initial conditions for the real part of the equal-time two-point 'spectral index' function
+template <typename number>
+number $MODEL<number>::make_twopf_si_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                        const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
+                                        double __k_norm)
+  {
+    DEFINE_INDEX_TOOLS
+    $RESOURCE_RELEASE
+    const auto& __pvector = __task->get_params().get_vector();
+    __raw_params[$1] = __pvector[$1];
+
+    const auto __Mp = __task->get_params().get_Mp();
+    const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+    $RESOURCE_PARAMETERS{__raw_params}
+    $RESOURCE_COORDINATES{__fields}
+
+    $TEMP_POOL{"const auto $1 = $2;"}
+
+    const auto __Hsq = $HUBBLE_SQ;
+//    const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
+
+    number __tpf = 0.0;
+
+    if(IS_FIELD(__i) && IS_FIELD(__j))              // field-field correlation function
+      {
+        // LEADING-ORDER INITIAL CONDITION
+        auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
+        __tpf = + __leading / (__k*__a*__a);
+      }
+    else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum or momentum-field correlation function
+            || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
+      {
+        // LEADING-ORDER INITIAL CONDITION
+        auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (-1.0);
+        __tpf = + __leading / (__k*__a*__a);
+      }
+    else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
+      {
+        // LEADING-ORDER INITIAL CONDITION
+        auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
+        __tpf = + 2.0*__k*__leading / (__Hsq*__a*__a*__a*__a);
+      }
+    else
+      {
+        assert(false);
+        throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_INDICES_OUT_OF_RANGE);
+      }
+
+    // return value, rescaled to give dimensionless correlation function
+    return(__tpf * __k_norm*__k_norm*__k_norm);
+  }
 
 
     // set up initial conditions for the real part of the equal-time tensor two-point function
@@ -894,7 +972,6 @@ namespace transport
         $RESOURCE_COORDINATES{__fields}
 
         const auto __Hsq = $HUBBLE_SQ;
-        const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
         number __tpf = 0.0;
 
@@ -902,28 +979,75 @@ namespace transport
           {
             // LEADING-ORDER INITIAL CONDITION
             __tpf = 1.0 / (__Mp*__Mp*__k*__a*__a);
-//            __tpf = 1.0 / (2.0*__k*__a*__a);
           }
         else if((__i == 0 && __j == 1) || (__i == 1 && __j == 0))     // h-dh or dh-h correlation function
           {
             // LEADING ORDER INITIAL CONDITION
             __tpf = -1.0 / (__Mp*__Mp*__k*__a*__a);
-//            __tpf = -1.0 / (2.0*__k*__a*__a);
           }
         else if(__i == 1 && __j == 1)                                 // dh-dh correlation function
           {
             // LEADING ORDER INITIAL CONDITION
             __tpf = __k / (__Mp*__Mp*__Hsq*__a*__a*__a*__a);
-//            __tpf = __k / (2.0*__Hsq*__a*__a*__a*__a);
           }
         else
           {
             assert(false);
+            throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_TENSOR_INDICES_OUT_OF_RANGE);
           }
 
         // return value, rescaled to give dimensionless correlation function
         return(__tpf * __k_norm*__k_norm*__k_norm);
       }
+
+
+// set up initial conditions for the real part of the equal-time tensor two-point 'spectral index' function
+template <typename number>
+number $MODEL<number>::make_twopf_tensor_si_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                               const twopf_db_task<number>* __task, const flattened_tensor<number>& __fields,
+                                               double __k_norm)
+  {
+    DEFINE_INDEX_TOOLS
+    $RESOURCE_RELEASE
+    const auto& __pvector = __task->get_params().get_vector();
+    __raw_params[$1] = __pvector[$1];
+
+    const auto __Mp = __task->get_params().get_Mp();
+    const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+    $TEMP_POOL{"const auto $1 = $2;"}
+
+    $RESOURCE_PARAMETERS{__raw_params}
+    $RESOURCE_COORDINATES{__fields}
+
+    const auto __Hsq = $HUBBLE_SQ;
+
+    number __tpf = 0.0;
+
+    if(__i == 0 && __j == 0)                                      // h-h correlation function
+      {
+        // LEADING-ORDER INITIAL CONDITION
+        __tpf = -1.0 / (__Mp*__Mp*__k*__a*__a);
+      }
+    else if((__i == 0 && __j == 1) || (__i == 1 && __j == 0))     // h-dh or dh-h correlation function
+      {
+        // LEADING ORDER INITIAL CONDITION
+        __tpf = 1.0 / (__Mp*__Mp*__k*__a*__a);
+      }
+    else if(__i == 1 && __j == 1)                                 // dh-dh correlation function
+      {
+        // LEADING ORDER INITIAL CONDITION
+        __tpf = __k / (__Mp*__Mp*__Hsq*__a*__a*__a*__a);
+      }
+    else
+      {
+        assert(false);
+        throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_TENSOR_INDICES_OUT_OF_RANGE);
+      }
+
+    // return value, rescaled to give dimensionless correlation function
+    return(__tpf * __k_norm*__k_norm*__k_norm);
+  }
 
 
     // set up initial conditions for the real part of the equal-time three-point function

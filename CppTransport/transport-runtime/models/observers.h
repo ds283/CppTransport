@@ -245,7 +245,10 @@ namespace transport
     // Observer: records results from a single twopf k-configuration
     // this is suitable for an OpenMP or MPI type integrator
 
-    template <typename number, typename BatchObject>
+    template <typename number, typename BatchObject,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+      unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
+      unsigned int tw_st, unsigned int tw_si_st>
     class twopf_singleconfig_batch_observer: public timing_observer<number, BatchObject>
       {
 
@@ -253,8 +256,6 @@ namespace transport
 
         twopf_singleconfig_batch_observer(BatchObject& b, const twopf_kconfig_record& c,
                                           double t_ics, const time_config_database& t,
-                                          unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
-                                          unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                           boost::timer::nanosecond_type t_int = CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                                           bool s = false, unsigned int p = 3);
 
@@ -289,53 +290,45 @@ namespace transport
 
         BatchObject& batcher;
 
-        const unsigned int backg_size;
-        const unsigned int tensor_size;
-        const unsigned int twopf_size;
-
-        const unsigned int backg_start;
-        const unsigned int tensor_start;
-        const unsigned int twopf_start;
-
       };
 
 
-    template <typename number, typename BatchObject>
-    twopf_singleconfig_batch_observer<number, BatchObject>::twopf_singleconfig_batch_observer
+    template <typename number, typename BatchObject,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+      unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
+      unsigned int tw_st, unsigned int tw_si_st>
+    twopf_singleconfig_batch_observer<number, BatchObject, bg_sz, ten_sz, tw_sz, bg_st, ten_st, ten_si_st, tw_st, tw_si_st>::twopf_singleconfig_batch_observer
       (BatchObject& b, const twopf_kconfig_record& c, double t_ics, const time_config_database& t,
-       unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
-       unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
        boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number, BatchObject>(t, t_int, s, p),
         batcher(b),
         k_config(c),
-        t_initial(t_ics),
-        backg_size(bg_sz),
-        tensor_size(ten_sz),
-        twopf_size(tw_sz),
-        backg_start(bg_st),
-        tensor_start(ten_st),
-        twopf_start(tw_st)
+        t_initial(t_ics)
       {
       }
 
 
-    template <typename number, typename BatchObject>
+    template <typename number, typename BatchObject,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+      unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
+      unsigned int tw_st, unsigned int tw_si_st>
     template <typename State>
-    void twopf_singleconfig_batch_observer<number, BatchObject>::push(const State& x)
+    void
+    twopf_singleconfig_batch_observer<number, BatchObject, bg_sz, ten_sz, tw_sz, bg_st, ten_st, ten_si_st, tw_st, tw_si_st>::push
+      (const State& x)
       {
         if(this->store_time_step())
           {
             // correlation functions are already dimensionless, so no rescaling needed
 
-            std::vector<number> bg_x(this->backg_size);
-            for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[this->backg_start + i];
+            std::vector<number> bg_x(bg_sz);
+            for(unsigned int i = 0; i < bg_sz; ++i) bg_x[i] = x[bg_st + i];
 
-            std::vector<number> tensor_tpf_x(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x[i] = x[this->tensor_start + i];
+            std::vector<number> tensor_tpf_x(ten_sz);
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_tpf_x[i] = x[ten_st + i];
 
-            std::vector<number> tpf_x(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x[i] = x[this->twopf_start + i];
+            std::vector<number> tpf_x(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_x[i] = x[tw_st + i];
 
             if(this->k_config.is_background_stored())
               {
@@ -349,8 +342,13 @@ namespace transport
       }
 
 
-    template <typename number, typename BatchObject>
-    void twopf_singleconfig_batch_observer<number, BatchObject>::stop_timers(size_t steps, unsigned int refinement)
+    template <typename number, typename BatchObject,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+      unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
+      unsigned int tw_st, unsigned int tw_si_st>
+    void
+    twopf_singleconfig_batch_observer<number, BatchObject, bg_sz, ten_sz, tw_sz, bg_st, ten_st, ten_si_st, tw_st, tw_si_st>::stop_timers
+      (size_t steps, unsigned int refinement)
       {
         this->timing_observer<number, BatchObject>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
@@ -384,7 +382,15 @@ namespace transport
     // Observer: records results from a single threepf k-configuration
     // this is suitable for an OpenMP or MPI type integrator
 
-    template <typename number, typename BatchObject>
+    template <typename number, typename BatchObject,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz, unsigned int bg_st,
+      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int ten_si_k1_st, unsigned int ten_si_k2_st, unsigned int ten_si_k3_st,
+      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+      unsigned int tw_si_re_k1_st, unsigned int tw_si_re_k2_st, unsigned int tw_si_re_k3_st,
+      unsigned int th_st>
     class threepf_singleconfig_batch_observer: public timing_observer<number, BatchObject>
       {
 
@@ -392,13 +398,6 @@ namespace transport
 
         threepf_singleconfig_batch_observer(BatchObject& b, const threepf_kconfig_record& c,
                                             double t_ics, const time_config_database& t,
-                                            unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
-                                            unsigned int bg_st,
-                                            unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
-                                            unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
-                                            unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
-                                            unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
-                                            unsigned int th_st,
                                             boost::timer::nanosecond_type t_int = CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                                             bool s = false, unsigned int p = 3);
 
@@ -438,54 +437,28 @@ namespace transport
 
         BatchObject& batcher;
 
-        const unsigned int backg_size;
-        const unsigned int tensor_size;
-        const unsigned int twopf_size;
-        const unsigned int threepf_size;
-
-        const unsigned int backg_start;
-        const unsigned int tensor_k1_start;
-        const unsigned int tensor_k2_start;
-        const unsigned int tensor_k3_start;
-        const unsigned int twopf_re_k1_start;
-        const unsigned int twopf_im_k1_start;
-        const unsigned int twopf_re_k2_start;
-        const unsigned int twopf_im_k2_start;
-        const unsigned int twopf_re_k3_start;
-        const unsigned int twopf_im_k3_start;
-        const unsigned int threepf_start;
-
       };
 
 
-    template <typename number, typename BatchObject>
-    threepf_singleconfig_batch_observer<number, BatchObject>::threepf_singleconfig_batch_observer(
-      BatchObject& b, const threepf_kconfig_record& c, double t_ics, const time_config_database& t,
-      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
-      unsigned int bg_st, unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+    template <typename number, typename BatchObject,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz, unsigned int bg_st,
+      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int ten_si_k1_st, unsigned int ten_si_k2_st, unsigned int ten_si_k3_st,
       unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
       unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
-      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st, unsigned int th_st,
-      boost::timer::nanosecond_type t_int, bool s, unsigned int p)
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+      unsigned int tw_si_re_k1_st, unsigned int tw_si_re_k2_st, unsigned int tw_si_re_k3_st,
+      unsigned int th_st>
+    threepf_singleconfig_batch_observer<number, BatchObject, bg_sz, ten_sz, tw_sz, th_sz, bg_st,
+      ten_k1_st, ten_k2_st, ten_k3_st, ten_si_k1_st, ten_si_k2_st, ten_si_k3_st,
+      tw_re_k1_st, tw_im_k1_st, tw_re_k2_st, tw_im_k2_st, tw_re_k3_st, tw_im_k3_st,
+      tw_si_re_k1_st, tw_si_re_k2_st, tw_si_re_k3_st, th_st>::threepf_singleconfig_batch_observer
+      (BatchObject& b, const threepf_kconfig_record& c, double t_ics, const time_config_database& t,
+       boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number, BatchObject>(t, t_int, s, p),
         batcher(b),
         k_config(c),
-        t_initial(t_ics),
-        backg_size(bg_sz),
-        tensor_size(ten_sz),
-        twopf_size(tw_sz),
-        threepf_size(th_sz),
-        backg_start(bg_st),
-        tensor_k1_start(ten_k1_st),
-        tensor_k2_start(ten_k2_st),
-        tensor_k3_start(ten_k3_st),
-        twopf_re_k1_start(tw_re_k1_st),
-        twopf_im_k1_start(tw_im_k1_st),
-        twopf_re_k2_start(tw_re_k2_st),
-        twopf_im_k2_start(tw_im_k2_st),
-        twopf_re_k3_start(tw_re_k3_st),
-        twopf_im_k3_start(tw_im_k3_st),
-        threepf_start(th_st)
+        t_initial(t_ics)
       {
         // compute rescaling factors to get correct dimensionless correlation functions
         double k1 = c->k1_comoving;
@@ -501,44 +474,69 @@ namespace transport
       }
 
 
-    template <typename number, typename BatchObject>
+    template <typename number, typename BatchObject,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz, unsigned int bg_st,
+      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int ten_si_k1_st, unsigned int ten_si_k2_st, unsigned int ten_si_k3_st,
+      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+      unsigned int tw_si_re_k1_st, unsigned int tw_si_re_k2_st, unsigned int tw_si_re_k3_st,
+      unsigned int th_st>
     template <typename State>
-    void threepf_singleconfig_batch_observer<number, BatchObject>::push(const State& x)
+    void
+    threepf_singleconfig_batch_observer<number, BatchObject, bg_sz, ten_sz, tw_sz, th_sz, bg_st,
+      ten_k1_st, ten_k2_st, ten_k3_st, ten_si_k1_st, ten_si_k2_st, ten_si_k3_st,
+      tw_re_k1_st, tw_im_k1_st, tw_re_k2_st, tw_im_k2_st, tw_re_k3_st, tw_im_k3_st,
+      tw_si_re_k1_st, tw_si_re_k2_st, tw_si_re_k3_st, th_st>::push
+      (const State& x)
       {
         if(this->store_time_step())
           {
             // the integrator makes each correlation function dimensionless by rescaling by a power of k_t
             // we want proper dimensionless correlation functions, so need to rescale
             
-            std::vector<number> bg_x(this->backg_size);
-            for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[this->backg_start + i];
+            std::vector<number> bg_x(bg_sz);
+            for(unsigned int i = 0; i < bg_sz; ++i) bg_x[i] = x[bg_st + i];
 
-            std::vector<number> tensor_tpf_x1(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x1[i] = this->k1_rescale * x[this->tensor_k1_start + i];
+            std::vector<number> tensor_x1(ten_sz);
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_x1[i] = this->k1_rescale * x[ten_k1_st + i];
+            std::vector<number> tensor_si_x1(ten_sz);
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x1[i] = this->k1_rescale * x[ten_si_k1_st + i];
 
-            std::vector<number> tpf_x1_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_re[i] = this->k1_rescale * x[this->twopf_re_k1_start + i];
-            std::vector<number> tpf_x1_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_im[i] = this->k1_rescale * x[this->twopf_im_k1_start + i];
+            std::vector<number> tpf_re_x1(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_re_x1[i] = this->k1_rescale * x[tw_re_k1_st + i];
+            std::vector<number> tpf_im_x1(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_im_x1[i] = this->k1_rescale * x[tw_im_k1_st + i];
+            std::vector<number> tpf_si_re_x1(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_re_x1[i] = this->k1_rescale * x[tw_si_re_k1_st + i];
 
-            std::vector<number> tensor_tpf_x2(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x2[i] = this->k2_rescale * x[this->tensor_k2_start + i];
+            std::vector<number> tensor_tpf_x2(ten_sz);
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_tpf_x2[i] = this->k2_rescale * x[ten_k2_st + i];
+            std::vector<number> tensor_si_x2(ten_sz);
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x2[i] = this->k2_rescale * x[ten_si_k2_st + i];
 
-            std::vector<number> tpf_x2_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_re[i] = this->k2_rescale * x[this->twopf_re_k2_start + i];
-            std::vector<number> tpf_x2_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_im[i] = this->k2_rescale * x[this->twopf_im_k2_start + i];
+            std::vector<number> tpf_re_x2(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_re_x2[i] = this->k2_rescale * x[tw_re_k2_st + i];
+            std::vector<number> tpf_im_x2(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_im_x2[i] = this->k2_rescale * x[tw_im_k2_st + i];
+            std::vector<number> tpf_si_re_x2(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_re_x2[i] = this->k2_rescale * x[tw_si_re_k2_st + i];
 
-            std::vector<number> tensor_tpf_x3(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x3[i] = this->k3_rescale * x[this->tensor_k3_start + i];
+            std::vector<number> tensor_tpf_x3(ten_sz);
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_tpf_x3[i] = this->k3_rescale * x[ten_k3_st + i];
+            std::vector<number> tensor_si_x3(ten_sz);
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x3[i] = this->k3_rescale * x[ten_si_k3_st + i];
 
-            std::vector<number> tpf_x3_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_re[i] = this->k3_rescale * x[this->twopf_re_k3_start + i];
-            std::vector<number> tpf_x3_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_im[i] = this->k3_rescale * x[this->twopf_im_k3_start + i];
+            std::vector<number> tpf_re_x3(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_re_x3[i] = this->k3_rescale * x[tw_re_k3_st + i];
+            std::vector<number> tpf_im_x3(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_im_x3[i] = this->k3_rescale * x[tw_im_k3_st + i];
+            std::vector<number> tpf_si_re_x3(tw_sz);
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_re_x3[i] = this->k3_rescale * x[tw_si_re_k3_st + i];
 
-            std::vector<number> thpf_x(this->threepf_size);
-            for(unsigned int i = 0; i < this->threepf_size; ++i) thpf_x[i] = this->shape_rescale * x[this->threepf_start + i];
+            std::vector<number> thpf_x(th_sz);
+            for(unsigned int i = 0; i < th_sz; ++i) thpf_x[i] = this->shape_rescale * x[th_st + i];
 
             if(this->k_config.is_background_stored())
               {
@@ -547,35 +545,48 @@ namespace transport
 
             if(this->k_config.is_twopf_k1_stored())
               {
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tensor_tpf_x1);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tpf_x1_re, bg_x, twopf_type::real);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tpf_x1_im, bg_x, twopf_type::imag);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tensor_x1);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tpf_re_x1, bg_x, twopf_type::real);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tpf_im_x1, bg_x, twopf_type::imag);
               }
 
             if(this->k_config.is_twopf_k2_stored())
               {
                 this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial, tensor_tpf_x2);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial, tpf_x2_re, bg_x, twopf_type::real);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial, tpf_x2_im, bg_x, twopf_type::imag);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial, tpf_re_x2, bg_x, twopf_type::real);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial, tpf_im_x2, bg_x, twopf_type::imag);
               }
 
             if(this->k_config.is_twopf_k3_stored())
               {
                 this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tensor_tpf_x3);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tpf_x3_re, bg_x, twopf_type::real);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tpf_x3_im, bg_x, twopf_type::imag);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tpf_re_x3, bg_x, twopf_type::real);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tpf_im_x3, bg_x, twopf_type::imag);
               }
 
             this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *this->k_config, this->k_config->serial,
-                                       thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
+                                       thpf_x, tpf_re_x1, tpf_im_x1, tpf_re_x2, tpf_im_x2, tpf_re_x3, tpf_im_x3, bg_x);
           }
 
         this->step();
       }
 
 
-    template <typename number, typename BatchObject>
-    void threepf_singleconfig_batch_observer<number, BatchObject>::stop_timers(size_t steps, unsigned int refinement)
+    template <typename number, typename BatchObject,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz, unsigned int bg_st,
+      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int ten_si_k1_st, unsigned int ten_si_k2_st, unsigned int ten_si_k3_st,
+      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+      unsigned int tw_si_re_k1_st, unsigned int tw_si_re_k2_st, unsigned int tw_si_re_k3_st,
+      unsigned int th_st>
+    void
+    threepf_singleconfig_batch_observer<number, BatchObject, bg_sz, ten_sz, tw_sz, th_sz, bg_st,
+      ten_k1_st, ten_k2_st, ten_k3_st, ten_si_k1_st, ten_si_k2_st, ten_si_k3_st,
+      tw_re_k1_st, tw_im_k1_st, tw_re_k2_st, tw_im_k2_st, tw_re_k3_st, tw_im_k3_st,
+      tw_si_re_k1_st, tw_si_re_k2_st, tw_si_re_k3_st, th_st>::stop_timers
+      (size_t steps, unsigned int refinement)
       {
         this->timing_observer<number, BatchObject>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
@@ -609,7 +620,10 @@ namespace transport
     // Observer: records results from a batch of twopf k-configurations
     // this is suitable for a GPU type integrator
 
-    template <typename number>
+    template <typename number,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+      unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
+      unsigned int tw_st, unsigned int tw_si_st>
     class twopf_groupconfig_batch_observer: public timing_observer<number, twopf_batcher<number>>
       {
 
@@ -618,8 +632,6 @@ namespace transport
         twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
                                          const device_queue_manager<twopf_kconfig_record>::device_work_list& c,
                                          const time_config_database& t,
-                                         unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
-                                         unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                          boost::timer::nanosecond_type t_int = CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                                          bool s = false, unsigned int p = 3);
 
@@ -655,40 +667,31 @@ namespace transport
 
         twopf_batcher<number>& batcher;
 
-        const unsigned int backg_size;
-        const unsigned int tensor_size;
-        const unsigned int twopf_size;
-
-        const unsigned int backg_start;
-        const unsigned int tensor_start;
-        const unsigned int twopf_start;
-
       };
 
 
-    template <typename number>
-    twopf_groupconfig_batch_observer<number>::twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
-                                                                               const device_queue_manager<twopf_kconfig_record>::device_work_list& c,
-                                                                               const time_config_database& t,
-                                                                               unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
-                                                                               unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
-                                                                               boost::timer::nanosecond_type t_int, bool s, unsigned int p)
+    template <typename number,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+      unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
+      unsigned int tw_st, unsigned int tw_si_st>
+    twopf_groupconfig_batch_observer<number, bg_sz, ten_sz, tw_sz, bg_st, ten_st, ten_si_st, tw_st, tw_si_st>::twopf_groupconfig_batch_observer
+      (twopf_batcher<number>& b, const device_queue_manager<twopf_kconfig_record>::device_work_list& c,
+       const time_config_database& t, boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number, twopf_batcher<number>>(t, t_int, s, p),
         batcher(b),
-        work_list(c),
-        backg_size(bg_sz),
-        tensor_size(ten_sz),
-        twopf_size(tw_sz),
-        backg_start(bg_st),
-        tensor_start(ten_st),
-        twopf_start(tw_st)
+        work_list(c)
       {
       }
 
 
-    template <typename number>
+    template <typename number,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+      unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
+      unsigned int tw_st, unsigned int tw_si_st>
     template <typename State>
-    void twopf_groupconfig_batch_observer<number>::push(const State& x)
+    void
+    twopf_groupconfig_batch_observer<number, bg_sz, ten_sz, tw_sz, bg_st, ten_st, ten_si_st, tw_st, tw_si_st>::push
+      (const State& x)
       {
         if(this->store_time_step())
           {
@@ -699,20 +702,24 @@ namespace transport
               {
                 // correlation functions are already dimensionless, so no rescaling needed
                 
-                std::vector<number> bg_x(this->backg_size);
-                for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[(this->backg_start + i)*n + c];
+                std::vector<number> bg_x(bg_sz);
+                for(unsigned int i = 0; i < bg_sz; ++i) bg_x[i] = x[(bg_st + i)*n + c];
 
-                std::vector<number> tensor_tpf_x(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x[i] = x[(this->tensor_start + i)*n + c];
+                std::vector<number> tensor_x(ten_sz);
+                for(unsigned int i = 0; i < ten_sz; ++i) tensor_x[i] = x[(ten_st + i)*n + c];
+                std::vector<number> tensor_si_x(ten_sz);
+                for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x[i] = x[(ten_si_st + i)*n + c];
 
-                std::vector<number> tpf_x(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x[i] = x[(this->twopf_start + i)*n + c];
+                std::vector<number> tpf_x(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_x[i] = x[(tw_st + i)*n + c];
+                std::vector<number> tpf_si_x(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_x[i] = x[(tw_si_st + i)*n + c];
 
                 if(this->work_list[c].is_background_stored())
                   {
                     this->batcher.push_backg(this->store_serial_number(), this->work_list[c]->serial, bg_x);
                   }
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->serial, this->work_list[c]->serial, tensor_tpf_x);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->serial, this->work_list[c]->serial, tensor_x);
                 this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->serial, this->work_list[c]->serial, tpf_x, bg_x);
               }
           }
@@ -721,8 +728,13 @@ namespace transport
       }
 
 
-    template <typename number>
-    void twopf_groupconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
+    template <typename number,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
+      unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
+      unsigned int tw_st, unsigned int tw_si_st>
+    void
+    twopf_groupconfig_batch_observer<number, bg_sz, ten_sz, tw_sz, bg_st, ten_st, ten_si_st, tw_st, tw_si_st>::stop_timers
+      (size_t steps, unsigned int refinement)
       {
         this->timing_observer<number, twopf_batcher<number>>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), steps, refinement);
@@ -732,7 +744,15 @@ namespace transport
     // Observer: records results from a batch of threepf k-configurations
     // this is suitable for a GPU type integrator
 
-    template <typename number>
+    template <typename number,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz, unsigned int bg_st,
+      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int ten_si_k1_st, unsigned int ten_si_k2_st, unsigned int ten_si_k3_st,
+      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+      unsigned int tw_si_re_k1_st, unsigned int tw_si_re_k2_st, unsigned int tw_si_re_k3_st,
+      unsigned int th_st>
     class threepf_groupconfig_batch_observer: public timing_observer<number, threepf_batcher<number>>
       {
 
@@ -741,13 +761,6 @@ namespace transport
         threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
                                            const device_queue_manager<threepf_kconfig_record>::device_work_list& c,
                                            const time_config_database& t,
-                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
-                                           unsigned int bg_st,
-                                           unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
-                                           unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
-                                           unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
-                                           unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
-                                           unsigned int th_st,
                                            boost::timer::nanosecond_type t_int=CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                                            bool s=false, unsigned int p=3);
 
@@ -783,63 +796,47 @@ namespace transport
 
         threepf_batcher<number>& batcher;
 
-        const unsigned int backg_size;
-        const unsigned int tensor_size;
-        const unsigned int twopf_size;
-        const unsigned int threepf_size;
-
-        const unsigned int backg_start;
-        const unsigned int tensor_k1_start;
-        const unsigned int tensor_k2_start;
-        const unsigned int tensor_k3_start;
-        const unsigned int twopf_re_k1_start;
-        const unsigned int twopf_im_k1_start;
-        const unsigned int twopf_re_k2_start;
-        const unsigned int twopf_im_k2_start;
-        const unsigned int twopf_re_k3_start;
-        const unsigned int twopf_im_k3_start;
-        const unsigned int threepf_start;
-
       };
 
 
-    template <typename number>
-    threepf_groupconfig_batch_observer<number>::threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
-                                                                                   const device_queue_manager<threepf_kconfig_record>::device_work_list& c,
-                                                                                   const time_config_database& t,
-                                                                                   unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
-                                                                                   unsigned int bg_st,
-                                                                                   unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
-                                                                                   unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
-                                                                                   unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
-                                                                                   unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
-                                                                                   unsigned int th_st,
-                                                                                   boost::timer::nanosecond_type t_int, bool s, unsigned int p)
+    template <typename number,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz, unsigned int bg_st,
+      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int ten_si_k1_st, unsigned int ten_si_k2_st, unsigned int ten_si_k3_st,
+      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+      unsigned int tw_si_re_k1_st, unsigned int tw_si_re_k2_st, unsigned int tw_si_re_k3_st,
+      unsigned int th_st>
+    threepf_groupconfig_batch_observer<number, bg_sz, ten_sz, tw_sz, th_sz, bg_st,
+      ten_k1_st, ten_k2_st, ten_k3_st, ten_si_k1_st, ten_si_k2_st, ten_si_k3_st,
+      tw_re_k1_st, tw_im_k1_st, tw_re_k2_st, tw_im_k2_st, tw_re_k3_st, tw_im_k3_st,
+      tw_si_re_k1_st, tw_si_re_k2_st, tw_si_re_k3_st, th_st>::threepf_groupconfig_batch_observer
+      (threepf_batcher<number>& b, const device_queue_manager<threepf_kconfig_record>::device_work_list& c,
+       const time_config_database& t, boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number, threepf_batcher<number>&>(t, t_int, s, p),
         batcher(b),
-        work_list(c),
-        backg_size(bg_sz),
-        tensor_size(ten_sz),
-        twopf_size(tw_sz),
-        threepf_size(th_sz),
-        backg_start(bg_st),
-        tensor_k1_start(ten_k1_st),
-        tensor_k2_start(ten_k2_st),
-        tensor_k3_start(ten_k3_st),
-        twopf_re_k1_start(tw_re_k1_st),
-        twopf_im_k1_start(tw_im_k1_st),
-        twopf_re_k2_start(tw_re_k2_st),
-        twopf_im_k2_start(tw_im_k2_st),
-        twopf_re_k3_start(tw_re_k3_st),
-        twopf_im_k3_start(tw_im_k3_st),
-        threepf_start(th_st)
+        work_list(c)
       {
       }
 
 
-    template <typename number>
+    template <typename number,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz, unsigned int bg_st,
+      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int ten_si_k1_st, unsigned int ten_si_k2_st, unsigned int ten_si_k3_st,
+      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+      unsigned int tw_si_re_k1_st, unsigned int tw_si_re_k2_st, unsigned int tw_si_re_k3_st,
+      unsigned int th_st>
     template <typename State>
-    void threepf_groupconfig_batch_observer<number>::push(const State& x)
+    void
+    threepf_groupconfig_batch_observer<number, bg_sz, ten_sz, tw_sz, th_sz, bg_st,
+      ten_k1_st, ten_k2_st, ten_k3_st, ten_si_k1_st, ten_si_k2_st, ten_si_k3_st,
+      tw_re_k1_st, tw_im_k1_st, tw_re_k2_st, tw_im_k2_st, tw_re_k3_st, tw_im_k3_st,
+      tw_si_re_k1_st, tw_si_re_k2_st, tw_si_re_k3_st, th_st>::push
+      (const State& x)
       {
         if(this->store_time_step())
           {
@@ -862,35 +859,47 @@ namespace transport
 
                 double shape_rescale = (k1/kt)*(k1/kt) * (k2/kt)*(k2/kt) * (k3/kt)*(k3/kt);
 
-                std::vector<number> bg_x(this->backg_size);
-                for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[(this->backg_start + i)*n + c];
+                std::vector<number> bg_x(bg_sz);
+                for(unsigned int i = 0; i < bg_sz; ++i) bg_x[i] = x[(bg_st + i)*n + c];
 
-                std::vector<number> tensor_tpf_x1(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x1[i] = k1_rescale * x[(this->tensor_k1_start + i)*n + c];
+                std::vector<number> tensor_x1(ten_sz);
+                for(unsigned int i = 0; i < ten_sz; ++i) tensor_x1[i] = k1_rescale * x[(ten_k1_st + i)*n + c];
+                std::vector<number> tensor_si_x1(ten_sz);
+                for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x1[i] = k1_rescale * x[(ten_si_k1_st + i)*n + c];
 
-                std::vector<number> tpf_x1_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_re[i] = k1_rescale * x[(this->twopf_re_k1_start + i)*n + c];
-                std::vector<number> tpf_x1_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_im[i] = k1_rescale * x[(this->twopf_im_k1_start + i)*n + c];
+                std::vector<number> tpf_re_x1(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_re_x1[i] = k1_rescale * x[(tw_re_k1_st + i) * n + c];
+                std::vector<number> tpf_im_x1(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_im_x1[i] = k1_rescale * x[(tw_im_k1_st + i) * n + c];
+                std::vector<number> tpf_si_re_x1(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_re_x1[i] = k1_rescale * x[(tw_si_re_k1_st + i)*n + c];
 
-                std::vector<number> tensor_tpf_x2(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x2[i] = k2_rescale * x[(this->tensor_k2_start + i)*n + c];
+                std::vector<number> tensor_x2(ten_sz);
+                for(unsigned int i = 0; i < ten_sz; ++i) tensor_x2[i] = k2_rescale * x[(ten_k2_st + i) * n + c];
+                std::vector<number> tensor_si_x2(ten_sz);
+                for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x2[i] = k2_rescale * x[(ten_si_k2_st + i)*n + c];
 
-                std::vector<number> tpf_x2_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_re[i] = k2_rescale * x[(this->twopf_re_k2_start + i)*n + c];
-                std::vector<number> tpf_x2_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_im[i] = k2_rescale * x[(this->twopf_im_k2_start + i)*n + c];
+                std::vector<number> tpf_re_x2(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_re_x2[i] = k2_rescale * x[(tw_re_k2_st + i) * n + c];
+                std::vector<number> tpf_im_x2(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_im_x2[i] = k2_rescale * x[(tw_im_k2_st + i) * n + c];
+                std::vector<number> tpf_si_re_x2(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_re_x2[i] = k2_rescale * x[(tw_si_re_k2_st + i)*n + c];
 
-                std::vector<number> tensor_tpf_x3(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x3[i] = k3_rescale * x[(this->tensor_k3_start + i)*n + c];
+                std::vector<number> tensor_x3(ten_sz);
+                for(unsigned int i = 0; i < ten_sz; ++i) tensor_x3[i] = k3_rescale * x[(ten_k3_st + i) * n + c];
+                std::vector<number> tensor_si_x3(ten_sz);
+                for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x3[i] = k3_rescale * x[(ten_si_k3_st + i)*n + c];
 
-                std::vector<number> tpf_x3_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_re[i] = k3_rescale * x[(this->twopf_re_k3_start + i)*n + c];
-                std::vector<number> tpf_x3_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_im[i] = k3_rescale * x[(this->twopf_im_k3_start + i)*n + c];
+                std::vector<number> tpf_re_x3(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_re_x3[i] = k3_rescale * x[(tw_re_k3_st + i) * n + c];
+                std::vector<number> tpf_im_x3(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_im_x3[i] = k3_rescale * x[(tw_im_k3_st + i) * n + c];
+                std::vector<number> tpf_si_re_x3(tw_sz);
+                for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_re_x3[i] = k3_rescale * x[(tw_si_re_k3_st + i)*n + c];
 
-                std::vector<number> thpf_x(this->threepf_size);
-                for(unsigned int i = 0; i < this->threepf_size; ++i) thpf_x[i] = shape_rescale * x[(this->threepf_start + i)*n + c];
+                std::vector<number> thpf_x(th_sz);
+                for(unsigned int i = 0; i < th_sz; ++i) thpf_x[i] = shape_rescale * x[(th_st + i)*n + c];
 
                 if(this->work_list[c].is_background_stored())
                   {
@@ -899,26 +908,26 @@ namespace transport
 
                 if(this->work_list[c].is_twopf_k1_stored())
                   {
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tensor_tpf_x1);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tpf_x1_re, bg_x, twopf_type::real);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tpf_x1_im, bg_x, twopf_type::imag);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tensor_x1);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tpf_re_x1, bg_x, twopf_type::real);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tpf_im_x1, bg_x, twopf_type::imag);
                   }
 
                 if(this->work_list[c].is_twopf_k2_stored())
                   {
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tensor_tpf_x2);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tpf_x2_re, bg_x, twopf_type::real);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tpf_x2_im, bg_x, twopf_type::imag);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tensor_x2);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tpf_re_x2, bg_x, twopf_type::real);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tpf_im_x2, bg_x, twopf_type::imag);
                   }
 
                 if(this->work_list[c].is_twopf_k3_stored())
                   {
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tensor_tpf_x3);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tpf_x3_re, bg_x, twopf_type::real);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tpf_x3_im, bg_x, twopf_type::imag);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tensor_x3);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tpf_re_x3, bg_x, twopf_type::real);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tpf_im_x3, bg_x, twopf_type::imag);
                   }
 
-                this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *(this->work_list[c]), this->work_list[c]->serial, thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
+                this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *(this->work_list[c]), this->work_list[c]->serial, thpf_x, tpf_re_x1, tpf_im_x1, tpf_re_x2, tpf_im_x2, tpf_re_x3, tpf_im_x3, bg_x);
               }
           }
 
@@ -926,8 +935,20 @@ namespace transport
       }
 
 
-    template <typename number>
-    void threepf_groupconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
+    template <typename number,
+      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz, unsigned int bg_st,
+      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
+      unsigned int ten_si_k1_st, unsigned int ten_si_k2_st, unsigned int ten_si_k3_st,
+      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+      unsigned int tw_si_re_k1_st, unsigned int tw_si_re_k2_st, unsigned int tw_si_re_k3_st,
+      unsigned int th_st>
+    void threepf_groupconfig_batch_observer<number, bg_sz, ten_sz, tw_sz, th_sz, bg_st,
+      ten_k1_st, ten_k2_st, ten_k3_st, ten_si_k1_st, ten_si_k2_st, ten_si_k3_st,
+      tw_re_k1_st, tw_im_k1_st, tw_re_k2_st, tw_im_k2_st, tw_re_k3_st, tw_im_k3_st,
+      tw_si_re_k1_st, tw_si_re_k2_st, tw_si_re_k3_st, th_st>::stop_timers
+      (size_t steps, unsigned int refinement)
       {
         this->timing_observer<number, threepf_batcher<number>>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), steps, refinement);
