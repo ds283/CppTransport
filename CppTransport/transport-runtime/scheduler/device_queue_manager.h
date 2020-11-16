@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_WORK_QUEUE_H
-#define CPPTRANSPORT_WORK_QUEUE_H
+#ifndef CPPTRANSPORT_DEVICE_QUEUE_MANAGER_H
+#define CPPTRANSPORT_DEVICE_QUEUE_MANAGER_H
 
 
 #include <iostream>
@@ -43,7 +43,7 @@
 namespace transport
   {
     
-    namespace work_queue_impl
+    namespace device_queue_impl
       {
     
         //! Hold a list of work items for a specific device. The queue for a device is a collection of these work lists.
@@ -112,7 +112,9 @@ namespace transport
           }
     
     
-        //! Hold a queue of work items for a specific device. The queue may be broken into a collection of work lists.
+        //! Hold a queue of work items for a specific device. The queue is broken into one or more
+        //! work lists, each of which holds the work items that can be processes 'atomically'.
+        //! For a GPU this means the work items that can be processed in parallel, ie. in a warp.
         template <typename ContextManager, typename QueueManager>
         class device_queue
           {
@@ -129,6 +131,11 @@ namespace transport
             
             //! work item type
             using item_type = typename QueueManager::item_type;
+
+          private:
+
+            //! list of work lists
+            using work_list_database = std::vector< work_list_type >;
       
             
           public:
@@ -139,11 +146,11 @@ namespace transport
                 state_size(size)
               {
                 // push empty queue onto list
-                queue_list.emplace_back(state_size);
+                work_lists.emplace_back(state_size);
               }
         
             //! Compute memory required to integrate all items in this queue
-            size_t get_memory_required() const { return(this->queue_list.back().get_memory_required()); }
+            size_t get_memory_required() const { return(this->work_lists.back().get_memory_required()); }
         
             //! Return device associated with this queue
             const device_type& get_device() const { return(this->device); }
@@ -152,7 +159,7 @@ namespace transport
             double get_weight() const { return(this->device.get_fractional_weight()); }
         
             //! Return number of work lists associated with this queue
-            size_t size() const { return(this->queue_list.size()); }
+            size_t size() const { return(this->work_lists.size()); }
         
             //! Access individual work lists
             const work_list_type& operator[](unsigned int d) const;
@@ -169,7 +176,7 @@ namespace transport
           protected:
 
             //! Create a new work list on the device
-            void new_queue() { this->queue_list.emplace_back(this->state_size); }
+            void new_work_list() { this->work_lists.emplace_back(this->state_size); }
       
             
             // INTERNAL DATA
@@ -177,7 +184,7 @@ namespace transport
           private:
         
             //! std::vector holding the work lists for this device
-            std::vector< work_list_type > queue_list;
+            work_list_database work_lists;
         
             //! device corresponding to this queue
             const device_type& device;
@@ -195,9 +202,9 @@ namespace transport
         const typename device_queue<ContextManager, QueueManager>::work_list_type&
         device_queue<ContextManager, QueueManager>::operator[](unsigned int d) const
           {
-            assert(d < this->queue_list.size());
+            assert(d < this->work_lists.size());
     
-            if(d < this->queue_list.size()) return(this->queue_list[d]);
+            if(d < this->work_lists.size()) return(this->work_lists[d]);
 
             throw std::out_of_range(CPPTRANSPORT_DEVICE_QUEUE_RANGE);
           }
@@ -206,21 +213,21 @@ namespace transport
         template <typename ContextManager, typename QueueManager>
         void device_queue<ContextManager, QueueManager>::enqueue_item(const item_type& item)
           {
-            if(this->device.get_mem_type() == context::device::memory_type::bounded
+            if(this->device.get_mem_type() == compute_context::device::memory_type::bounded
                && this->get_memory_required() > this->device.get_mem_size())
               {
-                this->new_queue();
+                this->new_work_list();
               }
 
-            this->queue_list.back().enqueue_item(item);
+            this->work_lists.back().enqueue_item(item);
             this->total_items++;
           }
     
-      }   // namespace work_queue_impl
+      }   // namespace device_queue_impl
 
 
     template <typename ItemType>
-    class work_queue
+    class device_queue_manager
       {
         
         // TYPES
@@ -231,21 +238,26 @@ namespace transport
         using item_type = ItemType;
 
         //! type for device queue
-        using device_queue = work_queue_impl::device_queue< context, work_queue<ItemType> >;
+        using device_queue = device_queue_impl::device_queue< compute_context, device_queue_manager<ItemType> >;
         
         //! type for work list
         using device_work_list = typename device_queue::work_list_type;
 
-        
+      private:
+
+        //! database for device queues, in 1-to-1 correspondence with devices in the compute context
+        using device_queue_database = std::vector<device_queue>;
+
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! constructor captures a compute context and size of state vector
-        work_queue(const context& c, unsigned int size);
+        device_queue_manager(const compute_context& c, unsigned int size);
         
         //! destructor is default
-        ~work_queue() = default;
+        ~device_queue_manager() = default;
         
         
         // QUEUE MANAGEMENT
@@ -285,10 +297,10 @@ namespace transport
       private:
 
         //! Device context
-        const context& ctx;
+        const compute_context& ctx;
 
         //! std::vector holding queues for each device
-        std::vector<device_queue> device_list;
+        device_queue_database device_list;
 
         //! Total number of work items we are holding, summed over all devices
         unsigned int total_items;
@@ -300,7 +312,7 @@ namespace transport
 
 
     template <typename ItemType>
-    work_queue<ItemType>::work_queue(const context& c, unsigned int size)
+    device_queue_manager<ItemType>::device_queue_manager(const compute_context& c, unsigned int size)
       : ctx(c),
         total_items(0),
         state_size(size)
@@ -313,9 +325,9 @@ namespace transport
 
 
     template <typename ItemType>
-    void work_queue<ItemType>::clear()
+    void device_queue_manager<ItemType>::clear()
       {
-        // set up queue for the number of devices in our context
+        // set up queue for the number of devices in our compute context
         this->device_list.clear();
 
         for(unsigned int i = 0; i < this->ctx.size(); ++i)
@@ -326,7 +338,7 @@ namespace transport
 
 
     template <typename ItemType>
-    void work_queue<ItemType>::enqueue_work_item(const ItemType& item)
+    void device_queue_manager<ItemType>::enqueue_work_item(const ItemType& item)
       {
         bool inserted = false;
         for(auto& q : this->device_list)
@@ -351,7 +363,7 @@ namespace transport
 
     template <typename ItemType>
     template <typename Stream>
-    void work_queue<ItemType>::write(Stream& out)
+    void device_queue_manager<ItemType>::write(Stream& out)
       {
         out << CPPTRANSPORT_WORK_QUEUE_OUTPUT_A << " " << this->ctx.size() << " "
         << (this->ctx.size() > 1 ? CPPTRANSPORT_WORK_QUEUE_OUTPUT_B : CPPTRANSPORT_WORK_QUEUE_OUTPUT_C)
@@ -361,7 +373,7 @@ namespace transport
         for(const auto& q : this->device_list)
           {
             out << d << ". " << q.get_device().get_name() << " (" << CPPTRANSPORT_WORK_QUEUE_WEIGHT << " = " << q.get_weight() << "), ";
-            if(q.get_device().get_mem_type() == context::device::memory_type::bounded)
+            if(q.get_device().get_mem_type() == compute_context::device::memory_type::bounded)
               {
                 out << CPPTRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory(q.get_device().get_mem_size());
               }
@@ -378,7 +390,7 @@ namespace transport
 
             for(unsigned int i = 0; i < q.size(); ++i)
               {
-                const typename work_queue<ItemType>::device_work_list& work = q[i];
+                const typename device_queue_manager<ItemType>::device_work_list& work = q[i];
 
                 out << "   ** " << CPPTRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << '\n';
                 for(unsigned int j = 0; j < work.size(); ++j)
@@ -394,8 +406,8 @@ namespace transport
     
     
     template <typename ItemType>
-    const typename work_queue<ItemType>::device_queue&
-    work_queue<ItemType>::operator[](unsigned int d) const
+    const typename device_queue_manager<ItemType>::device_queue&
+    device_queue_manager<ItemType>::operator[](unsigned int d) const
       {
         assert(d < this->device_list.size());
     
@@ -406,7 +418,7 @@ namespace transport
     
     
     template <typename ItemType, typename Char, typename Traits>
-    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, work_queue<ItemType>& obj)
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, device_queue_manager<ItemType>& obj)
       {
         obj.write(out);
         return(out);
@@ -416,4 +428,4 @@ namespace transport
 
 
 
-#endif //CPPTRANSPORT_WORK_QUEUE_H
+#endif //CPPTRANSPORT_DEVICE_QUEUE_MANAGER_H

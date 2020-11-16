@@ -35,7 +35,7 @@
 
 #include "transport-runtime/tasks/task.h"
 #include "transport-runtime/derived-products/derived-content/correlation-functions/template_types.h"
-#include "transport-runtime/scheduler/work_queue.h"
+#include "transport-runtime/scheduler/device_queue_manager.h"
 #include "transport-runtime/models/model.h"
 
 #include "transport-runtime/exceptions.h"

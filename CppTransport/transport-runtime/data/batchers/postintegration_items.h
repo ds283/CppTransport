@@ -370,7 +370,7 @@ namespace transport
 			      // enable searching on heterogeneous keys
 			      using is_transparent = void;
 
-				    bool operator() (const std::unique_ptr<fNL_item>& A, const std::unique_ptr<fNL_item>& B)
+				    bool operator() (const std::unique_ptr<fNL_item>& A, const std::unique_ptr<fNL_item>& B) const
 					    {
 						    return(A->time_serial < B->time_serial);
 					    }

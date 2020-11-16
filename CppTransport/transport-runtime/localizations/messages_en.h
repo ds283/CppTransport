@@ -44,6 +44,7 @@
 #include "transport-runtime/localizations/messages_en/initial_conditions.h"
 #include "transport-runtime/localizations/messages_en/range.h"
 #include "transport-runtime/localizations/messages_en/scheduler.h"
+#include "transport-runtime/localizations/messages_en/context.h"
 #include "transport-runtime/localizations/messages_en/model_list.h"
 
 #include "transport-runtime/localizations/messages_en/tasks/tasks.h"

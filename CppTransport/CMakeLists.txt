@@ -1173,7 +1173,7 @@ SET(TRANSPORT_RUNTIME_REPOSITORY_WRITERS_FILES
 SET(TRANSPORT_RUNTIME_SCHEDULER_FILES
   transport-runtime/scheduler/context.h
   transport-runtime/scheduler/scheduler.h
-  transport-runtime/scheduler/work_queue.h
+  transport-runtime/scheduler/device_queue_manager.h
   )
 
 SET(TRANSPORT_RUNTIME_SERIALIZATION_FILES

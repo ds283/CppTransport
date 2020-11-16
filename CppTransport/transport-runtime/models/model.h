@@ -386,7 +386,7 @@ namespace transport
         // obtain the compute context for this calculation
         // this method must be over-ridden by a derived implementation class, and should
         // supply a suitable context for whatever compute backend is in use
-        virtual context backend_get_context(void) = 0;
+        virtual compute_context backend_get_context(void) = 0;
 
 		    // obtain backend type
 		    virtual worker_type get_backend_type(void) = 0;
@@ -406,12 +406,12 @@ namespace transport
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
+        virtual void backend_process_queue(device_queue_manager<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
                                            twopf_batcher<number>& batcher, bool silent = false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
+        virtual void backend_process_queue(device_queue_manager<threepf_kconfig_record>& work, const threepf_task<number>* tk,
                                            threepf_batcher<number>& batcher, bool silent = false) = 0;
 
         // return size of state vectors

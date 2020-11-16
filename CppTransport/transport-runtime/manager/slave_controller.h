@@ -49,7 +49,7 @@
 
 #include "transport-runtime/scheduler/context.h"
 #include "transport-runtime/scheduler/scheduler.h"
-#include "transport-runtime/scheduler/work_queue.h"
+#include "transport-runtime/scheduler/device_queue_manager.h"
 
 #include "transport-runtime/utilities/formatter.h"
 

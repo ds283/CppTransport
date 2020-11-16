@@ -151,16 +151,16 @@ namespace transport
 
         public:
 
-          // Set up a context
-          virtual context backend_get_context() override ;
+          // Set up a compute context
+          virtual compute_context backend_get_context() override ;
 
           // Integrate background and 2-point function on a OpenCL device
-          virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+          virtual void backend_process_queue(device_queue_manager<twopf_kconfig>& work, const integration_task<number>* tk,
                                              twopf_batcher<number>& batcher,
                                              bool silent = false) override;
 
           // Integrate background, 2-point function and 3-point function on a OpenCL device
-          virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+          virtual void backend_process_queue(device_queue_manager<threepf_kconfig>& work, const integration_task<number>* tk,
                                              threepf_batcher<number>& batcher,
                                              bool silent = false) override;
 
@@ -176,14 +176,14 @@ namespace transport
 
           template <typename State, typename Config>
           void populate_twopf_ic(State& x, unsigned int start,
-                                 const typename work_queue<Config>::device_work_list& list,
+                                 const typename device_queue_manager<Config>::device_work_list& list,
                                  std::function<double(const Config&)> visitor,
                                  double Ninit,
                                  const parameters<number>& p, const std::vector<number>& ics, bool imaginary=false);
 
           template <typename State>
           void populate_threepf_ic(State& x, unsigned int start,
-                                   const work_queue<threepf_kconfig>::device_work_list& list, double Ninit,
+                                   const device_queue_manager<threepf_kconfig>::device_work_list& list, double Ninit,
                                    const parameters<number>& p, const std::vector<number>& ics);
 
           void populate_threepf_state_ic(threepf_state& x, const std::vector< struct threepf_kconfig >& kconfig_list,
@@ -230,7 +230,7 @@ namespace transport
       public:
 
         $$__MODEL_vexcl_twopf_observer(twopf_batcher<number>& b,
-                                       const work_queue<twopf_kconfig>::device_work_list& c,
+                                       const device_queue_manager<twopf_kconfig>::device_work_list& c,
                                        const std::vector<time_config>& l,
                                        double t_int=1.0, bool s=false, unsigned int p=3)
           : twopf_groupconfig_batch_observer<number>(b, c, l,
@@ -280,7 +280,7 @@ namespace transport
       public:
 
         $$__MODEL_vexcl_threepf_observer(threepf_batcher<number>& b,
-                                         const work_queue<threepf_kconfig>::device_work_list& c,
+                                         const device_queue_manager<threepf_kconfig>::device_work_list& c,
                                          const std::vector<time_config>& l,
                                          double t_int=1.0, bool s=false, unsigned int p=3)
           : threepf_groupconfig_batch_observer<number>(b, c, l,
@@ -302,11 +302,11 @@ namespace transport
     // BACKEND INTERFACE
 
 
-    // generate a context
+    // generate a compute context
     template <typename number>
-    context $$__MODEL_vexcl<number>::backend_get_context(void)
+    compute_context $$__MODEL_vexcl<number>::backend_get_context(void)
       {
-        context work_ctx;
+        compute_context work_ctx;
 
         // add our OpenCL device to the integration context
         // assume we can use all the memory on the device for storage -- this may require revisting
@@ -316,7 +316,7 @@ namespace transport
         unsigned long global_mem = dev.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
         std::string device_name  = dev.getInfo<CL_DEVICE_NAME>();
 
-        work_ctx.add_device(device_name, global_mem/2, context::device::bounded);
+        work_ctx.add_device(device_name, global_mem/2, compute_context::device::bounded);
 
         return(work_ctx);
       }
@@ -324,7 +324,7 @@ namespace transport
 
     // process work queue for twopf
     template <typename number>
-    void $$__MODEL_vexcl<number>::backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+    void $$__MODEL_vexcl<number>::backend_process_queue(device_queue_manager<twopf_kconfig>& work, const integration_task<number>* tk,
                                                         twopf_batcher<number>& batcher,
                                                         bool silent)
       {
@@ -338,7 +338,7 @@ namespace transport
 
         // get work queue for the zeroth device (should be the only device in this backend)
         assert(work.size() == 1);
-        const work_queue<twopf_kconfig>::device_queue queues = work[0];
+        const device_queue_manager<twopf_kconfig>::device_queue queues = work[0];
 
         // there may be more than one work list if there are too many configurations to integrate
         // with our current GPU memory capacity
@@ -346,7 +346,7 @@ namespace transport
           {
             try
               {
-                const work_queue<twopf_kconfig>::device_work_list list = queues[i];
+                const device_queue_manager<twopf_kconfig>::device_work_list list = queues[i];
 
 		            // get list of time steps, and storage list
                 std::vector<time_storage_record> slist;
@@ -424,7 +424,7 @@ namespace transport
     template <typename number>
     template <typename State, typename Config>
     void $$__MODEL_vexcl<number>::populate_twopf_ic(State& x, unsigned int start,
-                                                    const typename work_queue<Config>::device_work_list& list,
+                                                    const typename device_queue_manager<Config>::device_work_list& list,
                                                     std::function<double(const Config&)> visitor,
                                                     double Ninit,
                                                     const parameters<number>& p, const std::vector<number>& ics, bool imaginary)
@@ -441,7 +441,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_vexcl<number>::backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+    void $$__MODEL_vexcl<number>::backend_process_queue(device_queue_manager<threepf_kconfig>& work, const integration_task<number>* tk,
                                                         threepf_batcher<number>& batcher,
                                                         bool silent)
       {
@@ -455,7 +455,7 @@ namespace transport
 
         // get work queue for the zeroth device (should be the only device in this backend)
         assert(work.size() == 1);
-        const work_queue<threepf_kconfig>::device_queue queues = work[0];
+        const device_queue_manager<threepf_kconfig>::device_queue queues = work[0];
 
         // there may be more than one queue if there are too many configurations to integrate
         // with our current GPU memory capacity
@@ -463,7 +463,7 @@ namespace transport
           {
             try
               {
-                const work_queue<threepf_kconfig>::device_work_list list = queues[i];
+                const device_queue_manager<threepf_kconfig>::device_work_list list = queues[i];
 
 		            // get list of time steps, and storage list
                 std::vector<bool>          slist;
@@ -555,7 +555,7 @@ namespace transport
     template <typename number>
     template <typename State>
     void $$__MODEL_vexcl<number>::populate_threepf_ic(State& x, unsigned int start,
-                                                      const work_queue<threepf_kconfig>::device_work_list& list, double Ninit,
+                                                      const device_queue_manager<threepf_kconfig>::device_work_list& list, double Ninit,
                                                       const parameters<number>& p, const std::vector<number>& ics)
       {
         // scan through k-modes, assigning values to the (i,j,k)-th element
