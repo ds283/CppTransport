@@ -1270,10 +1270,10 @@ namespace transport
 #undef __tensor
 #undef __tensor_si
 
-#define __background(A)        x[$MODEL_pool::backg_start + FLATTEN(A)]
-#define __twopf(A,B)           x[$MODEL_pool::twopf_start + FLATTEN(A,B)]
-#define __twopf_si(A,B)        x[$MODEL_pool::twopf_si_start + FLATTEN(A,B)]
-#define __tensor(A,B)    x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(A,B)]
+#define __background(A)  x[$MODEL_pool::backg_start     + FLATTEN(A)]
+#define __twopf(A,B)     x[$MODEL_pool::twopf_start     + FLATTEN(A,B)]
+#define __twopf_si(A,B)  x[$MODEL_pool::twopf_si_start  + FLATTEN(A,B)]
+#define __tensor(A,B)    x[$MODEL_pool::tensor_start    + TENSOR_FLATTEN(A,B)]
 #define __tensor_si(A,B) x[$MODEL_pool::tensor_si_start + TENSOR_FLATTEN(A,B)]
 
 #ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
@@ -1526,6 +1526,7 @@ namespace transport
         __dtwopf_im_k3($A, $B) $=  + $U2_k3_CONTAINER[AC] * __twopf_im_k3($C, $B);
         __dtwopf_im_k3($A, $B) $+= + $U2_k3_CONTAINER[BC] * __twopf_im_k3($A, $C);
 
+
         // evolve the 2pf spectral index tensors
         __dtwopf_si_re_k1($A, $B) $=  + $U2_k1_CONTAINER[AC] * __twopf_si_re_k1($C, $B);
         __dtwopf_si_re_k1($A, $B) $+= + $U2_k1_CONTAINER[BC] * __twopf_si_re_k1($A, $C);
@@ -1566,6 +1567,7 @@ namespace transport
         __dthreepf($A, $B, $C) $+= + $U2_k3_CONTAINER[CM] * __threepf($A, $B, $M);
         __dthreepf($A, $B, $C) $+= + $U3_k3k1k2_CONTAINER[CMN] * __twopf_re_k1($A, $M) * __twopf_re_k2($B, $N);
         __dthreepf($A, $B, $C) $+= - $U3_k3k1k2_CONTAINER[CMN] * __twopf_im_k1($A, $M) * __twopf_im_k2($B, $N);
+
 
 #ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
         if(std::isnan(__background($A)) || std::isinf(__background($A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
