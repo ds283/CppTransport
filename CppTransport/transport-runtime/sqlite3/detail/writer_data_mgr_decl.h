@@ -39,7 +39,7 @@ namespace transport
       public:
 
         //! constructor captures repository_sqlite3 object
-        sqlite3_twopf_writer_aggregate(data_manager_sqlite3<number>& m)
+        explicit sqlite3_twopf_writer_aggregate(data_manager_sqlite3<number>& m)
           : mgr(m)
           {
           }
@@ -75,7 +75,7 @@ namespace transport
       public:
 
         //! constructor captures repository_sqlite3 object
-        sqlite3_twopf_writer_integrity(data_manager_sqlite3<number>& m)
+        explicit sqlite3_twopf_writer_integrity(data_manager_sqlite3<number>& m)
           : mgr(m)
           {
           }
@@ -111,7 +111,7 @@ namespace transport
       public:
 
         //! constructor captures repository_sqlite3 object
-        sqlite3_twopf_writer_finalize(data_manager_sqlite3<number>& m)
+        explicit sqlite3_twopf_writer_finalize(data_manager_sqlite3<number>& m)
           : mgr(m)
           {
           }
@@ -147,7 +147,7 @@ namespace transport
       public:
         
         //! constructor captures repository_sqlite3 object
-        sqlite3_threepf_writer_aggregate(data_manager_sqlite3<number>& m)
+        explicit sqlite3_threepf_writer_aggregate(data_manager_sqlite3<number>& m)
           : mgr(m)
           {
           }

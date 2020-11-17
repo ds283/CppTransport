@@ -114,9 +114,9 @@ namespace transport
       public:
 
         //! Create a timing observer object
-        timing_observer(const time_config_database& t,
-                        boost::timer::nanosecond_type t_int=CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
-                        bool s=false, unsigned int p=3);
+        explicit timing_observer(const time_config_database& t,
+                                 boost::timer::nanosecond_type t_int = CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                 bool s = false, unsigned int p = 3);
 
 
         // INTERFACE
@@ -277,7 +277,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers(size_t steps, unsigned int refinement) override;
+        void stop_timers(size_t steps, unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -321,21 +321,30 @@ namespace transport
           {
             // correlation functions are already dimensionless, so no rescaling needed
 
-            std::vector<number> bg_x(bg_sz);
+            std::vector<number> bg_x{bg_sz};
             for(unsigned int i = 0; i < bg_sz; ++i) bg_x[i] = x[bg_st + i];
 
-            std::vector<number> tensor_tpf_x(ten_sz);
-            for(unsigned int i = 0; i < ten_sz; ++i) tensor_tpf_x[i] = x[ten_st + i];
+            std::vector<number> tensor_x{ten_sz};
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_x[i] = x[ten_st + i];
+            
+            std::vector<number> tensor_si_x{ten_sz};
+            for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x[i] = x[ten_si_st + i];
 
-            std::vector<number> tpf_x(tw_sz);
+            std::vector<number> tpf_x{tw_sz};
             for(unsigned int i = 0; i < tw_sz; ++i) tpf_x[i] = x[tw_st + i];
+            
+            std::vector<number> tpf_si_x{tw_sz};
+            for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_x[i] = x[tw_si_st + i];
+
+            const auto store_serial = this->store_serial_number();
+            const auto k_serial = this->k_config->serial;
 
             if(this->k_config.is_background_stored())
               {
-                this->batcher.push_backg(this->store_serial_number(), this->k_config->serial, bg_x);
+                this->batcher.push_backg(store_serial, k_serial, bg_x);
               }
-            this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->serial, this->k_config->serial, tensor_tpf_x);
-            this->batcher.push_twopf(this->store_serial_number(), this->k_config->serial, this->k_config->serial, tpf_x, bg_x);
+            this->batcher.push_tensor_twopf(store_serial, k_serial, k_serial, tensor_x);
+            this->batcher.push_twopf(store_serial, k_serial, k_serial, tpf_x, bg_x);
           }
 
         this->step();
@@ -419,7 +428,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers(size_t steps, unsigned int refinement) override;
+        void stop_timers(size_t steps, unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -545,23 +554,32 @@ namespace transport
 
             if(this->k_config.is_twopf_k1_stored())
               {
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tensor_x1);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tpf_re_x1, bg_x, twopf_type::real);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial, tpf_im_x1, bg_x, twopf_type::imag);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k1_serial,
+                                                this->k_config->serial, tensor_x1);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial,
+                                         tpf_re_x1, bg_x);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial,
+                                         tpf_im_x1, bg_x);
               }
 
             if(this->k_config.is_twopf_k2_stored())
               {
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial, tensor_tpf_x2);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial, tpf_re_x2, bg_x, twopf_type::real);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial, tpf_im_x2, bg_x, twopf_type::imag);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k2_serial,
+                                                this->k_config->serial, tensor_tpf_x2);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial,
+                                         tpf_re_x2, bg_x);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial,
+                                         tpf_im_x2, bg_x);
               }
 
             if(this->k_config.is_twopf_k3_stored())
               {
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tensor_tpf_x3);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tpf_re_x3, bg_x, twopf_type::real);
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tpf_im_x3, bg_x, twopf_type::imag);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k3_serial,
+                                                this->k_config->serial, tensor_tpf_x3);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial,
+                                         tpf_re_x3, bg_x);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial,
+                                         tpf_im_x3, bg_x);
               }
 
             this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *this->k_config, this->k_config->serial,
@@ -656,7 +674,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers(size_t steps, unsigned int refinement) override;
+        void stop_timers(size_t steps, unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -719,8 +737,10 @@ namespace transport
                   {
                     this->batcher.push_backg(this->store_serial_number(), this->work_list[c]->serial, bg_x);
                   }
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->serial, this->work_list[c]->serial, tensor_x);
-                this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->serial, this->work_list[c]->serial, tpf_x, bg_x);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->serial,
+                                                this->work_list[c]->serial, tensor_x);
+                this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->serial,
+                                         this->work_list[c]->serial, tpf_x, bg_x);
               }
           }
 
@@ -785,7 +805,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers(size_t steps, unsigned int refinement) override;
+        void stop_timers(size_t steps, unsigned int refinement) override;
 
 
         // INTERNAL DATA
