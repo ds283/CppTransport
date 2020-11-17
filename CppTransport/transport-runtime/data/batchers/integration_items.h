@@ -130,7 +130,7 @@ namespace transport
             //! number of kconfiguration serial numbers in job
             const unsigned int kconfig_items;
 
-            // values
+            //! values
             const std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
@@ -179,13 +179,61 @@ namespace transport
             //! number of kconfiguration serial numbers in job
             const unsigned int kconfig_items;
 
-            // values
+            //! values
             const std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
             const unsigned int source_serial;
 
 	        };
+
+
+        //! Stores a real twopf 'spectral index' configuration associated with a single time-point and k-configuration
+        class twopf_si_re_item
+          {
+          public:
+            twopf_si_re_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki, unsigned int Nf)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki),
+                Nfields(Nf)
+              {
+                if(elements.size() != 2*Nfields * 2*Nfields)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_TWOPF_SI_SIZE << " (" << elements.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
+
+            //! cache number of fields in parent model
+            const unsigned int Nfields;
+
+            //! time serial number for this configuration
+            const unsigned int time_serial;
+
+            //! kconfig serial number for this configuration
+            const unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            const unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            const unsigned int kconfig_items;
+
+            //! values
+            const std::vector<number> elements;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            const unsigned int source_serial;
+
+          };
 
 
         //! Stores a tensor two-point function configuration, associated with a single time-point and k-configuration
@@ -223,12 +271,55 @@ namespace transport
             //! number of kconfiguration serial numbers in job
             const unsigned int kconfig_items;
 
-            // values
+            //! values
             const std::vector<number> elements;
 
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
             const unsigned int source_serial;
 	        };
+
+
+        //! Stores a tensor two-point 'spectral index' function configuration, associated with a single time-point and k-configuration
+        class tensor_twopf_si_item
+          {
+          public:
+            tensor_twopf_si_item(unsigned int ts, unsigned int ks, unsigned int ss, const std::vector<number>& e, unsigned int ti, unsigned int ki)
+              : time_serial(ts),
+                kconfig_serial(ks),
+                source_serial(ss),
+                elements(e),
+                time_items(ti),
+                kconfig_items(ki)
+              {
+                if(elements.size() != 2*2)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_BATCHER_TENSOR_TWOPF_SI_SIZE << " (" << elements.size() << ")";
+                    throw runtime_exception(exception_type::STORAGE_ERROR, msg.str());
+                  }
+              }
+
+            //! make unique identifier
+            unsigned long int get_unique(unsigned int page, unsigned int pages) const { return(kconfig_serial*time_items*pages + time_serial*pages + page); }
+
+            //! time serial number for this configuration
+            const unsigned int time_serial;
+
+            //! kconfig serial number for this configuration
+            const unsigned int kconfig_serial;
+
+            //! number of time serial numbers in job
+            const unsigned int time_items;
+
+            //! number of kconfiguration serial numbers in job
+            const unsigned int kconfig_items;
+
+            //! values
+            const std::vector<number> elements;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            const unsigned int source_serial;
+          };
 
 
         //! Stores a threepf configuration associated with a single time-point and k-configuration,

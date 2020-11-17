@@ -59,40 +59,46 @@ namespace transport
 		  public:
 
         //! Transaction factory
-        typedef std::function<transaction_manager(integration_batcher<number>*)> transaction_factory;
+        using transaction_factory = std::function<transaction_manager(integration_batcher<number>*)>;
 
-        // Write functions don't take const referefences for each cache because the cache is sorted in-place
+        // Write functions don't take const references for each cache because the cache is sorted in-place
         // This sort step is important -- it dramatically improves SQLite performance
 
 		    //! Background writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::backg_item> >&)> backg_writer;
+		    using backg_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::backg_item> >&)>;
 
-		    //! Two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::twopf_re_item> >&)> twopf_re_writer;
+		    //! 2pf writer function - real part
+		    using twopf_re_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::twopf_re_item> >&)>;
 
-		    //! Two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::twopf_im_item> >&)> twopf_im_writer;
+		    //! 2pf writer function - imaginary part
+		    using twopf_im_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::twopf_im_item> >&)>;
 
-		    //! Tensor two-point function writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::tensor_twopf_item> >&)> tensor_twopf_writer;
+		    //! 2pf 'spectral index' writer function (currently only the real part is stored)
+		    using twopf_si_re_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::twopf_si_re_item> >&)>;
+
+		    //! Tensor two-point function writer function (currently only the real part is stored)
+		    using tensor_twopf_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::tensor_twopf_item> >&)>;
+
+        //! Tensor two-point function writer function (currently only the real part is stored)
+        using tensor_twopf_si_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::tensor_twopf_si_item> >&)>;
 
 		    //! Three-point function writer function for momentum insertions
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::threepf_momentum_item> >&)> threepf_momentum_writer;
+		    using threepf_momentum_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::threepf_momentum_item> >&)>;
 
         //! Three-point function writer function for derivative insertions
-        typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::threepf_Nderiv_item> >&)> threepf_Nderiv_writer;
+        using threepf_Nderiv_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::threepf_Nderiv_item> >&)>;
 
 		    //! Per-configuration statistics writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::configuration_statistics> >&)> stats_writer;
+		    using stats_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::configuration_statistics> >&)>;
 
 				//! Per-configuration initial conditions writer function
-				typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::ics_item> >&)> ics_writer;
+				using ics_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::ics_item> >&)>;
 
 		    //! Per-configuration initial conditions writer function - kt variant
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::ics_kt_item> >&)> ics_kt_writer;
+		    using ics_kt_writer = std::function<void(transaction_manager&, integration_batcher<number>*, std::vector<std::unique_ptr< typename integration_items<number>::ics_kt_item> >&)>;
 
 		    //! Host information writer function
-		    typedef std::function<void(transaction_manager&, integration_batcher<number>*)> host_info_writer;
+		    using host_info_writer =  std::function<void(transaction_manager&, integration_batcher<number>*)>;
 			};
 
 
@@ -112,10 +118,10 @@ namespace transport
                             handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
 
         //! move constructor
-        integration_batcher(integration_batcher<number>&&) = default;
+        integration_batcher(integration_batcher<number>&&) noexcept = default;
 
         //! destructor is default
-        virtual ~integration_batcher() = default;
+        ~integration_batcher() override = default;
 
 
         // ADMINISTRATION
@@ -141,7 +147,7 @@ namespace transport
         std::pair< double, double > get_pert_tol() const { return(this->mdl->get_pert_tol()); }
 
         //! Close this batcher -- called at the end of an integration
-        virtual void close() override;
+        void close() override;
 
 
         // INTEGRATION MANAGEMENT
@@ -313,13 +319,37 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename integration_writers<number>::transaction_factory factory;
-            typename integration_writers<number>::backg_writer        backg;
-            typename integration_writers<number>::twopf_re_writer     twopf;
-            typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
-            typename integration_writers<number>::stats_writer        stats;
-            typename integration_writers<number>::ics_writer          ics;
-            typename integration_writers<number>::host_info_writer    host_info;
+
+	          using writer_type = integration_writers<number>;
+
+            //! constructor captures all writers and ensures they are correctly initialized;
+            //! once constructed, the writers cannot be changed
+            writer_group(typename writer_type::transaction_factory f, typename writer_type::backg_writer bg,
+                         typename writer_type::twopf_re_writer tpf, typename writer_type::twopf_si_re_writer twsi,
+                         typename writer_type::tensor_twopf_writer ten, typename writer_type::tensor_twopf_si_writer tensi,
+                         typename writer_type::stats_writer s, typename writer_type::ics_writer i,
+                         typename writer_type::host_info_writer h)
+              : factory{std::move(f)},
+                backg{std::move(bg)},
+                twopf{std::move(tpf)},
+                twopf_si{std::move(twsi)},
+                tensor_twopf{std::move(ten)},
+                tensor_twopf_si{std::move(tensi)},
+                stats{std::move(s)},
+                ics{std::move(i)},
+                host_info{std::move(h)}
+              {
+              }
+
+            const typename writer_type::transaction_factory factory;
+            const typename writer_type::backg_writer backg;
+            const typename writer_type::twopf_re_writer twopf;
+            const typename writer_type::twopf_si_re_writer twopf_si;
+            const typename writer_type::tensor_twopf_writer tensor_twopf;
+            const typename writer_type::tensor_twopf_si_writer tensor_twopf_si;
+            const typename writer_type::stats_writer stats;
+            const typename writer_type::ics_writer ics;
+            const typename writer_type::host_info_writer host_info;
 	        };
 
 
@@ -336,7 +366,7 @@ namespace transport
                       handle_type h, unsigned int wn, unsigned int wg);
 
         //! move constructor
-        twopf_batcher(twopf_batcher<number>&&) = default;
+        twopf_batcher(twopf_batcher<number>&&)  noexcept = default;
 
         //! destructor is default
         virtual ~twopf_batcher() = default;
@@ -347,23 +377,88 @@ namespace transport
       public:
 
         //! Override integration_batcher close() to push notification to a paired batcher, if one is present
-        virtual void close() override { this->integration_batcher<number>::close(); if(this->paired_batcher != nullptr) this->paired_batcher->close(); this->paired_batcher = nullptr; }
+        void close() override
+          {
+            this->integration_batcher<number>::close();
+            if(this->paired_batcher != nullptr) this->paired_batcher->close();
+            this->paired_batcher = nullptr;
+          }
 
 
         // BATCH, UNBATCH
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg);
+	      //! push a sampled twopf value to the batcher with assigned time and k-config serial numbers;
+	      //! the background field configuration is needed in case paired batching is being used, in which case
+	      //! we need to evaluate the gauge transformation to zeta.
+	      //! \param time_serial    time sample serial number
+	      //! \param k_serial       k-configuration sample serial number
+	      //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+	      //!                       twopf task this is just the same as k_serial, but in a threepf task
+	      //!                       it will be the 3pf k-config serial number, which might generate up to three
+	      //!                       twopf k-configurations
+	      //! \param value          vector representing flattened 2-point correlation function
+	      //! \param backg          vector representing background field configuration; not used by the integration
+	      //!                       batcher itself, but can be passed to a paired zeta batcher for the purpose
+	      //!                       of computing gauge transformation coefficients
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                        const std::vector<number>& value, const std::vector<number>& backg);
 
-        void push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& twopf, const std::vector<number>& backg);
+        //! push a sampled twopf 'spectral index' value to the batcher with assigned time and k-config serial numbers;
+        //! the background field configuration is needed in case paired batching is being used, in which case
+        //! we need to evaluate the gauge transformation to zeta.
+        //! \param time_serial    time sample serial number
+        //! \param k_serial       k-configuration sample serial number
+        //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+        //!                       twopf task this is just the same as k_serial, but in a threepf task
+        //!                       it will be the 3pf k-config serial number, which might generate up to three
+        //!                       twopf k-configurations
+        //! \param value          vector representing flattened 2-point 'spectral index' correlation function
+        //! \param backg          vector representing background field configuration; not used by the integration
+        //!                       batcher itself, but can be passed to a paired zeta batcher for the purpose
+        //!                       of computing gauge transformation coefficients
+        void push_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                           const std::vector<number>& value, const std::vector<number>& backg);
 
-        void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
+        //! push a sampled tensor twopf value to the batcher with assigned time and k-config serial numbers
+        //! \param time_serial    time sample serial number
+        //! \param k_serial       k-configuration serial number
+        //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+        //!                       twopf task this is just the same as k_serial, but in a threepf task
+        //!                       it will be the 3pf k-config serial number, which might generate up to three
+        //!                       twopf k-configurations
+        //! \param value          vector representing flattened tensor two-point function
+        void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                               const std::vector<number>& value);
 
-        //! Push a set of initial conditions
+        //! push a sampled tensor twopf 'spectral index' value to the batcher with assigned time and k-config
+        //! serial numbers
+        //! \param time_serial    time sample serial number
+        //! \param k_serial       k-configuration serial number
+        //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+        //!                       twopf task this is just the same as k_serial, but in a threepf task
+        //!                       it will be the 3pf k-config serial number, which might generate up to three
+        //!                       twopf k-configurations
+        //! \param value          vector representing flattened tensor two-point function
+        void push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                  const std::vector<number>& value);
+
+        //! push a set of initial conditions for a specified k-config serial number
+        //! \param k_serial   k-configuration serial numbers
+        //! \param t_exit     time of horizon-exit for this k-configuration
+        //! \param values     snapshot of field configuration at horizon-exit time
         void push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
 
-        virtual void unbatch(unsigned int source_serial) override;
+        //! unbatch entries corresponding to a specific source serial numbers
+        //! \param source_serial  specify which configurations to unbatch
+        void unbatch(unsigned int source_serial) override;
+
+	    protected:
+
+        //! used internally by push_twopf() to push a zeta 2pf value into the paired batcher
+        void push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                               const std::vector<number>& twopf, const std::vector<number>& backg);
 
 
         // INTEGRATION MANAGEMENT
@@ -371,10 +466,11 @@ namespace transport
       public:
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
+        void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
+                                        unsigned int kserial, size_t steps, unsigned int refinement) override;
 
         //! Report a failed integration for a specific serial number
-        virtual void report_integration_failure(unsigned int kserial) override;
+        void report_integration_failure(unsigned int kserial) override;
 
 
         // FLUSH INTERFACE
@@ -382,7 +478,11 @@ namespace transport
       public:
 
         //! Override generic batcher set_flush_mode() to push flush settings to a paired batcher, if one is present; then unpair
-        virtual void set_flush_mode(generic_batcher::flush_mode f) override { this->generic_batcher::set_flush_mode(f); if(this->paired_batcher != nullptr) this->paired_batcher->set_flush_mode(f); }
+        void set_flush_mode(generic_batcher::flush_mode f) override
+          {
+            this->generic_batcher::set_flush_mode(f);
+            if(this->paired_batcher != nullptr) this->paired_batcher->set_flush_mode(f);
+          }
 
 
         // PAIR
@@ -390,16 +490,21 @@ namespace transport
       public:
 
         //! Pair with a zeta batcher. Remember to push our flush setting to it.
-        void pair(zeta_twopf_batcher<number>* batcher) { assert(batcher != nullptr); this->paired_batcher = batcher; this->paired_batcher->set_flush_mode(this->get_flush_mode()); }
+        void pair(zeta_twopf_batcher<number>* batcher)
+          {
+            assert(batcher != nullptr);
+            this->paired_batcher = batcher;
+            this->paired_batcher->set_flush_mode(this->get_flush_mode());
+          }
 
 
         // INTERNAL API
 
       protected:
 
-        virtual size_t storage() const override;
+        size_t storage() const override;
 
-        virtual void flush(replacement_action action) override;
+        void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -411,9 +516,15 @@ namespace transport
 
         //! twopf cache
         std::vector< std::unique_ptr< typename integration_items<number>::twopf_re_item > > twopf_batch;
+        
+        //! twopf 'spectral index' cache
+        std::vector< std::unique_ptr< typename integration_items<number>::twopf_si_re_item > > twopf_si_batch;
 
         //! tensor twopf cache
         std::vector< std::unique_ptr< typename integration_items<number>::tensor_twopf_item > > tensor_twopf_batch;
+
+        //! tensor twopf 'spectral index' cache
+        std::vector< std::unique_ptr< typename integration_items<number>::tensor_twopf_si_item > > tensor_twopf_si_batch;
 
         //! initial conditions cache
         std::vector< std::unique_ptr< typename integration_items<number>::ics_item > > ics_batch;
@@ -451,17 +562,46 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename integration_writers<number>::transaction_factory     factory;
-            typename integration_writers<number>::backg_writer            backg;
-            typename integration_writers<number>::twopf_re_writer         twopf_re;
-            typename integration_writers<number>::twopf_im_writer         twopf_im;
-            typename integration_writers<number>::tensor_twopf_writer     tensor_twopf;
-            typename integration_writers<number>::threepf_momentum_writer threepf_momentum;
-            typename integration_writers<number>::threepf_Nderiv_writer   threepf_Nderiv;
-            typename integration_writers<number>::stats_writer            stats;
-            typename integration_writers<number>::ics_writer              ics;
-            typename integration_writers<number>::ics_kt_writer           kt_ics;
-            typename integration_writers<number>::host_info_writer        host_info;
+
+	          using writer_type = integration_writers<number>;
+
+	          //! constructor captures all writers and ensures they are correctly initialized;
+	          //! once constructed, the writers cannot be changed
+            writer_group(typename writer_type::transaction_factory f, typename writer_type::backg_writer bg,
+                         typename writer_type::twopf_re_writer twre, typename writer_type::twopf_im_writer twim, typename writer_type::twopf_si_re_writer twsi,
+                         typename writer_type::tensor_twopf_writer ten, typename writer_type::tensor_twopf_si_writer tensi,
+                         typename writer_type::threepf_momentum_writer thmom, typename writer_type::threepf_Nderiv_writer thdv,
+                         typename writer_type::stats_writer s, typename writer_type::ics_writer i, typename writer_type::ics_kt_writer ikt,
+                         typename writer_type::host_info_writer h)
+              : factory{std::move(f)},
+                backg{std::move(bg)},
+                twopf_re{std::move(twre)},
+                twopf_im{std::move(twim)},
+                twopf_si_re{std::move(twsi)},
+                tensor_twopf{std::move(ten)},
+                tensor_twopf_si{std::move(tensi)},
+                threepf_momentum{std::move(thmom)},
+                threepf_Nderiv{std::move(thdv)},
+                stats{std::move(s)},
+                ics{std::move(i)},
+                kt_ics{std::move(ikt)},
+                host_info{std::move(h)}
+              {
+              }
+
+            const typename writer_type::transaction_factory factory;
+            const typename writer_type::backg_writer backg;
+            const typename writer_type::twopf_re_writer twopf_re;
+            const typename writer_type::twopf_im_writer twopf_im;
+            const typename writer_type::twopf_si_re_writer twopf_si_re;
+            const typename writer_type::tensor_twopf_writer tensor_twopf;
+            const typename writer_type::tensor_twopf_si_writer tensor_twopf_si;
+            const typename writer_type::threepf_momentum_writer threepf_momentum;
+            const typename writer_type::threepf_Nderiv_writer threepf_Nderiv;
+            const typename writer_type::stats_writer stats;
+            const typename writer_type::ics_writer ics;
+            const typename writer_type::ics_kt_writer kt_ics;
+            const typename writer_type::host_info_writer host_info;
 	        };
 
 
@@ -478,7 +618,7 @@ namespace transport
                         handle_type h, unsigned int wn, unsigned int wg);
 
         //! move constructor
-        threepf_batcher(threepf_batcher<number>&&) = default;
+        threepf_batcher(threepf_batcher<number>&&)  noexcept = default;
 
         //! destructor is default
         virtual ~threepf_batcher() = default;
@@ -489,10 +629,10 @@ namespace transport
       public:
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
+        void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
 
         //! Report a failed integration for a specific serial number
-        virtual void report_integration_failure(unsigned int kserial) override;
+        void report_integration_failure(unsigned int kserial) override;
 
 
 
@@ -501,37 +641,143 @@ namespace transport
       public:
 
         //! Override integration_batcher close() to push notification to a paired batcher, if one is present; then unpair
-        virtual void close() override { this->integration_batcher<number>::close(); if(this->paired_batcher != nullptr) this->paired_batcher->close(); this->paired_batcher = nullptr; }
+        void close() override
+          {
+            this->integration_batcher<number>::close();
+            if(this->paired_batcher != nullptr) this->paired_batcher->close();
+            this->paired_batcher = nullptr;
+          }
 
 
         // BATCH, UNBATCH
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = twopf_type::real);
+        //! push a sampled twopf value to the batcher with assigned time and k-config serial numbers;
+        //! the background field configuration is needed in case paired batching is being used, in which case
+        //! we need to evaluate the gauge transformation to zeta.
+        //! \param time_serial    time sample serial number
+        //! \param k_serial       k-configuration sample serial number
+        //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+        //!                       twopf task this is just the same as k_serial, but in a threepf task
+        //!                       it will be the 3pf k-config serial number, which might generate up to three
+        //!                       twopf k-configurations
+        //! \param value           vector representing flattened 2-point correlation function
+        //! \param backg          vector representing background field configuration; not used by the integration
+        //!                       batcher itself, but can be passed to a paired zeta batcher for the purpose
+        //!                       of computing gauge transformation coefficients
+        //! \param t              value of type enum twopf_type specifying whether theis is a real or
+        //!                       imaginary part
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                        const std::vector<number>& value, const std::vector<number>& backg,
+                        twopf_type t = twopf_type::real);
 
+        //! push a sampled twopf 'spectral index' value to the batcher with assigned time and k-config serial numbers;
+        //! the background field configuration is needed in case paired batching is being used, in which case
+        //! we need to evaluate the gauge transformation to zeta.
+        //! \param time_serial    time sample serial number
+        //! \param k_serial       k-configuration sample serial number
+        //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+        //!                       twopf task this is just the same as k_serial, but in a threepf task
+        //!                       it will be the 3pf k-config serial number, which might generate up to three
+        //!                       twopf k-configurations
+        //! \param value          vector representing flattened 2-point 'spectral index' correlation function
+        //! \param backg          vector representing background field configuration; not used by the integration
+        //!                       batcher itself, but can be passed to a paired zeta batcher for the purpose
+        //!                       of computing gauge transformation coefficients
+        void push_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                           const std::vector<number>& value, const std::vector<number>& backg);
+
+        //! push a sampled threepf value to the batcher with assigned time and k-config serial numbers;
+        //! the background field configuration is needed in case paired batching is being used, in which case
+        //! we need to evaluate the gauge transformation to zeta.
+        //! \param time_serial    time sample serial number
+        //! \param k_serial       k-configuration sample serial number
+        //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+        //!                       twopf task this is just the same as k_serial, but in a threepf task
+        //!                       it will be the 3pf k-config serial number, which might generate up to three
+        //!                       twopf k-configurations
+        //! \param value          vector representing flattened 2-point correlation function
+        //! \param tpf_k1_re      real part of 2pf for mode k1, passed to paired zeta batcher (if present) for
+        //!                       computations of the zeta 3pf
+        //! \param tpf_k2_re      real part of 2pf for mode k2, passed to paired zeta batcher (if present) for
+        //!                       computations of the zeta 3pf
+        //! \param tpf_k3_re      real part of 2pf for mode k3, passed to paired zeta batcher (if present) for
+        //!                       computations of the zeta 3pf
+        //! \param tpf_k1_im      imaginary part of 2pf for mode k1, passed to paired zeta batcher (if present) for
+        //!                       computations of the zeta 3pf
+        //! \param tpf_k2_im      imaginary part of 2pf for mode k2, passed to paired zeta batcher (if present) for
+        //!                       computations of the zeta 3pf
+        //! \param tpf_k3_im      imaginary part of 2pf for mode k3, passed to paired zeta batcher (if present) for
+        //!                       computations of the zeta 3pf
+        //! \param bg             vector representing background field configuration; not used by the integration
+        //!                       batcher itself, but can be passed to a paired zeta batcher for the purpose
+        //!                       of computing gauge transformation coefficients
+        //! \param t              value of type enum twopf_type specifying whether theis is a real or
+        //!                       imaginary part
         void push_threepf(unsigned int time_serial, double t,
-                          const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& values,
+                          const threepf_kconfig& kconfig, unsigned int source_serial,
+                          const std::vector<number>& value,
                           const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
                           const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
-                          const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
+                          const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im,
+                          const std::vector<number>& bg);
 
-        void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
+        //! push a sampled tensor twopf value to the batcher with assigned time and k-config serial numbers
+        //! \param time_serial    time sample serial number
+        //! \param k_serial       k-configuration serial number
+        //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+        //!                       twopf task this is just the same as k_serial, but in a threepf task
+        //!                       it will be the 3pf k-config serial number, which might generate up to three
+        //!                       twopf k-configurations
+        //! \param value          vector representing flattened tensor two-point function
+        void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                               const std::vector<number>& value);
 
-        void push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& twopf, const std::vector<number>& backg);
+        //! push a sampled tensor twopf 'spectral index' value to the batcher with assigned time and k-config
+        //! serial numbers
+        //! \param time_serial    time sample serial number
+        //! \param k_serial       k-configuration serial number
+        //! \param source_serial  k-configuration serial number from where this sample "came from"; in a
+        //!                       twopf task this is just the same as k_serial, but in a threepf task
+        //!                       it will be the 3pf k-config serial number, which might generate up to three
+        //!                       twopf k-configurations
+        //! \param value          vector representing flattened tensor two-point function
+        void push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                  const std::vector<number>& value);
 
-        void push_paired_threepf(unsigned int time_serial, double t,
-                                 const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& values,
-                                 const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
-                                 const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
-                                 const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
-
-        //! Push a set of initial conditions
+        //! push a set of initial conditions for a specified k-config serial number;
+        //! for a 3pf the k-mode exiting the horizon is taken to be the smallest k-modein the configuration
+        //! \param k_serial   k-configuration serial numbers
+        //! \param t_exit     time of horizon-exit for this k-configuration
+        //! \param values     snapshot of field configuration at horizon-exit time
         void push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
 
+
+        //! push a set of initial conditions for a specified k-config serial number, but measured using
+        //! k_t as the mode exiting the horizon rather than the smallest k-mode in the configuration
+        //! \param k_serial   k-configuration serial numbers
+        //! \param t_exit     time of horizon-exit for this k-configuration
+        //! \param values     snapshot of field configuration at horizon-exit time
 		    void push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
 
-        virtual void unbatch(unsigned int source_serial) override;
+        //! unbatch entries corresponding to a specific source serial numbers
+        //! \param source_serial  specify which configurations to unbatch
+        void unbatch(unsigned int source_serial) override;
+
+	    protected:
+
+        //! used internally by push_twopf() to push a zeta 2pf value into the paired batcher
+        void push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                               const std::vector<number>& twopf, const std::vector<number>& backg);
+
+        //! used internally by push_threepff() to push a zeta 3pf value into the paired batcher
+        void push_paired_threepf(unsigned int time_serial, double t,
+                                 const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& value,
+                                 const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
+                                 const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
+                                 const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im,
+                                 const std::vector<number>& bg);
 
 
         // FLUSH INTERFACE
@@ -539,7 +785,11 @@ namespace transport
       public:
 
         //! Override generic batcher set_flush_mode() to push flush settings to a paired batcher, if one is present
-        virtual void set_flush_mode(generic_batcher::flush_mode f) override { this->generic_batcher::set_flush_mode(f); if(this->paired_batcher != nullptr) this->paired_batcher->set_flush_mode(f); }
+        void set_flush_mode(generic_batcher::flush_mode f) override
+          {
+            this->generic_batcher::set_flush_mode(f);
+            if(this->paired_batcher != nullptr) this->paired_batcher->set_flush_mode(f);
+          }
 
 
         // PAIR
@@ -547,16 +797,21 @@ namespace transport
       public:
 
         //! Pair with a zeta batcher. Remember to push our flush setting to it.
-        void pair(zeta_threepf_batcher<number>* batcher) { assert(batcher != nullptr); this->paired_batcher = batcher; this->paired_batcher->set_flush_mode(this->get_flush_mode()); }
+        void pair(zeta_threepf_batcher<number>* batcher)
+          {
+            assert(batcher != nullptr);
+            this->paired_batcher = batcher;
+            this->paired_batcher->set_flush_mode(this->get_flush_mode());
+          }
 
 
         // INTERNAL API
 
       protected:
 
-        virtual size_t storage() const override;
+        size_t storage() const override;
 
-        virtual void flush(replacement_action action) override;
+        void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -572,8 +827,14 @@ namespace transport
         //! imaginary twopf cache
         std::vector< std::unique_ptr< typename integration_items<number>::twopf_im_item > > twopf_im_batch;
 
+        //! twopf 'spectral index' cache
+        std::vector< std::unique_ptr< typename integration_items<number>::twopf_si_re_item > > twopf_si_re_batch;
+
         //! tensor twopf cache
         std::vector< std::unique_ptr< typename integration_items<number>::tensor_twopf_item > > tensor_twopf_batch;
+
+        //! tensor twopf 'spectral index' cache
+        std::vector< std::unique_ptr< typename integration_items<number>::tensor_twopf_si_item > > tensor_twopf_si_batch;
 
         //! threepf momentum-insertions cache
         std::vector< std::unique_ptr< typename integration_items<number>::threepf_momentum_item > > threepf_momentum_batch;
@@ -809,10 +1070,12 @@ namespace transport
 
     template <typename number>
     void twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                           const std::vector<number>& values, const std::vector<number>& backg)
+                                           const std::vector<number>& value, const std::vector<number>& backg)
 	    {
-        this->twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_re_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size, this->Nfields));
-        if(this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
+        this->twopf_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::twopf_re_item>(
+            time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
+        if(this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, value, backg);
 
         this->check_for_flush();
 	    }
@@ -834,12 +1097,40 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                                  const std::vector<number>& values)
+    void
+    twopf_batcher<number>::push_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                         const std::vector<number>& value, const std::vector<number>& backg)
+      {
+        this->twopf_si_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::twopf_si_re_item>(
+            time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
+        // TODO: push spectral index to paired zeta batcher, if one is present
+        
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    void twopf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial,
+                                                  unsigned int source_serial,
+                                                  const std::vector<number>& value)
 	    {
-        this->tensor_twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::tensor_twopf_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
+        this->tensor_twopf_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::tensor_twopf_item>(
+            time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
+
+
+    template <typename number>
+    void twopf_batcher<number>::push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial,
+                                                     unsigned int source_serial, const std::vector<number>& value)
+      {
+        this->tensor_twopf_si_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::tensor_twopf_si_item>(
+            time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size));
+        this->check_for_flush();
+      }
 
 
     template <typename number>
@@ -847,7 +1138,9 @@ namespace transport
       {
         if(this->collect_initial_conditions)
           {
-            this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size, this->Nfields));
+            this->ics_batch.emplace_back(
+              std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values,
+                                                                             this->kconfig_db_size, this->Nfields));
             this->check_for_flush();
           }
       }
@@ -856,11 +1149,20 @@ namespace transport
     template <typename number>
     size_t twopf_batcher<number>::storage() const
 	    {
-        return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
-	        + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
-	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->twopf_batch.size()
-	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
-		      + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size());
+        const auto backg_size = 2 * this->Nfields * sizeof(number);
+        constexpr auto tensor_size = 4 * sizeof(number);
+        const auto twopf_size = 2 * this->Nfields * 2 * this->Nfields * sizeof(number);
+        constexpr auto timing_data_size = sizeof(boost::timer::nanosecond_type);
+
+        return(
+          (4 * sizeof(unsigned int) + backg_size) * this->backg_batch.size()
+          + (5 * sizeof(unsigned int) + tensor_size) * this->tensor_twopf_batch.size()
+          + (5 * sizeof(unsigned int) + tensor_size) * this->tensor_twopf_si_batch.size()
+          + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_batch.size()
+          + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_si_batch.size()
+          + (2 * sizeof(unsigned int) + sizeof(size_t) + 2 * timing_data_size) * this->stats_batch.size()
+          + (sizeof(unsigned int) + backg_size) * this->ics_batch.size()
+        );
 	    }
 
 
@@ -879,7 +1181,9 @@ namespace transport
 		    if(this->collect_initial_conditions) this->writers.ics(mgr, this, this->ics_batch);
         this->writers.backg(mgr, this, this->backg_batch);
         this->writers.twopf(mgr, this, this->twopf_batch);
+        this->writers.twopf_si(mgr, this, this->twopf_si_batch);
         this->writers.tensor_twopf(mgr, this, this->tensor_twopf_batch);
+        this->writers.tensor_twopf_si(mgr, this, this->tensor_twopf_si_batch);
 
         mgr.commit();
 
@@ -890,7 +1194,9 @@ namespace transport
 		    this->ics_batch.clear();
         this->backg_batch.clear();
         this->twopf_batch.clear();
+        this->twopf_si_batch.clear();
         this->tensor_twopf_batch.clear();
+        this->tensor_twopf_si_batch.clear();
 
         // push a message to the master node, indicating that new data is available
         // note that the order of calls to 'dispatcher' and 'replacer' is important
@@ -909,21 +1215,35 @@ namespace transport
     template <typename number>
     void twopf_batcher<number>::unbatch(unsigned int source_serial)
 	    {
-        this->backg_batch.erase(std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
-                                               UnbatchPredicate<typename integration_items<number>::backg_item>(source_serial)),
-                                this->backg_batch.end());
+        this->backg_batch.erase(
+          std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::backg_item>(source_serial)),
+          this->backg_batch.end());
 
-        this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
-                                               UnbatchPredicate<typename integration_items<number>::twopf_re_item>(source_serial)),
-                                this->twopf_batch.end());
+        this->twopf_batch.erase(
+          std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::twopf_re_item>(source_serial)),
+          this->twopf_batch.end());
 
-        this->tensor_twopf_batch.erase(std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
-                                                      UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
-                                       this->tensor_twopf_batch.end());
+        this->twopf_si_batch.erase(
+          std::remove_if(this->twopf_si_batch.begin(), this->twopf_si_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::twopf_si_re_item>(source_serial)),
+          this->twopf_si_batch.end());
 
-        this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
-                                             UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
-                              this->ics_batch.end());
+        this->tensor_twopf_batch.erase(
+          std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
+          this->tensor_twopf_batch.end());
+
+        this->tensor_twopf_si_batch.erase(
+          std::remove_if(this->tensor_twopf_si_batch.begin(), this->tensor_twopf_si_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_si_item>(source_serial)),
+          this->tensor_twopf_si_batch.end());
+
+        this->ics_batch.erase(
+          std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
+          this->ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }
@@ -974,24 +1294,31 @@ namespace transport
 
     template <typename number>
     void threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                             const std::vector<number>& values, const std::vector<number>& backg, twopf_type t)
+                                             const std::vector<number>& value, const std::vector<number>& backg, twopf_type t)
 	    {
         switch(t)
           {
             case twopf_type::real:
               {
-                this->twopf_re_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_re_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size, this->Nfields));
+                this->twopf_re_batch.emplace_back(
+                  std::make_unique<typename integration_items<number>::twopf_re_item>(
+                    time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
                 break;
               }
 
             case twopf_type::imag:
               {
-                this->twopf_im_batch.emplace_back(std::make_unique<typename integration_items<number>::twopf_im_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size, this->Nfields));
+                this->twopf_im_batch.emplace_back(
+                  std::make_unique<typename integration_items<number>::twopf_im_item>(
+                    time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
                 break;
               }
           }
 
-        if(t == twopf_type::real && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
+        if(t == twopf_type::real && this->paired_batcher != nullptr)
+          {
+            this->push_paired_twopf(time_serial, k_serial, source_serial, value, backg);
+          }
 
         this->check_for_flush();
 	    }
@@ -1013,29 +1340,45 @@ namespace transport
 
 
     template <typename number>
-    void threepf_batcher<number>::push_threepf(unsigned int time_serial, double t, const threepf_kconfig& kconfig, unsigned int source_serial,
-                                               const std::vector<number>& values,
+    void
+    threepf_batcher<number>::push_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                           const std::vector<number>& value, const std::vector<number>& backg)
+      {
+        this->twopf_si_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::twopf_si_re_item>(
+            time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
+        // TODO: push spectral index to paired zeta batcher, if one is present
+
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    void threepf_batcher<number>::push_threepf(unsigned int time_serial, double t, const threepf_kconfig& kconfig,
+                                               unsigned int source_serial, const std::vector<number>& value,
                                                const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
                                                const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
-                                               const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg)
+                                               const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im,
+                                               const std::vector<number>& bg)
 	    {
         // momentum three-point function can be copied across directly
         this->threepf_momentum_batch.emplace_back(
           std::make_unique<typename integration_items<number>::threepf_momentum_item>(
-            time_serial, kconfig.serial, source_serial, values, this->time_db_size, this->kconfig_db_size, this->Nfields));
+            time_serial, kconfig.serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
 
         // derivative three-point function needs extra shifts in order to convert any momentum insertions
         // into time-derivative insertions
-        std::vector<number> Nderiv_values(values.size());
+        std::vector<number> Nderiv_values(value.size());
         for(unsigned int i = 0; i < 2*this->Nfields; ++i)
           {
             for(unsigned int j = 0; j < 2*this->Nfields; ++j)
               {
                 for(unsigned int k = 0; k < 2*this->Nfields; ++k)
                   {
-                    number tpf = values[this->mdl->flatten(i,j,k)];
+                    number tpf = value[this->mdl->flatten(i, j, k)];
 
-                    this->compute_agent.shift(i, j, k, kconfig, time_serial, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, tpf);
+                    this->compute_agent.shift(i, j, k, kconfig, time_serial, tpf_k1_re, tpf_k1_im, tpf_k2_re,
+                                              tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, tpf);
 
                     Nderiv_values[this->mdl->flatten(i,j,k)] = tpf;
                   }
@@ -1047,7 +1390,7 @@ namespace transport
             time_serial, kconfig.serial, source_serial, Nderiv_values, this->time_db_size, this->kconfig_db_size, this->Nfields));
 
         if(this->paired_batcher != nullptr)
-          this->push_paired_threepf(time_serial, t, kconfig, source_serial, values,
+          this->push_paired_threepf(time_serial, t, kconfig, source_serial, value,
                                     tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg);
 
         this->check_for_flush();
@@ -1057,7 +1400,7 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::push_paired_threepf(unsigned int time_serial, double t,
                                                       const threepf_kconfig& kconfig, unsigned int source_serial,
-                                                      const std::vector<number>& threepf,
+                                                      const std::vector<number>& value,
                                                       const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
                                                       const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                                       const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg)
@@ -1068,7 +1411,7 @@ namespace transport
         number              zeta_threepf = 0.0;
         number              redbsp       = 0.0;
 
-        this->compute_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp,
+        this->compute_agent.zeta_threepf(kconfig, t, value, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp,
                                          this->gauge_xfm1, this->gauge_xfm2_123, this->gauge_xfm2_213, this->gauge_xfm2_312);
 
         this->paired_batcher->push_threepf(time_serial, kconfig.serial, zeta_threepf, redbsp, source_serial);
@@ -1080,24 +1423,47 @@ namespace transport
 
     template <typename number>
     void threepf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                                    const std::vector<number>& values)
+                                                    const std::vector<number>& value)
 	    {
-        this->tensor_twopf_batch.emplace_back(std::make_unique<typename integration_items<number>::tensor_twopf_item>(time_serial, k_serial, source_serial, values, this->time_db_size, this->kconfig_db_size));
+        this->tensor_twopf_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::tensor_twopf_item>(
+            time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
 
     template <typename number>
+    void threepf_batcher<number>::push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial,
+                                                       unsigned int source_serial, const std::vector<number>& value)
+      {
+        this->tensor_twopf_si_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::tensor_twopf_si_item>(
+            time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size));
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
     size_t threepf_batcher<number>::storage() const
 	    {
-        return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
-	        + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
-	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
-	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_momentum_batch.size()
-          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_Nderiv_batch.size()
-	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
-	        + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size()
-          + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->kt_ics_batch.size());
+        const auto backg_size = 2 * this->Nfields * sizeof(number);
+        constexpr auto tensor_size = 4 * sizeof(number);
+        const auto twopf_size = 2 * this->Nfields * 2 * this->Nfields * sizeof(number);
+        const auto threepf_size = 2 * this->Nfields * 2 * this->Nfields * 2 * this->Nfields * sizeof(number);
+        constexpr auto timing_data_size = sizeof(boost::timer::nanosecond_type);
+
+        return (
+          (4 * sizeof(unsigned int) + backg_size) * this->backg_batch.size()
+          + (5 * sizeof(unsigned int) + tensor_size) * this->tensor_twopf_batch.size()
+          + (5 * sizeof(unsigned int) + tensor_size) * this->tensor_twopf_si_batch.size()
+          + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_re_batch.size()
+          + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_re_batch.size()
+          + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_si_re_batch.size()
+          + (6 * sizeof(unsigned int) + threepf_size) * this->threepf_momentum_batch.size()
+          + (6 * sizeof(unsigned int) + threepf_size) * this->threepf_Nderiv_batch.size()
+          + (2 * sizeof(unsigned int) + sizeof(size_t) + 2 * timing_data_size) * this->stats_batch.size()
+          + (sizeof(unsigned int) + backg_size) * this->ics_batch.size()
+          + (sizeof(unsigned int) + backg_size) * this->kt_ics_batch.size());
 	    }
 
 
@@ -1140,7 +1506,9 @@ namespace transport
         this->writers.backg(mgr, this, this->backg_batch);
         this->writers.twopf_re(mgr, this, this->twopf_re_batch);
         this->writers.twopf_im(mgr, this, this->twopf_im_batch);
+        this->writers.twopf_si_re(mgr, this, this->twopf_si_re_batch);
         this->writers.tensor_twopf(mgr, this, this->tensor_twopf_batch);
+        this->writers.tensor_twopf_si(mgr, this, this->tensor_twopf_si_batch);
         this->writers.threepf_momentum(mgr, this, this->threepf_momentum_batch);
         this->writers.threepf_Nderiv(mgr, this, this->threepf_Nderiv_batch);
 
@@ -1155,7 +1523,9 @@ namespace transport
         this->backg_batch.clear();
         this->twopf_re_batch.clear();
         this->twopf_im_batch.clear();
+        this->twopf_si_re_batch.clear();
         this->tensor_twopf_batch.clear();
+        this->tensor_twopf_si_batch.clear();
         this->threepf_momentum_batch.clear();
         this->threepf_Nderiv_batch.clear();
 
@@ -1178,27 +1548,33 @@ namespace transport
       {
         this->backg_batch.erase(
           std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::backg_item>(
-                           source_serial)),
+                         UnbatchPredicate<typename integration_items<number>::backg_item>(source_serial)),
           this->backg_batch.end());
 
         this->twopf_re_batch.erase(
           std::remove_if(this->twopf_re_batch.begin(), this->twopf_re_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::twopf_re_item>(
-                           source_serial)),
+                         UnbatchPredicate<typename integration_items<number>::twopf_re_item>(source_serial)),
           this->twopf_re_batch.end());
 
         this->twopf_im_batch.erase(
           std::remove_if(this->twopf_im_batch.begin(), this->twopf_im_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::twopf_im_item>(
-                           source_serial)),
+                         UnbatchPredicate<typename integration_items<number>::twopf_im_item>(source_serial)),
           this->twopf_im_batch.end());
+
+        this->twopf_si_re_batch.erase(
+          std::remove_if(this->twopf_si_re_batch.begin(), this->twopf_si_re_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::twopf_si_re_item>(source_serial)),
+          this->twopf_si_re_batch.end());
 
         this->tensor_twopf_batch.erase(
           std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(
-                           source_serial)),
+                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
           this->tensor_twopf_batch.end());
+
+        this->tensor_twopf_si_batch.erase(
+          std::remove_if(this->tensor_twopf_si_batch.begin(), this->tensor_twopf_si_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_si_item>(source_serial)),
+          this->tensor_twopf_si_batch.end());
 
         this->threepf_momentum_batch.erase(
           std::remove_if(this->threepf_momentum_batch.begin(), this->threepf_momentum_batch.end(),
@@ -1212,14 +1588,12 @@ namespace transport
 
         this->ics_batch.erase(
           std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::ics_item>(
-                           source_serial)),
+                         UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
           this->ics_batch.end());
 
         this->kt_ics_batch.erase(
           std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::ics_kt_item>(
-                           source_serial)),
+                         UnbatchPredicate<typename integration_items<number>::ics_kt_item>(source_serial)),
           this->kt_ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);

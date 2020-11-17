@@ -53,31 +53,31 @@ namespace transport
 		  public:
 
         //! Transaction factory
-        typedef std::function<transaction_manager(postintegration_batcher<number>*)> transaction_factory;
+        using transaction_factory = std::function<transaction_manager(postintegration_batcher<number>*)>;
 
         // Write functions don't take const referefences for each cache because the cache is sorted in-place
         // This sort step is important -- it dramatically improves SQLite performance
 
 		    //! Zeta 2pf writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)> zeta_twopf_writer;
+		    using zeta_twopf_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)>;
 
 		    //! Zeta 3pf writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_threepf_item> >&)> zeta_threepf_writer;
+		    using zeta_threepf_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_threepf_item> >&)>;
 
 		    //! fNL writer function
-		    typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, const typename postintegration_items<number>::fNL_cache&, derived_data::bispectrum_template)> fNL_writer;
+		    using fNL_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, const typename postintegration_items<number>::fNL_cache&, derived_data::bispectrum_template)>;
 
         //! linear gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm1_item> >&)> gauge_xfm1_writer;
+        using gauge_xfm1_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm1_item> >&)>;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_123_item> >&)> gauge_xfm2_123_writer;
+        using gauge_xfm2_123_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_123_item> >&)>;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_213_item> >&)> gauge_xfm2_213_writer;
+        using gauge_xfm2_213_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_213_item> >&)>;
 
         //! quadratic gauge xfm writer function
-        typedef std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_312_item> >&)> gauge_xfm2_312_writer;
+        using gauge_xfm2_312_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::gauge_xfm2_312_item> >&)>;
 
 			};
 
@@ -98,10 +98,10 @@ namespace transport
                                 handle_type h, unsigned int w);
 
         //! move constructor
-        postintegration_batcher(postintegration_batcher<number>&&) = default;
+        postintegration_batcher(postintegration_batcher<number>&&)  noexcept = default;
 
         //! destructor is default
-        virtual ~postintegration_batcher() = default;
+        ~postintegration_batcher() override = default;
 
 
         // MANAGEMENT
@@ -186,9 +186,22 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename postintegration_writers<number>::transaction_factory factory;
-            typename postintegration_writers<number>::zeta_twopf_writer   twopf;
-            typename postintegration_writers<number>::gauge_xfm1_writer   gauge_xfm1;
+
+	          using writer_type = postintegration_writers<number>;
+
+            //! constructor captures all writers and ensures they are correctly initialized;
+            //! once constructed, the writers cannot be changed
+            writer_group(typename writer_type::transaction_factory f,
+                         typename writer_type::zeta_twopf_writer tw, typename writer_type::gauge_xfm1_writer x1)
+              : factory{std::move(f)},
+                twopf{std::move(tw)},
+                gauge_xfm1{std::move(x1)}
+              {
+              }
+
+            const typename writer_type::transaction_factory factory;
+            const typename writer_type::zeta_twopf_writer twopf;
+            const typename writer_type::gauge_xfm1_writer gauge_xfm1;
 	        };
 
 
@@ -204,7 +217,7 @@ namespace transport
                            std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn);
 
         //! move constructor
-        zeta_twopf_batcher(zeta_twopf_batcher<number>&&) = default;
+        zeta_twopf_batcher(zeta_twopf_batcher<number>&&)  noexcept = default;
 
         //! destructor is default
         virtual ~zeta_twopf_batcher() = default;
@@ -227,9 +240,9 @@ namespace transport
 
       protected:
 
-        virtual size_t storage() const override;
+        size_t storage() const override;
 
-        virtual void flush(replacement_action action) override;
+        void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -269,13 +282,35 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename postintegration_writers<number>::transaction_factory   factory;
-            typename postintegration_writers<number>::zeta_twopf_writer     twopf;
-            typename postintegration_writers<number>::zeta_threepf_writer   threepf;
-            typename postintegration_writers<number>::gauge_xfm1_writer     gauge_xfm1;
-            typename postintegration_writers<number>::gauge_xfm2_123_writer gauge_xfm2_123;
-            typename postintegration_writers<number>::gauge_xfm2_213_writer gauge_xfm2_213;
-            typename postintegration_writers<number>::gauge_xfm2_312_writer gauge_xfm2_312;
+
+	          using writer_type = postintegration_writers<number>;
+
+            //! constructor captures all writers and ensures they are correctly initialized;
+            //! once constructed, the writers cannot be changed
+            writer_group(typename writer_type::transaction_factory f,
+                         typename writer_type::zeta_twopf_writer tw,
+                         typename writer_type::zeta_threepf_writer th,
+                         typename writer_type::gauge_xfm1_writer gxfm1,
+                         typename writer_type::gauge_xfm2_123_writer gxfm2_123,
+                         typename writer_type::gauge_xfm2_213_writer gxfm2_213,
+                         typename writer_type::gauge_xfm2_312_writer gxfm2_312)
+              : factory{std::move(f)},
+                twopf{std::move(tw)},
+                threepf{std::move(th)},
+                gauge_xfm1{std::move(gxfm1)},
+                gauge_xfm2_123{std::move(gxfm2_123)},
+                gauge_xfm2_213{std::move(gxfm2_213)},
+                gauge_xfm2_312{std::move(gxfm2_312)}
+              {
+              }
+
+            const typename writer_type::transaction_factory factory;
+            const typename writer_type::zeta_twopf_writer twopf;
+            const typename writer_type::zeta_threepf_writer threepf;
+            const typename writer_type::gauge_xfm1_writer gauge_xfm1;
+            const typename writer_type::gauge_xfm2_123_writer gauge_xfm2_123;
+            const typename writer_type::gauge_xfm2_213_writer gauge_xfm2_213;
+            const typename writer_type::gauge_xfm2_312_writer gauge_xfm2_312;
 	        };
 
 
@@ -291,7 +326,7 @@ namespace transport
                              std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn);
 
         //! move constructor
-        zeta_threepf_batcher(zeta_threepf_batcher<number>&&) = default;
+        zeta_threepf_batcher(zeta_threepf_batcher<number>&&)  noexcept = default;
 
         //! destructor is default
         virtual ~zeta_threepf_batcher() = default;
@@ -321,9 +356,9 @@ namespace transport
 
       protected:
 
-        virtual size_t storage() const override;
+        size_t storage() const override;
 
-        virtual void flush(replacement_action action) override;
+        void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -375,8 +410,20 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename postintegration_writers<number>::transaction_factory factory;
-            typename postintegration_writers<number>::fNL_writer          fNL;
+
+	          using writer_type = postintegration_writers<number>;
+
+            //! constructor captures all writers and ensures they are correctly initialized;
+            //! once constructed, the writers cannot be changed
+            writer_group(typename writer_type::transaction_factory f,
+                         typename writer_type::fNL_writer fw)
+              : factory{std::move(f)},
+                fNL{std::move(fw)}
+              {
+              }
+
+            const typename writer_type::transaction_factory factory;
+            const typename writer_type::fNL_writer fNL;
 	        };
 
 

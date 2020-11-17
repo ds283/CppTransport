@@ -65,8 +65,10 @@ namespace transport
         constexpr auto CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE                = "threepf_samples";
         constexpr auto CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE                   = "backg";
         constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE            = "tensor_twopf";
+        constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_VALUE_TABLE         = "tensor_twopf_si";
         constexpr auto CPPTRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE                = "twopf_re";
         constexpr auto CPPTRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE                = "twopf_im";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_SI_RE_VALUE_TABLE             = "twopf_si_re";
         constexpr auto CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_VALUE_TABLE        = "threepf_momentum";
         constexpr auto CPPTRANSPORT_SQLITE_THREEPF_DERIV_VALUE_TABLE           = "threepf_deriv";
         constexpr auto CPPTRANSPORT_SQLITE_WORKERS_TABLE                       = "worker_data";
@@ -93,8 +95,12 @@ namespace transport
         constexpr auto CPPTRANSPORT_SQLITE_TWOPF_RE_K_INDEX                    = "twopf_re_k";
         constexpr auto CPPTRANSPORT_SQLITE_TWOPF_IM_TIME_INDEX                 = "twopf_im_time";
         constexpr auto CPPTRANSPORT_SQLITE_TWOPF_IM_K_INDEX                    = "twopf_im_k";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_SI_RE_TIME_INDEX              = "twopf_si_re_time";
+        constexpr auto CPPTRANSPORT_SQLITE_TWOPF_SI_RE_K_INDEX                 = "twopf_si_re_k";
         constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_TIME_INDEX             = "tensor_twopf_time";
         constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_K_INDEX                = "tensor_twopf_k";
+        constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_TIME_INDEX          = "tensor_twopf_si_time";
+        constexpr auto CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_K_INDEX             = "tensor_twopf_si_k";
         constexpr auto CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_TIME_INDEX         = "threepf_momentum_time";
         constexpr auto CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_K_INDEX            = "threepf_momentum_k";
         constexpr auto CPPTRANSPORT_SQLITE_THREEPF_DERIV_TIME_INDEX            = "threepf_deriv_time";

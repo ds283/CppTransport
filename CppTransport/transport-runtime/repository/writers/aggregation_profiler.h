@@ -74,7 +74,8 @@ namespace transport
         struct record_traits<aggregation_profile_record_type::twopf>
           {
             std::string                  get_filename() { return "twopf.csv"; }
-            std::array< std::string, 6 > get_headings() { return { "backg", "twopf_re", "tensor_twopf",
+            std::array< std::string, 8 > get_headings() { return { "backg", "twopf_re", "twopf_si_re",
+                                                                   "tensor_twopf", "tensor_twopf_si",
                                                                    "statistics", "ics", "workers" }; }
           };
 
@@ -82,9 +83,10 @@ namespace transport
         struct record_traits<aggregation_profile_record_type::threepf>
           {
             std::string                   get_filename() { return "threepf.csv"; }
-            std::array< std::string, 10 > get_headings() { return { "backg", "twopf_re", "twopf_im",
+            std::array< std::string, 12 > get_headings() { return { "backg", "twopf_re", "twopf_im", "twopf_si_re",
                                                                     "threepf_momentum", "threepf_Nderiv",
-                                                                    "tensor_twopf", "statistics", "ics",
+                                                                    "tensor_twopf", "tensor_twopf_si",
+                                                                    "statistics", "ics",
                                                                     "ics_kt", "workers" }; }
           };
 
@@ -277,14 +279,21 @@ namespace transport
           }
 
       public:
-        aggregation_profile_record_type get_type() const override { return aggregation_profile_record_type::twopf; }
+        aggregation_profile_record_type get_type() const override
+          { return aggregation_profile_record_type::twopf; }
+
+
         size_t get_rows() const override;
+
         void write_row(std::ofstream& out) const override;
+
 
       public:
         boost::optional< aggregation_table_data > backg;
         boost::optional< aggregation_table_data > twopf_re;
+        boost::optional< aggregation_table_data > twopf_si_re;
         boost::optional< aggregation_table_data > tensor_twopf;
+        boost::optional< aggregation_table_data > tensor_twopf_si;
         boost::optional< aggregation_table_data > statistics;
         boost::optional< aggregation_table_data > ics;
         boost::optional< aggregation_table_data > workers;
@@ -296,7 +305,9 @@ namespace transport
         this->aggregation_profile_record::write_row(out);
         out << "," << aggregation_profiler_impl::format(this->backg)
             << "," << aggregation_profiler_impl::format(this->twopf_re)
+            << "," << aggregation_profiler_impl::format(this->twopf_si_re)
             << "," << aggregation_profiler_impl::format(this->tensor_twopf)
+            << "," << aggregation_profiler_impl::format(this->tensor_twopf_si)
             << "," << aggregation_profiler_impl::format(this->statistics)
             << "," << aggregation_profiler_impl::format(this->ics)
             << "," << aggregation_profiler_impl::format(this->workers)
@@ -309,7 +320,9 @@ namespace transport
         size_t rows = 0;
         if(this->backg) rows += this->backg->rows;
         if(this->twopf_re) rows += this->twopf_re->rows;
+        if(this->twopf_si_re) rows += this->twopf_si_re->rows;
         if(this->tensor_twopf) rows += this->tensor_twopf->rows;
+        if(this->tensor_twopf_si) rows += this->tensor_twopf_si->rows;
         if(this->statistics) rows += this->statistics->rows;
         if(this->ics) rows += this->ics->rows;
         if(this->workers) rows += this->workers->rows;
@@ -335,9 +348,11 @@ namespace transport
         boost::optional< aggregation_table_data > backg;
         boost::optional< aggregation_table_data > twopf_re;
         boost::optional< aggregation_table_data > twopf_im;
+        boost::optional< aggregation_table_data > twopf_si_re;
         boost::optional< aggregation_table_data > threepf_momentum;
         boost::optional< aggregation_table_data > threepf_Nderiv;
         boost::optional< aggregation_table_data > tensor_twopf;
+        boost::optional< aggregation_table_data > tensor_twopf_si;
         boost::optional< aggregation_table_data > statistics;
         boost::optional< aggregation_table_data > ics;
         boost::optional< aggregation_table_data > ics_kt;
@@ -351,9 +366,11 @@ namespace transport
         out << "," << aggregation_profiler_impl::format(this->backg)
             << "," << aggregation_profiler_impl::format(this->twopf_re)
             << "," << aggregation_profiler_impl::format(this->twopf_im)
+            << "," << aggregation_profiler_impl::format(this->twopf_si_re)
             << "," << aggregation_profiler_impl::format(this->threepf_momentum)
             << "," << aggregation_profiler_impl::format(this->threepf_Nderiv)
             << "," << aggregation_profiler_impl::format(this->tensor_twopf)
+            << "," << aggregation_profiler_impl::format(this->tensor_twopf_si)
             << "," << aggregation_profiler_impl::format(this->statistics)
             << "," << aggregation_profiler_impl::format(this->ics)
             << "," << aggregation_profiler_impl::format(this->ics_kt)
@@ -368,9 +385,11 @@ namespace transport
         if(this->backg) rows += this->backg->rows;
         if(this->twopf_re) rows += this->twopf_re->rows;
         if(this->twopf_im) rows += this->twopf_im->rows;
+        if(this->twopf_si_re) rows += this->twopf_si_re->rows;
         if(this->threepf_momentum) rows += this->threepf_momentum->rows;
         if(this->threepf_Nderiv) rows += this->threepf_Nderiv->rows;
         if(this->tensor_twopf) rows += this->tensor_twopf->rows;
+        if(this->tensor_twopf_si) rows += this->tensor_twopf_si->rows;
         if(this->statistics) rows += this->statistics->rows;
         if(this->ics) rows += this->ics->rows;
         if(this->ics_kt) rows += this->ics_kt->rows;
@@ -389,13 +408,17 @@ namespace transport
           }
 
       public:
-        aggregation_profile_record_type get_type() const override { return aggregation_profile_record_type::zeta_twopf; }
+        aggregation_profile_record_type get_type() const override
+          { return aggregation_profile_record_type::zeta_twopf; }
+
+
         size_t get_rows() const override;
+
         void write_row(std::ofstream& out) const override;
 
       public:
-        boost::optional< aggregation_table_data > twopf;
-        boost::optional< aggregation_table_data > gauge_xfm1;
+        boost::optional<aggregation_table_data> twopf;
+        boost::optional<aggregation_table_data> gauge_xfm1;
       };
 
 

@@ -76,8 +76,14 @@ namespace transport
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TWOPF_RE_TIME_INDEX, CPPTRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TWOPF_RE_K_INDEX, CPPTRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE);
 
+            finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TWOPF_SI_RE_TIME_INDEX, CPPTRANSPORT_SQLITE_TWOPF_SI_RE_VALUE_TABLE);
+            finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TWOPF_SI_RE_K_INDEX, CPPTRANSPORT_SQLITE_TWOPF_SI_RE_VALUE_TABLE);
+
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_TIME_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_K_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE);
+
+            finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_TIME_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_VALUE_TABLE);
+            finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_K_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_VALUE_TABLE);
 
             finalize_impl::analyze(mgr, db);
           }
@@ -93,8 +99,14 @@ namespace transport
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TWOPF_IM_TIME_INDEX, CPPTRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TWOPF_IM_K_INDEX, CPPTRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE);
 
+            finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TWOPF_SI_RE_TIME_INDEX, CPPTRANSPORT_SQLITE_TWOPF_SI_RE_VALUE_TABLE);
+            finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TWOPF_SI_RE_K_INDEX, CPPTRANSPORT_SQLITE_TWOPF_SI_RE_VALUE_TABLE);
+
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_TIME_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_K_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE);
+
+            finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_TIME_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_VALUE_TABLE);
+            finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_K_INDEX, CPPTRANSPORT_SQLITE_TENSOR_TWOPF_SI_VALUE_TABLE);
 
             finalize_impl::create_tserial_index(mgr, db, CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_TIME_INDEX, CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_VALUE_TABLE);
             finalize_impl::create_kserial_index(mgr, db, CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_K_INDEX, CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_VALUE_TABLE);
