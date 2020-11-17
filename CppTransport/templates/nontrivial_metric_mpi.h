@@ -1,4 +1,4 @@
-// backend = cpp, minver = 201901, lagrangian = nontrivial_metric
+// backend = cpp, minver = 202101, lagrangian = nontrivial_metric
 //
 // --@@
 // Copyright (c) 2017 University of Sussex. All rights reserved.
@@ -275,16 +275,29 @@ namespace transport
       protected:
 
         //! populate initial values for a 2pf configuration
-        void populate_twopf_ic(twopf_state& x, unsigned int start, double kmode, double Ninit,
-                               const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0, bool imaginary = false);
+        template <unsigned int start>
+        void populate_twopf_ic(twopf_state& x, double kmode, double Ninit, const twopf_db_task<number>* tk,
+                               const std::vector<number>& ic, double k_normalize=1.0, bool imaginary = false);
+
+        //! populate initial values for a 2pf spectral index configuration
+        template <unsigned int start>
+        void populate_twopf_si_ic(twopf_state& x, double kmode, double Ninit, const twopf_db_task<number>* tk,
+                                  const std::vector<number>& ic, double k_normalize=1.0);
 
         //! populate initial values for a tensor 2pf configuration
-        void populate_tensor_ic(twopf_state& x, unsigned int start, double kmode, double Ninit,
-                                const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0);
+        template <unsigned int start>
+        void populate_tensor_ic(twopf_state& x, double kmode, double Ninit, const twopf_db_task<number>* tk,
+                                const std::vector<number>& ic, double k_normalize=1.0);
+
+        //! populate initial values for a tensor 2pf spectral index configuration
+        template <unsigned int start>
+        void populate_tensor_si_ic(twopf_state& x, double kmode, double Ninit, const twopf_db_task<number>* tk,
+                                   const std::vector<number>& ic, double k_normalize=1.0);
 
         //! populate initial values for a 3pf configuration
-        void populate_threepf_ic(threepf_state& x, unsigned int start, const threepf_kconfig& kconfig,
-                                 double Ninit, const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0);
+        template <unsigned int start>
+        void populate_threepf_ic(threepf_state& x, const threepf_kconfig& kconfig, double Ninit,
+                                 const twopf_db_task<number>* tk, const std::vector<number>& ic, double k_normalize=1.0);
 
 
         // INTERNAL DATA
@@ -406,6 +419,7 @@ namespace transport
             delete[] this->__raw_params;
           }
 
+        // evaluate RHS of transport system
         void operator()(const twopf_state& __x, twopf_state& __dxdt, number __t);
 
         // adjust horizon exit time, given an initial time N_init which we wish to move to zero
@@ -459,7 +473,11 @@ namespace transport
 
     // integration - observer object for 2pf
     template <typename Model, typename BatchObject>
-    class $MODEL_mpi_twopf_observer: public twopf_singleconfig_batch_observer<typename Model::value_type, BatchObject>
+    class $MODEL_mpi_twopf_observer:
+      public twopf_singleconfig_batch_observer<typename Model::value_type, BatchObject,
+        $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
+        $MODEL_pool::backg_start, $MODEL_pool::tensor_start, $MODEL_pool::tensor_si_start,
+        $MODEL_pool::twopf_start, $MODEL_pool::twopf_si_start>
       {
   
       public:
@@ -473,15 +491,18 @@ namespace transport
         
       public:
 
+        //! constructor forwards to twopf_singleconfig_batch_observer<>
         $MODEL_mpi_twopf_observer(BatchObject& b, const twopf_kconfig_record& c,
                                   double t_ics, const time_config_database& t)
-          : twopf_singleconfig_batch_observer<number, BatchObject>
-              (b, c, t_ics, t,
-               $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
-               $MODEL_pool::backg_start, $MODEL_pool::tensor_start, $MODEL_pool::twopf_start)
+          : twopf_singleconfig_batch_observer<typename Model::value_type, BatchObject,
+              $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
+              $MODEL_pool::backg_start, $MODEL_pool::tensor_start, $MODEL_pool::tensor_si_start,
+              $MODEL_pool::twopf_start, $MODEL_pool::twopf_si_start>{b, c, t_ics, t}
           {
           }
 
+        //! call operator extracts state and pushes it to the batcher
+        //! most of the heavy lifting is abstracted into twopf_singleconfig_batch_observer
         void operator()(const twopf_state& x, number t);
 
       };
@@ -672,7 +693,18 @@ namespace transport
 
     // integration - observer object for 3pf
     template <typename Model, typename BatchObject>
-    class $MODEL_mpi_threepf_observer: public threepf_singleconfig_batch_observer<typename Model::value_type, BatchObject>
+    class $MODEL_mpi_threepf_observer:
+      public threepf_singleconfig_batch_observer<typename Model::value_type, BatchObject,
+        $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
+        $MODEL_pool::twopf_size, $MODEL_pool::threepf_size,
+        $MODEL_pool::backg_start,
+        $MODEL_pool::tensor_k1_start, $MODEL_pool::tensor_k2_start, $MODEL_pool::tensor_k3_start,
+        $MODEL_pool::tensor_si_k1_start, $MODEL_pool::tensor_si_k2_start, $MODEL_pool::tensor_si_k3_start,
+        $MODEL_pool::twopf_re_k1_start, $MODEL_pool::twopf_im_k1_start,
+        $MODEL_pool::twopf_re_k2_start, $MODEL_pool::twopf_im_k2_start,
+        $MODEL_pool::twopf_re_k3_start, $MODEL_pool::twopf_im_k3_start,
+        $MODEL_pool::twopf_si_re_k1_start, $MODEL_pool::twopf_si_re_k2_start, $MODEL_pool::twopf_si_re_k3_start,
+        $MODEL_pool::threepf_start>
       {
   
       public:
@@ -685,21 +717,26 @@ namespace transport
 
         
       public:
+
+        //! constructor forwards to threepf_singleconfig_observer<>
         $MODEL_mpi_threepf_observer(BatchObject& b, const threepf_kconfig_record& c,
                                     double t_ics, const time_config_database& t)
-          : threepf_singleconfig_batch_observer<number, BatchObject>
-              (b, c, t_ics, t,
-               $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
-               $MODEL_pool::twopf_size, $MODEL_pool::threepf_size,
-               $MODEL_pool::backg_start,
-               $MODEL_pool::tensor_k1_start, $MODEL_pool::tensor_k2_start, $MODEL_pool::tensor_k3_start,
-               $MODEL_pool::twopf_re_k1_start, $MODEL_pool::twopf_im_k1_start,
-               $MODEL_pool::twopf_re_k2_start, $MODEL_pool::twopf_im_k2_start,
-               $MODEL_pool::twopf_re_k3_start, $MODEL_pool::twopf_im_k3_start,
-               $MODEL_pool::threepf_start)
+          : threepf_singleconfig_batch_observer<typename Model::value_type, BatchObject,
+              $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
+              $MODEL_pool::twopf_size, $MODEL_pool::threepf_size,
+              $MODEL_pool::backg_start,
+              $MODEL_pool::tensor_k1_start, $MODEL_pool::tensor_k2_start, $MODEL_pool::tensor_k3_start,
+              $MODEL_pool::tensor_si_k1_start, $MODEL_pool::tensor_si_k2_start, $MODEL_pool::tensor_si_k3_start,
+              $MODEL_pool::twopf_re_k1_start, $MODEL_pool::twopf_im_k1_start,
+              $MODEL_pool::twopf_re_k2_start, $MODEL_pool::twopf_im_k2_start,
+              $MODEL_pool::twopf_re_k3_start, $MODEL_pool::twopf_im_k3_start,
+              $MODEL_pool::twopf_si_re_k1_start, $MODEL_pool::twopf_si_re_k2_start, $MODEL_pool::twopf_si_re_k3_start,
+              $MODEL_pool::threepf_start>{b, c, t_ics, t}
           {
           }
 
+        //! call operator extracts state and pushes it to the batcher
+        //! most of the heavy lifting is abstracted into twopf_singleconfig_batch_observer
         void operator()(const threepf_state& x, number t);
 
       };
@@ -842,18 +879,21 @@ namespace transport
 
         if(batcher.is_collecting_initial_conditions())
           {
-            const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig);
-            double t_exit = tk->get_ics_exit_time(*kconfig);
+            const auto ics_1 = tk->get_ics_exit_vector(*kconfig);
+            const double t_exit = tk->get_ics_exit_time(*kconfig);
             batcher.push_ics(kconfig->serial, t_exit, ics_1);
           }
     
-        // observers expect all correlation functions to be dimensionless and rescaled by the same factors
+        // observers expect all correlation functions to be dimensionless and rescaled by the same factors;
+        // this is true for the components of the spectral-index correlators as well as the plain correlators
     
         // fix initial conditions - tensors (use dimensionless correlation functions)
-        this->populate_tensor_ic(x, $MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
+        this->populate_tensor_ic<$MODEL_pool::tensor_start>(x, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
+        this->populate_tensor_si_ic<$MODEL_pool::tensor_si_start>(x, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
 
         // fix initial conditions - 2pf (use dimensionless correlation functions)
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
+        this->populate_twopf_ic<$MODEL_pool::twopf_start>(x, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
+        this->populate_twopf_si_ic<$MODEL_pool::twopf_si_start>(x, kconfig->k_comoving, *(time_db.value_begin()), tk, ics, kconfig->k_comoving);
 
         // up to this point the calculation has been done in the user-supplied time variable.
         // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
@@ -887,13 +927,14 @@ namespace transport
     // k_normalize - used to adjust ics to be dimensionless, or just 1.0 to get raw correlation function
     // imaginary   - whether to populate using real or imaginary components of the 2pf
     template <typename number, typename StateType>
-    void $MODEL_mpi<number, StateType>::populate_twopf_ic(twopf_state& x, unsigned int start, double kmode,
-                                                          double Ninit, const twopf_db_task<number>* tk,
+    template <unsigned int start>
+    void $MODEL_mpi<number, StateType>::populate_twopf_ic(twopf_state& x, double kmode, double Ninit,
+                                                          const twopf_db_task<number>* tk,
                                                           const std::vector<number>& ics, double k_normalize,
                                                           bool imaginary)
       {
         DEFINE_INDEX_TOOLS
-        
+
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::twopf_size);
 
@@ -902,14 +943,31 @@ namespace transport
       }
 
 
+    template <typename number, typename StateType>
+    template <unsigned int start>
+    void $MODEL_mpi<number, StateType>::populate_twopf_si_ic(twopf_state& x, double kmode, double Ninit,
+                                                             const twopf_db_task<number>* tk,
+                                                             const std::vector<number>& ics, double k_normalize)
+      {
+        DEFINE_INDEX_TOOLS
+
+        assert(x.size() >= start);
+        assert(x.size() >= start + $MODEL_pool::twopf_size);
+
+        // populate components of the 2pf 'spectral index' tensor
+        x[start + FLATTEN($^A, $^B)] = this->make_twopf_si_ic($^A, $^B, kmode, Ninit, tk, ics, k_normalize);
+      }
+
+
     // make initial conditions for the tensor twopf
     template <typename number, typename StateType>
-    void $MODEL_mpi<number, StateType>::populate_tensor_ic(twopf_state& x, unsigned int start, double kmode,
-                                                           double Ninit, const twopf_db_task<number>* tk,
+    template <unsigned int start>
+    void $MODEL_mpi<number, StateType>::populate_tensor_ic(twopf_state& x, double kmode, double Ninit,
+                                                           const twopf_db_task<number>* tk,
                                                            const std::vector<number>& ics, double k_normalize)
       {
         DEFINE_INDEX_TOOLS
-        
+
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::tensor_size);
 
@@ -918,6 +976,26 @@ namespace transport
         x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_ic(0, 1, kmode, Ninit, tk, ics, k_normalize);
         x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_ic(1, 0, kmode, Ninit, tk, ics, k_normalize);
         x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_ic(1, 1, kmode, Ninit, tk, ics, k_normalize);
+      }
+
+
+    // make initial conditions for the tensor twopf spectral index
+    template <typename number, typename StateType>
+    template <unsigned int start>
+    void $MODEL_mpi<number, StateType>::populate_tensor_si_ic(twopf_state& x, double kmode, double Ninit,
+                                                              const twopf_db_task<number>* tk,
+                                                              const std::vector<number>& ics, double k_normalize)
+      {
+        DEFINE_INDEX_TOOLS
+
+        assert(x.size() >= start);
+        assert(x.size() >= start + $MODEL_pool::tensor_size);
+
+        // populate components of the twopf 'spectral index' tensor
+        x[start + TENSOR_FLATTEN(0,0)] = this->make_twopf_tensor_si_ic(0, 0, kmode, Ninit, tk, ics, k_normalize);
+        x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_si_ic(0, 1, kmode, Ninit, tk, ics, k_normalize);
+        x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_si_ic(1, 0, kmode, Ninit, tk, ics, k_normalize);
+        x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_si_ic(1, 1, kmode, Ninit, tk, ics, k_normalize);
       }
 
 
@@ -1023,14 +1101,14 @@ namespace transport
         // use adaptive ics if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
-        x[$MODEL_pool::backg_start + $^A] = ics[$^A];
+        x[$MODEL_pool::backg_start + FLATTEN($^A)] = ics[$^A];
 
         if(batcher.is_collecting_initial_conditions())
           {
-            const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
-            const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
-            double t_exit_1 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
-            double t_exit_2 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
+            const auto ics_1 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
+            const auto ics_2 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
+            const double t_exit_1 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
+            const double t_exit_2 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
             batcher.push_ics(kconfig->serial, t_exit_1, ics_1);
             batcher.push_kt_ics(kconfig->serial, t_exit_2, ics_2);
           }
@@ -1038,22 +1116,32 @@ namespace transport
         // observers expect all correlation functions to be dimensionless and rescaled by the same factors
         
         // fix initial conditions - tensors (use dimensionless correlation functions, all rescaled by k_t to be consistent)
-        this->populate_tensor_ic(x, $MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
-        this->populate_tensor_ic(x, $MODEL_pool::tensor_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
-        this->populate_tensor_ic(x, $MODEL_pool::tensor_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_tensor_ic<$MODEL_pool::tensor_k1_start>(x, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_tensor_ic<$MODEL_pool::tensor_k2_start>(x, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_tensor_ic<$MODEL_pool::tensor_k3_start>(x, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+
+        // fix initial conditions - tensor spectral index (use dimensionless correlation functions, all rescaled by k_t to be consistent)
+        this->populate_tensor_si_ic<$MODEL_pool::tensor_si_k1_start>(x, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_tensor_si_ic<$MODEL_pool::tensor_si_k2_start>(x, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_tensor_si_ic<$MODEL_pool::tensor_si_k3_start>(x, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
 
         // fix initial conditions - real 2pfs (use dimensionless correlation functions, all rescaled by k_t to be consistent)
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_re_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
+        this->populate_twopf_ic<$MODEL_pool::twopf_re_k1_start>(x, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
+        this->populate_twopf_ic<$MODEL_pool::twopf_re_k2_start>(x, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
+        this->populate_twopf_ic<$MODEL_pool::twopf_re_k3_start>(x, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, false);
 
         // fix initial conditions - imaginary 2pfs (use dimensionless correlation functions, all rescaled by k_t to be consistent)
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
-        this->populate_twopf_ic(x, $MODEL_pool::twopf_im_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
+        this->populate_twopf_ic<$MODEL_pool::twopf_im_k1_start>(x, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
+        this->populate_twopf_ic<$MODEL_pool::twopf_im_k2_start>(x, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
+        this->populate_twopf_ic<$MODEL_pool::twopf_im_k3_start>(x, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving, true);
+
+        // fix initial conditions - real 2pf spectral indices (use dimensionless correlation functions, all rescaled by k_t to be consistent)
+        this->populate_twopf_si_ic<$MODEL_pool::twopf_si_re_k1_start>(x, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_twopf_si_ic<$MODEL_pool::twopf_si_re_k2_start>(x, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_twopf_si_ic<$MODEL_pool::twopf_si_re_k3_start>(x, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
 
         // fix initial conditions - threepf (use dimensionless correlation functions)
-        this->populate_threepf_ic(x, $MODEL_pool::threepf_start, *kconfig, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
+        this->populate_threepf_ic<$MODEL_pool::threepf_start>(x, *kconfig, *(time_db.value_begin()), tk, ics, kconfig->kt_comoving);
 
         // up to this point the calculation has been done in the user-supplied time variable.
         // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
@@ -1078,13 +1166,13 @@ namespace transport
 
 
     template <typename number, typename StateType>
-    void $MODEL_mpi<number, StateType>::populate_threepf_ic(threepf_state& x, unsigned int start,
-                                                            const threepf_kconfig& kconfig, double Ninit,
-                                                            const twopf_db_task<number>* tk,
+    template <unsigned int start>
+    void $MODEL_mpi<number, StateType>::populate_threepf_ic(threepf_state& x, const threepf_kconfig& kconfig,
+                                                            double Ninit, const twopf_db_task<number>* tk,
                                                             const std::vector<number>& ics, double k_normalize)
       {
         DEFINE_INDEX_TOOLS
-        
+
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::threepf_size);
 
@@ -1139,20 +1227,33 @@ namespace transport
         static_assert(FLATTEN(0,0) == 0, "FLATTEN failure");
         static_assert(FLATTEN(0,0,0) == 0, "FLATTEN failure");
 
-        const auto __tensor_twopf_ff = __x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(0,0)];
-        const auto __tensor_twopf_fp = __x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(0,1)];
-        const auto __tensor_twopf_pf = __x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(1,0)];
-        const auto __tensor_twopf_pp = __x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(1,1)];
+        const auto __tensor_ff = __x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_fp = __x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_pf = __x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_pp = __x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(1,1)];
 
-#undef __twopf
-#define __twopf(a,b) __x[$MODEL_pool::twopf_start + FLATTEN(a,b)]
+        const auto __tensor_si_ff = __x[$MODEL_pool::tensor_si_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_si_fp = __x[$MODEL_pool::tensor_si_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_si_pf = __x[$MODEL_pool::tensor_si_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_si_pp = __x[$MODEL_pool::tensor_si_start + TENSOR_FLATTEN(1,1)];
 
 #undef __background
+#undef __twopf
+#undef __twopf_si
+#define __background(A)    __x[$MODEL_pool::backg_start + FLATTEN(A)]
+#define __twopf(A,B)       __x[$MODEL_pool::twopf_start + FLATTEN(A,B)]
+#define __twopf_si(A,B)    __x[$MODEL_pool::twopf_si_start + FLATTEN(A,B)]
+
+#undef __dbackground
+#undef __dtensor
+#undef __dtensor_si
 #undef __dtwopf
-#undef __dtwopf_tensor
-#define __background(a)      __dxdt[$MODEL_pool::backg_start + FLATTEN(a)]
-#define __dtwopf_tensor(a,b) __dxdt[$MODEL_pool::tensor_start + TENSOR_FLATTEN(a,b)]
-#define __dtwopf(a,b)        __dxdt[$MODEL_pool::twopf_start + FLATTEN(a,b)]
+#undef __dtwopf_si
+#define __dbackground(A)   __dxdt[$MODEL_pool::backg_start + FLATTEN(A)]
+#define __dtensor(A,B)     __dxdt[$MODEL_pool::tensor_start + TENSOR_FLATTEN(A,B)]
+#define __dtensor_si(A,B)  __dxdt[$MODEL_pool::tensor_si_start + TENSOR_FLATTEN(A,B)]
+#define __dtwopf(A,B)      __dxdt[$MODEL_pool::twopf_start + FLATTEN(A,B)]
+#define __dtwopf_si(A,B)   __dxdt[$MODEL_pool::twopf_si_start + FLATTEN(A,B)]
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __setup_timer.stop();
@@ -1160,21 +1261,33 @@ namespace transport
 #endif
 
         // evolve the background
-        __background($^A) = $U1_TENSOR[^A];
-        __background(MOMENTUM($^a)) $+= - $GAMMA[^a_b] * $MOMENTA[^b];
+        __dbackground($^A) = $U1_TENSOR[^A];
+        __dbackground(MOMENTUM($^a)) $+= - $GAMMA[^a_b] * $MOMENTA[^b];
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __eps = $EPSILON;
+        const auto __m_kaHsq = -__k*__k/(__a*__a*__Hsq);
 
         // evolve the tensor modes
-        const auto __ff = 0.0;
-        const auto __fp = 1.0;
-        const auto __pf = -__k*__k/(__a*__a*__Hsq);
+        constexpr auto __ff = 0.0;
+        constexpr auto __fp = 1.0;
+        const auto __pf = __m_kaHsq;
         const auto __pp = __eps-3.0;
-        __dtwopf_tensor(0,0) = __ff*__tensor_twopf_ff + __fp*__tensor_twopf_pf + __ff*__tensor_twopf_ff + __fp*__tensor_twopf_fp;
-        __dtwopf_tensor(0,1) = __ff*__tensor_twopf_fp + __fp*__tensor_twopf_pp + __pf*__tensor_twopf_ff + __pp*__tensor_twopf_fp;
-        __dtwopf_tensor(1,0) = __pf*__tensor_twopf_ff + __pp*__tensor_twopf_pf + __ff*__tensor_twopf_pf + __fp*__tensor_twopf_pp;
-        __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
+
+        __dtensor(0,0) = __ff*__tensor_ff + __fp*__tensor_pf + __ff*__tensor_ff + __fp*__tensor_fp;
+        __dtensor(0,1) = __ff*__tensor_fp + __fp*__tensor_pp + __pf*__tensor_ff + __pp*__tensor_fp;
+        __dtensor(1,0) = __pf*__tensor_ff + __pp*__tensor_pf + __ff*__tensor_pf + __fp*__tensor_pp;
+        __dtensor(1,1) = __pf*__tensor_fp + __pp*__tensor_pp + __pf*__tensor_pf + __pp*__tensor_pp;
+
+        // evolve the tensor spectral index modes
+        __dtensor_si(0,0) = __ff*__tensor_si_ff + __fp*__tensor_si_pf + __ff*__tensor_si_ff + __fp*__tensor_si_fp;
+        __dtensor_si(0,1) = __ff*__tensor_si_fp + __fp*__tensor_si_pp + __pf*__tensor_si_ff + __pp*__tensor_si_fp;
+        __dtensor_si(1,0) = __pf*__tensor_si_ff + __pp*__tensor_si_pf + __ff*__tensor_si_pf + __fp*__tensor_si_pp;
+        __dtensor_si(1,1) = __pf*__tensor_si_fp + __pp*__tensor_si_pp + __pf*__tensor_si_pf + __pp*__tensor_si_pp;
+
+        __dtensor_si(1,0) += 2.0*__pf*__tensor_ff;
+        __dtensor_si(0,1) += 2.0*__pf*__tensor_ff;
+        __dtensor_si(1,1) += 2.0*__pf*__tensor_fp + 2.0*__pf*__tensor_pf;
 
         // set up components of the u2 tensor
         $U2_DECLARE[^A_B] = $U2_TENSOR[^A_B]{__k, __a};
@@ -1197,6 +1310,38 @@ namespace transport
         __dtwopf(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf(MOMENTUM($^c), $^B);
         __dtwopf($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf($^A, MOMENTUM($^c));
 
+        // evolve the 2pf spectral index tensor
+        __dtwopf_si($^A, $^B) $=  + $U2_CONTAINER[^A_C] * __twopf_si($^C, $^B);
+        __dtwopf_si($^A, $^B) $+= + $U2_CONTAINER[^B_C] * __twopf_si($^A, $^C);
+
+        __dtwopf_si(MOMENTUM($^a), $^b) $+= 2.0 * __m_kaHsq * __twopf($^a, $^b);
+        __dtwopf_si($^a, MOMENTUM($^b)) $+= 2.0 * __m_kaHsq * __twopf($^a, $^b);
+        __dtwopf_si(MOMENTUM($^a), MOMENTUM($^b)) $+= 2.0 * __m_kaHsq * __twopf($^a, MOMENTUM($^b));
+        __dtwopf_si(MOMENTUM($^a), MOMENTUM($^b)) $+= 2.0 * __m_kaHsq * __twopf(MOMENTUM($^a), $^b);
+
+        __dtwopf_si($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_si($^c, $^B);
+        __dtwopf_si($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_si($^A, $^c);
+
+        __dtwopf_si(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_si(MOMENTUM($^c), $^B);
+        __dtwopf_si($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_si($^A, MOMENTUM($^c));
+
+#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+        if(std::isnan(__background($^A)) || std::isinf(__background($^A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtensor(0,0)) || std::isinf(__dtensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor(0,1)) || std::isinf(__dtensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor(1,0)) || std::isinf(__dtensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor(1,1)) || std::isinf(__dtensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtensor_si(0,0)) || std::isinf(__dtensor_si(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si(0,1)) || std::isinf(__dtensor_si(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si(1,0)) || std::isinf(__dtensor_si(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si(1,1)) || std::isinf(__dtensor_si(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf($^A, $^B)) || std::isinf(__dtwopf($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_si($^A, $^B)) || std::isinf(__dtwopf_si($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+#endif
+
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();
         ++__invokations;
@@ -1214,21 +1359,31 @@ namespace transport
 
 #undef __background
 #undef __twopf
-#undef __twopf_tensor
+#undef __twopf_si
+#undef __tensor
+#undef __tensor_si
 
-#define __background(a)      x[$MODEL_pool::backg_start + FLATTEN(a)]
-#define __twopf(a,b)         x[$MODEL_pool::twopf_start + FLATTEN(a,b)]
-#define __twopf_tensor(a,b) x[$MODEL_pool::tensor_start + TENSOR_FLATTEN(a,b)]
+#define __background(A)  x[$MODEL_pool::backg_start     + FLATTEN(A)]
+#define __twopf(A,B)     x[$MODEL_pool::twopf_start     + FLATTEN(A,B)]
+#define __twopf_si(A,B)  x[$MODEL_pool::twopf_si_start  + FLATTEN(A,B)]
+#define __tensor(A,B)    x[$MODEL_pool::tensor_start    + TENSOR_FLATTEN(A,B)]
+#define __tensor_si(A,B) x[$MODEL_pool::tensor_si_start + TENSOR_FLATTEN(A,B)]
 
 #ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
         if(std::isnan(__background($^A)) || std::isinf(__background($^A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
-        if(std::isnan(__twopf_tensor(0,0)) || std::isinf(__twopf_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_tensor(0,1)) || std::isinf(__twopf_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_tensor(1,0)) || std::isinf(__twopf_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_tensor(1,1)) || std::isinf(__twopf_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor(0,0)) || std::isinf(__tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor(0,1)) || std::isinf(__tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor(1,0)) || std::isinf(__tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor(1,1)) || std::isinf(__tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__tensor_si(0,0)) || std::isinf(__tensor_si(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si(0,1)) || std::isinf(__tensor_si(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si(1,0)) || std::isinf(__tensor_si(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si(1,1)) || std::isinf(__tensor_si(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
         if(std::isnan(__twopf($^A, $^B)) || std::isinf(__twopf($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_si($^A, $^B)) || std::isinf(__twopf_si($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 #endif
 
         this->start_batching(static_cast<double>(t), this->get_log(), BatchObject::log_severity_level::normal);
@@ -1287,20 +1442,37 @@ namespace transport
         static_assert(FLATTEN(0,0) == 0, "FLATTEN failure");
         static_assert(FLATTEN(0,0,0) == 0, "FLATTEN failure");
 
-        const auto __tensor_k1_twopf_ff = __x[$MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(0,0)];
-        const auto __tensor_k1_twopf_fp = __x[$MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(0,1)];
-        const auto __tensor_k1_twopf_pf = __x[$MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(1,0)];
-        const auto __tensor_k1_twopf_pp = __x[$MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(1,1)];
+        const auto __tensor_k1_ff = __x[$MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(0, 0)];
+        const auto __tensor_k1_fp = __x[$MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(0, 1)];
+        const auto __tensor_k1_pf = __x[$MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(1, 0)];
+        const auto __tensor_k1_pp = __x[$MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(1, 1)];
 
-        const auto __tensor_k2_twopf_ff = __x[$MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(0,0)];
-        const auto __tensor_k2_twopf_fp = __x[$MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(0,1)];
-        const auto __tensor_k2_twopf_pf = __x[$MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(1,0)];
-        const auto __tensor_k2_twopf_pp = __x[$MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(1,1)];
+        const auto __tensor_si_k1_ff = __x[$MODEL_pool::tensor_si_k1_start + TENSOR_FLATTEN(0, 0)];
+        const auto __tensor_si_k1_fp = __x[$MODEL_pool::tensor_si_k1_start + TENSOR_FLATTEN(0, 1)];
+        const auto __tensor_si_k1_pf = __x[$MODEL_pool::tensor_si_k1_start + TENSOR_FLATTEN(1, 0)];
+        const auto __tensor_si_k1_pp = __x[$MODEL_pool::tensor_si_k1_start + TENSOR_FLATTEN(1, 1)];
 
-        const auto __tensor_k3_twopf_ff = __x[$MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(0,0)];
-        const auto __tensor_k3_twopf_fp = __x[$MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(0,1)];
-        const auto __tensor_k3_twopf_pf = __x[$MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,0)];
-        const auto __tensor_k3_twopf_pp = __x[$MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,1)];
+        const auto __tensor_k2_ff = __x[$MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_k2_fp = __x[$MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_k2_pf = __x[$MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_k2_pp = __x[$MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(1,1)];
+
+        const auto __tensor_si_k2_ff = __x[$MODEL_pool::tensor_si_k2_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_si_k2_fp = __x[$MODEL_pool::tensor_si_k2_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_si_k2_pf = __x[$MODEL_pool::tensor_si_k2_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_si_k2_pp = __x[$MODEL_pool::tensor_si_k2_start + TENSOR_FLATTEN(1,1)];
+
+        const auto __tensor_k3_ff = __x[$MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_k3_fp = __x[$MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_k3_pf = __x[$MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_k3_pp = __x[$MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,1)];
+
+        const auto __tensor_si_k3_ff = __x[$MODEL_pool::tensor_si_k3_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_si_k3_fp = __x[$MODEL_pool::tensor_si_k3_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_si_k3_pf = __x[$MODEL_pool::tensor_si_k3_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_si_k3_pp = __x[$MODEL_pool::tensor_si_k3_start + TENSOR_FLATTEN(1,1)];
+
+#undef __background
 
 #undef __twopf_re_k1
 #undef __twopf_re_k2
@@ -1308,40 +1480,56 @@ namespace transport
 #undef __twopf_im_k1
 #undef __twopf_im_k2
 #undef __twopf_im_k3
+#undef __twopf_si_re_k1
+#undef __twopf_si_re_k2
+#undef __twopf_si_re_k3
 
 #undef __threepf
 
-#define __twopf_re_k1(a,b) __x[$MODEL_pool::twopf_re_k1_start + FLATTEN(a,b)]
-#define __twopf_im_k1(a,b) __x[$MODEL_pool::twopf_im_k1_start + FLATTEN(a,b)]
-#define __twopf_re_k2(a,b) __x[$MODEL_pool::twopf_re_k2_start + FLATTEN(a,b)]
-#define __twopf_im_k2(a,b) __x[$MODEL_pool::twopf_im_k2_start + FLATTEN(a,b)]
-#define __twopf_re_k3(a,b) __x[$MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
-#define __twopf_im_k3(a,b) __x[$MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
+#define __background(A)       __x[$MODEL_pool::backg_start          + FLATTEN(A)]
+#define __twopf_re_k1(A,B)    __x[$MODEL_pool::twopf_re_k1_start    + FLATTEN(A,B)]
+#define __twopf_im_k1(A,B)    __x[$MODEL_pool::twopf_im_k1_start    + FLATTEN(A,B)]
+#define __twopf_re_k2(A,B)    __x[$MODEL_pool::twopf_re_k2_start    + FLATTEN(A,B)]
+#define __twopf_im_k2(A,B)    __x[$MODEL_pool::twopf_im_k2_start    + FLATTEN(A,B)]
+#define __twopf_re_k3(A,B)    __x[$MODEL_pool::twopf_re_k3_start    + FLATTEN(A,B)]
+#define __twopf_im_k3(A,B)    __x[$MODEL_pool::twopf_im_k3_start    + FLATTEN(A,B)]
+#define __twopf_si_re_k1(A,B) __x[$MODEL_pool::twopf_si_re_k1_start + FLATTEN(A,B)]
+#define __twopf_si_re_k2(A,B) __x[$MODEL_pool::twopf_si_re_k2_start + FLATTEN(A,B)]
+#define __twopf_si_re_k3(A,B) __x[$MODEL_pool::twopf_si_re_k3_start + FLATTEN(A,B)]
 
-#define __threepf(a,b,c)	 __x[$MODEL_pool::threepf_start  + FLATTEN(a,b,c)]
+#define __threepf(A,B,C)	    __x[$MODEL_pool::threepf_start        + FLATTEN(A,B,C)]
 
-#undef __background
-#undef __dtwopf_k1_tensor
-#undef __dtwopf_k2_tensor
-#undef __dtwopf_k3_tensor
+#undef __dbackground
+#undef __dtensor_k1
+#undef __dtensor_k2
+#undef __dtensor_k3
 #undef __dtwopf_re_k1
 #undef __dtwopf_im_k1
 #undef __dtwopf_re_k2
 #undef __dtwopf_im_k2
 #undef __dtwopf_re_k3
 #undef __dtwopf_im_k3
+#undef __dtwopf_si_re_k1
+#undef __dtwopf_si_re_k2
+#undef __dtwopf_si_re_k3
 #undef __dthreepf
-#define __background(a)         __dxdt[$MODEL_pool::backg_start       + FLATTEN(a)]
-#define __dtwopf_k1_tensor(a,b) __dxdt[$MODEL_pool::tensor_k1_start   + TENSOR_FLATTEN(a,b)]
-#define __dtwopf_k2_tensor(a,b) __dxdt[$MODEL_pool::tensor_k2_start   + TENSOR_FLATTEN(a,b)]
-#define __dtwopf_k3_tensor(a,b) __dxdt[$MODEL_pool::tensor_k3_start   + TENSOR_FLATTEN(a,b)]
-#define __dtwopf_re_k1(a,b)     __dxdt[$MODEL_pool::twopf_re_k1_start + FLATTEN(a,b)]
-#define __dtwopf_im_k1(a,b)     __dxdt[$MODEL_pool::twopf_im_k1_start + FLATTEN(a,b)]
-#define __dtwopf_re_k2(a,b)     __dxdt[$MODEL_pool::twopf_re_k2_start + FLATTEN(a,b)]
-#define __dtwopf_im_k2(a,b)     __dxdt[$MODEL_pool::twopf_im_k2_start + FLATTEN(a,b)]
-#define __dtwopf_re_k3(a,b)     __dxdt[$MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
-#define __dtwopf_im_k3(a,b)     __dxdt[$MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
-#define __dthreepf(a,b,c)       __dxdt[$MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
+#define __dbackground(A)        __dxdt[$MODEL_pool::backg_start          + FLATTEN(A)]
+#define __dtensor_k1(A,B)       __dxdt[$MODEL_pool::tensor_k1_start      + TENSOR_FLATTEN(A,B)]
+#define __dtensor_k2(A,B)       __dxdt[$MODEL_pool::tensor_k2_start      + TENSOR_FLATTEN(A,B)]
+#define __dtensor_k3(A,B)       __dxdt[$MODEL_pool::tensor_k3_start      + TENSOR_FLATTEN(A,B)]
+#define __dtensor_si_k1(A,B)    __dxdt[$MODEL_pool::tensor_si_k1_start   + TENSOR_FLATTEN(A,B)]
+#define __dtensor_si_k2(A,B)    __dxdt[$MODEL_pool::tensor_si_k2_start   + TENSOR_FLATTEN(A,B)]
+#define __dtensor_si_k3(A,B)    __dxdt[$MODEL_pool::tensor_si_k3_start   + TENSOR_FLATTEN(A,B)]
+#define __dtwopf_re_k1(A,B)     __dxdt[$MODEL_pool::twopf_re_k1_start    + FLATTEN(A,B)]
+#define __dtwopf_im_k1(A,B)     __dxdt[$MODEL_pool::twopf_im_k1_start    + FLATTEN(A,B)]
+#define __dtwopf_re_k2(A,B)     __dxdt[$MODEL_pool::twopf_re_k2_start    + FLATTEN(A,B)]
+#define __dtwopf_im_k2(A,B)     __dxdt[$MODEL_pool::twopf_im_k2_start    + FLATTEN(A,B)]
+#define __dtwopf_re_k3(A,B)     __dxdt[$MODEL_pool::twopf_re_k3_start    + FLATTEN(A,B)]
+#define __dtwopf_im_k3(A,B)     __dxdt[$MODEL_pool::twopf_im_k3_start    + FLATTEN(A,B)]
+#define __dtwopf_si_re_k1(A,B)  __dxdt[$MODEL_pool::twopf_si_re_k1_start + FLATTEN(A,B)]
+#define __dtwopf_si_re_k2(A,B)  __dxdt[$MODEL_pool::twopf_si_re_k2_start + FLATTEN(A,B)]
+#define __dtwopf_si_re_k3(A,B)  __dxdt[$MODEL_pool::twopf_si_re_k3_start + FLATTEN(A,B)]
+#define __dthreepf(A,B,C)       __dxdt[$MODEL_pool::threepf_start        + FLATTEN(A,B,C)]
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __setup_timer.stop();
@@ -1352,34 +1540,65 @@ namespace transport
         $GAMMA_DECLARE[^a_b] $= + $CONNECTION[^a_bc] * $MOMENTA[^c];
 
         // evolve the background
-        __background($^A) = $U1_TENSOR[^A];
-        __background(MOMENTUM($^a)) $+= - $GAMMA[^a_b] * $MOMENTA[^b];
+        __dbackground($^A) = $U1_TENSOR[^A];
+        __dbackground(MOMENTUM($^a)) $+= - $GAMMA[^a_b] * $MOMENTA[^b];
 
         const auto __Hsq = $HUBBLE_SQ;
         const auto __eps = $EPSILON;
+
+        const auto __m_k1aHsq = -__k1*__k1/(__a*__a*__Hsq);
+        const auto __m_k2aHsq = -__k2*__k2/(__a*__a*__Hsq);
+        const auto __m_k3aHsq = -__k3*__k3/(__a*__a*__Hsq);
 
         // evolve the tensor modes
         const auto __ff = 0.0;
         const auto __fp = 1.0;
         const auto __pp = __eps-3.0;
 
-        auto __pf = -__k1*__k1/(__a*__a*__Hsq);
-        __dtwopf_k1_tensor(0,0) = __ff*__tensor_k1_twopf_ff + __fp*__tensor_k1_twopf_pf + __ff*__tensor_k1_twopf_ff + __fp*__tensor_k1_twopf_fp;
-        __dtwopf_k1_tensor(0,1) = __ff*__tensor_k1_twopf_fp + __fp*__tensor_k1_twopf_pp + __pf*__tensor_k1_twopf_ff + __pp*__tensor_k1_twopf_fp;
-        __dtwopf_k1_tensor(1,0) = __pf*__tensor_k1_twopf_ff + __pp*__tensor_k1_twopf_pf + __ff*__tensor_k1_twopf_pf + __fp*__tensor_k1_twopf_pp;
-        __dtwopf_k1_tensor(1,1) = __pf*__tensor_k1_twopf_fp + __pp*__tensor_k1_twopf_pp + __pf*__tensor_k1_twopf_pf + __pp*__tensor_k1_twopf_pp;
+        auto __pf = __m_k1aHsq;
+        __dtensor_k1(0,0) = __ff*__tensor_k1_ff + __fp*__tensor_k1_pf + __ff*__tensor_k1_ff + __fp*__tensor_k1_fp;
+        __dtensor_k1(0,1) = __ff*__tensor_k1_fp + __fp*__tensor_k1_pp + __pf*__tensor_k1_ff + __pp*__tensor_k1_fp;
+        __dtensor_k1(1,0) = __pf*__tensor_k1_ff + __pp*__tensor_k1_pf + __ff*__tensor_k1_pf + __fp*__tensor_k1_pp;
+        __dtensor_k1(1,1) = __pf*__tensor_k1_fp + __pp*__tensor_k1_pp + __pf*__tensor_k1_pf + __pp*__tensor_k1_pp;
 
-        __pf = -__k2*__k2/(__a*__a*__Hsq);
-        __dtwopf_k2_tensor(0,0) = __ff*__tensor_k2_twopf_ff + __fp*__tensor_k2_twopf_pf + __ff*__tensor_k2_twopf_ff + __fp*__tensor_k2_twopf_fp;
-        __dtwopf_k2_tensor(0,1) = __ff*__tensor_k2_twopf_fp + __fp*__tensor_k2_twopf_pp + __pf*__tensor_k2_twopf_ff + __pp*__tensor_k2_twopf_fp;
-        __dtwopf_k2_tensor(1,0) = __pf*__tensor_k2_twopf_ff + __pp*__tensor_k2_twopf_pf + __ff*__tensor_k2_twopf_pf + __fp*__tensor_k2_twopf_pp;
-        __dtwopf_k2_tensor(1,1) = __pf*__tensor_k2_twopf_fp + __pp*__tensor_k2_twopf_pp + __pf*__tensor_k2_twopf_pf + __pp*__tensor_k2_twopf_pp;
+        __dtensor_si_k1(0,0) = __ff*__tensor_si_k1_ff + __fp*__tensor_si_k1_pf + __ff*__tensor_si_k1_ff + __fp*__tensor_si_k1_fp;
+        __dtensor_si_k1(0,1) = __ff*__tensor_si_k1_fp + __fp*__tensor_si_k1_pp + __pf*__tensor_si_k1_ff + __pp*__tensor_si_k1_fp;
+        __dtensor_si_k1(1,0) = __pf*__tensor_si_k1_ff + __pp*__tensor_si_k1_pf + __ff*__tensor_si_k1_pf + __fp*__tensor_si_k1_pp;
+        __dtensor_si_k1(1,1) = __pf*__tensor_si_k1_fp + __pp*__tensor_si_k1_pp + __pf*__tensor_si_k1_pf + __pp*__tensor_si_k1_pp;
 
-        __pf = -__k3*__k3/(__a*__a*__Hsq);
-        __dtwopf_k3_tensor(0,0) = __ff*__tensor_k3_twopf_ff + __fp*__tensor_k3_twopf_pf + __ff*__tensor_k3_twopf_ff + __fp*__tensor_k3_twopf_fp;
-        __dtwopf_k3_tensor(0,1) = __ff*__tensor_k3_twopf_fp + __fp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_ff + __pp*__tensor_k3_twopf_fp;
-        __dtwopf_k3_tensor(1,0) = __pf*__tensor_k3_twopf_ff + __pp*__tensor_k3_twopf_pf + __ff*__tensor_k3_twopf_pf + __fp*__tensor_k3_twopf_pp;
-        __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
+        __dtensor_si_k1(1,0) += 2.0*__pf*__tensor_k1_ff;
+        __dtensor_si_k1(0,1) += 2.0*__pf*__tensor_k1_ff;
+        __dtensor_si_k1(1,1) += 2.0*__pf*__tensor_k1_fp + 2.0*__pf*__tensor_k1_pf;
+
+        __pf = __m_k2aHsq;
+        __dtensor_k2(0,0) = __ff*__tensor_k2_ff + __fp*__tensor_k2_pf + __ff*__tensor_k2_ff + __fp*__tensor_k2_fp;
+        __dtensor_k2(0,1) = __ff*__tensor_k2_fp + __fp*__tensor_k2_pp + __pf*__tensor_k2_ff + __pp*__tensor_k2_fp;
+        __dtensor_k2(1,0) = __pf*__tensor_k2_ff + __pp*__tensor_k2_pf + __ff*__tensor_k2_pf + __fp*__tensor_k2_pp;
+        __dtensor_k2(1,1) = __pf*__tensor_k2_fp + __pp*__tensor_k2_pp + __pf*__tensor_k2_pf + __pp*__tensor_k2_pp;
+
+        __dtensor_si_k2(0,0) = __ff*__tensor_si_k2_ff + __fp*__tensor_si_k2_pf + __ff*__tensor_si_k2_ff + __fp*__tensor_si_k2_fp;
+        __dtensor_si_k2(0,1) = __ff*__tensor_si_k2_fp + __fp*__tensor_si_k2_pp + __pf*__tensor_si_k2_ff + __pp*__tensor_si_k2_fp;
+        __dtensor_si_k2(1,0) = __pf*__tensor_si_k2_ff + __pp*__tensor_si_k2_pf + __ff*__tensor_si_k2_pf + __fp*__tensor_si_k2_pp;
+        __dtensor_si_k2(1,1) = __pf*__tensor_si_k2_fp + __pp*__tensor_si_k2_pp + __pf*__tensor_si_k2_pf + __pp*__tensor_si_k2_pp;
+
+        __dtensor_si_k2(1,0) += 2.0*__pf*__tensor_k2_ff;
+        __dtensor_si_k2(0,1) += 2.0*__pf*__tensor_k2_ff;
+        __dtensor_si_k2(1,1) += 2.0*__pf*__tensor_k2_fp + 2.0*__pf*__tensor_k2_pf;
+
+        __pf = __m_k3aHsq;
+        __dtensor_k3(0,0) = __ff*__tensor_k3_ff + __fp*__tensor_k3_pf + __ff*__tensor_k3_ff + __fp*__tensor_k3_fp;
+        __dtensor_k3(0,1) = __ff*__tensor_k3_fp + __fp*__tensor_k3_pp + __pf*__tensor_k3_ff + __pp*__tensor_k3_fp;
+        __dtensor_k3(1,0) = __pf*__tensor_k3_ff + __pp*__tensor_k3_pf + __ff*__tensor_k3_pf + __fp*__tensor_k3_pp;
+        __dtensor_k3(1,1) = __pf*__tensor_k3_fp + __pp*__tensor_k3_pp + __pf*__tensor_k3_pf + __pp*__tensor_k3_pp;
+
+        __dtensor_si_k3(0,0) = __ff*__tensor_si_k3_ff + __fp*__tensor_si_k3_pf + __ff*__tensor_si_k3_ff + __fp*__tensor_si_k3_fp;
+        __dtensor_si_k3(0,1) = __ff*__tensor_si_k3_fp + __fp*__tensor_si_k3_pp + __pf*__tensor_si_k3_ff + __pp*__tensor_si_k3_fp;
+        __dtensor_si_k3(1,0) = __pf*__tensor_si_k3_ff + __pp*__tensor_si_k3_pf + __ff*__tensor_si_k3_pf + __fp*__tensor_si_k3_pp;
+        __dtensor_si_k3(1,1) = __pf*__tensor_si_k3_fp + __pp*__tensor_si_k3_pp + __pf*__tensor_si_k3_pf + __pp*__tensor_si_k3_pp;
+
+        __dtensor_si_k3(1,0) += 2.0*__pf*__tensor_k3_ff;
+        __dtensor_si_k3(0,1) += 2.0*__pf*__tensor_k3_ff;
+        __dtensor_si_k3(1,1) += 2.0*__pf*__tensor_k3_fp + 2.0*__pf*__tensor_k3_pf;
 
         // set up components of the u2 tensor for k1, k2, k3
         $U2_k1_DECLARE[^A_B] = $U2_TENSOR[^A_B]{__k1, __a};
@@ -1457,6 +1676,50 @@ namespace transport
         __dtwopf_im_k3(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_im_k3(MOMENTUM($^c), $^B);
         __dtwopf_im_k3($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_im_k3($^A, MOMENTUM($^c));
 
+
+        // evolve the 2pf spectral index tensors
+        __dtwopf_si_re_k1($^A, $^B) $=  + $U2_k1_CONTAINER[^A_C] * __twopf_si_re_k1($^C, $^B);
+        __dtwopf_si_re_k1($^A, $^B) $+= + $U2_k1_CONTAINER[^B_C] * __twopf_si_re_k1($^A, $^C);
+
+        __dtwopf_si_re_k1(MOMENTUM($^a), $^b) $+= 2.0 * __m_k1aHsq * __twopf_re_k1($^a, $^b);
+        __dtwopf_si_re_k1($^a, MOMENTUM($^b)) $+= 2.0 * __m_k1aHsq * __twopf_re_k1($^a, $^b);
+        __dtwopf_si_re_k1(MOMENTUM($^a), MOMENTUM($^b)) $+= 2.0 * __m_k1aHsq * __twopf_re_k1($^a, MOMENTUM($^b));
+        __dtwopf_si_re_k1(MOMENTUM($^a), MOMENTUM($^b)) $+= 2.0 * __m_k1aHsq * __twopf_re_k1(MOMENTUM($^a), $^b);
+
+        __dtwopf_si_re_k1($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_si_re_k1($^c, $^B);
+        __dtwopf_si_re_k1($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_si_re_k1($^A, $^c);
+
+        __dtwopf_si_re_k1(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_si_re_k1(MOMENTUM($^c), $^B);
+        __dtwopf_si_re_k1($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_si_re_k1($^A, MOMENTUM($^c));
+
+        __dtwopf_si_re_k2($^A, $^B) $=  + $U2_k2_CONTAINER[^A_C] * __twopf_si_re_k2($^C, $^B);
+        __dtwopf_si_re_k2($^A, $^B) $+= + $U2_k2_CONTAINER[^B_C] * __twopf_si_re_k2($^A, $^C);
+
+        __dtwopf_si_re_k2(MOMENTUM($^a), $^b) $+= 2.0 * __m_k1aHsq * __twopf_re_k2($^a, $^b);
+        __dtwopf_si_re_k2($^a, MOMENTUM($^b)) $+= 2.0 * __m_k1aHsq * __twopf_re_k2($^a, $^b);
+        __dtwopf_si_re_k2(MOMENTUM($^a), MOMENTUM($^b)) $+= 2.0 * __m_k1aHsq * __twopf_re_k2($^a, MOMENTUM($^b));
+        __dtwopf_si_re_k2(MOMENTUM($^a), MOMENTUM($^b)) $+= 2.0 * __m_k1aHsq * __twopf_re_k2(MOMENTUM($^a), $^b);
+
+        __dtwopf_si_re_k2($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_si_re_k2($^c, $^B);
+        __dtwopf_si_re_k2($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_si_re_k2($^A, $^c);
+
+        __dtwopf_si_re_k2(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_si_re_k2(MOMENTUM($^c), $^B);
+        __dtwopf_si_re_k2($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_si_re_k2($^A, MOMENTUM($^c));
+
+        __dtwopf_si_re_k3($^A, $^B) $=  + $U2_k3_CONTAINER[^A_C] * __twopf_si_re_k3($^C, $^B);
+        __dtwopf_si_re_k3($^A, $^B) $+= + $U2_k3_CONTAINER[^B_C] * __twopf_si_re_k3($^A, $^C);
+
+        __dtwopf_si_re_k3(MOMENTUM($^a), $^b) $+= 2.0 * __m_k3aHsq * __twopf_re_k3($^a, $^b);
+        __dtwopf_si_re_k3($^a, MOMENTUM($^b)) $+= 2.0 * __m_k3aHsq * __twopf_re_k3($^a, $^b);
+        __dtwopf_si_re_k3(MOMENTUM($^a), MOMENTUM($^b)) $+= 2.0 * __m_k3aHsq * __twopf_re_k3($^a, MOMENTUM($^b));
+        __dtwopf_si_re_k3(MOMENTUM($^a), MOMENTUM($^b)) $+= 2.0 * __m_k3aHsq * __twopf_re_k3(MOMENTUM($^a), $^b);
+
+        __dtwopf_si_re_k3($^a, $^B) $+= - $GAMMA[^a_c] * __twopf_si_re_k3($^c, $^B);
+        __dtwopf_si_re_k3($^A, $^b) $+= - $GAMMA[^b_c] * __twopf_si_re_k3($^A, $^c);
+
+        __dtwopf_si_re_k3(MOMENTUM($^a), $^B) $+= - $GAMMA[^a_c] * __twopf_si_re_k3(MOMENTUM($^c), $^B);
+        __dtwopf_si_re_k3($^A, MOMENTUM($^b)) $+= - $GAMMA[^b_c] * __twopf_si_re_k3($^A, MOMENTUM($^c));
+
         
         // evolve the components of the 3pf
         // index placement matters, partly because of the k-dependence
@@ -1482,7 +1745,56 @@ namespace transport
         __dthreepf(MOMENTUM($^a), $^B, $^C) $+= - $GAMMA[^a_d] * __threepf(MOMENTUM($^d), $^B, $^C);
         __dthreepf($^A, MOMENTUM($^b), $^C) $+= - $GAMMA[^b_d] * __threepf($^A, MOMENTUM($^d), $^C);
         __dthreepf($^A, $^B, MOMENTUM($^c)) $+= - $GAMMA[^c_d] * __threepf($^A, $^B, MOMENTUM($^d));
-        
+
+
+#ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
+        if(std::isnan(__background($^A)) || std::isinf(__background($^A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtensor_k1(0,0)) || std::isinf(__dtensor_k1(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k1(0,1)) || std::isinf(__dtensor_k1(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k1(1,0)) || std::isinf(__dtensor_k1(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k1(1,1)) || std::isinf(__dtensor_k1(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtensor_si_k1(0,0)) || std::isinf(__dtensor_si_k1(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k1(0,1)) || std::isinf(__dtensor_si_k1(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k1(1,0)) || std::isinf(__dtensor_si_k1(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k1(1,1)) || std::isinf(__dtensor_si_k1(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtensor_k2(0,0)) || std::isinf(__dtensor_k2(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k2(0,1)) || std::isinf(__dtensor_k2(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k2(1,0)) || std::isinf(__dtensor_k2(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k2(1,1)) || std::isinf(__dtensor_k2(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtensor_si_k2(0,0)) || std::isinf(__dtensor_si_k2(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k2(0,1)) || std::isinf(__dtensor_si_k2(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k2(1,0)) || std::isinf(__dtensor_si_k2(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k2(1,1)) || std::isinf(__dtensor_si_k2(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtensor_k3(0,0)) || std::isinf(__dtensor_k3(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k3(0,1)) || std::isinf(__dtensor_k3(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k3(1,0)) || std::isinf(__dtensor_k3(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_k3(1,1)) || std::isinf(__dtensor_k3(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtensor_si_k3(0,0)) || std::isinf(__dtensor_si_k3(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k3(0,1)) || std::isinf(__dtensor_si_k3(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k3(1,0)) || std::isinf(__dtensor_si_k3(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtensor_si_k3(1,1)) || std::isinf(__dtensor_si_k3(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_re_k1($^A, $^B)) || std::isinf(__dtwopf_re_k1($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_re_k2($^A, $^B)) || std::isinf(__dtwopf_re_k2($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_re_k3($^A, $^B)) || std::isinf(__dtwopf_re_k3($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_im_k1($^A, $^B)) || std::isinf(__dtwopf_im_k1($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_im_k2($^A, $^B)) || std::isinf(__dtwopf_im_k2($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_im_k3($^A, $^B)) || std::isinf(__dtwopf_im_k3($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dtwopf_si_re_k1($^A, $^B)) || std::isinf(__dtwopf_si_re_k1($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_si_re_k2($^A, $^B)) || std::isinf(__dtwopf_si_re_k2($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__dtwopf_si_re_k3($^A, $^B)) || std::isinf(__dtwopf_si_re_k3($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__dthreepf($^A, $^B, $^C)) || std::isinf(__dthreepf($^A, $^B, $^C))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+#endif
+
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();
         ++__invokations;
@@ -1499,46 +1811,73 @@ namespace transport
         DEFINE_INDEX_TOOLS
         
 #undef __background
-#undef __twopf_k1_tensor
-#undef __twopf_k2_tensor
-#undef __twopf_k3_tensor
+#undef __tensor_k1
+#undef __tensor_k2
+#undef __tensor_k3
+#undef __tensor_si_k1
+#undef __tensor_si_k2
+#undef __tensor_si_k3
 #undef __twopf_re_k1
 #undef __twopf_im_k1
 #undef __twopf_re_k2
 #undef __twopf_im_k2
 #undef __twopf_re_k3
 #undef __twopf_im_k3
+#undef __twopf_si_re_k1
+#undef __twopf_si_re_k2
+#undef __twopf_si_re_k3
 #undef __threepf
 
-#define __background(a)        x[$MODEL_pool::backg_start       + FLATTEN(a)]
-#define __twopf_k1_tensor(a,b) x[$MODEL_pool::tensor_k1_start   + TENSOR_FLATTEN(a,b)]
-#define __twopf_k2_tensor(a,b) x[$MODEL_pool::tensor_k2_start   + TENSOR_FLATTEN(a,b)]
-#define __twopf_k3_tensor(a,b) x[$MODEL_pool::tensor_k3_start   + TENSOR_FLATTEN(a,b)]
-#define __twopf_re_k1(a,b)     x[$MODEL_pool::twopf_re_k1_start + FLATTEN(a,b)]
-#define __twopf_im_k1(a,b)     x[$MODEL_pool::twopf_im_k1_start + FLATTEN(a,b)]
-#define __twopf_re_k2(a,b)     x[$MODEL_pool::twopf_re_k2_start + FLATTEN(a,b)]
-#define __twopf_im_k2(a,b)     x[$MODEL_pool::twopf_im_k2_start + FLATTEN(a,b)]
-#define __twopf_re_k3(a,b)     x[$MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
-#define __twopf_im_k3(a,b)     x[$MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
-#define __threepf(a,b,c)       x[$MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
+#define __background(A)        x[$MODEL_pool::backg_start          + FLATTEN(A)]
+#define __tensor_k1(A,B)       x[$MODEL_pool::tensor_k1_start      + TENSOR_FLATTEN(A,B)]
+#define __tensor_k2(A,B)       x[$MODEL_pool::tensor_k2_start      + TENSOR_FLATTEN(A,B)]
+#define __tensor_k3(A,B)       x[$MODEL_pool::tensor_k3_start      + TENSOR_FLATTEN(A,B)]
+#define __tensor_si_k1(A,B)    x[$MODEL_pool::tensor_si_k1_start   + TENSOR_FLATTEN(A,B)]
+#define __tensor_si_k2(A,B)    x[$MODEL_pool::tensor_si_k2_start   + TENSOR_FLATTEN(A,B)]
+#define __tensor_si_k3(A,B)    x[$MODEL_pool::tensor_si_k3_start   + TENSOR_FLATTEN(A,B)]
+#define __twopf_re_k1(A,B)     x[$MODEL_pool::twopf_re_k1_start    + FLATTEN(A,B)]
+#define __twopf_im_k1(A,B)     x[$MODEL_pool::twopf_im_k1_start    + FLATTEN(A,B)]
+#define __twopf_re_k2(A,B)     x[$MODEL_pool::twopf_re_k2_start    + FLATTEN(A,B)]
+#define __twopf_im_k2(A,B)     x[$MODEL_pool::twopf_im_k2_start    + FLATTEN(A,B)]
+#define __twopf_re_k3(A,B)     x[$MODEL_pool::twopf_re_k3_start    + FLATTEN(A,B)]
+#define __twopf_im_k3(A,B)     x[$MODEL_pool::twopf_im_k3_start    + FLATTEN(A,B)]
+#define __twopf_si_re_k1(A,B)  x[$MODEL_pool::twopf_si_re_k1_start + FLATTEN(A,B)]
+#define __twopf_si_re_k2(A,B)  x[$MODEL_pool::twopf_si_re_k2_start + FLATTEN(A,B)]
+#define __twopf_si_re_k3(A,B)  x[$MODEL_pool::twopf_si_re_k3_start + FLATTEN(A,B)]
+#define __threepf(A,B,C)       x[$MODEL_pool::threepf_start        + FLATTEN(A,B,C)]
 
 #ifndef CPPTRANSPORT_NO_STRICT_FP_TEST
         if(std::isnan(__background($^A)) || std::isinf(__background($^A))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
-        if(std::isnan(__twopf_k1_tensor(0,0)) || std::isinf(__twopf_k1_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k1_tensor(0,1)) || std::isinf(__twopf_k1_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k1_tensor(1,0)) || std::isinf(__twopf_k1_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k1_tensor(1,1)) || std::isinf(__twopf_k1_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k1(0,0)) || std::isinf(__tensor_k1(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k1(0,1)) || std::isinf(__tensor_k1(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k1(1,0)) || std::isinf(__tensor_k1(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k1(1,1)) || std::isinf(__tensor_k1(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
-        if(std::isnan(__twopf_k2_tensor(0,0)) || std::isinf(__twopf_k2_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k2_tensor(0,1)) || std::isinf(__twopf_k2_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k2_tensor(1,0)) || std::isinf(__twopf_k2_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k2_tensor(1,1)) || std::isinf(__twopf_k2_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k2(0,0)) || std::isinf(__tensor_k2(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k2(0,1)) || std::isinf(__tensor_k2(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k2(1,0)) || std::isinf(__tensor_k2(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k2(1,1)) || std::isinf(__tensor_k2(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
-        if(std::isnan(__twopf_k3_tensor(0,0)) || std::isinf(__twopf_k3_tensor(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k3_tensor(0,1)) || std::isinf(__twopf_k3_tensor(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k3_tensor(1,0)) || std::isinf(__twopf_k3_tensor(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
-        if(std::isnan(__twopf_k3_tensor(1,1)) || std::isinf(__twopf_k3_tensor(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k3(0,0)) || std::isinf(__tensor_k3(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k3(0,1)) || std::isinf(__tensor_k3(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k3(1,0)) || std::isinf(__tensor_k3(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_k3(1,1)) || std::isinf(__tensor_k3(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__tensor_si_k1(0,0)) || std::isinf(__tensor_si_k1(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k1(0,1)) || std::isinf(__tensor_si_k1(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k1(1,0)) || std::isinf(__tensor_si_k1(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k1(1,1)) || std::isinf(__tensor_si_k1(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__tensor_si_k2(0,0)) || std::isinf(__tensor_si_k2(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k2(0,1)) || std::isinf(__tensor_si_k2(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k2(1,0)) || std::isinf(__tensor_si_k2(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k2(1,1)) || std::isinf(__tensor_si_k2(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__tensor_si_k3(0,0)) || std::isinf(__tensor_si_k3(0,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k3(0,1)) || std::isinf(__tensor_si_k3(0,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k3(1,0)) || std::isinf(__tensor_si_k3(1,0))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__tensor_si_k3(1,1)) || std::isinf(__tensor_si_k3(1,1))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
         if(std::isnan(__twopf_re_k1($^A, $^B)) || std::isinf(__twopf_re_k1($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
         if(std::isnan(__twopf_im_k1($^A, $^B)) || std::isinf(__twopf_im_k1($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
@@ -1548,6 +1887,10 @@ namespace transport
 
         if(std::isnan(__twopf_re_k3($^A, $^B)) || std::isinf(__twopf_re_k3($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
         if(std::isnan(__twopf_im_k3($^A, $^B)) || std::isinf(__twopf_im_k3($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+
+        if(std::isnan(__twopf_si_re_k1($^A, $^B)) || std::isinf(__twopf_si_re_k1($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_si_re_k2($^A, $^B)) || std::isinf(__twopf_si_re_k2($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
+        if(std::isnan(__twopf_si_re_k3($^A, $^B)) || std::isinf(__twopf_si_re_k3($^A, $^B))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 
         if(std::isnan(__threepf($^A, $^B, $^C)) || std::isinf(__threepf($^A, $^B, $^C))) throw runtime_exception(exception_type::INTEGRATION_FAILURE, CPPTRANSPORT_INTEGRATOR_NAN_OR_INF);
 #endif
