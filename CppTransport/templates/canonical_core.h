@@ -926,20 +926,20 @@ number $MODEL<number>::make_twopf_si_ic(unsigned int __i, unsigned int __j, doub
       {
         // LEADING-ORDER INITIAL CONDITION
         auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
-        __tpf = + __leading / (__k*__a*__a);
+        __tpf = - __leading / (2.0*__k*__a*__a);
       }
     else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum or momentum-field correlation function
             || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
       {
         // LEADING-ORDER INITIAL CONDITION
         auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (-1.0);
-        __tpf = + __leading / (__k*__a*__a);
+        __tpf = - __leading / (2.0*__k*__a*__a);
       }
     else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
       {
         // LEADING-ORDER INITIAL CONDITION
         auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
-        __tpf = + 2.0*__k*__leading / (__Hsq*__a*__a*__a*__a);
+        __tpf = + __k*__leading / (2.0*__Hsq*__a*__a*__a*__a);
       }
     else
       {
