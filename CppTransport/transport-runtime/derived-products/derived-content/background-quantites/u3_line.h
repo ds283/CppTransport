@@ -330,9 +330,9 @@ namespace transport
 
                 lbl << CPPTRANSPORT_LATEX_U3_SYMBOL << "_{";
 
-                lbl << field_names[l % N_fields] << (l >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-                    << field_names[m % N_fields] << (m >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-                    << field_names[n % N_fields] << (n >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+                lbl << field_names[l % N_fields] << (l >= N_fields ? CPPTRANSPORT_LATEX_PRIME_SYMBOL_SUPERSCRIPT : "") << " "
+                    << field_names[m % N_fields] << (m >= N_fields ? CPPTRANSPORT_LATEX_PRIME_SYMBOL_SUPERSCRIPT : "") << " "
+                    << field_names[n % N_fields] << (n >= N_fields ? CPPTRANSPORT_LATEX_PRIME_SYMBOL_SUPERSCRIPT : "");
 
                 lbl << "}";
 

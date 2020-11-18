@@ -39,7 +39,6 @@
 namespace transport
   {
 
-
     constexpr auto CPPTRANSPORT_NODE_NOTE_UID = "uid";
     constexpr auto CPPTRANSPORT_NODE_NOTE_NOTE = "note";
     constexpr auto CPPTRANSPORT_NODE_NOTE_TIMESTAMP = "timestamp";
@@ -56,10 +55,10 @@ namespace transport
         note(std::string u, std::string n);
 
         //! deserialization constructor
-        note(Json::Value& reader);
+        explicit note(Json::Value& reader);
 
         //! destructor is default
-        ~note() = default;
+        ~note() override = default;
 
 
         // INTERFACE
@@ -79,7 +78,7 @@ namespace transport
         // SERIALIZATION INTERFACE
 
         //! Serialize
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -121,7 +120,6 @@ namespace transport
         writer[CPPTRANSPORT_NODE_NOTE_NOTE] = this->text;
         writer[CPPTRANSPORT_NODE_NOTE_TIMESTAMP] = boost::posix_time::to_iso_string(this->timestamp);
       }
-
 
   }
 

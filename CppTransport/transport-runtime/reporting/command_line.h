@@ -95,19 +95,19 @@ namespace transport
             template <>
             struct record_traits< content_group_record<integration_payload> >
               {
-                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_INTEGRATION); }
+                static std::string type_string() { return std::string(CPPTRANSPORT_REPORT_RECORD_INTEGRATION); }
               };
 
             template <>
             struct record_traits< content_group_record<postintegration_payload> >
               {
-                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_POSTINTEGRATION); }
+                static std::string type_string() { return std::string(CPPTRANSPORT_REPORT_RECORD_POSTINTEGRATION); }
               };
 
             template <>
             struct record_traits< content_group_record<output_payload> >
               {
-                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_OUTPUT); }
+                static std::string type_string() { return std::string(CPPTRANSPORT_REPORT_RECORD_OUTPUT); }
               };
 
           }
@@ -256,7 +256,7 @@ namespace transport
             //! report details for a generic content group record
             //! (used instead of report_record_generic() and subsumes its functionality)
             template <typename Payload>
-            void report_output_record_generic(const content_group_record<Payload>& rec, std::string type="");
+            void report_output_record_generic(const content_group_record<Payload>& rec, const std::string& type="");
 
             //! compose tags into a single string
             std::string compose_tag_list(const std::list<std::string>& tag_list);
@@ -325,8 +325,8 @@ namespace transport
 
             if(this->include_tasks) this->report_task_list<number>(cache);
             if(this->include_inflight) this->report_inflight<number>(cache);
-            if(this->info_items.size() > 0) this->report_info<number>(cache);
-            if(this->provenance_items.size() > 0) this->report_provenance<number>(cache);
+            if(!this->info_items.empty()) this->report_info<number>(cache);
+            if(!this->provenance_items.empty()) this->report_provenance<number>(cache);
           }
 
 
@@ -411,7 +411,7 @@ namespace transport
                   }
                 else
                   {
-                    type.push_back("--");
+                    type.emplace_back("--");
                   }
 
                 boost::posix_time::ptime init_time = boost::posix_time::from_iso_string(group.second->posix_time);
@@ -428,7 +428,7 @@ namespace transport
 
                 if(group.second->completion == CPPTRANSPORT_DEFAULT_COMPLETION_UNSET)
                   {
-                    complete.push_back("--");
+                    complete.emplace_back("--");
                   }
                 else
                   {
@@ -754,15 +754,15 @@ namespace transport
                       {
                         created.push_back(boost::posix_time::to_simple_string(t->second->get_creation_time()));
                         updated.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
-                        failed.push_back(t->second->get_payload().is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES); // label is 'complete', so yes/no other way
+                        failed.emplace_back(t->second->get_payload().is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES); // label is 'complete', so yes/no other way
                         size.push_back(format_memory(t->second->get_payload().get_size()));
                       }
                     else
                       {
-                        created.push_back("--");
-                        updated.push_back("--");
-                        failed.push_back("--");
-                        size.push_back("--");
+                        created.emplace_back("--");
+                        updated.emplace_back("--");
+                        failed.emplace_back("--");
+                        size.emplace_back("--");
                       }
                   }
 
@@ -838,15 +838,15 @@ namespace transport
                       {
                         created.push_back(boost::posix_time::to_simple_string(t->second->get_creation_time()));
                         updated.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
-                        failed.push_back(t->second->get_payload().is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES); // label is 'complete', so yes/no other way
+                        failed.emplace_back(t->second->get_payload().is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES); // label is 'complete', so yes/no other way
                         size.push_back(format_memory(t->second->get_payload().get_size()));
                       }
                     else
                       {
-                        created.push_back("--");
-                        updated.push_back("--");
-                        failed.push_back("--");
-                        size.push_back("--");
+                        created.emplace_back("--");
+                        updated.emplace_back("--");
+                        failed.emplace_back("--");
+                        size.emplace_back("--");
                       }
                   }
 
@@ -959,8 +959,8 @@ namespace transport
                       }
                     else
                       {
-                        created.push_back("--");
-                        updated.push_back("--");
+                        created.emplace_back("--");
+                        updated.emplace_back("--");
                       }
                   }
 
@@ -1045,9 +1045,9 @@ namespace transport
                           }
                         else
                           {
-                            type.push_back("--");
-                            last_edit.push_back("--");
-                            num_groups.push_back("--");
+                            type.emplace_back("--");
+                            last_edit.emplace_back("--");
+                            num_groups.emplace_back("--");
                           }
                       }
                   }
@@ -1084,7 +1084,7 @@ namespace transport
             this->report_record_title(rec);
             if(t != db.end() && t->second->get_type() == task_type::integration)
               {
-                const integration_task_record<number>& irec = dynamic_cast< const integration_task_record<number>& >(*t->second);
+                const auto& irec = dynamic_cast< const integration_task_record<number>& >(*t->second);
                 this->report_output_record_generic(rec, task_type_to_string(irec.get_task_type()));
               }
             else
@@ -1106,6 +1106,7 @@ namespace transport
             if(payload.is_seeded()) kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEED_GROUP, payload.get_seed_group());
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_STATISTICS, payload.has_statistics() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ICS, payload.has_initial_conditions() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_SPECTRAL, payload.has_spectral_data() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
             kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SIZE, format_memory(payload.get_size()));
 
             std::cout << '\n';
@@ -1146,7 +1147,7 @@ namespace transport
             this->report_record_title(rec);
             if(t != db.end() && t->second->get_type() == task_type::postintegration)
               {
-                const postintegration_task_record<number>& irec = dynamic_cast< const postintegration_task_record<number>& >(*t->second);
+                const auto& irec = dynamic_cast< const postintegration_task_record<number>& >(*t->second);
                 this->report_output_record_generic(rec, task_type_to_string(irec.get_task_type()));
               }
             else
@@ -1178,6 +1179,7 @@ namespace transport
             key_value kv_products(this->env, this->arg_cache);
 
             kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_TWOPF, products.get_zeta_twopf() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_TWOPF_SPECTRAL, products.get_zeta_twopf_spectral() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
             kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_THREEPF, products.get_zeta_threepf() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
             kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_REDBSP, products.get_zeta_redbsp() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
             kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_LOCAL, products.get_fNL_local() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
@@ -1267,7 +1269,7 @@ namespace transport
 
 
         template <typename Payload>
-        void command_line::report_output_record_generic(const content_group_record<Payload>& rec, std::string type)
+        void command_line::report_output_record_generic(const content_group_record<Payload>& rec, const std::string& type)
           {
             key_value kv(this->env, this->arg_cache);
 
@@ -1294,9 +1296,9 @@ namespace transport
                 for(const note& it : notes)
                   {
                     std::ostringstream msg;
-                    const std::string uid = it.get_uid();
+                    std::string uid = it.get_uid();
                     const std::string time = boost::posix_time::to_simple_string(it.get_timestamp());
-                    msg << (!uid.empty() ? uid + " " + time + ": " : "") << it.get_note();
+                    msg << (!uid.empty() ? uid.append(" ").append(time).append(": ") : "") << it.get_note();
                     kv.insert_back(boost::lexical_cast<std::string>(serial), msg.str());
                     ++serial;
                   }
@@ -1338,7 +1340,7 @@ namespace transport
 
             output_content_db& db = cache.get_output_content_db();
 
-            for(std::list<std::string>::iterator item_t = items.begin(); item_t != items.end(); /* intentionally no update statement */ )
+            for(auto item_t = items.begin(); item_t != items.end(); /* intentionally no update statement */ )
               {
                 output_content_db::const_iterator t = db.find(*item_t);
                 if(t != db.end())
@@ -1413,9 +1415,9 @@ namespace transport
                         for(const note& it : notes)
                           {
                             std::ostringstream msg;
-                            const std::string uid = it.get_uid();
+                            std::string uid = it.get_uid();
                             const std::string time = boost::posix_time::to_simple_string(it.get_timestamp());
-                            msg << (!uid.empty() ? uid + " " + time + ": " : "") << it.get_note();
+                            msg << (!uid.empty() ? uid.append(" ").append(time).append(": ") : "") << it.get_note();
                             kv.insert_back(boost::lexical_cast<std::string>(serial), msg.str());
                             ++serial;
                           }
