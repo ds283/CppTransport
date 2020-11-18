@@ -52,10 +52,10 @@ namespace transport
           }
 
         //! Deserialization constructor
-        derived_content(Json::Value& reader);
+        explicit derived_content(Json::Value& reader);
 
         //! Destroy a derived_product descriptor
-        ~derived_content() = default;
+        ~derived_content() override = default;
 
 
         // INTERFACE
@@ -92,7 +92,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -128,21 +128,22 @@ namespace transport
 
         //! Create a precomputed products record
         precomputed_products()
-          : zeta_twopf(false),
-            zeta_threepf(false),
-            zeta_redbsp(false),
-            fNL_local(false),
-            fNL_equi(false),
-            fNL_ortho(false),
-            fNL_DBI(false)
+          : zeta_twopf{false},
+            zeta_twopf_spectral{false},
+            zeta_threepf{false},
+            zeta_redbsp{false},
+            fNL_local{false},
+            fNL_equi{false},
+            fNL_ortho{false},
+            fNL_DBI{false}
           {
           }
 
         //! Deserialization constructor
-        precomputed_products(Json::Value& reader);
+        explicit precomputed_products(Json::Value& reader);
 
         //! Destroy a precomputed products record
-        ~precomputed_products() = default;
+        ~precomputed_products() override = default;
 
 
         // GET AND SET PROPERTIES
@@ -151,36 +152,56 @@ namespace transport
 
         //! Get precomputed zeta_twopf availability
         bool get_zeta_twopf() const { return(this->zeta_twopf); }
+
         //! Add zeta_twopf availability flag
         void add_zeta_twopf() { this->zeta_twopf = true; }
 
+
+        //! Get precomputed zeta_twopf spectral index availability
+        bool get_zeta_twopf_spectral() const { return(this->zeta_twopf_spectral); }
+
+        //! Add zeta twopf spectral availability flag
+        void add_zeta_twopf_spectral() { this->zeta_twopf_spectral = true; }
+
+
         //! Get precomputed zeta_threepf availability
         bool get_zeta_threepf() const { return(this->zeta_threepf); }
+
         //! Add zeta_threepf availability flag
         void add_zeta_threepf() { this->zeta_threepf = true; }
 
+
         //! Get precomputed zeta reduced bispectrum availability
         bool get_zeta_redbsp() const { return(this->zeta_redbsp); }
+
         //! Add zeta_threepf availability flag
         void add_zeta_redbsp() { this->zeta_redbsp = true; }
 
+
         //! Get precomputed fNL_local availability
         bool get_fNL_local() const { return(this->fNL_local); }
+
         //! Add fNL_local availability flag
         void add_fNL_local() { this->fNL_local = true; }
 
+
         //! Get precomputed fNL_equi availability
         bool get_fNL_equi() const { return(this->fNL_equi); }
+
         //! Add fNL_equi availability flag
         void add_fNL_equi() { this->fNL_equi = true; }
 
+
         //! Get precomputed fNL_ortho availability
         bool get_fNL_ortho() const { return(this->fNL_ortho); }
+
         //! Add fNL_ortho availability flag
         void add_fNL_ortho() { this->fNL_ortho = true; }
 
+
         //! Get precomputed fNL_DBI availability
         bool get_fNL_DBI() const { return(this->fNL_DBI); }
+
         //! Add fNL_DBI availability flag
         void add_fNL_DBI() { this->fNL_DBI = true; }
 
@@ -197,7 +218,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -206,6 +227,9 @@ namespace transport
 
         //! group has pre-computed zeta twopf data?
         bool zeta_twopf;
+
+        //! group has pre-cmoputed zeta twopf spectral index data?
+        bool zeta_twopf_spectral;
 
         //! group has pre-computed zeta threepf data?
         bool zeta_threepf;
@@ -234,23 +258,24 @@ namespace transport
 
       public:
 
-        //! Create a payload
+        //! Create an empty payload
         integration_payload()
-          : metadata(),
-            fail(false),
-            workgroup_number(0),
-            seeded(false),
-            statistics(false),
-            initial_conditions(false),
-            size(0)
+          : metadata{},
+            fail{false},
+            workgroup_number{0},
+            seeded{false},
+            statistics{false},
+            initial_conditions{false},
+            spectral_data{false},
+            size{0}
           {
           }
 
         //! Deserialization constructor
-        integration_payload(Json::Value& reader);
+        explicit integration_payload(Json::Value& reader);
 
         //! Destroy a payload
-        ~integration_payload() = default;
+        ~integration_payload() override = default;
 
 
         // GET AND SET RECORD (META)DATA
@@ -314,6 +339,9 @@ namespace transport
         //! Get initial conditions flag
         bool has_initial_conditions() const { return(this->initial_conditions); }
 
+        //! Get spectral data flag (notice that this flag can't be set)
+        bool has_spectral_data() const { return(this->spectral_data); }
+
         //! Set container size
         void set_size(unsigned int s) { this->size = s; }
 
@@ -333,7 +361,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -367,8 +395,13 @@ namespace transport
         //! does this group have per-configuration statistics?
         bool statistics;
 
-        //! does this group has initial conditions data?
+        //! does this group have initial conditions data?
         bool initial_conditions;
+
+        //! does this group have spectral index information?
+        //! this is always true for integration payloads produced from 2021.1 onwards, but
+        //! will be missing for payloads produced using earlier versions
+        bool spectral_data;
 
         //! record container size
         unsigned int size;
@@ -495,7 +528,7 @@ namespace transport
         precomputed_products precomputed;
 
         //! mark this group as failed?
-        bool fail;
+        bool fail{};
 
         //! serial numbers reported failed
         std::set< unsigned int > failed_serials;
@@ -532,10 +565,10 @@ namespace transport
           }
 
         //! Deserialization constructor
-        output_payload(Json::Value& reader);
+        explicit output_payload(Json::Value& reader);
 
         //! Destroy a payload
-        ~output_payload() = default;
+        ~output_payload() override = default;
 
 
         // ADMIN
@@ -587,7 +620,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -632,15 +665,15 @@ namespace transport
       public:
 
         //! Create a content_group_record descriptor
-        content_group_record(const std::string& tn, const paths_group& p,
-                            bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
+        content_group_record(std::string  tn, const paths_group& p,
+                            bool lock, std::list<note>  nt, std::list<std::string>  tg,
                             repository_record::handler_package& pkg);
 
         //! Deserialization constructor
         content_group_record(Json::Value& reader, const boost::filesystem::path& root, repository_record::handler_package& pkg);
 
         //! Destroy a content_group_record descriptor
-        ~content_group_record() = default;
+        ~content_group_record() override = default;
 
 
         // GET AND SET METADATA
@@ -660,7 +693,7 @@ namespace transport
         const std::list<note>& get_notes() const { return (this->notes); }
 
         //! Add note
-        void add_note(const std::string note);
+        void add_note(std::string note);
 
         //! Remove numbered note
         void remove_note(unsigned int number);
@@ -686,7 +719,7 @@ namespace transport
         const boost::filesystem::path& get_abs_repo_path() const { return(this->paths.root); }
 
         //! Get path to output root (typically a subdir of the repository root)
-        const boost::filesystem::path get_abs_output_path() const { return(this->paths.root/this->paths.output); }
+        boost::filesystem::path get_abs_output_path() const { return(this->paths.root/this->paths.output); }
 
 
         // PAYLOAD
@@ -705,7 +738,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -713,7 +746,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual content_group_record<Payload>* clone() const override { return new content_group_record<Payload>(static_cast<const content_group_record<Payload>&>(*this)); };
+        content_group_record<Payload>* clone() const override { return new content_group_record<Payload>(static_cast<const content_group_record<Payload>&>(*this)); };
 
 
         // WRITE TO A STREAM

@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by David Seery on 25/01/2016.
 // --@@
@@ -44,6 +46,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP = "seed-group";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS = "has-statistics";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS = "has-ics";
+    constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SPECTRAL = "has-spectral-data";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE = "size";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATA_TYPE = "data-type";
 
@@ -58,6 +61,7 @@ namespace transport
 
     constexpr auto CPPTRANSPORT_NODE_PRECOMPUTED_ROOT = "contains-products";
     constexpr auto CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF = "zeta-twopf";
+    constexpr auto CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL = "zeta-twopf-spectral";
     constexpr auto CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF = "zeta-threepf";
     constexpr auto CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP = "zeta-redbsp";
     constexpr auto CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL = "fNL_local";
@@ -80,15 +84,15 @@ namespace transport
 
 
     template <typename Payload>
-    content_group_record<Payload>::content_group_record(const std::string& tn, const paths_group& p,
-                                                        bool lock, const std::list<note>& nt, const std::list<std::string>& tg,
+    content_group_record<Payload>::content_group_record(std::string  tn, const paths_group& p,
+                                                        bool lock, std::list<note>  nt, std::list<std::string>  tg,
                                                         repository_record::handler_package& pkg)
       : repository_record(pkg),
-        task(tn),
+        task(std::move(tn)),
         paths(p),
         locked(lock),
-        notes(nt),
-        tags(tg),
+        notes(std::move(nt)),
+        tags(std::move(tg)),
         payload()
       {
         // remove any duplicated tags
@@ -138,7 +142,7 @@ namespace transport
         // iterate through match_tags, checking whether we can match each one
         for(const std::string& tag : match_tags)
           {
-            std::list<std::string>::const_iterator t = std::find(this->tags.begin(), this->tags.end(), tag);
+            auto t = std::find(this->tags.begin(), this->tags.end(), tag);
 
             // if match, move on to next tag
             if(t != this->tags.end()) continue;
@@ -170,17 +174,17 @@ namespace transport
         Json::Value note_list = reader[CPPTRANSPORT_NODE_OUTPUTGROUP_NOTES];
         assert(note_list.isArray());
 
-        for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); ++t)
+        for(auto& t : note_list)
           {
-            notes.emplace_back(*t);
+            notes.emplace_back(t);
           }
 
         Json::Value tag_list = reader[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS];
         assert(tag_list.isArray());
 
-        for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); ++t)
+        for(auto& t : tag_list)
           {
-            tags.push_back(t->asString());
+            tags.push_back(t.asString());
           }
       }
 
@@ -220,7 +224,7 @@ namespace transport
 
 
     template <typename Payload>
-    void content_group_record<Payload>::add_note(const std::string note)
+    void content_group_record<Payload>::add_note(std::string note)
       {
         this->notes.emplace_back(this->handlers.env.get_userid(), std::move(note));
         this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_note);
@@ -252,7 +256,7 @@ namespace transport
     template <typename Payload>
     void content_group_record<Payload>::remove_tag(const std::string& tag)
       {
-        std::list<std::string>::const_iterator it = std::find(this->tags.cbegin(), this->tags.cend(), tag);
+        auto it = std::find(this->tags.cbegin(), this->tags.cend(), tag);
         if(it != this->tags.end())
           {
             this->tags.erase(it);
@@ -265,7 +269,7 @@ namespace transport
     template <typename Payload>
     void content_group_record<Payload>::remove_note(unsigned int number)
       {
-        std::list<note>::const_iterator it = this->notes.cbegin();
+        auto it = this->notes.cbegin();
         while(number > 0 && it != this->notes.end())
           {
             --number;
@@ -301,25 +305,29 @@ namespace transport
 
     precomputed_products::precomputed_products(Json::Value& reader)
       {
-        zeta_twopf   = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
-        zeta_threepf = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
-        zeta_redbsp  = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
-        fNL_local    = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
-        fNL_equi     = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
-        fNL_ortho    = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
-        fNL_DBI      = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
+        const auto root = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT];
+        zeta_twopf          = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
+        zeta_twopf_spectral = root.get(CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL, Json::Value(false)).asBool();
+        zeta_threepf        = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
+        zeta_redbsp         = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
+        fNL_local           = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
+        fNL_equi            = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
+        fNL_ortho           = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
+        fNL_DBI             = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
       }
 
 
     void precomputed_products::serialize(Json::Value& writer) const
       {
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]   = this->zeta_twopf;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF] = this->zeta_threepf;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]  = this->zeta_redbsp;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]    = this->fNL_local;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]     = this->fNL_equi;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]    = this->fNL_ortho;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI]      = this->fNL_DBI;
+        auto root = writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT];
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]          = this->zeta_twopf;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL] = this->zeta_twopf_spectral;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF]        = this->zeta_threepf;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]         = this->zeta_redbsp;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]           = this->fNL_local;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]            = this->fNL_equi;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]           = this->fNL_ortho;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI]             = this->fNL_DBI;
       }
 
 
@@ -327,6 +335,7 @@ namespace transport
     void precomputed_products::write(Stream& out) const
       {
         out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_TWO_SPECTRAL << ": " << (this->zeta_twopf_spectral ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
         out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
         out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_REDBSP << ": " << (this->zeta_redbsp ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
         out << CPPTRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
@@ -337,7 +346,7 @@ namespace transport
 
 
     integration_payload::integration_payload(Json::Value& reader)
-      : metadata(reader)
+      : metadata{reader}
       {
         container          = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
         fail               = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED].asBool();
@@ -346,15 +355,16 @@ namespace transport
         seed_group         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
         statistics         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
         initial_conditions = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS].asBool();
+        spectral_data      = reader.get(CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SPECTRAL, Json::Value(false)).asBool();
         size               = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE].asUInt();
         data_type          = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATA_TYPE].asString();
 
         Json::Value failure_array = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
         failed_serials.clear();
-        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); ++t)
+        for(auto& t : failure_array)
           {
-            failed_serials.insert(t->asUInt());
+            failed_serials.insert(t.asUInt());
           }
       }
 
@@ -368,6 +378,7 @@ namespace transport
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP] = this->seed_group;
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS] = this->statistics;
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS]        = this->initial_conditions;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SPECTRAL]   = this->spectral_data;
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE]       = this->size;
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATA_TYPE]  = this->data_type;
 

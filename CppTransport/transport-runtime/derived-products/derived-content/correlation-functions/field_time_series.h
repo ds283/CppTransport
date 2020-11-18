@@ -261,7 +261,7 @@ namespace transport
                 switch(this->get_dot_meaning())
                   {
                     case dot_type::derivatives:
-                      label << field_names[i % N_fields] << (i >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+                      label << field_names[i % N_fields] << (i >= N_fields ? CPPTRANSPORT_LATEX_PRIME_SYMBOL_SUPERSCRIPT : "");
                       break;
 
                     case dot_type::momenta:
