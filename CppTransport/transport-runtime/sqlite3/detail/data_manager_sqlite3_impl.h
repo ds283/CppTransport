@@ -444,7 +444,9 @@ namespace transport
         sqlite3_close(db);
 
         // physically remove the tempfiles directory
+#ifndef CPPPTRANSPORT_NO_REMOVE_INTERMEDIATE_CONTAINERS
         boost::filesystem::remove_all(writer.get_abs_tempdir_path());
+#endif
       }
 
 
