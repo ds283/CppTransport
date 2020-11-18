@@ -46,9 +46,9 @@ namespace transport
 					{
 						static int number_elements(unsigned int Nfields) { return(static_cast<int>(2*Nfields * 2*Nfields)); }
 						static std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE); }
-						static std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
             static std::string sqlite_unique_column()  { return("unique_id"); }
-				    static std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_TWOPF_DATATAB_FAIL); }
+            static std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_TWOPF_DATATAB_FAIL); }
+						static std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
 						static std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_TWOPF_COPY); }
 					};
 

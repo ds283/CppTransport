@@ -484,8 +484,10 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<threepf_kconfig_database::record_iterator> threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db,
-                                                                                                           double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
+    boost::optional<threepf_kconfig_database::record_iterator>
+    threepf_kconfig_database::add_k1k2k3_record
+      (twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional,
+       StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -514,8 +516,9 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<threepf_kconfig_database::record_iterator> threepf_kconfig_database::add_alphabeta_record(twopf_kconfig_database& twopf_db,
-                                                                                                              double kt_conventional, double alpha, double beta, StoragePolicy policy)
+    boost::optional<threepf_kconfig_database::record_iterator>
+    threepf_kconfig_database::add_alphabeta_record
+      (twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -545,7 +548,9 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<threepf_kconfig_database::record_iterator> threepf_kconfig_database::add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
+    boost::optional<threepf_kconfig_database::record_iterator>
+    threepf_kconfig_database::add_record
+      (twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
       {
         // populate serial numbers in configuration record before
         // passing to storage policy

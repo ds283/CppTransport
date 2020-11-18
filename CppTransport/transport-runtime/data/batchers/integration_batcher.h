@@ -1344,7 +1344,7 @@ namespace transport
     threepf_batcher<number>::push_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                            const std::vector<number>& value, const std::vector<number>& backg)
       {
-        this->twopf_si_batch.emplace_back(
+        this->twopf_si_re_batch.emplace_back(
           std::make_unique<typename integration_items<number>::twopf_si_re_item>(
             time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
         // TODO: push spectral index to paired zeta batcher, if one is present
@@ -1408,8 +1408,8 @@ namespace transport
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
 
-        number              zeta_threepf = 0.0;
-        number              redbsp       = 0.0;
+        number zeta_threepf = 0.0;
+        number redbsp = 0.0;
 
         this->compute_agent.zeta_threepf(kconfig, t, value, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp,
                                          this->gauge_xfm1, this->gauge_xfm2_123, this->gauge_xfm2_213, this->gauge_xfm2_312);
@@ -1457,7 +1457,7 @@ namespace transport
           + (5 * sizeof(unsigned int) + tensor_size) * this->tensor_twopf_batch.size()
           + (5 * sizeof(unsigned int) + tensor_size) * this->tensor_twopf_si_batch.size()
           + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_re_batch.size()
-          + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_re_batch.size()
+          + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_im_batch.size()
           + (6 * sizeof(unsigned int) + twopf_size) * this->twopf_si_re_batch.size()
           + (6 * sizeof(unsigned int) + threepf_size) * this->threepf_momentum_batch.size()
           + (6 * sizeof(unsigned int) + threepf_size) * this->threepf_Nderiv_batch.size()
