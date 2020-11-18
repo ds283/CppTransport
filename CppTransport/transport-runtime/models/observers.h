@@ -344,7 +344,9 @@ namespace transport
                 this->batcher.push_backg(store_serial, k_serial, bg_x);
               }
             this->batcher.push_tensor_twopf(store_serial, k_serial, k_serial, tensor_x);
+            this->batcher.push_tensor_twopf_si(store_serial, k_serial, k_serial, tensor_si_x);
             this->batcher.push_twopf(store_serial, k_serial, k_serial, tpf_x, bg_x);
+            this->batcher.push_twopf_si(store_serial, k_serial, k_serial, tpf_si_x, bg_x);
           }
 
         this->step();
@@ -556,30 +558,42 @@ namespace transport
               {
                 this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k1_serial,
                                                 this->k_config->serial, tensor_x1);
+                this->batcher.push_tensor_twopf_si(this->store_serial_number(), this->k_config->k1_serial,
+                                                   this->k_config->serial, tensor_si_x1);
                 this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial,
-                                         tpf_re_x1, bg_x);
+                                         tpf_re_x1, bg_x, twopf_type::real);
                 this->batcher.push_twopf(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial,
-                                         tpf_im_x1, bg_x);
+                                         tpf_im_x1, bg_x, twopf_type::imag);
+                this->batcher.push_twopf_si(this->store_serial_number(), this->k_config->k1_serial, this->k_config->serial,
+                                            tpf_si_re_x1, bg_x);
               }
 
             if(this->k_config.is_twopf_k2_stored())
               {
                 this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k2_serial,
                                                 this->k_config->serial, tensor_tpf_x2);
+                this->batcher.push_tensor_twopf_si(this->store_serial_number(), this->k_config->k2_serial,
+                                                   this->k_config->serial, tensor_si_x2);
                 this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial,
-                                         tpf_re_x2, bg_x);
+                                         tpf_re_x2, bg_x, twopf_type::real);
                 this->batcher.push_twopf(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial,
-                                         tpf_im_x2, bg_x);
+                                         tpf_im_x2, bg_x, twopf_type::imag);
+                this->batcher.push_twopf_si(this->store_serial_number(), this->k_config->k2_serial, this->k_config->serial,
+                                            tpf_si_re_x2, bg_x);
               }
 
             if(this->k_config.is_twopf_k3_stored())
               {
                 this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config->k3_serial,
                                                 this->k_config->serial, tensor_tpf_x3);
+                this->batcher.push_tensor_twopf_si(this->store_serial_number(), this->k_config->k3_serial,
+                                                   this->k_config->serial, tensor_si_x3);
                 this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial,
-                                         tpf_re_x3, bg_x);
+                                         tpf_re_x3, bg_x, twopf_type::real);
                 this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial,
-                                         tpf_im_x3, bg_x);
+                                         tpf_im_x3, bg_x, twopf_type::imag);
+                this->batcher.push_twopf_si(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial,
+                                            tpf_si_re_x3, bg_x);
               }
 
             this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *this->k_config, this->k_config->serial,
@@ -739,8 +753,12 @@ namespace transport
                   }
                 this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->serial,
                                                 this->work_list[c]->serial, tensor_x);
+                this->batcher.push_tensor_twopf_si(this->store_serial_number(), this->work_list[c]->serial,
+                                                   this->work_list[c]->serial, tensor_si_x);
                 this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->serial,
                                          this->work_list[c]->serial, tpf_x, bg_x);
+                this->batcher.push_twopf_si(this->store_serial_number(), this->work_list[c]->serial,
+                                            this->work_list[c]->serial, tpf_si_x, bg_x);
               }
           }
 
@@ -928,26 +946,49 @@ namespace transport
 
                 if(this->work_list[c].is_twopf_k1_stored())
                   {
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tensor_x1);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tpf_re_x1, bg_x, twopf_type::real);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k1_serial, this->work_list[c]->serial, tpf_im_x1, bg_x, twopf_type::imag);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k1_serial,
+                                                    this->work_list[c]->serial, tensor_x1);
+                    this->batcher.push_tensor_twopf_si(this->store_serial_number(), this->work_list[c]->k1_serial,
+                                                       this->work_list[c]->serial, tensor_si_x1);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k1_serial,
+                                             this->work_list[c]->serial, tpf_re_x1, bg_x, twopf_type::real);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k1_serial,
+                                             this->work_list[c]->serial, tpf_im_x1, bg_x, twopf_type::imag);
+                    this->batcher.push_twopf_si(this->store_serial_number(), this->work_list[c]->k1_serial,
+                                                this->work_list[c]->serial, tpf_si_re_x1, bg_x);
                   }
 
                 if(this->work_list[c].is_twopf_k2_stored())
                   {
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tensor_x2);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tpf_re_x2, bg_x, twopf_type::real);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k2_serial, this->work_list[c]->serial, tpf_im_x2, bg_x, twopf_type::imag);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k2_serial,
+                                                    this->work_list[c]->serial, tensor_x2);
+                    this->batcher.push_tensor_twopf_si(this->store_serial_number(), this->work_list[c]->k2_serial,
+                                                       this->work_list[c]->serial, tensor_si_x2);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k2_serial,
+                                             this->work_list[c]->serial, tpf_re_x2, bg_x, twopf_type::real);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k2_serial,
+                                             this->work_list[c]->serial, tpf_im_x2, bg_x, twopf_type::imag);
+                    this->batcher.push_twopf_si(this->store_serial_number(), this->work_list[c]->k2_serial,
+                                                this->work_list[c]->serial, tpf_si_re_x2, bg_x);
                   }
 
                 if(this->work_list[c].is_twopf_k3_stored())
                   {
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tensor_x3);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tpf_re_x3, bg_x, twopf_type::real);
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k3_serial, this->work_list[c]->serial, tpf_im_x3, bg_x, twopf_type::imag);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c]->k3_serial,
+                                                    this->work_list[c]->serial, tensor_x3);
+                    this->batcher.push_tensor_twopf_si(this->store_serial_number(), this->work_list[c]->k3_serial,
+                                                       this->work_list[c]->serial, tensor_si_x3);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k3_serial,
+                                             this->work_list[c]->serial, tpf_re_x3, bg_x, twopf_type::real);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c]->k3_serial,
+                                             this->work_list[c]->serial, tpf_im_x3, bg_x, twopf_type::imag);
+                    this->batcher.push_twopf_si(this->store_serial_number(), this->work_list[c]->k3_serial,
+                                                this->work_list[c]->serial, tpf_si_re_x3, bg_x);
                   }
 
-                this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *(this->work_list[c]), this->work_list[c]->serial, thpf_x, tpf_re_x1, tpf_im_x1, tpf_re_x2, tpf_im_x2, tpf_re_x3, tpf_im_x3, bg_x);
+                this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *(this->work_list[c]),
+                                           this->work_list[c]->serial, thpf_x, tpf_re_x1, tpf_im_x1, tpf_re_x2,
+                                           tpf_im_x2, tpf_re_x3, tpf_im_x3, bg_x);
               }
           }
 

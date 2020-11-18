@@ -211,8 +211,8 @@ namespace transport
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool adpt_ics)
-	    : twopf_db_task<number>(nm, i, t, adpt_ics),
-	      integrable(true)
+	    : twopf_db_task<number>{nm, i, t, adpt_ics},
+	      integrable{true}
 	    {
         threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar);
 	    }
@@ -220,7 +220,7 @@ namespace transport
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
-	    : twopf_db_task<number>(nm, reader, handle, i)
+	    : twopf_db_task<number>{nm, reader, handle, i}
 	    {
 		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar, handle, *this->twopf_db_task<number>::twopf_db);
 
@@ -509,7 +509,7 @@ namespace transport
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
                                                    range<double>& t, range<double>& ks, bool adpt_ics,
                                                    StoragePolicy policy, TrianglePolicy triangle)
-	    : threepf_task<number>(nm, i, t, adpt_ics)
+	    : threepf_task<number>{nm, i, t, adpt_ics}
 	    {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
@@ -521,7 +521,8 @@ namespace transport
 	                {
                     if(triangle(j, k, l, ks[j], ks[k], ks[l]))      // ask policy object whether this is a triangle
 	                    {
-                        boost::optional<threepf_kconfig_database::record_iterator> record = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
+                        auto record = this->threepf_task<number>::threepf_db->add_k1k2k3_record(
+                          *this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
 
                         if(!record)  // storage policy declined to store this configuration
                           {
@@ -651,8 +652,8 @@ namespace transport
 	                {
                     if(triangle(alphas[k], betas[l]))     // ask policy object to decide whether this is a triangle
 	                    {
-                        boost::optional<threepf_kconfig_database::record_iterator> record
-													= this->threepf_task<number>::threepf_db->add_alphabeta_record(*this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
+                        auto record = this->threepf_task<number>::threepf_db->add_alphabeta_record(
+                          *this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
 
                         if(!record)   // storage policy declined to store this configuration
                           {
