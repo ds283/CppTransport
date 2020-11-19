@@ -321,19 +321,19 @@ namespace transport
           {
             // correlation functions are already dimensionless, so no rescaling needed
 
-            std::vector<number> bg_x{bg_sz};
+            std::vector<number> bg_x(bg_sz);
             for(unsigned int i = 0; i < bg_sz; ++i) bg_x[i] = x[bg_st + i];
 
-            std::vector<number> tensor_x{ten_sz};
+            std::vector<number> tensor_x(ten_sz);
             for(unsigned int i = 0; i < ten_sz; ++i) tensor_x[i] = x[ten_st + i];
             
-            std::vector<number> tensor_si_x{ten_sz};
+            std::vector<number> tensor_si_x(ten_sz);
             for(unsigned int i = 0; i < ten_sz; ++i) tensor_si_x[i] = x[ten_si_st + i];
 
-            std::vector<number> tpf_x{tw_sz};
+            std::vector<number> tpf_x(tw_sz);
             for(unsigned int i = 0; i < tw_sz; ++i) tpf_x[i] = x[tw_st + i];
             
-            std::vector<number> tpf_si_x{tw_sz};
+            std::vector<number> tpf_si_x(tw_sz);
             for(unsigned int i = 0; i < tw_sz; ++i) tpf_si_x[i] = x[tw_si_st + i];
 
             const auto store_serial = this->store_serial_number();
