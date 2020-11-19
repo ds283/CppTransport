@@ -319,15 +319,14 @@ namespace transport
 
     void precomputed_products::serialize(Json::Value& writer) const
       {
-        auto root = writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT];
-        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]          = this->zeta_twopf;
-        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL] = this->zeta_twopf_spectral;
-        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF]        = this->zeta_threepf;
-        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]         = this->zeta_redbsp;
-        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]           = this->fNL_local;
-        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]            = this->fNL_equi;
-        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]           = this->fNL_ortho;
-        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI]             = this->fNL_DBI;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]          = this->zeta_twopf;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL] = this->zeta_twopf_spectral;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF]        = this->zeta_threepf;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]         = this->zeta_redbsp;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]           = this->fNL_local;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]            = this->fNL_equi;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]           = this->fNL_ortho;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI]             = this->fNL_DBI;
       }
 
 
