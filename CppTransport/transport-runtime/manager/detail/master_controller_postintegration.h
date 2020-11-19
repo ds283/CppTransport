@@ -604,7 +604,7 @@ namespace transport
 
             // remove temporary container
 //        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
-#ifndef CPPPTRANSPORT_NO_REMOVE_INTERMEDIATE_CONTAINERS
+#ifndef CPPTRANSPORT_NO_REMOVE_INTERMEDIATE_CONTAINERS
             if(!boost::filesystem::remove(ctr_path))
               {
                 std::ostringstream msg;
