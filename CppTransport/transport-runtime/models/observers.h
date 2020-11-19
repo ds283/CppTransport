@@ -707,7 +707,7 @@ namespace transport
       unsigned int bg_st, unsigned int ten_st, unsigned int ten_si_st,
       unsigned int tw_st, unsigned int tw_si_st>
     twopf_groupconfig_batch_observer<number, bg_sz, ten_sz, tw_sz, bg_st, ten_st, ten_si_st, tw_st, tw_si_st>::twopf_groupconfig_batch_observer
-      (twopf_batcher<number>& b, const device_queue_manager<twopf_kconfig_record>::device_work_list& c,
+      (twopf_batcher<number>& b, const work_queue<twopf_kconfig_record>::device_work_list& c,
        const time_config_database& t, boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number, twopf_batcher<number>>(t, t_int, s, p),
         batcher(b),
@@ -850,7 +850,7 @@ namespace transport
       ten_k1_st, ten_k2_st, ten_k3_st, ten_si_k1_st, ten_si_k2_st, ten_si_k3_st,
       tw_re_k1_st, tw_im_k1_st, tw_re_k2_st, tw_im_k2_st, tw_re_k3_st, tw_im_k3_st,
       tw_si_re_k1_st, tw_si_re_k2_st, tw_si_re_k3_st, th_st>::threepf_groupconfig_batch_observer
-      (threepf_batcher<number>& b, const device_queue_manager<threepf_kconfig_record>::device_work_list& c,
+      (threepf_batcher<number>& b, const work_queue<threepf_kconfig_record>::device_work_list& c,
        const time_config_database& t, boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number, threepf_batcher<number>&>(t, t_int, s, p),
         batcher(b),
