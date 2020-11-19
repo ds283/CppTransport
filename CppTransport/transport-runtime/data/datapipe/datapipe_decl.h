@@ -101,9 +101,10 @@ namespace transport
               {
               }
 
-            integration_content_finder<number>&     integration_finder;
+
+            integration_content_finder<number>& integration_finder;
             postintegration_content_finder<number>& postintegration_finder;
-            datapipe_dispatch_function<number>&      dispatch;
+            datapipe_dispatch_function<number>& dispatch;
 
 	        };
 
@@ -118,7 +119,7 @@ namespace transport
       public:
 
         //! Construct a datapipe
-        datapipe(size_t cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
+        datapipe(size_t cap, boost::filesystem::path lp, boost::filesystem::path tp, unsigned int w,
                  data_manager<number>& dm, utility_callbacks& u, bool no_log=false);
 
         //! Destroy a datapipe
@@ -144,11 +145,11 @@ namespace transport
         unsigned int get_worker_number() const { return(this->worker_number); }
 
         //! Validate that the pipe is attached to a container
-        bool validate_attached(void) const;
+        bool validate_attached() const;
 		    bool validate_attached(attachment_type) const;
 
         //! Validate that the pipe is *not* attached to a container
-        bool validate_unattached(void) const;
+        bool validate_unattached() const;
 
 
         // ABSOLUTE PATHS
@@ -238,7 +239,7 @@ namespace transport
         std::string attach(derivable_task<number>* tk, const std::list<std::string>& tags);
 
         //! Detach a content group from the datapipe
-        void detach(void);
+        void detach();
 
         //! Is this datapipe attached to a content group?
         bool is_attached() const { return(this->type != attachment_type::none_attached); }

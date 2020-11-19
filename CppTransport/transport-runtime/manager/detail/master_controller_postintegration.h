@@ -54,7 +54,7 @@ namespace transport
 
         if((z2pf = dynamic_cast< zeta_twopf_task<number>* >(tk)) != nullptr)
           {
-            twopf_task<number>* ptk = dynamic_cast<twopf_task<number>*>(z2pf->get_parent_task());
+            auto* ptk = dynamic_cast<twopf_task<number>*>(z2pf->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -82,7 +82,7 @@ namespace transport
           }
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
           {
-            threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
+            auto* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -92,7 +92,7 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
               }
 
-            // is this 3pf task apired?
+            // is this 3pf task paired?
             if(z3pf->is_paired())
               {
                 model<number>* m = ptk->get_model();
@@ -110,7 +110,7 @@ namespace transport
           }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
           {
-            zeta_threepf_task<number>* ptk = dynamic_cast<zeta_threepf_task<number>*>(zfNL->get_parent_task());
+            auto* ptk = dynamic_cast<zeta_threepf_task<number>*>(zfNL->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -178,6 +178,23 @@ namespace transport
         // initialize the writer
         this->data_mgr->initialize_writer(*writer);
 
+        // determine which content group will be used in the calculation
+        const auto& ptk_name = tk->get_parent_task()->get_name();
+        auto source_group = this->repo->find_integration_task_output(ptk_name, tags);
+        if(!source_group)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_NO_CANDIDATE_INTEGRATION_GROUP << " '" << ptk_name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
+
+        // tag the writer as including spectral data if the source integration group also includes it
+        const auto& source_payload = source_group->get_payload();
+        if(source_payload.has_spectral_data())
+          {
+            writer->get_products().add_zeta_twopf_spectral();
+          }
+
         // create new tables needed in the database
         this->data_mgr->create_tables(*writer, tk);
 
@@ -218,7 +235,7 @@ namespace transport
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         auto pre_prec = this->repo->query_task(ptk->get_name());
-        integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
+        auto* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
 
         assert(prec != nullptr);
         if(prec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -238,7 +255,11 @@ namespace transport
 
         // create an output writer for the postintegration task
         auto p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
+
         this->data_mgr->initialize_writer(*p_writer);
+        // paired batchers will always have spectral data, so can set this here
+        // (the other content flags are set in initialize_writer() above, but that does not set the flag for spectral data)
+        p_writer->get_products().add_zeta_twopf_spectral();
         this->data_mgr->create_tables(*p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different content groups
@@ -311,13 +332,21 @@ namespace transport
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             throw runtime_exception(exception_type::SEEDING_ERROR, msg.str());
-          };
+          }
 
         // mark writer as seeded
         writer.set_seed(seed_group);
 
         // seeded writer inherits metadata from its seed content group
-        writer.set_metadata(t->second->get_payload().get_metadata());
+        const auto& seed_record = *(t->second);
+        const auto& seed_payload = seed_record.get_payload();
+
+        writer.set_metadata(seed_payload.get_metadata());
+
+        // propagate setting for spectral data
+        const auto& seed_products = seed_payload.get_precomputed_products();
+        auto& writer_products = writer.get_products();
+        writer_products.set_zeta_twopf_spectral(writer_products.get_zeta_twopf_spectral() && seed_products.get_zeta_twopf_spectral());
 
         this->data_mgr->seed_writer(writer, tk, *(t->second));
         this->work_scheduler.prepare_queue(t->second->get_payload().get_failed_serials());
@@ -333,12 +362,13 @@ namespace transport
                                                                         TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
-        postintegration_content_db db = this->repo->enumerate_postintegration_task_content(tk->get_name());
+        integration_content_db i_db = this->repo->enumerate_integration_task_content(ptk->get_name());
+        postintegration_content_db p_db = this->repo->enumerate_postintegration_task_content(tk->get_name());
 
         // find the specified group in this list
-        auto t = std::find_if(db.begin(), db.end(), OutputGroupFinder<postintegration_payload>(seed_group));
+        auto t = std::find_if(p_db.begin(), p_db.end(), OutputGroupFinder<postintegration_payload>(seed_group));
 
-        if(t == db.end())   // no record found
+        if(t == p_db.end())   // no record found
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
@@ -346,7 +376,31 @@ namespace transport
           }
 
         // find parent content group for the seed
-        std::string parent_seed_name = t->second->get_payload().get_parent_group();
+        const auto& p_seed_record = *(t->second);
+        const auto& p_seed_payload = p_seed_record.get_payload();
+        std::string parent_seed_name = p_seed_payload.get_parent_group();
+
+        // find the specified group
+        auto pt = std::find_if(i_db.begin(), i_db.end(), OutputGroupFinder<integration_payload>(parent_seed_name));
+
+        if(pt == i_db.end())    // no record found
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << parent_seed_name << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << ptk->get_name() << "'";
+            throw runtime_exception(exception_type::SEEDING_ERROR, msg.str());
+          }
+
+        const auto& i_seed_record = *(pt->second);
+        const auto& i_seed_payload = i_seed_record.get_payload();
+        const auto& p_seed_products = p_seed_payload.get_precomputed_products();
+
+        // disable spectral data if either of the seed groups don't have it
+        // note we can always assume writer_products.get_zeta_twopf_spectral() is set for a paired batcher
+        // (but we look up its value directly anyway)
+        auto& writer_products = p_writer.get_products();
+        writer_products.set_zeta_twopf_spectral(writer_products.get_zeta_twopf_spectral() &&
+                                                p_seed_products.get_zeta_twopf_spectral() &&
+                                                i_seed_payload.has_spectral_data());
 
         // check that same k-configurations are missing from both content groups in the pair
         // currently we assume this to be true, although the integrity check for paired writers
@@ -373,7 +427,7 @@ namespace transport
             std::set_difference(integration_serials.begin(), integration_serials.end(),
                                 postintegration_serials.begin(), postintegration_serials.end(), std::inserter(diff, diff.begin()));
 
-            if(diff.size() > 0)
+            if(!diff.empty())
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << t->second->get_name() << "' "
@@ -385,9 +439,9 @@ namespace transport
             p_writer.set_seed(seed_group);
 
             // seeded writer inherits metadata from its seed content group
-            p_writer.set_metadata(t->second->get_payload().get_metadata());
+            p_writer.set_metadata(p_seed_payload.get_metadata());
 
-            this->data_mgr->seed_writer(p_writer, tk, *(t->second));
+            this->data_mgr->seed_writer(p_writer, tk, p_seed_record);
           }
 
         return(t->second->get_payload().get_failed_serials());
@@ -407,6 +461,8 @@ namespace transport
         // aggregate cache information
         integration_metadata   i_metadata;  // unused
         output_metadata        o_metadata = writer.get_metadata();
+
+        // list of content groups will be overwritten
         std::list<std::string> content_groups;
 
         // get paths the workers will need

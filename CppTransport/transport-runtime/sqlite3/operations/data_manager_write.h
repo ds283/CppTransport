@@ -31,6 +31,9 @@
 #include "transport-runtime/sqlite3/operations/data_manager_common.h"
 #include "transport-runtime/sqlite3/operations/data_traits.h"
 
+// require postintegration items for zeta_twof_item, zeta_threepf_item
+#include "transport-runtime/data/batchers/postintegration_items.h"
+
 
 namespace transport
   {
@@ -368,7 +371,7 @@ namespace transport
 			    }
 
 
-        // Write a batch of unpaged values
+        // Write a batch of unpaged values for a completely generic ValueType item
         template <typename number, typename BatcherType, typename ValueType >
         void write_unpaged(transaction_manager& mgr, BatcherType* batcher, std::vector< std::unique_ptr<ValueType> >& batch)
 	        {
@@ -378,10 +381,8 @@ namespace transport
             std::ostringstream insert_stmt;
             insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
               << " VALUES (@" << data_traits<number, ValueType>::sqlite_unique_column()
-              << ", @tserial, @kserial, @" << data_traits<number, ValueType>::column_name();
-
-            if(data_traits<number, ValueType>::has_redbsp) insert_stmt << ", @redbsp";
-            insert_stmt << ");";
+              << ", @tserial, @kserial, @" << data_traits<number, ValueType>::column_name()
+              << ");";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -390,7 +391,6 @@ namespace transport
             const int tserial_id = sqlite3_bind_parameter_index(stmt, "@tserial");
             const int kserial_id = sqlite3_bind_parameter_index(stmt, "@kserial");
             const int column_id  = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::column_name()).c_str());
-            const int redbsp_id  = data_traits<number, ValueType>::has_redbsp ? sqlite3_bind_parameter_index(stmt, "@redbsp") : 0;
 
 #ifdef CPPTRANSPORT_STRICT_CONSISTENCY
             // sort batch into ascending primary key order;
@@ -406,10 +406,6 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
                 check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
                 check_stmt(db, sqlite3_bind_double(stmt, column_id, static_cast<double>(item->value)));
-                if(data_traits<number, ValueType>::has_redbsp)
-                  {
-                    check_stmt(db, sqlite3_bind_double(stmt, redbsp_id, static_cast<double>(item->redbsp)));
-                  }
 
                 check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 
@@ -419,6 +415,112 @@ namespace transport
 
             check_stmt(db, sqlite3_finalize(stmt));
 	        }
+
+
+        // write a batch of zeta 2pf items
+        template <typename number>
+        void write_zeta_twopf(transaction_manager& mgr, postintegration_batcher<number>* batcher,
+                              const std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >& batch)
+          {
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            using ValueType = typename postintegration_items<number>::zeta_twopf_item;
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
+                        << " VALUES (@" << data_traits<number, ValueType>::sqlite_unique_column()
+                        << ", @tserial, @kserial, "
+                        << "@" << data_traits<number, ValueType>::column_name() << ", "
+                        << "@" << data_traits<number, ValueType>::ns_column_name()
+                        << ");";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            const int unique_id          = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::sqlite_unique_column()).c_str());
+            const int tserial_id         = sqlite3_bind_parameter_index(stmt, "@tserial");
+            const int kserial_id         = sqlite3_bind_parameter_index(stmt, "@kserial");
+            const int twopf_column_id    = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::column_name()).c_str());
+            const int twopf_si_column_id = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::ns_column_name()).c_str());
+
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            // sort batch into ascending primary key order;
+            // sorting is done in-place for performance
+            std::sort(batch.begin(), batch.end(), data_manager_write_impl::UnpagedPrimaryKeyCompare<ValueType>());
+#endif
+
+            for(const std::unique_ptr<ValueType>& item : batch)
+              {
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+                check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique()));
+#endif
+                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, twopf_column_id, static_cast<double>(item->value)));
+                check_stmt(db, sqlite3_bind_double(stmt, twopf_si_column_id, static_cast<double>(item->spectral_value)));
+
+                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
+
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
+              }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
+        // write a batch of zeta 2pf items
+        template <typename number>
+        void write_zeta_threepf(transaction_manager& mgr, postintegration_batcher<number>* batcher,
+                                const std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_threepf_item> >& batch)
+          {
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            using ValueType = typename postintegration_items<number>::zeta_threepf_item;
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
+                        << " VALUES (@" << data_traits<number, ValueType>::sqlite_unique_column()
+                        << ", @tserial, @kserial, "
+                        << "@" << data_traits<number, ValueType>::column_name() << ", "
+                        << "@" << data_traits<number, ValueType>::redbsp_column_name()
+                        << ");";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            const int unique_id         = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::sqlite_unique_column()).c_str());
+            const int tserial_id        = sqlite3_bind_parameter_index(stmt, "@tserial");
+            const int kserial_id        = sqlite3_bind_parameter_index(stmt, "@kserial");
+            const int threepf_column_id = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::column_name()).c_str());
+            const int redbsp_column_id  = sqlite3_bind_parameter_index(stmt, (std::string("@") + data_traits<number, ValueType>::redbsp_column_name()).c_str());
+
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+            // sort batch into ascending primary key order;
+            // sorting is done in-place for performance
+            std::sort(batch.begin(), batch.end(), data_manager_write_impl::UnpagedPrimaryKeyCompare<ValueType>());
+#endif
+
+            for(const std::unique_ptr<ValueType>& item : batch)
+              {
+#ifdef CPPTRANSPORT_STRICT_CONSISTENCY
+                check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique()));
+#endif
+                check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, threepf_column_id, static_cast<double>(item->value)));
+                check_stmt(db, sqlite3_bind_double(stmt, redbsp_column_id, static_cast<double>(item->redbsp)));
+
+                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
+
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
+              }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
 
 
         // Write a batch of fNL values.

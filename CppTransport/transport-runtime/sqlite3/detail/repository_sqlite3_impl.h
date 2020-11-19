@@ -319,7 +319,7 @@ namespace transport
                                                               typename repository_sqlite3<number>::store_function storer,
                                                               std::string store_root, std::string exists_err)
       {
-        integration_task_record<number>& task_record = dynamic_cast<integration_task_record<number>&>(record);
+        auto& task_record = dynamic_cast<integration_task_record<number>&>(record);
 
         // check that no package with this name already exists
         unsigned int count = counter(this->db, task_record.get_name());
@@ -368,7 +368,7 @@ namespace transport
     void repository_sqlite3<number>::commit_integration_replace(repository_record& record, transaction_manager& mgr,
                                                                 typename repository_sqlite3<number>::find_function finder)
       {
-        integration_task_record<number>& task_record = dynamic_cast<integration_task_record<number>&>(record);
+        auto& task_record = dynamic_cast<integration_task_record<number>&>(record);
 
         // find existing record in the database
         boost::filesystem::path document_path = finder(this->db, task_record.get_name());
@@ -945,7 +945,7 @@ namespace transport
           {
             case task_type::integration:
               {
-                integration_task<number>& rtk = dynamic_cast< integration_task<number>& >(tk);
+                auto& rtk = dynamic_cast< integration_task<number>& >(tk);
 
                 switch(rtk.get_task_type())
                   {
@@ -967,7 +967,7 @@ namespace transport
 
             case task_type::postintegration:
               {
-                postintegration_task<number>& rtk = dynamic_cast< postintegration_task<number>& >(tk);
+                auto& rtk = dynamic_cast< postintegration_task<number>& >(tk);
 
                 switch(rtk.get_task_type())
                   {
@@ -1819,7 +1819,7 @@ namespace transport
           {
             // get task record
             auto pre_rec = this->query_task(inflight.second->task_name);
-            integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
+            auto* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
             assert(rec != nullptr);
             if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -1915,7 +1915,7 @@ namespace transport
           {
             // get task record
             auto pre_rec = this->query_task(inflight.second->task_name);
-            postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
+            auto* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
 
             assert(rec != nullptr);
             if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -1931,6 +1931,12 @@ namespace transport
                                                                       postintegration_task_record<number>& rec, unsigned int worker)
       {
         auto writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
+
+        // set p_writer flags for spectral data content depending whether the original writer had it
+        if(data.has_spectral)
+          {
+            writer->get_products().add_zeta_twopf_spectral();
+          }
 
         // close writer, performing integrity check to update all missing serial numbers
         // if any are missing, the writer will be marked as failed
@@ -1952,7 +1958,7 @@ namespace transport
         class FindInFlight
           {
           public:
-            FindInFlight(const std::string& n)
+            explicit FindInFlight(const std::string& n)
               : name(n)
               {
               }
@@ -1987,10 +1993,17 @@ namespace transport
 
         // get task record
         auto pre_rec = this->query_task(t->second->task_name);
-        integration_task_record<number>& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
+        auto& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
 
         auto i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
         auto p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
+
+        // set p_writer flags for spectral data content depending whether the original writer had it
+        // (although in practice we always expect paired writers to be producing spectral data)
+        if(data.has_spectral)
+          {
+            p_writer->get_products().add_zeta_twopf_spectral();
+          }
 
         // metadata for the writer are likely to be inconsistent
         // try to recover correct metadata directly from the container
@@ -2024,6 +2037,7 @@ namespace transport
         auto writer = this->recover_postintegration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker);
 
         // initialize writer in recovery mode
+        // (recall that this does not set content flags for spectral data, which have to be handled elsewhere)
         data_mgr.initialize_writer(*writer, true);
 
         writer->set_pair(data.is_paired);
@@ -2049,7 +2063,7 @@ namespace transport
           {
             // get task record
             auto pre_rec = this->query_task(inflight.second->task_name);
-            output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(pre_rec.get());
+            auto* rec = dynamic_cast< output_task_record<number>* >(pre_rec.get());
 
             assert(rec != nullptr);
             if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -2111,7 +2125,7 @@ namespace transport
           transaction, this->db, writer.get_name(), writer.get_task_name(), writer.get_relative_output_path(),
           writer.get_relative_container_path(), writer.get_relative_logdir_path(),
           writer.get_relative_tempdir_path(), writer.is_paired(), writer.get_parent_group(),
-          writer.is_seeded(), writer.get_seed_group());
+          writer.is_seeded(), writer.get_seed_group(), writer.get_products().get_zeta_twopf_spectral());
 
         transaction.commit();
       }

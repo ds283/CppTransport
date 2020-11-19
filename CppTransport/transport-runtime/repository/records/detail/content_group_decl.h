@@ -160,6 +160,9 @@ namespace transport
         //! Get precomputed zeta_twopf spectral index availability
         bool get_zeta_twopf_spectral() const { return(this->zeta_twopf_spectral); }
 
+        //! Set precomputed zeta twopf spectral index availability
+        bool set_zeta_twopf_spectral(bool f) { this->zeta_twopf_spectral = f; return f; }
+
         //! Add zeta twopf spectral availability flag
         void add_zeta_twopf_spectral() { this->zeta_twopf_spectral = true; }
 
@@ -266,7 +269,7 @@ namespace transport
             seeded{false},
             statistics{false},
             initial_conditions{false},
-            spectral_data{false},
+            spectral_data{true},
             size{0}
           {
           }
@@ -426,10 +429,10 @@ namespace transport
           }
 
         //! Deserialization constructor
-        postintegration_payload(Json::Value& reader);
+        explicit postintegration_payload(Json::Value& reader);
 
         //! Destroy a payload
-        ~postintegration_payload() = default;
+        ~postintegration_payload() override = default;
 
 
         // GET AND SET RECORD (META)DATA
@@ -650,7 +653,7 @@ namespace transport
       public:
 
         //! make payload type available for template programming
-        typedef Payload payload_type;
+        using payload_type = Payload;
 
         // encapsulate paths associated with this record
         class paths_group
@@ -665,8 +668,8 @@ namespace transport
       public:
 
         //! Create a content_group_record descriptor
-        content_group_record(std::string  tn, const paths_group& p,
-                            bool lock, std::list<note>  nt, std::list<std::string>  tg,
+        content_group_record(std::string tn, const paths_group& p,
+                            bool lock, std::list<note> nt, std::list<std::string> tg,
                             repository_record::handler_package& pkg);
 
         //! Deserialization constructor

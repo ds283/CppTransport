@@ -73,13 +73,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, kserial =  " << kdata.serial; return(msg.str()); }
+        std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, kserial =  " << kdata.serial; return(msg.str()); }
 
 
         // CLONE
@@ -87,7 +87,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual zeta_twopf_time_data_tag<number>* clone() const override { return new zeta_twopf_time_data_tag<number>(static_cast<const zeta_twopf_time_data_tag<number>&>(*this)); }
+        zeta_twopf_time_data_tag<number>* clone() const override { return new zeta_twopf_time_data_tag<number>(static_cast<const zeta_twopf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -95,7 +95,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -134,10 +134,10 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, kserial =  " << kdata.serial; return(msg.str()); }
+        std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, kserial =  " << kdata.serial; return(msg.str()); }
 
 
         // CLONE
@@ -145,7 +145,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual zeta_threepf_time_data_tag<number>* clone() const override { return new zeta_threepf_time_data_tag<number>(static_cast<const zeta_threepf_time_data_tag<number>&>(*this)); }
+        zeta_threepf_time_data_tag<number>* clone() const override { return new zeta_threepf_time_data_tag<number>(static_cast<const zeta_threepf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -153,7 +153,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -189,13 +189,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, kserial =  " << kdata.serial; return(msg.str()); }
+        std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, kserial =  " << kdata.serial; return(msg.str()); }
 
 
         // CLONE
@@ -203,7 +203,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual zeta_reduced_bispectrum_time_data_tag<number>* clone() const override { return new zeta_reduced_bispectrum_time_data_tag<number>(static_cast<const zeta_reduced_bispectrum_time_data_tag<number>&>(*this)); }
+        zeta_reduced_bispectrum_time_data_tag<number>* clone() const override { return new zeta_reduced_bispectrum_time_data_tag<number>(static_cast<const zeta_reduced_bispectrum_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -211,7 +211,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -247,13 +247,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, tserial =  " << tserial; return(msg.str()); }
+        std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, tserial =  " << tserial; return(msg.str()); }
 
 
         // CLONE
@@ -261,7 +261,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual zeta_twopf_kconfig_data_tag<number>* clone() const override { return new zeta_twopf_kconfig_data_tag<number>(static_cast<const zeta_twopf_kconfig_data_tag<number>&>(*this)); }
+        zeta_twopf_kconfig_data_tag<number>* clone() const override { return new zeta_twopf_kconfig_data_tag<number>(static_cast<const zeta_twopf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -269,7 +269,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -305,13 +305,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, tserial =  " << tserial; return(msg.str()); }
+        std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, tserial =  " << tserial; return(msg.str()); }
 
 
         // CLONE
@@ -319,7 +319,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual zeta_threepf_kconfig_data_tag<number>* clone() const override { return new zeta_threepf_kconfig_data_tag<number>(static_cast<const zeta_threepf_kconfig_data_tag<number>&>(*this)); }
+        zeta_threepf_kconfig_data_tag<number>* clone() const override { return new zeta_threepf_kconfig_data_tag<number>(static_cast<const zeta_threepf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -327,7 +327,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -363,13 +363,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, tserial =  " << tserial; return(msg.str()); }
+        std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, tserial =  " << tserial; return(msg.str()); }
 
 
         // CLONE
@@ -377,7 +377,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual zeta_reduced_bispectrum_kconfig_data_tag<number>* clone() const override { return new zeta_reduced_bispectrum_kconfig_data_tag<number>(static_cast<const zeta_reduced_bispectrum_kconfig_data_tag&>(*this)); }
+        zeta_reduced_bispectrum_kconfig_data_tag<number>* clone() const override { return new zeta_reduced_bispectrum_kconfig_data_tag<number>(static_cast<const zeta_reduced_bispectrum_kconfig_data_tag&>(*this)); }
 
 
         // HASH
@@ -385,7 +385,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -498,7 +498,7 @@ namespace transport
     template <typename number>
     bool zeta_twopf_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const zeta_twopf_time_data_tag<number>* zeta_tag = dynamic_cast<const zeta_twopf_time_data_tag<number>*>(&obj);
+        const auto* zeta_tag = dynamic_cast<const zeta_twopf_time_data_tag<number>*>(&obj);
 
         if(zeta_tag == nullptr) return(false);
         return(this->kdata.serial == zeta_tag->kdata.serial);
@@ -508,7 +508,7 @@ namespace transport
     template <typename number>
     bool zeta_threepf_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const zeta_threepf_time_data_tag<number>* zeta_tag = dynamic_cast<const zeta_threepf_time_data_tag<number>*>(&obj);
+        const auto* zeta_tag = dynamic_cast<const zeta_threepf_time_data_tag<number>*>(&obj);
 
         if(zeta_tag == nullptr) return(false);
         return(this->kdata.serial == zeta_tag->kdata.serial);
@@ -518,7 +518,7 @@ namespace transport
     template <typename number>
     bool zeta_reduced_bispectrum_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const zeta_reduced_bispectrum_time_data_tag<number>* zeta_tag = dynamic_cast<const zeta_reduced_bispectrum_time_data_tag<number>*>(&obj);
+        const auto* zeta_tag = dynamic_cast<const zeta_reduced_bispectrum_time_data_tag<number>*>(&obj);
 
         if(zeta_tag == nullptr) return(false);
         return(this->kdata.serial == zeta_tag->kdata.serial);
@@ -528,7 +528,7 @@ namespace transport
     template <typename number>
     bool zeta_twopf_kconfig_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const zeta_twopf_kconfig_data_tag<number>* zeta_tag = dynamic_cast<const zeta_twopf_kconfig_data_tag<number>*>(&obj);
+        const auto* zeta_tag = dynamic_cast<const zeta_twopf_kconfig_data_tag<number>*>(&obj);
 
         if(zeta_tag == nullptr) return(false);
         return(this->tserial == zeta_tag->tserial);
@@ -538,7 +538,7 @@ namespace transport
     template <typename number>
     bool zeta_threepf_kconfig_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const zeta_threepf_kconfig_data_tag<number>* zeta_tag = dynamic_cast<const zeta_threepf_kconfig_data_tag<number>*>(&obj);
+        const auto* zeta_tag = dynamic_cast<const zeta_threepf_kconfig_data_tag<number>*>(&obj);
 
         if(zeta_tag == nullptr) return(false);
         return(this->tserial == zeta_tag->tserial);
@@ -548,7 +548,7 @@ namespace transport
     template <typename number>
     bool zeta_reduced_bispectrum_kconfig_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const zeta_reduced_bispectrum_kconfig_data_tag<number>* zeta_tag = dynamic_cast<const zeta_reduced_bispectrum_kconfig_data_tag<number>*>(&obj);
+        const auto* zeta_tag = dynamic_cast<const zeta_reduced_bispectrum_kconfig_data_tag<number>*>(&obj);
 
         if(zeta_tag == nullptr) return(false);
         return(this->tserial == zeta_tag->tserial);

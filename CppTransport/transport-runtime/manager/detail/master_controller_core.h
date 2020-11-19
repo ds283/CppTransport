@@ -170,7 +170,7 @@ namespace transport
         busyidle_instrument timers(this->busyidle_timers);
 
         // work through list of tasks needed as dependencies, deciding whether they have content groups
-        for(std::set<std::string>::const_iterator t = required_tasks.begin(); t != required_tasks.end(); /* intentionally no update step */)
+        for(auto t = required_tasks.begin(); t != required_tasks.end(); /* intentionally no update step */)
           {
             std::unique_ptr< task_record<number> > rec = this->repo->query_task(*t);
             if(rec)
@@ -208,18 +208,18 @@ namespace transport
 
                 if(rec->get_type() == task_type::postintegration)
                   {
-                    const postintegration_task_record<number>& prec = dynamic_cast< const postintegration_task_record<number>& >(*rec);
+                    const auto& prec = dynamic_cast< const postintegration_task_record<number>& >(*rec);
                     const postintegration_task<number>& tk = *prec.get_task();
 
                     // only zeta 2pf and zeta 3pf tasks can be paired
                     if(tk.get_task_type() == postintegration_task_type::twopf)
                       {
-                        const zeta_twopf_task<number>& ztk = dynamic_cast< const zeta_twopf_task<number>& >(tk);
+                        const auto& ztk = dynamic_cast< const zeta_twopf_task<number>& >(tk);
                         if(ztk.is_paired()) paired_task = ztk.get_parent_task()->get_name();
                       }
                     else if(tk.get_task_type() == postintegration_task_type::threepf)
                       {
-                        const zeta_threepf_task<number>& ztk = dynamic_cast< const zeta_threepf_task<number>& >(tk);
+                        const auto& ztk = dynamic_cast< const zeta_threepf_task<number>& >(tk);
                         if(ztk.is_paired()) paired_task = ztk.get_parent_task()->get_name();
                       }
                   }
@@ -227,8 +227,8 @@ namespace transport
                 // if there is a paired task, check whether it should be removed from required_tasks
                 if(!paired_task.empty())
                   {
-                    std::set<std::string>::const_iterator u = std::find(required_tasks.begin(), required_tasks.end(), paired_task);
-                    std::list<job_descriptor>::const_iterator j = std::find_if(this->job_queue.begin(), this->job_queue.end(), FindJobDescriptorByName(paired_task));
+                    auto u = required_tasks.find(paired_task);
+                    auto j = std::find_if(this->job_queue.begin(), this->job_queue.end(), FindJobDescriptorByName(paired_task));
 
                     // if this paired task wasn't specified on the command line, but is present in required_tasks, then remove it
                     if(j == this->job_queue.end() && u != required_tasks.end()) required_tasks.erase(u);
@@ -255,7 +255,7 @@ namespace transport
         // add extra tasks to job queue (not yet in any particular order)
         for(const std::string& task : required_tasks)
           {
-            std::list<job_descriptor>::const_iterator j = std::find_if(this->job_queue.cbegin(), this->job_queue.cend(), FindJobDescriptorByName(task));
+            auto j = std::find_if(this->job_queue.cbegin(), this->job_queue.cend(), FindJobDescriptorByName(task));
 
             if(j == this->job_queue.cend())   // no corresponding job in queue, so we need to insert one
               {
@@ -274,7 +274,7 @@ namespace transport
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
 
-        for(std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); /* intentionally no update step */)
+        for(auto t = this->job_queue.begin(); t != this->job_queue.end(); /* intentionally no update step */)
           {
             const job_descriptor& job = *t;
 
@@ -474,7 +474,7 @@ namespace transport
             // meaning that it is converted to read/write status
             record = this->repo->query_task(job.get_name());
           }
-        catch (runtime_exception xe)    // exceptions should not occur, since records were validated. But catch exceptions just to be sure
+        catch (runtime_exception& xe)    // exceptions should not occur, since records were validated. But catch exceptions just to be sure
           {
             if(xe.get_exception_code() == exception_type::RECORD_NOT_FOUND)
               {
@@ -496,7 +496,7 @@ namespace transport
           {
             case task_type::integration:
               {
-                integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
+                auto* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 
                 assert(int_rec != nullptr);
                 if(int_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -507,7 +507,7 @@ namespace transport
 
             case task_type::output:
               {
-                output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
+                auto* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
 
                 assert(out_rec != nullptr);
                 if(out_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -518,7 +518,7 @@ namespace transport
 
             case task_type::postintegration:
               {
-                postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
+                auto* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
 
                 assert(pint_rec != nullptr);
                 if(pint_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -574,7 +574,7 @@ namespace transport
                     this->world.recv(stat.source(), stat.tag());
                     break;
                   }
-              };
+              }
           }
 
         // now all data is available, ask scheduler to fix maximum unit of allocation
@@ -920,6 +920,7 @@ namespace transport
                         // mark this scheduler as unassigned, and update its mean time per work item
                         this->unassign_worker(this->worker_number(stat->source()), writer, payload);
 
+                        // update metadata and list of used content groups from information reported by the worker
                         this->update_output_metadata(payload, out_metadata);
                         this->update_content_group_list(payload, content_groups);
 
@@ -984,7 +985,7 @@ namespace transport
             // we arrive at this point only when no more messages are available to be received
 
             // check whether any aggregations are in the queue, and process them if we have been idle for sufficiently long
-            if(aggregation_queue.size() > 0)
+            if(!aggregation_queue.empty())
               {
                 timers.busy();
 
@@ -1014,9 +1015,9 @@ namespace transport
           << "++ All work items completed at " << boost::posix_time::to_simple_string(now);
 
         // process any remaining aggregations
-        if(aggregation_queue.size() > 0)
+        if(!aggregation_queue.empty())
           {
-            while(aggregation_queue.size() > 0)
+            while(!aggregation_queue.empty())
               {
                 aggregation_queue.front()->aggregate();
                 aggregation_queue.pop_front();

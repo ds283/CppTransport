@@ -106,7 +106,7 @@ namespace transport
 
         //! Initialize a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        void initialize_writer(integration_writer<number>& writer, bool recover_mode = false) override;
+        void initialize_writer(integration_writer<number>& writer, bool recover_mode=false) override;
 
         //! Close an open integration_writer object.
 
@@ -115,7 +115,7 @@ namespace transport
         void close_writer(integration_writer<number>& writer) override;
 
         //! Initialize a new derived_content_writer object.
-        void initialize_writer(derived_content_writer<number>& writer, bool recover_mode = false) override;
+        void initialize_writer(derived_content_writer<number>& writer, bool recover_mode=false) override;
 
         //! Close an open derived_content_writer object.
 
@@ -124,7 +124,9 @@ namespace transport
         void close_writer(derived_content_writer<number>& writer) override;
 
         //! Initialize a new postintegration_writer object.
-        void initialize_writer(postintegration_writer<number>& writer, bool recover_mode = false) override;
+        //! Note: does not set flags for spectral data content, which may or may not be present depending
+        //! on the integration payload that is sourcing this writer
+        void initialize_writer(postintegration_writer<number>& writer, bool recover_mode=false) override;
 
         //! Close an open postintegration_writer object
         void close_writer(postintegration_writer<number>& writer) override;
@@ -506,14 +508,21 @@ namespace transport
         void pull_twopf_time_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                     unsigned int k_serial, std::vector<number>& sample, twopf_type type) override;
 
-        //! Pull a sample of a threepf at fixed k-configuration from a datapipe
+        //! Pull a time sample of a twopf 'spectral index' component at fixed k-configuration from a datapipe
+        void pull_twopf_si_time_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
+                                       unsigned int k_serial, std::vector<number>& sample) override;
+
+        //! Pull a sample of a threepf component at fixed k-configuration from a datapipe
         void pull_threepf_time_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                       unsigned int k_serial, std::vector<number>& sample, threepf_type type) override;
 
         //! Pull a sample of a tensor twopf component at fixed k-configuration from a datapipe
-        void
-        pull_tensor_twopf_time_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
-                                      unsigned int k_serial, std::vector<number>& sample) override;
+        void pull_tensor_twopf_time_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
+                                           unsigned int k_serial, std::vector<number>& sample) override;
+
+        //! Pull a sample of a tensor twopf 'spectral index' component at fixed k-configuration from a datapipe
+        void pull_tensor_twopf_si_time_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
+                                              unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
         void pull_zeta_twopf_time_sample(datapipe <number>* pipe, const derived_data::SQL_query& query,
@@ -543,6 +552,10 @@ namespace transport
         void pull_twopf_kconfig_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                        unsigned int t_serial, std::vector<number>& sample, twopf_type type) override;
 
+        //! Pull a kconfig sample of a twopf 'spectral index' component at fixed time from a datapipe
+        void pull_twopf_si_kconfig_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
+                                          unsigned int t_serial, std::vector<number>& sample) override;
+
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         void pull_threepf_kconfig_sample(datapipe <number>* pipe, unsigned int id,
                                          const derived_data::SQL_query& query,
@@ -553,6 +566,10 @@ namespace transport
         void pull_tensor_twopf_kconfig_sample(datapipe <number>* pipe, unsigned int id,
                                               const derived_data::SQL_query& query,
                                               unsigned int t_serial, std::vector<number>& sample) override;
+
+        //! Pull a kconfig sample of a tensor twopf 'spectral index' component at fixed time from a datapipe
+        void pull_tensor_twopf_si_kconfig_sample(datapipe <number>* pipe, unsigned int id, const derived_data::SQL_query& query,
+                                                 unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
         void pull_zeta_twopf_kconfig_sample(datapipe <number>* pipe, const derived_data::SQL_query& query,

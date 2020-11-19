@@ -52,7 +52,7 @@ namespace transport
         //! type alias for operator position
         using position = derived_data::derived_data_impl::operator_position;
         
-        //! type alais for which index is fixed
+        //! type alias for which index is fixed
         using fixed = derived_data::derived_data_impl::fixed_index;
     
     
@@ -70,7 +70,9 @@ namespace transport
       public:
 
         //! compute the zeta twopf
-        void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, std::vector<number>& gauge_xfm1, bool precomputed=false);
+        void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& twopf_si,
+                        const std::vector<number>& bg, number& zeta_twopf, number& ns,
+                        std::vector<number>& gauge_xfm1, bool precomputed);
 
         //! compute the zeta threepf and reduced bispectrum;
         //! the input three-point function *should already have been shifted* so that it represents
@@ -93,6 +95,12 @@ namespace transport
                    const std::vector<number>& k3_re, const std::vector<number>& k3_im,
                    const std::vector<number>& bg,
                    number& value);
+
+      protected:
+
+        //! internal version of zeta 2pf calculation that does not include calculation of the spectral index
+        //! the gauge transformation is required to be pre-computed
+        number zeta_twopf_no_ns(const std::vector<number>& twopf, const std::vector<number>& bg, std::vector<number>& gauge_xfm1);
 
 
         // INTERNAL API
@@ -149,9 +157,13 @@ namespace transport
 
 
 		template <typename number>
-		void postprocess_delegate<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, std::vector<number>& gauge_xfm, bool precomputed)
+    void
+    postprocess_delegate<number>::zeta_twopf
+      (const std::vector<number>& twopf, const std::vector<number>& twopf_si, const std::vector<number>& bg,
+       number& zeta_twopf, number& ns, std::vector<number>& gauge_xfm, bool precomputed)
 			{
         zeta_twopf = 0.0;
+        number zeta_si = 0.0;
 
         if(!precomputed) this->mdl->compute_gauge_xfm_1(this->parent_task, bg, gauge_xfm);
 
@@ -160,25 +172,56 @@ namespace transport
           {
             for(unsigned int n = 0; n < 2*this->Nfields; ++n)
               {
-                number component = gauge_xfm[m]*gauge_xfm[n] * twopf[this->mdl->flatten(m, n)];
-                zeta_twopf += component;
+                number tpf_term = gauge_xfm[m] * gauge_xfm[n] * twopf[this->mdl->flatten(m, n)];
+                number si_term = gauge_xfm[m] * gauge_xfm[n] * twopf_si[this->mdl->flatten(m, n)];
+
+                zeta_twopf += tpf_term;
+                zeta_si += si_term;
               }
           }
+
+        // the zeta spectral index is given by the ratio
+        // (N_a N_b n^ab) / (N_c N_d Sigma^cd) = (N_a N_b n^ab) / P_zeta.
+        // However, our definition of n^ab gives the spectral index for the raw power spectrum P
+        // rather than the dimensionless power spectrum \cal{P}, so we need to adjust it by a +3 offset.
+        // Then we have another +1 because the scalar spectral index is defined as n_s-1 rather than just n_s
+        ns = 4.0 + zeta_si/zeta_twopf;
 			}
 
 
     template <typename number>
-    void postprocess_delegate<number>::zeta_threepf(const threepf_kconfig& kconfig, double t,
-                                                    const std::vector<number>& threepf,
-                                                    const std::vector<number>& k1_re, const std::vector<number>& k1_im,
-                                                    const std::vector<number>& k2_re, const std::vector<number>& k2_im,
-                                                    const std::vector<number>& k3_re, const std::vector<number>& k3_im,
-                                                    const std::vector<number>& bg,
-                                                    number& zeta_threepf, number& redbsp,
-                                                    std::vector<number>& gauge_xfm1,
-                                                    std::vector<number>& gauge_xfm2_123,
-                                                    std::vector<number>& gauge_xfm2_213,
-                                                    std::vector<number>& gauge_xfm2_312)
+    number
+    postprocess_delegate<number>::zeta_twopf_no_ns
+      (const std::vector<number>& twopf, const std::vector<number>& bg, std::vector<number>& gauge_xfm)
+      {
+        number zeta_twopf = 0.0;
+
+        // compute twopf
+        for(unsigned int m = 0; m < 2*this->Nfields; ++m)
+          {
+            for(unsigned int n = 0; n < 2*this->Nfields; ++n)
+              {
+                number tpf_term = gauge_xfm[m] * gauge_xfm[n] * twopf[this->mdl->flatten(m, n)];
+
+                zeta_twopf += tpf_term;
+              }
+          }
+
+        return zeta_twopf;
+      }
+
+
+    template <typename number>
+    void
+    postprocess_delegate<number>::zeta_threepf
+      (const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
+       const std::vector<number>& k1_re, const std::vector<number>& k1_im,
+       const std::vector<number>& k2_re, const std::vector<number>& k2_im,
+       const std::vector<number>& k3_re, const std::vector<number>& k3_im,
+       const std::vector<number>& bg,
+       number& zeta_threepf, number& redbsp,
+       std::vector<number>& gauge_xfm1,
+       std::vector<number>& gauge_xfm2_123, std::vector<number>& gauge_xfm2_213, std::vector<number>& gauge_xfm2_312)
       {
         zeta_threepf = 0.0;
 
@@ -246,12 +289,12 @@ namespace transport
           }
 
         // compute reduced bispectrum
-        number z_tpf_k1;
-        number z_tpf_k2;
-        number z_tpf_k3;
-        this->zeta_twopf(k1_re, bg, z_tpf_k1, gauge_xfm1, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
-        this->zeta_twopf(k2_re, bg, z_tpf_k2, gauge_xfm1, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
-        this->zeta_twopf(k3_re, bg, z_tpf_k3, gauge_xfm1, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+
+        // internal 'no ns' version of zeta 2pf calculation requires that the gauge transformation is
+        // precomputed
+        number z_tpf_k1 = this->zeta_twopf_no_ns(k1_re, bg, gauge_xfm1);
+        number z_tpf_k2 = this->zeta_twopf_no_ns(k2_re, bg, gauge_xfm1);
+        number z_tpf_k3 = this->zeta_twopf_no_ns(k3_re, bg, gauge_xfm1);
 
         number form_factor = (6.0/5.0) * (z_tpf_k1*z_tpf_k2*k1k2 + z_tpf_k1*z_tpf_k3*k1k3 + z_tpf_k2*z_tpf_k3*k2k3);
         redbsp = zeta_threepf / form_factor;
@@ -282,12 +325,14 @@ namespace transport
 
 
     template <typename number>
-    number postprocess_delegate<number>::compute_shift(double t, unsigned int p, unsigned int q, unsigned int r,
-                                                       double p_comoving, double q_comoving, double r_comoving,
-                                                       const std::vector<number>& p_re, const std::vector<number>& p_im,
-                                                       const std::vector<number>& q_re, const std::vector<number>& q_im,
-                                                       const std::vector<number>& r_re, const std::vector<number>& r_im,
-                                                       const std::vector<number>& bg, position pos)
+    number
+    postprocess_delegate<number>::compute_shift
+      (double t, unsigned int p, unsigned int q, unsigned int r,
+       double p_comoving, double q_comoving, double r_comoving,
+       const std::vector<number>& p_re, const std::vector<number>& p_im,
+       const std::vector<number>& q_re, const std::vector<number>& q_im,
+       const std::vector<number>& r_re, const std::vector<number>& r_im,
+       const std::vector<number>& bg, position pos)
       {
         // p is the index of the momentum insertion
         // q, r are the indices of the remaining insertions

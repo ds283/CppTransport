@@ -49,19 +49,19 @@ namespace transport
         class zeta_twopf_item
 	        {
           public:
-            zeta_twopf_item(unsigned int ts, unsigned int ks, unsigned int ss, number v, unsigned int ti, unsigned int ki)
-              : time_serial(ts),
-                kconfig_serial(ks),
-                source_serial(ss),
-                value(v),
-                time_items(ti),
-                kconfig_items(ki),
-                redbsp(0.0)
+            zeta_twopf_item(unsigned int ts, unsigned int ks, unsigned int ss, number v, number si, unsigned int ti, unsigned int ki)
+              : time_serial{ts},
+                kconfig_serial{ks},
+                source_serial{ss},
+                value{v},
+                spectral_value{si},
+                time_items{ti},
+                kconfig_items{ki}
               {
               }
 
             //! make unique identifier
-            const unsigned long int get_unique() const { return(kconfig_serial*time_items + time_serial); }
+            unsigned long int get_unique() const { return(kconfig_serial*time_items + time_serial); }
 
             //! time serial number for this configuration
             const unsigned int time_serial;
@@ -81,8 +81,8 @@ namespace transport
             //! twopf value
             const number value;
 
-            //! reduced bispectrum not used, but included here to prevent template specialization failure
-            const number redbsp;
+            //! twopf spectral index value (if used; just set to zero if not present)
+            const number spectral_value;
 	        };
 
 

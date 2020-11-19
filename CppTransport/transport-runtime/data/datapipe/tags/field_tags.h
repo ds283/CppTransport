@@ -51,7 +51,18 @@
 namespace transport
 	{
 
-    enum class cf_data_type { cf_twopf_re, cf_twopf_im, cf_threepf_momentum, cf_threepf_Nderiv, cf_tensor_twopf };
+	  //! enum class to select type of correlation function content
+    enum class cf_data_type
+      {
+        cf_twopf_re,
+        cf_twopf_im,
+        cf_twopf_si_re,
+        cf_threepf_momentum,
+        cf_threepf_Nderiv,
+        cf_tensor_twopf,
+        cf_tensor_twopf_si
+      };
+
 
     //! data group tag -- abstract group used to derive background and field tags
     template <typename number>
@@ -62,7 +73,7 @@ namespace transport
 
       public:
 
-        data_tag(datapipe<number>* p)
+        explicit data_tag(datapipe<number>* p)
 	        : pipe(p)
 	        {
             assert(pipe != nullptr);
@@ -136,13 +147,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "background field " << id; return(msg.str()); }
+        std::string name() const override { std::ostringstream msg; msg << "background field " << id; return(msg.str()); }
 
 
         // CLONE
@@ -150,7 +161,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual background_time_data_tag<number>* clone() const override { return new background_time_data_tag<number>(static_cast<const background_time_data_tag<number>&>(*this)); }
+        background_time_data_tag<number>* clone() const override { return new background_time_data_tag<number>(static_cast<const background_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -158,7 +169,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->id*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->id*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -196,13 +207,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override;
+        std::string name() const override;
 
 
         // CLONE
@@ -210,7 +221,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual cf_time_data_tag<number>* clone() const override { return new cf_time_data_tag<number>(static_cast<const cf_time_data_tag<number>&>(*this)); }
+        cf_time_data_tag<number>* clone() const override { return new cf_time_data_tag<number>(static_cast<const cf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -218,7 +229,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kserial*8761 + this->id*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->kserial*8761 + this->id*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -262,13 +273,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override;
+        std::string name() const override;
 
 
         // CLONE
@@ -276,7 +287,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual cf_kconfig_data_tag<number>* clone() const override { return new cf_kconfig_data_tag<number>(static_cast<const cf_kconfig_data_tag<number>&>(*this)); }
+        cf_kconfig_data_tag<number>* clone() const override { return new cf_kconfig_data_tag<number>(static_cast<const cf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -284,17 +295,17 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*8761 + this->id*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((this->tserial*8761 + this->id*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
 
       protected:
 
-        //! type
+        //! correlation function type
         const cf_data_type type;
 
-        //! data id - controls which element id is samples
+        //! data id - controls which element id is sampled
         const unsigned int id;
 
         //! tserial - controls which t serial number is sampled
@@ -325,6 +336,12 @@ namespace transport
                 break;
               }
 
+            case cf_data_type::cf_twopf_si_re:
+              {
+                msg << "real twopf 'spectral index' (time series)";
+                break;
+              }
+
             case cf_data_type::cf_threepf_momentum:
               {
                 msg << "threepf-momentum (time series)";
@@ -340,6 +357,12 @@ namespace transport
             case cf_data_type::cf_tensor_twopf:
               {
                 msg << "tensor twopf (time series)";
+                break;
+              }
+
+            case cf_data_type::cf_tensor_twopf_si:
+              {
+                msg << "tensor twopf 'spectral index' (time series)";
                 break;
               }
 	        }
@@ -368,6 +391,12 @@ namespace transport
                 break;
               }
 
+            case cf_data_type::cf_twopf_si_re:
+              {
+                msg << "real twopf 'spectral index' (kconfig series";
+                break;
+              }
+
             case cf_data_type::cf_threepf_momentum:
               {
                 msg << "threepf-momentum (kconfig series)";
@@ -383,6 +412,12 @@ namespace transport
             case cf_data_type::cf_tensor_twopf:
               {
                 msg << "tensor twopf (kconfig series)";
+                break;
+              }
+
+            case cf_data_type::cf_tensor_twopf_si:
+              {
+                msg << "tensor twopf 'spectral index' (kconfig series)";
                 break;
               }
 	        }
@@ -416,7 +451,8 @@ namespace transport
 	    {
         // check that we are attached to an integration content group
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached))
+          throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         timing_instrument timer(this->pipe->database_timer);
         switch(this->type)
@@ -436,6 +472,21 @@ namespace transport
                 BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
 #endif
                 this->pipe->data_mgr.pull_twopf_time_sample(this->pipe, this->id, query, this->kserial, sample, twopf_type::imag);
+                break;
+              }
+
+            case cf_data_type::cf_twopf_si_re:
+              {
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+                BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf 'spectral index' time sample request for element " << this->id << ", k-configuration " << this->kserial;
+#endif
+
+                // ensure that the attached content group has spectral index data
+                const auto& payload = this->pipe->get_attached_integration_record()->get_payload();
+                if(!payload.has_spectral_data())
+                  throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_CONTENT_NO_SPECTRAL);
+
+                this->pipe->data_mgr.pull_twopf_si_time_sample(this->pipe, this->id, query, this->kserial, sample);
                 break;
               }
 
@@ -463,6 +514,21 @@ namespace transport
                 BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL tensor twopf time sample request for element " << this->id << ", k-configuration " << this->kserial;
 #endif
                 this->pipe->data_mgr.pull_tensor_twopf_time_sample(this->pipe, this->id, query, this->kserial, sample);
+                break;
+              }
+
+            case cf_data_type::cf_tensor_twopf_si:
+              {
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+                BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL tensor twopf 'spectral index' time sample request for element " << this->id << ", k-configuration " << this->kserial;
+#endif
+
+                // ensure that the attached content group has spectral index data
+                const auto& payload = this->pipe->get_attached_integration_record()->get_payload();
+                if(!payload.has_spectral_data())
+                  throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_CONTENT_NO_SPECTRAL);
+
+                this->pipe->data_mgr.pull_tensor_twopf_si_time_sample(this->pipe, this->id, query, this->kserial, sample);
                 break;
               }
           }
@@ -497,6 +563,21 @@ namespace transport
                 break;
               }
 
+            case cf_data_type::cf_twopf_si_re:
+              {
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+                BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf 'spectral index' kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+#endif
+
+                // ensure that the attached content group has spectral index data
+                const auto& payload = this->pipe->get_attached_integration_record()->get_payload();
+                if(!payload.has_spectral_data())
+                  throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_CONTENT_NO_SPECTRAL);
+
+                this->pipe->data_mgr.pull_twopf_si_kconfig_sample(this->pipe, this->id, query, this->tserial, sample);
+                break;
+              }
+
             case cf_data_type::cf_threepf_momentum:
               {
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
@@ -523,6 +604,21 @@ namespace transport
                 this->pipe->data_mgr.pull_tensor_twopf_kconfig_sample(this->pipe, this->id, query, this->tserial, sample);
                 break;
               }
+
+            case cf_data_type::cf_tensor_twopf_si:
+              {
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+                BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL tensor twopf 'spectral index' kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+#endif
+
+                // ensure that the attached content group has spectral index data
+                const auto& payload = this->pipe->get_attached_integration_record()->get_payload();
+                if(!payload.has_spectral_data())
+                  throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_CONTENT_NO_SPECTRAL);
+
+                this->pipe->data_mgr.pull_tensor_twopf_si_kconfig_sample(this->pipe, this->id, query, this->tserial, sample);
+                break;
+              }
           }
 	    }
 
@@ -533,7 +629,7 @@ namespace transport
     template <typename number>
     bool background_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const background_time_data_tag<number>* bg_tag = dynamic_cast<const background_time_data_tag<number>*>(&obj);
+        const auto* bg_tag = dynamic_cast<const background_time_data_tag<number>*>(&obj);
 
         if(bg_tag == nullptr) return(false);
         return(this->id == bg_tag->id);
@@ -543,7 +639,7 @@ namespace transport
     template <typename number>
     bool cf_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const cf_time_data_tag<number>* cf_tag = dynamic_cast<const cf_time_data_tag<number>*>(&obj);
+        const auto* cf_tag = dynamic_cast<const cf_time_data_tag<number>*>(&obj);
 
         if(cf_tag == nullptr) return(false);
         return(this->type == cf_tag->type && this->id == cf_tag->id && this->kserial == cf_tag->kserial);
@@ -553,7 +649,7 @@ namespace transport
     template <typename number>
     bool cf_kconfig_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const cf_kconfig_data_tag<number>* cf_tag = dynamic_cast<const cf_kconfig_data_tag<number>*>(&obj);
+        const auto* cf_tag = dynamic_cast<const cf_kconfig_data_tag<number>*>(&obj);
 
         if(cf_tag == nullptr) return(false);
         return(this->type == cf_tag->type && this->id == cf_tag->id && this->tserial == cf_tag->tserial);

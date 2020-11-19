@@ -299,35 +299,38 @@ namespace transport
         writer.set_data_manager_handle(db);
 
         // set aggregation handlers
+        auto products = writer.get_products();
         switch(writer.get_type())
           {
             case postintegration_task_type::twopf:
               {
-                std::unique_ptr< sqlite3_zeta_twopf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_twopf_writer_aggregate<number> >(*this);
-                std::unique_ptr< sqlite3_zeta_twopf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_twopf_writer_integrity<number> >(*this);
-                std::unique_ptr< sqlite3_zeta_twopf_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_zeta_twopf_writer_finalize<number> >(*this);
+                auto aggregate = std::make_unique< sqlite3_zeta_twopf_writer_aggregate<number> >(*this);
+                auto integrity = std::make_unique< sqlite3_zeta_twopf_writer_integrity<number> >(*this);
+                auto finalize  = std::make_unique< sqlite3_zeta_twopf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
                 writer.set_finalize_handler(std::move(finalize));
 
-                writer.get_products().add_zeta_twopf();
+                products.add_zeta_twopf();
+                // if twopf spectral data is being recorded, this will need to be tagged later
                 break;
               }
 
             case postintegration_task_type::threepf:
               {
-                std::unique_ptr< sqlite3_zeta_threepf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_threepf_writer_aggregate<number> >(*this);
-                std::unique_ptr< sqlite3_zeta_threepf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_threepf_writer_integrity<number> >(*this);
-                std::unique_ptr< sqlite3_zeta_threepf_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_zeta_threepf_writer_finalize<number> >(*this);
+                auto aggregate = std::make_unique< sqlite3_zeta_threepf_writer_aggregate<number> >(*this);
+                auto integrity = std::make_unique< sqlite3_zeta_threepf_writer_integrity<number> >(*this);
+                auto finalize  = std::make_unique< sqlite3_zeta_threepf_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
                 writer.set_finalize_handler(std::move(finalize));
 
-                writer.get_products().add_zeta_twopf();
-                writer.get_products().add_zeta_threepf();
-                writer.get_products().add_zeta_redbsp();
+                products.add_zeta_twopf();
+                // if twopf spectral data is being recorded, this will need to be tagged later
+                products.add_zeta_threepf();
+                products.add_zeta_redbsp();
                 break;
               }
 
@@ -335,9 +338,9 @@ namespace transport
               {
                 const fNL_task<number>& ztk = writer.template get_task< fNL_task<number> >();
 
-                std::unique_ptr< sqlite3_fNL_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_fNL_writer_aggregate<number> >(*this, ztk.get_template());
-                std::unique_ptr< sqlite3_fNL_writer_integrity<number> > integrity = std::make_unique< sqlite3_fNL_writer_integrity<number> >(*this);
-                std::unique_ptr< sqlite3_fNL_writer_finalize<number> >  finalize  = std::make_unique< sqlite3_fNL_writer_finalize<number> >(*this);
+                auto aggregate = std::make_unique< sqlite3_fNL_writer_aggregate<number> >(*this, ztk.get_template());
+                auto integrity = std::make_unique< sqlite3_fNL_writer_integrity<number> >(*this);
+                auto finalize  = std::make_unique< sqlite3_fNL_writer_finalize<number> >(*this);
 
                 writer.set_aggregation_handler(std::move(aggregate));
                 writer.set_integrity_check_handler(std::move(integrity));
@@ -347,25 +350,25 @@ namespace transport
                   {
                     case derived_data::bispectrum_template::local:
                       {
-                        writer.get_products().add_fNL_local();
+                        products.add_fNL_local();
                         break;
                       }
 
                     case derived_data::bispectrum_template::equilateral:
                       {
-                        writer.get_products().add_fNL_equi();
+                        products.add_fNL_equi();
                         break;
                       }
 
                     case derived_data::bispectrum_template::orthogonal:
                       {
-                        writer.get_products().add_fNL_ortho();
+                        products.add_fNL_ortho();
                         break;
                       }
 
                     case derived_data::bispectrum_template::DBI:
                       {
-                        writer.get_products().add_fNL_DBI();
+                        products.add_fNL_DBI();
                         break;
                       }
                   }
@@ -799,6 +802,32 @@ namespace transport
       };
 
 
+    template <typename number>
+    class MakeZeta2pfWriter
+      {
+      public:
+        auto operator()()
+          {
+            return std::bind(
+              &sqlite3_operations::write_zeta_twopf<number>,
+              std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+          }
+      };
+
+
+    template <typename number>
+    class MakeZeta3pfWriter
+      {
+      public:
+        auto operator()()
+          {
+            return std::bind(
+              &sqlite3_operations::write_zeta_threepf<number>,
+              std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+          }
+      };
+
+
     template <typename number, typename Item>
     class MakeCoordinateWriter
       {
@@ -1044,7 +1073,7 @@ namespace transport
         typename zeta_twopf_batcher<number>::writer_group writers{
           [this, lockfile](postintegration_batcher<number>* b) -> transaction_manager
             { sqlite3* h = nullptr; b->get_manager_handle(&h); return this->transaction_factory(h, lockfile); },
-          MakeUnpagedWriter<number, postintegration_batcher<number>, typename items::zeta_twopf_item>()(),
+          MakeZeta2pfWriter<number>()(),
           MakePagedWriter<number, postintegration_batcher<number>, typename items::gauge_xfm1_item>()()
         };
 
@@ -1092,8 +1121,8 @@ namespace transport
         typename zeta_threepf_batcher<number>::writer_group writers{
           [this, lockfile](postintegration_batcher<number>* b) -> transaction_manager
             { sqlite3* h = nullptr; b->get_manager_handle(&h); return this->transaction_factory(h, lockfile); },
-          MakeUnpagedWriter<number, postintegration_batcher<number>, typename items::zeta_twopf_item>()(),
-          MakeUnpagedWriter<number, postintegration_batcher<number>, typename items::zeta_threepf_item>()(),
+          MakeZeta2pfWriter<number>()(),
+          MakeZeta3pfWriter<number>()(),
           MakePagedWriter<number, postintegration_batcher<number>, typename items::gauge_xfm1_item>()(),
           MakePagedWriter<number, postintegration_batcher<number>, typename items::gauge_xfm2_123_item>()(),
           MakePagedWriter<number, postintegration_batcher<number>, typename items::gauge_xfm2_213_item>()(),
@@ -2201,11 +2230,11 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< datapipe<number> > data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                                                                      integration_content_finder<number>& integration_finder,
-                                                                                      postintegration_content_finder<number>& postintegration_finder,
-                                                                                      datapipe_dispatch_function<number>& dispatcher,
-                                                                                      unsigned int worker, bool no_log)
+    std::unique_ptr< datapipe<number> >
+    data_manager_sqlite3<number>::create_datapipe
+      (const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
+       integration_content_finder<number>& integration_finder, postintegration_content_finder<number>& postintegration_finder,
+       datapipe_dispatch_function<number>& dispatcher, unsigned int worker, bool no_log)
       {
         // set up callback API
         typename datapipe<number>::utility_callbacks utilities(integration_finder, postintegration_finder, dispatcher);
@@ -2272,9 +2301,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
-                                                              const derived_data::SQL_query& query,
-                                                              unsigned int k_serial, std::vector<number>& sample, twopf_type type)
+    void
+      data_manager_sqlite3<number>::pull_twopf_time_sample
+        (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int k_serial,
+         std::vector<number>& sample, twopf_type type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2286,15 +2316,15 @@ namespace transport
           {
             case twopf_type::real:
               {
-                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
-                                                                                                                      pipe->get_worker_number(), pipe->get_N_fields());
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(
+                  db, id, query, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
                 break;
               }
 
             case twopf_type::imag:
               {
-                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
-                                                                                                                      pipe->get_worker_number(), pipe->get_N_fields());
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(
+                  db, id, query, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
                 break;
               }
           }
@@ -2302,9 +2332,27 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id,
-                                                                const derived_data::SQL_query& query,
-                                                                unsigned int k_serial, std::vector<number>& sample, threepf_type type)
+    void
+    data_manager_sqlite3<number>::pull_twopf_si_time_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int k_serial,
+       std::vector<number>& sample)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_si_re_item>(
+          db, id, query, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
+      }
+
+
+    template <typename number>
+    void
+    data_manager_sqlite3<number>::pull_threepf_time_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int k_serial,
+       std::vector<number>& sample, threepf_type type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2316,15 +2364,15 @@ namespace transport
           {
             case threepf_type::momentum:
               {
-                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, k_serial, sample,
-                                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(
+                  db, id, query, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
                 break;
               }
 
             case threepf_type::Nderiv:
               {
-                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, k_serial, sample,
-                                                                                                                            pipe->get_worker_number(), pipe->get_N_fields());
+                sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_Nderiv_item>(
+                  db, id, query, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
                 break;
               }
           }
@@ -2332,9 +2380,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
-                                                                     const derived_data::SQL_query& query,
-                                                                     unsigned int k_serial, std::vector<number>& sample)
+    void
+    data_manager_sqlite3<number>::pull_tensor_twopf_time_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int k_serial,
+       std::vector<number>& sample)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2342,14 +2391,16 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, query, k_serial, sample,
-                                                                                                                  pipe->get_worker_number(), pipe->get_N_fields());
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::tensor_twopf_item>(
+          db, id, query, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_twopf_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                                   unsigned int k_serial, std::vector<number>& sample)
+    void
+    data_manager_sqlite3<number>::pull_tensor_twopf_si_time_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int k_serial,
+       std::vector<number>& sample)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2357,14 +2408,15 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, query, k_serial, sample,
-                                                                                                                      pipe->get_worker_number());
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::tensor_twopf_si_item>(
+          db, id, query, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_threepf_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                                     unsigned int k_serial, std::vector<number>& sample)
+    void
+    data_manager_sqlite3<number>::pull_zeta_twopf_time_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int k_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2372,14 +2424,15 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, query, k_serial, sample,
-                                                                                                                        pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_twopf_item>(
+          db, query, k_serial, sample, pipe->get_worker_number());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                                    unsigned int k_serial, std::vector<number>& sample)
+    void
+    data_manager_sqlite3<number>::pull_zeta_threepf_time_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int k_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2387,14 +2440,31 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(db, query, k_serial, sample,
-                                                                                                                       pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_threepf_item>(
+          db, query, k_serial, sample, pipe->get_worker_number());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                            std::vector<number>& sample, derived_data::bispectrum_template type)
+    void
+    data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int k_serial, std::vector<number>& sample)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(
+          db, query, k_serial, sample, pipe->get_worker_number());
+      }
+
+
+    template <typename number>
+    void
+    data_manager_sqlite3<number>::pull_fNL_time_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2407,8 +2477,9 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                           std::vector<number>& sample, derived_data::bispectrum_template type)
+    void
+    data_manager_sqlite3<number>::pull_BT_time_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2421,8 +2492,9 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                           std::vector<number>& sample, derived_data::bispectrum_template type)
+    void
+    data_manager_sqlite3<number>::pull_TT_time_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, std::vector<number>& sample, derived_data::bispectrum_template type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2435,9 +2507,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                                 const derived_data::SQL_query& query,
-                                                                 unsigned int t_serial, std::vector<number>& sample, twopf_type type)
+    void
+    data_manager_sqlite3<number>::pull_twopf_kconfig_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int t_serial,
+       std::vector<number>& sample, twopf_type type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2449,15 +2522,15 @@ namespace transport
           {
             case twopf_type::real:
               {
-                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
-                                                                                                                         pipe->get_worker_number(), pipe->get_N_fields());
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(
+                  db, id, query, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
                 break;
               }
 
             case twopf_type::imag:
               {
-                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
-                                                                                                                         pipe->get_worker_number(), pipe->get_N_fields());
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(
+                  db, id, query, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
                 break;
               }
           }
@@ -2465,9 +2538,27 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                                   const derived_data::SQL_query& query,
-                                                                   unsigned int t_serial, std::vector<number>& sample, threepf_type type)
+    void
+    data_manager_sqlite3<number>::pull_twopf_si_kconfig_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int t_serial,
+       std::vector<number>& sample)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_si_re_item>(
+          db, id, query, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
+      }
+
+
+    template <typename number>
+    void
+    data_manager_sqlite3<number>::pull_threepf_kconfig_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int t_serial,
+       std::vector<number>& sample, threepf_type type)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2479,15 +2570,15 @@ namespace transport
           {
             case threepf_type::momentum:
               {
-                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, t_serial, sample,
-                                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(
+                  db, id, query, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
                 break;
               }
 
             case threepf_type::Nderiv:
               {
-                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, t_serial, sample,
-                                                                                                                               pipe->get_worker_number(), pipe->get_N_fields());
+                sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_Nderiv_item>(
+                  db, id, query, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
                 break;
               }
           }
@@ -2495,9 +2586,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                                        const derived_data::SQL_query& query,
-                                                                        unsigned int t_serial, std::vector<number>& sample)
+    void
+    data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int t_serial,
+       std::vector<number>& sample)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2505,14 +2597,16 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, query, t_serial, sample,
-                                                                                                                     pipe->get_worker_number(), pipe->get_N_fields());
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::tensor_twopf_item>(
+          db, id, query, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                                      unsigned int t_serial, std::vector<number>& sample)
+    void
+    data_manager_sqlite3<number>::pull_tensor_twopf_si_kconfig_sample
+      (datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, unsigned int t_serial,
+       std::vector<number>& sample)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2520,14 +2614,15 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, query, t_serial, sample,
-                                                                                                                         pipe->get_worker_number());
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::tensor_twopf_si_item>(
+          db, id, query, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                                        unsigned int t_serial, std::vector<number>& sample)
+    void
+    data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int t_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2535,14 +2630,15 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, query, t_serial, sample,
-                                                                                                                           pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_twopf_item>(
+          db, query, t_serial, sample, pipe->get_worker_number());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                                       unsigned int t_serial, std::vector<number>& sample)
+    void
+    data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int t_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2550,14 +2646,31 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(db, query, t_serial, sample,
-                                                                                                                          pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(
+          db, query, t_serial, sample, pipe->get_worker_number());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_k_statistics_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
-                                                                std::vector<kconfiguration_statistics>& data)
+    void
+    data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, unsigned int t_serial, std::vector<number>& sample)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(
+          db, query, t_serial, sample, pipe->get_worker_number());
+      }
+
+
+    template <typename number>
+    void
+    data_manager_sqlite3<number>::pull_k_statistics_sample
+      (datapipe<number>* pipe, const derived_data::SQL_query& query, std::vector<kconfiguration_statistics>& data)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2570,7 +2683,8 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path)
+    void
+    data_manager_sqlite3<number>::datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path)
       {
         sqlite3* db = nullptr;
 
@@ -2606,16 +2720,16 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< content_group_record<integration_payload> >
-    data_manager_sqlite3<number>::datapipe_attach_integration_content(datapipe<number>* pipe, integration_content_finder<number>& finder,
-                                                                      const std::string& name, const std::list<std::string>& tags)
+    data_manager_sqlite3<number>::datapipe_attach_integration_content
+      (datapipe<number>* pipe, integration_content_finder<number>& finder, const std::string& name, const std::list<std::string>& tags)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable content group for this task; will throw an exception if no suitable content group can be found
-        std::unique_ptr< content_group_record<integration_payload> > group = finder(name, tags);
+        auto group = finder(name, tags);
 
-        integration_payload& payload = group->get_payload();
+        const auto& payload = group->get_payload();
 
         // get path to the content group data container
         boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();
@@ -2628,16 +2742,17 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< content_group_record<postintegration_payload> >
-    data_manager_sqlite3<number>::datapipe_attach_postintegration_content(datapipe<number>* pipe, postintegration_content_finder<number>& finder,
-                                                                          const std::string& name, const std::list<std::string>& tags)
+    data_manager_sqlite3<number>::datapipe_attach_postintegration_content
+      (datapipe<number>* pipe, postintegration_content_finder<number>& finder, const std::string& name,
+       const std::list<std::string>& tags)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable content group for this task; will throw an exception if no suitable content group can be found
-        std::unique_ptr< content_group_record<postintegration_payload> > group = finder(name, tags);
+        auto group = finder(name, tags);
 
-        postintegration_payload& payload = group->get_payload();
+        const auto& payload = group->get_payload();
 
         // get path to the content group data container
         boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();

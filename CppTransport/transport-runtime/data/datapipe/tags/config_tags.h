@@ -60,7 +60,7 @@ namespace transport
 
       public:
 
-        time_config_tag(datapipe<number>* p)
+        explicit time_config_tag(datapipe<number>* p)
 	        : pipe(p)
 	        {
 	        }
@@ -120,7 +120,7 @@ namespace transport
 
       public:
 
-        twopf_kconfig_tag(datapipe<number>* p)
+        explicit twopf_kconfig_tag(datapipe<number>* p)
 	        : pipe(p)
 	        {
 	        }
@@ -180,7 +180,7 @@ namespace transport
 
       public:
 
-        threepf_kconfig_tag(datapipe<number>* p)
+        explicit threepf_kconfig_tag(datapipe<number>* p)
 	        : pipe(p)
 	        {
 	        }

@@ -399,11 +399,15 @@ namespace transport
 	      //!                       it will be the 3pf k-config serial number, which might generate up to three
 	      //!                       twopf k-configurations
 	      //! \param value          vector representing flattened 2-point correlation function
+        //! \param value_si       vector representing flattened 2-point 'spectral index' correlation function;
+        //!                       this is used only if paired batching is in progress. Otherwise, its value
+        //!                       is ignored and may be arbitrary
 	      //! \param backg          vector representing background field configuration; not used by the integration
 	      //!                       batcher itself, but can be passed to a paired zeta batcher for the purpose
 	      //!                       of computing gauge transformation coefficients
         void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                        const std::vector<number>& value, const std::vector<number>& backg);
+                        const std::vector<number>& value, const std::vector<number>& value_si,
+                        const std::vector<number>& backg);
 
         //! push a sampled twopf 'spectral index' value to the batcher with assigned time and k-config serial numbers;
         //! the background field configuration is needed in case paired batching is being used, in which case
@@ -458,7 +462,8 @@ namespace transport
 
         //! used internally by push_twopf() to push a zeta 2pf value into the paired batcher
         void push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                               const std::vector<number>& twopf, const std::vector<number>& backg);
+                               const std::vector<number>& twopf, const std::vector<number>& twopf_si,
+                               const std::vector<number>& backg);
 
 
         // INTEGRATION MANAGEMENT
@@ -662,15 +667,19 @@ namespace transport
         //!                       twopf task this is just the same as k_serial, but in a threepf task
         //!                       it will be the 3pf k-config serial number, which might generate up to three
         //!                       twopf k-configurations
-        //! \param value           vector representing flattened 2-point correlation function
+        //! \param value          vector representing flattened 2-point correlation function
+        //! \param value_si       vector representing flattened 2-point 'spectral index' correlation function;
+        //!                       this is used only if paired batching is in progress, and only if the
+        //!                       t parameter is twopf_type::real. Otherwise, its value is ignored and may be
+        //!                       arbitrary
         //! \param backg          vector representing background field configuration; not used by the integration
         //!                       batcher itself, but can be passed to a paired zeta batcher for the purpose
         //!                       of computing gauge transformation coefficients
         //! \param t              value of type enum twopf_type specifying whether theis is a real or
         //!                       imaginary part
         void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                        const std::vector<number>& value, const std::vector<number>& backg,
-                        twopf_type t = twopf_type::real);
+                        const std::vector<number>& value, const std::vector<number>& value_si,
+                        const std::vector<number>& backg, twopf_type t);
 
         //! push a sampled twopf 'spectral index' value to the batcher with assigned time and k-config serial numbers;
         //! the background field configuration is needed in case paired batching is being used, in which case
@@ -769,7 +778,8 @@ namespace transport
 
         //! used internally by push_twopf() to push a zeta 2pf value into the paired batcher
         void push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                               const std::vector<number>& twopf, const std::vector<number>& backg);
+                               const std::vector<number>& twopf, const std::vector<number>& twopf_si,
+                               const std::vector<number>& backg);
 
         //! used internally by push_threepff() to push a zeta 3pf value into the paired batcher
         void push_paired_threepf(unsigned int time_serial, double t,
@@ -1051,10 +1061,11 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    twopf_batcher<number>::twopf_batcher(size_t cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
-                                         const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
-                                         std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
-                                         handle_type h, unsigned int wn, unsigned int wg)
+    twopf_batcher<number>::twopf_batcher
+      (size_t cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
+       const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
+       std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
+       handle_type h, unsigned int wn, unsigned int wg)
 	    : integration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
@@ -1069,37 +1080,43 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                           const std::vector<number>& value, const std::vector<number>& backg)
+    void twopf_batcher<number>::push_twopf
+      (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+       const std::vector<number>& value, const std::vector<number>& value_si, const std::vector<number>& backg)
 	    {
         this->twopf_batch.emplace_back(
           std::make_unique<typename integration_items<number>::twopf_re_item>(
             time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
-        if(this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, value, backg);
+        if(this->paired_batcher != nullptr)
+          this->push_paired_twopf(time_serial, k_serial, source_serial, value, value_si, backg);
 
         this->check_for_flush();
 	    }
 
 
     template <typename number>
-    void twopf_batcher<number>::push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                                  const std::vector<number>& twopf, const std::vector<number>& backg)
+    void
+    twopf_batcher<number>::push_paired_twopf
+    (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+     const std::vector<number>& twopf, const std::vector<number>& twopf_si, const std::vector<number>& backg)
       {
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
 
         number zeta_twopf = 0.0;
+        number ns = 0.0;
 
-        this->compute_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
-        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
+        this->compute_agent.zeta_twopf(twopf, twopf_si, backg, zeta_twopf, ns, this->gauge_xfm1, false);
+        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, ns, source_serial);
         this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, this->gauge_xfm1, source_serial);
       }
 
 
     template <typename number>
     void
-    twopf_batcher<number>::push_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                         const std::vector<number>& value, const std::vector<number>& backg)
+    twopf_batcher<number>::push_twopf_si
+      (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+       const std::vector<number>& value, const std::vector<number>& backg)
       {
         this->twopf_si_batch.emplace_back(
           std::make_unique<typename integration_items<number>::twopf_si_re_item>(
@@ -1111,9 +1128,8 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial,
-                                                  unsigned int source_serial,
-                                                  const std::vector<number>& value)
+    void twopf_batcher<number>::push_tensor_twopf
+      (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& value)
 	    {
         this->tensor_twopf_batch.emplace_back(
           std::make_unique<typename integration_items<number>::tensor_twopf_item>(
@@ -1123,8 +1139,8 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial,
-                                                     unsigned int source_serial, const std::vector<number>& value)
+    void twopf_batcher<number>::push_tensor_twopf_si
+      (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& value)
       {
         this->tensor_twopf_si_batch.emplace_back(
           std::make_unique<typename integration_items<number>::tensor_twopf_si_item>(
@@ -1250,8 +1266,10 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
-                                                           unsigned int kserial, size_t steps, unsigned int refinement)
+    void
+    twopf_batcher<number>::report_integration_success
+      (boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial,
+       size_t steps, unsigned int refinement)
       {
         this->integration_batcher<number>::report_integration_success(integration, batching, kserial, steps, refinement);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
@@ -1271,10 +1289,11 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    threepf_batcher<number>::threepf_batcher(size_t cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
-                                             const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
-                                             std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
-                                             handle_type h, unsigned int wn, unsigned int wg)
+    threepf_batcher<number>::threepf_batcher
+      (size_t cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
+       const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
+       std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
+       handle_type h, unsigned int wn, unsigned int wg)
 	    : integration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
@@ -1293,8 +1312,11 @@ namespace transport
 
 
     template <typename number>
-    void threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                             const std::vector<number>& value, const std::vector<number>& backg, twopf_type t)
+    void
+    threepf_batcher<number>::push_twopf
+      (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+       const std::vector<number>& value, const std::vector<number>& value_si, const std::vector<number>& backg,
+       twopf_type t)
 	    {
         switch(t)
           {
@@ -1317,7 +1339,7 @@ namespace transport
 
         if(t == twopf_type::real && this->paired_batcher != nullptr)
           {
-            this->push_paired_twopf(time_serial, k_serial, source_serial, value, backg);
+            this->push_paired_twopf(time_serial, k_serial, source_serial, value, value_si, backg);
           }
 
         this->check_for_flush();
@@ -1325,16 +1347,19 @@ namespace transport
 
 
     template <typename number>
-    void threepf_batcher<number>::push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                                    const std::vector<number>& twopf, const std::vector<number>& backg)
+    void
+    threepf_batcher<number>::push_paired_twopf
+      (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+       const std::vector<number>& twopf, const std::vector<number>& twopf_si, const std::vector<number>& backg)
       {
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
 
         number zeta_twopf = 0.0;
+        number ns = 0.0;
 
-        this->compute_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
-        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
+        this->compute_agent.zeta_twopf(twopf, twopf_si, backg, zeta_twopf, ns, this->gauge_xfm1, false);
+        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, ns, source_serial);
         this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, this->gauge_xfm1, source_serial);
       }
 
@@ -1463,7 +1488,8 @@ namespace transport
           + (6 * sizeof(unsigned int) + threepf_size) * this->threepf_Nderiv_batch.size()
           + (2 * sizeof(unsigned int) + sizeof(size_t) + 2 * timing_data_size) * this->stats_batch.size()
           + (sizeof(unsigned int) + backg_size) * this->ics_batch.size()
-          + (sizeof(unsigned int) + backg_size) * this->kt_ics_batch.size());
+          + (sizeof(unsigned int) + backg_size) * this->kt_ics_batch.size()
+        );
 	    }
 
 

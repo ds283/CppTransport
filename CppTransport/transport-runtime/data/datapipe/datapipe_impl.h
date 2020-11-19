@@ -27,6 +27,8 @@
 #define CPPTRANSPORT_DATAPIPE_IMPL_H
 
 
+#include <utility>
+
 #include "transport-runtime/data/datapipe/datapipe_decl.h"
 
 
@@ -37,10 +39,10 @@ namespace transport
 
 
     template <typename number>
-    datapipe<number>::datapipe(size_t cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
+    datapipe<number>::datapipe(size_t cap, boost::filesystem::path  lp, boost::filesystem::path  tp, unsigned int w,
                                data_manager<number>& dm, utility_callbacks& u, bool no_log)
-      : logdir_path(lp),
-        temporary_path(tp),
+      : logdir_path(std::move(lp)),
+        temporary_path(std::move(tp)),
         worker_number(w),
         utilities(u),
         data_mgr(dm),
@@ -190,7 +192,7 @@ namespace transport
 
 
     template <typename number>
-    bool datapipe<number>::validate_attached(void) const
+    bool datapipe<number>::validate_attached() const
       {
         switch(this->type)
           {
@@ -240,14 +242,16 @@ namespace transport
         if(tk == nullptr) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK);
 
         // work out what sort of content group we are trying to attach
-        integration_task<number>* itk     = nullptr;
+        integration_task<number>* itk = nullptr;
         postintegration_task<number>* ptk = nullptr;
 
         if((itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)    // trying to attach to an integration content group
           {
             // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
-            this->attached_integration_group = this->data_mgr.datapipe_attach_integration_content(this, this->utilities.integration_finder, tk->get_name(), tags);
-            this->type                       = attachment_type::integration_attached;
+            this->attached_integration_group =
+              this->data_mgr.datapipe_attach_integration_content(
+                this, this->utilities.integration_finder, tk->get_name(), tags);
+            this->type = attachment_type::integration_attached;
 
             // remember number of fields associated with this container
             this->N_fields = itk->get_model()->get_N_fields();
@@ -263,8 +267,10 @@ namespace transport
         else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
           {
             // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
-            this->attached_postintegration_group = this->data_mgr.datapipe_attach_postintegration_content(this, this->utilities.postintegration_finder, tk->get_name(), tags);
-            this->type                           = attachment_type::postintegration_attached;
+            this->attached_postintegration_group =
+              this->data_mgr.datapipe_attach_postintegration_content(
+                this, this->utilities.postintegration_finder, tk->get_name(), tags);
+            this->type = attachment_type::postintegration_attached;
 
             this->N_fields = 0;
 

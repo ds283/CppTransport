@@ -59,7 +59,7 @@ namespace transport
         // This sort step is important -- it dramatically improves SQLite performance
 
 		    //! Zeta 2pf writer function
-		    using zeta_twopf_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)>;
+		    using zeta_twopf_writer = std::function<void(transaction_manager&,postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)>;
 
 		    //! Zeta 3pf writer function
 		    using zeta_threepf_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_threepf_item> >&)>;
@@ -228,9 +228,11 @@ namespace transport
       public:
 
         //! batch twopf value
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial=0);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, number zeta_twopf_si,
+                        unsigned int source_serial=0);
 
-        void push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial=0);
+        void push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1,
+                             unsigned int source_serial=0);
 
         //! unbatch a k-configuration serial number
         void unbatch(unsigned int source_serial);
@@ -336,17 +338,23 @@ namespace transport
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial=0);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, number zeta_twopf_si,
+                        unsigned int source_serial=0);
 
-        void push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, unsigned int source_serial=0);
+        void push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp,
+                          unsigned int source_serial=0);
 
-        void push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial=0);
+        void push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1,
+                             unsigned int source_serial=0);
 
-        void push_gauge_xfm2_123(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial=0);
+        void push_gauge_xfm2_123(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2,
+                                 unsigned int source_serial=0);
 
-        void push_gauge_xfm2_213(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial=0);
+        void push_gauge_xfm2_213(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2,
+                                 unsigned int source_serial=0);
 
-        void push_gauge_xfm2_312(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial=0);
+        void push_gauge_xfm2_312(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2,
+                                 unsigned int source_serial=0);
 
         //! unbatch a k-configuration serial number
         void unbatch(unsigned int source_serial);
@@ -577,17 +585,25 @@ namespace transport
 
 
     template <typename number>
-    void zeta_twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial)
+    void
+    zeta_twopf_batcher<number>::push_twopf
+      (unsigned int time_serial, unsigned int k_serial, number zeta_twopf, number zeta_twopf_si, unsigned int source_serial)
 	    {
-        this->twopf_batch.emplace_back(std::make_unique<typename postintegration_items<number>::zeta_twopf_item>(time_serial, k_serial, source_serial, zeta_twopf, this->time_db_size, this->kconfig_db_size));
+        this->twopf_batch.emplace_back(
+          std::make_unique<typename postintegration_items<number>::zeta_twopf_item>(
+            time_serial, k_serial, source_serial, zeta_twopf, zeta_twopf_si, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
 
     template <typename number>
-    void zeta_twopf_batcher<number>::push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
+    void
+    zeta_twopf_batcher<number>::push_gauge_xfm1
+      (unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
       {
-        this->gauge_xfm1_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size, this->Nfields));
+        this->gauge_xfm1_batch.emplace_back(
+          std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(
+            time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
@@ -595,8 +611,13 @@ namespace transport
     template <typename number>
     size_t zeta_twopf_batcher<number>::storage() const
 	    {
-        return((3*sizeof(unsigned int) + 2*sizeof(number))*this->twopf_batch.size()
-          + (3*sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->gauge_xfm1_batch.size());
+        const auto twopf_size = 3 * sizeof(number);
+        const auto gauge_xfm1_size = 2 * this->Nfields * sizeof(number);
+
+        return (
+          (5 * sizeof(unsigned int) + twopf_size) * this->twopf_batch.size()
+          + (6 * sizeof(unsigned int) + gauge_xfm1_size) * this->gauge_xfm1_batch.size()
+        );
 	    }
 
 
@@ -638,13 +659,15 @@ namespace transport
     template <typename number>
     void zeta_twopf_batcher<number>::unbatch(unsigned int source_serial)
       {
-        this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
-                                               UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
-                                this->twopf_batch.end());
+        this->twopf_batch.erase(
+          std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
+                         UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
+          this->twopf_batch.end());
 
-        this->gauge_xfm1_batch.erase(std::remove_if(this->gauge_xfm1_batch.begin(), this->gauge_xfm1_batch.end(),
-                                                    UnbatchPredicate<typename postintegration_items<number>::gauge_xfm1_item>(source_serial)),
-                                     this->gauge_xfm1_batch.end());
+        this->gauge_xfm1_batch.erase(
+          std::remove_if(this->gauge_xfm1_batch.begin(), this->gauge_xfm1_batch.end(),
+                         UnbatchPredicate<typename postintegration_items<number>::gauge_xfm1_item>(source_serial)),
+          this->gauge_xfm1_batch.end());
       }
 
 
@@ -666,61 +689,92 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial)
+    void
+    zeta_threepf_batcher<number>::push_twopf
+      (unsigned int time_serial, unsigned int k_serial, number zeta_twopf, number zeta_twopf_si, unsigned int source_serial)
 	    {
-        this->twopf_batch.emplace_back(std::make_unique<typename postintegration_items<number>::zeta_twopf_item>(time_serial, k_serial, source_serial, zeta_twopf, this->time_db_size, this->kconfig_db_size));
+        this->twopf_batch.emplace_back(
+          std::make_unique<typename postintegration_items<number>::zeta_twopf_item>(
+            time_serial, k_serial, source_serial, zeta_twopf, zeta_twopf_si, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, unsigned int source_serial)
+    void
+    zeta_threepf_batcher<number>::push_threepf
+      (unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, unsigned int source_serial)
 	    {
-        this->threepf_batch.emplace_back(std::make_unique<typename postintegration_items<number>::zeta_threepf_item>(time_serial, k_serial, source_serial, zeta_threepf, redbsp, this->time_db_size, this->kconfig_db_size));
+        this->threepf_batch.emplace_back(
+          std::make_unique<typename postintegration_items<number>::zeta_threepf_item>(
+            time_serial, k_serial, source_serial, zeta_threepf, redbsp, this->time_db_size, this->kconfig_db_size));
         this->check_for_flush();
 	    }
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
+    void
+    zeta_threepf_batcher<number>::push_gauge_xfm1
+      (unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
       {
-        this->gauge_xfm1_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size, this->Nfields));
+        this->gauge_xfm1_batch.emplace_back(
+          std::make_unique<typename postintegration_items<number>::gauge_xfm1_item>(
+            time_serial, k_serial, source_serial, gauge_xfm1, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_gauge_xfm2_123(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
+    void
+    zeta_threepf_batcher<number>::push_gauge_xfm2_123
+      (unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_123_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_123_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
+        this->gauge_xfm2_123_batch.emplace_back(
+          std::make_unique<typename postintegration_items<number>::gauge_xfm2_123_item>(
+            time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_gauge_xfm2_213(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
+    void
+    zeta_threepf_batcher<number>::push_gauge_xfm2_213
+      (unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_213_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_213_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
+        this->gauge_xfm2_213_batch.emplace_back(
+          std::make_unique<typename postintegration_items<number>::gauge_xfm2_213_item>(
+            time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_gauge_xfm2_312(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
+    void
+    zeta_threepf_batcher<number>::push_gauge_xfm2_312
+      (unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
       {
-        this->gauge_xfm2_312_batch.emplace_back(std::make_unique<typename postintegration_items<number>::gauge_xfm2_312_item>(time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
+        this->gauge_xfm2_312_batch.emplace_back(
+          std::make_unique<typename postintegration_items<number>::gauge_xfm2_312_item>(
+            time_serial, k_serial, source_serial, gauge_xfm2, this->time_db_size, this->kconfig_db_size, this->Nfields));
         this->check_for_flush();
       }
 
     template <typename number>
     size_t zeta_threepf_batcher<number>::storage() const
 	    {
-        return((2*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size()
-	        + (3*sizeof(unsigned int) + 3*sizeof(number))*this->threepf_batch.size()
-          + (3*sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->gauge_xfm1_batch.size()
-          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->gauge_xfm2_123_batch.size()
-          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->gauge_xfm2_213_batch.size()
-          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->gauge_xfm2_312_batch.size());
+        const auto twopf_size = 3 * sizeof(number);
+        const auto threepf_size = 2 * sizeof(number);
+        const auto gauge_xfm1_size = 2 * this->Nfields * sizeof(number);
+        const auto gauge_xfm2_size = 2 * this->Nfields * 2 * this->Nfields * sizeof(number);
+
+        return (
+          (5 * sizeof(unsigned int) + twopf_size) * this->twopf_batch.size()
+          + (5 * sizeof(unsigned int) + threepf_size) * this->threepf_batch.size()
+          + (6 * sizeof(unsigned int) + gauge_xfm1_size) * this->gauge_xfm1_batch.size()
+          + (6 * sizeof(unsigned int) + gauge_xfm2_size) * this->gauge_xfm2_123_batch.size()
+          + (6 * sizeof(unsigned int) + gauge_xfm2_size) * this->gauge_xfm2_213_batch.size()
+          + (6 * sizeof(unsigned int) + gauge_xfm2_size) * this->gauge_xfm2_312_batch.size()
+        );
 	    }
 
 
@@ -779,29 +833,35 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::unbatch(unsigned int source_serial)
       {
-        this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
-                                               UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
-                                this->twopf_batch.end());
+        this->twopf_batch.erase(
+          std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
+                         UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
+          this->twopf_batch.end());
 
-        this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
-                                                 UnbatchPredicate<typename postintegration_items<number>::zeta_threepf_item>(source_serial)),
-                                this->threepf_batch.end());
+        this->threepf_batch.erase(
+          std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
+                         UnbatchPredicate<typename postintegration_items<number>::zeta_threepf_item>(source_serial)),
+          this->threepf_batch.end());
 
-        this->gauge_xfm1_batch.erase(std::remove_if(this->gauge_xfm1_batch.begin(), this->gauge_xfm1_batch.end(),
-                                                    UnbatchPredicate<typename postintegration_items<number>::gauge_xfm1_item>(source_serial)),
-                                     this->gauge_xfm1_batch.end());
+        this->gauge_xfm1_batch.erase(
+          std::remove_if(this->gauge_xfm1_batch.begin(), this->gauge_xfm1_batch.end(),
+                         UnbatchPredicate<typename postintegration_items<number>::gauge_xfm1_item>(source_serial)),
+          this->gauge_xfm1_batch.end());
 
-        this->gauge_xfm2_123_batch.erase(std::remove_if(this->gauge_xfm2_123_batch.begin(), this->gauge_xfm2_123_batch.end(),
-                                                        UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_123_item>(source_serial)),
-                                         this->gauge_xfm2_123_batch.end());
+        this->gauge_xfm2_123_batch.erase(
+          std::remove_if(this->gauge_xfm2_123_batch.begin(), this->gauge_xfm2_123_batch.end(),
+                         UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_123_item>(source_serial)),
+          this->gauge_xfm2_123_batch.end());
 
-        this->gauge_xfm2_213_batch.erase(std::remove_if(this->gauge_xfm2_213_batch.begin(), this->gauge_xfm2_213_batch.end(),
-                                                        UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_213_item>(source_serial)),
-                                         this->gauge_xfm2_213_batch.end());
+        this->gauge_xfm2_213_batch.erase(
+          std::remove_if(this->gauge_xfm2_213_batch.begin(), this->gauge_xfm2_213_batch.end(),
+                         UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_213_item>(source_serial)),
+          this->gauge_xfm2_213_batch.end());
 
-        this->gauge_xfm2_312_batch.erase(std::remove_if(this->gauge_xfm2_312_batch.begin(), this->gauge_xfm2_312_batch.end(),
-                                                        UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_312_item>(source_serial)),
-                                         this->gauge_xfm2_312_batch.end());
+        this->gauge_xfm2_312_batch.erase(
+          std::remove_if(this->gauge_xfm2_312_batch.begin(), this->gauge_xfm2_312_batch.end(),
+                         UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_312_item>(source_serial)),
+          this->gauge_xfm2_312_batch.end());
       }
 
 
@@ -849,7 +909,8 @@ namespace transport
     template <typename number>
     size_t fNL_batcher<number>::storage() const
 	    {
-        return((2*sizeof(unsigned int) + sizeof(number))*this->fNL_batch.size());
+        const auto fNL_size = 3 * sizeof(number);
+        return((1 * sizeof(unsigned int) + fNL_size) * this->fNL_batch.size());
 	    }
 
 

@@ -87,6 +87,7 @@ namespace transport
         std::string             parent_group;
         bool                    is_seeded;
         std::string             seed_group;
+        bool                    has_spectral;
       };
 
 

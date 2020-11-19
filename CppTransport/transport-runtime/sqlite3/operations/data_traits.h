@@ -169,7 +169,7 @@ namespace transport
 				    static std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
 				    static std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_ZETA_TWOPF_COPY); }
             static std::string column_name()           { return("twopf"); }
-            static const bool has_redbsp = false;
+            static std::string ns_column_name()        { return("ns"); }
 					};
 
 
@@ -181,7 +181,7 @@ namespace transport
 				    static std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
 				    static std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_ZETA_THREEPF_COPY); }
             static std::string column_name()           { return("threepf"); }
-            static const bool has_redbsp = true;
+            static std::string redbsp_column_name()    { return("redbsp"); }
 					};
 
 
