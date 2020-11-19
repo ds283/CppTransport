@@ -55,7 +55,7 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::wait_for_tasks(void)
+    void slave_controller<number>::wait_for_tasks()
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
@@ -202,7 +202,7 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::send_worker_data(void)
+    void slave_controller<number>::send_worker_data()
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
@@ -237,7 +237,7 @@ namespace transport
               {
                 case task_type::integration:
                   {
-                    integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
+                    auto* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 
                     assert(int_rec != nullptr);
                     if(int_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -253,17 +253,13 @@ namespace transport
                   }
 
                 case task_type::output:
-                  {
-                    throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
-                  }
-
                 case task_type::postintegration:
                   {
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
               }
           }
-        catch(runtime_exception xe)
+        catch(runtime_exception& xe)
           {
             if(xe.get_exception_code() == exception_type::RECORD_NOT_FOUND)
               {
@@ -445,7 +441,7 @@ namespace transport
                     BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Worker message sent to master | reported at " << boost::posix_time::to_simple_string(now);
 
                     break;
-                  };
+                  }
 
                 case MPI::END_OF_WORK:
                   {
@@ -465,7 +461,7 @@ namespace transport
                     close_msg.wait();
 
                     break;
-                  };
+                  }
 
                 default:
                   {
@@ -504,7 +500,7 @@ namespace transport
 
                 case task_type::output:
                   {
-                    output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
+                    auto* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
 
                     assert(out_rec != nullptr);
                     if(out_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -526,7 +522,7 @@ namespace transport
               }
 
           }
-        catch (runtime_exception xe)
+        catch (runtime_exception& xe)
           {
             if(xe.get_exception_code() == exception_type::RECORD_NOT_FOUND)
               {
@@ -728,7 +724,7 @@ namespace transport
                     this->world.recv(stat.source(), stat.tag());
                     break;
                   }
-              };
+              }
           }
 
       }
@@ -746,16 +742,12 @@ namespace transport
         // extract our task from the database
         try
           {
-            // query a task record with the name we're looking for from the database
-            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name());
+            // lookup task by name from the repository
+            auto record = this->repo->query_task(payload.get_task_name());
 
             switch(record->get_type())
               {
                 case task_type::integration:
-                  {
-                    throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
-                  }
-
                 case task_type::output:
                   {
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
@@ -763,7 +755,7 @@ namespace transport
 
                 case task_type::postintegration:
                   {
-                    postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
+                    auto* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
 
                     assert(pint_rec != nullptr);
                     if(pint_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -779,7 +771,7 @@ namespace transport
                   }
               }
           }
-        catch(runtime_exception xe)
+        catch(runtime_exception& xe)
           {
             if(xe.get_exception_code() == exception_type::RECORD_NOT_FOUND)
               {
@@ -818,7 +810,7 @@ namespace transport
         if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
           {
             // get parent task
-            twopf_task<number>* ptk = dynamic_cast<twopf_task<number>*>(z2pf->get_parent_task());
+            auto* ptk = dynamic_cast<twopf_task<number>*>(z2pf->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -831,19 +823,19 @@ namespace transport
             model<number>* m = ptk->get_model();
 
             // construct a callback for the postintegrator to push new batches to the master
-            std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            auto dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold postintegration output
-            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(z2pf, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher));
+            auto batcher = this->data_mgr->create_temp_zeta_twopf_container(z2pf, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher));
 
             // is this 2pf task paired?
             if(z2pf->is_paired())
               {
                 // also need a callback for the paired integrator
-                std::unique_ptr< slave_container_dispatch<number> > i_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+                auto i_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
                 // construct a batcher to hold integration output
-                twopf_batcher<number> i_batcher = this->data_mgr->create_temp_twopf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), payload.get_paired_workgroup_number(), m, std::move(i_dispatcher));
+                auto i_batcher = this->data_mgr->create_temp_twopf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), payload.get_paired_workgroup_number(), m, std::move(i_dispatcher));
 
                 // pair batchers
                 i_batcher.pair(&batcher);
@@ -868,7 +860,7 @@ namespace transport
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
           {
             // get parent task
-            threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
+            auto* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -881,15 +873,15 @@ namespace transport
             model<number>* m = ptk->get_model();
 
             // construct a callback for the integrator to push new batches to the master
-            std::unique_ptr< slave_container_dispatch<number> > p_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            auto p_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(z3pf, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(p_dispatcher));
+            auto batcher = this->data_mgr->create_temp_zeta_threepf_container(z3pf, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(p_dispatcher));
 
             if(z3pf->is_paired())
               {
                 // also need a callback for the paired integrator
-                std::unique_ptr< slave_container_dispatch<number> > i_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+                auto i_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
                 // construct a batcher to hold integration output
                 threepf_batcher<number> i_batcher = this->data_mgr->create_temp_threepf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), payload.get_paired_workgroup_number(), m, std::move(i_dispatcher));
@@ -917,7 +909,7 @@ namespace transport
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
           {
             // get parent task
-            zeta_threepf_task<number>* ptk = dynamic_cast<zeta_threepf_task<number>*>(zfNL->get_parent_task());
+            auto* ptk = dynamic_cast<zeta_threepf_task<number>*>(zfNL->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -928,7 +920,7 @@ namespace transport
               }
 
             // get parent task
-            threepf_task<number>* pptk = dynamic_cast<threepf_task<number>*>(ptk->get_parent_task());
+            auto* pptk = dynamic_cast<threepf_task<number>*>(ptk->get_parent_task());
 
             assert(pptk != nullptr);
             if(pptk == nullptr)
@@ -941,10 +933,10 @@ namespace transport
             model<number>* m = pptk->get_model();
 
             // construct a callback for the integrator to push new batches to the master
-            std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            auto dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(zfNL, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher), zfNL->get_template());
+            auto batcher = this->data_mgr->create_temp_fNL_container(zfNL, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher), zfNL->get_template());
 
             this->schedule_postintegration(zfNL, ptk, payload, batcher);
           }
@@ -981,8 +973,9 @@ namespace transport
         // must survive throughout lifetime of datapipe
         slave_null_dispatch_function<number> dispatcher(*this);
 
-        // acquire a datapipe which we can use to stream content from the databse
-        std::unique_ptr< datapipe<number> > pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank(), true);
+        // acquire a datapipe which we can use to stream content from the database
+        auto pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
+                                                    i_finder, p_finder, dispatcher, this->get_rank(), true);
 
         bool complete = false;
         while(!complete)
@@ -1030,8 +1023,13 @@ namespace transport
                     std::string group;
                     try
                       {
+                        // attach datapipe to the best-match content group for the task ptk and specified tags
                         group = pipe->attach(ptk, payload.get_tags());
+
+                        // use this content group to do whatever work is required
                         this->work_handler.postintegration_handler(tk, ptk, work, batcher, *pipe);
+
+                        // detach datapipe
                         pipe->detach();
                       }
                     catch(runtime_exception& xe)
@@ -1097,7 +1095,7 @@ namespace transport
                     this->world.recv(stat.source(), stat.tag());
                     break;
                   }
-              };
+              }
           }
       }
 

@@ -90,6 +90,7 @@ constexpr auto CPPTRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED = "Data manager
 constexpr auto CPPTRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK = "Data manager error: Attempt to attach datapipe to derivable task of unknown type: task name";
 constexpr auto CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED = "Data manager error: Attempt to use datapipe when no content group is attached";
 constexpr auto CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK = "Data manager error: Null task supplied when attaching datapipe";
+constexpr auto CPPTRANSPORT_DATAMGR_CONTENT_NO_SPECTRAL = "Data manager error: Cannot pull spectral data because the datapipe is attached to an integration payload that does not include it";
 
 constexpr auto CPPTRANSPORT_DATAMGR_CONTAINER_NOT_EXIST = "Data manager error: Could not find requested data container";
 

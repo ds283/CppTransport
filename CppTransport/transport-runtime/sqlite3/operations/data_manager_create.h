@@ -394,7 +394,8 @@ namespace transport
               << "unique_id INTEGER, "
 			        << "tserial   INTEGER, "
 			        << "kserial   INTEGER, "
-			        << "twopf     DOUBLE";
+			        << "twopf     DOUBLE, "
+			        << "ns        DOUBLE";
 
 #ifdef CPPTRANSPORT_STRICT_CONSISTENCY
             create_stmt << ", PRIMARY KEY(unique_id)";

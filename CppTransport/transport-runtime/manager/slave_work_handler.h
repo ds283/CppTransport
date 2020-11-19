@@ -98,10 +98,14 @@ namespace transport
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename device_queue_manager<twopf_kconfig_record>::device_queue queues = work[0];
+        const auto& queues = work[0];
         assert(queues.size() == 1);
 
-        const typename device_queue_manager<twopf_kconfig_record>::device_work_list list = queues[0];
+        const auto& list = queues[0];
+
+        // check that the datapipe is attached to an integration content group
+        if(!pipe.is_integration_attached())
+          throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_SLAVE_NOT_INTEGRATION_CONTENT);
 
 		    // set up query representing time values at which to sample; we just want all of them,
 		    // so we need a condition which always evaluates to TRUE.
@@ -117,10 +121,11 @@ namespace transport
 		    const twopf_kconfig_database& twopf_db = ptk->get_twopf_database();
 
         // set up handle for compute delegate
-        std::unique_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, ptk->get_model()->get_N_fields());
+        auto handle = this->zeta_computer.make_handle(pipe, ptk, tquery, ptk->get_model()->get_N_fields());
 
         // buffer for computed values
-        std::vector<number> zeta_npf;
+        std::vector<number> zeta_tpf;
+        std::vector<number> zeta_ns;
         std::vector< std::vector<number> > gauge_xfm1;
 
         for(unsigned int i = 0; i < list.size(); ++i)
@@ -128,12 +133,12 @@ namespace transport
             boost::timer::cpu_timer timer;
 
 		        // compute zeta twopf
-            this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm1, *(list[i]));
-						assert(zeta_npf.size() == time_values.size());
+            this->zeta_computer.twopf(*handle, zeta_tpf, zeta_ns, gauge_xfm1, *(list[i]));
+						assert(zeta_tpf.size() == time_values.size());
 
 		        for(unsigned int j = 0; j < time_values.size(); ++j)
 			        {
-                batcher.push_twopf(time_values[j].serial, list[i]->serial, zeta_npf[j]);
+                batcher.push_twopf(time_values[j].serial, list[i]->serial, zeta_tpf[j], zeta_ns[j]);
                 batcher.push_gauge_xfm1(time_values[j].serial, list[i]->serial, gauge_xfm1[j]);
 	            }
 
@@ -153,10 +158,14 @@ namespace transport
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename device_queue_manager<threepf_kconfig_record>::device_queue queues = work[0];
+        const auto& queues = work[0];
         assert(queues.size() == 1);
 
-        const typename device_queue_manager<threepf_kconfig_record>::device_work_list list = queues[0];
+        const auto& list = queues[0];
+
+        // check that the datapipe is attached to an integration content group
+        if(!pipe.is_integration_attached())
+          throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_SLAVE_NOT_INTEGRATION_CONTENT);
 
         // set up query representing time values at which to sample
         const derived_data::SQL_time_query tquery("1=1");
@@ -176,6 +185,7 @@ namespace transport
         const auto gauge_xfm2_size = 2*N_fields * 2*N_fields;
 
         std::vector<number> zeta_npf(time_size);
+        std::vector<number> zeta_ns(time_size);
         std::vector<number> redbsp(time_size);
         std::vector< std::vector<number> > gauge_xfm1(time_size);
         std::vector< std::vector<number> > gauge_xfm2_123(time_size);
@@ -223,10 +233,10 @@ namespace transport
                 k1.k_comoving     = list[i]->k1_comoving;
                 k1.k_conventional = list[i]->k1_conventional;
 
-		            this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm1, k1);
+		            this->zeta_computer.twopf(*handle, zeta_npf, zeta_ns, gauge_xfm1, k1);
                 for(unsigned int j = 0; j < time_size; ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k1.serial, zeta_npf[j]);
+                    batcher.push_twopf(time_values[j].serial, k1.serial, zeta_npf[j], zeta_ns[j]);
                     batcher.push_gauge_xfm1(time_values[j].serial, k1.serial, gauge_xfm1[j]);
 	                }
 	            }
@@ -239,10 +249,10 @@ namespace transport
                 k2.k_comoving     = list[i]->k2_comoving;
                 k2.k_conventional = list[i]->k2_conventional;
 
-                this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm1, k2);
+                this->zeta_computer.twopf(*handle, zeta_npf, zeta_ns, gauge_xfm1, k2);
                 for(unsigned int j = 0; j < time_size; ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k2.serial, zeta_npf[j]);
+                    batcher.push_twopf(time_values[j].serial, k2.serial, zeta_npf[j], zeta_ns[j]);
                     batcher.push_gauge_xfm1(time_values[j].serial, k2.serial, gauge_xfm1[j]);
 	                }
 	            }
@@ -255,10 +265,10 @@ namespace transport
                 k3.k_comoving     = list[i]->k3_comoving;
                 k3.k_conventional = list[i]->k3_conventional;
 
-                this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm1, k3);
+                this->zeta_computer.twopf(*handle, zeta_npf, zeta_ns, gauge_xfm1, k3);
                 for(unsigned int j = 0; j < time_size; ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k3.serial, zeta_npf[j]);
+                    batcher.push_twopf(time_values[j].serial, k3.serial, zeta_npf[j], zeta_ns[j]);
                     batcher.push_gauge_xfm1(time_values[j].serial, k3.serial, gauge_xfm1[j]);
 	                }
 	            }
@@ -279,10 +289,14 @@ namespace transport
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename device_queue_manager<threepf_kconfig_record>::device_queue queues = work[0];
+        const auto& queues = work[0];
         assert(queues.size() == 1);
 
-        const typename device_queue_manager<threepf_kconfig_record>::device_work_list list = queues[0];
+        const auto& list = queues[0];
+
+        // check that the datapipe is attached to an postintegration content group
+        if(!pipe.is_postintegration_attached())
+          throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_SLAVE_NOT_POSTINTEGRATION_CONTENT);
 
         boost::timer::cpu_timer timer;
 
@@ -300,7 +314,7 @@ namespace transport
         std::vector<number> TT;
 
 		    // set up handle for compute delegate
-        std::unique_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, tquery, tk->get_template(), list);
+        auto handle = this->fNL_computer.make_handle(pipe, ptk, tquery, tk->get_template(), list);
 
 		    this->fNL_computer.components(*handle, BB, BT, TT);
         assert(BB.size() == time_values.size());

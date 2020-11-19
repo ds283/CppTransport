@@ -62,12 +62,25 @@ namespace transport
 		            //! destructor is default
                 ~handle() = default;
 
+
+                // EXPOSE ATTRIBUTES OF ATTACHED CONTENT GROUP
+
+                //! introspect attached content group
+                const integration_payload& get_payload() const { return this->payload; }
+
+                //! does attached group have spectral data?
+                bool has_spectral_data() const { return this->has_spectral; }
+
+
                 // INTERNAL DATA
 
               protected:
 
                 //! datapipe object
                 datapipe<number>& pipe;
+
+                //! cache reference to repository integration payload record
+                const integration_payload& payload;
 
                 //! model pointer
                 model<number>* mdl;
@@ -86,6 +99,9 @@ namespace transport
 
                 //! number of fields
                 const unsigned int N_fields;
+
+                //! does the payload have spectral data?
+                const bool has_spectral;
 
                 //! cache background evolution
                 std::vector< std::vector<number> > background;
@@ -121,7 +137,8 @@ namespace transport
           public:
 
             //! compute a time series for the zeta two-point function
-            void twopf(handle& h, std::vector<number>& zeta_twopf, std::vector< std::vector<number> >& gauge_xfm1, const twopf_kconfig& k) const;
+            void twopf(handle& h, std::vector<number>& zeta_twopf, std::vector<number>& zeta_ns,
+                       std::vector< std::vector<number> >& gauge_xfm1, const twopf_kconfig& k) const;
 
             //! compute a time series for the zeta three-point function
             void threepf(handle& h, std::vector<number>& zeta_threepf, std::vector<number>& redbsp,
@@ -130,8 +147,11 @@ namespace transport
 
           protected:
 
-            //! compute a time series for the zeta two-point function (don't copy gauge xfms)
-            void twopf(handle& h, std::vector<number>& zeta_twopf, const twopf_kconfig& k) const;
+            //! compute a time series for the zeta two-point function (doesn't copy gauge xfms)
+            void twopf(handle& h, std::vector<number>& zeta_twopf, std::vector<number>& ns, const twopf_kconfig& k) const;
+
+            //! compute a time series for the zeta two-point function, without spectral index data (doesn't copy gauge xfms)
+            void twopf_no_ns(handle& h, std::vector<number>& zeta_twopf, const twopf_kconfig& k) const;
 
           };
 
@@ -141,11 +161,13 @@ namespace transport
 
         template <typename number>
         zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_db_task<number>* t, const SQL_time_query& tq, unsigned int Nf)
-          : pipe(p),
-            tk(t),
-            tquery(tq),
-            t_handle(p.new_time_data_handle(tq)),
-            N_fields(Nf)
+          : pipe{p},
+            payload{p.get_attached_integration_record()->get_payload()},
+            has_spectral{payload.has_spectral_data()},    // payload guaranteed to be constructed due to declaration order
+            tk{t},
+            tquery{tq},
+            t_handle{p.new_time_data_handle(tq)},
+            N_fields{Nf}
           {
             assert(tk != nullptr);
 
@@ -198,28 +220,93 @@ namespace transport
 
 
         template <typename number>
-        void zeta_timeseries_compute<number>::twopf(typename zeta_timeseries_compute<number>::handle& h,
-                                                    std::vector<number>& zeta_twopf, const twopf_kconfig& k) const
+        void zeta_timeseries_compute<number>::twopf
+            (typename zeta_timeseries_compute<number>::handle& h, std::vector<number>& zeta_twopf,
+             std::vector<number>& zeta_ns, const twopf_kconfig& k) const
           {
             unsigned int N_fields = h.N_fields;
 
+            // zero data vectors
             zeta_twopf.clear();
-            zeta_twopf.assign(h.t_axis.size(), 0.0);
+            zeta_ns.clear();
+
+            const auto t_axis_size = h.t_axis.size();
+            zeta_twopf.assign(t_axis_size, 0.0);
+            zeta_ns.assign(t_axis_size, 0.0);
 
             // compute zeta twopf
             for(unsigned int m = 0; m < 2*N_fields; ++m)
               {
                 for(unsigned int n = 0; n < 2*N_fields; ++n)
                   {
-                    cf_time_data_tag<number> tag =
-                                               h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(m,n), k.serial);
+                    // pull twopf data from the datapipe for this (m,n) element
+                    cf_time_data_tag<number> tpf_tag =
+                      h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(m, n), k.serial);
 
                     // pull twopf data for this component; can use a reference to avoid copying
-                    const std::vector<number>& sigma_line = h.t_handle.lookup_tag(tag);
+                    const std::vector<number>& line = h.t_handle.lookup_tag(tpf_tag);
 
-                    for(unsigned int j = 0; j < h.t_axis.size(); ++j)
+                    for(unsigned int j = 0; j < t_axis_size; ++j)
                       {
-                        number component = h.dN[j][m]*h.dN[j][n]*sigma_line[j];
+                        number component = h.dN[j][m] * h.dN[j][n] * line[j];
+                        zeta_twopf[j] += component;
+                      }
+                    
+                    if(h.has_spectral)
+                      {
+                        // pull twopf 'spectral index' data from the datapipe for this (m,n) element
+                        cf_time_data_tag<number> tpf_si_tag =
+                          h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_si_re, h.mdl->flatten(m, n), k.serial);
+                        
+                        const std::vector<number>& si_line = h.t_handle.lookup_tag(tpf_si_tag);
+                        
+                        for(unsigned int j = 0; j < t_axis_size; ++j)
+                          {
+                            number component = h.dN[j][m] * h.dN[j][n] * si_line[j];
+                            zeta_ns[j] += component;
+                          }
+                      }
+                  }
+              }
+            
+            // if recording spectral data, go through and take ratio (N_a N_b n^ab) / (N_a N_b Sigma^ab)
+            if(h.has_spectral)
+              {
+                for(unsigned int j = 0; j < t_axis_size; ++j)
+                  {
+                    zeta_ns[j] = 4.0 + zeta_ns[j] / zeta_twopf[j];
+                  }
+              }
+          }
+
+
+        template <typename number>
+        void zeta_timeseries_compute<number>::twopf_no_ns
+          (typename zeta_timeseries_compute<number>::handle& h, std::vector<number>& zeta_twopf, const twopf_kconfig& k) const
+          {
+            unsigned int N_fields = h.N_fields;
+
+            // zero data vector
+            zeta_twopf.clear();
+
+            const auto t_axis_size = h.t_axis.size();
+            zeta_twopf.assign(t_axis_size, 0.0);
+
+            // compute zeta twopf
+            for(unsigned int m = 0; m < 2*N_fields; ++m)
+              {
+                for(unsigned int n = 0; n < 2*N_fields; ++n)
+                  {
+                    // pull twopf data from the datapipe for this (m,n) element
+                    cf_time_data_tag<number> tpf_tag =
+                      h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(m, n), k.serial);
+
+                    // pull twopf data for this component; can use a reference to avoid copying
+                    const std::vector<number>& line = h.t_handle.lookup_tag(tpf_tag);
+
+                    for(unsigned int j = 0; j < t_axis_size; ++j)
+                      {
+                        number component = h.dN[j][m] * h.dN[j][n] * line[j];
                         zeta_twopf[j] += component;
                       }
                   }
@@ -228,10 +315,12 @@ namespace transport
 
 
         template <typename number>
-        void zeta_timeseries_compute<number>::twopf(typename zeta_timeseries_compute<number>::handle& h,
-                                                    std::vector<number>& zeta_twopf, std::vector< std::vector<number> >& gauge_xfm1, const twopf_kconfig& k) const
+        void
+        zeta_timeseries_compute<number>::twopf
+          (typename zeta_timeseries_compute<number>::handle& h, std::vector<number>& zeta_twopf,
+           std::vector<number>& zeta_ns, std::vector< std::vector<number> >& gauge_xfm1, const twopf_kconfig& k) const
           {
-            this->twopf(h, zeta_twopf, k);
+            this->twopf(h, zeta_twopf, zeta_ns, k);
 
             // copy gauge xfm into return list
             gauge_xfm1 = h.dN;
@@ -239,10 +328,12 @@ namespace transport
 
 
         template <typename number>
-        void zeta_timeseries_compute<number>::threepf(typename zeta_timeseries_compute<number>::handle& h,
-                                                      std::vector<number>& zeta_threepf, std::vector<number>& redbsp,
-                                                      std::vector< std::vector<number> >& gauge_xfm2_123, std::vector< std::vector<number> >& gauge_xfm2_213,
-                                                      std::vector< std::vector<number> >& gauge_xfm2_312, const threepf_kconfig& k) const
+        void
+        zeta_timeseries_compute<number>::threepf
+          (typename zeta_timeseries_compute<number>::handle& h, std::vector<number>& zeta_threepf,
+           std::vector<number>& redbsp, std::vector< std::vector<number> >& gauge_xfm2_123,
+           std::vector< std::vector<number> >& gauge_xfm2_213, std::vector< std::vector<number> >& gauge_xfm2_312,
+           const threepf_kconfig& k) const
           {
             unsigned int N_fields = h.N_fields;
 
@@ -286,7 +377,8 @@ namespace transport
                     for(unsigned int n = 0; n < 2*N_fields; ++n)
                       {
                         // pull threepf data for this component
-                        cf_time_data_tag<number> tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_threepf_Nderiv, h.mdl->flatten(l,m,n), k.serial);
+                        cf_time_data_tag<number> tag =
+                          h.pipe.new_cf_time_data_tag(cf_data_type::cf_threepf_Nderiv, h.mdl->flatten(l,m,n), k.serial);
 
                         const std::vector<number>& threepf_line = h.t_handle.lookup_tag(tag);
 
@@ -311,17 +403,25 @@ namespace transport
                             // the indices are N_lm, N_p, N_q, so the 2pfs we sum over are
                             // sigma_lp(k2)*sigma_mq(k3) etc.
 
-                            cf_time_data_tag<number> k1_re_lp_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(l,p), k.k1_serial);
-                            cf_time_data_tag<number> k1_im_lp_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(l,p), k.k1_serial);
+                            cf_time_data_tag<number> k1_re_lp_tag =
+                              h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(l,p), k.k1_serial);
+                            cf_time_data_tag<number> k1_im_lp_tag =
+                              h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(l,p), k.k1_serial);
 
-                            cf_time_data_tag<number> k2_re_lp_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(l,p), k.k2_serial);
-                            cf_time_data_tag<number> k2_im_lp_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(l,p), k.k2_serial);
+                            cf_time_data_tag<number> k2_re_lp_tag =
+                              h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(l,p), k.k2_serial);
+                            cf_time_data_tag<number> k2_im_lp_tag =
+                              h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(l,p), k.k2_serial);
 
-                            cf_time_data_tag<number> k2_re_mq_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(m,q), k.k2_serial);
-                            cf_time_data_tag<number> k2_im_mq_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(m,q), k.k2_serial);
+                            cf_time_data_tag<number> k2_re_mq_tag =
+                              h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(m,q), k.k2_serial);
+                            cf_time_data_tag<number> k2_im_mq_tag =
+                              h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(m,q), k.k2_serial);
 
-                            cf_time_data_tag<number> k3_re_mq_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(m,q), k.k3_serial);
-                            cf_time_data_tag<number> k3_im_mq_tag = h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(m,q), k.k3_serial);
+                            cf_time_data_tag<number> k3_re_mq_tag =
+                              h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h.mdl->flatten(m,q), k.k3_serial);
+                            cf_time_data_tag<number> k3_im_mq_tag =
+                              h.pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h.mdl->flatten(m,q), k.k3_serial);
 
                             // can only take reference for the last lookup, because previous items may be evicted
                             const std::vector<number>  k1_re_lp = h.t_handle.lookup_tag(k1_re_lp_tag);
@@ -371,9 +471,9 @@ namespace transport
             k3_config.k_comoving     = k.k3_comoving;
             k3_config.k_conventional = k.k3_conventional;
 
-            this->twopf(h, twopf_k1, k1_config);
-            this->twopf(h, twopf_k2, k2_config);
-            this->twopf(h, twopf_k3, k3_config);
+            this->twopf_no_ns(h, twopf_k1, k1_config);
+            this->twopf_no_ns(h, twopf_k2, k2_config);
+            this->twopf_no_ns(h, twopf_k3, k3_config);
 
             // build the reduced bispectrum
             for(unsigned int j = 0; j < h.t_axis.size(); ++j)

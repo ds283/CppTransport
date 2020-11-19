@@ -140,6 +140,7 @@ namespace transport
               << "parent           TEXT, "        // parent integration group, or paired integration group if this is a paired writer
               << "seeded           INTEGER, "
               << "seed_group       TEXT, "
+              << "has_spectral     INTEGER, "
               << "FOREIGN KEY(content_group) REFERENCES " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << "(name), "
               << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << "(name), "
               << "FOREIGN KEY(seed_group) REFERENCES " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE << "(name));";

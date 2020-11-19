@@ -74,13 +74,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "fNL, template =  " <<
+        std::string name() const override { std::ostringstream msg; msg << "fNL, template =  " <<
           template_type_to_string(this->type); return(msg.str()); }
 
 
@@ -89,7 +89,7 @@ namespace transport
       public:
 
         //! copy this object
-        virtual fNL_time_data_tag<number>* clone() const override { return new fNL_time_data_tag<number>(static_cast<const fNL_time_data_tag<number>&>(*this)); }
+        fNL_time_data_tag<number>* clone() const override { return new fNL_time_data_tag<number>(static_cast<const fNL_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -97,7 +97,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -133,13 +133,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "bispectrum.template, template =  " <<
+        std::string name() const override { std::ostringstream msg; msg << "bispectrum.template, template =  " <<
           template_type_to_string(this->type); return(msg.str()); }
 
 
@@ -156,7 +156,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -192,13 +192,13 @@ namespace transport
       public:
 
         //! check for tag equality
-        virtual bool operator==(const data_tag<number>& obj) const override;
+        bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
+        void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
-        virtual std::string name() const override { std::ostringstream msg; msg << "template.template, template =  " <<
+        std::string name() const override { std::ostringstream msg; msg << "template.template, template =  " <<
           template_type_to_string(this->type); return(msg.str()); }
 
 
@@ -215,7 +215,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -282,7 +282,7 @@ namespace transport
     template <typename number>
     bool fNL_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const fNL_time_data_tag<number>* fNL_tag = dynamic_cast<const fNL_time_data_tag<number>*>(&obj);
+        const auto* fNL_tag = dynamic_cast<const fNL_time_data_tag<number>*>(&obj);
 
         if(fNL_tag == nullptr) return(false);
         return(this->type == fNL_tag->type);
@@ -292,7 +292,7 @@ namespace transport
     template <typename number>
     bool BT_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const BT_time_data_tag<number>* BT_tag = dynamic_cast<const BT_time_data_tag<number>*>(&obj);
+        const auto* BT_tag = dynamic_cast<const BT_time_data_tag<number>*>(&obj);
 
         if(BT_tag == nullptr) return(false);
         return(this->type == BT_tag->type);
@@ -302,7 +302,7 @@ namespace transport
     template <typename number>
     bool TT_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
-        const TT_time_data_tag<number>* TT_tag = dynamic_cast<const TT_time_data_tag<number>*>(&obj);
+        const auto* TT_tag = dynamic_cast<const TT_time_data_tag<number>*>(&obj);
 
         if(TT_tag == nullptr) return(false);
         return(this->type == TT_tag->type);

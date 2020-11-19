@@ -60,7 +60,7 @@ namespace transport
 
       public:
 
-        k_statistics_tag(datapipe<number>* p)
+        explicit k_statistics_tag(datapipe<number>* p)
 	        : pipe(p)
 	        {
 	        }

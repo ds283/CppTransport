@@ -49,7 +49,7 @@ namespace transport
       public:
 
         //! constructor captures repository object
-        integration_content_finder(repository<number>& r)
+        explicit integration_content_finder(repository<number>& r)
           : repo(r)
           {
           }
@@ -85,7 +85,7 @@ namespace transport
       public:
 
         //! constructor captures repository object
-        postintegration_content_finder(repository<number>& r)
+        explicit postintegration_content_finder(repository<number>& r)
           : repo(r)
           {
           }
