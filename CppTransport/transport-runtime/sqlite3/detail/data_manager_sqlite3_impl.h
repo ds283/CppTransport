@@ -299,7 +299,7 @@ namespace transport
         writer.set_data_manager_handle(db);
 
         // set aggregation handlers
-        auto products = writer.get_products();
+        auto& products = writer.get_products();
         switch(writer.get_type())
           {
             case postintegration_task_type::twopf:
