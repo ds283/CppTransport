@@ -921,32 +921,60 @@ number $MODEL<number>::make_twopf_si_ic(unsigned int __i, unsigned int __j, doub
 
     $RESOURCE_PARAMETERS{__raw_params}
     $RESOURCE_COORDINATES{__fields}
+    $IF{!fast}
+      $MODEL_compute_dV(__raw_params, __fields, __Mp, __dV);
+      $MODEL_compute_ddV(__raw_params, __fields, __Mp, __ddV);
+      $RESOURCE_DV{__dV}
+      $RESOURCE_DDV{__ddV}
+    $ENDIF
 
     $TEMP_POOL{"const auto $1 = $2;"}
 
     const auto __Hsq = $HUBBLE_SQ;
-//    const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
+    const auto __eps = $EPSILON;
+
+    std::array<number, $NUMBER_FIELDS * $NUMBER_FIELDS> __M;
+    __M[FIELDS_FLATTEN($a, $b)] = $M_TENSOR[ab];
+
+    // __N is number of e-folds outside the horizon
+    // (this expression is only valid to leading order, but if it only appears in NLO terms
+    // that should be OK)
+    const auto __N = - std::log(__k / (__a * std::sqrt(__Hsq)));
 
     number __tpf = 0.0;
 
     if(IS_FIELD(__i) && IS_FIELD(__j))              // field-field correlation function
       {
-        // LEADING-ORDER INITIAL CONDITION
+        // O(a^-2) TERM
         auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
-        __tpf = - __leading / (2.0*__k*__a*__a);
+
+        // O(a^0) TEMR
+        auto __subl = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (2.0 - 4.0*(1.0 + __N)*__eps)
+                      + 3.0*__M[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))];
+
+        __tpf  = - __leading        / (2.0*__k*__a*__a)
+                 - 3.0*__Hsq*__subl / (4.0*__k*__k*__k);
       }
     else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum or momentum-field correlation function
             || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
       {
-        // LEADING-ORDER INITIAL CONDITION
-        auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (-1.0);
+        // O(a^-2) TERM
+        auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (-1.0 + __eps);
+
+        // O(a^2) TERM IS ABSENT
+
         __tpf = - __leading / (2.0*__k*__a*__a);
       }
     else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
       {
-        // LEADING-ORDER INITIAL CONDITION
-        auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
-        __tpf = + __k*__leading / (2.0*__Hsq*__a*__a*__a*__a);
+        // O(a^-4) TERM
+        auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 + 2.0*__eps*__N);
+
+        // O(a^-2) TERM
+        auto __subl = __M[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))];
+
+        __tpf = + __k*__leading / (2.0*__Hsq*__a*__a*__a*__a)
+                + 3.0*__subl / (4.0*__k*__a*__a);
       }
     else
       {
@@ -973,10 +1001,10 @@ number $MODEL<number>::make_twopf_si_ic(unsigned int __i, unsigned int __j, doub
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $TEMP_POOL{"const auto $1 = $2;"}
-
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
+
+        $TEMP_POOL{"const auto $1 = $2;"}
 
         const auto __Hsq = $HUBBLE_SQ;
 
@@ -1022,29 +1050,49 @@ number $MODEL<number>::make_twopf_tensor_si_ic(unsigned int __i, unsigned int __
     const auto __Mp = __task->get_params().get_Mp();
     const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-    $TEMP_POOL{"const auto $1 = $2;"}
-
     $RESOURCE_PARAMETERS{__raw_params}
     $RESOURCE_COORDINATES{__fields}
 
+    $TEMP_POOL{"const auto $1 = $2;"}
+
     const auto __Hsq = $HUBBLE_SQ;
+    const auto __eps = $EPSILON;
+
+    // __N is number of e-folds outside the horizon
+    // (this expression is only valid to leading order, but if it only appears in NLO terms
+    // that should be OK)
+    const auto __N = - std::log(__k / (__a * std::sqrt(__Hsq)));
 
     number __tpf = 0.0;
 
     if(__i == 0 && __j == 0)                                      // h-h correlation function
       {
-        // LEADING-ORDER INITIAL CONDITION
-        __tpf = -1.0 / (__Mp*__Mp*__k*__a*__a);
+        // O(a^-2) TERM
+        auto __leading = 1.0;
+
+        // O(a^0) TEMR
+        auto __subl = (2.0 - 4.0*(1.0 + __N)*__eps);
+
+        __tpf  = - __leading        / (__Mp*__Mp*__k*__a*__a)
+                 - 3.0*__Hsq*__subl / (2.0*__Mp*__Mp*__k*__k*__k);
       }
     else if((__i == 0 && __j == 1) || (__i == 1 && __j == 0))     // h-dh or dh-h correlation function
       {
-        // LEADING ORDER INITIAL CONDITION
-        __tpf = 1.0 / (__Mp*__Mp*__k*__a*__a);
+        // O(a^-2) TERM
+        auto __leading = -1.0 + __eps;
+
+        // O(a^2) TERM IS ABSENT
+
+        __tpf = - __leading / (__Mp*__Mp*__k*__a*__a);
       }
     else if(__i == 1 && __j == 1)                                 // dh-dh correlation function
       {
-        // LEADING ORDER INITIAL CONDITION
-        __tpf = __k / (__Mp*__Mp*__Hsq*__a*__a*__a*__a);
+        // O(a^-4) TERM
+        auto __leading = 1.0 + 2.0*__eps*__N;
+
+        // O(a^-2) TERM IS ABSENT
+
+        __tpf = + __k*__leading / (__Mp*__Mp*__Hsq*__a*__a*__a*__a);
       }
     else
       {
