@@ -124,7 +124,7 @@ namespace cpp
               }
             else if(name == "adams_bashforth_moulton")
               {
-                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::adaptive_adams_bashforth_moulton< 5, "
+                out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::adaptive_adams_bashforth_moulton< 6, "
                     << state_name << ", " << value_type << ", " << state_name << ", " << time_type << ", "
                     << algebra_name << ", " << operations_name
                     << " > >(" << step.get_abserr() << ", " << step.get_relerr() << ")";
