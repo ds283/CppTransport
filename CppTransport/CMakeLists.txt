@@ -858,6 +858,7 @@ SET(TRANSPORT_RUNTIME_DATA_BATCHERS_FILES
   transport-runtime/data/batchers/postintegration_batcher.h
   transport-runtime/data/batchers/postintegration_items.h
   transport-runtime/data/batchers/postprocess_delegate.h
+  transport-runtime/data/batchers/sampling_integration_batcher.h
   )
 
 SET(TRANSPORT_RUNTIME_DATA_DATAPIPE_FILES
@@ -1268,7 +1269,6 @@ SET(TRANSPORT_RUNTIME_TASKS_FILES
   transport-runtime/tasks/task_helper.h
   transport-runtime/tasks/task_types.h
   transport-runtime/tasks/tasks_forward_declare.h
-  transport-runtime/tasks/sampling_integration_batcher.h
   )
 
 SET(TRANSPORT_RUNTIME_SAMPLING_FILES
