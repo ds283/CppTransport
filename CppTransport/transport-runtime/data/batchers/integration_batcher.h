@@ -118,7 +118,7 @@ namespace transport
                             handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
 
         //! move constructor
-        integration_batcher(integration_batcher<number>&&) noexcept = default;
+        integration_batcher(integration_batcher<number>&&) = default;
 
         //! destructor is default
         ~integration_batcher() override = default;
@@ -366,7 +366,7 @@ namespace transport
                       handle_type h, unsigned int wn, unsigned int wg);
 
         //! move constructor
-        twopf_batcher(twopf_batcher<number>&&)  noexcept = default;
+        twopf_batcher(twopf_batcher<number>&&) = default;
 
         //! destructor is default
         virtual ~twopf_batcher() = default;
@@ -623,7 +623,7 @@ namespace transport
                         handle_type h, unsigned int wn, unsigned int wg);
 
         //! move constructor
-        threepf_batcher(threepf_batcher<number>&&)  noexcept = default;
+        threepf_batcher(threepf_batcher<number>&&) = default;
 
         //! destructor is default
         virtual ~threepf_batcher() = default;

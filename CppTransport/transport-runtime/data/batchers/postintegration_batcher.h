@@ -98,7 +98,7 @@ namespace transport
                                 handle_type h, unsigned int w);
 
         //! move constructor
-        postintegration_batcher(postintegration_batcher<number>&&)  noexcept = default;
+        postintegration_batcher(postintegration_batcher<number>&&) = default;
 
         //! destructor is default
         ~postintegration_batcher() override = default;
@@ -217,7 +217,7 @@ namespace transport
                            std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn);
 
         //! move constructor
-        zeta_twopf_batcher(zeta_twopf_batcher<number>&&)  noexcept = default;
+        zeta_twopf_batcher(zeta_twopf_batcher<number>&&) = default;
 
         //! destructor is default
         virtual ~zeta_twopf_batcher() = default;
@@ -328,7 +328,7 @@ namespace transport
                              std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn);
 
         //! move constructor
-        zeta_threepf_batcher(zeta_threepf_batcher<number>&&)  noexcept = default;
+        zeta_threepf_batcher(zeta_threepf_batcher<number>&&) = default;
 
         //! destructor is default
         virtual ~zeta_threepf_batcher() = default;
