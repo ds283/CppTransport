@@ -547,7 +547,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         std::vector<LongDataType> samples_ns;
         std::vector<LongDataType> tens_samples_twpf;
         std::vector<LongDataType> tens_samples_twpf_ns;
-        twopf_sampling_batcher<LongDataType>
+        transport::twopf_sampling_batcher<LongDataType>
           batcher(samples, samples_ns, tens_samples_twpf, tens_samples_twpf_ns, lp, w, model.get(), tk2.get(), g,
                   no_log);
 
@@ -592,7 +592,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           std::vector<LongDataType> eq_tens_ns_samples;
           std::vector<LongDataType> eq_threepf_samples;
           std::vector<LongDataType> eq_redbsp_samples;
-            threepf_sampling_batcher <LongDataType>
+          transport::threepf_sampling_batcher <LongDataType>
               eq_thpf_batcher(eq_twopf_samples, eq_twopf_ns_samples, eq_tens_samples, eq_tens_ns_samples,
                               eq_threepf_samples, eq_redbsp_samples, lp, w, model.get(), tk3e.get(), g, no_log);
 
@@ -631,7 +631,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           std::vector<LongDataType> sq_tens_ns_samples;
           std::vector<LongDataType> sq_threepf_samples;
           std::vector<LongDataType> sq_redbsp_samples;
-            threepf_sampling_batcher <LongDataType>
+          transport::threepf_sampling_batcher <LongDataType>
               sq_thpf_batcher(sq_twopf_samples, sq_twopf_ns_samples, sq_tens_samples, sq_tens_ns_samples,
                               sq_threepf_samples, sq_redbsp_samples, lp, w, model.get(), tk3s.get());
 
@@ -668,7 +668,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           std::vector<LongDataType> fold_tens_ns_samples;
           std::vector<LongDataType> fold_threepf_samples;
           std::vector<LongDataType> fold_redbsp_samples;
-            threepf_sampling_batcher <LongDataType>
+          transport::threepf_sampling_batcher <LongDataType>
               fold_thpf_batcher(fold_twopf_samples, fold_twopf_ns_samples, fold_tens_samples, fold_tens_ns_samples,
                                 fold_threepf_samples, fold_redbsp_samples, lp, w, model.get(), tk3f.get());
 
@@ -829,7 +829,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     status = block->put_val( inflation::twopf_name, "n_s_lin",  static_cast<double>(ns_pivot_linear) );
     status = block->put_val( inflation::twopf_name, "n_t_lin",  static_cast<double>(nt_pivot_linear) );
     status = block->put_val( inflation::twopf_name, "n_s_transport", static_cast<double>(ns_transport_pivot) );
-    status = block->put_val( inflation::twopf_mame, "n_t_transport", static_cast<double>(nt_transport_pivot) );
+    status = block->put_val( inflation::twopf_name, "n_t_transport", static_cast<double>(nt_transport_pivot) );
     status = block->put_val( inflation::twopf_name, "r", static_cast<double>(r_pivot) );
 
     // Use put_val to put the three-point observables (B_equi, fNL_equi) onto the datablock

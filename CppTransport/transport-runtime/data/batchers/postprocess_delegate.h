@@ -72,7 +72,7 @@ namespace transport
         //! compute the zeta twopf
         void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& twopf_si,
                         const std::vector<number>& bg, number& zeta_twopf, number& ns,
-                        std::vector<number>& gauge_xfm1, bool precomputed);
+                        std::vector<number>& gauge_xfm1, bool precomputed=false);
 
         //! compute the zeta threepf and reduced bispectrum;
         //! the input three-point function *should already have been shifted* so that it represents

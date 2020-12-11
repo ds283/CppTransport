@@ -457,7 +457,7 @@ namespace transport
       {
         number zeta_twopf = 0.0;
         number ns = 0.0;
-        this->compute_agent.zeta_twopf(value, value_si, backg, zeta_twopf, ns, this->gauge_xfm1);
+        this->compute_agent.zeta_twopf(value, value_si, backg, zeta_twopf, ns, this->gauge_xfm1, false);
         this->zeta_twopf_data.push_back(zeta_twopf);
         this->zeta_twopf_spectral_data.push_back(ns);
       }
@@ -548,7 +548,7 @@ namespace transport
       {
         number zeta_twopf = 0.0;
         number ns = 0.0;
-        this->compute_agent.zeta_twopf(value, value_si, backg, zeta_twopf, ns, this->gauge_xfm1);
+        this->compute_agent.zeta_twopf(value, value_si, backg, zeta_twopf, ns, this->gauge_xfm1, false);
         this->zeta_twopf_data.push_back(zeta_twopf);
         this->zeta_twopf_spectral_data.push_back(ns);
       }
