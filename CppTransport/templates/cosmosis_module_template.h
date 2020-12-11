@@ -469,9 +469,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         std::vector<LongDataType> pivot_twopf_ns_samples;
         std::vector<LongDataType> tens_pivot_samples;
         std::vector<LongDataType> tens_pivot_ns_samples;
-        twopf_sampling_batcher<LongDataType> pivot_batcher(pivot_twopf_samples, pivot_twopf_ns_samples,
-                                                           tens_pivot_samples, tens_pivot_ns_samples,
-                                                           lp, w, model.get(), tk2_piv.get(), g, no_log);
+        transport::twopf_sampling_batcher<LongDataType>
+          pivot_batcher(pivot_twopf_samples, pivot_twopf_ns_samples, tens_pivot_samples, tens_pivot_ns_samples,
+                        lp, w, model.get(), tk2_piv.get(), g, no_log);
 
         // Integrate the pivot task
         auto db_piv = tk2_piv->get_twopf_database();
@@ -544,11 +544,12 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         //! Big twopf task for CLASS or CAMB
         // Add a 2pf batcher here to collect the data - this needs a vector to collect the zeta-twopf samples.
         std::vector<LongDataType> samples;
-        std::vector<LongDataType> ns_samples;
+        std::vector<LongDataType> samples_ns;
         std::vector<LongDataType> tens_samples_twpf;
         std::vector<LongDataType> tens_samples_twpf_ns;
-        twopf_sampling_batcher<LongDataType> batcher(samples, samples_ns, tens_samples_twpf, tens_samples_twpf_ns,
-                                                     lp, w, model.get(), tk2.get(), g, no_log);
+        twopf_sampling_batcher<LongDataType>
+          batcher(samples, samples_ns, tens_samples_twpf, tens_samples_twpf_ns, lp, w, model.get(), tk2.get(), g,
+                  no_log);
 
         // Integrate all of the twopf samples provided above in the tk2 task
         if(inflation::Debug){std::cout << "Constructing a big two-point function run for CLASS" << std::endl;}
@@ -591,10 +592,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           std::vector<LongDataType> eq_tens_ns_samples;
           std::vector<LongDataType> eq_threepf_samples;
           std::vector<LongDataType> eq_redbsp_samples;
-          threepf_sampling_batcher<LongDataType>  eq_thpf_batcher(eq_twopf_samples, eq_twopf_ns_samples,
-                                                                  eq_tens_samples, eq_tens_ns_samples,
-                                                                  eq_threepf_samples, eq_redbsp_samples,
-                                                                  lp, w, model.get(), tk3e.get(), g, no_log);
+            threepf_sampling_batcher <LongDataType>
+              eq_thpf_batcher(eq_twopf_samples, eq_twopf_ns_samples, eq_tens_samples, eq_tens_ns_samples,
+                              eq_threepf_samples, eq_redbsp_samples, lp, w, model.get(), tk3e.get(), g, no_log);
 
           // Integrate all of the threepf samples provided in the tk3e task
           if(inflation::Debug){std::cout << "Integrating the equilateral three-point funciton" << std::endl;}
@@ -631,10 +631,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           std::vector<LongDataType> sq_tens_ns_samples;
           std::vector<LongDataType> sq_threepf_samples;
           std::vector<LongDataType> sq_redbsp_samples;
-          threepf_sampling_batcher<LongDataType>  sq_thpf_batcher(sq_twopf_samples, sq_twopf_ns_samples,
-                                                                  sq_tens_samples, sq_tens_ns_samples,
-                                                                  sq_threepf_samples, sq_redbsp_samples,
-                                                                  lp, w, model.get(), tk3s.get());
+            threepf_sampling_batcher <LongDataType>
+              sq_thpf_batcher(sq_twopf_samples, sq_twopf_ns_samples, sq_tens_samples, sq_tens_ns_samples,
+                              sq_threepf_samples, sq_redbsp_samples, lp, w, model.get(), tk3s.get());
 
           // Integrate all of the threepf samples provided in the tk3s task
           if(inflation::Debug){std::cout << "Integrating the squeezed three-point function" << std::endl;}
@@ -669,10 +668,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           std::vector<LongDataType> fold_tens_ns_samples;
           std::vector<LongDataType> fold_threepf_samples;
           std::vector<LongDataType> fold_redbsp_samples;
-          threepf_sampling_batcher<LongDataType>  fold_thpf_batcher(fold_twopf_samples, fold_twopf_ns_samples,
-                                                                    fold_tens_samples, fold_tens_ns_samples,
-                                                                    fold_threepf_samples, fold_redbsp_samples,
-                                                                    lp, w, model.get(), tk3f.get());
+            threepf_sampling_batcher <LongDataType>
+              fold_thpf_batcher(fold_twopf_samples, fold_twopf_ns_samples, fold_tens_samples, fold_tens_ns_samples,
+                                fold_threepf_samples, fold_redbsp_samples, lp, w, model.get(), tk3f.get());
 
           // Integrate all of the threepf samples provided in the tk3f task
           if(inflation::Debug){std::cout << "Integrating the folded three-point function" << std::endl;}

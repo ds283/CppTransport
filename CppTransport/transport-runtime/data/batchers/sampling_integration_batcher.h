@@ -283,7 +283,7 @@ namespace transport
                                unsigned int source_serial, const std::vector<number>& value);
 
         void push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                  const std::vector<number>& value)
+                                  const std::vector<number>& value);
 
         // INTERNAL DATA
       private:
@@ -456,7 +456,7 @@ namespace transport
        const std::vector<number>& value, const std::vector<number>& value_si, const std::vector<number>& backg)
       {
         number zeta_twopf = 0.0;
-        number ns = 0.0,
+        number ns = 0.0;
         this->compute_agent.zeta_twopf(value, value_si, backg, zeta_twopf, ns, this->gauge_xfm1);
         this->zeta_twopf_data.push_back(zeta_twopf);
         this->zeta_twopf_spectral_data.push_back(ns);
@@ -491,7 +491,7 @@ namespace transport
     void
     twopf_sampling_batcher<number>::push_tensor_twopf_si
       (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-       const std::vector<number>& value, const std::vector<number>& backg)
+       const std::vector<number>& value)
       {
         // assumes corresponding tensor twopf value has already been emplaced
         number nt = 3.0 + (4.0*value[0]) / this->tensor_twopf_data.back();
@@ -507,7 +507,7 @@ namespace transport
        std::vector<number>& dt_tenspf, std::vector<number>& dt_tenspf_si,
        std::vector<number>& dt_thrpf, std::vector<number>& dt_redbsp,
        const boost::filesystem::path& lp, unsigned int w,
-       model<number>* m, ransport::threepf_task<number>* tk, unsigned int g, bool no_log)
+       model<number>* m, threepf_task<number>* tk, unsigned int g, bool no_log)
       : sampling_integration_batcher<number>(lp, w, m, tk, g, no_log),
         zeta_twopf_data(dt_twopf),
         zeta_twopf_spectral_data(dt_twopf_si),
