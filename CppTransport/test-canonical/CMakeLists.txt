@@ -38,7 +38,7 @@ SET(CPPTRANSPORT_LIBRARIES ${JSONCPP_LIBRARIES} ${SPLINTER_LIBRARIES} ${CMAKE_TH
 
 ADD_CUSTOM_COMMAND(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/axion_core.h ${CMAKE_CURRENT_BINARY_DIR}/axion_mpi.h
-  COMMAND CppTransport --verbose --profile --Wdevelop --Wunroll --no-search-env -I ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
+  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../CppTransport --verbose --profile --Wdevelop --Wunroll --no-search-env -I ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
   DEPENDS axion.model
   DEPENDS defaults.model
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/canonical_mpi.h
