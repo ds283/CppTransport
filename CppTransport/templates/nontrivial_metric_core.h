@@ -1180,7 +1180,7 @@ number $MODEL<number>::make_twopf_si_ic(unsigned int __i, unsigned int __j, doub
         auto __leading = __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))] * (1.0 - __eps);
 
         // O(a^2) TERM (next order)
-        auto __next = __Ginf[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))] * 3.0*__eps
+        auto __next = __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))] * 3.0*__eps
                       - __M[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))] / __Hsq;
 
         __tpf = (__leading
@@ -1192,7 +1192,7 @@ number $MODEL<number>::make_twopf_si_ic(unsigned int __i, unsigned int __j, doub
         auto __leading = __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))];
 
         // O(a^-2) TERM
-        auto __next = __Ginf[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))] * 3.0*__eps
+        auto __next = __Ginv[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))] * 3.0*__eps
                       - __M[FIELDS_FLATTEN(SPECIES(__i),SPECIES(__j))] / __Hsq;
 
         __tpf = (__leading
