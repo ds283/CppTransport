@@ -94,6 +94,8 @@ namespace inflation {
 
     // no. of k samples for CLASS read in from ini file
     int num_k_samples;
+    bool force_powerspec = false;
+    DataType min_k, max_k;
 
     // User-chosen k_pivot scale [Mpc^-1]
     DataType k_pivot_choice;
@@ -197,12 +199,18 @@ static std::unique_ptr< transport::threepf_alphabeta_task<LongDataType> > tk3e;
 static std::unique_ptr< transport::threepf_alphabeta_task<LongDataType> > tk3s;
 static std::unique_ptr< transport::threepf_alphabeta_task<LongDataType> > tk3f;
 
+int SampleNumber = 0;
+
+
 extern "C" {
 
 void * setup(cosmosis::DataBlock * options)
 {
     // Read options from the CosmoSIS configuration ini file, passed via the "options" argument
     options->get_val(inflation::sectionName, "M_P", inflation::M_P);
+    options->get_val(inflation::sectionName, "force_powerspec", inflation::force_powerspec);
+    options->get_val(inflation::sectionName, "min_k", inflation::min_k);
+    options->get_val(inflation::sectionName, "max_k", inflation::max_k);
     options->get_val(inflation::sectionName, "k_samples", inflation::num_k_samples);
     options->get_val(inflation::sectionName, "k_pivot", inflation::k_pivot_choice);
     options->get_val(inflation::sectionName, "ThreepfEqui", inflation::ThreepfEqui);
@@ -227,6 +235,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
     // Record the start time of the module to see how long each run takes.
     auto CppTStartTime = std::chrono::system_clock::now();
+    ++SampleNumber;
 
     // Reset the flags for each new sample
     inflation::no_end_inflate = 0;
@@ -273,30 +282,36 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
     // Pivot task observables
     // Twopf observables
-    DataType k_pivot_cppt;
-    DataType N_pivot_exit;
-    LongDataType A_s_pivot;
-    LongDataType A_t_pivot;
-    LongDataType r_pivot;
-    LongDataType ns_pivot;
-    LongDataType nt_pivot;
-    LongDataType ns_transport_pivot;
-    LongDataType nt_transport_pivot;
-    LongDataType ns_full;
-    LongDataType nt_full;
-    LongDataType ns_pivot_linear;
-    LongDataType nt_pivot_linear;
+    DataType k_pivot_cppt = 0;
+    DataType N_pivot_exit = 0;
+    LongDataType A_s_pivot = 0;
+    LongDataType A_t_pivot = 0;
+    LongDataType r_pivot = 0;
+    LongDataType ns_pivot = 0;
+    LongDataType nt_pivot = 0;
+    LongDataType ns_transport_pivot = 0;
+    LongDataType nt_transport_pivot = 0;
+    LongDataType ns_full = 0;
+    LongDataType nt_full = 0;
+    LongDataType ns_pivot_linear = 0;
+    LongDataType nt_pivot_linear = 0;
+    // epsilon, eta calculation needs to be implemented
+    LongDataType epsilon = 0;
+    LongDataType eta = 0;
     std::vector<LongDataType> r;
 
     // Threepf observables (at pivot scale)
-    LongDataType B_equi_piv;
-    LongDataType fNL_equi_piv;
+    LongDataType B_equi_piv = 0;
+    LongDataType fNL_equi_piv = 0;
 
-    LongDataType B_squ_piv;
-    LongDataType fNL_squ_piv;
+    LongDataType B_squ_piv = 0;
+    LongDataType fNL_squ_piv = 0;
 
-    LongDataType B_fold_piv;
-    LongDataType fNL_fold_piv;
+    LongDataType B_fold_piv = 0;
+    LongDataType fNL_fold_piv = 0;
+
+    DataType gamma = 0;
+    DataType exp_gamma = 0;
 
     const int NumFields = model->get_N_fields();
     std::vector<LongDataType> FieldVals;
@@ -307,11 +322,13 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     // Wavenumber k vectors for passing to CLASS, CAMB or another Boltzmann code
     // Use the pyLogspace function to produce log-spaced values between 10^(-6) & 10^(0) Mpc^(-1) with the number of
     // k samples given in 'num_k_samples' read-in above.
-    std::vector<DataType> Phys_waveno_sample = transport::pyLogspace<DataType> (-6.0, 1.7, inflation::num_k_samples, 10);
+    std::vector<DataType> Phys_waveno_sample = transport::pyLogspace<DataType> (inflation::min_k, inflation::max_k, inflation::num_k_samples, 10);
     std::vector<DataType> k_conventional(Phys_waveno_sample.size());
     // Vectors for storing A_s and A_t before writing them to a temporary file
     std::vector<LongDataType> A_s;
     std::vector<LongDataType> A_t;
+
+    bool DoBig2pf = false;
 
     // From here, we need to enclose the rest of the code in a try-catch statement in order to catch
     // when a particular set of initial conditions fails to integrate or if there is a problem with the
@@ -376,11 +393,12 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
         //! Construct the wave-numbers using a linearity relation.
         // Build CppT normalised wave-numbers by using the linear relation k_phys = gamma * k_cppt and k_cppt[Npre] == 1
-        DataType gamma = spline_match_eq(N_pre);
+        gamma = spline_match_eq(N_pre);
+        exp_gamma = std::exp(gamma);
 
         for (std::size_t i = 0; i != k_conventional.size(); ++i)
         {
-            k_conventional[i] = Phys_waveno_sample[i] / exp(gamma);
+            k_conventional[i] = Phys_waveno_sample[i] / exp_gamma;
         }
 
         // Put these into a transport::aggregate range one-by-one
@@ -394,7 +412,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         }
 
         // Construct a CppT normalised wave-number for the chosen pivot scale using the linearity constant
-        k_pivot_cppt = inflation::k_pivot_choice / std::exp(gamma);
+        k_pivot_cppt = inflation::k_pivot_choice / exp_gamma;
 
         // Use the CppT normalised kpivot value to build a wave-number range for kpivot with some other values to use
         // for finding the spectral indices.
@@ -427,8 +445,19 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         
         // construct a twopf task based on the k values generated above
         if(inflation::Debug){std::cout << "Processing the two-point functions" << std::endl;}
-        tk2 = std::make_unique< transport::twopf_task<LongDataType> > ("$MODEL.twopf", ics, times_sample, ks);
-        tk2->set_adaptive_ics_efolds(4.5);
+
+        if(nEND > 65) { DoBig2pf = true; }
+
+        if(DoBig2pf)
+          {
+            tk2 = std::make_unique< transport::twopf_task<LongDataType> > ("$MODEL.twopf", ics, times_sample, ks);
+            tk2->set_adaptive_ics_efolds(4.5);
+          }
+        else
+          {
+            if(inflation::Debug){std::cout << "The big 2pf task for CLASS has not been processed" << std::endl;}
+          }
+
         // construct a twopf task for the pivot scale
         tk2_piv = std::make_unique< transport::twopf_task<LongDataType> > ("$MODEL.twopf-pivot", ics, times_sample, k_pivot_range);
         tk2_piv->set_adaptive_ics_efolds(4.5);
@@ -465,6 +494,9 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         bool no_log = true;
 
         //! Twopf pivot task
+
+        auto TwopfStart = std::chrono::system_clock::now();
+
         std::vector<LongDataType> pivot_twopf_samples;
         std::vector<LongDataType> pivot_twopf_ns_samples;
         std::vector<LongDataType> tens_pivot_samples;
@@ -483,13 +515,13 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         std::vector<DataType> k_pivots;
         for (std::size_t i = 0; i != k_pivot_range.size(); ++i)
         {
-            k_pivots.push_back(k_pivot_range[i] * std::exp(gamma) );
+            k_pivots.push_back(k_pivot_range[i] * exp_gamma );
         }
 
         // Perform a dispersion check on the spectrum values - throw time_varying_spectrum if they're varying.
-        transport::Dispersion<DataType, LongDataType> twpf_pivot_dispersion(k_pivot_range, times_sample, pivot_twopf_samples);
-
-        if(twpf_pivot_dispersion.dispersion_check() == true) throw time_varying_spectrum();
+//        transport::Dispersion<DataType, LongDataType> twpf_pivot_dispersion(k_pivot_range, times_sample, pivot_twopf_samples);
+//
+//        if(twpf_pivot_dispersion.dispersion_check() == true) throw time_varying_spectrum();
 
         // Extract the A_s & a_t values: put the 15 A_s & A_t values into vectors for finding n_s and n_t with, then
         // take the values at index 7 (centre) to get the pivot scale.
@@ -542,50 +574,59 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         nt_pivot_linear = transport::spec_index_deriv(inflation::k_pivot_choice, k_pivots, A_t_spec, false, 1);
 
         //! Big twopf task for CLASS or CAMB
-        // Add a 2pf batcher here to collect the data - this needs a vector to collect the zeta-twopf samples.
-        std::vector<LongDataType> samples;
-        std::vector<LongDataType> samples_ns;
-        std::vector<LongDataType> tens_samples_twpf;
-        std::vector<LongDataType> tens_samples_twpf_ns;
-        transport::twopf_sampling_batcher<LongDataType>
-          batcher(samples, samples_ns, tens_samples_twpf, tens_samples_twpf_ns, lp, w, model.get(), tk2.get(), g,
-                  no_log);
+        if(DoBig2pf)
+          {
+            // Add a 2pf batcher here to collect the data - this needs a vector to collect the zeta-twopf samples.
+            std::vector<LongDataType> samples;
+            std::vector<LongDataType> samples_ns;
+            std::vector<LongDataType> tens_samples_twpf;
+            std::vector<LongDataType> tens_samples_twpf_ns;
+            transport::twopf_sampling_batcher<LongDataType>
+              batcher(samples, samples_ns, tens_samples_twpf, tens_samples_twpf_ns, lp, w, model.get(), tk2.get(), g,
+                      no_log);
 
-        // Integrate all of the twopf samples provided above in the tk2 task
-        if(inflation::Debug){std::cout << "Constructing a big two-point function run for CLASS" << std::endl;}
-        auto db = tk2->get_twopf_database();
-        for (auto t = db.record_cbegin(); t != db.record_cend(); ++t)
-        {
-            model->twopf_kmode(*t, tk2.get(), batcher, 1);
-        }
+            // Integrate all of the twopf samples provided above in the tk2 task
+            if(inflation::Debug){std::cout << "Constructing a big two-point function run for CLASS" << std::endl;}
+            auto db = tk2->get_twopf_database();
+            for (auto t = db.record_cbegin(); t != db.record_cend(); ++t)
+              {
+                model->twopf_kmode(*t, tk2.get(), batcher, 1);
+              }
 
-        // Perform a dispersion check on the spectrum values - throw time_varying_spectrum if they're varying.
-      transport::Dispersion<DataType, LongDataType> twopf_task_disp(ks, times_sample, samples);
+            // Perform a dispersion check on the spectrum values - throw time_varying_spectrum if they're varying.
+//            transport::Dispersion<DataType, LongDataType> twopf_task_disp(ks, times_sample, samples);
+//
+//            if (twopf_task_disp.dispersion_check() == true)
+//              {
+//                std::cout << "time-varying spectrum" << std::endl;
+//                throw time_varying_spectrum();
+//              }
 
-        if (twopf_task_disp.dispersion_check() == true)
-        {
-            std::cout << "time-varying spectrum" << std::endl;
-            throw time_varying_spectrum();
-        }
+            // find A_s & A_t for each k mode exiting at Nend-10, ..., Nend etc. We take the final time value at Nend to be
+            // the amplitude for the scalar and tensor modes. The tensor-to-scalar ratio r is the ratio of these values.
+            for (std::size_t k = 0; k != k_conventional.size(); ++k)
+              {
+                int index = (times_sample.size() * k) + (times_sample.size() -1);
+                A_s.push_back(samples[index]);
+                A_t.push_back(tens_samples_twpf[index]);
+                r.push_back( tens_samples_twpf[index] / samples[index] );
+              }
 
-        // find A_s & A_t for each k mode exiting at Nend-10, ..., Nend etc. We take the final time value at Nend to be
-        // the amplitude for the scalar and tensor modes. The tensor-to-scalar ratio r is the ratio of these values.
-        for (std::size_t k = 0; k != k_conventional.size(); ++k)
-        {
-            int index = (times_sample.size() * k) + (times_sample.size() -1);
-            A_s.push_back(samples[index]);
-            A_t.push_back(tens_samples_twpf[index]);
-            r.push_back( tens_samples_twpf[index] / samples[index] );
-        }
+            ns_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks_vector, A_s, true);
+            nt_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks_vector, A_t, false);
+          }
 
-        ns_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks_vector, A_s, true);
-        nt_full = transport::spec_index_deriv(inflation::k_pivot_choice, ks_vector, A_t, false);
+        auto TwopfFinish = std::chrono::system_clock::now();
+        double TwopfTime = std::chrono::duration_cast<std::chrono::seconds>(TwopfFinish - TwopfStart).count();
+        std::cout << "Time took to process the two-point functions: " << TwopfTime << std::endl;
 
         //! Integrate the tasks created for the equilateral 3-point function above, if we want to
         if (inflation::ThreepfEqui)
         {
           // Add a 3pf batcher here to collect the data - this needs 3 vectors for the z2pf, z3pf and redbsp data samples
           // as well as the same boost::filesystem::path and unsigned int variables used in the 2pf batcher.
+          auto ThreepfEquiStart = std::chrono::system_clock::now();
+
           std::vector<LongDataType> eq_twopf_samples;
           std::vector<LongDataType> eq_tens_samples;
           std::vector<LongDataType> eq_twopf_ns_samples;
@@ -606,25 +647,31 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
 
           // Perform a dispersion check - throw time_varying_spectrum if spectra aren't stable
 
-          transport::Dispersion<DataType, LongDataType> equi_B_disp_check(kt_pivot_range, times_sample, eq_threepf_samples);
-          transport::Dispersion<DataType, LongDataType> equi_fNL_disp_check(kt_pivot_range, times_sample, eq_redbsp_samples);
-
-          if ( (equi_B_disp_check.dispersion_check() == true) or (equi_fNL_disp_check.dispersion_check() == true) )
-          {
-            throw time_varying_spectrum();
-          }
+//          transport::Dispersion<DataType, LongDataType> equi_B_disp_check(kt_pivot_range, times_sample, eq_threepf_samples);
+//          transport::Dispersion<DataType, LongDataType> equi_fNL_disp_check(kt_pivot_range, times_sample, eq_redbsp_samples);
+//
+//          if ( (equi_B_disp_check.dispersion_check() == true) or (equi_fNL_disp_check.dispersion_check() == true) )
+//          {
+//            throw time_varying_spectrum();
+//          }
 
           // Find the bispectrum amplitude and f_NL amplitude at the end of inflation for the pivot scale
           // do this by taking the value at the end of inflation
           B_equi_piv = eq_threepf_samples.back();
           fNL_equi_piv = eq_redbsp_samples.back();
-          }
+
+          auto ThreepfEquiFinish = std::chrono::system_clock::now();
+          double ThreepfEquiTime = std::chrono::duration_cast<std::chrono::seconds>(ThreepfEquiFinish - ThreepfEquiStart).count();
+          std::cout << "Time took to process the equilateral three-point functions: " << ThreepfEquiTime << std::endl;
+        }
 
         //! Integrate the task for the squeezed 3-point function above, if we want to
         if (inflation::ThreepfSqueeze)
         {
           // Add a 3pf batcher here to collect the data - this needs 3 vectors for the z2pf, z3pf and redbsp data samples
           // as well as the same boost::filesystem::path and unsigned int variables used in the 2pf batcher.
+          auto ThreepfSqueezeStart = std::chrono::system_clock::now();
+
           std::vector<LongDataType> sq_twopf_samples;
           std::vector<LongDataType> sq_tens_samples;
           std::vector<LongDataType> sq_twopf_ns_samples;
@@ -644,17 +691,21 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           }
 
           // Perform a dispersion check - throw time_varying_spectrum if spectra aren't stable
-          transport::Dispersion<DataType, LongDataType> sq_B_disp_check(kt_pivot_range, times_sample, sq_threepf_samples);
-          transport::Dispersion<DataType, LongDataType> sq_fNL_disp_check(kt_pivot_range, times_sample, sq_redbsp_samples);
-
-          if ( (sq_B_disp_check.dispersion_check() == true) or (sq_fNL_disp_check.dispersion_check() == true) )
-          {
-            throw time_varying_spectrum();
-          }
+//          transport::Dispersion<DataType, LongDataType> sq_B_disp_check(kt_pivot_range, times_sample, sq_threepf_samples);
+//          transport::Dispersion<DataType, LongDataType> sq_fNL_disp_check(kt_pivot_range, times_sample, sq_redbsp_samples);
+//
+//          if ( (sq_B_disp_check.dispersion_check() == true) or (sq_fNL_disp_check.dispersion_check() == true) )
+//          {
+//            throw time_varying_spectrum();
+//          }
 
           //Find the bispectrum amplitude and f_NL amplitude at the end of inflation for the pivot scale
           B_squ_piv = sq_threepf_samples.back();
           fNL_squ_piv = sq_redbsp_samples.back();
+
+          auto ThreepfSqueezeFinish = std::chrono::system_clock::now();
+          double ThreepfSqueezeTime = std::chrono::duration_cast<std::chrono::seconds>(ThreepfSqueezeFinish - ThreepfSqueezeStart).count();
+          std::cout << "Time took to process the squeezed three-point functions: " << ThreepfSqueezeTime << std::endl;
         }
 
         //* Integrate the task for the folded 3-point function above, if we want to
@@ -662,6 +713,8 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         {
           // Add a 3pf batcher here to collect the data - this needs 3 vectors for the z2pf, z3pf and redbsp data samples
           // as well as the same boost::filesystem::path and unsigned int variables used in the 2pf batcher.
+          auto ThreepfFoldStart = std::chrono::system_clock::now();
+
           std::vector<LongDataType> fold_twopf_samples;
           std::vector<LongDataType> fold_tens_samples;
           std::vector<LongDataType> fold_twopf_ns_samples;
@@ -681,17 +734,21 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
           }
 
           // Perform a dispersion check - throw time_varying_spectrum if spectra aren't stable
-          transport::Dispersion<DataType, LongDataType> fold_B_disp_check(kt_pivot_range, times_sample, fold_threepf_samples);
-          transport::Dispersion<DataType, LongDataType> fold_fNL_disp_check(kt_pivot_range, times_sample, fold_redbsp_samples);
-
-          if ( (fold_B_disp_check.dispersion_check() == true) or (fold_fNL_disp_check.dispersion_check() == true) )
-          {
-            throw time_varying_spectrum();
-          }
+//          transport::Dispersion<DataType, LongDataType> fold_B_disp_check(kt_pivot_range, times_sample, fold_threepf_samples);
+//          transport::Dispersion<DataType, LongDataType> fold_fNL_disp_check(kt_pivot_range, times_sample, fold_redbsp_samples);
+//
+//          if ( (fold_B_disp_check.dispersion_check() == true) or (fold_fNL_disp_check.dispersion_check() == true) )
+//          {
+//            throw time_varying_spectrum();
+//          }
 
           //Find the bispectrum amplitude and f_NL amplitude at the end of inflation for the pivot scale
           B_fold_piv = fold_threepf_samples.back();
           fNL_fold_piv = fold_redbsp_samples.back();
+
+          auto ThreepfFoldFinish = std::chrono::system_clock::now();
+          double ThreepfFoldTime = std::chrono::duration_cast<std::chrono::seconds>(ThreepfFoldFinish - ThreepfFoldStart).count();
+          std::cout << "Time took to process the folded three-point functions: " << ThreepfFoldTime << std::endl;
         }
 
       //* Alex's code to compute the normalised mass-matrix eigenvalues for the model:
@@ -772,6 +829,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         inflation::failed_horizonExit = 1;
     } catch (transport::adaptive_ics_before_Ninit& xe) {
         std::cout << "!!! THE ADAPTIVE INITIAL CONDITIONS REQUIRE INTEGRATION TIME BEFORE N_INITIAL !!!" <<  std::endl;
+        std::cout << xe.what() << "\n";
         inflation::ics_before_start = 1;
     } catch (le60inflation& xe) {
         std::cout << "!!! WE HAVE LESS THAN 60 E-FOLDS OF INFLATION !!!" << std::endl;
@@ -781,6 +839,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
         inflation::time_var_pow_spec = 1;
     } catch (transport::runtime_exception& xe) {
       std::cout << "!!! RUNTIME EXCEPTION: SEE TERMINAL OUTPUT FOR REASON !!!";
+      std::cout << xe.what() << "\n";
       inflation::runtime_exception = 1;
     } catch (LongIntTime& xe) {
       std::cout << "Integrations took over 1 min, killing :( ";
@@ -798,19 +857,24 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     }
 
     //! Create a temporary path & file for passing wave-number information to the datablock for class
-    boost::filesystem::path temp_path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.dat");
-    std::ofstream outf(temp_path.string(), std::ios_base::out | std::ios_base::trunc);
-    if ( err_sum == 0)
-    {
-      for (std::size_t i = 0; i != Phys_waveno_sample.size(); ++i)
+    if(DoBig2pf && err_sum == 0)
       {
-        outf  << std::setprecision(std::numeric_limits<LongDataType>::digits10 + 1)
-              << Phys_waveno_sample[i] << "\t"
-              << A_s[i] << "\t"
-              << A_t[i] << "\n";
+        boost::filesystem::path temp_path =
+          boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.dat");
+        std::ofstream outf(temp_path.string(), std::ios_base::out | std::ios_base::trunc);
+
+        for(std::size_t i = 0; i != Phys_waveno_sample.size(); ++i)
+          {
+            outf << std::setprecision(std::numeric_limits<LongDataType>::digits10 + 1)
+                 << Phys_waveno_sample[i] << "\t"
+                 << A_s[i] << "\t"
+                 << A_t[i] << "\n";
+          }
+        outf.close();
+
+        // Use put_val to write the temporary file with k, P_s(k) and P_t(k) information for CLASS
+        status = block->put_val(inflation::spec_file, "spec_table", temp_path.string());
       }
-    }
-    outf.close();
 
     //! Return the calculated observables to the datablock
     // PIVOT TASKS
@@ -820,6 +884,7 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
     // at an increased precision for the integrations
     status = block->put_val( inflation::twopf_name, "k_piv", k_pivot_cppt );
     status = block->put_val( inflation::twopf_name, "N_piv", N_pivot_exit );
+    status = block->put_val( inflation::twopf_name, "k_scaling", exp_gamma);
     status = block->put_val( inflation::twopf_name, "A_s",   static_cast<double>(A_s_pivot) );
     status = block->put_val( inflation::twopf_name, "A_t",   static_cast<double>(A_t_pivot) );
     status = block->put_val( inflation::twopf_name, "n_s",   static_cast<double>(ns_pivot) );
@@ -847,10 +912,6 @@ DATABLOCK_STATUS execute(cosmosis::DataBlock * block, void * config)
       status = block->put_val( inflation::thrpf_name, "B_fold",   static_cast<double>(B_fold_piv) );
       status = block->put_val( inflation::thrpf_name, "fNL_fold", static_cast<double>(fNL_fold_piv) );
     }
-
-    // CMB TASK for Boltzmann solver
-    // Use put_val to write the temporary file with k, P_s(k) and P_t(k) information for CLASS
-    status = block->put_val( inflation::spec_file, "spec_table", temp_path.string() );
 
     // Return the mass-matrix eigenvalues.
     $FOR{ £FIELDNUM, "status = block->put_val( inflation::twopf_name£COMMA £QUOTENormMassMatrixEigenValue£FIELDNUM_1£QUOTE£COMMA static_cast<double>(EigenValues[0][£FIELDNUM]) );", FieldNum , True, False }
