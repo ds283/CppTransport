@@ -1178,14 +1178,22 @@ namespace transport
 
             key_value kv_products(this->env, this->arg_cache);
 
-            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_TWOPF, products.get_zeta_twopf() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
-            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_TWOPF_SPECTRAL, products.get_zeta_twopf_spectral() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
-            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_THREEPF, products.get_zeta_threepf() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
-            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_REDBSP, products.get_zeta_redbsp() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
-            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_LOCAL, products.get_fNL_local() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
-            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_EQUILATERAL, products.get_fNL_equi() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
-            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_ORTHOGONAL, products.get_fNL_ortho() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
-            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_DBI, products.get_fNL_DBI() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_TWOPF,
+                                    products.has_zeta_twopf() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_TWOPF_SPECTRAL,
+                                    products.has_zeta_twopf_spectral() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_THREEPF,
+                                    products.has_zeta_threepf() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_REDBSP,
+                                    products.has_zeta_redbsp() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_LOCAL,
+                                    products.has_fNL_local() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_EQUILATERAL,
+                                    products.has_fNL_equi() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_ORTHOGONAL,
+                                    products.has_fNL_ortho() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_DBI,
+                                    products.has_fNL_DBI() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
 
             std::cout << '\n';
             kv_products.set_title(CPPTRANSPORT_REPORT_PAYLOAD_PRECOMPUTED);

@@ -2125,7 +2125,7 @@ namespace transport
           transaction, this->db, writer.get_name(), writer.get_task_name(), writer.get_relative_output_path(),
           writer.get_relative_container_path(), writer.get_relative_logdir_path(),
           writer.get_relative_tempdir_path(), writer.is_paired(), writer.get_parent_group(),
-          writer.is_seeded(), writer.get_seed_group(), writer.get_products().get_zeta_twopf_spectral());
+          writer.is_seeded(), writer.get_seed_group(), writer.get_products().has_zeta_twopf_spectral());
 
         transaction.commit();
       }

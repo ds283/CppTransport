@@ -346,7 +346,8 @@ namespace transport
         // propagate setting for spectral data
         const auto& seed_products = seed_payload.get_precomputed_products();
         auto& writer_products = writer.get_products();
-        writer_products.set_zeta_twopf_spectral(writer_products.get_zeta_twopf_spectral() && seed_products.get_zeta_twopf_spectral());
+        writer_products.set_zeta_twopf_spectral(writer_products.has_zeta_twopf_spectral() &&
+                                                seed_products.has_zeta_twopf_spectral());
 
         this->data_mgr->seed_writer(writer, tk, *(t->second));
         this->work_scheduler.prepare_queue(t->second->get_payload().get_failed_serials());
@@ -395,11 +396,11 @@ namespace transport
         const auto& p_seed_products = p_seed_payload.get_precomputed_products();
 
         // disable spectral data if either of the seed groups don't have it
-        // note we can always assume writer_products.get_zeta_twopf_spectral() is set for a paired batcher
+        // note we can always assume writer_products.has_zeta_twopf_spectral() is set for a paired batcher
         // (but we look up its value directly anyway)
         auto& writer_products = p_writer.get_products();
-        writer_products.set_zeta_twopf_spectral(writer_products.get_zeta_twopf_spectral() &&
-                                                p_seed_products.get_zeta_twopf_spectral() &&
+        writer_products.set_zeta_twopf_spectral(writer_products.has_zeta_twopf_spectral() &&
+                                                p_seed_products.has_zeta_twopf_spectral() &&
                                                 i_seed_payload.has_spectral_data());
 
         // check that same k-configurations are missing from both content groups in the pair

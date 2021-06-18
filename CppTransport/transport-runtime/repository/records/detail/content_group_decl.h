@@ -151,14 +151,14 @@ namespace transport
       public:
 
         //! Get precomputed zeta_twopf availability
-        bool get_zeta_twopf() const { return(this->zeta_twopf); }
+        bool has_zeta_twopf() const { return(this->zeta_twopf); }
 
         //! Add zeta_twopf availability flag
         void add_zeta_twopf() { this->zeta_twopf = true; }
 
 
         //! Get precomputed zeta_twopf spectral index availability
-        bool get_zeta_twopf_spectral() const { return(this->zeta_twopf_spectral); }
+        bool has_zeta_twopf_spectral() const { return(this->zeta_twopf_spectral); }
 
         //! Set precomputed zeta twopf spectral index availability
         bool set_zeta_twopf_spectral(bool f) { this->zeta_twopf_spectral = f; return f; }
@@ -168,42 +168,42 @@ namespace transport
 
 
         //! Get precomputed zeta_threepf availability
-        bool get_zeta_threepf() const { return(this->zeta_threepf); }
+        bool has_zeta_threepf() const { return(this->zeta_threepf); }
 
         //! Add zeta_threepf availability flag
         void add_zeta_threepf() { this->zeta_threepf = true; }
 
 
         //! Get precomputed zeta reduced bispectrum availability
-        bool get_zeta_redbsp() const { return(this->zeta_redbsp); }
+        bool has_zeta_redbsp() const { return(this->zeta_redbsp); }
 
         //! Add zeta_threepf availability flag
         void add_zeta_redbsp() { this->zeta_redbsp = true; }
 
 
         //! Get precomputed fNL_local availability
-        bool get_fNL_local() const { return(this->fNL_local); }
+        bool has_fNL_local() const { return(this->fNL_local); }
 
         //! Add fNL_local availability flag
         void add_fNL_local() { this->fNL_local = true; }
 
 
         //! Get precomputed fNL_equi availability
-        bool get_fNL_equi() const { return(this->fNL_equi); }
+        bool has_fNL_equi() const { return(this->fNL_equi); }
 
         //! Add fNL_equi availability flag
         void add_fNL_equi() { this->fNL_equi = true; }
 
 
         //! Get precomputed fNL_ortho availability
-        bool get_fNL_ortho() const { return(this->fNL_ortho); }
+        bool has_fNL_ortho() const { return(this->fNL_ortho); }
 
         //! Add fNL_ortho availability flag
         void add_fNL_ortho() { this->fNL_ortho = true; }
 
 
         //! Get precomputed fNL_DBI availability
-        bool get_fNL_DBI() const { return(this->fNL_DBI); }
+        bool has_fNL_DBI() const { return(this->fNL_DBI); }
 
         //! Add fNL_DBI availability flag
         void add_fNL_DBI() { this->fNL_DBI = true; }

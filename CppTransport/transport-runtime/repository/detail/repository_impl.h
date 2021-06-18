@@ -655,14 +655,14 @@ namespace transport
           }
 
         // tag this content group with its contents
-        if(writer.get_products().get_zeta_twopf())           payload.get_precomputed_products().add_zeta_twopf();
-        if(writer.get_products().get_zeta_twopf_spectral())  payload.get_precomputed_products().add_zeta_twopf_spectral();
-        if(writer.get_products().get_zeta_threepf())         payload.get_precomputed_products().add_zeta_threepf();
-        if(writer.get_products().get_zeta_redbsp())          payload.get_precomputed_products().add_zeta_redbsp();
-        if(writer.get_products().get_fNL_local())            payload.get_precomputed_products().add_fNL_local();
-        if(writer.get_products().get_fNL_equi())             payload.get_precomputed_products().add_fNL_equi();
-        if(writer.get_products().get_fNL_ortho())            payload.get_precomputed_products().add_fNL_ortho();
-        if(writer.get_products().get_fNL_DBI())              payload.get_precomputed_products().add_fNL_DBI();
+        if(writer.get_products().has_zeta_twopf())           payload.get_precomputed_products().add_zeta_twopf();
+        if(writer.get_products().has_zeta_twopf_spectral())  payload.get_precomputed_products().add_zeta_twopf_spectral();
+        if(writer.get_products().has_zeta_threepf())         payload.get_precomputed_products().add_zeta_threepf();
+        if(writer.get_products().has_zeta_redbsp())          payload.get_precomputed_products().add_zeta_redbsp();
+        if(writer.get_products().has_fNL_local())            payload.get_precomputed_products().add_fNL_local();
+        if(writer.get_products().has_fNL_equi())             payload.get_precomputed_products().add_fNL_equi();
+        if(writer.get_products().has_fNL_ortho())            payload.get_precomputed_products().add_fNL_ortho();
+        if(writer.get_products().has_fNL_DBI())              payload.get_precomputed_products().add_fNL_DBI();
 
         // commit new output record
         output_record->commit();
