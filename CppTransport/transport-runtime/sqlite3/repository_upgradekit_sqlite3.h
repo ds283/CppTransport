@@ -354,6 +354,10 @@ namespace transport
         sqlite3_operations::update_201801 h201801;
         h201801.integration_container(db, mgr, notify);
 
+        // currently no upgrades introduced in 2021.1; this release introduced new tables for spectral indices
+        // associated with the 2pfs (field, zeta, and tensor), but these don't *have* to be present
+        // in a database. If they are, they're tagged in the repository metadata
+
         // release container clock
         mgr.commit();
       }
