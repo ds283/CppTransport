@@ -306,14 +306,17 @@ namespace transport
     precomputed_products::precomputed_products(Json::Value& reader)
       {
         const auto root = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT];
-        zeta_twopf          = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
+        zeta_twopf      = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
+        zeta_threepf    = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
+        zeta_redbsp     = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
+        fNL_local       = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
+        fNL_equi        = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
+        fNL_ortho       = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
+        fNL_DBI         = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
+
+        // use .get() with a default argument here, since this field does not have to be present; it was
+        // introduced in 2021.1 and should default to false
         zeta_twopf_spectral = root.get(CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL, Json::Value(false)).asBool();
-        zeta_threepf        = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
-        zeta_redbsp         = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
-        fNL_local           = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
-        fNL_equi            = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
-        fNL_ortho           = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
-        fNL_DBI             = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
       }
 
 
@@ -354,9 +357,12 @@ namespace transport
         seed_group         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
         statistics         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
         initial_conditions = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS].asBool();
-        spectral_data      = reader.get(CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SPECTRAL, Json::Value(false)).asBool();
         size               = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE].asUInt();
         data_type          = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATA_TYPE].asString();
+
+        // use .get() with a default argument here, since this field does not have to be present; it was
+        // introduced in 2021.1 and should default to false
+        spectral_data      = reader.get(CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SPECTRAL, Json::Value(false)).asBool();
 
         Json::Value failure_array = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
@@ -415,9 +421,9 @@ namespace transport
         Json::Value failure_array = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
         failed_serials.clear();
-        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); ++t)
+        for(auto& t : failure_array)
           {
-            failed_serials.insert(t->asUInt());
+            failed_serials.insert(t.asUInt());
           }
       }
 
@@ -462,17 +468,17 @@ namespace transport
         Json::Value& content_array = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY];
         assert(content_array.isArray());
 
-        for(Json::Value::iterator t = content_array.begin(); t != content_array.end(); ++t)
+        for(auto& t : content_array)
           {
-            this->content.push_back( derived_content(*t) );
+            this->content.emplace_back(t );
           }
 
         Json::Value& summary_array = reader[CPPTRANSPORT_NODE_PAYLOAD_GROUPS_SUMMARY];
         assert(summary_array.isArray());
 
-        for(Json::Value::iterator t = summary_array.begin(); t != summary_array.end(); ++t)
+        for(auto& t : summary_array)
           {
-            this->used_groups.push_back( (*t).asString() );
+            this->used_groups.emplace_back( t.asString() );
           }
       }
 
@@ -526,25 +532,25 @@ namespace transport
         Json::Value& content_groups_array = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS];
         assert(content_groups_array.isArray());
 
-        for(Json::Value::iterator t = content_groups_array.begin(); t != content_groups_array.end(); ++t)
+        for(auto& t : content_groups_array)
           {
-            this->content_groups.push_back(t->asString());
+            this->content_groups.emplace_back(t.asString());
           }
 
         Json::Value note_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
         assert(note_list.isArray());
 
-        for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); ++t)
+        for(auto& t : note_list)
           {
-            notes.emplace_back(*t);
+            notes.emplace_back(t);
           }
 
         Json::Value tag_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS];
         assert(tag_list.isArray());
 
-        for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); ++t)
+        for(auto& t : tag_list)
           {
-            tags.push_back(t->asString());
+            tags.emplace_back(t.asString());
           }
       }
 
@@ -557,7 +563,7 @@ namespace transport
 
         Json::Value content_groups_array(Json::arrayValue);
 
-        for(const std::string& group : this->content_groups)
+        for(const auto& group : this->content_groups)
           {
             Json::Value element = group;
             content_groups_array.append(element);
@@ -566,7 +572,7 @@ namespace transport
 
         Json::Value note_list(Json::arrayValue);
 
-        for(const note& item : this->notes)
+        for(const auto& item : this->notes)
           {
             Json::Value note_element(Json::objectValue);
             item.serialize(note_element);
@@ -576,7 +582,7 @@ namespace transport
 
         Json::Value tag_list(Json::arrayValue);
 
-        for(const std::string& tag : this->tags)
+        for(const auto& tag : this->tags)
           {
             Json::Value tag_element = tag;
             tag_list.append(tag_element);
