@@ -113,17 +113,31 @@ namespace transport
 
             ~vertex_record() = default;
 
-            unsigned int                  index;
+
+            // VERTEX IDENTIFIERS
+
+            //! unique numerical identifier for vertex
+            unsigned int index;
+
+            //! associated vertex descriptor
             graph_type::vertex_descriptor descriptor;
-            std::string                   name;
-            repository_vertex_type        type;
+
+            //! vertex name (usually the task name or content group name or similar)
+            std::string name;
+
+
+            // METADATA
+
+            //! vertex type: what sort of repository record does this vertex label?
+            repository_vertex_type type;
+
           };
 
         //! typedef representing map from names to vertices
-        typedef std::map< std::string, std::shared_ptr<vertex_record> > name_to_vertex_map;
+        using name_to_vertex_map = std::map< std::string, std::shared_ptr<vertex_record> >;
 
         //! typedef representing map from vertex descriptors to names
-        typedef std::map< graph_type::vertex_descriptor, std::shared_ptr<vertex_record> > vertex_to_name_map;
+        using vertex_to_name_map = std::map< graph_type::vertex_descriptor, std::shared_ptr<vertex_record> >;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -132,8 +146,8 @@ namespace transport
 
         //! constructor is default
         repository_vertex_map()
-          : name_map(std::make_shared<name_to_vertex_map>()),
-            vertex_map(std::make_shared<vertex_to_name_map>())
+          : name_map{std::make_shared<name_to_vertex_map>()},
+            vertex_map{std::make_shared<vertex_to_name_map>()}
           {
           }
 
@@ -194,10 +208,10 @@ namespace transport
       {
         if(name_map)
           {
-            for(const name_to_vertex_map::value_type& v : *name_map)
+            for(const auto& v : *name_map)
               {
-                const std::shared_ptr<vertex_record>& record_ptr = v.second;
-                const vertex_record& record = *record_ptr;
+                const auto& record_ptr = v.second;
+                const auto& record = *record_ptr;
 
                 out << record.name << ": " << record.index << '\n';
               }
@@ -216,7 +230,7 @@ namespace transport
             auto descriptor = boost::add_vertex(graph);
             auto number = static_cast<unsigned int>(this->name_map->size());
 
-            std::shared_ptr<vertex_record> record = std::make_shared<vertex_record>(number, descriptor, name, type);
+            auto record = std::make_shared<vertex_record>(number, descriptor, name, type);
 
             this->name_map->insert(std::make_pair(name, record));
             this->vertex_map->insert(std::make_pair(descriptor, record));
@@ -793,7 +807,8 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr<repository_distance_matrix> repository_graphkit<number>::task_distance_matrix()
+    std::unique_ptr<repository_distance_matrix>
+    repository_graphkit<number>::task_distance_matrix()
       {
         auto db = this->repo.enumerate_tasks();
 
@@ -839,7 +854,7 @@ namespace transport
 
                     for(const auto& elt : elements)
                       {
-                        derived_data::derived_product<number>& product = elt.get_product();
+                        auto& product = elt.get_product();
 
                         // get list of tasks this product depends on
                         typename std::list< derivable_task<number>* > task_list;
@@ -858,17 +873,18 @@ namespace transport
           }
 
         // initialize distance matrix with graph and vertex list
-        std::unique_ptr<repository_distance_matrix> dmat = std::make_unique<repository_distance_matrix>(G, vmap);
+        auto dmat = std::make_unique<repository_distance_matrix>(G, vmap);
 
         // run Floyd-Warshall algorithm to find shortest path between each vertex pair in the graph
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
 
-        return(std::move(dmat));
+        return std::move(dmat);
       }
 
 
     template <typename number>
-    std::unique_ptr<repository_distance_matrix> repository_graphkit<number>::content_group_distance_matrix()
+    std::unique_ptr<repository_distance_matrix>
+    repository_graphkit<number>::content_group_distance_matrix()
       {
         // cache content databases
         auto integration_content = this->repo.enumerate_integration_task_content();
@@ -924,12 +940,13 @@ namespace transport
         // run Floyd-Warshall algorithm to find shortest path between each vertex pair in the graph
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
 
-        return(std::move(dmat));
+        return std::move(dmat);
       }
 
 
     template <typename number>
-    std::unique_ptr<repository_dependency_graph> repository_graphkit<number>::content_group_dependency(const std::list<std::string>& groups)
+    std::unique_ptr<repository_dependency_graph>
+    repository_graphkit<number>::content_group_dependency(const std::list<std::string>& groups)
       {
         // build graph representing content groups and their dependencies
         repository_vertex_map vmap;
@@ -941,12 +958,13 @@ namespace transport
           }
 
         auto graph = std::make_unique<repository_dependency_graph>(G, vmap);
-        return(std::move(graph));
+        return std::move(graph);
       }
 
 
     template <typename number>
-    void repository_graphkit<number>::follow_content_dependency(graph_type& G, repository_vertex_map& vmap, const std::string& name)
+    void
+    repository_graphkit<number>::follow_content_dependency(graph_type& G, repository_vertex_map& vmap, const std::string& name)
       {
         // find content group
         auto integration_content = this->repo.enumerate_integration_task_content();
@@ -1004,7 +1022,8 @@ namespace transport
 
 
     template <typename number>
-    void repository_graphkit<number>::follow_task_dependency(graph_type& G, repository_vertex_map& vmap, const std::string& name)
+    void
+    repository_graphkit<number>::follow_task_dependency(graph_type& G, repository_vertex_map& vmap, const std::string& name)
       {
         // find task
         auto db = this->repo.enumerate_tasks();
@@ -1012,7 +1031,7 @@ namespace transport
 
         if(t != db.end())
           {
-            const auto& rec = *t->second;
+            const auto& rec = *(t->second);
             switch(rec.get_type())
               {
                 case task_type::integration:
@@ -1048,7 +1067,8 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr<repository_dependency_graph> repository_graphkit<number>::derived_content_dependency(const std::string& name, const std::list<std::string>& groups)
+    std::unique_ptr<repository_dependency_graph>
+    repository_graphkit<number>::derived_content_dependency(const std::string& name, const std::list<std::string>& groups)
       {
         auto graph = this->content_group_dependency(groups);
 
