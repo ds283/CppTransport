@@ -1010,16 +1010,16 @@ namespace transport
 
             this->force_newline();
 
-            typename std::list< derivable_task<number>* > task_list;
-            rec.get_product()->get_task_list(task_list);
-
+            auto task_list = rec.get_product()->get_task_list();
             if(!task_list.empty())
               {
                 this->check_newline();
 
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output())
+                  std::cout << ColourCode(ANSI_colour::bold_green);
                 std::cout << CPPTRANSPORT_REPORT_PRODUCT_DEPENDS_ON;
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output())
+                  std::cout << ColourCode(ANSI_colour::normal);
                 std::cout << '\n';
 
                 std::vector<column_descriptor> columns;
@@ -1028,13 +1028,14 @@ namespace transport
                 std::vector<std::string> last_edit;
                 std::vector<std::string> num_groups;
 
-                typename task_db<number>::type& db = cache.get_task_db();
-
-                for(derivable_task<number>* tk : task_list)
+                auto& db = cache.get_task_db();
+                for(const auto& elt : task_list)
                   {
+                    auto tk = elt.first;
+
                     if(tk != nullptr)
                       {
-                        typename task_db<number>::type::const_iterator t = db.find(tk->get_name());
+                        auto t = db.find(tk->get_name());
                         name.push_back(tk->get_name());
 
                         if(t != db.end())

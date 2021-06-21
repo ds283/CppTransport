@@ -857,13 +857,12 @@ namespace transport
                         auto& product = elt.get_product();
 
                         // get list of tasks this product depends on
-                        typename std::list< derivable_task<number>* > task_list;
-                        product.get_task_list(task_list);
-
-                        for(auto depend_tk : task_list)
+                        auto task_list = product.get_task_list();
+                        for(const auto& elt : task_list)
                           {
-                            vmap.insert(depend_tk->get_name(), G, repository_vertex_type::task);
-                            boost::add_edge(vmap[depend_tk->get_name()], vmap[rec.get_name()], 1, G);
+                            auto tk = elt.first;
+                            vmap.insert(tk->get_name(), G, repository_vertex_type::task);
+                            boost::add_edge(vmap[tk->get_name()], vmap[rec.get_name()], 1, G);
                           }
                       }
 

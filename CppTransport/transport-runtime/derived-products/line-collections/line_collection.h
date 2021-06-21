@@ -289,7 +289,7 @@ namespace transport
 
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary tasks
-            virtual void get_task_list(typename std::list< derivable_task<number>* >& list) const override;
+            virtual typename derivable_task_list<number>::type get_task_list() const override;
 
 
             // AGGREGATE OUTPUT GROUPS FROM A LIST OF LINES
@@ -589,85 +589,24 @@ namespace transport
 			    }
 
 
-        namespace line_collection_impl
-          {
-
-            template <typename number>
-            class DerivedLineNameComparator
-              {
-
-                // CONSTRUCTOR, DESTRUCTOR
-
-              public:
-
-                //! constructor
-                DerivedLineNameComparator() = default;
-
-                //! destructor
-                ~DerivedLineNameComparator() = default;
-
-
-                // INTERFACE
-
-              public:
-
-                //! compare two derivable_tasks by name
-                bool operator()(derivable_task<number>* A, derivable_task<number>* B)
-                  {
-                    if(A == nullptr || B == nullptr) return false;
-                    return A->get_name() < B->get_name();
-                  }
-
-              };
-
-
-            template <typename number>
-            class DerivedLineNameEquality
-              {
-
-                // CONSTRUCTOR, DESTRUCTOR
-
-              public:
-
-                //! constructor
-                DerivedLineNameEquality() = default;
-
-                //! destructor
-                ~DerivedLineNameEquality() = default;
-
-
-                // INTERFACE
-
-              public:
-
-                //! compare two derivable_tasks by name
-                bool operator()(derivable_task<number>* A, derivable_task<number>* B)
-                  {
-                    if(A == nullptr || B == nullptr) return false;
-                    return A->get_name() == B->get_name();
-                  }
-
-              };
-
-          }   // namespace line_collection_impl
-
-
         template <typename number>
-        void line_collection<number>::get_task_list(typename std::list< derivable_task<number>* >& list) const
+        typename derivable_task_list<number>::type line_collection<number>::get_task_list() const
           {
-            list.clear();
+            typename derivable_task_list<number>::type l;
 
             // collect data from each derived_line
             for(const auto& line : this->lines)
               {
-                list.push_back(line->get_parent_task());
+                l.emplace_back(line->get_parent_task(), std::make_unique<content_group_specifiers>());
               }
 
             // sort into lexical order
-            list.sort(line_collection_impl::DerivedLineNameComparator<number>());
+            l.sort(derivable_task_list_impl::NameComparator<number>());
 
             // remove duplicates
-            list.unique(line_collection_impl::DerivedLineNameEquality<number>());
+            l.unique(derivable_task_list_impl::NameEquality<number>());
+
+            return std::move(l);
           }
 
 

@@ -915,11 +915,10 @@ namespace transport
 
         // check whether all tasks on which this derived product depends are already in the database;
         // if not, commit them: we need their records to be available to enforce foreign key constraints
-        typename std::list<derivable_task<number>*> task_list;
-        d.get_task_list(task_list);
-
-        for(derivable_task<number>* tk : task_list)
+        auto task_list = d.get_task_list();
+        for(const auto& elt : task_list)
           {
+            auto tk = elt.first;
             unsigned int count = sqlite3_operations::count_tasks(this->db, tk->get_name());
 
             if(count == 0)

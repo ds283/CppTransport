@@ -2248,14 +2248,14 @@ namespace transport
                   {
                     case derived_data::derived_product_type::line_2dplot:
                       {
-                        const derived_data::line_plot2d<number>& item = dynamic_cast< const derived_data::line_plot2d<number>& >(*rec.get_product());
+                        const auto& item = dynamic_cast< const derived_data::line_plot2d<number>& >(*rec.get_product());
                         this->write_derived_product(bundle, rec, item, panel_body);
                         break;
                       }
 
                     case derived_data::derived_product_type::line_table:
                       {
-                        const derived_data::line_asciitable<number>& item = dynamic_cast< const derived_data::line_asciitable<number>& >(*rec.get_product());
+                        const auto& item = dynamic_cast< const derived_data::line_asciitable<number>& >(*rec.get_product());
                         this->write_derived_product(bundle, rec, item, panel_body);
                         break;
                       }
@@ -2264,9 +2264,7 @@ namespace transport
                 panel.add_element(panel_heading).add_element(panel_body);
                 anchor.add_element(panel);
 
-                typename std::list< derivable_task<number>* > task_list;
-                rec.get_product()->get_task_list(task_list);
-
+                auto task_list = rec.get_product()->get_task_list();
                 if(!task_list.empty())
                   {
                     HTML_node button("button");
@@ -2311,8 +2309,10 @@ namespace transport
 
                     HTML_node body("tbody");
 
-                    for(derivable_task<number>* tk : task_list)
+                    for(const auto& elt : task_list)
                       {
+                        auto tk = elt.first;
+
                         HTML_node table_row("tr");
 
                         if(tk != nullptr)

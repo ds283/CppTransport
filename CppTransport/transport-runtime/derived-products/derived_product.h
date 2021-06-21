@@ -30,6 +30,8 @@
 
 #include <float.h>
 
+#include <utility>
+
 
 #include "transport-runtime/serialization/serializable.h"
 
@@ -78,6 +80,137 @@ namespace transport
         constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_DESCRIPTION          = "description";
 
 
+        //! used to specify which properties are needed in a content group for each task
+        //! that supplies data to a derived_product<>
+        class content_group_specifiers
+          {
+          public:
+
+            //! constructor
+            content_group_specifiers()
+              : ics{false},
+                statistics{false},
+                spectral_data{false}
+              {
+              }
+
+            //! destructor
+            ~content_group_specifiers() = default;
+
+
+            // GET/SET DATA
+
+          public:
+
+            bool requires_ics() const { return ics; }
+
+            void set_ics(bool i) { ics = i; }
+
+            bool requires_statistics() const { return statistics; }
+
+            void set_statistics(bool s) { statistics = s; }
+
+            bool requires_spectral_data() const { return spectral_data; }
+
+            void set_spectral_data(bool sd) { spectral_data = sd; }
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! true if we require a content group with initial conditions data (not currently used)
+            bool ics;
+
+            //! true if we require a content group with per-configuraiton statistics
+            bool statistics;
+
+            //! true if we require a content group with spectral data
+            bool spectral_data;
+
+          };
+
+
+        template <typename number>
+        class derivable_task_list
+          {
+          public:
+            using type = std::list< std::pair< derivable_task<number>*, std::unique_ptr<content_group_specifiers> > >;
+            using element_type = typename type::value_type;
+          };
+
+
+        namespace derivable_task_list_impl
+          {
+
+            template <typename number>
+            class NameComparator
+              {
+
+                // CONSTRUCTOR, DESTRUCTOR
+
+              public:
+
+                //! constructor
+                NameComparator() = default;
+
+                //! destructor
+                ~NameComparator() = default;
+
+
+                // INTERFACE
+
+              public:
+
+                //! compare two derivable_task_list<number>::type elements by name
+                bool operator()(const typename derivable_task_list<number>::element_type& A,
+                                const typename derivable_task_list<number>::element_type& B)
+                  {
+                    const auto& A_tk = A.first;
+                    const auto& B_tk = B.first;
+
+                    if(A_tk == nullptr || B_tk == nullptr) return false;
+                    return A_tk->get_name() < B_tk->get_name();
+                  }
+
+              };
+
+
+            template <typename number>
+            class NameEquality
+              {
+
+                // CONSTRUCTOR, DESTRUCTOR
+
+              public:
+
+                //! constructor
+                NameEquality() = default;
+
+                //! destructor
+                ~NameEquality() = default;
+
+
+                // INTERFACE
+
+              public:
+
+                //! compare two derivable_task_list<number>::type elements by name
+                bool operator()(const typename derivable_task_list<number>::element_type& A,
+                                const typename derivable_task_list<number>::element_type& B)
+                  {
+                    const auto& A_tk = A.first;
+                    const auto& B_tk = B.first;
+
+                    if(A_tk == nullptr || B_tk == nullptr) return false;
+                    return A_tk->get_name() == B_tk->get_name();
+                  }
+
+              };
+
+          }   // namespace derivable_task_list_impl
+
+
 		    //! A derived product represents some particular post-processing
 		    //! of the integration data, perhaps to produce a plot,
 		    //! extract the data in some suitable format, etc.
@@ -90,14 +223,14 @@ namespace transport
 		        // CONSTRUCTOR, DESTRUCTOR
 
 				    //! Construct a derived product object.
-		        derived_product(const std::string& nm, const boost::filesystem::path& fnam)
-		          : name(nm), filename(fnam)
+		        derived_product(std::string nm, boost::filesystem::path fnam)
+		          : name(std::move(nm)), filename(std::move(fnam))
 			        {
 			        }
 
 
             //! deserialization constructor
-            derived_product(const std::string& nm, Json::Value& reader);
+            derived_product(std::string  nm, Json::Value& reader);
 
             //! destructor is default
 		        virtual ~derived_product() = default;
@@ -122,7 +255,8 @@ namespace transport
 				    //! Get filename associated with this derived data product
 				    const boost::filesystem::path& get_filename() const { return(this->filename); }
 
-		        //! Apply the analysis represented by this derived product to a given content group
+		        //! Apply the analysis represented by this derived product to a given content group,
+		        //! specified by an attached datapipe<> object
 		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags,
                                                   slave_message_buffer& messages, local_environment& env, argument_cache& args) = 0;
 
@@ -133,7 +267,7 @@ namespace transport
 
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary tasks
-            virtual void get_task_list(typename std::list< derivable_task<number>* >& list) const = 0;
+            virtual typename derivable_task_list<number>::type get_task_list() const = 0;
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
@@ -177,8 +311,8 @@ namespace transport
 
 
         template <typename number>
-        derived_product<number>::derived_product(const std::string& nm, Json::Value& reader)
-          : name(nm),
+        derived_product<number>::derived_product(std::string nm, Json::Value& reader)
+          : name(std::move(nm)),
             description(reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_DESCRIPTION].asString())
           {
             filename = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME].asString();
