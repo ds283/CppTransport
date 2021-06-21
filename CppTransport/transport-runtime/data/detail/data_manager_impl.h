@@ -102,7 +102,7 @@ namespace transport
         if(this->transactions > 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_UNDERWAY);
         this->transactions++;
 
-        return transaction_manager(std::move(lockfile), std::move(handle));
+        return {std::move(lockfile), std::move(handle)};
       }
 
 
@@ -119,16 +119,17 @@ namespace transport
 
     template <typename number>
     template <typename WriterObject, typename Database>
-    void data_manager<number>::advise_missing_content(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db)
+    void data_manager<number>::advise_missing_content(WriterObject& writer, const serial_number_list& serials, const Database& db)
       {
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning) << "** Detected missing data in container";
         writer.set_fail(true);
 
-        for(unsigned int serial : serials)
+        for(auto serial : serials)
           {
             // find this configuration
-            typename Database::const_config_iterator u = std::find_if(db.config_begin(), db.config_end(),
-                                                                      ConfigurationFinder<typename Database::const_config_iterator::type>(serial));
+            typename Database::const_config_iterator u =
+              std::find_if(db.config_begin(), db.config_end(),
+                           ConfigurationFinder<typename Database::const_config_iterator::type>(serial));
 
             // emit configuration information
             std::ostringstream msg;
@@ -141,11 +142,11 @@ namespace transport
 
     template <typename number>
     template <typename WriterObject, typename Database>
-    std::set<unsigned int> data_manager<number>::find_failed_but_undropped_serials(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db)
+    serial_number_list data_manager<number>::find_failed_but_undropped_serials(WriterObject& writer, const serial_number_list& serials, const Database& db)
       {
-        std::set<unsigned int> advised_list = writer.get_failed_serials();
+        serial_number_list advised_list = writer.get_failed_serials();
 
-        for(unsigned int serial : serials)
+        for(auto serial : serials)
           {
             // search for this element in the advised list
             auto ad = advised_list.find(serial);
@@ -160,15 +161,16 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int> data_manager<number>::compute_twopf_drop_list(const std::set<unsigned int>& serials, const threepf_kconfig_database& threepf_db)
+    serial_number_list data_manager<number>::compute_twopf_drop_list(const serial_number_list& serials, const threepf_kconfig_database& threepf_db)
       {
-        std::set<unsigned int> drop_serials;
+        serial_number_list drop_serials;
 
         // TODO: this is a O(N^2) algorithm; it would be nice if it could be replaced with something better
         for(unsigned int serial : serials)
           {
-            threepf_kconfig_database::const_record_iterator u = std::find_if(threepf_db.record_begin(), threepf_db.record_end(),
-                                                                             RecordFinder<threepf_kconfig_database::const_record_iterator::type>(serial));
+            threepf_kconfig_database::const_record_iterator u =
+              std::find_if(threepf_db.record_begin(), threepf_db.record_end(),
+                           RecordFinder<threepf_kconfig_database::const_record_iterator::type>(serial));
 
             if(u != threepf_db.record_end())
               {
@@ -183,9 +185,9 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int> data_manager<number>::map_twopf_to_threepf_serials(const std::set<unsigned int>& twopf_list, const threepf_kconfig_database& threepf_db)
+    serial_number_list data_manager<number>::map_twopf_to_threepf_serials(const serial_number_list& twopf_list, const threepf_kconfig_database& threepf_db)
       {
-        std::set<unsigned int> threepf_list;
+        serial_number_list threepf_list;
 
         // TODO: this is a O(N^2) algorithm; it would be nice if it could be replaced with something better
         for(unsigned int twopf_serial : twopf_list)
@@ -217,8 +219,7 @@ namespace transport
     template <typename number>
     void data_manager<number>::check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>& itk)
       {
-        transaction_manager mgr = this->transaction_factory(writer);
-
+        auto mgr = this->transaction_factory(writer);
         auto& tk = dynamic_cast< twopf_task<number>& >(itk);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
@@ -231,19 +232,28 @@ namespace transport
         // in the statistics or ics tables.
         // In this case we don't drop the corresponding data; we just live with the missing metadata
         auto twopf_serials = this->get_missing_twopf_re_serials(writer);
-        auto twopf_si_serials = this->get_missing_twopf_si_re_serials(writer);
         auto tensor_serials = this->get_missing_tensor_twopf_serials(writer);
-        auto tensor_si_serials = this->get_missing_tensor_twopf_si_serials(writer);
+
+        std::unique_ptr<serial_number_list> twopf_si_serials;
+        std::unique_ptr<serial_number_list> tensor_si_serials;
+        if(writer.is_collecting_spectral_data())
+          {
+            twopf_si_serials = std::make_unique<serial_number_list>(this->get_missing_twopf_si_re_serials(writer));
+            tensor_si_serials = std::make_unique<serial_number_list>(this->get_missing_tensor_twopf_si_serials(writer));
+          }
 
         // merge
-        std::set<unsigned int> total_serials;
+        serial_number_list total_serials;
         total_serials.insert(twopf_serials.begin(), twopf_serials.end());
-        total_serials.insert(twopf_si_serials.begin(), twopf_si_serials.end());
         total_serials.insert(tensor_serials.begin(), tensor_serials.end());
-        total_serials.insert(tensor_si_serials.begin(), tensor_si_serials.end());
+
+        if(twopf_si_serials)
+          total_serials.insert(twopf_si_serials->begin(), twopf_si_serials->end());
+        if(tensor_si_serials)
+          total_serials.insert(tensor_si_serials->begin(), tensor_si_serials->end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk.get_twopf_database());
+        auto failed = this->find_failed_but_undropped_serials(writer, total_serials, tk.get_twopf_database());
         if(!failed.empty())
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning)
@@ -264,11 +274,20 @@ namespace transport
 
             // ensure all tables are consistent
             this->drop_twopf_re_configurations(mgr, writer, total_serials, twopf_serials, tk.get_twopf_database());
-            this->drop_twopf_si_re_configurations(mgr, writer, total_serials, twopf_si_serials, tk.get_twopf_database());
             this->drop_tensor_twopf_configurations(mgr, writer, total_serials, tensor_serials, tk.get_twopf_database());
-            this->drop_tensor_twopf_si_configurations(mgr, writer, total_serials, tensor_si_serials, tk.get_twopf_database());
-            if(writer.is_collecting_statistics()) this->drop_statistics_configurations(mgr, writer, total_serials, tk.get_twopf_database());
-            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, total_serials, tk.get_twopf_database());
+
+            if(writer.is_collecting_spectral_data())
+              {
+                if(twopf_si_serials)
+                  this->drop_twopf_si_re_configurations(mgr, writer, total_serials, *twopf_si_serials, tk.get_twopf_database());
+                if(tensor_si_serials)
+                  this->drop_tensor_twopf_si_configurations(mgr, writer, total_serials, *tensor_si_serials, tk.get_twopf_database());
+              }
+
+            if(writer.is_collecting_statistics())
+              this->drop_statistics_configurations(mgr, writer, total_serials, tk.get_twopf_database());
+            if(writer.is_collecting_initial_conditions())
+              this->drop_initial_conditions_configurations(mgr, writer, total_serials, tk.get_twopf_database());
           }
 
         mgr.commit();
@@ -281,8 +300,7 @@ namespace transport
     template <typename number>
     void data_manager<number>::check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>& itk)
       {
-        transaction_manager mgr = this->transaction_factory(writer);
-
+        auto mgr = this->transaction_factory(writer);
         auto& tk = dynamic_cast< threepf_task<number>& >(itk);
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::notification)
@@ -301,25 +319,34 @@ namespace transport
         // get lists of missing serial numbers for twopf configurations
         auto twopf_re_serials          = this->get_missing_twopf_re_serials(writer);
         auto twopf_im_serials          = this->get_missing_twopf_im_serials(writer);
-        auto twopf_si_re_serials       = this->get_missing_twopf_si_re_serials(writer);
         auto tensor_serials            = this->get_missing_tensor_twopf_serials(writer);
-        auto tensor_si_serials         = this->get_missing_tensor_twopf_si_serials(writer);
+
+        std::unique_ptr<serial_number_list> twopf_si_re_serials;
+        std::unique_ptr<serial_number_list> tensor_si_serials;
+        if(writer.is_collecting_spectral_data())
+          {
+            twopf_si_re_serials = std::make_unique<serial_number_list>(this->get_missing_twopf_si_re_serials(writer));
+            tensor_si_serials = std::make_unique<serial_number_list>(this->get_missing_tensor_twopf_si_serials(writer));
+          }
 
         // merge missing threepf lists into a single one
-        std::set<unsigned int> threepf_total_serials;
+        serial_number_list threepf_total_serials;
         threepf_total_serials.insert(threepf_momentum_serials.begin(), threepf_momentum_serials.end());
         threepf_total_serials.insert(threepf_deriv_serials.begin(), threepf_deriv_serials.end());
 
         // merge missing twopf lists into a single one
-        std::set<unsigned int> twopf_total_serials;
+        serial_number_list twopf_total_serials;
         twopf_total_serials.insert(twopf_re_serials.begin(), twopf_re_serials.end());
         twopf_total_serials.insert(twopf_im_serials.begin(), twopf_im_serials.end());
-        twopf_total_serials.insert(twopf_si_re_serials.begin(), twopf_si_re_serials.end());
         twopf_total_serials.insert(tensor_serials.begin(), tensor_serials.end());
-        twopf_total_serials.insert(tensor_si_serials.begin(), tensor_si_serials.end());
+
+        if(twopf_si_re_serials)
+          twopf_total_serials.insert(twopf_si_re_serials->begin(), twopf_si_re_serials->end());
+        if(tensor_si_serials)
+          twopf_total_serials.insert(tensor_si_serials->begin(), tensor_si_serials->end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk.get_threepf_database());
+        auto failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk.get_threepf_database());
         if(!failed.empty())
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning)
@@ -330,7 +357,7 @@ namespace transport
           }
 
         // now check whether any missing twopf configurations might require further threepfs to be dropped for consistency
-        std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk.get_threepf_database());
+        auto twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk.get_threepf_database());
         threepf_total_serials.insert(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end());
 
         // if any serial numbers are missing, advise the user
@@ -346,18 +373,27 @@ namespace transport
             // ensure all threepf-indexed tables are consistent
             this->drop_threepf_momentum_configurations(mgr, writer, threepf_total_serials, threepf_momentum_serials, tk.get_threepf_database());
             this->drop_threepf_deriv_configurations(mgr, writer, threepf_total_serials, threepf_deriv_serials, tk.get_threepf_database());
-            if(writer.is_collecting_statistics())         this->drop_statistics_configurations(mgr, writer, threepf_total_serials, tk.get_threepf_database());
-            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(mgr, writer, threepf_total_serials, tk.get_threepf_database());
+
+            if(writer.is_collecting_statistics())
+              this->drop_statistics_configurations(mgr, writer, threepf_total_serials, tk.get_threepf_database());
+            if(writer.is_collecting_initial_conditions())
+              this->drop_initial_conditions_configurations(mgr, writer, threepf_total_serials, tk.get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk.get_threepf_database());
+            auto twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk.get_threepf_database());
 
             // ensure all twopf-indexed tables are consistent
             this->drop_twopf_re_configurations(mgr, writer, twopf_drop, twopf_re_serials, tk.get_twopf_database());
             this->drop_twopf_im_configurations(mgr, writer, twopf_drop, twopf_im_serials, tk.get_twopf_database());
-            this->drop_twopf_si_re_configurations(mgr, writer, twopf_drop, twopf_si_re_serials, tk.get_twopf_database());
             this->drop_tensor_twopf_configurations(mgr, writer, twopf_drop, tensor_serials, tk.get_twopf_database());
-            this->drop_tensor_twopf_si_configurations(mgr, writer, twopf_drop, tensor_si_serials, tk.get_twopf_database());
+
+            if(writer.is_collecting_spectral_data())
+              {
+                if(twopf_si_re_serials)
+                  this->drop_twopf_si_re_configurations(mgr, writer, twopf_drop, *twopf_si_re_serials, tk.get_twopf_database());
+                if(tensor_si_serials)
+                  this->drop_tensor_twopf_si_configurations(mgr, writer, twopf_drop, *tensor_si_serials, tk.get_twopf_database());
+              }
           }
 
         mgr.commit();
@@ -383,16 +419,16 @@ namespace transport
         // note that we allow the possibility that there are configurations which are present in the data tables, but missing
         // in the statistics or ics tables.
         // In this case we don't drop the corresponding data; we just live with the missing metadata
-        std::set<unsigned int> twopf_serials  = this->get_missing_zeta_twopf_serials(writer);
-        std::set<unsigned int> xfm1_serials   = this->get_missing_gauge_xfm1_serials(writer);
+        auto twopf_serials = this->get_missing_zeta_twopf_serials(writer);
+        auto xfm1_serials = this->get_missing_gauge_xfm1_serials(writer);
 
         // merge
-        std::set<unsigned int> total_serials;
+        serial_number_list total_serials;
         total_serials.insert(twopf_serials.begin(), twopf_serials.end());
         total_serials.insert(xfm1_serials.begin(), xfm1_serials.end());
 
         // compare against backend-supplied list of failed configurations, if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, total_serials, tk.get_twopf_database());
+        auto failed = this->find_failed_but_undropped_serials(writer, total_serials, tk.get_twopf_database());
         if(!failed.empty())
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning)
@@ -442,29 +478,29 @@ namespace transport
         // get lists of missing serial numbers for threepf-configurations
         // (threepf rows store both threepf data and reduced bispectrum data, so the reduced bispectrum
         // does not need to be handled separately)
-        std::set<unsigned int> threepf_serials        = this->get_missing_zeta_threepf_serials(writer);
-        std::set<unsigned int> gauge_xfm2_123_serials = this->get_missing_gauge_xfm2_123_serials(writer);
-        std::set<unsigned int> gauge_xfm2_213_serials = this->get_missing_gauge_xfm2_213_serials(writer);
-        std::set<unsigned int> gauge_xfm2_312_serials = this->get_missing_gauge_xfm2_312_serials(writer);
+        auto threepf_serials        = this->get_missing_zeta_threepf_serials(writer);
+        auto gauge_xfm2_123_serials = this->get_missing_gauge_xfm2_123_serials(writer);
+        auto gauge_xfm2_213_serials = this->get_missing_gauge_xfm2_213_serials(writer);
+        auto gauge_xfm2_312_serials = this->get_missing_gauge_xfm2_312_serials(writer);
 
         // get lists of missing serial numbers for twopf-configurations
-        std::set<unsigned int> twopf_serials          = this->get_missing_zeta_twopf_serials(writer);
-        std::set<unsigned int> gauge_xfm1_serials     = this->get_missing_gauge_xfm1_serials(writer);
+        auto twopf_serials          = this->get_missing_zeta_twopf_serials(writer);
+        auto gauge_xfm1_serials     = this->get_missing_gauge_xfm1_serials(writer);
 
         // merge missing threepf lists
-        std::set<unsigned int> threepf_total_serials;
+        serial_number_list threepf_total_serials;
         threepf_total_serials.insert(threepf_serials.begin(), threepf_serials.end());
         threepf_total_serials.insert(gauge_xfm2_123_serials.begin(), gauge_xfm2_123_serials.end());
         threepf_total_serials.insert(gauge_xfm2_213_serials.begin(), gauge_xfm2_213_serials.end());
         threepf_total_serials.insert(gauge_xfm2_312_serials.begin(), gauge_xfm2_312_serials.end());
 
         // merge missing twopf lists
-        std::set<unsigned int> twopf_total_serials;
+        serial_number_list twopf_total_serials;
         twopf_total_serials.insert(twopf_serials.begin(), twopf_serials.end());
         twopf_total_serials.insert(gauge_xfm1_serials.begin(), gauge_xfm1_serials.end());
 
         // compare against backend-supplied list of failed configurations if one is available
-        std::set<unsigned int> failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk.get_threepf_database());
+        auto failed = this->find_failed_but_undropped_serials(writer, threepf_total_serials, tk.get_threepf_database());
         if(!failed.empty())
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::warning)
@@ -475,7 +511,7 @@ namespace transport
           }
 
         // now check whether any missing twopf configurations might require even further threepfs to be dropped for consistency
-        std::set<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk.get_threepf_database());
+        auto twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk.get_threepf_database());
         threepf_total_serials.insert(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end());
 
         // if any serial numbers are missing, advise the user
@@ -495,7 +531,7 @@ namespace transport
             this->drop_gauge_xfm2_312_configurations(mgr, writer, threepf_total_serials, gauge_xfm2_312_serials, tk.get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::set<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk.get_threepf_database());
+            auto twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk.get_threepf_database());
 
             // ensure all twopf-indexed tables are consistent
             this->drop_zeta_twopf_configurations(mgr, writer, twopf_drop, twopf_serials, tk.get_twopf_database());
@@ -521,16 +557,16 @@ namespace transport
     void data_manager<number>::synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer)
       {
         // get serial numbers missing individually from each writer
-        std::set<unsigned int> integration_missing = i_writer.get_missing_serials();
-        std::set<unsigned int> postintegration_missing = p_writer.get_missing_serials();
+        auto integration_missing = i_writer.get_missing_serials();
+        auto postintegration_missing = p_writer.get_missing_serials();
 
         // merge into a single list
-        std::set<unsigned int> total_missing;
+        serial_number_list total_missing;
         total_missing.insert(integration_missing.begin(), integration_missing.end());
         total_missing.insert(postintegration_missing.begin(), postintegration_missing.end());
 
         // check for discrepancies
-        std::set<unsigned int> integration_discrepant;
+        serial_number_list integration_discrepant;
         std::set_difference(total_missing.begin(), total_missing.end(),
                             integration_missing.begin(), integration_missing.end(),
                             std::inserter(integration_discrepant, integration_discrepant.begin()));
@@ -544,7 +580,7 @@ namespace transport
             i_writer.check_integrity();   // run manual integrity check; will take account of discrepant serials numbers which have just been added
           }
 
-        std::set<unsigned int> postintegration_discrepant;
+        serial_number_list postintegration_discrepant;
         std::set_difference(total_missing.begin(), total_missing.end(),
                             postintegration_missing.begin(), postintegration_missing.end(),
                             std::inserter(postintegration_discrepant, postintegration_discrepant.begin()));

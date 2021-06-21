@@ -166,7 +166,7 @@ namespace transport
             // sorting is done in-place for performance
             std::sort(batch.begin(), batch.end(), data_manager_write_impl::StatisticsPrimaryKeyCompare<number>());
 
-            for(const std::unique_ptr< typename integration_items<number>::configuration_statistics >& item : batch)
+            for(const auto& item : batch)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->serial));
                 check_stmt(db, sqlite3_bind_int64(stmt, integration_time_id, item->integration));
@@ -243,7 +243,7 @@ namespace transport
               }
 #endif
 
-            for(const std::unique_ptr<ValueType>& item : batch)
+            for(const auto& item : batch)
               {
                 for(unsigned int page = 0; page < num_pages; ++page)
 	                {
@@ -333,7 +333,7 @@ namespace transport
             std::sort(batch.begin(), batch.end(), data_manager_write_impl::PagedPrimaryKeyCompare<ValueType>());
 #endif
 
-            for(const std::unique_ptr<ValueType>& item : batch)
+            for(const auto& item : batch)
 			        {
 			          auto item_num_elements = item->elements.size();
 			          if(item_num_elements != num_elements)
@@ -398,7 +398,7 @@ namespace transport
             std::sort(batch.begin(), batch.end(), data_manager_write_impl::UnpagedPrimaryKeyCompare<ValueType>());
 #endif
 
-            for(const std::unique_ptr<ValueType>& item : batch)
+            for(const auto& item : batch)
 	            {
 #ifdef CPPTRANSPORT_STRICT_CONSISTENCY
                 check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique()));
@@ -420,7 +420,7 @@ namespace transport
         // write a batch of zeta 2pf items
         template <typename number>
         void write_zeta_twopf(transaction_manager& mgr, postintegration_batcher<number>* batcher,
-                              const std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >& batch)
+                              const std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >& batch, bool write_spectral_data)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -450,7 +450,7 @@ namespace transport
             std::sort(batch.begin(), batch.end(), data_manager_write_impl::UnpagedPrimaryKeyCompare<ValueType>());
 #endif
 
-            for(const std::unique_ptr<ValueType>& item : batch)
+            for(const auto& item : batch)
               {
 #ifdef CPPTRANSPORT_STRICT_CONSISTENCY
                 check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique()));
@@ -458,7 +458,15 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
                 check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item->kconfig_serial));
                 check_stmt(db, sqlite3_bind_double(stmt, twopf_column_id, static_cast<double>(item->value)));
-                check_stmt(db, sqlite3_bind_double(stmt, twopf_si_column_id, static_cast<double>(item->spectral_value)));
+
+                if(write_spectral_data)
+                  {
+                    check_stmt(db, sqlite3_bind_double(stmt, twopf_si_column_id, static_cast<double>(item->spectral_value)));
+                  }
+                else
+                  {
+                    check_stmt(db, sqlite3_bind_null(stmt, twopf_si_column_id));
+                  }
 
                 check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 
@@ -503,7 +511,7 @@ namespace transport
             std::sort(batch.begin(), batch.end(), data_manager_write_impl::UnpagedPrimaryKeyCompare<ValueType>());
 #endif
 
-            for(const std::unique_ptr<ValueType>& item : batch)
+            for(const auto& item : batch)
               {
 #ifdef CPPTRANSPORT_STRICT_CONSISTENCY
                 check_stmt(db, sqlite3_bind_int64(stmt, unique_id, item->get_unique()));
@@ -557,7 +565,7 @@ namespace transport
             const int TT_id      = sqlite3_bind_parameter_index(stmt, "@TT");
 
             // cache will already be sorted in ascending order of primary key = time_serial
-            for(const typename postintegration_items<number>::fNL_cache::value_type& item : batch)
+            for(const auto& item : batch)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, tserial_id, item->time_serial));
                 check_stmt(db, sqlite3_bind_double(stmt, BB_id, static_cast<double>(item->BB)));

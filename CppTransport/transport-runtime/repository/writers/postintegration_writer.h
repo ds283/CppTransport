@@ -250,6 +250,19 @@ namespace transport
         void finalize() { if(this->finalize_h) (*this->finalize_h)(*this); }
 
 
+        // COLLECTION BEHAVIOUR
+
+      public:
+
+        //! Are we collecting spectral data?
+        bool is_collecting_spectral_data() const { return(this->collect_spectral_data); }
+
+        //! Set spectral data collection flag
+        [[deprecated("This function should not be used, because it can override the collection behaviour specified in the task. Use could lead to an inconsistent repository.")]]
+        void set_collecting_spectral_data(bool g)
+          { this->collect_spectral_data = g; }
+
+
         // PAIRING
 
       public:
@@ -302,21 +315,21 @@ namespace transport
       public:
 
         //! Add list of serial numbers which the backend (or a paired integrator) advises have failed (not all backends may support this)
-        void merge_failure_list(const std::set<unsigned int>& failed)
+        void merge_failure_list(const serial_number_list& failed)
           {
             this->failed_serials.insert(failed.begin(), failed.end());
             this->set_fail(!this->failed_serials.empty());
           }
 
         //! Get list of serial numbers which the backend (or a paired integrator) advises have failed
-        const std::set<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+        const serial_number_list& get_failed_serials() const { return(this->failed_serials); }
 
         //! get list of missing k-configuration serials
-        const std::set<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
+        const serial_number_list& get_missing_serials() const { return(this->missing_serials); }
 
         //! set list of missing k-configuration serials
         template <typename Database>
-        void set_missing_serials(const std::set<unsigned int>& s, const Database& db)
+        void set_missing_serials(const serial_number_list& s, const Database& db)
           {
             this->missing_serials = s;
           }
@@ -363,6 +376,12 @@ namespace transport
         std::unique_ptr< postintegration_writer_finalize<number> > finalize_h;
 
 
+        // COLLECTION BEHAVIOUR
+
+        //! are we collecting spectral data?
+        bool collect_spectral_data;
+
+
         // METADATA
 
         //! copy of task associated with this integration writer; needed for interrogation of task properties
@@ -393,7 +412,7 @@ namespace transport
         // FAILURE STATUS
 
         //! List of failed serial numbers
-        std::set<unsigned int> failed_serials;
+        serial_number_list failed_serials;
 
 
         // INTEGRITY STATUS
@@ -401,7 +420,7 @@ namespace transport
         //! List of missing serial numbers
         //! (this isn't the same as the list of failed serials reported by the backend; we compute this by testing the
         //! integrity of the database directly and cross-check with failures reported by the backend)
-        std::set<unsigned int> missing_serials;
+        serial_number_list missing_serials;
 
 
 		    // CONTENT TAGS
@@ -436,8 +455,17 @@ namespace transport
         task(dynamic_cast< postintegration_task<number>* >(rec.get_task()->clone())),
         type(rec.get_task_type()),
 	      metadata(),
-        agg_profile(n)
+        agg_profile(n),
+        collect_spectral_data{false}    // defaults to false, but can be overwritten in constructor body
 	    {
+	      // test whether supplied task is a zeta 2pf integration task (or contains one)
+	      auto* tk_as_zeta_twopf_db = dynamic_cast< zeta_twopf_db_task<number>* >(rec.get_task());
+
+	      // inherit collecting status from zeta task, if available
+	      if(tk_as_zeta_twopf_db != nullptr)
+          {
+            collect_spectral_data = tk_as_zeta_twopf_db->get_collect_spectral_data();
+          }
 	    }
 
 

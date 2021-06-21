@@ -407,7 +407,7 @@ namespace transport
                                              const boost::timer::nanosecond_type& max_b, const boost::timer::nanosecond_type& min_b,
                                              const boost::timer::nanosecond_type& w,
                                              const unsigned int n, const unsigned int nr, const unsigned int nf,
-                                             std::set<unsigned int> fs, const double ld)
+                                             serial_number_list fs, const double ld)
                   : integration_time(i),
                     max_integration_time(max_i),
                     min_integration_time(min_i),
@@ -465,7 +465,7 @@ namespace transport
                 unsigned int                    get_items_processed()      const { return this->num_success + this->num_failures; }
                 
                 //! Get list of failed serial numbers (if supported by the backend -- otherwise the returned list is empty)
-                const std::set<unsigned int>&   get_failed_serials()       const { return this->failed_serials; }
+                const serial_number_list&   get_failed_serials()       const { return this->failed_serials; }
 
                 //! Get current load average
                 double                          get_load_average()         const { return this->load_average; }
@@ -509,7 +509,7 @@ namespace transport
                 double load_average;
 
                 //! List of failed serial numbers (not all backends may support collection of this data)
-                std::set<unsigned int> failed_serials;
+                serial_number_list failed_serials;
 
 		            //! Timestamp
 		            boost::posix_time::ptime timestamp;

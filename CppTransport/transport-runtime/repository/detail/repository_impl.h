@@ -27,6 +27,8 @@
 #define CPPTRANSPORT_REPOSITORY_IMPL_H
 
 
+#include <utility>
+
 #include "transport-runtime/repository/detail/repository_mode.h"
 #include "transport-runtime/repository/detail/repository_decl.h"
 
@@ -57,8 +59,8 @@ namespace transport
           public:
 
             //! constructor captures name of group to be found
-            OutputGroupFinder(const std::string& n)
-              : name(n)
+            explicit OutputGroupFinder(std::string n)
+              : name(std::move(n))
               {
               }
 
@@ -110,7 +112,7 @@ namespace transport
 
 
     template <typename number>
-    repository<number>::repository(const boost::filesystem::path path, model_manager <number>& f, repository_mode mode,
+    repository<number>::repository(const boost::filesystem::path& path, model_manager <number>& f, repository_mode mode,
                                    local_environment& ev, argument_cache& ar,
                                    package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf)
       : root_path(path.is_absolute() ? path : boost::filesystem::absolute(path)),
@@ -517,7 +519,7 @@ namespace transport
       {
         // read record from database (so that we have a fresh and up-to-date copy of the data)
         std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), mgr);
-        integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(raw_rec.get());
+        auto* rec = dynamic_cast< integration_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -553,6 +555,7 @@ namespace transport
 
         payload.set_statistics(writer.is_collecting_statistics());
         payload.set_initial_conditions(writer.is_collecting_initial_conditions());
+        payload.set_spectral_data(writer.is_collecting_spectral_data());
 
         try
           {
@@ -611,7 +614,7 @@ namespace transport
       {
         // read record from database (so that we have a fresh and up-to-date copy of the data)
         std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), mgr);
-        postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(raw_rec.get());
+        auto* rec = dynamic_cast< postintegration_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -655,14 +658,7 @@ namespace transport
           }
 
         // tag this content group with its contents
-        if(writer.get_products().has_zeta_twopf())           payload.get_precomputed_products().add_zeta_twopf();
-        if(writer.get_products().has_zeta_twopf_spectral())  payload.get_precomputed_products().add_zeta_twopf_spectral();
-        if(writer.get_products().has_zeta_threepf())         payload.get_precomputed_products().add_zeta_threepf();
-        if(writer.get_products().has_zeta_redbsp())          payload.get_precomputed_products().add_zeta_redbsp();
-        if(writer.get_products().has_fNL_local())            payload.get_precomputed_products().add_fNL_local();
-        if(writer.get_products().has_fNL_equi())             payload.get_precomputed_products().add_fNL_equi();
-        if(writer.get_products().has_fNL_ortho())            payload.get_precomputed_products().add_fNL_ortho();
-        if(writer.get_products().has_fNL_DBI())              payload.get_precomputed_products().add_fNL_DBI();
+        payload = writer.get_products();
 
         // commit new output record
         output_record->commit();

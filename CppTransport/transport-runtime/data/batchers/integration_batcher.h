@@ -115,7 +115,7 @@ namespace transport
         integration_batcher(size_t cap, unsigned int ckp, model<number>* m, integration_task<number>* tk,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
-                            handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
+                            handle_type h, unsigned int w, unsigned int g=0, bool ics=false, bool sd=true);
 
         //! move constructor
         integration_batcher(integration_batcher<number>&&) = default;
@@ -278,13 +278,19 @@ namespace transport
         unsigned int refinements;
 
 
-        // INTEGRATION STATISTICS
+        // COLLECTION BEHAVIOUR
 
         //! Are we collecting per-configuration statistics?
         bool collect_statistics;
 
-		    //! Are we collecting initial conditions data?
-		    bool collect_initial_conditions;
+        //! Are we collecting initial conditions data?
+        bool collect_initial_conditions;
+
+        //! Are we collecting spectral data?
+        bool collect_spectral_data;
+
+
+        // INTEGRATION STATISTICS
 
         //! Number of integrations handled by this batcher
         unsigned int num_integrations;
@@ -522,7 +528,7 @@ namespace transport
         //! twopf cache
         std::vector< std::unique_ptr< typename integration_items<number>::twopf_re_item > > twopf_batch;
         
-        //! twopf 'spectral index' cache
+        //! twopf 'spectral index' cache (if used)
         std::vector< std::unique_ptr< typename integration_items<number>::twopf_si_re_item > > twopf_si_batch;
 
         //! tensor twopf cache
@@ -531,7 +537,7 @@ namespace transport
         //! tensor twopf 'spectral index' cache
         std::vector< std::unique_ptr< typename integration_items<number>::tensor_twopf_si_item > > tensor_twopf_si_batch;
 
-        //! initial conditions cache
+        //! initial conditions cache (if used)
         std::vector< std::unique_ptr< typename integration_items<number>::ics_item > > ics_batch;
 
         //! cache for linear part of gauge transformation
@@ -899,7 +905,7 @@ namespace transport
     integration_batcher<number>::integration_batcher(size_t cap, unsigned int ckp, model<number>* m, integration_task<number>* tk,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
-                                                     handle_type h, unsigned int w, unsigned int g, bool ics)
+                                                     handle_type h, unsigned int w, unsigned int g, bool ics, bool sd)
 	    : generic_batcher(cap, ckp, cp, lp, std::move(d), std::move(r), h, w, g),
         Nfields(m->get_N_fields()),
         mdl(m),
@@ -914,6 +920,7 @@ namespace transport
 	      min_batching_time(0),
 	      collect_statistics(m->supports_per_configuration_statistics()),
 	      collect_initial_conditions(ics),
+	      collect_spectral_data(sd),
 	      failures(0),
 	      refinements(0)
 	    {
@@ -1066,7 +1073,8 @@ namespace transport
        const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
        std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
        handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, wg,
+                                    tk->get_collect_initial_conditions(), tk->get_collect_spectral_data()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -1118,6 +1126,8 @@ namespace transport
       (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
        const std::vector<number>& value, const std::vector<number>& backg)
       {
+        if(!this->collect_spectral_data) return;
+
         this->twopf_si_batch.emplace_back(
           std::make_unique<typename integration_items<number>::twopf_si_re_item>(
             time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
@@ -1142,6 +1152,8 @@ namespace transport
     void twopf_batcher<number>::push_tensor_twopf_si
       (unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& value)
       {
+        if(!this->collect_spectral_data) return;
+
         this->tensor_twopf_si_batch.emplace_back(
           std::make_unique<typename integration_items<number>::tensor_twopf_si_item>(
             time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size));
@@ -1152,13 +1164,12 @@ namespace transport
     template <typename number>
     void twopf_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
       {
-        if(this->collect_initial_conditions)
-          {
-            this->ics_batch.emplace_back(
-              std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values,
-                                                                             this->kconfig_db_size, this->Nfields));
-            this->check_for_flush();
-          }
+        if(!this->collect_initial_conditions) return;
+
+        this->ics_batch.emplace_back(
+          std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values,
+                                                                         this->kconfig_db_size, this->Nfields));
+        this->check_for_flush();
       }
 
 
@@ -1197,22 +1208,31 @@ namespace transport
 		    if(this->collect_initial_conditions) this->writers.ics(mgr, this, this->ics_batch);
         this->writers.backg(mgr, this, this->backg_batch);
         this->writers.twopf(mgr, this, this->twopf_batch);
-        this->writers.twopf_si(mgr, this, this->twopf_si_batch);
         this->writers.tensor_twopf(mgr, this, this->tensor_twopf_batch);
-        this->writers.tensor_twopf_si(mgr, this, this->tensor_twopf_si_batch);
+
+        if(this->collect_spectral_data)
+          {
+            this->writers.twopf_si(mgr, this, this->twopf_si_batch);
+            this->writers.tensor_twopf_si(mgr, this, this->tensor_twopf_si_batch);
+          }
 
         mgr.commit();
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
-        this->stats_batch.clear();
-		    this->ics_batch.clear();
+        if(this->collect_statistics) this->stats_batch.clear();
+		    if(this->collect_initial_conditions) this->ics_batch.clear();
+
         this->backg_batch.clear();
         this->twopf_batch.clear();
-        this->twopf_si_batch.clear();
         this->tensor_twopf_batch.clear();
-        this->tensor_twopf_si_batch.clear();
+
+        if(this->collect_spectral_data)
+          {
+            this->twopf_si_batch.clear();
+            this->tensor_twopf_si_batch.clear();
+          }
 
         // push a message to the master node, indicating that new data is available
         // note that the order of calls to 'dispatcher' and 'replacer' is important
@@ -1241,25 +1261,31 @@ namespace transport
                          UnbatchPredicate<typename integration_items<number>::twopf_re_item>(source_serial)),
           this->twopf_batch.end());
 
-        this->twopf_si_batch.erase(
-          std::remove_if(this->twopf_si_batch.begin(), this->twopf_si_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::twopf_si_re_item>(source_serial)),
-          this->twopf_si_batch.end());
-
         this->tensor_twopf_batch.erase(
           std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
                          UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
           this->tensor_twopf_batch.end());
 
-        this->tensor_twopf_si_batch.erase(
-          std::remove_if(this->tensor_twopf_si_batch.begin(), this->tensor_twopf_si_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_si_item>(source_serial)),
-          this->tensor_twopf_si_batch.end());
+        if(this->collect_spectral_data)
+          {
+            this->twopf_si_batch.erase(
+              std::remove_if(this->twopf_si_batch.begin(), this->twopf_si_batch.end(),
+                             UnbatchPredicate<typename integration_items<number>::twopf_si_re_item>(source_serial)),
+              this->twopf_si_batch.end());
 
-        this->ics_batch.erase(
-          std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
-          this->ics_batch.end());
+            this->tensor_twopf_si_batch.erase(
+              std::remove_if(this->tensor_twopf_si_batch.begin(), this->tensor_twopf_si_batch.end(),
+                             UnbatchPredicate<typename integration_items<number>::tensor_twopf_si_item>(source_serial)),
+              this->tensor_twopf_si_batch.end());
+          }
+
+        if(this->collect_initial_conditions)
+          {
+            this->ics_batch.erase(
+              std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                             UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
+              this->ics_batch.end());
+          }
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }
@@ -1294,7 +1320,8 @@ namespace transport
        const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
        std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
        handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, wg,
+                                    tk->get_collect_initial_conditions(), tk->get_collect_spectral_data()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -1369,6 +1396,8 @@ namespace transport
     threepf_batcher<number>::push_twopf_si(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                            const std::vector<number>& value, const std::vector<number>& backg)
       {
+        if(!this->collect_spectral_data) return;
+
         this->twopf_si_re_batch.emplace_back(
           std::make_unique<typename integration_items<number>::twopf_si_re_item>(
             time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size, this->Nfields));
@@ -1461,6 +1490,8 @@ namespace transport
     void threepf_batcher<number>::push_tensor_twopf_si(unsigned int time_serial, unsigned int k_serial,
                                                        unsigned int source_serial, const std::vector<number>& value)
       {
+        if(!this->collect_spectral_data) return;
+
         this->tensor_twopf_si_batch.emplace_back(
           std::make_unique<typename integration_items<number>::tensor_twopf_si_item>(
             time_serial, k_serial, source_serial, value, this->time_db_size, this->kconfig_db_size));
@@ -1496,22 +1527,20 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
       {
-        if(this->collect_initial_conditions)
-          {
-            this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size, this->Nfields));
-            this->check_for_flush();
-          }
+        if(!this->collect_initial_conditions) return;
+
+        this->ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_item>(k_serial, t_exit, values, this->kconfig_db_size, this->Nfields));
+        this->check_for_flush();
       }
 
 
     template <typename number>
     void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 	    {
-        if(this->collect_initial_conditions)
-	        {
-            this->kt_ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_kt_item>(k_serial, t_exit, values, this->kconfig_db_size, this->Nfields));
-            this->check_for_flush();
-	        }
+	      if(!this->collect_initial_conditions) return;
+
+        this->kt_ics_batch.emplace_back(std::make_unique<typename integration_items<number>::ics_kt_item>(k_serial, t_exit, values, this->kconfig_db_size, this->Nfields));
+        this->check_for_flush();
 	    }
 
 
@@ -1527,33 +1556,48 @@ namespace transport
 
         this->writers.host_info(mgr, this);
         if(this->collect_statistics) this->writers.stats(mgr, this, this->stats_batch);
-		    if(this->collect_initial_conditions) this->writers.ics(mgr, this, this->ics_batch);
-		    if(this->collect_initial_conditions) this->writers.kt_ics(mgr, this, this->kt_ics_batch);
+        if(this->collect_initial_conditions)
+          {
+            this->writers.ics(mgr, this, this->ics_batch);
+            this->writers.kt_ics(mgr, this, this->kt_ics_batch);
+          }
         this->writers.backg(mgr, this, this->backg_batch);
         this->writers.twopf_re(mgr, this, this->twopf_re_batch);
         this->writers.twopf_im(mgr, this, this->twopf_im_batch);
-        this->writers.twopf_si_re(mgr, this, this->twopf_si_re_batch);
         this->writers.tensor_twopf(mgr, this, this->tensor_twopf_batch);
-        this->writers.tensor_twopf_si(mgr, this, this->tensor_twopf_si_batch);
         this->writers.threepf_momentum(mgr, this, this->threepf_momentum_batch);
         this->writers.threepf_Nderiv(mgr, this, this->threepf_Nderiv_batch);
+
+        if(this->collect_spectral_data)
+          {
+            this->writers.twopf_si_re(mgr, this, this->twopf_si_re_batch);
+            this->writers.tensor_twopf_si(mgr, this, this->tensor_twopf_si_batch);
+          }
 
         mgr.commit();
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
-        this->stats_batch.clear();
-		    this->ics_batch.clear();
-		    this->kt_ics_batch.clear();
+        if(this->collect_statistics) this->stats_batch.clear();
+		    if(this->collect_initial_conditions)
+          {
+            this->ics_batch.clear();
+            this->kt_ics_batch.clear();
+          }
+
         this->backg_batch.clear();
         this->twopf_re_batch.clear();
         this->twopf_im_batch.clear();
-        this->twopf_si_re_batch.clear();
         this->tensor_twopf_batch.clear();
-        this->tensor_twopf_si_batch.clear();
         this->threepf_momentum_batch.clear();
         this->threepf_Nderiv_batch.clear();
+
+        if(this->collect_spectral_data)
+          {
+            this->twopf_si_re_batch.clear();
+            this->tensor_twopf_si_batch.clear();
+          }
 
         // push a message to the master node, indicating that new data is available
         // note that the order of calls to 'dispatcher' and 'replacer' is important
@@ -1587,20 +1631,10 @@ namespace transport
                          UnbatchPredicate<typename integration_items<number>::twopf_im_item>(source_serial)),
           this->twopf_im_batch.end());
 
-        this->twopf_si_re_batch.erase(
-          std::remove_if(this->twopf_si_re_batch.begin(), this->twopf_si_re_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::twopf_si_re_item>(source_serial)),
-          this->twopf_si_re_batch.end());
-
         this->tensor_twopf_batch.erase(
           std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
                          UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
           this->tensor_twopf_batch.end());
-
-        this->tensor_twopf_si_batch.erase(
-          std::remove_if(this->tensor_twopf_si_batch.begin(), this->tensor_twopf_si_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_si_item>(source_serial)),
-          this->tensor_twopf_si_batch.end());
 
         this->threepf_momentum_batch.erase(
           std::remove_if(this->threepf_momentum_batch.begin(), this->threepf_momentum_batch.end(),
@@ -1612,15 +1646,31 @@ namespace transport
                          UnbatchPredicate<typename integration_items<number>::threepf_Nderiv_item>(source_serial)),
           this->threepf_Nderiv_batch.end());
 
-        this->ics_batch.erase(
-          std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
-          this->ics_batch.end());
+        if(this->collect_spectral_data)
+          {
+            this->twopf_si_re_batch.erase(
+              std::remove_if(this->twopf_si_re_batch.begin(), this->twopf_si_re_batch.end(),
+                             UnbatchPredicate<typename integration_items<number>::twopf_si_re_item>(source_serial)),
+              this->twopf_si_re_batch.end());
 
-        this->kt_ics_batch.erase(
-          std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
-                         UnbatchPredicate<typename integration_items<number>::ics_kt_item>(source_serial)),
-          this->kt_ics_batch.end());
+            this->tensor_twopf_si_batch.erase(
+              std::remove_if(this->tensor_twopf_si_batch.begin(), this->tensor_twopf_si_batch.end(),
+                             UnbatchPredicate<typename integration_items<number>::tensor_twopf_si_item>(source_serial)),
+              this->tensor_twopf_si_batch.end());
+          }
+
+        if(this->collect_initial_conditions)
+          {
+            this->ics_batch.erase(
+              std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                             UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
+              this->ics_batch.end());
+
+            this->kt_ics_batch.erase(
+              std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
+                             UnbatchPredicate<typename integration_items<number>::ics_kt_item>(source_serial)),
+              this->kt_ics_batch.end());
+          }
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
       }

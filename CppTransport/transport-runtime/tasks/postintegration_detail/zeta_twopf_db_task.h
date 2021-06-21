@@ -35,6 +35,9 @@
 namespace transport
 	{
 
+	  constexpr auto CPPTRANSPORT_NODE_ZETA_TWOPF_LIST_COLLECT_SPECTRAL_DATA = "collect-spectral-data";
+
+
     // ZETA TWOPF DATABASE TASK -- COMMON ANCESTOR FOR ZETA_TWOPF_TASK AND ZETA_THREEPF_TASK
 
     template <typename number>
@@ -65,6 +68,13 @@ namespace transport
         //! Provide access to twopf k-configuration database
         const twopf_kconfig_database& get_twopf_database() const { return(this->ptk_as_twopf_db->get_twopf_database()); }
 
+        //! Are we collecting spectral data? Inherited from parent spectral data task
+        bool get_collect_spectral_data() const
+          {
+            return this->collect_spectral_data
+                   && this->ptk_as_twopf_db->get_collect_spectral_data();
+          }
+
 
         // SERIALIZATION
 
@@ -81,13 +91,17 @@ namespace transport
         //! TODO: it would be preferable to avoid this somehow
         twopf_db_task<number>* ptk_as_twopf_db;
 
+        //! enable collection of spectral data (if underlying integration task also provides it)
+        bool collect_spectral_data;
+
 	    };
 
 
     template <typename number>
     zeta_twopf_db_task<number>::zeta_twopf_db_task(const std::string& nm, const twopf_db_task<number>& t)
 	    : postintegration_task<number>(nm, t),
-	      ptk_as_twopf_db(nullptr)
+	      ptk_as_twopf_db(nullptr),
+	      collect_spectral_data(t.get_collect_spectral_data())
 	    {
         ptk_as_twopf_db = dynamic_cast< twopf_db_task<number>* >(this->ptk);
         assert(ptk_as_twopf_db != nullptr);
@@ -99,19 +113,24 @@ namespace transport
     template <typename number>
     zeta_twopf_db_task<number>::zeta_twopf_db_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : postintegration_task<number>(nm, reader, finder),
-	      ptk_as_twopf_db(nullptr)
+	      ptk_as_twopf_db(nullptr),
+	      collect_spectral_data(CPPTRANSPORT_DEFAULT_COLLECT_SPECTRAL_DATA)
 	    {
         ptk_as_twopf_db = dynamic_cast< twopf_db_task<number>* >(this->ptk);
         assert(ptk_as_twopf_db != nullptr);
 
         if(ptk_as_twopf_db == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
+
+        // use .get() with a default argument; this field was introduced in 2021.1, so may not be present in older repositories
+        collect_spectral_data = reader.get(CPPTRANSPORT_NODE_ZETA_TWOPF_LIST_COLLECT_SPECTRAL_DATA, Json::Value(false)).asBool();
 	    }
 
 
     template <typename number>
     zeta_twopf_db_task<number>::zeta_twopf_db_task(const zeta_twopf_db_task<number>& obj)
 	    : postintegration_task<number>(obj),
-	      ptk_as_twopf_db(nullptr)
+	      ptk_as_twopf_db(nullptr),
+	      collect_spectral_data(obj.collect_spectral_data)
 	    {
         ptk_as_twopf_db = dynamic_cast< twopf_db_task<number>* >(this->ptk);
         assert(ptk_as_twopf_db != nullptr);
@@ -123,6 +142,8 @@ namespace transport
     template <typename number>
     void zeta_twopf_db_task<number>::serialize(Json::Value& writer) const
 	    {
+	      writer[CPPTRANSPORT_NODE_ZETA_TWOPF_LIST_COLLECT_SPECTRAL_DATA] = this->collect_spectral_data;
+
         this->postintegration_task<number>::serialize(writer);
 	    }
 

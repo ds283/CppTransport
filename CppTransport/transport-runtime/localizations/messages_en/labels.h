@@ -58,6 +58,8 @@ constexpr auto CPPTRANSPORT_TIME_CONFIG_TEQUALS                = "t =";
 
 constexpr auto CPPTRANSPORT_ADAPTIVE_ICS                       = "Adaptive initial conditions";
 constexpr auto CPPTRANSPORT_MESH_REFINEMENTS                   = "Maximum number of mesh refinements";
+constexpr auto CPPTRANSPORT_COLLECTING_ICS                     = "Collecting initial conditions";
+constexpr auto CPPTRANSPORT_COLLECTING_SPECTRAL_DATA           = "Collecting spectral data";
 constexpr auto CPPTRANSPORT_PARENT_TASK                        = "Parent task";
 
 constexpr auto CPPTRANSPORT_CONTENT_GROUP                       = "Content group";

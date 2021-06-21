@@ -30,6 +30,7 @@
 namespace transport
   {
 
+    //! leafname for repository lockfile
     constexpr auto CPPTRANSPORT_DATAMGR_LOCKFILE_LEAF = "lockfile";
 
     template <typename number>
@@ -48,7 +49,8 @@ namespace transport
           {
           }
 
-        //! Explicitly delete copy constructor, preventing duplication (data_manager instances should be unique)
+        //! Explicitly delete copy constructor, preventing duplication (data_manager instances should be unique,
+        //! in order to prevent corruption due to overlapping writes)
         data_manager(const data_manager<number>& obj) = delete;
 
         //! Destroy the data_manager instance. In practice this would always be delegated to an implementation class
@@ -241,43 +243,43 @@ namespace transport
       protected:
 
         //! get missing serial numbers from a twopf-re table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_twopf_re_serials(integration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_twopf_re_serials(integration_writer<number>& writer) = 0;
 
         //! get missing serial numbers from a twopf-im table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_twopf_im_serials(integration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_twopf_im_serials(integration_writer<number>& writer) = 0;
 
         //! get missing serial numbers from a twopf-re spectral index table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_twopf_si_re_serials(integration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_twopf_si_re_serials(integration_writer<number>& writer) = 0;
 
         //! get missing serial numbers from a tensor twopf table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_tensor_twopf_serials(integration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_tensor_twopf_serials(integration_writer<number>& writer) = 0;
 
         //! get missing serial numbers from a tensor twopf spectral index table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_tensor_twopf_si_serials(integration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_tensor_twopf_si_serials(integration_writer<number>& writer) = 0;
 
         //! get missing serial numbers from a threepf-momentum table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_threepf_momentum_serials(integration_writer <number>& writer) = 0;
+        virtual serial_number_list get_missing_threepf_momentum_serials(integration_writer <number>& writer) = 0;
 
         //! get missing serial numbers from a threepf-deriv table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_threepf_deriv_serials(integration_writer <number>& writer) = 0;
+        virtual serial_number_list get_missing_threepf_deriv_serials(integration_writer <number>& writer) = 0;
 
         //! get missing serial numbers from a zeta twopf table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_zeta_twopf_serials(postintegration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_zeta_twopf_serials(postintegration_writer<number>& writer) = 0;
 
         //! get missing serial numbers from a zeta threepf table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) = 0;
 
         //! get missing numbers from a zeta 1st-order gauge xfm table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_gauge_xfm1_serials(postintegration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_gauge_xfm1_serials(postintegration_writer<number>& writer) = 0;
 
         //! get missing numbers from a zeta 2nd-order gauge xfm 123-order table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_gauge_xfm2_123_serials(postintegration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_gauge_xfm2_123_serials(postintegration_writer<number>& writer) = 0;
 
         //! get missing numbers from a zeta 2nd-order gauge xfm 213-order table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_gauge_xfm2_213_serials(postintegration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_gauge_xfm2_213_serials(postintegration_writer<number>& writer) = 0;
 
         //! get missing numbers from a zeta 2nd-order gauge xfm 312-order table; should be provided by implementation
-        virtual std::set<unsigned int> get_missing_gauge_xfm2_312_serials(postintegration_writer<number>& writer) = 0;
+        virtual serial_number_list get_missing_gauge_xfm2_312_serials(postintegration_writer<number>& writer) = 0;
 
 
         // -- DROP GROUPS OF SERIAL NUMBERS
@@ -286,80 +288,80 @@ namespace transport
 
         //! drop a set of k-configurations from a twopf-re table; should be provided by implementation
         virtual void drop_twopf_re_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                  const std::set<unsigned int>& serials,const std::set<unsigned int>& missing,
+                                                  const serial_number_list& serials, const serial_number_list& missing,
                                                   const twopf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a twopf-im table; should be provided by implementation
         virtual void drop_twopf_im_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                  const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                  const serial_number_list& serials, const serial_number_list& missing,
                                                   const twopf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a twopf-re spectral index table; should be provided by implementation
         virtual void drop_twopf_si_re_configurations(transaction_manager& mgr, integration_writer <number>& writer,
-                                                     const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                     const serial_number_list& serials, const serial_number_list& missing,
                                                      const twopf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a tensor twopf table; should be provided by implementation
         virtual void drop_tensor_twopf_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                      const serial_number_list& serials, const serial_number_list& missing,
                                                       const twopf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a tensor twopf spectral index table; should be provided by implementation
         virtual void drop_tensor_twopf_si_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                         const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                         const serial_number_list& serials, const serial_number_list& missing,
                                                          const twopf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a threepf-momentum table; should be provided by implementation
         virtual void drop_threepf_momentum_configurations(transaction_manager& mgr, integration_writer <number>& writer,
-                                                          const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                          const serial_number_list& serials, const serial_number_list& missing,
                                                           const threepf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a threepf-deriv table; should be provided by implementation
         virtual void drop_threepf_deriv_configurations(transaction_manager& mgr, integration_writer <number>& writer,
-                                                       const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                       const serial_number_list& serials, const serial_number_list& missing,
                                                        const threepf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a zeta twopf table; should be provided by implementation
         virtual void drop_zeta_twopf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                    const serial_number_list& serials, const serial_number_list& missing,
                                                     const twopf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
         virtual void drop_zeta_threepf_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                      const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                      const serial_number_list& serials, const serial_number_list& missing,
                                                       const threepf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a 1st-order gauge xfm table; should be provided by implementation
         virtual void drop_gauge_xfm1_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                    const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                    const serial_number_list& serials, const serial_number_list& missing,
                                                     const twopf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 123-order table; should be provided by implementation
         virtual void drop_gauge_xfm2_123_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const serial_number_list& serials, const serial_number_list& missing,
                                                         const threepf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 213-order table; should be provided by implementation
         virtual void drop_gauge_xfm2_213_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const serial_number_list& serials, const serial_number_list& missing,
                                                         const threepf_kconfig_database& dbase) = 0;
 
         //! drop a set of k-configurations from a 2nd-order gauge xfm 312-order table; should be provided by implementation
         virtual void drop_gauge_xfm2_312_configurations(transaction_manager& mgr, postintegration_writer<number>& writer,
-                                                        const std::set<unsigned int>& serials, const std::set<unsigned int>& missing,
+                                                        const serial_number_list& serials, const serial_number_list& missing,
                                                         const threepf_kconfig_database& dbase) = 0;
 
         //! drop statistics for a set of k-configurations; should be provided by implementation
         virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                    const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase) = 0;
+                                                    const serial_number_list& serials, const twopf_kconfig_database& dbase) = 0;
         virtual void drop_statistics_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                    const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase) = 0;
+                                                    const serial_number_list& serials, const threepf_kconfig_database& dbase) = 0;
 
         //! drop initial conditions for a set of k-configurations; should be provided by implementation
         virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                            const std::set<unsigned int>& serials, const twopf_kconfig_database& dbase) = 0;
+                                                            const serial_number_list& serials, const twopf_kconfig_database& dbase) = 0;
         virtual void drop_initial_conditions_configurations(transaction_manager& mgr, integration_writer<number>& writer,
-                                                            const std::set<unsigned int>& serials, const threepf_kconfig_database& dbase) = 0;
+                                                            const serial_number_list& serials, const threepf_kconfig_database& dbase) = 0;
 
 
         // -- INTEGRITY-CHECK UTILITY FUNCTIONS
@@ -368,19 +370,19 @@ namespace transport
 
         //!
         template <typename WriterObject, typename Database>
-        void advise_missing_content(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db);
+        void advise_missing_content(WriterObject& writer, const serial_number_list& serials, const Database& db);
 
         //! compare list of missing serials numbers against a list of failed serial numbers, provided by the backend
         //! (not all backends may make this information available)
         //! returns: serial numbers of any further configurations that should be dropped (they were in the list provided by the backend, but not already missing)
         template <typename WriterObject, typename Database>
-        std::set<unsigned int> find_failed_but_undropped_serials(WriterObject& writer, const std::set<unsigned int>& serials, const Database& db);
+        serial_number_list find_failed_but_undropped_serials(WriterObject& writer, const serial_number_list& serials, const Database& db);
 
         //! compute the twopf configurations which should be dropped to match a give list of threepf serials
-        std::set<unsigned int> compute_twopf_drop_list(const std::set<unsigned int>& serials, const threepf_kconfig_database& configs);
+        serial_number_list compute_twopf_drop_list(const serial_number_list& serials, const threepf_kconfig_database& configs);
 
         //! map a list of twopf configuration serial numbers to corresponding threepf configuration serial numbers
-        std::set<unsigned int> map_twopf_to_threepf_serials(const std::set<unsigned int>& twopf_list, const threepf_kconfig_database& threepf_db);
+        serial_number_list map_twopf_to_threepf_serials(const serial_number_list& twopf_list, const threepf_kconfig_database& threepf_db);
 
 
         // DATA ACCESS VIA DATA PIPES

@@ -977,6 +977,7 @@ SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_UTILITIES_FILES
 
 SET(TRANSPORT_RUNTIME_FILES
   transport-runtime/ansi_colour_codes.h
+  transport-runtime/common.h
   transport-runtime/default_symbols.h
   transport-runtime/defaults.h
   transport-runtime/enumerations.h

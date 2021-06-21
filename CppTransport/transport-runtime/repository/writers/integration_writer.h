@@ -272,17 +272,24 @@ namespace transport
 
       public:
 
-        //! Are we collecting per-configuration statistics
+        //! Are we collecting per-configuration statistics?
         bool is_collecting_statistics() const { return(this->collect_statistics); }
 
-        //! Set collecting-statistics mode
+        //! Set collecting-statistics mode flag
         void set_collecting_statistics(bool g) { this->collect_statistics = g; }
 
 		    //! Are we collecting initial conditions data?
 				bool is_collecting_initial_conditions() const { return(this->collect_initial_conditions); }
 
-        //! Set initial-conditions collection mode
+        //! Set initial-conditions collection mode flag
         void set_collecting_initial_conditions(bool g) { this->collect_initial_conditions = g; }
+
+        //! Are we collecting spectral data?
+        bool is_collecting_spectral_data() const { return(this->collect_spectral_data); }
+
+        //! Set spectral data collection flag
+        [[deprecated("This function should not be used, because it can override the collection behaviour specified in the task. Use could lead to an inconsistent repository.")]]
+        void set_collecting_spectral_data(bool g) { this->collect_spectral_data = g; }
 
 
         // METADATA
@@ -296,7 +303,7 @@ namespace transport
         void set_workgroup_number(unsigned int wg) { this->workgroup_number = wg; }
 
         //! Return task
-        const std::string get_task_name() const { return(this->task->get_name()); }
+        const std::string& get_task_name() const { return(this->task->get_name()); }
 
         //! Return task
         template <typename TaskType>
@@ -329,21 +336,21 @@ namespace transport
       public:
 
         //! Add list of serial numbers which the backend advises have failed (not all backends may support this)
-        void merge_failure_list(const std::set<unsigned int>& failed)
+        void merge_failure_list(const serial_number_list& failed)
           {
             this->failed_serials.insert(failed.begin(), failed.end());
             this->set_fail(!this->failed_serials.empty());
           }
 
         //! Get list of serial numbers which the backend advises have failed
-        const std::set<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+        const serial_number_list& get_failed_serials() const { return(this->failed_serials); }
 
         //! get list of missing k-configuration serials
-        const std::set<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
+        const serial_number_list& get_missing_serials() const { return(this->missing_serials); }
 
 		    //! set list of missing k-configuration serials
         template <typename Database>
-        void set_missing_serials(const std::set<unsigned int>& s, const Database& db)
+        void set_missing_serials(const serial_number_list& s, const Database& db)
           {
             this->missing_serials = s;
 
@@ -413,7 +420,7 @@ namespace transport
         // FAILURE STATUS
 
         //! List of failed serial numbers reported by backend (not all backends may support this)
-        std::set<unsigned int> failed_serials;
+        serial_number_list failed_serials;
 
 
         // INTEGRITY STATUS
@@ -421,10 +428,11 @@ namespace transport
         //! List of missing serial numbers
         //! (this isn't the same as the list of failed serials reported by the backend; we compute this by testing the
         //! integrity of the database directly and cross-check with failures reported by the backend)
-        std::set<unsigned int> missing_serials;
+        serial_number_list missing_serials;
 
 
-        // MISCELLANEOUS
+        // COLLECTION INFORMATION
+        // enable/disable configurable collection behaviour
 
         //! are we collecting per-configuration statistics?
         bool collect_statistics;
@@ -432,6 +440,8 @@ namespace transport
 		    //! are we collecting initial conditions data?
 		    bool collect_initial_conditions;
 
+		    //! are we collecting spectral data?
+        bool collect_spectral_data;
 
         // PROFILING SUPPORT
 
@@ -459,21 +469,22 @@ namespace transport
         integrity_h(nullptr),
         task(dynamic_cast< integration_task<number>* >(rec.get_task()->clone())),
         type(rec.get_task_type()),
+        collect_initial_conditions{false},  // defaults to false, but can be overwritten in constructor body
 	      collect_statistics(rec.get_task()->get_model()->supports_per_configuration_statistics()),
+	      collect_spectral_data{false},       // defaults to false, but can be overwritten in constructor body
 	      metadata(),
         data_type(data_type_name<number>()),
         agg_profile(n)
 	    {
-	      twopf_db_task<number>* tk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(rec.get_task());
-	      assert(tk_as_twopf_list != nullptr);
+	      // test whether supplied task is a 2pf integration task
+	      auto* tk_as_twopf_db = dynamic_cast< twopf_db_task<number>* >(rec.get_task());
 
-	      if(tk_as_twopf_list != nullptr)
+	      // if supplied integration task resolves to a 2pf integration task (or something that contains a 2pf
+	      // integration task, such as a 3pf integration task), then inherit collecting status from the task
+	      if(tk_as_twopf_db != nullptr)
 		      {
-			      collect_initial_conditions = tk_as_twopf_list->get_collect_initial_conditions();
-		      }
-	      else
-		      {
-			      collect_initial_conditions = false;
+			      collect_initial_conditions = tk_as_twopf_db->get_collect_initial_conditions();
+			      collect_spectral_data = tk_as_twopf_db->get_collect_spectral_data();
 		      }
 	    }
 

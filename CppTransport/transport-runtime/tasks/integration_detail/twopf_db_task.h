@@ -51,9 +51,10 @@
 namespace transport
 	{
 
-    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR         = "kstar";
-    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION = "normalization";
-    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   = "collect-ics";
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR                 = "kstar";
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION         = "normalization";
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS           = "collect-ics";
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_SPECTRAL_DATA = "collect-spectral-data";
 
     namespace task_impl
       {
@@ -269,10 +270,10 @@ namespace transport
 		    virtual void compute_horizon_exit_times();
 
         //! Write k-configuration database to disk
-        virtual void write_kconfig_database(sqlite3* handle) override;
+        void write_kconfig_database(sqlite3* handle) override;
 
 		    //! Check whether twopf database has been modified
-		    virtual bool is_kconfig_database_modified() const override { return(this->twopf_db->is_modified()); }
+		    bool is_kconfig_database_modified() const override { return(this->twopf_db->is_modified()); }
 
       protected:
 
@@ -369,15 +370,21 @@ namespace transport
         twopf_db_task<number>& set_max_refinements(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); return *this; }
 
 
-		    // INTERFACE - COLLECTION OF INITIAL CONDITIONS
+		    // INTERFACE - OPTIONAL COLLECTION BEHAVIOUR
 
       public:
 
-		    //! Get current collection status
+		    //! Get current collection status for initial conditions
 		    bool get_collect_initial_conditions() const { return(this->collect_initial_conditions); }
 
-		    //! Set current collection status
+		    //! Set current collection status for initial conditions
 		    twopf_db_task<number>& set_collect_initial_conditions(bool g) { this->collect_initial_conditions = g; return *this; }
+
+		    //! Get current collection status for spectral data
+		    bool get_collect_spectral_data() const { return(this->collect_spectral_data); }
+
+		    //! Set current collection status for spectral data
+		    twopf_db_task<number>& set_collect_spectral_data(bool g) { this->collect_spectral_data = g; this *this; }
 
 
         // TIME CONFIGURATION DATABASE
@@ -387,7 +394,7 @@ namespace transport
         //! override cache_stored_time_config_database()
         //! supplied by integration_task<> in order to account for adaptive ics
         //! if they are being used
-        virtual void cache_stored_time_config_database(double largest_conventional_k) override;
+        void cache_stored_time_config_database(double largest_conventional_k) override;
 
 
         // INTERNAL API
@@ -452,10 +459,13 @@ namespace transport
         unsigned int max_refinements;
 
 
-		    // COLLECTION OF INITIAL CONDITIONS
+		    // OPTIONAL DATA COLLECTION
 
 		    //! Write initial conditions into the container during integration?
 		    bool collect_initial_conditions;
+
+		    //! Collect spectral data?
+		    bool collect_spectral_data;
 
 
 		    // K-CONFIGURATION DATABASE
@@ -485,6 +495,7 @@ namespace transport
         max_refinements(CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
         collect_initial_conditions(CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
+        collect_spectral_data(CPPTRANSPORT_DEFAULT_COLLECT_SPECTRAL_DATA),
         kstar(i.get_model()->compute_kstar(this))     // compute k* for our choice of horizon-crossing time
       {
 		    twopf_db = std::make_shared<twopf_kconfig_database>(kstar);
@@ -503,18 +514,22 @@ namespace transport
         max_refinements            = reader[CPPTRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
         astar_normalization        = reader[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
         collect_initial_conditions = reader[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS].asBool();
+
+        // use .get() with a default argument; this field was introduced in 2021.1, so may not be present in older repositories
+        collect_spectral_data      = reader.get(CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_SPECTRAL_DATA, Json::Value(false)).asBool();
 	    }
 
 
     template <typename number>
     void twopf_db_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[CPPTRANSPORT_NODE_ADAPTIVE_ICS]             = this->adaptive_ics;
-        writer[CPPTRANSPORT_NODE_ADAPTIVE_ICS_EFOLDS]      = this->adaptive_efolds;
-        writer[CPPTRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
-        writer[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
-        writer[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
-		    writer[CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR]         = this->kstar;
+        writer[CPPTRANSPORT_NODE_ADAPTIVE_ICS]                     = this->adaptive_ics;
+        writer[CPPTRANSPORT_NODE_ADAPTIVE_ICS_EFOLDS]              = this->adaptive_efolds;
+        writer[CPPTRANSPORT_NODE_MESH_REFINEMENTS]                 = this->max_refinements;
+        writer[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION]         = this->astar_normalization;
+        writer[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]           = this->collect_initial_conditions;
+        writer[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_SPECTRAL_DATA] = this->collect_spectral_data;
+		    writer[CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR]                 = this->kstar;
 
 		    // twopf database is serialized separately into an SQLite database
         // this serialization is handled by the repository layer via write_kconfig_database() below
@@ -974,6 +989,10 @@ namespace transport
         out << CPPTRANSPORT_ADAPTIVE_ICS << ": " << (this->get_adaptive_ics() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO);
         out << " " << CPPTRANSPORT_WITH << " " << this->adaptive_efolds << " " << CPPTRANSPORT_EFOLDS << ", ";
         out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << this->get_max_refinements() << '\n';
+        out << CPPTRANSPORT_COLLECTING_ICS << ": " << (this->collect_initial_conditions ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << "\n";
+        out << CPPTRANSPORT_COLLECTING_SPECTRAL_DATA << ": " << (this->collect_spectral_data ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << "\n";
+
+        // forward to underlying write method of integration_task<>
         out << static_cast< const integration_task<number>& >(*this);
       }
 

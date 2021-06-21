@@ -188,11 +188,11 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        // tag the writer as including spectral data if the source integration group also includes it
+        // tag the writer as *not* including spectral data if the source integration group hasn't got it
         const auto& source_payload = source_group->get_payload();
-        if(source_payload.has_spectral_data())
+        if(!source_payload.has_spectral_data())
           {
-            writer->get_products().add_zeta_twopf_spectral();
+            writer->get_products().set_zeta_twopf_spectral(false);
           }
 
         // create new tables needed in the database
@@ -257,9 +257,6 @@ namespace transport
         auto p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
 
         this->data_mgr->initialize_writer(*p_writer);
-        // paired batchers will always have spectral data, so can set this here
-        // (the other content flags are set in initialize_writer() above, but that does not set the flag for spectral data)
-        p_writer->get_products().add_zeta_twopf_spectral();
         this->data_mgr->create_tables(*p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different content groups
@@ -319,7 +316,7 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    std::set<unsigned int> master_controller<number>::seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
+    serial_number_list master_controller<number>::seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
         postintegration_content_db db = this->repo->enumerate_postintegration_task_content(tk->get_name());
@@ -358,7 +355,7 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
-    std::set<unsigned int> master_controller<number>::seed_writer_pair(integration_writer<number>& i_writer,
+    serial_number_list master_controller<number>::seed_writer_pair(integration_writer<number>& i_writer,
                                                                         postintegration_writer<number>& p_writer,
                                                                         TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group)
       {
@@ -407,11 +404,11 @@ namespace transport
         // currently we assume this to be true, although the integrity check for paired writers
         // doesn't enforce it (yet)
         // note, this->seed_writer() will make i_writer inherit metadata from the seed content group
-        std::set<unsigned int> integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
+        auto integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
 
         if(i_writer.is_seeded())
           {
-            std::set<unsigned int> postintegration_serials = t->second->get_payload().get_failed_serials();
+            auto postintegration_serials = t->second->get_payload().get_failed_serials();
 
             // minimal check is that each content group is missing the same number of serial numbers
             if(postintegration_serials.size() != integration_serials.size())
@@ -424,7 +421,7 @@ namespace transport
               }
 
             // now check more carefully that the missing serial numbers are the same
-            std::set<unsigned int> diff;
+            serial_number_list diff;
             std::set_difference(integration_serials.begin(), integration_serials.end(),
                                 postintegration_serials.begin(), postintegration_serials.end(), std::inserter(diff, diff.begin()));
 

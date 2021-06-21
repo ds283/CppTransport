@@ -144,7 +144,7 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    std::set<unsigned int> master_controller<number>::seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
+    serial_number_list master_controller<number>::seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
         integration_content_db db = this->repo->enumerate_integration_task_content(tk->get_name());

@@ -67,7 +67,8 @@ namespace transport
     constexpr double       CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS         = (4.0);
     constexpr double       CPPTRANSPORT_DEFAULT_RECOMMENDED_SETTLE_EFOLDS  = (2.0);
 
-    constexpr bool         CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS = (false);
+    constexpr bool         CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS = false;
+    constexpr bool         CPPTRANSPORT_DEFAULT_COLLECT_SPECTRAL_DATA      = true;
 
     // store wavenumbers to a relative precision of 1 part in 1E5
     constexpr double       CPPTRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION   = (1E-5);

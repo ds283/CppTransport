@@ -41,7 +41,7 @@ namespace transport
       public:
 
         //! null constructor - set all fields to zero
-        integration_metadata(void)
+        integration_metadata()
           : total_wallclock_time(0),
             total_aggregation_time(0),
             total_integration_time(0),
@@ -77,7 +77,7 @@ namespace transport
           }
 
         //! deserialization constructor
-        integration_metadata(Json::Value& reader);
+        explicit integration_metadata(Json::Value& reader);
 
 
         // SERIALIZE -- implements a 'serializable' interface
@@ -134,7 +134,7 @@ namespace transport
       public:
 
         //! null constructor - set all fields to zero
-        output_metadata(void)
+        output_metadata()
           : work_time(0),
             db_time(0),
             aggregation_time(0),
@@ -188,7 +188,7 @@ namespace transport
           }
 
         //! deserialization constructor
-        output_metadata(Json::Value& reader);
+        explicit output_metadata(Json::Value& reader);
 
 
         // SERIALIZE -- implements a 'serializable' interface

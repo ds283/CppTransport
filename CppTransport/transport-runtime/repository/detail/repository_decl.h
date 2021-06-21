@@ -82,7 +82,7 @@ namespace transport
       public:
 
         //! Create a repository object
-        repository(const boost::filesystem::path path, model_manager <number>& f, repository_mode mode,
+        repository(const boost::filesystem::path& path, model_manager <number>& f, repository_mode mode,
                    local_environment& ev, argument_cache& ar,
                    package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf);
 

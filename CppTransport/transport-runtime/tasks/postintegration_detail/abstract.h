@@ -33,12 +33,11 @@
 #include "boost/log/utility/formatting_ostream.hpp"
 
 
-#define CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT     "parent-task"
-#define CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED     "paired"
-
-
 namespace transport
 	{
+
+	  constexpr auto CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT     = "parent-task";
+    constexpr auto CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED     = "paired";
 
     // TASK STRUCTURES -- POST-PROCESSING TASKS
 

@@ -299,6 +299,7 @@ namespace transport
         writer.set_data_manager_handle(db);
 
         // set aggregation handlers
+        // TODO: why do we populate the postintegration products here? Shouldn't this happen inside the writer?
         auto& products = writer.get_products();
         switch(writer.get_type())
           {
@@ -313,7 +314,7 @@ namespace transport
                 writer.set_finalize_handler(std::move(finalize));
 
                 products.add_zeta_twopf();
-                // if twopf spectral data is being recorded, this will need to be tagged later
+                if(writer.is_collecting_spectral_data()) products.add_zeta_twopf_spectral();
                 break;
               }
 
@@ -328,9 +329,9 @@ namespace transport
                 writer.set_finalize_handler(std::move(finalize));
 
                 products.add_zeta_twopf();
-                // if twopf spectral data is being recorded, this will need to be tagged later
                 products.add_zeta_threepf();
                 products.add_zeta_redbsp();
+                if(writer.is_collecting_spectral_data()) products.add_zeta_twopf_spectral();
                 break;
               }
 
@@ -810,7 +811,7 @@ namespace transport
           {
             return std::bind(
               &sqlite3_operations::write_zeta_twopf<number>,
-              std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+              std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
           }
       };
 
@@ -1593,7 +1594,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_twopf_re_serials(integration_writer <number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1605,7 +1606,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_twopf_im_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1617,7 +1618,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_twopf_si_re_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1629,7 +1630,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_tensor_twopf_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1641,7 +1642,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_tensor_twopf_si_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1653,7 +1654,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_threepf_momentum_serials(integration_writer <number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1665,7 +1666,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_threepf_deriv_serials(integration_writer <number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1677,7 +1678,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_zeta_twopf_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1689,7 +1690,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_zeta_threepf_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1701,7 +1702,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_gauge_xfm1_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1713,7 +1714,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_gauge_xfm2_123_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1725,7 +1726,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_gauge_xfm2_213_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1737,7 +1738,7 @@ namespace transport
 
 
     template <typename number>
-    std::set<unsigned int>
+    serial_number_list
     data_manager_sqlite3<number>::get_missing_gauge_xfm2_312_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
@@ -1751,15 +1752,15 @@ namespace transport
     template <typename number>
     void
       data_manager_sqlite3<number>::drop_twopf_re_configurations
-        (transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials,
-         const std::set<unsigned int>& missing, const twopf_kconfig_database& dbase)
+        (transaction_manager& mgr, integration_writer<number>& writer, const serial_number_list& serials,
+         const serial_number_list& missing, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1770,15 +1771,15 @@ namespace transport
     template <typename number>
     void
       data_manager_sqlite3<number>::drop_twopf_im_configurations
-      (transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const twopf_kconfig_database& dbase)
+      (transaction_manager& mgr, integration_writer<number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1789,15 +1790,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_twopf_si_re_configurations
-      (transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const twopf_kconfig_database& dbase)
+      (transaction_manager& mgr, integration_writer <number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1808,15 +1809,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_tensor_twopf_configurations
-      (transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const twopf_kconfig_database& dbase)
+      (transaction_manager& mgr, integration_writer<number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1827,15 +1828,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_tensor_twopf_si_configurations
-      (transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const twopf_kconfig_database& dbase)
+      (transaction_manager& mgr, integration_writer <number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1846,15 +1847,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_threepf_momentum_configurations
-      (transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const threepf_kconfig_database& dbase)
+      (transaction_manager& mgr, integration_writer <number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1865,15 +1866,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_threepf_deriv_configurations
-      (transaction_manager& mgr, integration_writer <number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const threepf_kconfig_database& dbase)
+      (transaction_manager& mgr, integration_writer <number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1884,15 +1885,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_zeta_twopf_configurations
-    (transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials,
-     const std::set<unsigned int>& missing, const twopf_kconfig_database& dbase)
+    (transaction_manager& mgr, postintegration_writer<number>& writer, const serial_number_list& serials,
+     const serial_number_list& missing, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1903,15 +1904,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_zeta_threepf_configurations
-      (transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const threepf_kconfig_database& dbase)
+      (transaction_manager& mgr, postintegration_writer<number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1922,15 +1923,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_gauge_xfm1_configurations
-      (transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const twopf_kconfig_database& dbase)
+      (transaction_manager& mgr, postintegration_writer<number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1941,15 +1942,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_gauge_xfm2_123_configurations
-      (transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const threepf_kconfig_database& dbase)
+      (transaction_manager& mgr, postintegration_writer<number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1960,15 +1961,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_gauge_xfm2_213_configurations
-      (transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const threepf_kconfig_database& dbase)
+      (transaction_manager& mgr, postintegration_writer<number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1979,15 +1980,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_gauge_xfm2_312_configurations
-      (transaction_manager& mgr, postintegration_writer<number>& writer, const std::set<unsigned int>& serials,
-       const std::set<unsigned int>& missing, const threepf_kconfig_database& dbase)
+      (transaction_manager& mgr, postintegration_writer<number>& writer, const serial_number_list& serials,
+       const serial_number_list& missing, const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // only drop those serials that are actually missing (otherwise DELETE is expensive)
-        std::set<unsigned int> drop_list;
+        serial_number_list drop_list;
         std::set_difference(serials.begin(), serials.end(), missing.begin(), missing.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_k_configurations(mgr, db, writer, drop_list, dbase,
@@ -1998,15 +1999,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_statistics_configurations
-      (transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials,
+      (transaction_manager& mgr, integration_writer<number>& writer, const serial_number_list& serials,
        const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::set<unsigned int> present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::configuration_statistics>(db);
-        std::set<unsigned int> drop_list;
+        auto present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::configuration_statistics>(db);
+        serial_number_list drop_list;
         std::set_intersection(serials.begin(), serials.end(), present.begin(), present.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_statistics(mgr, db, drop_list, dbase);
@@ -2016,15 +2017,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_statistics_configurations
-      (transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials,
+      (transaction_manager& mgr, integration_writer<number>& writer, const serial_number_list& serials,
        const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::set<unsigned int> present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::configuration_statistics>(db);
-        std::set<unsigned int> drop_list;
+        auto present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::configuration_statistics>(db);
+        serial_number_list drop_list;
         std::set_intersection(serials.begin(), serials.end(), present.begin(), present.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_statistics(mgr, db, drop_list, dbase);
@@ -2034,15 +2035,15 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_initial_conditions_configurations
-      (transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials,
+      (transaction_manager& mgr, integration_writer<number>& writer, const serial_number_list& serials,
        const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::set<unsigned int> present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_item>(db);
-        std::set<unsigned int> drop_list;
+        auto present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_item>(db);
+        serial_number_list drop_list;
         std::set_intersection(serials.begin(), serials.end(), present.begin(), present.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(mgr, db, drop_list, dbase);
@@ -2052,21 +2053,21 @@ namespace transport
     template <typename number>
     void
     data_manager_sqlite3<number>::drop_initial_conditions_configurations
-      (transaction_manager& mgr, integration_writer<number>& writer, const std::set<unsigned int>& serials,
+      (transaction_manager& mgr, integration_writer<number>& writer, const serial_number_list& serials,
        const threepf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        std::set<unsigned int> present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_item>(db);
-        std::set<unsigned int> drop_list;
+        auto present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_item>(db);
+        serial_number_list drop_list;
         std::set_intersection(serials.begin(), serials.end(), present.begin(), present.end(), std::inserter(drop_list, drop_list.begin()));
 
         sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(mgr, db, drop_list, dbase);
 
-        std::set<unsigned int> kt_present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_kt_item>(db);
-        std::set<unsigned int> kt_drop_list;
+        auto kt_present = sqlite3_operations::get_stored_serials<number, typename integration_items<number>::ics_kt_item>(db);
+        serial_number_list kt_drop_list;
         std::set_intersection(serials.begin(), serials.end(), kt_present.begin(), kt_present.end(), std::inserter(kt_drop_list, kt_drop_list.begin()));
 
         sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(mgr, db, kt_drop_list, dbase);

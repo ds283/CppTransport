@@ -47,6 +47,8 @@
 #include "transport-runtime/messages.h"
 #include "transport-runtime/defaults.h"
 
+#include "transport-runtime/common.h"
+
 #include "transport-runtime/models/observers.h"
 #include "transport-runtime/models/model.h"
 

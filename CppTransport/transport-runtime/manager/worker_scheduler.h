@@ -316,7 +316,7 @@ namespace transport
 		    void prepare_queue(output_task<number>& task);
 
         //! build a work queue using specified serial numbers (used when seeding tasks)
-        void prepare_queue(const std::set<unsigned int>& list);
+        void prepare_queue(const serial_number_list& list);
 
 		    //! current queue exhausted? ie., finished all current work?
 		    bool is_finished() const { return this->queue.empty(); }
@@ -681,7 +681,7 @@ namespace transport
       }
 
 
-    void worker_scheduler::prepare_queue(const std::set<unsigned int>& list)
+    void worker_scheduler::prepare_queue(const serial_number_list& list)
       {
         // copy serial numbers from list into temporary vector
         std::vector<unsigned int> temp;

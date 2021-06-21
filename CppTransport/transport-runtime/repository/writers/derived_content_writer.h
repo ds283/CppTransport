@@ -235,7 +235,7 @@ namespace transport
         const output_metadata& get_metadata() const { return(this->metadata); }
 
         //! Merge list of failed serials reported by backend (not all backends may support this)
-        void merge_failure_list(const std::set<unsigned int>& failed) { throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED); }
+        void merge_failure_list(const serial_number_list& failed) { throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED); }
 
         //! Set content groups
         void set_content_groups(const std::list<std::string>& l) { this->content_groups = l; }

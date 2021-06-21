@@ -58,8 +58,8 @@ namespace transport
         // Write functions don't take const referefences for each cache because the cache is sorted in-place
         // This sort step is important -- it dramatically improves SQLite performance
 
-		    //! Zeta 2pf writer function
-		    using zeta_twopf_writer = std::function<void(transaction_manager&,postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&)>;
+		    //! Zeta 2pf writer function; final bool determines whether spectral data is being used
+		    using zeta_twopf_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_twopf_item> >&, bool)>;
 
 		    //! Zeta 3pf writer function
 		    using zeta_threepf_writer = std::function<void(transaction_manager&, postintegration_batcher<number>*, std::vector< std::unique_ptr<typename postintegration_items<number>::zeta_threepf_item> >&)>;
@@ -95,7 +95,7 @@ namespace transport
         postintegration_batcher(size_t cap, unsigned int ckp, model<number>* m, postintegration_task<number>* tk,
                                 const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                 std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
-                                handle_type h, unsigned int w);
+                                handle_type h, unsigned int w, bool sd=true);
 
         //! move constructor
         postintegration_batcher(postintegration_batcher<number>&&) = default;
@@ -146,6 +146,14 @@ namespace transport
         // INTERNAL DATA
 
       protected:
+
+	      // COLLECTION BEHAVIOUR
+
+        //! collect spectral data?
+        bool collect_spectral_data;
+
+
+        // OTHER INTERNAL DATA
 
         //! Number of work items processed
         unsigned int items_processed;
@@ -507,7 +515,7 @@ namespace transport
     postintegration_batcher<number>::postintegration_batcher(size_t cap, unsigned int ckp, model<number>* m, postintegration_task<number>* tk,
                                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                              std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
-                                                             handle_type h, unsigned int w)
+                                                             handle_type h, unsigned int w, bool sd)
 	    : generic_batcher(cap, ckp, cp, lp, std::move(d), std::move(r), h, w),
 	      items_processed(0),
 	      total_time(0),
@@ -515,7 +523,8 @@ namespace transport
 	      shortest_time(0),
         parent_task(tk),
         time_db_size(tk->get_parent_task()->get_stored_time_config_database().size()),
-        Nfields(m->get_N_fields())
+        Nfields(m->get_N_fields()),
+        collect_spectral_data(sd)
 	    {
 	    }
 
@@ -576,7 +585,7 @@ namespace transport
                                                    const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                    const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                                                    std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn)
-	    : postintegration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn),
+	    : postintegration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, tk->get_collect_spectral_data()),
 	      writers(w),
         parent_task(tk),
         kconfig_db_size(tk->get_twopf_database().size())
@@ -631,7 +640,7 @@ namespace transport
 
         transaction_manager mgr = this->writers.factory(this);
 
-        this->writers.twopf(mgr, this, this->twopf_batch);
+        this->writers.twopf(mgr, this, this->twopf_batch, this->collect_spectral_data);
         this->writers.gauge_xfm1(mgr, this, this->gauge_xfm1_batch);
 
         mgr.commit();
@@ -680,7 +689,7 @@ namespace transport
                                                        const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                        const writer_group& w, std::unique_ptr<container_dispatch_function> d,
                                                        std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn)
-	    : postintegration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn),
+	    : postintegration_batcher<number>(cap, ckp, m, tk, cp, lp, std::move(d), std::move(r), h, wn, tk->get_collect_spectral_data()),
 	      writers(w),
         parent_task(tk),
         kconfig_db_size(tk->get_threepf_database().size())
@@ -786,25 +795,16 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** A";
         transaction_manager mgr = this->writers.factory(this);
 
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** B";
-        this->writers.twopf(mgr, this, this->twopf_batch);
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** C";
+        this->writers.twopf(mgr, this, this->twopf_batch, this->collect_spectral_data);
         this->writers.threepf(mgr, this, this->threepf_batch);
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** D";
         this->writers.gauge_xfm1(mgr, this, this->gauge_xfm1_batch);
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** E";
         this->writers.gauge_xfm2_123(mgr, this, this->gauge_xfm2_123_batch);
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** F";
         this->writers.gauge_xfm2_213(mgr, this, this->gauge_xfm2_213_batch);
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** G";
         this->writers.gauge_xfm2_312(mgr, this, this->gauge_xfm2_312_batch);
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** H";
 
         mgr.commit();
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** A";
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";

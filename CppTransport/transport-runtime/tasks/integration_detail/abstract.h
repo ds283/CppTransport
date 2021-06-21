@@ -131,7 +131,7 @@ namespace transport
       public:
 
 		    //! Build sample-time database
-		    const time_config_database get_time_config_database() const { return(this->build_time_config_database()); }
+        const time_config_database get_time_config_database() const { return(this->build_time_config_database()); }
 
         //! Get time at which initial conditions are set
         double get_N_initial() const { return(this->ics.get_N_initial()); }
@@ -504,7 +504,7 @@ namespace transport
 
         unsigned int serial = CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL;
         bool first = true;
-		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
+		    for(auto t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
 			    {
             if(*t > this->get_N_initial())
               {

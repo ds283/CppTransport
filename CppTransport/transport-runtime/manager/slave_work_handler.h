@@ -132,7 +132,7 @@ namespace transport
 	        {
             boost::timer::cpu_timer timer;
 
-		        // compute zeta twopf
+		        // compute zeta twopf; if no spectral data is available, the zeta_ns output will have no meaning
             this->zeta_computer.twopf(*handle, zeta_tpf, zeta_ns, gauge_xfm1, *(list[i]));
 						assert(zeta_tpf.size() == time_values.size());
 

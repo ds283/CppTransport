@@ -146,6 +146,13 @@ namespace transport
         ~precomputed_products() override = default;
 
 
+        // SET VIA ASSIGNMENT
+
+      public:
+
+        precomputed_products& operator=(const precomputed_products& in);
+
+
         // GET AND SET PROPERTIES
 
       public:
@@ -269,7 +276,7 @@ namespace transport
             seeded{false},
             statistics{false},
             initial_conditions{false},
-            spectral_data{true},
+            spectral_data{false},
             size{0}
           {
           }
@@ -304,10 +311,10 @@ namespace transport
         void set_fail(bool g) { this->fail = g; }
 
         //! Get list of failed serial numbers
-        const std::set<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+        const serial_number_list& get_failed_serials() const { return(this->failed_serials); }
 
         //! Set list of failed serial numbers
-        void set_failed_serials(std::set<unsigned int> f) { this->failed_serials = std::move(f); }
+        void set_failed_serials(serial_number_list f) { this->failed_serials = std::move(f); }
 
         //! Get workgroup number
         unsigned int get_workgroup_number() const { return(this->workgroup_number); }
@@ -342,8 +349,11 @@ namespace transport
         //! Get initial conditions flag
         bool has_initial_conditions() const { return(this->initial_conditions); }
 
-        //! Get spectral data flag (notice that this flag can't be set)
+        //! Does this integration payload have spectral data?
         bool has_spectral_data() const { return(this->spectral_data); }
+
+        //! Set spectral data flag
+        void set_spectral_data(bool g) { this->spectral_data = g; }
 
         //! Set container size
         void set_size(unsigned int s) { this->size = s; }
@@ -452,14 +462,23 @@ namespace transport
         void set_metadata(const output_metadata& data) { this->metadata = data; }
 
 
-        // GET AND SET PROPERTIES
+        // PRECOMPUTED PRODUCTS
 
       public:
+
+        //! Set precomputed products by assignment
+        postintegration_payload& operator=(const precomputed_products& in);
 
         //! Get precomputed products record
         precomputed_products& get_precomputed_products() { return(this->precomputed); }
 
+        //! Get precomputed products record, const version
         const precomputed_products& get_precomputed_products() const { return(this->precomputed); }
+
+
+        // GET AND SET PROPERTIES
+
+      public:
 
         //! Get fail status
         bool is_failed() const { return(this->fail); }
@@ -468,10 +487,10 @@ namespace transport
         void set_fail(bool g) { this->fail = g; }
 
         //! Get list of failed serial numbers
-        const std::set<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+        const serial_number_list& get_failed_serials() const { return(this->failed_serials); }
 
         //! Set list of failed serial numbers
-        void set_failed_serials(std::set<unsigned int> f) { this->failed_serials = std::move(f); }
+        void set_failed_serials(serial_number_list f) { this->failed_serials = std::move(f); }
 
         //! Set pair
         void set_pair(bool g) { this->paired = g; }

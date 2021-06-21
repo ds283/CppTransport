@@ -1,4 +1,6 @@
 #include <utility>
+#include "content_group_decl.h"
+
 
 //
 // Created by David Seery on 25/01/2016.
@@ -347,6 +349,21 @@ namespace transport
       }
 
 
+    precomputed_products& precomputed_products::operator=(const precomputed_products& in)
+      {
+        if(in.has_zeta_twopf())           this->add_zeta_twopf();
+        if(in.has_zeta_twopf_spectral())  this->add_zeta_twopf_spectral();
+        if(in.has_zeta_threepf())         this->add_zeta_threepf();
+        if(in.has_zeta_redbsp())          this->add_zeta_redbsp();
+        if(in.has_fNL_local())            this->add_fNL_local();
+        if(in.has_fNL_equi())             this->add_fNL_equi();
+        if(in.has_fNL_ortho())            this->add_fNL_ortho();
+        if(in.has_fNL_DBI())              this->add_fNL_DBI();
+
+        return *this;
+      }
+
+
     integration_payload::integration_payload(Json::Value& reader)
       : metadata{reader}
       {
@@ -457,6 +474,14 @@ namespace transport
         out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << '\n';
 
         this->precomputed.write(out);
+      }
+
+
+    postintegration_payload& postintegration_payload::operator=(const precomputed_products& in)
+      {
+        this->precomputed = in;
+
+        return *this;
       }
 
 

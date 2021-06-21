@@ -1676,7 +1676,7 @@ number $MODEL<number>::make_twopf_tensor_si_ic(unsigned int __i, unsigned int __
 
         assert(tk != nullptr);
 
-        const time_config_database time_db = tk->get_time_config_database();
+        const auto time_db = tk->get_time_config_database();
 
         solution.clear();
         solution.reserve(time_db.size());

@@ -299,15 +299,19 @@ namespace transport
         if((tka = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
           {
             // construct a callback for the integrator to push new batches to the master
-            std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+            std::unique_ptr< slave_container_dispatch<number> > dispatcher =
+              std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY,
+                                                                   std::string{"INTEGRATION_DATA_READY"});
 
             // construct a batcher to hold the output of the integration
-            twopf_batcher<number> batcher = this->data_mgr->create_temp_twopf_container(tka, payload.get_tempdir_path(), payload.get_logdir_path(),
-                                                                                        this->get_rank(), payload.get_workgroup_number(), m, std::move(dispatcher));
+            twopf_batcher<number> batcher =
+              this->data_mgr->create_temp_twopf_container(tka, payload.get_tempdir_path(), payload.get_logdir_path(),
+                                                          this->get_rank(), payload.get_workgroup_number(), m, std::move(dispatcher));
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) <<  "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) <<
+              "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
             BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
             this->schedule_integration(tka, m, batcher, payload, m->backend_twopf_state_size());
@@ -315,11 +319,14 @@ namespace transport
         else if((tkb = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
           {
             // construct a callback for the integrator to push new batches to the master
-            std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+            std::unique_ptr< slave_container_dispatch<number> > dispatcher =
+              std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY,
+                                                                   std::string{"INTEGRATION_DATA_READY"});
 
             // construct a batcher to hold the output of the integration
-            threepf_batcher<number> batcher = this->data_mgr->create_temp_threepf_container(tkb, payload.get_tempdir_path(), payload.get_logdir_path(),
-                                                                                            this->get_rank(), payload.get_workgroup_number(), m, std::move(dispatcher));
+            threepf_batcher<number> batcher =
+              this->data_mgr->create_temp_threepf_container(tkb, payload.get_tempdir_path(), payload.get_logdir_path(),
+                                                            this->get_rank(), payload.get_workgroup_number(), m, std::move(dispatcher));
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();

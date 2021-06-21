@@ -146,7 +146,7 @@ namespace transport
       private:
 
         //! std::set holding the serial number for each items we are supposed to process
-        std::set<unsigned int> items;
+        serial_number_list items;
 
       };
 

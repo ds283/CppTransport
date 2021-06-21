@@ -786,7 +786,7 @@ namespace transport
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get time configuration database
-        const time_config_database time_db = tk->get_time_config_database(*kconfig);
+        const auto time_db = tk->get_time_config_database(*kconfig);
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
@@ -1010,7 +1010,7 @@ namespace transport
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get list of time steps, and storage list
-        const time_config_database time_db = tk->get_time_config_database(*kconfig);
+        const auto time_db = tk->get_time_config_database(*kconfig);
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible

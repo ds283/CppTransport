@@ -41,12 +41,12 @@ namespace transport
         namespace integrity_detail
 	        {
 
-            std::set<unsigned int> get_serials(sqlite3* db, std::string sql_query)
+            serial_number_list get_serials(sqlite3* db, std::string sql_query)
 	            {
                 sqlite3_stmt* stmt;
                 check_stmt(db, sqlite3_prepare_v2(db, sql_query.c_str(), sql_query.length() + 1, &stmt, nullptr));
 
-                std::set<unsigned int> serials;
+                serial_number_list serials;
                 int                    status;
                 while((status = sqlite3_step(stmt)) != SQLITE_DONE)
 	                {
@@ -76,7 +76,7 @@ namespace transport
         // we don't check that k-configuration serial numbers which are *present* have their full complement
         // of time samples
 		    template <typename number, typename ValueType>
-		    std::set<unsigned int> get_missing_serials(sqlite3* db)
+		    serial_number_list get_missing_serials(sqlite3* db)
 			    {
 		        std::ostringstream find_stmt;
 				    find_stmt
@@ -89,7 +89,7 @@ namespace transport
 
 
         template <typename number, typename ValueType>
-        std::set<unsigned int> get_stored_serials(sqlite3* db)
+        serial_number_list get_stored_serials(sqlite3* db)
           {
             std::ostringstream find_stmt;
 
@@ -125,7 +125,7 @@ namespace transport
 
 
         template <typename Database>
-        void drop_statistics(transaction_manager& mgr, sqlite3* db, const std::set<unsigned int>& drop_list, const Database& dbase)
+        void drop_statistics(transaction_manager& mgr, sqlite3* db, const serial_number_list& drop_list, const Database& dbase)
 	        {
             for(unsigned int drop_serial : drop_list)
 	            {
@@ -143,7 +143,7 @@ namespace transport
 
 
         template <typename number, typename ValueType, typename Database>
-        void drop_ics(transaction_manager& mgr, sqlite3* db, const std::set<unsigned int>& drop_list, const Database& dbase)
+        void drop_ics(transaction_manager& mgr, sqlite3* db, const serial_number_list& drop_list, const Database& dbase)
 	        {
             for(unsigned int drop_serial : drop_list)
 	            {
@@ -162,7 +162,7 @@ namespace transport
 
         // should be wrapped in an outer transaction
 		    template <typename WriterObject, typename Database>
-		    void drop_k_configurations(transaction_manager& mgr, sqlite3* db, WriterObject& writer, const std::set<unsigned int>& drop_list, const Database& dbase,
+		    void drop_k_configurations(transaction_manager& mgr, sqlite3* db, WriterObject& writer, const serial_number_list& drop_list, const Database& dbase,
 		                               std::string table, bool silent=false)
 			    {
             for(unsigned int drop_serial : drop_list)
