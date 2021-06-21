@@ -157,7 +157,7 @@ namespace transport
         // we need to prune it for paired tasks, because these do not need to be handled separately
         this->prune_paired_tasks(required_tasks);
 
-        // insert any required job descriptors and sort task list into order
+        // sort task list into order, and insert any required job descriptors
         std::unique_ptr< std::list<std::string> > topological_order = dmat->get_graph().compute_topological_order();
         if(topological_order) this->insert_job_descriptors(required_tasks, *topological_order);
       }
@@ -172,12 +172,21 @@ namespace transport
         // work through list of tasks needed as dependencies, deciding whether they have content groups
         for(auto t = required_tasks.begin(); t != required_tasks.end(); /* intentionally no update step */)
           {
-            std::unique_ptr< task_record<number> > rec = this->repo->query_task(*t);
+            auto rec = this->repo->query_task(*t);
             if(rec)
               {
                 // check for presence of content group
-                if(rec->get_content_groups().size() > 0) t = required_tasks.erase(t);   // group present; no need to schedule this task, so erase it from the list. Leaves t pointing to next item.
-                else                                     ++t;                           // no groups present; move on to next item
+
+                if(rec->get_content_groups().size() > 0)
+                  {
+                    // group present; no need to schedule this task, so erase it from the list. Leaves t pointing to next item.
+                    t = required_tasks.erase(t);
+                  }
+                else
+                  {
+                    // no groups present; move on to next item
+                    ++t;
+                  }
               }
           }
       }

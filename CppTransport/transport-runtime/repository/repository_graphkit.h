@@ -104,10 +104,10 @@ namespace transport
           {
           public:
             vertex_record(unsigned int i, graph_type::vertex_descriptor d, std::string n, repository_vertex_type t)
-              : index(std::move(i)),
-                descriptor(std::move(d)),
+              : index(i),
+                descriptor(d),
                 name(std::move(n)),
-                type(std::move(t))
+                type(t)
               {
               }
 
@@ -208,13 +208,13 @@ namespace transport
     void repository_vertex_map::insert(const std::string& name, graph_type& graph, repository_vertex_type type)
       {
         // search for a vertex with this name
-        name_to_vertex_map::const_iterator t = this->name_map->find(name);
+        auto t = this->name_map->find(name);
 
         // if no such vertex already exists, insert it
         if(t == this->name_map->end())
           {
-            graph_type::vertex_descriptor descriptor = boost::add_vertex(graph);
-            unsigned int number = static_cast<unsigned int>(this->name_map->size());
+            auto descriptor = boost::add_vertex(graph);
+            auto number = static_cast<unsigned int>(this->name_map->size());
 
             std::shared_ptr<vertex_record> record = std::make_shared<vertex_record>(number, descriptor, name, type);
 
@@ -226,7 +226,7 @@ namespace transport
 
     const graph_type::vertex_descriptor& repository_vertex_map::operator[](const std::string& vertex_name) const
       {
-        name_to_vertex_map::const_iterator t = this->name_map->find(vertex_name);
+        auto t = this->name_map->find(vertex_name);
         if(t == this->name_map->end())
           {
             std::ostringstream msg;
@@ -241,7 +241,7 @@ namespace transport
 
     const std::string& repository_vertex_map::operator[](const graph_type::vertex_descriptor& vertex) const
       {
-        vertex_to_name_map::const_iterator t = this->vertex_map->find(vertex);
+        auto t = this->vertex_map->find(vertex);
         if(t == this->vertex_map->end())
           {
             std::ostringstream msg;
@@ -256,7 +256,7 @@ namespace transport
 
     unsigned int repository_vertex_map::get_index(const graph_type::vertex_descriptor& vertex) const
       {
-        vertex_to_name_map::const_iterator t = this->vertex_map->find(vertex);
+        auto t = this->vertex_map->find(vertex);
         if(t == this->vertex_map->end())
           {
             std::ostringstream msg;
@@ -271,7 +271,7 @@ namespace transport
 
     repository_vertex_type repository_vertex_map::get_type(const graph_type::vertex_descriptor& vertex) const
       {
-        vertex_to_name_map::const_iterator t = this->vertex_map->find(vertex);
+        auto t = this->vertex_map->find(vertex);
         if(t == this->vertex_map->end())
           {
             std::ostringstream msg;
@@ -353,7 +353,7 @@ namespace transport
 
           public:
 
-            label_writer(repository_vertex_map& m)
+            explicit label_writer(repository_vertex_map& m)
               : map(m)
               {
               }
@@ -366,7 +366,7 @@ namespace transport
             //! write label
             void operator()(std::ostream& out, const graph_type::vertex_descriptor& v) const
               {
-                out << "[label=" << boost::escape_dot_string(this->map[v]) << ",shape=box,style=\"filled,rounded\",fillcolor=\"";
+                out << "[label=" << boost::escape_dot_string(this->map[v]) << R"(,shape=box,style="filled,rounded",fillcolor=")";
 
                 switch(this->map.get_type(v))
                   {
@@ -395,7 +395,7 @@ namespace transport
                       }
                   }
 
-                out << "\",fontname=\"Helvetica\",fontsize=12]";
+                out << R"(",fontname="Helvetica",fontsize=12])";
               }
 
 
@@ -428,7 +428,7 @@ namespace transport
 
     std::unique_ptr< std::list<std::string> > repository_dependency_graph::compute_topological_order() const
       {
-        std::unique_ptr< std::list<std::string> > objects = std::make_unique< std::list<std::string> >();
+        auto objects = std::make_unique< std::list<std::string> >();
 
         if(!this->G || !this->M) return objects;
 
@@ -437,7 +437,7 @@ namespace transport
         boost::topological_sort(*this->G, std::back_inserter(list));
 
         // convert list of vertices (remember it is supplied in reverse order) to an ordered list of object names
-        for(vertex_list::const_reverse_iterator t = list.crbegin(); t != list.crend(); ++t)
+        for(auto t = list.crbegin(); t != list.crend(); ++t)
           {
             objects->push_back((*this->M)[*t]);
           }
@@ -543,7 +543,7 @@ namespace transport
           }
 
         //! overload first subscript to return a proxy to a row (const version)
-        const value_type operator[](const graph_type::vertex_descriptor& v) const
+        value_type operator[](const graph_type::vertex_descriptor& v) const
           {
             return value_type(*this->map, (*this->matrix)[this->map->get_index(v)]);
           }
@@ -601,11 +601,8 @@ namespace transport
         //! get dimension of distance matrix
         size_t size() const { return this->D.size(); }
 
-        //! overload [] to provide subscripting of distance matrix
-        matrix_type::value_type operator[](const graph_type::vertex_descriptor& vertex);
-
         //! overload [] to provide subscripting of distance matrix (const version)
-        const matrix_type::value_type operator[](const graph_type::vertex_descriptor& vertex) const;
+        matrix_type::value_type operator[](const graph_type::vertex_descriptor& vertex) const;
 
         //! get underlying graph
         const repository_dependency_graph& get_graph() const { return(this->G); }
@@ -635,13 +632,7 @@ namespace transport
       };
 
 
-    repository_distance_matrix::matrix_type::value_type repository_distance_matrix::operator[](const graph_type::vertex_descriptor& vertex)
-      {
-        return this->D[vertex];
-      }
-
-
-    const repository_distance_matrix::matrix_type::value_type repository_distance_matrix::operator[](const graph_type::vertex_descriptor& vertex) const
+    repository_distance_matrix::matrix_type::value_type repository_distance_matrix::operator[](const graph_type::vertex_descriptor& vertex) const
       {
         return this->D[vertex];
       }
@@ -685,9 +676,9 @@ namespace transport
 
         const graph_type::vertex_descriptor vertex = map[name];
 
-        std::pair< graph_type::vertex_iterator, graph_type::vertex_iterator > vertex_list = boost::vertices(graph);
+        auto vertex_list = boost::vertices(graph);
 
-        for(graph_type::vertex_iterator v = vertex_list.first; v != vertex_list.second; ++v)
+        for(auto v = vertex_list.first; v != vertex_list.second; ++v)
           {
             // get distance *from* some other group (i) *to* this object (vertex)
             // following directed arrows in the graph
@@ -786,16 +777,16 @@ namespace transport
     template <typename number>
     std::unique_ptr<repository_distance_matrix> repository_graphkit<number>::task_distance_matrix()
       {
-        typename task_db<number>::type db = this->repo.enumerate_tasks();
+        auto db = this->repo.enumerate_tasks();
 
         // build graph representing tasks and their connexions
         repository_vertex_map vmap;
         graph_type G;
 
         // build directed graph representing the dependency chain among tasks
-        for(const typename task_db<number>::type::value_type& item : db)
+        for(auto& item : db)
           {
-            const task_record<number>& rec = *item.second;
+            const auto& rec = *item.second;
             vmap.insert(rec.get_name(), G, repository_vertex_type::task);
 
             switch(rec.get_type())
@@ -811,8 +802,8 @@ namespace transport
                     const auto& prec = dynamic_cast< const postintegration_task_record<number>& >(rec);
 
                     // postintegration tasks depend on their parent
-                    const postintegration_task<number>& tk = *prec.get_task();
-                    const derivable_task<number>& ptk = *tk.get_parent_task();
+                    const auto& tk = *prec.get_task();
+                    const auto& ptk = *tk.get_parent_task();
                     vmap.insert(ptk.get_name(), G, repository_vertex_type::task);
 
                     boost::add_edge(vmap[ptk.get_name()], vmap[rec.get_name()], 1, G);
@@ -825,11 +816,10 @@ namespace transport
                     const auto& orec = dynamic_cast< const output_task_record<number>& >(rec);
 
                     // output tasks depend on derived products, each of which may depend on other tasks
-                    const output_task<number>& tk = *orec.get_task();
+                    const auto& tk = *orec.get_task();
+                    const auto elements = tk.get_elements();
 
-                    const typename std::vector< output_task_element<number> > elements = tk.get_elements();
-
-                    for(const output_task_element<number>& elt : elements)
+                    for(const auto& elt : elements)
                       {
                         derived_data::derived_product<number>& product = elt.get_product();
 
@@ -837,7 +827,7 @@ namespace transport
                         typename std::list< derivable_task<number>* > task_list;
                         product.get_task_list(task_list);
 
-                        for(derivable_task<number>* depend_tk : task_list)
+                        for(auto depend_tk : task_list)
                           {
                             vmap.insert(depend_tk->get_name(), G, repository_vertex_type::task);
                             boost::add_edge(vmap[depend_tk->get_name()], vmap[rec.get_name()], 1, G);
@@ -852,7 +842,7 @@ namespace transport
         // initialize distance matrix with graph and vertex list
         std::unique_ptr<repository_distance_matrix> dmat = std::make_unique<repository_distance_matrix>(G, vmap);
 
-        // run Floyd-Warshall algorithm
+        // run Floyd-Warshall algorithm to find shortest path between each vertex pair in the graph
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
 
         return(std::move(dmat));
@@ -863,28 +853,28 @@ namespace transport
     std::unique_ptr<repository_distance_matrix> repository_graphkit<number>::content_group_distance_matrix()
       {
         // cache content databases
-        integration_content_db integration_content = this->repo.enumerate_integration_task_content();
-        postintegration_content_db postintegration_content = this->repo.enumerate_postintegration_task_content();
-        output_content_db output_content = this->repo.enumerate_output_task_content();
+        auto integration_content = this->repo.enumerate_integration_task_content();
+        auto postintegration_content = this->repo.enumerate_postintegration_task_content();
+        auto output_content = this->repo.enumerate_output_task_content();
 
         // build graph representing content groups and their connexions
         repository_vertex_map vmap;
         graph_type G;
 
         // build directed graph representing the dependency chain among content groups
-        for(const integration_content_db::value_type& item : integration_content)
+        for(const auto& item : integration_content)
           {
-            const content_group_record<integration_payload>& rec = *item.second;
+            const auto& rec = *item.second;
             vmap.insert(rec.get_name(), G, repository_vertex_type::content_group);
           }
 
-        for(const postintegration_content_db::value_type& item : postintegration_content)
+        for(const auto& item : postintegration_content)
           {
-            const content_group_record<postintegration_payload>& rec = *item.second;
+            const auto& rec = *item.second;
             vmap.insert(rec.get_name(), G, repository_vertex_type::content_group);
 
             // postintegration content will depend on the parent group, but possibly also a seed group
-            const postintegration_payload& payload = rec.get_payload();
+            const auto& payload = rec.get_payload();
             vmap.insert(payload.get_parent_group(), G, repository_vertex_type::content_group);
             boost::add_edge(vmap[payload.get_parent_group()], vmap[rec.get_name()], 1, G);
 
@@ -895,15 +885,15 @@ namespace transport
               }
           }
 
-        for(const output_content_db::value_type& item : output_content)
+        for(const auto& item : output_content)
           {
-            const content_group_record<output_payload>& rec = *item.second;
+            const auto& rec = *item.second;
             vmap.insert(rec.get_name(), G, repository_vertex_type::content_group);
 
             // postintegration content dependency is summarized in the payload
-            const output_payload& payload = rec.get_payload();
-            const std::list<std::string>& groups = payload.get_content_groups_summary();
-            for(const std::string& group : groups)
+            const auto& payload = rec.get_payload();
+            const auto& groups = payload.get_content_groups_summary();
+            for(const auto& group : groups)
               {
                 vmap.insert(group, G, repository_vertex_type::content_group);
                 boost::add_edge(vmap[group], vmap[rec.get_name()], 1, G);
@@ -911,9 +901,9 @@ namespace transport
           }
 
         // initialize distance matrix with graph and vertex list
-        std::unique_ptr<repository_distance_matrix> dmat = std::make_unique<repository_distance_matrix>(G, vmap);
+        auto dmat = std::make_unique<repository_distance_matrix>(G, vmap);
 
-        // run Floyd-Warshall algorithm
+        // run Floyd-Warshall algorithm to find shortest path between each vertex pair in the graph
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
 
         return(std::move(dmat));
@@ -927,12 +917,12 @@ namespace transport
         repository_vertex_map vmap;
         graph_type G;
 
-        for(const std::string& group : groups)
+        for(const auto& group : groups)
           {
             this->follow_content_dependency(G, vmap, group);
           }
 
-        std::unique_ptr<repository_dependency_graph> graph = std::make_unique<repository_dependency_graph>(G, vmap);
+        auto graph = std::make_unique<repository_dependency_graph>(G, vmap);
         return(std::move(graph));
       }
 
@@ -941,17 +931,17 @@ namespace transport
     void repository_graphkit<number>::follow_content_dependency(graph_type& G, repository_vertex_map& vmap, const std::string& name)
       {
         // find content group
-        integration_content_db integration_content = this->repo.enumerate_integration_task_content();
-        postintegration_content_db postintegration_content = this->repo.enumerate_postintegration_task_content();
+        auto integration_content = this->repo.enumerate_integration_task_content();
+        auto postintegration_content = this->repo.enumerate_postintegration_task_content();
 
-        integration_content_db::const_iterator t = integration_content.find(name);
+        auto t = integration_content.find(name);
         if(t != integration_content.end())
           {
-            const content_group_record<integration_payload>& rec = *t->second;
+            const auto& rec = *t->second;
             vmap.insert(name, G, repository_vertex_type::content_group);
 
             // integration content groups depend on a possible seed group and the parent integration task
-            const integration_payload& payload = rec.get_payload();
+            const auto& payload = rec.get_payload();
             if(payload.is_seeded())
               {
                 vmap.insert(payload.get_seed_group(), G, repository_vertex_type::content_group);
@@ -966,15 +956,15 @@ namespace transport
             return;
           }
 
-        postintegration_content_db::const_iterator u = postintegration_content.find(name);
+        auto u = postintegration_content.find(name);
         if(u != postintegration_content.end())
           {
-            const content_group_record<postintegration_payload>& rec = *u->second;
+            const auto& rec = *u->second;
             vmap.insert(name, G, repository_vertex_type::content_group);
 
             // postintegration content groups depend on a possible seed group, the parent task, and a parent content group
             // we don't link directly to the parent task; that will be linked via its content group
-            const postintegration_payload& payload = rec.get_payload();
+            const auto& payload = rec.get_payload();
             if(payload.is_seeded())
               {
                 vmap.insert(payload.get_seed_group(), G, repository_vertex_type::content_group);
@@ -999,20 +989,20 @@ namespace transport
     void repository_graphkit<number>::follow_task_dependency(graph_type& G, repository_vertex_map& vmap, const std::string& name)
       {
         // find task
-        typename task_db<number>::type db = this->repo.enumerate_tasks();
-        typename task_db<number>::type::const_iterator t = db.find(name);
+        auto db = this->repo.enumerate_tasks();
+        auto t = db.find(name);
 
         if(t != db.end())
           {
-            const task_record<number>& rec = *t->second;
+            const auto& rec = *t->second;
             switch(rec.get_type())
               {
                 case task_type::integration:
                   {
-                    const integration_task_record<number>& irec = dynamic_cast< const integration_task_record<number>& >(rec);
+                    const auto& irec = dynamic_cast< const integration_task_record<number>& >(rec);
 
                     // integration task depends only on initial conditions group
-                    const std::string& ics_group = irec.get_task()->get_ics().get_name();
+                    const auto& ics_group = irec.get_task()->get_ics().get_name();
                     vmap.insert(ics_group, G, repository_vertex_type::package);
                     boost::add_edge(vmap[ics_group], vmap[name], 1 , G);
                     break;
@@ -1020,10 +1010,10 @@ namespace transport
 
                 case task_type::postintegration:
                   {
-                    const postintegration_task_record<number>& prec = dynamic_cast< const postintegration_task_record<number>& >(rec);
+                    const auto& prec = dynamic_cast< const postintegration_task_record<number>& >(rec);
 
                     // postintegration task depend on parent integration task
-                    const std::string& parent = prec.get_task()->get_parent_task()->get_name();
+                    const auto& parent = prec.get_task()->get_parent_task()->get_name();
                     vmap.insert(parent, G, repository_vertex_type::task);
                     boost::add_edge(vmap[parent], vmap[name], 1, G);
                     break;
@@ -1042,13 +1032,13 @@ namespace transport
     template <typename number>
     std::unique_ptr<repository_dependency_graph> repository_graphkit<number>::derived_content_dependency(const std::string& name, const std::list<std::string>& groups)
       {
-        std::unique_ptr<repository_dependency_graph> graph = this->content_group_dependency(groups);
+        auto graph = this->content_group_dependency(groups);
 
-        graph_type& G = graph->get_graph();
-        repository_vertex_map& vmap = *(*graph);
+        auto& G = graph->get_graph();
+        auto& vmap = *(*graph);
 
         vmap.insert(name, G, repository_vertex_type::product);
-        for(const std::string& group : groups)
+        for(const auto& group : groups)
           {
             boost::add_edge(vmap[group], vmap[name], 1, G);
           }
