@@ -75,15 +75,17 @@ namespace transport
   {
 
     template <typename number>
-    std::unique_ptr< json_repository<number> > repository_factory(const std::string& path, model_manager<number>& finder,
-                                                                  repository_mode mode, local_environment& ev, argument_cache& ar)
+    std::unique_ptr< json_repository<number> >
+    repository_factory(const std::string& path, model_manager<number>& finder, repository_mode mode,
+                       local_environment& ev, argument_cache& ar)
       {
         return std::make_unique< repository_sqlite3<number> >(path, finder, mode, ev, ar);
       }
     
     template <typename number>
     std::unique_ptr< repository_upgradekit<number> >
-    upgradekit_factory(repository<number>& r, argument_cache& ac, error_handler eh, warning_handler wh, message_handler mh)
+    upgradekit_factory(repository<number>& r, argument_cache& ac, error_handler eh, warning_handler wh,
+                       message_handler mh)
       {
         return std::make_unique< repository_upgradekit_sqlite3<number> >(r, ac, eh, wh, mh);
       }

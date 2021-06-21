@@ -104,7 +104,7 @@ namespace transport
         
       public:
     
-        //! constuctor captures resources
+        //! constructor captures resources
         repository_upgradekit(repository <number>& r, argument_cache& ac,
                               error_handler eh, warning_handler wh, message_handler mh)
           : repo(r),

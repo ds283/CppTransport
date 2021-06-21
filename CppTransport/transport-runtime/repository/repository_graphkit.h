@@ -802,13 +802,13 @@ namespace transport
               {
                 case task_type::integration:
                   {
-                    const integration_task_record<number>& irec = dynamic_cast< const integration_task_record<number>& >(rec);
+                    const auto& irec = dynamic_cast< const integration_task_record<number>& >(rec);
                     break;
                   }
 
                 case task_type::postintegration:
                   {
-                    const postintegration_task_record<number>& prec = dynamic_cast< const postintegration_task_record<number>& >(rec);
+                    const auto& prec = dynamic_cast< const postintegration_task_record<number>& >(rec);
 
                     // postintegration tasks depend on their parent
                     const postintegration_task<number>& tk = *prec.get_task();
@@ -822,7 +822,7 @@ namespace transport
 
                 case task_type::output:
                   {
-                    const output_task_record<number>& orec = dynamic_cast< const output_task_record<number>& >(rec);
+                    const auto& orec = dynamic_cast< const output_task_record<number>& >(rec);
 
                     // output tasks depend on derived products, each of which may depend on other tasks
                     const output_task<number>& tk = *orec.get_task();

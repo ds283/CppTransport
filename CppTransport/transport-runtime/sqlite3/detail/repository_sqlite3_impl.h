@@ -462,10 +462,10 @@ namespace transport
         store_function storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_ics().get_name());
 
         // for newly-created records, access mode is inherited from the repository
-    repository_record::handler_package pkg(
-      std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1,
-                std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS),
-      this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+        repository_record::handler_package pkg(
+          std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1,
+                    std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS),
+          this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< integration_task_record<number> >(tk, pkg);
       }

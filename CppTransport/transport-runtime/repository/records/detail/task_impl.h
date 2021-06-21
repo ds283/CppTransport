@@ -60,9 +60,9 @@ namespace transport
         Json::Value& group_list = reader[CPPTRANSPORT_NODE_TASK_CONTENT_GROUPS];
         assert(group_list.isArray());
 
-        for(Json::Value::iterator t = group_list.begin(); t != group_list.end(); ++t)
+        for(auto & t : group_list)
           {
-            std::string name = t->asString();
+            std::string name = t.asString();
             this->content_groups.push_back(name);
           }
       }
@@ -96,7 +96,7 @@ namespace transport
     template <typename number>
     void task_record<number>::delete_content_group(const std::string& name)
       {
-        std::list<std::string>::const_iterator t = std::find(this->content_groups.cbegin(), this->content_groups.cend(), name);
+        auto t = std::find(this->content_groups.cbegin(), this->content_groups.cend(), name);
 
         if(t == this->content_groups.end()) return;
 

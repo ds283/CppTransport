@@ -94,13 +94,26 @@ namespace transport
         // INTERNAL API
       
       protected:
-        
+
+        // DATA CONTAINERS
+
         //! perform upgrade of integration containers
         void upgrade_integration_containers();
         
         //! upgrade an individual integration data container
-        void
-        upgrade_integration_container(const boost::filesystem::path& ctr, const boost::filesystem::path& lock);
+        void upgrade_integration_container(const boost::filesystem::path& ctr, const boost::filesystem::path& lock);
+
+
+        // TASK DOCUMENTS
+
+        //! perform upgrade of task documents
+        void upgrade_tasks();
+
+        //! upgrade an individual integration task
+        void upgrade_twopf_db_task(const integration_task_record<number>& irec);
+
+        //! upgrade an individual zeta postintegration task
+        void upgrade_zeta_twopf_db_task(const postintegration_task_record<number>& prec);
         
         
         // TRANSACTIONS
@@ -306,8 +319,11 @@ namespace transport
       {
         // get global lock on the repository
         transaction_manager mgr = this->repo.transaction_factory();
-        
-        // currently only integration data containers require upgrade work
+
+        // upgrade task documents, if needed
+        this->upgrade_tasks();
+
+        // upgrade data containers, if needed
         this->upgrade_integration_containers();
         
         // release repository lock
@@ -318,9 +334,10 @@ namespace transport
     template <typename number>
     void repository_upgradekit_sqlite3<number>::upgrade_integration_containers()
       {
-        // obtain list of integration content groups
-        integration_content_db groups = this->repo.enumerate_integration_task_content();
-        
+        // obtain list of integration content groups for all tasks
+        auto groups = this->repo.enumerate_integration_task_content();
+
+        // get root directory for the repository
         const auto& root = this->repo.get_root_path();
         
         for(auto& item : groups)
@@ -361,8 +378,101 @@ namespace transport
         // release container clock
         mgr.commit();
       }
-    
-    
+
+
+    template <typename number>
+    void repository_upgradekit_sqlite3<number>::upgrade_tasks()
+      {
+        // obtain list of tasks
+        auto tasks = this->repo.enumerate_tasks();
+
+        // get root directory for the repository
+        const auto& root = this->repo.get_root_path();
+
+        for(auto& item : tasks)
+          {
+            // item is std::pair< std::string, std::unique_ptr< task_record<> > >
+            const auto& rec = item.second;
+
+            switch(rec->get_type())
+              {
+                case task_type::integration:
+                  {
+                    const auto& irec = dynamic_cast< const integration_task_record<number>& >(*rec);
+
+                    // test whether is a twopf_db_task, and if so perform whatever upgrade steps are
+                    // needed
+                    const auto tk = dynamic_cast< const twopf_db_task<number>* >(irec.get_task());
+                    if(tk != nullptr)
+                      {
+                        this->upgrade_twopf_db_task(irec);
+                      }
+                    break;
+                  }
+
+                case task_type::postintegration:
+                  {
+                    const auto& prec = dynamic_cast< const postintegration_task_record<number>& >(*rec);
+
+                    // test whether is a zeta_twopf_db_task, and if so perform whatever upgrade steps are
+                    // needed
+                    const auto tk = dynamic_cast< const zeta_twopf_db_task<number>* >(prec.get_task());
+                    if(tk != nullptr)
+                      {
+                        this->upgrade_zeta_twopf_db_task(prec);
+                      }
+                    break;
+                  }
+
+                case task_type::output:
+                  {
+                    // nothing to do (currently)
+                    break;
+                  };
+              }
+          }
+      }
+
+
+    template <typename number>
+    void repository_upgradekit_sqlite3<number>::upgrade_twopf_db_task(const integration_task_record<number>& irec)
+      {
+        auto mgr = this->repo.transaction_factory();
+
+        // re-query task record to get it in a read/write state
+        auto rw_rec = this->repo.query_task(irec.get_name(), mgr, query_task_hint::integration);
+
+        // 2021.1: no explicit modifications required
+        //   - new field CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_SPECTRAL_DATA will be added on write
+
+        // commit any changes
+        rw_rec->commit();
+
+        // commit transaction
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void
+    repository_upgradekit_sqlite3<number>::upgrade_zeta_twopf_db_task(const postintegration_task_record<number>& prec)
+      {
+        auto mgr = this->repo.transaction_factory();
+
+        // re-query task record to get it in a read/write state
+        auto rw_rec = this->repo.query_task(prec.get_name(), mgr, query_task_hint::postintegration);
+
+        // 2021.1: no explicit modifications required
+        //   - new field CPPTRANSPORT_NODE_ZETA_TWOPF_LIST_COLLECT_SPECTRAL_DATA will be added on write
+
+        // commit any changes
+        rw_rec->commit();
+
+        // commit transaction
+        mgr.commit();
+      }
+
+
     template <typename number>
     void repository_upgradekit_sqlite3<number>::begin_transaction(sqlite3* db)
       {
@@ -410,7 +520,7 @@ namespace transport
         if(this->transactions == 0) throw runtime_exception(exception_type::TRANSACTION_ERROR, CPPTRANSPORT_TRANSACTION_OVER_RELEASE);
         this->transactions--;
       }
-    
+
   }   // namespace transport
 
 
