@@ -446,6 +446,67 @@ namespace transport
       }
 
 
+    //! represents a 1-dimensional vector whose elements can be accessed using graph vertices
+    template <typename Value, bool const_only=false>
+    class vertex_indexed_vector
+      {
+
+        // ASSOCIATED TYPES
+
+      public:
+
+        //! value_type
+        using value_type = Value;
+
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        vertex_indexed_vector(std::shared_ptr<repository_vertex_map> m, std::vector<Value>& r)
+          : map(std::move(m)),
+            vec(r)
+          {
+          }
+
+        //! destructor is default
+        ~vertex_indexed_vector() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! overload of [] allows access to vector contents using vertex descriptor;
+        //! enabled only if const_only is false
+        template <bool c=const_only, typename std::enable_if<!c>::type* = nullptr>
+        value_type& operator[](const graph_type::vertex_descriptor& v)
+          {
+            return this->vec[this->map->get_index(v)];
+          }
+
+        //! overload of [] allows access to vector contents using vertex descriptor (const version);
+        //! this version is always available
+        const value_type& operator[](const graph_type::vertex_descriptor& v) const
+          {
+            return this->vec[this->map->get_index(v)];
+          }
+
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! copy of repository vertex map
+        std::shared_ptr<repository_vertex_map> map;
+
+        //! reference to vector (usually a row or column of a parent matrix)
+        std::vector<Value>& vec;
+
+      };
+
+
     template <typename Value>
     class vertex_indexed_matrix
       {
@@ -456,8 +517,8 @@ namespace transport
 
         //! constructor
         vertex_indexed_matrix(const repository_vertex_map& m)
-          : map(std::make_unique<repository_vertex_map>(m)),
-            matrix(std::make_unique< std::vector< std::vector<Value> > >())
+          : map{std::make_shared<repository_vertex_map>(m)},
+            matrix{std::make_unique< std::vector< std::vector<Value> > >()}
           {
             // resize matrix to be d * d square, where d is the number of vertices in repository_vertex_map
             matrix->resize(m.size());
@@ -476,76 +537,21 @@ namespace transport
 
       public:
 
-        //! proxy object wraps a row from the matrix, overloading its [] to use the same vertex map
-        class vertex_indexed_matrix_proxy
-          {
-
-            // ASSOCIATED TYPES
-
-          public:
-
-            //! value_type
-            typedef Value value_type;
-
-
-            // CONSTRUCTOR, DESTRUCTOR
-
-          public:
-
-            //! constructor
-            vertex_indexed_matrix_proxy(const repository_vertex_map& m, std::vector<Value>& r)
-              : map(m),
-                row(r)
-              {
-              }
-
-            //! destructor is default
-            ~vertex_indexed_matrix_proxy() = default;
-
-
-            // INTERFACE
-
-          public:
-
-            //! final overload of [] leads to element from parent matrix
-            Value& operator[](const graph_type::vertex_descriptor& v)
-              {
-                return this->row[this->map.get_index(v)];
-              }
-
-            //! final overload of [] leads to element from parent matrix (const version)
-            const Value& operator[](const graph_type::vertex_descriptor& v) const
-              {
-                return this->row[this->map.get_index(v)];
-              }
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! copy of repository vertex map
-            const repository_vertex_map& map;
-
-            //! row from parent matrix
-            std::vector<Value>& row;
-
-          };
-
-
         //! set value_type type to be proxy object
-        typedef vertex_indexed_matrix_proxy value_type;
+        using value_type = vertex_indexed_vector< Value, false >;
+        using const_value_type = vertex_indexed_vector< Value, true >;
 
-        //! overload first subscript to return a proxy to a row
+
+        //! overload first subscript to return a vector corresponding to a row of the original matrix;
         value_type operator[](const graph_type::vertex_descriptor& v)
           {
-            return value_type(*this->map, (*this->matrix)[this->map->get_index(v)]);
+            return value_type(this->map, (*this->matrix)[this->map->get_index(v)]);
           }
 
-        //! overload first subscript to return a proxy to a row (const version)
-        value_type operator[](const graph_type::vertex_descriptor& v) const
+        //! overload first subscript to return a vector corresponding to a row of the original matrix (const version)
+        const_value_type operator[](const graph_type::vertex_descriptor& v) const
           {
-            return value_type(*this->map, (*this->matrix)[this->map->get_index(v)]);
+            return const_value_type(this->map, (*this->matrix)[this->map->get_index(v)]);
           }
 
         //! size should return number of vertices, ie. size of each side of the matrix
@@ -556,8 +562,8 @@ namespace transport
 
       protected:
 
-        //! reference to repository vertex map
-        std::unique_ptr<repository_vertex_map> map;
+        //! shared pointer to repository vertex map (shared with any dynamically generated vector wrappers)
+        std::shared_ptr<repository_vertex_map> map;
 
         //! matrix
         std::unique_ptr< std::vector< std::vector<Value> > > matrix;
@@ -601,8 +607,11 @@ namespace transport
         //! get dimension of distance matrix
         size_t size() const { return this->D.size(); }
 
+        //! overload [] to provide subscripting of distance matrix
+        matrix_type::value_type operator[](const graph_type::vertex_descriptor& vertex);
+
         //! overload [] to provide subscripting of distance matrix (const version)
-        matrix_type::value_type operator[](const graph_type::vertex_descriptor& vertex) const;
+        matrix_type::const_value_type operator[](const graph_type::vertex_descriptor& vertex) const;
 
         //! get underlying graph
         const repository_dependency_graph& get_graph() const { return(this->G); }
@@ -632,32 +641,41 @@ namespace transport
       };
 
 
-    repository_distance_matrix::matrix_type::value_type repository_distance_matrix::operator[](const graph_type::vertex_descriptor& vertex) const
+    repository_distance_matrix::matrix_type::value_type
+    repository_distance_matrix::operator[](const graph_type::vertex_descriptor& vertex)
       {
         return this->D[vertex];
       }
 
 
-    std::unique_ptr< std::set<std::string> > repository_distance_matrix::find_dependent_objects(const std::string& name) const
+    repository_distance_matrix::matrix_type::const_value_type
+    repository_distance_matrix::operator[](const graph_type::vertex_descriptor& vertex) const
       {
-        std::unique_ptr< std::set<std::string> > objects = std::make_unique< std::set<std::string> >();
+        return this->D[vertex];
+      }
 
-        const repository_vertex_map& map = *(this->G);
-        const graph_type& graph = this->G.get_graph();
 
-        const graph_type::vertex_descriptor vertex = map[name];
+    std::unique_ptr< std::set<std::string> >
+    repository_distance_matrix::find_dependent_objects(const std::string& name) const
+      {
+        auto objects = std::make_unique< std::set<std::string> >();
 
-        std::pair< graph_type::vertex_iterator, graph_type::vertex_iterator > vertex_list = boost::vertices(graph);
+        const auto& map = *(this->G);
+        const auto& graph = this->G.get_graph();
+        const auto vertex = map[name];
 
-        for(graph_type::vertex_iterator v = vertex_list.first; v != vertex_list.second; ++v)
+        // run through available vertices that have this vertex as a destination
+        const auto vertex_list = boost::vertices(graph);
+        const auto no_link_value = std::numeric_limits<unsigned int>::max();
+        for(auto v = vertex_list.first; v != vertex_list.second; ++v)
           {
-            // get distance *from* this object (vertex) *to* some other object (i)
-            // following directed arrows in the graph
+            // get distance *from* this object (vertex) *to* some other object (i), following directed arrows in the graph
             // (arrows are not bidirectional; this is an inclusion relationship)
-            const graph_type::vertex_descriptor vtx = *v;
-
+            const auto vtx = *v;
             unsigned int dist = this->D[vertex][vtx];
-            if(vtx != vertex && dist < std::numeric_limits<unsigned int>::max())
+
+            // include if vertex is not ourselves and there is a link
+            if(vtx != vertex && dist < no_link_value)
               {
                 objects->insert(map[vtx]);
               }
@@ -669,23 +687,23 @@ namespace transport
 
     std::unique_ptr< std::set<std::string> > repository_distance_matrix::find_dependencies(const std::string& name) const
       {
-        std::unique_ptr< std::set<std::string> > objects = std::make_unique< std::set<std::string> >();
+        auto objects = std::make_unique< std::set<std::string> >();
 
-        const repository_vertex_map& map = *(this->G);
-        const graph_type& graph = this->G.get_graph();
+        const auto& map = *(this->G);
+        const auto& graph = this->G.get_graph();
+        const auto vertex = map[name];
 
-        const graph_type::vertex_descriptor vertex = map[name];
-
-        auto vertex_list = boost::vertices(graph);
-
+        // run through available vertices that have this vertex as a source
+        const auto vertex_list = boost::vertices(graph);
+        const auto no_link_value = std::numeric_limits<unsigned int>::max();
         for(auto v = vertex_list.first; v != vertex_list.second; ++v)
           {
-            // get distance *from* some other group (i) *to* this object (vertex)
-            // following directed arrows in the graph
-            const graph_type::vertex_descriptor vtx = *v;
-
+            // get distance *from* some other group (i) *to* this object (vertex), following directed arrows in the graph
+            const auto vtx = *v;
             unsigned int dist = this->D[vtx][vertex];
-            if(vtx != vertex && dist < std::numeric_limits<unsigned int>::max())
+
+            // include if vertex is not ourselves and there is a link
+            if(vtx != vertex && dist < no_link_value)
               {
                 objects->insert(map[vtx]);
               }
