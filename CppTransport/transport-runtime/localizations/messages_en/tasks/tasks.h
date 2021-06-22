@@ -124,4 +124,6 @@ constexpr auto CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION_TWOPF = "zeta twopf";
 constexpr auto CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION_THREEPF = "zeta threepf";
 constexpr auto CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION_FNL = "fNL";
 
+constexpr auto CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE = "Attempt to access out-of-range payload flag for this content group type";
+
 #endif // CPPTRANSPORT_MESSAGES_EN_TASKS_H

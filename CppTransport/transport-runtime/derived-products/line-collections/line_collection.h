@@ -32,7 +32,9 @@
 #include <sstream>
 #include <string>
 #include <cmath>
+#include <utility>
 
+#include "transport-runtime/tasks/derivable_task.h"
 #include "transport-runtime/derived-products/derived_product.h"
 #include "transport-runtime/derived-products/derived-content/concepts/derived_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/derived_line_helper.h"
@@ -57,7 +59,8 @@ namespace transport
         // we have to use a vector of pointers to avoid truncating the derived_line objects stored inside,
         // but also for performance reasons because multiple additions will generate copies
         template <typename number>
-        std::vector< std::shared_ptr< derived_line<number> > > operator+(const derived_line<number>& lhs, const derived_line<number>& rhs)
+        std::vector< std::shared_ptr< derived_line<number> > >
+        operator+(const derived_line<number>& lhs, const derived_line<number>& rhs)
           {
             std::vector< std::shared_ptr< derived_line<number> > > list;
             list.reserve(2);
@@ -70,7 +73,8 @@ namespace transport
 
         // a vector of derived lines and another derived line can be summed into a bigger vector
         template <typename number>
-        std::vector< std::shared_ptr< derived_line<number> > > operator+(const std::vector< std::shared_ptr< derived_line<number> > >& lhs, const derived_line<number>& rhs)
+        std::vector< std::shared_ptr< derived_line<number> > >
+        operator+(const std::vector< std::shared_ptr< derived_line<number> > >& lhs, const derived_line<number>& rhs)
           {
             std::vector< std::shared_ptr< derived_line<number> > > list = lhs;
 
@@ -89,7 +93,7 @@ namespace transport
 
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY = "line-array";
 
-				//! A line-collection is a specialization of a derived product that produces
+				//! A line-collection is a specialization of a derived_product<> that produces
 				//! derived data from a collection of 2d lines
 
 				template <typename number>
@@ -109,14 +113,15 @@ namespace transport
 
 				      public:
 
-				        output_value(double v)
+				        explicit output_value(double v)
 					        : exists(true),
 					          value(v)
 					        {
 					        }
 
 				        output_value()
-					        : exists(false)
+					        : exists(false),
+					          value{}
 					        {
 					        }
 
@@ -139,7 +144,7 @@ namespace transport
 				        void format_python(std::ostream& out) const;
 
 						    //! Format as a number
-						    number format_number(void) const;
+						    number format_number() const;
 
 
 				        // INTERNAL DATA
@@ -162,8 +167,8 @@ namespace transport
 
 				      public:
 
-				        output_line(const std::string& l, value_type v, data_line_type d)
-					        : label(l),
+				        output_line(std::string  l, value_type v, data_line_type d)
+					        : label(std::move(l)),
 				            value(v),
 				            data_type(d)
 					        {
@@ -177,10 +182,10 @@ namespace transport
 				      public:
 
 				        //! Add a value at the back
-				        void push_back(const output_value v) { this->values.push_back(std::move(v)); }
+				        void push_back(output_value v) { this->values.push_back(std::move(v)); }
 
 				        //! Add a value at the front
-				        void push_front(const output_value v) { this->values.push_front(std::move(v)); }
+				        void push_front(output_value v) { this->values.push_front(std::move(v)); }
                 
                 //! Emplace a value at the back
                 template <typename ...Args>
@@ -230,12 +235,12 @@ namespace transport
 				  public:
 
 						//! Basic user-facing constructor
-						line_collection(const std::string& name, const boost::filesystem::path& filename)
-				      : log_x(false),
-				        log_y(false),
-				        abs_y(false),
-				        use_LaTeX(false),
-				        derived_product<number>(name, filename)
+						line_collection(std::string name, boost::filesystem::path filename)
+				      : log_x{false},
+				        log_y{false},
+				        abs_y{false},
+				        use_LaTeX{false},
+				        derived_product<number>(std::move(name), std::move(filename))
 							{
 							}
 
@@ -276,7 +281,8 @@ namespace transport
 				  protected:
 
 				    //! Merge axes and value data into a single series
-				    void merge_lines(datapipe<number>& pipe, const std::list< data_line<number> >& input, std::deque<double>& axis, std::vector<output_line>& data) const;
+				    void merge_lines(datapipe<number>& pipe, const std::list< data_line<number> >& input,
+                             std::deque<double>& axis, std::vector<output_line>& output) const;
 
 						//! Obtain output from our lines
 				    void obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags,
@@ -597,13 +603,13 @@ namespace transport
             // collect data from each derived_line
             for(const auto& line : this->lines)
               {
-                l.emplace_back(line->get_parent_task(), std::make_unique<content_group_specifiers>());
+                l.emplace_back(line->get_parent_task(), std::make_unique<content_group_specifier>(false, false, false));
               }
 
-            // sort into lexical order
+            // sort into lexical order of task name
             l.sort(derivable_task_list_impl::NameComparator<number>());
 
-            // remove duplicates
+            // remove duplicates (based on task name)
             l.unique(derivable_task_list_impl::NameEquality<number>());
 
             return std::move(l);
@@ -621,10 +627,13 @@ namespace transport
                 groups.merge(line_groups);
               }
 
+            // sort into lexical order of content group name
             groups.sort();
+
+            // remove duplicates (based on content group name)
             groups.unique();
 
-            return(groups);
+            return std::move(groups);
           }
 
 

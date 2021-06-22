@@ -32,6 +32,7 @@
 #include <sstream>
 #include <string>
 #include <list>
+#include <utility>
 #include <vector>
 #include <stdexcept>
 
@@ -150,7 +151,7 @@ namespace transport
 						//! Has to be provided as part of our virtual inheritance strategy (mainly to silence
 						//! a warning from the Intel compiler), but not intended to be used
 						//! to construct real objects.
-						derived_line(const task<number>& tk);
+						explicit derived_line(const task<number>& tk);
 
 				    //! Deserialization constructor
 						derived_line(Json::Value& reader, task_finder<number>& finder);
@@ -159,12 +160,12 @@ namespace transport
 						//! Has to be provided as part of our virtual inheritance strategy (mainly to silence
 						//! a warning from the Intel compiler), but not intended to be used
 						//! to construct real objects.
-						derived_line(Json::Value& reader);
+						explicit derived_line(Json::Value& reader);
 
 						// Override default copy constructor to perform a deep copy of the parent task
 						derived_line(const derived_line<number>& obj);
 
-						virtual ~derived_line();
+						~derived_line() override;
 
 
             // TYPE INTROSPECTION
@@ -213,10 +214,10 @@ namespace transport
 						bool is_label_set() const { return(this->label_set); }
 
             //! get LaTeX label
-            const std::string get_LaTeX_label() const { return(this->LaTeX_label); }
+            const std::string& get_LaTeX_label() const { return(this->LaTeX_label); }
 
             //! get non-LaTeX label
-            const std::string get_non_LaTeX_label() const { return(this->non_LaTeX_label); }
+            const std::string& get_non_LaTeX_label() const { return(this->non_LaTeX_label); }
 
 						//! use tags?
 						bool get_label_tags() const { return(this->use_tags); }
@@ -236,7 +237,7 @@ namespace transport
             std::string attach(datapipe<number>& pipe, const std::list<std::string>& tags, derivable_task<number>* tk) const;
 
 				    //! detach datapipe from content group
-				    void detach(datapipe<number>& detach) const;
+				    void detach(datapipe<number>& pipe) const;
 
 
 				    // DERIVE LINES
@@ -269,12 +270,23 @@ namespace transport
 				  public:
 
 						//! Serialize this object
-						virtual void serialize(Json::Value& writer) const override;
+						void serialize(Json::Value& writer) const override;
 
 
 				    // INTERNAL DATA
 
           protected:
+
+
+					  // ADMIN DATA
+
+            //! record the task that 'owns' this derived content. Currently this is taken always to be
+            //! a single task, even for derived lines such as r that depend on both zeta and field
+            //! correlation functions (and therefore depend on multiple content groups from multiple tasks).
+            derivable_task<number>* parent_task;
+
+
+					  // AXIS DATA
 
 						//! x-xis class
 						axis_class x_class;
@@ -294,17 +306,20 @@ namespace transport
 						//! has an x-label been set?
 						bool label_set;
 
+
+						// LABEL DATA
+
 						//! generate tags when making labels?
 						bool use_tags;
-
-				    //! record the task which 'owns' this derived content
-				    derivable_task<number>* parent_task;
 
 				    //! record meaning of momenta - do we interpret them as derivatives?
 				    dot_type dot_meaning;
 
 				    //! record meaning of k-labels -- are they conventional or comoving?
 				    klabel_type klabel_meaning;
+
+
+				    // FORMATTING
 
 						//! record default plot precision
 						unsigned int precision;
@@ -318,7 +333,7 @@ namespace transport
 				template <typename number>
 				derived_line<number>::derived_line(const derivable_task<number>& tk, axis_class at, std::list< axis_value > sax, unsigned int prec)
 					: x_class(at),
-					  supported_x_axes(sax),
+					  supported_x_axes(std::move(sax)),
             dot_meaning(dot_type::momenta),
             klabel_meaning(klabel_type::conventional),
             label_set(false),
@@ -329,7 +344,7 @@ namespace transport
 						assert(parent_task != nullptr);
 
 				    if(parent_task == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
-						if(supported_x_axes.size() == 0) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES);
+						if(supported_x_axes.empty()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES);
 
 						x_type = supported_x_axes.front();
 					}
@@ -386,10 +401,10 @@ namespace transport
 				    Json::Value supported_array = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES];
 						supported_x_axes.clear();
 						assert(supported_array.isArray());
-						for(Json::Value::iterator t = supported_array.begin(); t != supported_array.end(); ++t)
+						for(auto& t : supported_array)
 							{
 								// decode this array element
-						    std::string value_string = t->asString();
+						    std::string value_string = t.asString();
 								axis_value value = axis_value::efolds;
 								if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     value = axis_value::efolds;
 								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            value = axis_value::k;
@@ -407,7 +422,7 @@ namespace transport
 									}
 
 								// add this value to the list of supported axes, if it is not already present
-						    std::list< axis_value >::iterator u = std::find(supported_x_axes.begin(), supported_x_axes.end(), value);
+						    auto u = std::find(supported_x_axes.begin(), supported_x_axes.end(), value);
 								if(u == supported_x_axes.end()) supported_x_axes.push_back(value);
 							}
 
@@ -427,7 +442,7 @@ namespace transport
 				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE << " '" << x_type_string << "'";
 				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 					    }
-				    std::list< axis_value >::iterator fv = std::find(supported_x_axes.begin(), supported_x_axes.end(), x_type);
+				    auto fv = std::find(supported_x_axes.begin(), supported_x_axes.end(), x_type);
 						if(fv == supported_x_axes.end())
 							{
 						    std::stringstream msg;
@@ -493,7 +508,7 @@ namespace transport
 				template <typename number>
 				derived_line<number>& derived_line<number>::set_current_x_axis_value(axis_value v)
 					{
-				    std::list< axis_value >::iterator fv = std::find(this->supported_x_axes.begin(), this->supported_x_axes.end(), v);
+				    auto fv = std::find(this->supported_x_axes.begin(), this->supported_x_axes.end(), v);
 
 						if(fv == this->supported_x_axes.end())
 							{
@@ -510,15 +525,15 @@ namespace transport
 				template <typename number>
 				derived_line<number>& derived_line<number>::set_label_text(const std::string& latex, const std::string& non_latex)
 					{
-						if(latex == "" && non_latex == "")    // treat as an attempt to clear the labels
+						if(latex.empty() && non_latex.empty())    // treat as an attempt to clear the labels
 							{
 								this->clear_label_text();
 							}
 						else
 							{
-						    this->LaTeX_label     = latex;
-						    this->non_LaTeX_label = non_latex;
-						    this->label_set       = true;
+                this->LaTeX_label = latex;
+                this->non_LaTeX_label = non_latex;
+                this->label_set = true;
 							}
             return *this;
 					}
@@ -583,7 +598,7 @@ namespace transport
 
 						// Serialize: supported x-axis types
 				    Json::Value supported_array(Json::arrayValue);
-						for(std::list< axis_value >::const_iterator t = this->supported_x_axes.begin(); t != this->supported_x_axes.end(); ++t)
+						for(auto t = this->supported_x_axes.begin(); t != this->supported_x_axes.end(); ++t)
 							{
 								switch(*t)
 									{
@@ -702,7 +717,7 @@ namespace transport
 						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << '\n';
 
 						// output model details if this derived line is directly associated with an integration task
-						integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->parent_task);
+						auto itk = dynamic_cast< integration_task<number>* >(this->parent_task);
 						if(itk != nullptr)
 							{
 						    out << ", " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << itk->get_model()->get_name() << "'" << '\n';
@@ -727,7 +742,7 @@ namespace transport
 						unsigned int count = 0;
 
 						this->wrapper.wrap_out(out, "  " CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED " ");
-						for(std::list< axis_value >::const_iterator t = this->supported_x_axes.begin(); t != this->supported_x_axes.end() && count < CPPTRANSPORT_PRODUCT_MAX_SUPPORTED_AXES; ++t)
+						for(auto t = this->supported_x_axes.begin(); t != this->supported_x_axes.end() && count < CPPTRANSPORT_PRODUCT_MAX_SUPPORTED_AXES; ++t)
 							{
 								switch(*t)
 									{
