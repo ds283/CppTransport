@@ -60,76 +60,76 @@
 #include "transport-runtime/derived-products/derived-content/concepts/derived_line_type.h"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 "task-name"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT                                      "derived-line"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE                                  "threepf-momenta"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE                            "derivatives"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA                               "momenta"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE                               "k-label-type"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL                       "conventional"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING                           "comoving"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET                                 "label-set"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX                               "label-latex"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX                            "label-nonlatex"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS                            "label-tags"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION                                 "precision"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS                              "axis-class"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES                          "supported-axes"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE                      "x-axis-current"
-
-
-// derived content types
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE                                      "derived-line-type"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND                                "background"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE                           "background-line"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE                                   "u2-line"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_U3_LINE                                   "u3-line"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE                           "largest-u2-line"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U3_LINE                           "largest-u3-line"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES                         "twopf-time-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES                       "threepf-time-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES                  "tensor-twopf-time-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES                    "zeta-twopf-time-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES                  "zeta-threepf-time-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES       "zeta-reduced-bispectrum-time-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES                   "twopf-k-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES                 "threepf-k-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_WAVENUMBER_SERIES            "tensor-twopf-k-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES              "zeta-twopf-k-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES            "zeta-threepf-k-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES "zeta-reduced-bispectrum-k-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES                           "fNL-time-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES                             "r-time-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES                       "r-k-series"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST                          "integration-cost"
-
-
-// common serialization groups used by derived products
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY                                   "kconfig-query"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY                                   "time-query"
-
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT                          "use-kt-label"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA                       "use-alpha-label"
-#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA                        "use-beta-label"
-
-// maximum number of serial numbers to output when writing ourselves to
-// a standard stream
-#define CPPTRANSPORT_PRODUCT_MAX_SN                                                      (15)
-#define CPPTRANSPORT_PRODUCT_MAX_SUPPORTED_AXES                                          (5)
-
-
 namespace transport
 	{
 
 		namespace derived_data
 			{
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 = "task-name";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT                                      = "derived-line";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE                                  = "threepf-momenta";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE                            = "derivatives";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA                               = "momenta";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE                               = "k-label-type";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL                       = "conventional";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING                           = "comoving";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET                                 = "label-set";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX                               = "label-latex";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX                            = "label-nonlatex";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS                            = "label-tags";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION                                 = "precision";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS                              = "axis-class";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES                          = "supported-axes";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE                      = "x-axis-current";
+
+
+        // derived content types
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE                                      = "derived-line-type";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND                                = "background";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE                           = "background-line";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE                                   = "u2-line";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_U3_LINE                                   = "u3-line";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE                           = "largest-u2-line";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U3_LINE                           = "largest-u3-line";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES                         = "twopf-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES                       = "threepf-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES                  = "tensor-twopf-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES                    = "zeta-twopf-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES                  = "zeta-threepf-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES       = "zeta-reduced-bispectrum-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES                   = "twopf-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES                 = "threepf-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_WAVENUMBER_SERIES            = "tensor-twopf-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES              = "zeta-twopf-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES            = "zeta-threepf-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES = "zeta-reduced-bispectrum-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES                           = "fNL-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES                             = "r-time-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES                       = "r-k-series";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST                          = "integration-cost";
+
+
+        // common serialization groups used by derived products
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY                                   = "kconfig-query";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY                                   = "time-query";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT                          = "use-kt-label";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA                       = "use-alpha-label";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA                        = "use-beta-label";
+
+        // maximum number of serial numbers to output when writing ourselves to
+        // a standard stream
+        constexpr unsigned int CPPTRANSPORT_PRODUCT_MAX_SN                                              = 15;
+        constexpr unsigned int CPPTRANSPORT_PRODUCT_MAX_SUPPORTED_AXES                                  = 5;
+
 
 				//! content producer
 				template <typename number>
