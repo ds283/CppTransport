@@ -60,10 +60,10 @@ namespace transport
       public:
 
         //! construct a derivable task
-        derivable_task(const std::string& nm);
+        explicit derivable_task(std::string nm);
 
         //! deserialization constructor
-        derivable_task(const std::string& nm, Json::Value& reader);
+        derivable_task(std::string nm, Json::Value& reader);
 
         //! destructor
         virtual ~derivable_task() = default;
@@ -91,15 +91,15 @@ namespace transport
 
 
     template <typename number>
-    derivable_task<number>::derivable_task(const std::string& nm)
-	    : task<number>(nm)
+    derivable_task<number>::derivable_task(std::string nm)
+	    : task<number>(std::move(nm))
 	    {
 	    }
 
 
     template <typename number>
-    derivable_task<number>::derivable_task(const std::string& nm, Json::Value& reader)
-	    : task<number>(nm, reader)
+    derivable_task<number>::derivable_task(std::string nm, Json::Value& reader)
+	    : task<number>(std::move(nm), reader)
 	    {
 	    }
 
@@ -109,12 +109,6 @@ namespace transport
 	    {
         this->task<number>::serialize(writer);
 	    }
-
-
-    enum class content_group_type
-      {
-        integration, postintegration
-      };
 
 
     //! used to specify which properties are needed in a content group for each task
@@ -133,7 +127,7 @@ namespace transport
 
         //! constructor: integration group
         content_group_specifier(bool i, bool s, bool sd)
-          : type{content_group_type::integration},
+          : type{task_type::integration},
             ics{i},
             statistics{s},
             spectral_data{sd}
@@ -141,8 +135,8 @@ namespace transport
           }
 
         //! constructor: postintegration group
-        content_group_specifier(precomputed_products p)
-          : type{content_group_type::postintegration},
+        explicit content_group_specifier(precomputed_products p)
+          : type{task_type::postintegration},
             products(p),
             ics{false},
             statistics{false},
@@ -181,7 +175,7 @@ namespace transport
       protected:
 
         //! type of required content group
-        content_group_type type;
+        task_type type;
 
 
         // FLAGS FOR INTEGRATION GROUPS
@@ -206,7 +200,7 @@ namespace transport
 
     bool content_group_specifier::requires_ics() const
       {
-        if(this->type != content_group_type::integration)
+        if(this->type != task_type::integration)
           throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
 
         return ics;
@@ -215,7 +209,7 @@ namespace transport
 
     bool content_group_specifier::requires_statistics() const
       {
-        if(this->type != content_group_type::integration)
+        if(this->type != task_type::integration)
           throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
 
         return statistics;
@@ -224,7 +218,7 @@ namespace transport
 
     bool content_group_specifier::requires_spectral_data() const
       {
-        if(this->type != content_group_type::integration)
+        if(this->type != task_type::integration)
           throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
 
         return spectral_data;
@@ -233,7 +227,7 @@ namespace transport
 
     const precomputed_products& content_group_specifier::requires_products() const
       {
-        if(this->type != content_group_type::integration)
+        if(this->type != task_type::integration)
           throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
 
         return products;
@@ -244,7 +238,10 @@ namespace transport
     class derivable_task_list
       {
       public:
-        using type = std::list< std::pair< transport::derivable_task<number>*, std::unique_ptr<content_group_specifier> > >;
+        // it's unclear whether we should use std::unique_ptr<> + clone() to manage the derivable_task<> here,
+        // or std::shared_ptr<>. We can expect derivable_task_list<> objects to be shared.
+        // TODO: We may want to revisit this solution in future.
+        using type = std::list< std::pair< std::unique_ptr< transport::derivable_task<number> >, std::unique_ptr<content_group_specifier> > >;
         using element_type = typename type::value_type;
       };
 
@@ -278,7 +275,10 @@ namespace transport
                 const auto& A_tk = A.first;
                 const auto& B_tk = B.first;
 
-                if(A_tk == nullptr || B_tk == nullptr) return false;
+                // complain if either A or B has an empty pointer
+                if(!A_tk || !B_tk) return false;
+
+                // compares true if A.name < B.name
                 return A_tk->get_name() < B_tk->get_name();
               }
 
@@ -311,7 +311,10 @@ namespace transport
                 const auto& A_tk = A.first;
                 const auto& B_tk = B.first;
 
-                if(A_tk == nullptr || B_tk == nullptr) return false;
+                // complain if either A or B has an empty pointer
+                if(!A_tk || !B_tk) return false;
+
+                // compares true if A.name == B.name
                 return A_tk->get_name() == B_tk->get_name();
               }
 

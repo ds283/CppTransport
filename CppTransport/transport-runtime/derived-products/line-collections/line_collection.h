@@ -603,7 +603,8 @@ namespace transport
             // collect data from each derived_line
             for(const auto& line : this->lines)
               {
-                l.emplace_back(line->get_parent_task(), std::make_unique<content_group_specifier>(false, false, false));
+                std::unique_ptr< derivable_task<number> > tk(dynamic_cast< derivable_task<number>* >(line->get_parent_task()->clone()));
+                l.emplace_back(std::move(tk), std::make_unique<content_group_specifier>(false, false, false));
               }
 
             // sort into lexical order of task name

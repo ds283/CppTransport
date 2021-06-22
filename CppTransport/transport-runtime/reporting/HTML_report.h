@@ -2311,7 +2311,7 @@ namespace transport
 
                     for(const auto& elt : task_list)
                       {
-                        auto tk = elt.first;
+                        const auto& tk = elt.first;
 
                         HTML_node table_row("tr");
 

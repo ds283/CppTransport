@@ -860,7 +860,7 @@ namespace transport
                         auto task_list = product.get_task_list();
                         for(const auto& elt : task_list)
                           {
-                            auto tk = elt.first;
+                            const auto& tk = elt.first;
                             vmap.insert(tk->get_name(), G, repository_vertex_type::task);
                             boost::add_edge(vmap[tk->get_name()], vmap[rec.get_name()], 1, G);
                           }

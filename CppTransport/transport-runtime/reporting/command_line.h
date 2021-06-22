@@ -1031,7 +1031,7 @@ namespace transport
                 auto& db = cache.get_task_db();
                 for(const auto& elt : task_list)
                   {
-                    auto tk = elt.first;
+                    const auto& tk = elt.first;
 
                     if(tk != nullptr)
                       {

@@ -918,7 +918,7 @@ namespace transport
         auto task_list = d.get_task_list();
         for(const auto& elt : task_list)
           {
-            auto tk = elt.first;
+            const auto& tk = elt.first;
             unsigned int count = sqlite3_operations::count_tasks(this->db, tk->get_name());
 
             if(count == 0)
@@ -930,7 +930,7 @@ namespace transport
           }
 
         // create a record and commit it; the commit will throw an exception if the repository is not in a read/write mode
-        std::unique_ptr< derived_product_record<number> > record = derived_product_record_factory(d, mgr);
+        auto record = derived_product_record_factory(d, mgr);
         record->commit();
       }
 
