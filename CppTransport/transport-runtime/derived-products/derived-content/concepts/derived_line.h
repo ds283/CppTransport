@@ -1040,10 +1040,10 @@ namespace transport
 //						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << '\n';
 
 //						// output model details if this derived line is directly associated with an integration task
-//						auto itk = dynamic_cast< integration_task<number>* >(this->parent_task);
-//						if(itk != nullptr)
+//						auto db_task = dynamic_cast< integration_task<number>* >(this->parent_task);
+//						if(db_task != nullptr)
 //							{
-//						    out << ", " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << itk->get_model()->get_name() << "'" << '\n';
+//						    out << ", " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << db_task->get_model()->get_name() << "'" << '\n';
 //							}
 
 						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS << " ";

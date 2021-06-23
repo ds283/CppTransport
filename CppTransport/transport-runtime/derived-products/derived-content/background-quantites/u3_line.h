@@ -39,7 +39,7 @@
 #include "transport-runtime/derived-products/line-collections/data_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/derived_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/series/time_series.h"
-#include "transport-runtime/derived-products/derived-content/utilities/integration_task_gadget.h"
+#include "transport-runtime/derived-products/derived-content/utilities/twopf_db_task_gadget.h"
 
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h"
@@ -161,7 +161,7 @@ namespace transport
 		      protected:
 
 		        //! integration task gadget
-		        integration_task_gadget<number> gadget;
+		        twopf_db_task_gadget<number> gadget;
 
 		        //! time query object
 				    SQL_time_query tquery;
@@ -279,7 +279,7 @@ namespace transport
 
             std::vector<number> u3_tensor(2*Nfields * 2*Nfields * 2*Nfields);
 
-            for(std::vector<threepf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
+            for(auto & k_config : k_configs)
               {
                 for(unsigned int l = 0; l < 2*Nfields; ++l)
                   {
@@ -294,12 +294,12 @@ namespace transport
 
                                 for(unsigned int j = 0; j < line_data.size(); ++j)
                                   {
-                                    mdl->u3(this->gadget.get_integration_task(), bg_data[j], t->k1_comoving, t->k2_comoving, t->k3_comoving, t_configs[j].t, u3_tensor);
+                                    mdl->u3(this->gadget.get_twopf_db_task(), bg_data[j], k_config.k1_comoving, k_config.k2_comoving, k_config.k3_comoving, t_configs[j].t, u3_tensor);
                                     line_data[j] = u3_tensor[mdl->flatten(l,m,n)];
                                   }
 
                                 lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
-                                                   this->get_LaTeX_label(l,m,n,*t), this->get_non_LaTeX_label(l,m,n,*t), messages);
+                                                   this->get_LaTeX_label(l,m,n,k_config), this->get_non_LaTeX_label(l,m,n,k_config), messages);
                               }
                           }
                       }

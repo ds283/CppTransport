@@ -24,8 +24,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_INTEGRATION_TASK_GADGET_H
-#define CPPTRANSPORT_INTEGRATION_TASK_GADGET_H
+#ifndef CPPTRANSPORT_TWOPF_DB_TASK_GADGET_H
+#define CPPTRANSPORT_TWOPF_DB_TASK_GADGET_H
 
 
 #include "transport-runtime/exceptions.h"
@@ -42,37 +42,34 @@ namespace transport
 			{
 
 				template <typename number>
-				class integration_task_gadget
+				class twopf_db_task_gadget
 					{
 
 				  public:
 
 						//! construct gadget directly from a suitable twopf_db_task instance
-						integration_task_gadget(const twopf_db_task<number>& tk);
+						twopf_db_task_gadget(const twopf_db_task<number>& tk);
 
 						//! construct gadget from a derivable_task_set<> instance, assumed to contain a suitable
 						//! twopf_db_task instance
-            integration_task_gadget(const typename derivable_task_set<number>::type& task_list);
+            twopf_db_task_gadget(const typename derivable_task_set<number>::type& task_list);
 
 						//! override copy constructor to perform a deep copy
-						integration_task_gadget(const integration_task_gadget<number>& obj);
+						twopf_db_task_gadget(const twopf_db_task_gadget<number>& obj);
 
 						//! destructor
-						~integration_task_gadget() = default;
+						~twopf_db_task_gadget() = default;
 
 
 						// ADMIN
 
 				  public:
 
-						//! initialize after default constructor
-						void set_task(derivable_task<number>* tk, task_finder<number>& finder);
-
 						//! get pointer to model instance
 						model<number>* get_model() const { return this->mdl; }
 
-						//! get pointer to integration_task<> instance
-						twopf_db_task<number>* get_integration_task() const { return this->itk.get(); }
+						//! get pointer to twopf_db_task<> instance
+						twopf_db_task<number>* get_twopf_db_task() const { return this->db_task.get(); }
 
 						//! quick access to get number of fields
 						unsigned int get_N_fields() const { return(this->N_fields); }
@@ -83,7 +80,7 @@ namespace transport
 				  private:
 
 						//! pointer to integration task
-						std::unique_ptr< twopf_db_task<number> > itk;
+						std::unique_ptr< twopf_db_task<number> > db_task;
 
 				    //! pointer to model.
 				    //! It's OK for this to be 'shallow' copied, rather than 'deep' copied, because model instances are managed
@@ -98,19 +95,19 @@ namespace transport
 
 
 				template <typename number>
-				integration_task_gadget<number>::integration_task_gadget(const twopf_db_task<number>& tk)
+				twopf_db_task_gadget<number>::twopf_db_task_gadget(const twopf_db_task<number>& tk)
 					: mdl(tk.get_model()),
-					  itk(dynamic_cast< twopf_db_task<number>* >(tk.clone())),
-						N_fields(tk.get_model()->get_N_fields())
+            db_task(dynamic_cast< twopf_db_task<number>* >(tk.clone())),
+            N_fields(tk.get_model()->get_N_fields())
 					{
 					}
 
 
 				template <typename number>
-				integration_task_gadget<number>::integration_task_gadget(const typename derivable_task_set<number>::type& task_list)
+				twopf_db_task_gadget<number>::twopf_db_task_gadget(const typename derivable_task_set<number>::type& task_list)
 					: mdl(nullptr),
-					  itk(nullptr),
-					  N_fields(0)
+            db_task(nullptr),
+            N_fields(0)
 					{
 					  // search through task_list to find a suitable twopf_db_task<> instance
 					  for(const auto& elt : task_list)
@@ -119,8 +116,8 @@ namespace transport
 
                 if(tk.get_type() == task_type::integration)
                   {
-                    itk.reset(dynamic_cast< twopf_db_task<number>* >(tk.clone()));
-                    mdl = itk->get_model();
+                    db_task.reset(dynamic_cast< twopf_db_task<number>* >(tk.clone()));
+                    mdl = db_task->get_model();
                     N_fields = mdl->get_N_fields();
                     break;
                   }
@@ -129,8 +126,8 @@ namespace transport
 
 
         template <typename number>
-        integration_task_gadget<number>::integration_task_gadget(const integration_task_gadget<number>& obj)
-          : itk(dynamic_cast< twopf_db_task<number>* >(obj.itk->clone())),
+        twopf_db_task_gadget<number>::twopf_db_task_gadget(const twopf_db_task_gadget<number>& obj)
+          : db_task(dynamic_cast< twopf_db_task<number>* >(obj.db_task->clone())),
             mdl(obj.mdl),
             N_fields(obj.N_fields)
           {
@@ -142,4 +139,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //CPPTRANSPORT_INTEGRATION_TASK_GADGET_H
+#endif //CPPTRANSPORT_TWOPF_DB_TASK_GADGET_H

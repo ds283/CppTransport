@@ -255,7 +255,7 @@ namespace transport
                 this->type = attachment_type::integration_attached;
 
                 // remember number of fields associated with this container
-                // TODO: this is the only thing we use itk for. Is there no way to avoid the upcast, by getting N
+                // TODO: this is the only thing we use db_task for. Is there no way to avoid the upcast, by getting N
                 //  from somehwere else?
                 this->N_fields = itk.get_model()->get_N_fields();
 

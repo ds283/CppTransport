@@ -129,7 +129,7 @@ namespace transport
 		      protected:
 
 				    //! gadget for extracting details about parent task
-				    integration_task_gadget<number> gadget;
+				    twopf_db_task_gadget<number> gadget;
 
 		        //! record which indices are active in this group
 		        index_selector<1> active_indices;
@@ -696,7 +696,7 @@ namespace transport
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
 
-		        for(std::vector<threepf_kconfig>::const_iterator t = k_values.begin(); t != k_values.end(); ++t)
+		        for(const auto & k_value : k_values)
 			        {
 		            for(unsigned int l = 0; l < 2*this->gadget.get_N_fields(); ++l)
 			            {
@@ -708,7 +708,7 @@ namespace transport
 		                        if(this->active_indices.is_on(index_set))
 			                        {
 				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(this->get_dot_meaning() == dot_type::derivatives ? cf_data_type::cf_threepf_Nderiv : cf_data_type::cf_threepf_momentum,
-                                                                                         this->gadget.get_model()->flatten(l,m,n), t->serial);
+                                                                                         this->gadget.get_model()->flatten(l,m,n), k_value.serial);
 
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
                                 assert(line_data.size() == t_axis.size());
@@ -720,7 +720,7 @@ namespace transport
                                   }
                                 else
                                   {
-                                    double shape = t->k1_comoving*t->k1_comoving * t->k2_comoving*t->k2_comoving * t->k3_comoving*t->k3_comoving;
+                                    double shape = k_value.k1_comoving*k_value.k1_comoving * k_value.k2_comoving*k_value.k2_comoving * k_value.k3_comoving*k_value.k3_comoving;
                                     for(unsigned int j = 0; j < line_data.size(); ++j)
                                       {
                                         line_data[j] *= 1.0/shape;
@@ -729,7 +729,7 @@ namespace transport
                                   }
 
                                 lines.emplace_back(group, this->x_type, value, t_axis, line_data,
-                                                   this->get_LaTeX_label(l, m, n, *t), this->get_non_LaTeX_label(l, m, n, *t), messages);
+                                                   this->get_LaTeX_label(l, m, n, k_value), this->get_non_LaTeX_label(l, m, n, k_value), messages);
 			                        }
 			                    }
 			                }

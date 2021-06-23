@@ -39,7 +39,7 @@
 #include "transport-runtime/derived-products/line-collections/data_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/derived_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/series/time_series.h"
-#include "transport-runtime/derived-products/derived-content/utilities/integration_task_gadget.h"
+#include "transport-runtime/derived-products/derived-content/utilities/twopf_db_task_gadget.h"
 
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h"
@@ -135,7 +135,7 @@ namespace transport
 		      protected:
 
 		        //! integration task gadget
-		        integration_task_gadget<number> gadget;
+		        twopf_db_task_gadget<number> gadget;
 
 		        //! time query object
 				    SQL_time_query tquery;
@@ -232,7 +232,7 @@ namespace transport
 
                 for(unsigned int j = 0; j < line_data.size(); ++j)
                   {
-                    mdl->u2(this->gadget.get_integration_task(), bg_data[j], k_config.k_comoving, t_configs[j].t, u2_tensor);
+                    mdl->u2(this->gadget.get_twopf_db_task(), bg_data[j], k_config.k_comoving, t_configs[j].t, u2_tensor);
                     number val = -std::numeric_limits<number>::max();
 
                     for(unsigned int m = 0; m < 2*Nfields; ++m)

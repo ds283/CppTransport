@@ -39,7 +39,7 @@
 #include "transport-runtime/derived-products/line-collections/data_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/derived_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/series/time_series.h"
-#include "transport-runtime/derived-products/derived-content/utilities/integration_task_gadget.h"
+#include "transport-runtime/derived-products/derived-content/utilities/twopf_db_task_gadget.h"
 
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h"
@@ -183,7 +183,7 @@ namespace transport
 		      protected:
 
 		        //! integration task gadget
-		        integration_task_gadget<number> gadget;
+		        twopf_db_task_gadget<number> gadget;
 
 		        //! query object
 				    SQL_time_query tquery;
@@ -366,7 +366,7 @@ namespace transport
 
 				    for(unsigned int j = 0; j < line_data.size(); ++j)
 					    {
-				        line_data[j] = mdl->epsilon(this->gadget.get_integration_task()->get_params(), bg_data[j]);
+				        line_data[j] = mdl->epsilon(this->gadget.get_twopf_db_task()->get_params(), bg_data[j]);
 					    }
 
             lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
@@ -386,7 +386,7 @@ namespace transport
 
           for(unsigned int j = 0; j < line_data.size(); ++j)
             {
-              line_data[j] = mdl->eta(this->gadget.get_integration_task()->get_params(), bg_data[j]);
+              line_data[j] = mdl->eta(this->gadget.get_twopf_db_task()->get_params(), bg_data[j]);
             }
 
           lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
@@ -406,7 +406,7 @@ namespace transport
 
 		        for(unsigned int j = 0; j < line_data.size(); ++j)
 			        {
-		            line_data[j] = mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]);
+		            line_data[j] = mdl->H(this->gadget.get_twopf_db_task()->get_params(), bg_data[j]);
 			        }
 
             lines.emplace_back(group, this->x_type, value_type::mass, t_axis, line_data,
@@ -424,12 +424,12 @@ namespace transport
 
 		        std::vector<number> line_data(t_axis.size());
 
-            auto tcross = this->gadget.get_integration_task()->get_N_horizon_crossing();
+            auto tcross = this->gadget.get_twopf_db_task()->get_N_horizon_crossing();
 
 		        for(unsigned int j = 0; j < line_data.size(); ++j)
 			        {
 		            number a = exp(t_axis[j] - tcross);
-		            line_data[j] = a * mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]);
+		            line_data[j] = a * mdl->H(this->gadget.get_twopf_db_task()->get_params(), bg_data[j]);
 			        }
 
             lines.emplace_back(group, this->x_type, value_type::mass, t_axis, line_data,
@@ -481,7 +481,7 @@ namespace transport
             // for each time sample point, compute mass spectrum and store in line_data
             for(unsigned int j = 0; j < t_axis.size(); ++j)
               {
-                mdl->sorted_mass_spectrum(this->gadget.get_integration_task(), bg_data[j], norm, M, E);
+                mdl->sorted_mass_spectrum(this->gadget.get_twopf_db_task(), bg_data[j], norm, M, E);
 
                 for(unsigned int i = 0; i < N; ++i)
                   {

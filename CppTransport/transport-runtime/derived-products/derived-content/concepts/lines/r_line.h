@@ -53,7 +53,7 @@
 #include "transport-runtime/derived-products/utilities/wrapper.h"
 
 #include "transport-runtime/derived-products/derived-content/concepts/derived_line.h"
-#include "transport-runtime/derived-products/derived-content/utilities/integration_task_gadget.h"
+#include "transport-runtime/derived-products/derived-content/utilities/twopf_db_task_gadget.h"
 
 
 namespace transport
@@ -125,7 +125,7 @@ namespace transport
 		      protected:
 
 				    //! integration task gadget
-				    integration_task_gadget<number> gadget;
+				    twopf_db_task_gadget<number> gadget;
 
 			    };
 

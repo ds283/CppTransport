@@ -949,7 +949,7 @@ SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
   )
 
 SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES
-  transport-runtime/derived-products/derived-content/utilities/integration_task_gadget.h
+  transport-runtime/derived-products/derived-content/utilities/twopf_db_task_gadget.h
   )
 
 SET(TRANSPORT_RUNTIME_DERIVED_PRODUCTS_FILES

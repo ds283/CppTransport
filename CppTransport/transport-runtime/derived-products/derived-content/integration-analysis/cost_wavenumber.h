@@ -41,7 +41,7 @@
 #include "transport-runtime/derived-products/line-collections/data_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/derived_line.h"
 #include "transport-runtime/derived-products/derived-content/concepts/series/wavenumber_series.h"
-#include "transport-runtime/derived-products/derived-content/utilities/integration_task_gadget.h"
+#include "transport-runtime/derived-products/derived-content/utilities/twopf_db_task_gadget.h"
 
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query.h"
 #include "transport-runtime/derived-products/derived-content/SQL_query/SQL_query_helper.h"
@@ -140,7 +140,7 @@ namespace transport
 				  protected:
 
 						//! for some purposes we need access to the owning task
-						integration_task_gadget<number> gadget;
+						twopf_db_task_gadget<number> gadget;
 
 						//! cost metric to use
 						cost_metric metric;
