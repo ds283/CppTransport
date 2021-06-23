@@ -196,7 +196,8 @@ namespace transport
 
 				template <typename number>
 				background_line<number>::background_line(const twopf_db_task<number>& tk, SQL_time_query tq, background_quantity t, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
+					: derived_line<number>(make_derivable_task_set_element(tk, false, false, false),
+                                 axis_class::time, { axis_value::efolds }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),
@@ -209,12 +210,9 @@ namespace transport
 				background_line<number>::background_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
-						gadget(),
+            gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
 					{
-						assert(this->parent_task != nullptr);
-						gadget.set_task(this->parent_task, finder);
-
 				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE].asString();
 						type = background_quantity::epsilon;
 

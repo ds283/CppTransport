@@ -195,12 +195,9 @@ namespace transport
 		    template <typename number>
 		    threepf_line<number>::threepf_line(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
-			      gadget(),
+            gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 			      active_indices(reader)
 			    {
-				    assert(this->parent_task != nullptr);
-		        gadget.set_task(this->parent_task, finder);
-
 		        use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
 		        use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
 		        use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();

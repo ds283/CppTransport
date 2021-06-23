@@ -152,7 +152,8 @@ namespace transport
 				template <typename number>
 				u2_line<number>::u2_line(const twopf_db_task<number>& tk, index_selector<2> sel,
                                  SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
+					: derived_line<number>(make_derivable_task_set_element(tk, false, false, false),
+                                 axis_class::time, { axis_value::efolds }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
             active_indices(sel),
@@ -166,13 +167,11 @@ namespace transport
 				u2_line<number>::u2_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
-						gadget(),
+            gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
             active_indices(reader),
 						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
             kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 					{
-						assert(this->parent_task != nullptr);
-						gadget.set_task(this->parent_task, finder);
 					}
 
 

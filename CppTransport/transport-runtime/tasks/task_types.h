@@ -57,6 +57,23 @@ namespace transport
       }
 
 
+    inline task_type task_type_from_string(const std::string& str)
+      {
+        if(str == CPPTRANSPORT_TASK_TYPE_INTEGRATION)
+          return task_type::integration;
+
+        if(str == CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION)
+          return task_type::postintegration;
+
+        if(str == CPPTRANSPORT_TASK_TYPE_OUTPUT)
+          return task_type::output;
+
+        std::ostringstream msg;
+        msg << CPPTRANSPORT_TASK_UNKNOWN_TYPE << " '" << str << "'";
+        throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+      }
+
+
     inline std::string task_type_to_string(integration_task_type type)
       {
         switch(type)

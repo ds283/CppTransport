@@ -141,7 +141,13 @@ namespace transport
 				template <typename number>
 				r_wavenumber_series<number>::r_wavenumber_series(const zeta_twopf_db_task<number>& tk,
 				                                                 SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit }, prec),
+					: derived_line<number>({ make_derivable_task_set_element(tk,
+                                                                      precomputed_products(true, false, false, false,
+                                                                                           false, false, false, false),
+                                                                      r_line_impl::ZETA_TASK),
+                                   make_derivable_task_set_element(*(tk.get_parent_task()), false, false, false,
+                                                                      r_line_impl::INTEGRATION_TASK) },
+                                 axis_class::wavenumber, { axis_value::k, axis_value::efolds_exit }, prec),
 					  r_line<number>(tk),
 					  wavenumber_series<number>(tk),
             tquery(tq),
@@ -171,7 +177,7 @@ namespace transport
             std::list<std::string> groups;
 
 						// attach datapipe to a content group for the zeta part of r
-            std::string group = this->attach(pipe, tags, this->parent_task);
+            std::string group = this->attach(pipe, tags, r_line_impl::ZETA_TASK);
             groups.push_back(group);
 
 				    // pull wavenumber-axis data
@@ -201,10 +207,7 @@ namespace transport
 				    pipe.detach();
 
 				    // attach datapipe to a content group for the tensor part of r
-				    auto* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
-				    assert(ptk != nullptr);
-
-				    group = this->attach(pipe, tags, ptk->get_parent_task());
+				    group = this->attach(pipe, tags, r_line_impl::INTEGRATION_TASK);
             groups.push_back(group);
 
 				    // rebind handles

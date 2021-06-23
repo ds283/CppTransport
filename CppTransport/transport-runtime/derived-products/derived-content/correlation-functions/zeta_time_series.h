@@ -146,7 +146,9 @@ namespace transport
         template <typename number>
         zeta_twopf_time_series<number>::zeta_twopf_time_series(const zeta_twopf_db_task<number>& tk,
                                                                SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-	        : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
+	        : derived_line<number>(make_derivable_task_set_element(tk, precomputed_products(true, false, false, false,
+                                                                                           false, false, false, false)),
+                                 axis_class::time, { axis_value::efolds }, prec),
 	          zeta_twopf_line<number>(tk),
 	          time_series<number>(tk),
             tquery(tq),
@@ -379,7 +381,9 @@ namespace transport
         zeta_threepf_time_series<number>::zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
                                                                    SQL_time_query tq, SQL_threepf_query kq,
                                                                    unsigned int prec)
-          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
+          : derived_line<number>(make_derivable_task_set_element(tk, precomputed_products(false, false, true, false,
+                                                                                           false, false, false, false)),
+                                 axis_class::time, { axis_value::efolds }, prec),
             zeta_threepf_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -611,7 +615,9 @@ namespace transport
         zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
                                                                                          SQL_time_query tq, SQL_threepf_query kq,
                                                                                          unsigned int prec)
-          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
+          : derived_line<number>(make_derivable_task_set_element(tk, precomputed_products(false, false, false, true,
+                                                                                           false, false, false, false)),
+                                 axis_class::time, { axis_value::efolds }, prec),
             zeta_reduced_bispectrum_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),

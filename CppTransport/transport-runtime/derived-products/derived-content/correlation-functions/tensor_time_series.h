@@ -146,7 +146,8 @@ namespace transport
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_db_task<number>& tk, index_selector<2> sel,
 		                                                               SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-			    : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
+			    : derived_line<number>(make_derivable_task_set_element(tk, false, false, false),
+                                 axis_class::time, { axis_value::efolds }, prec),
             tensor_twopf_line<number>(tk, sel),
             time_series<number>(tk),
             tquery(tq),

@@ -28,27 +28,32 @@
 #define CPPTRANSPORT_MESSAGES_EN_LINE_VALUES_H
 
 
-#define CPPTRANSPORT_VALUE_NON_LATEX_FIELD                "field value"
-#define CPPTRANSPORT_VALUE_NON_LATEX_MOMENTUM             "momentum value"
-#define CPPTRANSPORT_VALUE_NON_LATEX_CORRELATION_FUNCTION "correlation function"
-#define CPPTRANSPORT_VALUE_NON_LATEX_FNL                  "fNL"
-#define CPPTRANSPORT_VALUE_NON_LATEX_R                    "tensor-to-scalar ratio"
-#define CPPTRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX       "spectral index"
-#define CPPTRANSPORT_VALUE_NON_LATEX_MASS                 "mass scale"
-#define CPPTRANSPORT_VALUE_NON_LATEX_SECONDS              "seconds"
-#define CPPTRANSPORT_VALUE_NON_LATEX_STEPS                "steps"
+namespace transport
+  {
 
-#define CPPTRANSPORT_VALUE_LATEX_FIELD                    "field value"
-#define CPPTRANSPORT_VALUE_LATEX_MOMENTUM                 "momentum value"
-#define CPPTRANSPORT_VALUE_LATEX_CORRELATION_FUNCTION     "correlation function"
-#define CPPTRANSPORT_VALUE_LATEX_FNL                      "$f_{\\mathrm{NL}}$"
-#define CPPTRANSPORT_VALUE_LATEX_R                        "tensor-to-scalar ratio"
-#define CPPTRANSPORT_VALUE_LATEX_SPECTRAL_INDEX           "spectral index"
-#define CPPTRANSPORT_VALUE_LATEX_MASS                     "mass scale"
-#define CPPTRANSPORT_VALUE_LATEX_SECONDS                  "seconds"
-#define CPPTRANSPORT_VALUE_LATEX_STEPS                    "steps"
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_FIELD                = "field value";
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_MOMENTUM             = "momentum value";
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_CORRELATION_FUNCTION = "correlation function";
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_FNL                  = "fNL";
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_R                    = "tensor-to-scalar ratio";
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX       = "spectral index";
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_MASS                 = "mass scale";
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_SECONDS              = "seconds";
+    constexpr auto CPPTRANSPORT_VALUE_NON_LATEX_STEPS                = "steps";
 
-#define CPPTRANSPORT_VALUE_UNKNOWN_TYPE                   "lines_values: unknown value type"
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_FIELD                    = "field value";
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_MOMENTUM                 = "momentum value";
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_CORRELATION_FUNCTION     = "correlation function";
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_FNL                      = "$f_{\\mathrm{NL}}$";
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_R                        = "tensor-to-scalar ratio";
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_SPECTRAL_INDEX           = "spectral index";
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_MASS                     = "mass scale";
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_SECONDS                  = "seconds";
+    constexpr auto CPPTRANSPORT_VALUE_LATEX_STEPS                    = "steps";
+
+    constexpr auto CPPTRANSPORT_VALUE_UNKNOWN_TYPE                   = "lines_values: unknown value type";
+
+  }   // namespace transport
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_LINE_VALUES_H

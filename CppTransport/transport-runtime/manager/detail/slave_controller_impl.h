@@ -1031,7 +1031,7 @@ namespace transport
                     try
                       {
                         // attach datapipe to the best-match content group for the task ptk and specified tags
-                        group = pipe->attach(ptk, payload.get_tags());
+                        group = pipe->attach(*ptk, payload.get_tags());
 
                         // use this content group to do whatever work is required
                         this->work_handler.postintegration_handler(tk, ptk, work, batcher, *pipe);

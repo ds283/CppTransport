@@ -2685,7 +2685,7 @@ namespace transport
 
     template <typename number>
     void
-    data_manager_sqlite3<number>::datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path)
+    data_manager_sqlite3<number>::datapipe_attach_container(datapipe<number>& pipe, const boost::filesystem::path& ctr_path)
       {
         sqlite3* db = nullptr;
 
@@ -2713,23 +2713,19 @@ namespace transport
 
         // remember this connexion
         this->open_containers.push_back(db);
-        pipe->set_manager_handle(db);
+        pipe.set_manager_handle(db);
 
-        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "** Attached SQLite3 container '" << ctr_path.string() << "' to datapipe";
+        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << "** Attached SQLite3 container '" << ctr_path.string() << "' to datapipe";
       }
 
 
     template <typename number>
     std::unique_ptr< content_group_record<integration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_integration_content
-      (datapipe<number>* pipe, integration_content_finder<number>& finder, const std::string& name, const std::list<std::string>& tags)
+      (datapipe<number>& pipe, integration_content_finder<number>& finder, const std::string& name, const std::list<std::string>& tags)
       {
-        assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
-
         // find a suitable content group for this task; will throw an exception if no suitable content group can be found
         auto group = finder(name, tags);
-
         const auto& payload = group->get_payload();
 
         // get path to the content group data container
@@ -2744,15 +2740,11 @@ namespace transport
     template <typename number>
     std::unique_ptr< content_group_record<postintegration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_postintegration_content
-      (datapipe<number>* pipe, postintegration_content_finder<number>& finder, const std::string& name,
-       const std::list<std::string>& tags)
+      (datapipe<number>& pipe, postintegration_content_finder<number>& finder, const std::string& name, const std::list<std::string>& tags)
       {
-        assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable content group for this task; will throw an exception if no suitable content group can be found
         auto group = finder(name, tags);
-
         const auto& payload = group->get_payload();
 
         // get path to the content group data container

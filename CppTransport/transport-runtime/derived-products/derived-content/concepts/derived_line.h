@@ -68,6 +68,11 @@ namespace transport
 
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 = "task-name";
 
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST                          = "parent-tasks";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_TASKNAME                 = "name";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_SPECIFIERS               = "content-specifiers";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_TAG                      = "tag";
+
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT                                      = "derived-line";
 
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE                                  = "threepf-momenta";
@@ -138,14 +143,22 @@ namespace transport
 
 				  public:
 
+					  using task_set_type = typename derivable_task_set<number>::type;
+            using task_set_element_type = typename derivable_task_set<number>::type::value_type;
+
+					  using owning_task_initializer_list_type = std::initializer_list<task_set_element_type>;
+
 
 						// CONSTRUCTOR, DESTRUCTOR
 
 				  public:
 
-						//! Basic user-facing constructor
-						derived_line(const derivable_task<number>& tk, axis_class at, std::list< axis_value > sax,
-						             unsigned int prec=CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
+						//! Simplest user-facing constructor with a single parent task
+						derived_line(task_set_element_type tk, axis_class at,
+                         std::set<axis_value> sax, unsigned int prec=CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
+
+						derived_line(owning_task_initializer_list_type tks, axis_class at, std::set<axis_value> sax,
+                         unsigned int prec=CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! Dummy constructor, should not be used.
 						//! Has to be provided as part of our virtual inheritance strategy (mainly to silence
@@ -165,7 +178,8 @@ namespace transport
 						// Override default copy constructor to perform a deep copy of the parent task
 						derived_line(const derived_line<number>& obj);
 
-						~derived_line() override;
+						//! destructor can be defaulted
+						~derived_line() override = default;
 
 
             // TYPE INTROSPECTION
@@ -176,12 +190,12 @@ namespace transport
             virtual derived_line_type get_line_type() const = 0;
 
 
-				    // ADMIN
+				    // ADMINISTRATION INTERFACE
 
 				  public:
 
-				    //! Get parent task
-				    derivable_task<number>* get_parent_task() const { return(this->parent_task); }
+				    //! Get parent task list
+				    const task_set_type& get_parent_task_list() const { return this->parent_tasks; }
 
             //! Get axis type
             axis_class get_x_axis_class() const { return(this->x_class); }
@@ -231,12 +245,9 @@ namespace transport
 				  protected:
 
 				    //! attach datapipe to content group
-            std::string attach(datapipe<number>& pipe, const std::list<std::string>& tags) const ;
+            std::string attach(datapipe<number>& pipe, const std::list<std::string>& tags, unsigned int tag=0) const;
 
-						//! attach datapipe to content group, using specified task
-            std::string attach(datapipe<number>& pipe, const std::list<std::string>& tags, derivable_task<number>* tk) const;
-
-				    //! detach datapipe from content group
+            //! detach datapipe from content group
 				    void detach(datapipe<number>& pipe) const;
 
 
@@ -244,7 +255,7 @@ namespace transport
 
 				  public:
 
-				    //! generate data lines for plotting
+				    //! generate data lines for plotting, output to tables, or whatever other purpose is intended
 				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 				                              const std::list<std::string>& tags, slave_message_buffer& messages) const = 0;
 
@@ -272,19 +283,68 @@ namespace transport
 						//! Serialize this object
 						void serialize(Json::Value& writer) const override;
 
+					private:
 
-				    // INTERNAL DATA
+					  // INTERNAL SERIALIZATION API
+
+					  //! serialize parent class list
+					  void serialize_parent_task_list(Json::Value& root) const;
+
+					  //! serialize x-axis class
+            void serialize_x_axis_class(Json::Value& root) const;
+					  
+					  //! serialize the list of supported x-axis types
+            void serialize_supported_x_axis_types(Json::Value& root) const;
+
+            //! serialize the currently-selected x-axis type
+            void serialize_current_x_axis_value(Json::Value& root) const;
+
+            //! serialize the currently-selected meaning for a dot (momentum or time derivative?)
+            void serialize_dot_meaning(Json::Value& root) const;
+
+            //! serialize the currently-selected units of k-values
+            void serialize_klabel_meaning(Json::Value& root) const;
+
+
+            // INTERNAL DE-SERIALIZATION API
+
+            //! deserialize parent class list
+            task_set_type deserialize_parent_task_list(const Json::Value& root, task_finder<number>& finder) const;
+
+            //! deserialize new-style parent class list in derived_task_list<number>::type format
+            task_set_type deserialize_new_parent_task_list(const Json::Value& root, task_finder<number>& finder) const;
+
+            //! deserialize old-style parent task stored in a single field
+            task_set_type deserialize_old_parent_task(const Json::Value& root, task_finder<number>& finder) const;
+
+            //! deserialize x-axis class
+            axis_class deserialize_x_axis_class(const Json::Value& root) const;
+
+            //! deserialize the list of supported x-axis types
+            std::set<axis_value> deserialize_supported_x_axis_types(const Json::Value& root) const;
+
+            //! deserialize the currently-selected x-axis type
+            axis_value deserialize_current_x_axis_value(const Json::Value& root) const;
+
+            //! deserialize the currently-selected meaning for a dot (momentum or time derivative?)
+            dot_type deserialize_dot_meaning(const Json::Value& root) const;
+
+            //! deserialize the currently-selected units of k-values
+            klabel_type deserialize_klabel_meaning(const Json::Value& root) const;
+
+
+
+            // INTERNAL DATA
 
           protected:
 
 
 					  // ADMIN DATA
 
-            //! record the task that 'owns' this derived content. Currently this is taken always to be
-            //! a single task, even for derived lines such as r that depend on both zeta and field
-            //! correlation functions (and therefore depend on multiple content groups from multiple tasks).
-            derivable_task<number>* parent_task;
-
+            //! Record the tasks that contribute to this derived content. There can be several such tasks,
+            //! e.g. for an r-line, which accepts contributions from a zeta correlation function task
+            //! *and* a field correlation function task
+            task_set_type parent_tasks;
 
 					  // AXIS DATA
 
@@ -295,7 +355,7 @@ namespace transport
 						axis_value x_type;
 
 						//! Supported axis values
-						std::list< axis_value > supported_x_axes;
+						std::set< axis_value > supported_x_axes;
 
 						//! LaTeX version of label (optional)
 						std::string LaTeX_label;
@@ -331,151 +391,117 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(const derivable_task<number>& tk, axis_class at, std::list< axis_value > sax, unsigned int prec)
+				derived_line<number>::derived_line(typename derived_line<number>::task_set_element_type tk, axis_class at,
+                                           std::set<axis_value> sax, unsigned int prec)
 					: x_class(at),
 					  supported_x_axes(std::move(sax)),
             dot_meaning(dot_type::momenta),
             klabel_meaning(klabel_type::conventional),
             label_set(false),
-            use_tags(true),
-            precision(prec),
-            parent_task(dynamic_cast< derivable_task<number>* >(tk.clone()))
+            use_tags(CPPTRANSPORT_DEFAULT_DERIVED_LINE_USE_TAGS),
+            precision(prec)
 					{
-						assert(parent_task != nullptr);
+					  parent_tasks.clear();
+            parent_tasks.insert(std::move(tk));
 
-				    if(parent_task == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
-						if(supported_x_axes.empty()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES);
+				    // check that at least one supportable x-axis type has been specified
+						if(supported_x_axes.empty())
+						  throw runtime_exception(exception_type::RUNTIME_ERROR,
+                                      CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES);
 
-						x_type = supported_x_axes.front();
+						// default to first allowed x-axis type
+						x_type = *supported_x_axes.cbegin();
 					}
+
+
+        template <typename number>
+        derived_line<number>::derived_line(typename derived_line<number>::owning_task_initializer_list_type tks,
+                                           axis_class at, std::set<axis_value> sax, unsigned int prec)
+          :  x_class(at),
+             supported_x_axes(std::move(sax)),
+             dot_meaning(dot_type::momenta),
+             klabel_meaning(klabel_type::conventional),
+             label_set(false),
+             use_tags(CPPTRANSPORT_DEFAULT_DERIVED_LINE_USE_TAGS),
+             precision(prec)
+          {
+            parent_tasks.clear();
+            for(auto& item : tks)
+              {
+                parent_tasks.insert(std::move(tks));
+              }
+
+            // check that at least one supportable x-axis type has been specified
+            if(supported_x_axes.empty())
+              throw runtime_exception(exception_type::RUNTIME_ERROR,
+                                      CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES);
+
+            // default to first allowed x-axis type
+            x_type = *supported_x_axes.cbegin();
+          }
 
 
 				template <typename number>
 				derived_line<number>::derived_line(const task<number>& tk)
-					: parent_task(nullptr)
 					{
+					  parent_tasks.clear();
 						assert(false);
 					}
 
 
 				template <typename number>
 				derived_line<number>::derived_line(Json::Value& reader)
-					: parent_task(nullptr)
 					{
+					  parent_tasks.clear();
 						assert(false);
 					}
 
 
+        // deserialization constructor
 				template <typename number>
 				derived_line<number>::derived_line(Json::Value& reader, task_finder<number>& finder)
-					: parent_task(nullptr)
 					{
-				    precision       = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION].asUInt();
-				    label_set       = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET].asBool();
-				    LaTeX_label     = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX].asString();
-				    non_LaTeX_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX].asString();
-						use_tags        = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS].asBool();
+					  parent_tasks.clear();
 
-				    std::string parent_task_name = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME].asString();
+					  auto& root = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT];
 
-				    // extract parent task
-            std::unique_ptr< task_record<number> > tk_rec = finder(parent_task_name);
-            assert(tk_rec.get() != nullptr);
+				    precision       = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION].asUInt();
+				    label_set       = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET].asBool();
+				    LaTeX_label     = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX].asString();
+				    non_LaTeX_label = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX].asString();
+						use_tags        = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS].asBool();
 
-						parent_task = dynamic_cast< derivable_task<number>* >(tk_rec->get_abstract_task()->clone());
-						assert(parent_task != nullptr);
+						//! Deserialize: parent task list
+						parent_tasks = this->deserialize_parent_task_list(root, finder);
 
 						// Deserialize: axis type for this derived line
-				    std::string xtype = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS].asString();
-				    if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME)                       x_class = axis_class::time;
-				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER)            x_class = axis_class::wavenumber;
-				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION) x_class = axis_class::threepf_kconfig;
-				    else
-					    {
-				        std::ostringstream msg;
-				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_CLASS << " '" << xtype << "'";
-				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
-					    }
+						x_class = this->deserialize_x_axis_class(root);
 
 						// Deserialize: supported x-axis values
-				    Json::Value supported_array = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES];
-						supported_x_axes.clear();
-						assert(supported_array.isArray());
-						for(auto& t : supported_array)
-							{
-								// decode this array element
-						    std::string value_string = t.asString();
-								axis_value value = axis_value::efolds;
-								if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     value = axis_value::efolds;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            value = axis_value::k;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           value = axis_value::efolds_exit;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 value = axis_value::alpha;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  value = axis_value::beta;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) value = axis_value::squeeze_k1;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) value = axis_value::squeeze_k2;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) value = axis_value::squeeze_k3;
-								else
-									{
-								    std::ostringstream msg;
-										msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE << " '" << value_string << "'";
-								    throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
-									}
+						supported_x_axes = this->deserialize_supported_x_axis_types(root);
 
-								// add this value to the list of supported axes, if it is not already present
-						    auto u = std::find(supported_x_axes.begin(), supported_x_axes.end(), value);
-								if(u == supported_x_axes.end()) supported_x_axes.push_back(value);
-							}
+            // Deserialize: current x-axis type
+            x_type = this->deserialize_current_x_axis_value(root);
 
-						// Deserialize: current x-axis type
-				    std::string x_type_string = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE].asString();
-				    if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     x_type = axis_value::efolds;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            x_type = axis_value::k;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           x_type = axis_value::efolds_exit;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 x_type = axis_value::alpha;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  x_type = axis_value::beta;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) x_type = axis_value::squeeze_k1;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) x_type = axis_value::squeeze_k2;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) x_type = axis_value::squeeze_k3;
-				    else
-					    {
-				        std::ostringstream msg;
-				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE << " '" << x_type_string << "'";
-				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
-					    }
-				    auto fv = std::find(supported_x_axes.begin(), supported_x_axes.end(), x_type);
-						if(fv == supported_x_axes.end())
-							{
-						    std::stringstream msg;
-								msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_NOT_SUPPORTED << " '" << x_type_string << "'";
-								throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
-							}
+            // check current x-axis type is in supported list
+            auto fv = supported_x_axes.find(x_type);    // TODO: change to contains() when we switch to C++20
+            if(fv == supported_x_axes.end())
+              {
+                std::stringstream msg;
+                msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_NOT_SUPPORTED
+                    << " '" << root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] << "'";
+                throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
+              }
 
 						// Deserialize: meaning of 'dot' for this derived line
-				    std::string dot_meaning_value = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE].asString();
-
-				    if(dot_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE)   dot_meaning = dot_type::derivatives;
-				    else if(dot_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA) dot_meaning = dot_type::momenta;
-				    else
-					    {
-				        std::ostringstream msg;
-				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_TYPE_UNKNOWN << " '" << dot_meaning_value << "'";
-				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
-					    }
+						dot_meaning = this->deserialize_dot_meaning(root);
 
 						// Deserialize: meaning of k-labels for this derived line
-				    std::string label_meaning_value = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE].asString();
-
-				    if(label_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL)  klabel_meaning = klabel_type::conventional;
-				    else if(label_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING) klabel_meaning = klabel_type::comoving;
-				    else
-					    {
-				        std::ostringstream msg;
-				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN << " '" << label_meaning_value << "'";
-				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
-					    }
+						klabel_meaning = this->deserialize_klabel_meaning(root);
 					}
 
 
+        // copy constructor
 				template <typename number>
 				derived_line<number>::derived_line(const derived_line<number>& obj)
 					: x_class(obj.x_class),
@@ -487,28 +513,21 @@ namespace transport
 					  LaTeX_label(obj.LaTeX_label),
 					  non_LaTeX_label(obj.non_LaTeX_label),
 					  use_tags(obj.use_tags),
-            precision(obj.precision),
-		        parent_task(dynamic_cast<derivable_task<number>*>(obj.parent_task->clone()))
+            precision(obj.precision)
 					{
-						assert(this->parent_task != nullptr);
+					  parent_tasks.clear();
 
-				    if(parent_task == nullptr)
-					    throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
-					}
-
-
-				template <typename number>
-				derived_line<number>::~derived_line()
-					{
-						assert(this->parent_task != nullptr);
-						delete this->parent_task;
+					  for(const auto& elt : obj.parent_tasks) // TODO: change to std::views::values in C++20 and remove use of .second
+              {
+                parent_tasks.insert(std::move(make_derivable_task_set_element(elt.second.get_task(), elt.second.get_specifier(), elt.second.get_tag())));
+              }
 					}
 
 
 				template <typename number>
 				derived_line<number>& derived_line<number>::set_current_x_axis_value(axis_value v)
 					{
-				    auto fv = std::find(this->supported_x_axes.begin(), this->supported_x_axes.end(), v);
+				    auto fv = this->supported_x_axes.find(v); // TODO: change to contains() when we switch to C++20
 
 						if(fv == this->supported_x_axes.end())
 							{
@@ -550,20 +569,23 @@ namespace transport
 
 
 		    template <typename number>
-        std::string derived_line<number>::attach(datapipe<number>& pipe, const std::list<std::string>& tags) const
+        std::string derived_line<number>::attach(datapipe<number>& pipe, const std::list<std::string>& tags, unsigned int tag) const
           {
-		        return(pipe.attach(this->parent_task, tags));
+            // find required task from parent task list
+            auto t = this->parent_tasks.find(tag);
+
+            if(t == this->parent_tasks.end())
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_DATAPIPE_ATTACH_BAD_TAG << " [tag=" << tag << "]\n";
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+		        return(pipe.attach(t->second.get_task(), tags));
 			    }
 
 
-		    template <typename number>
-        std::string derived_line<number>::attach(datapipe<number>& pipe, const std::list<std::string>& tags, derivable_task<number>* tk) const
-        {
-				    assert(tk != nullptr);
-		        return(pipe.attach(tk, tags));
-        }
-
-		    template <typename number>
+        template <typename number>
 		    void derived_line<number>::detach(datapipe<number>& pipe) const
 			    {
 		        pipe.detach();
@@ -573,155 +595,456 @@ namespace transport
 				template <typename number>
 				void derived_line<number>::serialize(Json::Value& writer) const
 					{
-				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME]      = this->parent_task->get_name();
-				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION]      = this->precision;
-				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET]      = this->label_set;
-				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX]    = this->LaTeX_label;
-				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX] = this->non_LaTeX_label;
-						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS] = this->use_tags;
+            Json::Value& root = writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT];
 
-						// Serialize: axis type of this derived line
-				    switch(this->x_class)
-							{
-						    case axis_class::time:
-							    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME);
-									break;
+            // Serialize: miscellaneous data
+            // none of this needs to be packaged up more carefully
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION]      = this->precision;
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET]      = this->label_set;
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX]    = this->LaTeX_label;
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX] = this->non_LaTeX_label;
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS] = this->use_tags;
 
-						    case axis_class::wavenumber:
-							    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER);
-									break;
+            // Serialize: parent task list
+            this->serialize_parent_task_list(root);
 
-				        case axis_class::threepf_kconfig:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION);
-						      break;
-							}
+						// Serialize: x-axis class
+            this->serialize_x_axis_class(root);
 
-						// Serialize: supported x-axis types
-				    Json::Value supported_array(Json::arrayValue);
-						for(auto t = this->supported_x_axes.begin(); t != this->supported_x_axes.end(); ++t)
-							{
-								switch(*t)
-									{
-								    case axis_value::efolds:
-									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)));
-											break;
+            // Serialize: supported x-axis types
+            this->serialize_supported_x_axis_types(root);
 
-								    case axis_value::k:
-									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)));
-											break;
-
-								    case axis_value::efolds_exit:
-									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)));
-											break;
-
-								    case axis_value::alpha:
-									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)));
-											break;
-
-								    case axis_value::beta:
-									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)));
-											break;
-
-								    case axis_value::squeeze_k1:
-									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1)));
-											break;
-
-								    case axis_value::squeeze_k2:
-									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2)));
-									    break;
-
-								    case axis_value::squeeze_k3:
-									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3)));
-									    break;
-
-								    default:
-									    assert(false);
-											throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
-									}
-							}
-						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES] = supported_array;
-
-						// Serialize: current x-axis type
-				    switch(this->x_type)
-					    {
-				        case axis_value::efolds:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS);
-				          break;
-
-				        case axis_value::k:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER);
-				          break;
-
-				        case axis_value::efolds_exit:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT);
-				          break;
-
-				        case axis_value::alpha:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA);
-				          break;
-
-				        case axis_value::beta:
-					       writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA);
-				          break;
-
-				        case axis_value::squeeze_k1:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1);
-				          break;
-
-				        case axis_value::squeeze_k2:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2);
-				          break;
-
-				        case axis_value::squeeze_k3:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3);
-				          break;
-
-				        default:
-					        assert(false);
-				          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
-					    }
+            // Serialize: current x-axis type
+            this->serialize_current_x_axis_value(root);
 
 						// Serialize: meaning of 'dot' for this derived line
-				    switch(this->dot_meaning)
-					    {
-				        case dot_type::derivatives:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE);
-				          break;
-
-                case dot_type::momenta:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA);
-				          break;
-					    }
+						this->serialize_dot_meaning(root);
 
 						// Serialize: meaning of k-labels for this derived line
-				    switch(this->klabel_meaning)
-					    {
-				        case klabel_type::conventional:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL);
-				          break;
-
-                case klabel_type::comoving:
-					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING);
-				          break;
-					    }
+						this->serialize_klabel_meaning(root);
 					}
 
 
-				template <typename number>
+        template <typename number>
+        void derived_line<number>::serialize_parent_task_list(Json::Value& root) const
+          {
+            // prior to 2021.1, a single task name was serialized into the field
+            // CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME
+
+            // in 2021.1, this was replaced by the current use of a derived_task_list<> list,
+            // serialized into the field CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST
+
+            // for serialization there is nothing specific arising from this change; we simply serialize
+            // the current task list ino CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST.
+            Json::Value parents(Json::arrayValue);
+
+            for(const auto& elt : this->parent_tasks)  // TODO: change to std::views::values in C++20 and remove use of .second
+              {
+                Json::Value tk_block(Json::objectValue);
+
+                const auto& tk = elt.second.get_task();
+                const auto& sp = elt.second.get_specifier();
+                auto tag = elt.second.get_tag();
+
+                tk_block[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_TASKNAME] = tk.get_name();
+
+                Json::Value spec_block(Json::objectValue);
+                sp.serialize(spec_block);
+
+                tk_block[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_SPECIFIERS] = spec_block;
+                tk_block[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_TAG] = tag;
+
+                parents.append(tk_block);
+              }
+
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST] = parents;
+          }
+
+
+        template <typename number>
+        typename derived_line<number>::task_set_type
+        derived_line<number>::deserialize_parent_task_list(const Json::Value& root, task_finder<number>& finder) const
+          {
+            // prior to 2021.1, a single task name was serialized into the field
+            // CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME
+
+            // in 2021.1, this was replaced by the current use of a derived_task_list<> list,
+            // serialized into the field CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST
+
+            // if no CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST field is present, we should
+            // attempt to deserialize CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME using the old
+            // implementation
+
+            if(root.isMember(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST))
+              {
+                const Json::Value& new_root = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST];
+                return this->deserialize_new_parent_task_list(new_root, finder);
+              }
+
+            if(root.isMember(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME))
+              {
+                return this->deserialize_old_parent_task(root, finder);
+              }
+
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR,
+                                    CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_PARENT_TASK);
+          }
+
+
+        template <typename number>
+        typename derived_line<number>::task_set_type
+        derived_line<number>::deserialize_old_parent_task(const Json::Value& root, task_finder<number>& finder) const
+          {
+            std::string name = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME].asString();
+
+            // extract parent task (as pointer to task_record instance)
+            auto tk_rec = finder(name);
+            assert(tk_rec);
+
+            // convert to derivable_task<>
+            auto tk = dynamic_cast< derivable_task<number>* >(tk_rec->get_abstract_task());
+
+            task_set_type parents;
+
+            switch(tk_rec->get_type())
+              {
+                case task_type::integration:
+                  {
+                    parents.insert(make_derivable_task_set_element(*tk, false, false, false));
+                    break;
+                  }
+
+                case task_type::postintegration:
+                  {
+                    precomputed_products p;
+                    parents.insert(make_derivable_task_set_element(*tk, p));
+                    break;
+                  }
+
+                case task_type::output:
+                  {
+                    throw runtime_exception(exception_type::SERIALIZATION_ERROR,
+                                            CPPTRANSPORT_PRODUCT_DERIVED_LINE_BAD_PARENT_TASK_TYPE);
+                  }
+              }
+
+            return std::move(parents);
+          }
+
+
+        template <typename number>
+        typename derived_line<number>::task_set_type
+        derived_line<number>::deserialize_new_parent_task_list(const Json::Value& root, task_finder<number>& finder) const
+          {
+            assert(root.isArray());
+
+            task_set_type parents;
+            for(const auto& elt : root)
+              {
+                // lookup task by name in the repository
+                auto name = elt[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_TASKNAME].asString();
+                auto tk_rec = finder(name);
+                assert(tk_rec);
+
+                // convert to derivable_task<>
+                auto tk = dynamic_cast< derivable_task<number>* >(tk_rec->get_abstract_task());
+
+                const Json::Value& spec_block = elt[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_SPECIFIERS];
+                content_group_specifier spec(spec_block);
+
+                auto tag = elt[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PARENT_TASK_LIST_TAG].asUInt();
+
+                parents.insert(make_derivable_task_set_element(*tk, spec, tag));
+              }
+
+            return std::move(parents);
+          }
+
+
+        template <typename number>
+        void derived_line<number>::serialize_supported_x_axis_types(Json::Value& root) const
+          {
+            Json::Value supported(Json::arrayValue);
+
+            for(auto type : this->supported_x_axes)
+              {
+                switch(type)
+                  {
+                    case axis_value::efolds:
+                      supported.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)));
+                      break;
+
+                    case axis_value::k:
+                      supported.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)));
+                      break;
+
+                    case axis_value::efolds_exit:
+                      supported.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)));
+                      break;
+
+                    case axis_value::alpha:
+                      supported.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)));
+                      break;
+
+                    case axis_value::beta:
+                      supported.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)));
+                      break;
+
+                    case axis_value::squeeze_k1:
+                      supported.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1)));
+                      break;
+
+                    case axis_value::squeeze_k2:
+                      supported.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2)));
+                      break;
+
+                    case axis_value::squeeze_k3:
+                      supported.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3)));
+                      break;
+
+                    default:
+                      assert(false);
+                      throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
+                  }
+              }
+
+            root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES] = supported;
+          }
+
+
+        template <typename number>
+        std::set<axis_value> derived_line<number>::deserialize_supported_x_axis_types(const Json::Value& root) const
+          {
+            std::set<axis_value> supported;
+
+            auto& supported_array = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES];
+            assert(supported_array.isArray());
+
+            for(auto& t : supported_array)
+              {
+                // decode this array element
+                std::string value_string = t.asString();
+
+                if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     supported.insert(axis_value::efolds);
+                else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            supported.insert(axis_value::k);
+                else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           supported.insert(axis_value::efolds_exit);
+                else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 supported.insert(axis_value::alpha);
+                else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  supported.insert(axis_value::beta);
+                else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) supported.insert(axis_value::squeeze_k1);
+                else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) supported.insert(axis_value::squeeze_k2);
+                else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) supported.insert(axis_value::squeeze_k3);
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE << " '" << value_string << "'";
+                    throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
+                  }
+              }
+
+            return std::move(supported);
+          }
+
+
+        template <typename number>
+        void derived_line<number>::serialize_x_axis_class(Json::Value& root) const
+          {
+            switch(this->x_class)
+              {
+                case axis_class::time:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME);
+                  break;
+
+                case axis_class::wavenumber:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER);
+                  break;
+
+                case axis_class::threepf_kconfig:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION);
+                  break;
+              }
+          }
+
+
+        template <typename number>
+        axis_class derived_line<number>::deserialize_x_axis_class(const Json::Value& root) const
+          {
+            std::string xtype = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS].asString();
+
+            if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME)
+              return axis_class::time;
+
+            if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER)
+              return axis_class::wavenumber;
+
+            if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION)
+              return axis_class::threepf_kconfig;
+
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_CLASS << " '" << xtype << "'";
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
+          }
+
+
+        template <typename number>
+        void derived_line<number>::serialize_current_x_axis_value(Json::Value& root) const
+          {
+            switch(this->x_type)
+              {
+                case axis_value::efolds:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS);
+                  break;
+
+                case axis_value::k:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER);
+                  break;
+
+                case axis_value::efolds_exit:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT);
+                  break;
+
+                case axis_value::alpha:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA);
+                  break;
+
+                case axis_value::beta:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA);
+                  break;
+
+                case axis_value::squeeze_k1:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1);
+                  break;
+
+                case axis_value::squeeze_k2:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2);
+                  break;
+
+                case axis_value::squeeze_k3:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3);
+                  break;
+
+                default:
+                  assert(false);
+                  throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
+              }
+          }
+
+
+        template <typename number>
+        axis_value derived_line<number>::deserialize_current_x_axis_value(const Json::Value& root) const
+          {
+            std::string type = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE].asString();
+
+            if(type == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)
+              return axis_value::efolds;
+
+            if(type == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)
+              return axis_value::k;
+
+            if(type == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)
+              return axis_value::efolds_exit;
+
+            if(type == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)
+              return axis_value::alpha;
+
+            if(type == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)
+              return axis_value::beta;
+
+            if(type == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1)
+              return axis_value::squeeze_k1;
+
+            if(type == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2)
+              return axis_value::squeeze_k2;
+
+            if(type == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3)
+              return axis_value::squeeze_k3;
+
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE << " '" << type << "'";
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
+          }
+
+
+        template <typename number>
+        void derived_line<number>::serialize_dot_meaning(Json::Value& root) const
+          {
+            switch(this->dot_meaning)
+              {
+                case dot_type::derivatives:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE);
+                  break;
+
+                case dot_type::momenta:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA);
+                  break;
+              }
+          }
+
+
+        template <typename number>
+        dot_type derived_line<number>::deserialize_dot_meaning(const Json::Value& root) const
+          {
+            std::string dot_meaning_value = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE].asString();
+
+            if(dot_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE)
+              return dot_type::derivatives;
+
+            if(dot_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA)
+              return dot_type::momenta;
+
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_TYPE_UNKNOWN << " '" << dot_meaning_value << "'";
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
+          }
+
+
+        template <typename number>
+        void derived_line<number>::serialize_klabel_meaning(Json::Value& root) const
+          {
+            switch(this->klabel_meaning)
+              {
+                case klabel_type::conventional:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL);
+                  break;
+
+                case klabel_type::comoving:
+                  root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING);
+                  break;
+              }
+          }
+
+
+        template <typename number>
+        klabel_type derived_line<number>::deserialize_klabel_meaning(const Json::Value& root) const
+          {
+            std::string label_meaning_value = root[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE].asString();
+
+            if(label_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL)
+              return klabel_type::conventional;
+
+            if(label_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING)
+              return klabel_type::comoving;
+
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN << " '" << label_meaning_value << "'";
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
+          }
+
+
+        template <typename number>
 				void derived_line<number>::write(std::ostream& out)
 					{
 						unsigned int saved_left_margin = this->wrapper.get_left_margin();
 						this->wrapper.set_left_margin(2);
 
 //						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_LABEL << '\n';
-						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << '\n';
+//						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << '\n';
 
-						// output model details if this derived line is directly associated with an integration task
-						auto itk = dynamic_cast< integration_task<number>* >(this->parent_task);
-						if(itk != nullptr)
-							{
-						    out << ", " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << itk->get_model()->get_name() << "'" << '\n';
-							}
+//						// output model details if this derived line is directly associated with an integration task
+//						auto itk = dynamic_cast< integration_task<number>* >(this->parent_task);
+//						if(itk != nullptr)
+//							{
+//						    out << ", " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << itk->get_model()->get_name() << "'" << '\n';
+//							}
 
 						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS << " ";
 						switch(this->x_class)
@@ -741,7 +1064,7 @@ namespace transport
 
 						unsigned int count = 0;
 
-						this->wrapper.wrap_out(out, "  " CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED " ");
+						this->wrapper.wrap_out(out, std::string{"  "} + CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED + " ");  // inefficient?
 						for(auto t = this->supported_x_axes.begin(); t != this->supported_x_axes.end() && count < CPPTRANSPORT_PRODUCT_MAX_SUPPORTED_AXES; ++t)
 							{
 								switch(*t)
@@ -879,7 +1202,7 @@ namespace transport
 						this->wrapper.set_left_margin(saved_left_margin);
 					}
 
-			};   // derived_data
+      };   // derived_data
 
 
 	}   // namespace transport

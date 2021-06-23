@@ -137,7 +137,13 @@ namespace transport
         // We have to call it ourselves.
         template <typename number>
         fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, SQL_time_query tq)
-          : derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }),
+          : derived_line<number>(make_derivable_task_set_element(tk,
+                                    precomputed_products(false, false, false, false,
+                                                         tk.get_template() == bispectrum_template::local,
+                                                         tk.get_template() == bispectrum_template::equilateral,
+                                                         tk.get_template() == bispectrum_template::orthogonal,
+                                                         tk.get_template() == bispectrum_template::DBI)),
+                                 axis_class::time, { axis_value::efolds }),
             fNL_line<number>(tk),
             time_series<number>(tk),
             tquery(tq)

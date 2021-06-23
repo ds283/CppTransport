@@ -153,7 +153,7 @@ namespace transport
         void commit_postintegration_task(transaction_manager& mgr, const TaskType& tk);
 
         //! Autocommit a derivable task encountered as part of another task specification
-        void autocommit(transaction_manager& mgr, derivable_task <number>& tk, std::string parent,
+        void autocommit(transaction_manager& mgr, const derivable_task <number>& tk, std::string parent,
                         std::string commit_int_A, std::string commit_int_B,
                         std::string commit_pint_A, std::string commit_pint_B);
 

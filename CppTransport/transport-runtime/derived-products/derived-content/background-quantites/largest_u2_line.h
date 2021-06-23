@@ -148,7 +148,8 @@ namespace transport
 
 				template <typename number>
 				largest_u2_line<number>::largest_u2_line(const twopf_db_task<number>& tk, SQL_time_query tq, SQL_twopf_query kq, unsigned int prec)
-					: derived_line<number>(tk, axis_class::time, std::list<axis_value>{ axis_value::efolds }, prec),
+					: derived_line<number>(make_derivable_task_set_element(tk, false, false, false),
+                                 axis_class::time, { axis_value::efolds }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),
@@ -161,12 +162,10 @@ namespace transport
 				largest_u2_line<number>::largest_u2_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
-						gadget(),
+            gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
             kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 					{
-						assert(this->parent_task != nullptr);
-						gadget.set_task(this->parent_task, finder);
 					}
 
 
@@ -227,13 +226,13 @@ namespace transport
 
             std::vector<number> u2_tensor(2*Nfields * 2*Nfields);
 
-            for(std::vector<twopf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
+            for(auto & k_config : k_configs)
               {
                 std::vector<number> line_data(t_axis.size());
 
                 for(unsigned int j = 0; j < line_data.size(); ++j)
                   {
-                    mdl->u2(this->gadget.get_integration_task(), bg_data[j], t->k_comoving, t_configs[j].t, u2_tensor);
+                    mdl->u2(this->gadget.get_integration_task(), bg_data[j], k_config.k_comoving, t_configs[j].t, u2_tensor);
                     number val = -std::numeric_limits<number>::max();
 
                     for(unsigned int m = 0; m < 2*Nfields; ++m)
@@ -252,7 +251,7 @@ namespace transport
                   }
 
                 lines.emplace_back(group, this->x_type, value_type::dimensionless, t_axis, line_data,
-                                   this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t), messages);
+                                   this->get_LaTeX_label(k_config), this->get_non_LaTeX_label(k_config), messages);
               }
 
             this->detach(pipe);

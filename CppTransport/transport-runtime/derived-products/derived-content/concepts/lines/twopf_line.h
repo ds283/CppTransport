@@ -184,12 +184,9 @@ namespace transport
 		    template <typename number>
 		    twopf_line<number>::twopf_line(Json::Value& reader, task_finder<number>& finder)
 		      : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
-		        gadget(),
+            gadget(derived_line<number>::parent_tasks), // safe, will always be constructed after derived_line<number>()
 		        active_indices(reader)
 			    {
-				    assert(this->parent_task != nullptr);
-				    gadget.set_task(this->parent_task, finder);
-
 				    dimensionless = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS].asBool();
 
 		        std::string tpf_type = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();

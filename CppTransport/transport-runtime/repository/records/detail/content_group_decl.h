@@ -139,18 +139,37 @@ namespace transport
           {
           }
 
+        //! Create a precomputed products record: value constructor
+        precomputed_products(bool z_2pf, bool z_2pf_si, bool z_3pf, bool z_rb,
+                             bool fNL_l, bool fNL_e, bool fNL_o, bool fNL_D)
+          : zeta_twopf{z_2pf},
+            zeta_twopf_spectral{z_2pf_si},
+            zeta_threepf{z_3pf},
+            zeta_redbsp{z_rb},
+            fNL_local{fNL_l},
+            fNL_equi{fNL_e},
+            fNL_ortho{fNL_o},
+            fNL_DBI{fNL_D}
+          {
+          }
+
         //! Deserialization constructor
-        explicit precomputed_products(Json::Value& reader);
+        explicit precomputed_products(const Json::Value& reader);
 
         //! Destroy a precomputed products record
         ~precomputed_products() override = default;
 
 
-        // SET VIA ASSIGNMENT
+        // OPERATIONS
 
       public:
 
-        precomputed_products& operator=(const precomputed_products& in);
+        //! set properties via assignment
+        precomputed_products& operator=(const precomputed_products& obj);
+
+        //! merge with another precomputed_products instance
+        //! the resulting object should satisfy the conditions of both
+        precomputed_products& operator|=(const precomputed_products& obj);
 
 
         // GET AND SET PROPERTIES

@@ -1010,7 +1010,7 @@ namespace transport
 
             this->force_newline();
 
-            auto task_list = rec.get_product()->get_task_list();
+            auto task_list = rec.get_product()->get_task_dependencies();
             if(!task_list.empty())
               {
                 this->check_newline();
@@ -1029,27 +1029,24 @@ namespace transport
                 std::vector<std::string> num_groups;
 
                 auto& db = cache.get_task_db();
-                for(const auto& elt : task_list)
+                for(const auto& elt : task_list) // TODO: change to std::views::values in C++20 and remove use of .second
                   {
-                    const auto& tk = elt.first;
+                    const auto& tk = elt.second.get_task();
 
-                    if(tk != nullptr)
+                    auto t = db.find(tk.get_name());
+                    name.push_back(tk.get_name());
+
+                    if(t != db.end())
                       {
-                        auto t = db.find(tk->get_name());
-                        name.push_back(tk->get_name());
-
-                        if(t != db.end())
-                          {
-                            type.push_back(task_type_to_string(t->second->get_type()));
-                            last_edit.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
-                            num_groups.push_back(boost::lexical_cast<std::string>(t->second->get_content_groups().size()));
-                          }
-                        else
-                          {
-                            type.emplace_back("--");
-                            last_edit.emplace_back("--");
-                            num_groups.emplace_back("--");
-                          }
+                        type.push_back(task_type_to_string(t->second->get_type()));
+                        last_edit.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
+                        num_groups.push_back(boost::lexical_cast<std::string>(t->second->get_content_groups().size()));
+                      }
+                    else
+                      {
+                        type.emplace_back("--");
+                        last_edit.emplace_back("--");
+                        num_groups.emplace_back("--");
                       }
                   }
 

@@ -295,7 +295,7 @@ namespace transport
 
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary tasks
-            virtual typename derivable_task_list<number>::type get_task_list() const override;
+            virtual typename derivable_task_set<number>::type get_task_dependencies() const override;
 
 
             // AGGREGATE OUTPUT GROUPS FROM A LIST OF LINES
@@ -596,22 +596,38 @@ namespace transport
 
 
         template <typename number>
-        typename derivable_task_list<number>::type line_collection<number>::get_task_list() const
+        typename derivable_task_set<number>::type line_collection<number>::get_task_dependencies() const
           {
-            typename derivable_task_list<number>::type l;
+            typename derivable_task_set<number>::type l;
+            unsigned int unique_tag = 0;
 
-            // collect data from each derived_line
+            // collect task list from each derived_line
             for(const auto& line : this->lines)
               {
-                std::unique_ptr< derivable_task<number> > tk(dynamic_cast< derivable_task<number>* >(line->get_parent_task()->clone()));
-                l.emplace_back(std::move(tk), std::make_unique<content_group_specifier>(false, false, false));
+                // each line maintains its own list of tasks it depends on, together with any properties required
+                // of their content groups.
+                // We want to merge all of these together
+                const auto& parents = line->get_parent_task_list();
+
+                for(const auto& elt : parents) // TODO: change to std::views::values in C++20 and remove use of .second
+                  {
+                    const auto& tk = elt.second.get_task();
+                    auto t = std::find_if(l.begin(), l.end(), derivable_task_set_impl::FindByName<number>(tk.get_name()));
+
+                    // if this task is already present, we want to merge any requirements on its content group.
+                    // otherwise, we insert a new task
+                    if(t != l.end())
+                      {
+                        // merge
+                        t->second.get_specifier() |= elt.second.get_specifier();
+                      }
+                    else
+                      {
+                        auto tag = unique_tag++;
+                        l.insert(make_derivable_task_set_element(tk, elt.second.get_specifier(), tag));
+                      }
+                  }
               }
-
-            // sort into lexical order of task name
-            l.sort(derivable_task_list_impl::NameComparator<number>());
-
-            // remove duplicates (based on task name)
-            l.unique(derivable_task_list_impl::NameEquality<number>());
 
             return std::move(l);
           }

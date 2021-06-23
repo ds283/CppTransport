@@ -24,51 +24,59 @@
 //
 
 
+
 #ifndef CPPTRANSPORT_MESSAGES_EN_DERIVED_LINE_H
 #define CPPTRANSPORT_MESSAGES_EN_DERIVED_LINE_H
 
 
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN               "Internal error: Cannot deserialize unknown 'derived_line' content type"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN                 "Internal error: Unknown twopf type in 'derived_line'"
+namespace transport
+  {
 
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN               = "Internal error: Cannot deserialize unknown 'derived_line' content type";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN                 = "Internal error: Unknown twopf type in 'derived_line'";
 
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_LABEL                              "Derived content:"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME                          "Derived from task"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME                         "model"
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_PARENT_TASK                     = "Internal error: Cannot deserialize 'derived_line' content because no parent task was specified";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_BAD_PARENT_TASK_TYPE               = "Internal error: Bad parent task type for 'derived_line' content";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_DATAPIPE_ATTACH_BAD_TAG            = "Datapipe was not attached because the specified parent task could not be found";
 
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS                       "axis data represent"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_TIME_LABEL                   "time"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_WAVENUMBER_LABEL             "k-value"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_THREEPF_CONFIGURATION_LABEL  "threepf configuration"
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_LABEL                              = "Derived content:";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME                          = "Derived from task";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME                         = "model";
 
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED                   "supported x-axis values:"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS                     "current x-axis value:"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS                "e-folds"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K                     "k-value"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS_EXIT           "efolds from horizone exit"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_ALPHA                 "alpha"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_BETA                  "beta"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_SQUEEZING_K1          "k1/kt"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_SQUEEZING_K2          "k2/kt"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_SQUEEZING_K3          "k3/kt"
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS                       = "axis data represent";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_TIME_LABEL                   = "time";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_WAVENUMBER_LABEL             = "k-value";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_THREEPF_CONFIGURATION_LABEL  = "threepf configuration";
 
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_MEANING                        "correlation functions involve"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE                     "field derivatives"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_MOMENTA                        "momenta"
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED                   = "supported x-axis values:";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS                     = "current x-axis value:";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS                = "e-folds";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K                     = "k-value";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS_EXIT           = "efolds from horizone exit";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_ALPHA                 = "alpha";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_BETA                  = "beta";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_SQUEEZING_K1          = "k1/kt";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_SQUEEZING_K2          = "k2/kt";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_SQUEEZING_K3          = "k3/kt";
 
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_MEANING                     "wavenumber normalization is"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_COMOVING                    "comoving"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL                "conventional"
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_MEANING                        = "correlation functions involve";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE                     = "field derivatives";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_MOMENTA                        = "momenta";
 
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_CLASS               "derived_line error: unknown x-axis class"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE               "derived_line error: unknown x-axis value"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_TYPE_UNKNOWN                   "derived_line error: unknown dot meaning"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN                "derived_line error: unknown klabel meaning"
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_MEANING                     = "wavenumber normalization is";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_COMOVING                    = "comoving";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL                = "conventional";
 
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK                 "derived_line error: cannot derive data from a non-derivable task"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES                      "derived_line error: no supported axis types"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_NOT_SUPPORTED               "derived_line error: unsupported x-axis type"
-#define CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNSUPPORTED_X_AXIS_TYPE            "derived_line error: attempt to set x-axis to unsupported type"
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_CLASS               = "derived_line error: unknown x-axis class";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE               = "derived_line error: unknown x-axis value";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_TYPE_UNKNOWN                   = "derived_line error: unknown dot meaning";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN                = "derived_line error: unknown klabel meaning";
+
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES                      = "derived_line error: no supported axis types";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_NOT_SUPPORTED               = "derived_line error: unsupported x-axis type";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNSUPPORTED_X_AXIS_TYPE            = "derived_line error: attempt to set x-axis to unsupported type";
+
+  }   // namespace transport
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_DERIVED_LINE_H

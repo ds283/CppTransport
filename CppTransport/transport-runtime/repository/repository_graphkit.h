@@ -857,12 +857,12 @@ namespace transport
                         auto& product = elt.get_product();
 
                         // get list of tasks this product depends on
-                        auto task_list = product.get_task_list();
-                        for(const auto& elt : task_list)
+                        auto task_list = product.get_task_dependencies();
+                        for(const auto& elt : task_list) // TODO: change to std::views::values in C++20 and remove use of .second
                           {
-                            const auto& tk = elt.first;
-                            vmap.insert(tk->get_name(), G, repository_vertex_type::task);
-                            boost::add_edge(vmap[tk->get_name()], vmap[rec.get_name()], 1, G);
+                            const auto& tk = elt.second.get_task();
+                            vmap.insert(tk.get_name(), G, repository_vertex_type::task);
+                            boost::add_edge(vmap[tk.get_name()], vmap[rec.get_name()], 1, G);
                           }
                       }
 

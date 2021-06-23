@@ -471,13 +471,13 @@ namespace transport
 
         //! Attach an integration content group to a datapipe
         std::unique_ptr< content_group_record<integration_payload> >
-          datapipe_attach_integration_content(datapipe<number>* pipe, integration_content_finder<number>& finder,
-                                              const std::string& name, const std::list<std::string>& tags) override;
+        datapipe_attach_integration_content(datapipe<number>& pipe, integration_content_finder<number>& finder,
+                                            const std::string& name, const std::list<std::string>& tags) override;
 
         //! Attach an postintegration content group to a datapipe
         std::unique_ptr< content_group_record<postintegration_payload> >
-          datapipe_attach_postintegration_content(datapipe<number>* pipe, postintegration_content_finder<number>& finder,
-                                                  const std::string& name, const std::list<std::string>& tags) override;
+        datapipe_attach_postintegration_content(datapipe<number>& pipe, postintegration_content_finder<number>& finder,
+                                                const std::string& name, const std::list<std::string>& tags) override;
 
         //! Detach a content_group_record from a pipe
         void datapipe_detach(datapipe<number>* pipe) override;
@@ -590,7 +590,7 @@ namespace transport
       protected:
 
         //! Attach a SQLite database to a datapipe
-        void datapipe_attach_container(datapipe <number>* pipe, const boost::filesystem::path& ctr_path);
+        void datapipe_attach_container(datapipe <number>& pipe, const boost::filesystem::path& ctr_path);
 
 
         // RAW DATA ACCESS -- DOESN'T REQUIRE USE OF DATAPIPE

@@ -305,16 +305,19 @@ namespace transport
       }
 
 
-    precomputed_products::precomputed_products(Json::Value& reader)
+    precomputed_products::precomputed_products(const Json::Value& reader)
       {
-        const auto root = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT];
-        zeta_twopf      = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
-        zeta_threepf    = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
-        zeta_redbsp     = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
-        fNL_local       = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
-        fNL_equi        = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
-        fNL_ortho       = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
-        fNL_DBI         = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
+        const auto& root = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT];
+
+        zeta_twopf          = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
+        zeta_twopf_spectral = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL].asBool();
+        zeta_threepf        = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
+        zeta_redbsp         = root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
+
+        fNL_local           = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
+        fNL_equi            = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
+        fNL_ortho           = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
+        fNL_DBI             = root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
 
         // use .get() with a default argument here, since this field does not have to be present; it was
         // introduced in 2021.1 and should default to false
@@ -324,14 +327,15 @@ namespace transport
 
     void precomputed_products::serialize(Json::Value& writer) const
       {
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]          = this->zeta_twopf;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL] = this->zeta_twopf_spectral;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF]        = this->zeta_threepf;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]         = this->zeta_redbsp;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]           = this->fNL_local;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]            = this->fNL_equi;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]           = this->fNL_ortho;
-        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI]             = this->fNL_DBI;
+        auto& root = writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT];
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]          = this->zeta_twopf;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF_SPECTRAL] = this->zeta_twopf_spectral;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF]        = this->zeta_threepf;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]         = this->zeta_redbsp;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]           = this->fNL_local;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]            = this->fNL_equi;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]           = this->fNL_ortho;
+        root[CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI]             = this->fNL_DBI;
       }
 
 
@@ -349,16 +353,36 @@ namespace transport
       }
 
 
-    precomputed_products& precomputed_products::operator=(const precomputed_products& in)
+    precomputed_products& precomputed_products::operator=(const precomputed_products& obj)
       {
-        if(in.has_zeta_twopf())           this->add_zeta_twopf();
-        if(in.has_zeta_twopf_spectral())  this->add_zeta_twopf_spectral();
-        if(in.has_zeta_threepf())         this->add_zeta_threepf();
-        if(in.has_zeta_redbsp())          this->add_zeta_redbsp();
-        if(in.has_fNL_local())            this->add_fNL_local();
-        if(in.has_fNL_equi())             this->add_fNL_equi();
-        if(in.has_fNL_ortho())            this->add_fNL_ortho();
-        if(in.has_fNL_DBI())              this->add_fNL_DBI();
+        this->zeta_twopf = obj.zeta_twopf;
+        this->zeta_twopf_spectral = obj.zeta_twopf_spectral;
+        this->zeta_threepf = obj.zeta_threepf;
+        this->zeta_redbsp = obj.zeta_redbsp;
+
+        this->fNL_local = obj.fNL_local;
+        this->fNL_equi = obj.fNL_equi;
+        this->fNL_ortho = obj.fNL_ortho;
+        this->fNL_DBI = obj.fNL_DBI;
+
+        return *this;
+      }
+
+
+    precomputed_products& precomputed_products::operator|=(const precomputed_products& obj)
+      {
+        // prefer || for short-circuit evaluation (although barely relevant here since all types are simple),
+        // note no ||= operator in C++
+
+        this->zeta_twopf = this->zeta_twopf || obj.zeta_twopf;
+        this->zeta_twopf_spectral = this->zeta_twopf_spectral || obj.zeta_twopf_spectral;
+        this->zeta_threepf = this->zeta_threepf || obj.zeta_threepf;
+        this->zeta_redbsp = this->zeta_redbsp || obj.zeta_redbsp;
+
+        this->fNL_local = this->fNL_local || obj.fNL_local;
+        this->fNL_equi = this->fNL_equi || obj.fNL_equi;
+        this->fNL_ortho = this->fNL_ortho || obj.fNL_ortho;
+        this->fNL_DBI = this->fNL_DBI || obj.fNL_DBI;
 
         return *this;
       }
@@ -554,7 +578,7 @@ namespace transport
         std::string ctime_string = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_CREATED].asString();
         created = boost::posix_time::from_iso_string(ctime_string);
 
-        Json::Value& content_groups_array = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS];
+        const Json::Value& content_groups_array = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS];
         assert(content_groups_array.isArray());
 
         for(auto& t : content_groups_array)
@@ -562,7 +586,7 @@ namespace transport
             this->content_groups.emplace_back(t.asString());
           }
 
-        Json::Value note_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
+        const Json::Value& note_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
         assert(note_list.isArray());
 
         for(auto& t : note_list)
@@ -570,7 +594,7 @@ namespace transport
             notes.emplace_back(t);
           }
 
-        Json::Value tag_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS];
+        const Json::Value& tag_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS];
         assert(tag_list.isArray());
 
         for(auto& t : tag_list)

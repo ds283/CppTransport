@@ -111,9 +111,16 @@ namespace transport
 	    }
 
 
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_TYPE        = "type";
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_ICS         = "require-ics";
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_STATISTICS  = "require-statistics";
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_SPECTRAL    = "require-spectral-data";
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_PRECOMPUTED = "required-precomputed";
+
+
     //! used to specify which properties are needed in a content group for each task
     //! that supplies data to a derived_product<> via a derivable_task<>
-    class content_group_specifier
+    class content_group_specifier: public serializable
       {
 
         // We need to capture information about different types of content groups, and while we could do that
@@ -144,11 +151,23 @@ namespace transport
           {
           }
 
+        //! deserialization constructor
+        explicit content_group_specifier(const Json::Value& reader);
+
         //! destructor
         ~content_group_specifier() = default;
 
 
-        // INTEGRATION GROUPS
+        // OPERATIONS
+
+      public:
+
+        //! merge with a second object
+        //! the resulting flags should be suitable to satisfy the requirements of both original specifiers
+        content_group_specifier& operator|=(const content_group_specifier& obj);
+
+
+        // QUERY: INTEGRATION GROUPS
 
       public:
 
@@ -162,12 +181,19 @@ namespace transport
         bool requires_spectral_data() const;
 
 
-        // POSTINTEGRATION GROUPS
+        // QUERY: POSTINTEGRATION GROUPS
 
       public:
 
         //! postintegration content group: which precomputed products are required?
         const precomputed_products& requires_products() const;
+
+
+        // SERIALIZATION -- implements a serializable interface
+
+      public:
+
+        void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -196,6 +222,70 @@ namespace transport
         precomputed_products products;
 
       };
+
+
+    // deserialization constructor
+    content_group_specifier::content_group_specifier(const Json::Value& reader)
+      : type{task_type_from_string(reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_TYPE].asString())},
+        ics{false},
+        statistics{false},
+        spectral_data{false}
+      {
+        switch(type)
+          {
+            case task_type::integration:
+              {
+                // deserialize data for integration content groups
+                ics = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_ICS].asBool();
+                statistics = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_STATISTICS].asBool();
+                spectral_data = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_SPECTRAL].asBool();
+              }
+
+            case task_type::postintegration:
+              {
+                // deserialize precomputed products information and assign it to our local copy
+                const Json::Value& pdata = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_PRECOMPUTED];
+                precomputed_products p(pdata);
+                products = p;
+              }
+
+            case task_type::output:
+              {
+                throw runtime_exception(exception_type::SERIALIZATION_ERROR,
+                                        CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_TASK_TYPE);
+              }
+          }
+      }
+
+
+    // serialize to a JSON document
+    void content_group_specifier::serialize(Json::Value& writer) const
+      {
+        writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_TYPE] = task_type_to_string(this->type);
+
+        switch(this->type)
+          {
+            case task_type::integration:
+              {
+                writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_ICS] = this->ics;
+                writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_STATISTICS] = this->statistics;
+                writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_SPECTRAL] = this->spectral_data;
+                break;
+              }
+
+            case task_type::postintegration:
+              {
+                Json::Value p(Json::objectValue);
+                this->products.serialize(p);
+                writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_PRECOMPUTED] = p;
+              }
+
+            case task_type::output:
+              {
+                throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_TASK_TYPE);
+              }
+          }
+      }
 
 
     bool content_group_specifier::requires_ics() const
@@ -234,19 +324,135 @@ namespace transport
       }
 
 
+    content_group_specifier& content_group_specifier::operator|=(const content_group_specifier& obj)
+      {
+        if(this->type != obj.type)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_MERGE);
+
+        switch(this->type)
+          {
+            case task_type::integration:
+              {
+                this->ics |= obj.ics;
+                this->statistics |= obj.statistics;
+                this->spectral_data |= obj.spectral_data;
+                break;
+              }
+
+            case task_type::postintegration:
+              {
+                this->products |= obj.products;
+              }
+
+            case task_type::output:
+              {
+                throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_TASK_TYPE);
+              }
+          }
+
+        return *this;
+      }
+
+
     template <typename number>
-    class derivable_task_list
+    class derivable_task_set_element
       {
       public:
+
+        //! constructor
+        derivable_task_set_element(std::unique_ptr< derivable_task<number> > tk,
+                                    std::unique_ptr< content_group_specifier > sp,
+                                    unsigned int tg=0)
+          : task(std::move(tk)),
+            specifier(std::move(sp)),
+            tag(tg)
+          {
+          }
+
+
+        // INTERFACE
+
+      public:
+
+        //! obtain task (const only)
+        const derivable_task<number>& get_task() const { return *this->task; }
+
+        //! obtain specifier
+        content_group_specifier& get_specifier() { return *this->specifier; }
+
+        //! obtain specifier (const version)
+        const content_group_specifier& get_specifier() const { return *this->specifier; }
+
+        //! obtain tag
+        unsigned int get_tag() const { return this->tag; }
+
+
+        // INTERNAL DATA:
+
+      private:
+
         // it's unclear whether we should use std::unique_ptr<> + clone() to manage the derivable_task<> here,
-        // or std::shared_ptr<>. We can expect derivable_task_list<> objects to be shared.
+        // or std::shared_ptr<>. We can expect derivable_task_sets (and their elements) to be shared.
         // TODO: We may want to revisit this solution in future.
-        using type = std::list< std::pair< std::unique_ptr< transport::derivable_task<number> >, std::unique_ptr<content_group_specifier> > >;
-        using element_type = typename type::value_type;
+
+        //! pointer to derivable_task<> instance
+        std::unique_ptr< derivable_task<number> > task;
+
+        //! pointer to content_group_specifier instance
+        std::unique_ptr< content_group_specifier > specifier;
+
+        //! tag, used to identify particular tasks (e.g. to specify which task should be attached to a datapipe)
+        unsigned int tag;
+
       };
 
 
-    namespace derivable_task_list_impl
+    template <typename number>
+    class derivable_task_set
+      {
+      public:
+        using type = std::map< unsigned int, derivable_task_set_element<number> >;
+        using element_type = derivable_task_set_element<number>;
+      };
+
+
+    //! factory function to construct a derivable_task_set<>::element_type from a derivable_task<> and
+    //! the flags for a content_group_specifier for an integration task
+    template <typename number>
+    typename derivable_task_set<number>::type::value_type
+    make_derivable_task_set_element(const derivable_task<number>& tk, bool i, bool s, bool sd, unsigned int id=0)
+      {
+        return {id, std::move(derivable_task_set_element<number>{
+          std::unique_ptr<derivable_task<number> >(dynamic_cast< derivable_task<number>* >(tk.clone())),
+          std::make_unique<content_group_specifier>(i, s, sd), id})};
+      }
+
+
+    //! factory function to construct a derivable_task_set<>::element_type from a derivable_task<> and
+    //! a precomputed_products object forming the flags for a content_group_specifier for an postintegration task
+    template <typename number>
+    typename derivable_task_set<number>::type::value_type
+    make_derivable_task_set_element(const derivable_task<number>& tk, precomputed_products p, unsigned int id=0)
+      {
+        return {id, std::move(derivable_task_set_element<number>{
+          std::unique_ptr<derivable_task<number> >(dynamic_cast< derivable_task<number>* >(tk.clone())),
+          std::make_unique<content_group_specifier>(p), id})};
+      }
+
+
+    //! factory function to construct a derivable_task_set<>::element_type from a derivable_task<> and
+    //! an existing content_group_specifier
+    template <typename number>
+    typename derivable_task_set<number>::type::value_type
+    make_derivable_task_set_element(const derivable_task<number>& tk, const content_group_specifier& sp, unsigned int id=0)
+      {
+        return {id, std::move(derivable_task_set_element<number>{
+          std::unique_ptr<derivable_task<number> >(dynamic_cast< derivable_task<number>* >(tk.clone())),
+          std::make_unique<content_group_specifier>(sp), id})};
+      }
+
+
+    namespace derivable_task_set_impl
       {
 
         template <typename number>
@@ -268,18 +474,15 @@ namespace transport
 
           public:
 
-            //! compare two derivable_task_list<number>::type elements by name
-            bool operator()(const typename derivable_task_list<number>::element_type& A,
-                            const typename derivable_task_list<number>::element_type& B)
+            //! compare two derivable_task_set<number>::type elements by name
+            bool operator()(const typename derivable_task_set<number>::type::value_type & A,
+                            const typename derivable_task_set<number>::type::value_type & B)
               {
-                const auto& A_tk = A.first;
-                const auto& B_tk = B.first;
-
-                // complain if either A or B has an empty pointer
-                if(!A_tk || !B_tk) return false;
+                const auto& A_tk = A.second.get_task();
+                const auto& B_tk = B.second.get_task();
 
                 // compares true if A.name < B.name
-                return A_tk->get_name() < B_tk->get_name();
+                return A_tk.get_name() < B_tk.get_name();
               }
 
           };
@@ -304,23 +507,61 @@ namespace transport
 
           public:
 
-            //! compare two derivable_task_list<number>::type elements by name
-            bool operator()(const typename derivable_task_list<number>::element_type& A,
-                            const typename derivable_task_list<number>::element_type& B)
+            //! compare two derivable_task_set<number>::type elements by name
+            bool operator()(const typename derivable_task_set<number>::type::value_type& A,
+                            const typename derivable_task_set<number>::type::value_type & B)
               {
-                const auto& A_tk = A.first;
-                const auto& B_tk = B.first;
-
-                // complain if either A or B has an empty pointer
-                if(!A_tk || !B_tk) return false;
+                const auto& A_tk = A.second.get_task();
+                const auto& B_tk = B.second.get_task();
 
                 // compares true if A.name == B.name
-                return A_tk->get_name() == B_tk->get_name();
+                return A_tk.get_name() == B_tk.get_name();
               }
 
           };
 
-      }    //  namespace derivable_task_list_impl
+
+        template <typename number>
+        class FindByName
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor captures the name we are searching for
+            FindByName(std::string n)
+              : name{std::move(n)}
+              {
+              }
+
+            //! destructor is default
+            ~FindByName() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! test for match
+            bool operator()(const typename derivable_task_set<number>::type::value_type & elt)
+              {
+                const auto& tk = elt.second.get_task();
+
+                return tk.get_name() == this->name;
+              }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! name to test
+            std::string name;
+
+          };
+
+      }    //  namespace derivable_task_set_impl
 
 	}   // namespace transport
 

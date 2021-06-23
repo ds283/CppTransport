@@ -32,23 +32,22 @@
 #include "transport-runtime/exceptions.h"
 
 
-// axis classes
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME                  "time-axis"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER            "k-axis"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION "threepf-axis"
-
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS                "efolds"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER            "k-value"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT           "efolds-exit"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA                 "alpha"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA                  "beta"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1 "squeezing-fraction-k1"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2 "squeezing-fraction-k2"
-#define CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3 "squeezing-fraction-k3"
-
-
 namespace transport
 	{
+
+    // axis classes
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME                  = "time-axis";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER            = "k-axis";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION = "threepf-axis";
+
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS                = "efolds";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER            = "k-value";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT           = "efolds-exit";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA                 = "alpha";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA                  = "beta";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1 = "squeezing-fraction-k1";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2 = "squeezing-fraction-k2";
+    constexpr auto CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3 = "squeezing-fraction-k3";
 
 		namespace derived_data
 			{

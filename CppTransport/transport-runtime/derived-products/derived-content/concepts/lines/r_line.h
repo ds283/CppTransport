@@ -62,6 +62,15 @@ namespace transport
 		namespace derived_data
 			{
 
+			  namespace r_line_impl
+          {
+
+            // tags to identify different tasks in parent task list, used to select a task when attaching the datapipe
+            constexpr unsigned int INTEGRATION_TASK = 0;
+            constexpr unsigned int ZETA_TASK = 1;
+
+          }
+
 				//! general tensor-to-scalar ratio content producer, suitable
 				//! for producing content usable in eg. a 2d plot or table
 				//! Note that we derive virtually from derived_line<> to solve the diamond
@@ -124,7 +133,7 @@ namespace transport
 				template <typename number>
 				r_line<number>::r_line(const zeta_twopf_db_task<number>& tk)
 					: derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
-						gadget(dynamic_cast< twopf_db_task<number>& >(*(tk.get_parent_task())))
+            gadget(tk.get_parent_task_as_twopf_db()) // safe, will always be constructed after derived_line<number>()
 					{
 					}
 
@@ -132,14 +141,8 @@ namespace transport
 				template <typename number>
 				r_line<number>::r_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
-						gadget()
+            gadget(derived_line<number>::parent_tasks) // safe, will always be constructed after derived_line<number>()
 					{
-						assert(this->parent_task != nullptr);
-
-						postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
-						assert(ptk != nullptr);
-
-				    gadget.set_task(ptk->get_parent_task(), finder);
 					}
 
 

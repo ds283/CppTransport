@@ -407,13 +407,13 @@ namespace transport
 
         //! Attach an integration content group to a datapipe
         virtual std::unique_ptr< content_group_record<integration_payload> >
-          datapipe_attach_integration_content(datapipe<number>* pipe, integration_content_finder<number>& finder,
-                                              const std::string& name, const std::list<std::string>& tags) = 0;
+        datapipe_attach_integration_content(datapipe<number>& pipe, integration_content_finder<number>& finder,
+                                            const std::string& name, const std::list<std::string>& tags) = 0;
 
         //! Attach an postintegration content group to a datapipe
         virtual std::unique_ptr< content_group_record<postintegration_payload> >
-          datapipe_attach_postintegration_content(datapipe<number>* pipe, postintegration_content_finder<number>& finder,
-                                                  const std::string& name, const std::list<std::string>& tags) = 0;
+        datapipe_attach_postintegration_content(datapipe<number>& pipe, postintegration_content_finder<number>& finder,
+                                                const std::string& name, const std::list<std::string>& tags) = 0;
 
         //! Detach a content_group_record from a pipe
         virtual void datapipe_detach(datapipe<number>* pipe) = 0;

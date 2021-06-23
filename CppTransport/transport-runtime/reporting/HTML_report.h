@@ -2264,7 +2264,7 @@ namespace transport
                 panel.add_element(panel_heading).add_element(panel_body);
                 anchor.add_element(panel);
 
-                auto task_list = rec.get_product()->get_task_list();
+                auto task_list = rec.get_product()->get_task_dependencies();
                 if(!task_list.empty())
                   {
                     HTML_node button("button");
@@ -2309,29 +2309,25 @@ namespace transport
 
                     HTML_node body("tbody");
 
-                    for(const auto& elt : task_list)
+                    for(const auto& elt : task_list) // TODO: change to std::views::values in C++20 and remove use of .second
                       {
-                        const auto& tk = elt.first;
+                        const auto& tk = elt.second.get_task();
 
                         HTML_node table_row("tr");
+                        typename task_db<number>::type::const_iterator t = tk_db.find(tk.get_name());
 
-                        if(tk != nullptr)
+                        if(t != tk_db.end())
                           {
-                            typename task_db<number>::type::const_iterator t = tk_db.find(tk->get_name());
 
-                            if(t != tk_db.end())
-                              {
+                            HTML_node name("td");
+                            this->write_task_button(bundle, tk.get_name(), name);
 
-                                HTML_node name("td");
-                                this->write_task_button(bundle, tk->get_name(), name);
+                            HTML_node type("td", task_type_to_string(tk.get_type()));
+                            HTML_node edited("td", boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
 
-                                HTML_node type("td", task_type_to_string(tk->get_type()));
-                                HTML_node edited("td", boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
-
-                                table_row.add_element(name);
-                                table_row.add_element(type);
-                                table_row.add_element(edited);
-                              }
+                            table_row.add_element(name);
+                            table_row.add_element(type);
+                            table_row.add_element(edited);
                           }
                         body.add_element(table_row);
                       }
@@ -3033,14 +3029,19 @@ namespace transport
             this->make_data_element("k-labels", derived_data::klabel_type_to_string(line.get_klabel_meaning()), col2_list);
             this->make_data_element("Add identifiers to labels", line.get_label_tags() ? "Yes" : "No", col3_list);
 
-            HTML_node tt("dt", "Data from task");
+            const auto& parents = line.get_parent_task_list();
+
+            HTML_node tt("dt", parents.size() == 1 ? "Data from task" : "Data from tasks");
             HTML_node td("dd");
-            derivable_task<number>* ptk = line.get_parent_task();
-            if(ptk != nullptr)
+
+            for(const auto& elt : parents) // TODO: change to std::views::values in C++20 and remove use of .second
               {
-                this->write_task_button(bundle, ptk->get_name(), td);
-                col1_list.add_element(tt).add_element(td);
+                const auto& tk = elt.second.get_task();
+                HTML_node tlist_div("div");
+                this->write_task_button(bundle, tk.get_name(), tlist_div);
+                td.add_element(tlist_div);
               }
+            col1_list.add_element(tt).add_element(td);
 
             HTML_node lt("dt", "Label");
             HTML_node ld("dd");

@@ -233,58 +233,69 @@ namespace transport
 
 
     template <typename number>
-    std::string datapipe<number>::attach(derivable_task<number>* tk, const std::list<std::string>& tags)
+    std::string datapipe<number>::attach(const derivable_task<number>& tk, const std::list<std::string>& tags)
       {
+        // check that we are not already attached to a content group
         assert(this->validate_unattached());
-        if(!this->validate_unattached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
-
-        assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK);
+        if(!this->validate_unattached())
+          throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
 
         // work out what sort of content group we are trying to attach
-        integration_task<number>* itk = nullptr;
-        postintegration_task<number>* ptk = nullptr;
-
-        if((itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)    // trying to attach to an integration content group
+        switch(tk.get_type())
           {
-            // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
-            this->attached_integration_group =
-              this->data_mgr.datapipe_attach_integration_content(
-                this, this->utilities.integration_finder, tk->get_name(), tags);
-            this->type = attachment_type::integration_attached;
+            case task_type::integration:
+              {
+                const auto& itk = dynamic_cast< const integration_task<number>& >(tk);
 
-            // remember number of fields associated with this container
-            this->N_fields = itk->get_model()->get_N_fields();
+                // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
+                this->attached_integration_group =
+                  this->data_mgr.datapipe_attach_integration_content(
+                    *this, this->utilities.integration_finder, itk.get_name(), tags);
 
-            integration_payload& payload = this->attached_integration_group->get_payload();
-            this->attach_cache_tables(payload);
+                this->type = attachment_type::integration_attached;
 
-            BOOST_LOG_SEV(this->get_log(), log_severity_level::normal) << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
-            << " (from integration task '" << tk->get_name() << "')";
+                // remember number of fields associated with this container
+                // TODO: this is the only thing we use itk for. Is there no way to avoid the upcast, by getting N
+                //  from somehwere else?
+                this->N_fields = itk.get_model()->get_N_fields();
 
-            return(this->attached_integration_group->get_name());
-          }
-        else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
-          {
-            // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
-            this->attached_postintegration_group =
-              this->data_mgr.datapipe_attach_postintegration_content(
-                this, this->utilities.postintegration_finder, tk->get_name(), tags);
-            this->type = attachment_type::postintegration_attached;
+                integration_payload& payload = this->attached_integration_group->get_payload();
+                this->attach_cache_tables(payload);
 
-            this->N_fields = 0;
+                BOOST_LOG_SEV(this->get_log(), log_severity_level::normal)
+                  << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
+                  << " (from integration task '" << itk.get_name() << "')";
 
-            postintegration_payload& payload = this->attached_postintegration_group->get_payload();
-            this->attach_cache_tables(payload);
+                return this->attached_integration_group->get_name();
+              }
 
-            BOOST_LOG_SEV(this->get_log(), log_severity_level::normal) << "** ATTACH postintegration content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time())
-            << " (from postintegration task '" << tk->get_name() << "')";
+            case task_type::postintegration:
+              {
+                // datapipe_attach_postintegration_content() will throw an exception if no suitable content group can be found
+                this->attached_postintegration_group =
+                  this->data_mgr.datapipe_attach_postintegration_content(
+                    *this, this->utilities.postintegration_finder, tk.get_name(), tags);
 
-            return(this->attached_postintegration_group->get_name());
+                this->type = attachment_type::postintegration_attached;
+
+                this->N_fields = 0;
+
+                postintegration_payload& payload = this->attached_postintegration_group->get_payload();
+                this->attach_cache_tables(payload);
+
+                BOOST_LOG_SEV(this->get_log(), log_severity_level::normal)
+                  << "** ATTACH postintegration content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time())
+                  << " (from postintegration task '" << tk.get_name() << "')";
+
+                return this->attached_postintegration_group->get_name();
+              }
+
+            default:
+              break;
           }
 
         std::stringstream msg;
-        msg << CPPTRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
+        msg << CPPTRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk.get_name() << "'";
         throw runtime_exception(exception_type::DATAPIPE_ERROR, msg.str());
       }
 
@@ -304,7 +315,7 @@ namespace transport
 
 
     template <typename number>
-    void datapipe<number>::detach(void)
+    void datapipe<number>::detach()
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);

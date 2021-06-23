@@ -55,7 +55,7 @@ namespace transport
         note(std::string u, std::string n);
 
         //! deserialization constructor
-        explicit note(Json::Value& reader);
+        explicit note(const Json::Value& reader);
 
         //! destructor is default
         ~note() override = default;
@@ -105,7 +105,7 @@ namespace transport
       }
 
 
-    note::note(Json::Value& reader)
+    note::note(const Json::Value& reader)
       : uid(reader[CPPTRANSPORT_NODE_NOTE_UID].asString()),
         text(reader[CPPTRANSPORT_NODE_NOTE_NOTE].asString())
       {

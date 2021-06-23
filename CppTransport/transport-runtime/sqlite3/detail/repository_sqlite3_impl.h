@@ -915,15 +915,15 @@ namespace transport
 
         // check whether all tasks on which this derived product depends are already in the database;
         // if not, commit them: we need their records to be available to enforce foreign key constraints
-        auto task_list = d.get_task_list();
-        for(const auto& elt : task_list)
+        auto task_list = d.get_task_dependencies();
+        for(const auto& elt : task_list) // TODO: change to std::views::values in C++20 and remove use of .second
           {
-            const auto& tk = elt.first;
-            unsigned int count = sqlite3_operations::count_tasks(this->db, tk->get_name());
+            const auto& tk = elt.second.get_task();
+            unsigned int count = sqlite3_operations::count_tasks(this->db, tk.get_name());
 
             if(count == 0)
               {
-                this->autocommit(mgr, *tk, d.get_name(),
+                this->autocommit(mgr, tk, d.get_name(),
                                  CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A, CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B,
                                  CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C, CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D);
               }
@@ -936,27 +936,27 @@ namespace transport
 
 
     template <typename number>
-    void repository_sqlite3<number>::autocommit(transaction_manager& mgr, derivable_task<number>& tk, std::string parent,
-                                                std::string commit_int_A, std::string commit_int_B,
+    void repository_sqlite3<number>::autocommit(transaction_manager& mgr, const derivable_task<number>& tk,
+                                                std::string parent, std::string commit_int_A, std::string commit_int_B,
                                                 std::string commit_pint_A, std::string commit_pint_B)
       {
         switch(tk.get_type())
           {
             case task_type::integration:
               {
-                auto& rtk = dynamic_cast< integration_task<number>& >(tk);
+                auto& rtk = dynamic_cast< const integration_task<number>& >(tk);
 
                 switch(rtk.get_task_type())
                   {
                     case integration_task_type::twopf:
                       {
-                        this->commit(mgr, dynamic_cast< twopf_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< const twopf_task<number>& >(rtk));
                         break;
                       }
 
                     case integration_task_type::threepf:
                       {
-                        this->commit(mgr, dynamic_cast< threepf_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< const threepf_task<number>& >(rtk));
                         break;
                       }
                   }
@@ -966,25 +966,25 @@ namespace transport
 
             case task_type::postintegration:
               {
-                auto& rtk = dynamic_cast< postintegration_task<number>& >(tk);
+                auto& rtk = dynamic_cast< const postintegration_task<number>& >(tk);
 
                 switch(rtk.get_task_type())
                   {
                     case postintegration_task_type::twopf:
                       {
-                        this->commit(mgr, dynamic_cast< zeta_twopf_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< const zeta_twopf_task<number>& >(rtk));
                         break;
                       }
 
                     case postintegration_task_type::threepf:
                       {
-                        this->commit(mgr, dynamic_cast< zeta_threepf_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< const zeta_threepf_task<number>& >(rtk));
                         break;
                       }
 
                     case postintegration_task_type::fNL:
                       {
-                        this->commit(mgr, dynamic_cast< fNL_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< const fNL_task<number>& >(rtk));
                         break;
                       }
                   }

@@ -61,6 +61,7 @@ namespace transport
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME    = "time";
         constexpr auto CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS   = "steps";
 
+
 				template <typename number=default_number_type>
 				class cost_wavenumber: public wavenumber_series<number>
 					{
@@ -138,7 +139,7 @@ namespace transport
 
 				  protected:
 
-						//! integration task gadget
+						//! for some purposes we need access to the owning task
 						integration_task_gadget<number> gadget;
 
 						//! cost metric to use
@@ -156,7 +157,8 @@ namespace transport
 				template <typename number>
 				cost_wavenumber<number>::cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_query& kq,
 				                                         cost_metric m, unsigned int prec)
-					: derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit }, prec),
+					: derived_line<number>(make_derivable_task_set_element(tk, false, true, false), axis_class::wavenumber,
+                                 { axis_value::k, axis_value::efolds_exit }, prec),
 					  wavenumber_series<number>(tk),
 					  type(analysis_type::twopf),
 		        gadget(tk),
@@ -169,7 +171,9 @@ namespace transport
 		    template <typename number>
 		    cost_wavenumber<number>::cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_query& kq,
 		                                             cost_metric m, unsigned int prec)
-			    : derived_line<number>(tk, axis_class::wavenumber, std::list<axis_value>{ axis_value::k, axis_value::efolds_exit, axis_value::alpha, axis_value::beta, axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 }, prec),
+			    : derived_line<number>(make_derivable_task_set_element(tk, false, true, false), axis_class::wavenumber,
+                                 { axis_value::k, axis_value::efolds_exit, axis_value::alpha, axis_value::beta,
+                                   axis_value::squeeze_k1, axis_value::squeeze_k2, axis_value::squeeze_k3 }, prec),
 			      wavenumber_series<number>(tk),
 			      type(analysis_type::threepf),
 			      gadget(tk),
@@ -183,11 +187,8 @@ namespace transport
 				cost_wavenumber<number>::cost_wavenumber(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 					  wavenumber_series<number>(reader),
-					  gadget()
+            gadget(derived_line<number>::parent_tasks) // safe, will always be constructed after derived_line<number>()
 					{
-						assert(this->parent_task != nullptr);
-						gadget.set_task(this->parent_task, finder);
-
 						kquery = SQL_query_helper::deserialize(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE].asString();
@@ -280,7 +281,7 @@ namespace transport
 					            {
 				                case analysis_type::twopf:
 					                {
-						                SQL_twopf_query* kquery_as_twopf = dynamic_cast<SQL_twopf_query*>(this->kquery.get());
+						                auto* kquery_as_twopf = dynamic_cast<SQL_twopf_query*>(this->kquery.get());
 						                assert(kquery_as_twopf != nullptr);   // TODO: raise exception
 						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_twopf);
 						                break;
@@ -288,7 +289,7 @@ namespace transport
 
 				                case analysis_type::threepf:
 					                {
-						                SQL_threepf_query* kquery_as_threepf = dynamic_cast<SQL_threepf_query*>(this->kquery.get());
+						                auto* kquery_as_threepf = dynamic_cast<SQL_threepf_query*>(this->kquery.get());
 						                assert(kquery_as_threepf != nullptr);   // TODO: raise exception
 						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_threepf);
 						                break;
@@ -306,20 +307,20 @@ namespace transport
 		                line_data.reserve(statistics.size());
 		                value_type this_value = value_type::time;
 
-		                for(std::vector<kconfiguration_statistics>::const_iterator t = statistics.begin(); t != statistics.end(); ++t)
+		                for(const auto & statistic : statistics)
 			                {
 		                    switch(this->metric)
 			                    {
 		                        case cost_metric::time:
                               {
-                                line_data.push_back(static_cast<number>(t->integration) / 1E9); // convert to seconds
+                                line_data.push_back(static_cast<number>(statistic.integration) / 1E9); // convert to seconds
                                 this_value = value_type::time;
                                 break;
                               }
 
 		                        case cost_metric::steps:
                               {
-                                line_data.push_back(static_cast<number>(t->steps));
+                                line_data.push_back(static_cast<number>(statistic.steps));
                                 this_value = value_type::steps;
                                 break;
                               }

@@ -136,7 +136,7 @@ namespace transport
 
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary tasks
-            virtual typename derivable_task_list<number>::type get_task_list() const = 0;
+            virtual typename derivable_task_set<number>::type get_task_dependencies() const = 0;
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
