@@ -677,7 +677,7 @@ namespace transport
         boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF / writer.get_task_name();
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
-        if(boost::filesystem::is_directory(fail_path))
+        if(!boost::filesystem::is_directory(fail_path))
           throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
     
         boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
@@ -708,7 +708,7 @@ namespace transport
       {
         // read record from database (so that we have a fresh and up-to-date copy of the data)
         std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), mgr);
-        output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(raw_rec.get());
+        auto* rec = dynamic_cast< output_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -801,7 +801,7 @@ namespace transport
         // items are stored in integration_content_db according to their key, which is a lexical datestamp
         // this means that the earliest content group will be at the front, and the most recent content
         // group at the back
-        
+
         std::unique_ptr< content_group_record<integration_payload> > rval;
         (*db.rbegin()).second.swap(rval);
         return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
