@@ -28,9 +28,9 @@
 #define CPPTRANSPORT_WORKER_MANAGER_MESSAGES_H
 
 
-#define CPPTRANSPORT_WORKER_MANAGER_OUT_OF_RANGE   "Internal error: worker index out of range in worker manager"
-#define CPPTRANSPORT_WORKER_MANAGER_NEW_TASK_FAIL  "Internal error: failed to create new worker management group for task"
-#define CPPTRANSPORT_WORKER_MANAGER_NO_ACTIVE_TASK "Internal error: no active task in worker manager"
+#define CPPTRANSPORT_WORKER_MANAGER_OUT_OF_RANGE   "Worker index out of range in worker manager"
+#define CPPTRANSPORT_WORKER_MANAGER_NEW_TASK_FAIL  "Failed to create new worker management group for task"
+#define CPPTRANSPORT_WORKER_MANAGER_NO_ACTIVE_TASK "No active task in worker manager"
 
 
 #endif //CPPTRANSPORT_WORKER_MANAGER_MESSAGES_H

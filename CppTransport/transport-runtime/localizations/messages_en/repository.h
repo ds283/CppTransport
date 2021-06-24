@@ -58,7 +58,7 @@
 
 #define CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH     "Repository error: Error while attempting to move content group to failure cache"
 
-#define CPPTRANSPORT_TASK_NOT_SERIALIZABLE            "Internal error: serializable is not allowed for task"
+#define CPPTRANSPORT_TASK_NOT_SERIALIZABLE            "Serializable is not allowed for task"
 
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A        "Autocommit: derived product"
 #define CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B        "requires integration task"
@@ -92,16 +92,16 @@
 #define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A      "Task"
 #define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B      "Some postprocessing could not be completed"
 
-#define CPPTRANSPORT_REPO_NOT_SET                     "Internal error: attempt to access repository when unset in 'task_manager'"
+#define CPPTRANSPORT_REPO_NOT_SET                     "Attempt to access repository when unset in 'task_manager'"
 
 #define CPPTRANSPORT_REPO_MISSING_RECORD              "Repository error: Could not find database record"
 
 #define CPPTRANSPORT_REPO_SKIPPING_TASK               "; skipping this task"
 #define CPPTRANSPORT_REPO_NONE                        "Nothing to do: no repository specified"
 #define CPPTRANSPORT_REPO_FOR_TASK                    "while processing task"
-#define CPPTRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Internal error: attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
-#define CPPTRANSPORT_REPO_WRITER_AGGREGATOR_UNSET     "Internal error: aggregator unset in writer object"
-#define CPPTRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED  "Internal error: writer doesn't support failure lists"
+#define CPPTRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
+#define CPPTRANSPORT_REPO_WRITER_AGGREGATOR_UNSET     "Aggregator unset in writer object"
+#define CPPTRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED  "Writer doesn't support failure lists"
 
 #define CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: attempt to enumerate derived contents for non-integration task"
 #define CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT "Repository error: attempt to enumerate derived contents for non-postintegration task"
@@ -114,9 +114,9 @@
 #define CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL       "Repository error: failed to deserialize task"
 #define CPPTRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL    "Repository error: failed to deserialize derived product"
 
-#define CPPTRANSPORT_REPO_RECORD_CAST_FAILED          "Internal error: dynamic cast of repository record failed"
+#define CPPTRANSPORT_REPO_RECORD_CAST_FAILED          "Dynamic cast of repository record failed"
 
-#define CPPTRANSPORT_REPO_COMMIT_READONLY             "Internal error: Attempt to commit read-only record"
+#define CPPTRANSPORT_REPO_COMMIT_READONLY             "Attempt to commit read-only record"
 
 #define CPPTRANSPORT_REPOSITORY_MODE_READONLY         "read-only"
 #define CPPTRANSPORT_REPOSITORY_MODE_READWRITE        "read-write"

@@ -27,7 +27,7 @@
 #define CPPTRANSPORT_MESSAGES_EN_REPOSITORY_RECORDS_H
 
 
-constexpr auto CPPTRANSPORT_UNKNOWN_METADATA_HISTORY_ACTION = "Internal error: Unknown metadata history action";
+constexpr auto CPPTRANSPORT_UNKNOWN_METADATA_HISTORY_ACTION = "Unknown metadata history action";
 
 constexpr auto CPPTRANSPORT_HISTORY_ADDED = "added by";
 constexpr auto CPPTRANSPORT_HISTORY_REMOVED = "removed by";

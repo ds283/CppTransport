@@ -27,7 +27,7 @@
 #define CPPTRANSPORT_MESSAGES_EN_MPI_H
 
 
-constexpr auto CPPTRANSPORT_FAILED_SERIALS_MISMATCH = "Internal error: list of failed serial numbers and reported failures do not agree";
+constexpr auto CPPTRANSPORT_FAILED_SERIALS_MISMATCH = "List of failed serial numbers and reported failures do not agree";
 
 
 #endif //CPPTRANSPORT_MESSAGES_EN_MPI_H

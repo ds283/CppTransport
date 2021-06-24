@@ -26,14 +26,14 @@
 #ifndef CPPTRANSPORT_MESSAGES_EN_BATCHERS_H
 #define CPPTRANSPORT_MESSAGES_EN_BATCHERS_H
 
-constexpr auto CPPTRANSPORT_BATCHER_BACKG_SIZE           = "Internal error: background fields sample item has unexpected size";
-constexpr auto CPPTRANSPORT_BATCHER_ICS_SIZE             = "Internal error: per-configuration initial conditions item has unexpected size";
-constexpr auto CPPTRANSPORT_BATCHER_TWOPF_SIZE           = "Internal error: fields 2pf sample item has unexpected size";
-constexpr auto CPPTRANSPORT_BATCHER_TWOPF_SI_SIZE        = "Internal error: fields 2pf 'spectral index' sample item has unexpected size";
-constexpr auto CPPTRANSPORT_BATCHER_THREEPF_SIZE         = "Internal error: fields 3pf sample item has unexpected size";
-constexpr auto CPPTRANSPORT_BATCHER_TENSOR_TWOPF_SIZE    = "Internal error: tensor 2pf sample item has unexpected size";
-constexpr auto CPPTRANSPORT_BATCHER_TENSOR_TWOPF_SI_SIZE = "Internal error: tensor 2pf 'spectral index' sample item has unexpected size";
-constexpr auto CPPTRANSPORT_ZETA_BATCHER_GAUGEXFM1_SIZE  = "Internal error: gauge_xfm1 sample item has unexpected size";
-constexpr auto CPPTRANSPORT_ZETA_BATCHER_GAUGEXFM2_SIZE  = "Internal error: gauge_xfm2 sample item has unexpected size";
+constexpr auto CPPTRANSPORT_BATCHER_BACKG_SIZE           = "Background fields sample item has unexpected size";
+constexpr auto CPPTRANSPORT_BATCHER_ICS_SIZE             = "Per-configuration initial conditions item has unexpected size";
+constexpr auto CPPTRANSPORT_BATCHER_TWOPF_SIZE           = "Fields 2pf sample item has unexpected size";
+constexpr auto CPPTRANSPORT_BATCHER_TWOPF_SI_SIZE        = "Fields 2pf 'spectral index' sample item has unexpected size";
+constexpr auto CPPTRANSPORT_BATCHER_THREEPF_SIZE         = "Fields 3pf sample item has unexpected size";
+constexpr auto CPPTRANSPORT_BATCHER_TENSOR_TWOPF_SIZE    = "Tensor 2pf sample item has unexpected size";
+constexpr auto CPPTRANSPORT_BATCHER_TENSOR_TWOPF_SI_SIZE = "Tensor 2pf 'spectral index' sample item has unexpected size";
+constexpr auto CPPTRANSPORT_ZETA_BATCHER_GAUGEXFM1_SIZE  = "Gauge_xfm1 sample item has unexpected size";
+constexpr auto CPPTRANSPORT_ZETA_BATCHER_GAUGEXFM2_SIZE  = "Gauge_xfm2 sample item has unexpected size";
 
 #endif //CPPTRANSPORT_MESSAGES_EN_BATCHERS_H

@@ -28,10 +28,10 @@
 #define CPPTRANSPORT_MESSAGES_EN_INITIAL_CONDITIONS_H
 
 
-#define CPPTRANSPORT_ICS_NULL_MODEL                "Internal error: null model in 'initial_conditions' object"
+#define CPPTRANSPORT_ICS_NULL_MODEL                "Null model in 'initial_conditions' object"
 
 #define CPPTRANSPORT_ICS_TAG                       "Initial conditions:"
-#define CPPTRANSPORT_ICS_NULL_SERIALIZATION_READER "Internal error: null serialization reader in 'initial_conditions' object"
+#define CPPTRANSPORT_ICS_NULL_SERIALIZATION_READER "Null serialization reader in 'initial_conditions' object"
 
 #define CPPTRANSPORT_ICS_MODEL_MISMATCH            "Disallowed combination: model supplied to 'parameters' and 'initial conditions' must match in package"
 

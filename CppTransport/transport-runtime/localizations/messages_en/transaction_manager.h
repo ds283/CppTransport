@@ -37,7 +37,7 @@
 #define CPPTRANSPORT_TRANSACTION_COMMITTED       "Repository error: attempt to add to a transaction which has already been committed"
 #define CPPTRANSPORT_TRANSACTION_DEAD            "Repository error: attempt to add to a transaction which has been rolled back"
 
-#define CPPTRANSPORT_TRANSACTION_OVER_RELEASE    "Internal error: over-release of transaction"
+#define CPPTRANSPORT_TRANSACTION_OVER_RELEASE    "Over-release of transaction"
 
 
 

@@ -28,7 +28,7 @@
 #define CPPTRANSPORT_MESSAGES_EN_NAMED_LIST_H
 
 
-#define CPPTRANSPORT_NAMED_LIST_FAIL       "Internal error: Lookup failed in named_list"
+#define CPPTRANSPORT_NAMED_LIST_FAIL       "Lookup failed in named_list"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_NAMED_LIST_H

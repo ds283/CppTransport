@@ -28,15 +28,15 @@
 #define CPPTRANSPORT_MESSAGES_EN_DERIVED_PRODUCT_H
 
 
-#define CPPTRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH  "Internal error: Axis and sample size mismatch in 'time_data_line'"
+#define CPPTRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH  "Axis and sample size mismatch in 'time_data_line'"
 
-#define CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE            "Internal error: Unknown derived-product type"
+#define CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE            "Unknown derived-product type"
 
-#define CPPTRANSPORT_INDEX_UNKNOWN_RANGE_TYPE        "Internal error: Unknown 'index_selector' range type"
-#define CPPTRANSPORT_INDEX_PRESET_MISMATCH           "Internal error: Mismatched number of presets provided to 'index_selector'; expected"
+#define CPPTRANSPORT_INDEX_UNKNOWN_RANGE_TYPE        "Unknown 'index_selector' range type"
+#define CPPTRANSPORT_INDEX_PRESET_MISMATCH           "Mismatched number of presets provided to 'index_selector'; expected"
 #define CPPTRANSPORT_INDEX_PRESET_MISMATCH_A         "received"
 
-#define CPPTRANSPORT_PRODUCT_INDEX_MISMATCH          "Internal error: unexpected number of fields in index selector object"
+#define CPPTRANSPORT_PRODUCT_INDEX_MISMATCH          "Unexpected number of fields in index selector object"
 #define CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A        "received"
 #define CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B        "expected"
 

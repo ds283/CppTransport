@@ -28,8 +28,8 @@
 #define CPPTRANSPORT_TWOPF_CONFIG_DATABASE_MESSAGES_H
 
 
-#define CPPTRANSPORT_TWOPF_DATABASE_WRITE_FAIL   "Internal error: failed to write twopf k-configuration database (backend code="
-#define CPPTRANSPORT_TWOPF_DATABASE_READ_FAIL    "Internal error: failed to read twopf k-configuration database (backend code="
+#define CPPTRANSPORT_TWOPF_DATABASE_WRITE_FAIL   "Failed to write twopf k-configuration database (backend code="
+#define CPPTRANSPORT_TWOPF_DATABASE_READ_FAIL    "Failed to read twopf k-configuration database (backend code="
 
 
 #endif //CPPTRANSPORT_TWOPF_CONFIG_DATABASE_MESSAGES_H

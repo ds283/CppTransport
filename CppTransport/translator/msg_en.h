@@ -28,10 +28,10 @@
 
 // Messages
 
-constexpr auto ERROR_NO_ERROR_HANDLER                = "Internal error: no registered error handler";
-constexpr auto ERROR_NO_WARNING_HANDLER              = "Internal error: no registered warning handler";
-constexpr auto ERROR_NOT_FULL_CONTEXT                = "Internal error: attempt to unpack error context without full context data";
-constexpr auto ERROR_NO_STACK_REGISTERED             = "Internal error: attempt to unpack error context with no filestack data";
+constexpr auto ERROR_NO_ERROR_HANDLER                = "No registered error handler";
+constexpr auto ERROR_NO_WARNING_HANDLER              = "No registered warning handler";
+constexpr auto ERROR_NOT_FULL_CONTEXT                = "Attempt to unpack error context without full context data";
+constexpr auto ERROR_NO_STACK_REGISTERED             = "Attempt to unpack error context with no filestack data";
 
 constexpr auto ERROR_MESSAGE_AT_LINE                 = "at line";
 constexpr auto ERROR_MESSAGE_WRAP_PAD                = "  ";
@@ -66,7 +66,7 @@ constexpr auto WARNING_DUPLICATE_TEMPLATE_BACKEND    = "Duplicate backend identi
 constexpr auto WARNING_DUPLICATE_TEMPLATE_MINVER     = "Duplicate minimum CppTransport version number";
 constexpr auto WARNING_DUPLICATE_TEMPLATE_TYPE       = "Duplicate template type specifier";
 
-constexpr auto ERROR_UNSET_BACKEND_DATA              = "Internal error: attempt to read from unset backend_data field";
+constexpr auto ERROR_UNSET_BACKEND_DATA              = "Attempt to read from unset backend_data field";
 
 constexpr auto WARNING_NO_REQUIRED_VERSION           = "No minimum version of CppTransport was specified, so some new features may be disabled";
 constexpr auto ERROR_REQUIRED_VERSION_TOO_HIGH_A     = "Requires more recent version of CppTransport (requires";
@@ -153,17 +153,17 @@ constexpr auto ERROR_REQUIRED_VERSION_REDECLARATION  = "Redeclaration of minimum
 constexpr auto ERROR_MODEL_SPECIFICATION_STARTED     = "Model properties must be declared before the model is specified";
 constexpr auto WARNING_SPECIFICATION_START_WAS       = "Model specification began here:";
 
-constexpr auto ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   = "Internal error: increment or decrement of unattached assignment set iterator";
-constexpr auto ERROR_ASSIGNMENT_ITERATOR_DECREMENT   = "Internal error: attempt to decrement assignment iterator before first element";
-constexpr auto ERROR_ASSIGNMENT_ITERATOR_INCREMENT   = "Internal error: attempt to increment assignment iterator after last element";
+constexpr auto ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   = "Increment or decrement of unattached assignment set iterator";
+constexpr auto ERROR_ASSIGNMENT_ITERATOR_DECREMENT   = "Attempt to decrement assignment iterator before first element";
+constexpr auto ERROR_ASSIGNMENT_ITERATOR_INCREMENT   = "Attempt to increment assignment iterator after last element";
 
-constexpr auto ERROR_TOKENIZE_NO_MACRO_MATCH         = "Internal error: unexpectedly failed to match a replacement rule";
+constexpr auto ERROR_TOKENIZE_NO_MACRO_MATCH         = "Unexpectedly failed to match a replacement rule";
 constexpr auto ERROR_TOKENIZE_UNEXPECTED_LIST        = "Did not expect index list following simple replacement rule";
 constexpr auto ERROR_TOKENIZE_SKIPPING               = "skipping";
 
 constexpr auto ERROR_TOKENIZE_TOO_MANY_ERRORS        = "Too many errors from this token; further output will be suppressed";
 
-constexpr auto ERROR_NO_PRE_MAP                      = "Internal error: Data to perform replacement rule expansion was not correctly pre-mapped";
+constexpr auto ERROR_NO_PRE_MAP                      = "Data to perform replacement rule expansion was not correctly pre-mapped";
 
 constexpr auto ERROR_INCOMPATIBLE_UNROLL             = "Conflicting unroll/roll-up requirements";
 constexpr auto NOTIFY_CONFLICT_RULE_FORCES_UNROLL    = "Note: replacement rule forces unroll";
@@ -186,7 +186,7 @@ constexpr auto WARN_EXPLICIT_PREVENT_FOLLOWS_PREVENT = "Duplicate force roll-up 
 constexpr auto WARN_EXPLICIT_PREVENT_FOLLOWS_FORCE   = "Explicit force roll-up specifier conflicts with earlier explicit force unroll specifier";
 constexpr auto NOTIFY_ORIGINAL_EXPLICIT_WAS          = "Note: Location of earlier explicit specifier was";
 
-constexpr auto ERROR_MISSING_INDEX_ASSIGNMENT        = "Internal error: missing index assignment";
+constexpr auto ERROR_MISSING_INDEX_ASSIGNMENT        = "Missing index assignment";
 
 constexpr auto ERROR_EXPECTED_OPEN_INDEX_LIST        = "Expected index list beginning with '[' for indexed rule";
 constexpr auto ERROR_EXPECTED_INDEX_LABEL_A          = "Expected index label for indexed rule";
@@ -222,7 +222,7 @@ constexpr auto ERROR_NONTRIVIAL_REQUIRES_VARIANCE    = "Variance must be assigne
 constexpr auto NOTIFY_CANONICAL_IGNORES_VARIANCE     = "Note: variance specifiers are ignored in canonical models";
 constexpr auto NOTIFY_PARAMETER_VARIANCE_IGNORED     = "Note: variance specifier ignored for parameter-type index";
 
-constexpr auto ERROR_INDEX_LITERAL_REASSIGN          = "Internal error: missing database entry during index literal reassignment, for index";
+constexpr auto ERROR_INDEX_LITERAL_REASSIGN          = "Missing database entry during index literal reassignment, for index";
 
 constexpr auto ERROR_FIELD_INDICES_ARE_CONTRAVARIANT = "Field indices must be contravariant";
 constexpr auto ERROR_COORD_INDICES_ARE_CONTRAVARIANT = "Coordinate indices must be contravariant";
@@ -232,22 +232,22 @@ constexpr auto ERROR_MISSING_RHS                     = "Missing right-hand side 
 
 constexpr auto ERROR_MACRO_LHS_RHS_MISMATCH          = "Mismatched index class on left- and right-hand sides";
 
-constexpr auto ERROR_INDEX_DATABASE_EMPLACE_FAIL     = "Internal error: emplacement in index database failed";
-constexpr auto ERROR_INDEX_DATABASE_OUT_OF_RANGE     = "Internal error: out of range access in index database";
+constexpr auto ERROR_INDEX_DATABASE_EMPLACE_FAIL     = "Emplacement in index database failed";
+constexpr auto ERROR_INDEX_DATABASE_OUT_OF_RANGE     = "Out of range access in index database";
 
-constexpr auto ERROR_REPLACEMENT_RULE_INDEX_COUNT    = "Internal error: number of index classes provided to replacement rule constructor does not match declared number of indices";
-constexpr auto ERROR_DIRECTIVE_RULE_INDEX_COUNT      = "Internal error: number of index classes provided to directive constructor does not match declared number of indices";
-constexpr auto ERROR_REPLACEMENT_RULE_ZERO_INDICES   = "Internal error: number of indices for an indexed replacement rule cannot be zero";
+constexpr auto ERROR_REPLACEMENT_RULE_INDEX_COUNT    = "Number of index classes provided to replacement rule constructor does not match declared number of indices";
+constexpr auto ERROR_DIRECTIVE_RULE_INDEX_COUNT      = "Number of index classes provided to directive constructor does not match declared number of indices";
+constexpr auto ERROR_REPLACEMENT_RULE_ZERO_INDICES   = "Number of indices for an indexed replacement rule cannot be zero";
 
-constexpr auto ERROR_DN_DOES_NOT_ROLL                = "Internal error: attempt to roll-up a delta-N rule";
-constexpr auto ERROR_INCONSISTENT_LAMBDA_MAP         = "Internal error: inconsistent lambda map size";
+constexpr auto ERROR_DN_DOES_NOT_ROLL                = "Attempt to roll-up a delta-N rule";
+constexpr auto ERROR_INCONSISTENT_LAMBDA_MAP         = "Inconsistent lambda map size";
 
-constexpr auto ERROR_FILESTACK_EMPTY                 = "Internal error: filestack empty when accessing top element";
-constexpr auto ERROR_FILESTACK_TOO_SHORT             = "Internal error: filestack empty when attempting to pop";
+constexpr auto ERROR_FILESTACK_EMPTY                 = "Filestack empty when accessing top element";
+constexpr auto ERROR_FILESTACK_TOO_SHORT             = "Filestack empty when attempting to pop";
 
-constexpr auto ERROR_CURRENT_LINE_EMPTY              = "Internal error: current line empty in lexfile";
+constexpr auto ERROR_CURRENT_LINE_EMPTY              = "Current line empty in lexfile";
 
-constexpr auto ERROR_OUT_OF_BOUNDS_CSE_MAP           = "Internal error: out of bounds subscript in CSE map";
+constexpr auto ERROR_OUT_OF_BOUNDS_CSE_MAP           = "Out of bounds subscript in CSE map";
 
 constexpr auto WARNING_TEMPORARY_NO_TAG_SET          = "End of input reached, but no location set for temporary buffer. "
                                                        "This is most likely a template bug, and the translator output is unlikely to compile";
@@ -259,12 +259,12 @@ constexpr auto WARNING_OCTAL_CONVERSION_B            = "indicates octal, but did
 
 constexpr auto WARNING_RECURSION_DEPTH               = "Maximum depth of recursive replacement rule expansion exceeded (max";
 
-constexpr auto WARNING_LEXEME_KEYWORD                = "Internal error: attempt to get keyword type for non-keyword lexeme";
-constexpr auto WARNING_LEXEME_SYMBOL                 = "Internal error: attempt to get symbol type for non-symbol lexeme";
-constexpr auto WARNING_LEXEME_INTEGER                = "Internal error: attempt to get integer value for non-integer lexeme";
-constexpr auto WARNING_LEXEME_DECIMAL                = "Internal error: attempt to get decimal value for non-decimal lexeme";
-constexpr auto WARNING_LEXEME_STRING                 = "Internal error: attempt to get string value for non-string lexeme";
-constexpr auto WARNING_LEXEME_IDENTIFIER             = "Internal error: attempt to get identifier value for non-identifier lexeme";
+constexpr auto WARNING_LEXEME_KEYWORD                = "Attempt to get keyword type for non-keyword lexeme";
+constexpr auto WARNING_LEXEME_SYMBOL                 = "Attempt to get symbol type for non-symbol lexeme";
+constexpr auto WARNING_LEXEME_INTEGER                = "Attempt to get integer value for non-integer lexeme";
+constexpr auto WARNING_LEXEME_DECIMAL                = "Attempt to get decimal value for non-decimal lexeme";
+constexpr auto WARNING_LEXEME_STRING                 = "Attempt to get string value for non-string lexeme";
+constexpr auto WARNING_LEXEME_IDENTIFIER             = "Attempt to get identifier value for non-identifier lexeme";
 
 constexpr auto RESOURCE_SET_PARAMETERS               = "parameters resource set to";
 constexpr auto RESOURCE_SET_COORDINATES              = "coordinates resource set to";
@@ -348,24 +348,24 @@ constexpr auto MESSAGE_REPLACEMENT_RULE_EXPANSIONS   = "replacement rule expansi
 constexpr auto ERROR_UNKNOWN_STEPPER                 = "Unknown or unimplemented odeint-v2 stepper";
 constexpr auto ERROR_UNDEFINED_STEPPER               = "Stepper block not declared";
 
-constexpr auto ERROR_SYMBOL_DATABASE_EMPLACE_FAIL    = "Internal error: emplace to symbol database failed";
+constexpr auto ERROR_SYMBOL_DATABASE_EMPLACE_FAIL    = "Emplace to symbol database failed";
 
-constexpr auto ERROR_COMPONENT_DATABASE_INCONSISTENT = "Internal error: metric component database is inconsistent";
+constexpr auto ERROR_COMPONENT_DATABASE_INCONSISTENT = "Metric component database is inconsistent";
 constexpr auto ERROR_COMPONENT_REDEFINITION          = "Redefinition of metric component";
 constexpr auto ERROR_BAD_INDEX_LABEL                 = "Unknown field-space metric index label";
 
-constexpr auto ERROR_MISMATCHED_TENSOR_INDICES       = "Internal error: comparison of tensor indices with different variance";
-constexpr auto ERROR_VARIDX_WITHOUT_VARIANCE         = "Internal error: construction of GiNaC::varidx without variance information";
-constexpr auto ERROR_INDEX_MISSING_VARIANCE_DATA     = "Internal error: index missing variance data";
+constexpr auto ERROR_MISMATCHED_TENSOR_INDICES       = "Comparison of tensor indices with different variance";
+constexpr auto ERROR_VARIDX_WITHOUT_VARIANCE         = "Construction of GiNaC::varidx without variance information";
+constexpr auto ERROR_INDEX_MISSING_VARIANCE_DATA     = "Index missing variance data";
 
 constexpr auto NOTIFY_REPOSITIONING_INDICES_A        = "Note: repositioning";
 constexpr auto NOTIFY_REPOSITIONING_INDICES_B1       = "indices on resource with label";
 constexpr auto NOTIFY_REPOSITIONING_INDICES_B2       = "index on resource with label";
 constexpr auto WARNING_INDEX_POSITIONING_FAILURE     = "Index reposition failed; fallback to direct evaluation. Are suitable metric/inverse metric resources available?";
 
-constexpr auto ERROR_METRIC_NOT_SQUARE               = "Internal error: field-space metric is not a square matrix";
-constexpr auto ERROR_METRIC_DIMENSION                = "Internal error: field-space metric/inverse has inconsistent dimension";
-constexpr auto ERROR_METRIC_INDICES_ARE_FIELDS       = "Internal error: indices used to construct a metric component should be fields";
+constexpr auto ERROR_METRIC_NOT_SQUARE               = "Field-space metric is not a square matrix";
+constexpr auto ERROR_METRIC_DIMENSION                = "Field-space metric/inverse has inconsistent dimension";
+constexpr auto ERROR_METRIC_INDICES_ARE_FIELDS       = "Indices used to construct a metric component should be fields";
 
 constexpr auto ERROR_METRIC_RESOURCE_MIXED_INDICES   = "Metric resource should not have mixed indices";
 constexpr auto ERROR_METRIC_RULE_MIXED_INDICES       = "$METRIC should not be used with mixed indices";
@@ -374,18 +374,18 @@ constexpr auto ERROR_CONNEXION_INDICES               = "$CONNECTION has incorrec
 constexpr auto NOTIFY_PARSE_TERMINATED               = "Translation terminated";
 constexpr auto NOTIFY_TOO_MANY_ERRORS                = "encountered too many errors";
 
-constexpr auto ERROR_VARIANCE_TENSOR_CACHE_EMPLACE   = "Internal error: failed to emplace tensor in variance_tensor_cache";
+constexpr auto ERROR_VARIANCE_TENSOR_CACHE_EMPLACE   = "Failed to emplace tensor in variance_tensor_cache";
 
-constexpr auto ERROR_SPECIES_MAPPING_OVERFLOW        = "Internal error: abstract index mapping overflow";
-constexpr auto ERROR_SPECIES_TO_SPECIES_FAIL         = "Internal error: species-to-species map must be applied to a phase-space index";
-constexpr auto ERROR_MOMENTUM_TO_SPECIES_FAIL        = "Internal error: momentum-to-species map must be applied to a phase-space index";
+constexpr auto ERROR_SPECIES_MAPPING_OVERFLOW        = "Abstract index mapping overflow";
+constexpr auto ERROR_SPECIES_TO_SPECIES_FAIL         = "Species-to-species map must be applied to a phase-space index";
+constexpr auto ERROR_MOMENTUM_TO_SPECIES_FAIL        = "Momentum-to-species map must be applied to a phase-space index";
 
 constexpr auto ERROR_UNIMPLEMENTED_MATHS_FUNCTION    = "Unimplemented mathematical function";
 constexpr auto ERROR_USED_IN_EXPRESSION              = "used in expression";
 
 constexpr auto ERROR_SYMBOL_PREVIOUSLY_COMPLEX       = "symbol was previously declared complex";
 constexpr auto ERROR_SYMBOL_PREVIOUSLY_REAL          = "symbol was previously declared real";
-constexpr auto ERROR_SYMBOL_RECORD_INSERTION         = "Internal error: emplace to symbol record database failed";
+constexpr auto ERROR_SYMBOL_RECORD_INSERTION         = "Emplace to symbol record database failed";
 
 constexpr auto MESSAGE_HOUR_LABEL                    = "h";
 constexpr auto MESSAGE_MINUTE_LABEL                  = "m";

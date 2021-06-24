@@ -28,22 +28,22 @@
 #define CPPTRANSPORT_MESSAGES_EN_TASK_MANAGER_H
 
 
-#define CPPTRANSPORT_EXEC_SLAVE                        "Internal error: task_manager::execute_tasks() called on slave process"
-#define CPPTRANSPORT_WAIT_MASTER                       "Internal error: task_manager::wait_for_tasks() called on master process"
-#define CPPTRANSPORT_UNKNOWN_DERIVED_TASK              "Internal error: unknown derived 'task<number>' class for task"
+#define CPPTRANSPORT_EXEC_SLAVE                        "Task_manager::execute_tasks() called on slave process"
+#define CPPTRANSPORT_WAIT_MASTER                       "Task_manager::wait_for_tasks() called on master process"
+#define CPPTRANSPORT_UNKNOWN_DERIVED_TASK              "Unknown derived 'task<number>' class for task"
 #define CPPTRANSPORT_TOO_FEW_WORKERS                   "Too few workers: require at least two worker processes to process a task"
-#define CPPTRANSPORT_UNEXPECTED_MPI                    "Internal error: unexpected MPI message received"
+#define CPPTRANSPORT_UNEXPECTED_MPI                    "Unexpected MPI message received"
 
-#define CPPTRANSPORT_UNEXPECTED_UNHANDLED              "Internal error: unexpected unhandled exception"
+#define CPPTRANSPORT_UNEXPECTED_UNHANDLED              "Unexpected unhandled exception"
 
 #define CPPTRANSPORT_TASK_MISSING                      "Could not find repository record for task"
 #define CPPTRANSPORT_TASK_CANT_BE_READ                 "Can not read repository record for task"
 
 #define CPPTRANSPORT_FILTER_TAG                        "Filter for work items:"
 
-#define CPPTRANSPORT_EXPECTED_TWOPF_TASK               "Internal error: expected postintegration parent task to be of type twopf_task, but instead found task"
-#define CPPTRANSPORT_EXPECTED_THREEPF_TASK             "Internal error: expected postintegration parent task to be of type threepf_task, but instead found task"
-#define CPPTRANSPORT_EXPECTED_ZETA_THREEPF_TASK        "Internal error: expected postintegration parent task to be of type zeta_threepf_task, but instead found task"
+#define CPPTRANSPORT_EXPECTED_TWOPF_TASK               "Expected postintegration parent task to be of type twopf_task, but instead found task"
+#define CPPTRANSPORT_EXPECTED_THREEPF_TASK             "Expected postintegration parent task to be of type threepf_task, but instead found task"
+#define CPPTRANSPORT_EXPECTED_ZETA_THREEPF_TASK        "Expected postintegration parent task to be of type zeta_threepf_task, but instead found task"
 
 #define CPPTRANSPORT_NO_CANDIDATE_INTEGRATION_GROUP    "Could not find a candidate integration content group for task"
 

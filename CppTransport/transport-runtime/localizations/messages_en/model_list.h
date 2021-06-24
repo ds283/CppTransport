@@ -28,8 +28,8 @@
 #define CPPTRANSPORT_MESSAGES_EN_MODEL_LIST_H
 
 
-#define CPPTRANSPORT_MODEL_LIST_RANGE    "Internal error: Out of range when accessing 'model_list' object"
-#define CPPTRANSPORT_MODEL_LIST_MISMATCH "Internal error: Unexpected number of models supplied with task"
+#define CPPTRANSPORT_MODEL_LIST_RANGE    "Out of range when accessing 'model_list' object"
+#define CPPTRANSPORT_MODEL_LIST_MISMATCH "Unexpected number of models supplied with task"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_RANGE_H

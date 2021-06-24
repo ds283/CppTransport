@@ -32,11 +32,11 @@
 namespace transport
   {
 
-    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN               = "Internal error: Cannot deserialize unknown 'derived_line' content type";
-    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN                 = "Internal error: Unknown twopf type in 'derived_line'";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN               = "Cannot deserialize unknown 'derived_line' content type";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN                 = "Unknown twopf type in 'derived_line'";
 
-    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_PARENT_TASK                     = "Internal error: Cannot deserialize 'derived_line' content because no parent task was specified";
-    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_BAD_PARENT_TASK_TYPE               = "Internal error: Bad parent task type for 'derived_line' content";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_PARENT_TASK                     = "Cannot deserialize 'derived_line' content because no parent task was specified";
+    constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_BAD_PARENT_TASK_TYPE               = "Bad parent task type for 'derived_line' content";
     constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_DATAPIPE_ATTACH_BAD_TAG            = "Datapipe was not attached because the specified parent task could not be found";
 
     constexpr auto CPPTRANSPORT_PRODUCT_DERIVED_LINE_LABEL                              = "Derived content:";

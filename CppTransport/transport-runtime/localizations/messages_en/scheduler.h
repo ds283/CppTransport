@@ -38,9 +38,9 @@
 #define CPPTRANSPORT_WORK_QUEUE_QUEUE      "queue"
 #define CPPTRANSPORT_WORK_QUEUE_QUEUES     "queues"
 
-#define CPPTRANSPORT_WORK_LIST_RANGE       "Internal error: Out of range when accessing 'device_work_list' object"
-#define CPPTRANSPORT_DEVICE_QUEUE_RANGE    "Internal error: Out of range when accessing 'device_queue' object"
-#define CPPTRANSPORT_WORK_QUEUE_RANGE      "Internal error: Out of range when accessing 'work_queue' object"
+#define CPPTRANSPORT_WORK_LIST_RANGE       "Out of range when accessing 'device_work_list' object"
+#define CPPTRANSPORT_DEVICE_QUEUE_RANGE    "Out of range when accessing 'device_queue' object"
+#define CPPTRANSPORT_WORK_QUEUE_RANGE      "Out of range when accessing 'work_queue' object"
 
 
 

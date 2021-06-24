@@ -31,9 +31,9 @@
 namespace transport
   {
 
-    constexpr auto CPPTRANSPORT_TASK_TYPE_UNKNOWN = "Internal error: unknown task type";
+    constexpr auto CPPTRANSPORT_TASK_TYPE_UNKNOWN = "Unknown task type";
 
-    constexpr auto CPPTRANSPORT_OUTPUT_TASK_RANGE = "Internal error: Out of range when accessing 'output_task' object";
+    constexpr auto CPPTRANSPORT_OUTPUT_TASK_RANGE = "Out of range when accessing 'output_task' object";
 
     constexpr auto CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A = "Output task error: attempt to add two derived products with the filename";
     constexpr auto CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B = "to output task";
@@ -42,20 +42,20 @@ namespace transport
     constexpr auto CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_B = "to output task";
 
     constexpr auto CPPTRANSPORT_TASK_TIMES = "Sampling times: ";
-    constexpr auto CPPTRANSPORT_SERIALIZE_BACKGROUND_TASK = "Internal error: attempt to serialize background task object";
-    constexpr auto CPPTRANSPORT_KCONFIG_BACKGROUND_TASK = "Internal error: attempt to query background task object for k-configuration database";
-    constexpr auto CPPTRANSPORT_QUERY_BACKGROUND_TASK = "Internal error: attempt to query background task object for type";
+    constexpr auto CPPTRANSPORT_SERIALIZE_BACKGROUND_TASK = "Attempt to serialize background task object";
+    constexpr auto CPPTRANSPORT_KCONFIG_BACKGROUND_TASK = "Attempt to query background task object for k-configuration database";
+    constexpr auto CPPTRANSPORT_QUERY_BACKGROUND_TASK = "Attempt to query background task object for type";
 
     constexpr auto CPPTRANSPORT_OUTPUT_ELEMENTS = "Derived data tasks: ";
     constexpr auto CPPTRANSPORT_OUTPUT_ELEMENT_TASK = "task";
     constexpr auto CPPTRANSPORT_OUTPUT_ELEMENT_OUTPUT = "output";
     constexpr auto CPPTRANSPORT_OUTPUT_ELEMENT_TAGS = "tags";
 
-    constexpr auto CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL = "Internal error: expected postintegration task parent to be castable to integration task, but dynamic cast failed";
-    constexpr auto CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL = "Internal error: expected zeta_twopf_list_task parent to be castable to twopf_list_task, but dynamic cast failed";
-    constexpr auto CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL = "Internal error: expected zeta_threepf_task parent to be castable to threepf_task, but dynamic cast failed";
+    constexpr auto CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL = "Expected postintegration task parent to be castable to integration task, but dynamic cast failed";
+    constexpr auto CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL = "Expected zeta_twopf_list_task parent to be castable to twopf_list_task, but dynamic cast failed";
+    constexpr auto CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL = "Expected zeta_threepf_task parent to be castable to threepf_task, but dynamic cast failed";
 
-    constexpr auto CPPTRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE = "Internal error: unknown bispectrum template";
+    constexpr auto CPPTRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE = "Unknown bispectrum template";
 
     constexpr auto CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE = "fNL_task: can't construct fNL product because parent task does not have a simple linear k-grid";
 
@@ -71,9 +71,9 @@ namespace transport
     constexpr auto CPPTRANSPORT_TASK_DATA_LATEST = "Latest N_exit";
     constexpr auto CPPTRANSPORT_TASK_DATA_END_INFLATION = "Inflation ends";
 
-    constexpr auto CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS = "Internal error: missing database entry for k =";
+    constexpr auto CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS = "Missing database entry for k =";
 
-    constexpr auto CPPTRANSPORT_TASK_TWOPF_VALIDATE_INCONSISTENT = "Internal error: validation of subhorizon efolds is inconsistent";
+    constexpr auto CPPTRANSPORT_TASK_TWOPF_VALIDATE_INCONSISTENT = "Validation of subhorizon efolds is inconsistent";
     constexpr auto CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A = "N=";
     constexpr auto CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B = "adaptive ics -- earliest required time N=";
     constexpr auto CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_C = "is earlier than time of initial conditions N=";
@@ -94,7 +94,7 @@ namespace transport
 
     constexpr auto CPPTRANSPORT_TASK_TWOPF_LIST_NO_TIMES = "no times to be stored";
 
-    constexpr auto CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS = "Internal error: missing database entry for k =";
+    constexpr auto CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS = "Missing database entry for k =";
 
     constexpr auto CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT = "Error: failed to compute horizon exit times for all k-configurations";
     constexpr auto CPPTRANSPORT_TASK_SEARCH_FROM = "searched from N=";
@@ -120,7 +120,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_TASK_TYPE_INTEGRATION = "integration";
     constexpr auto CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION = "postintegration";
     constexpr auto CPPTRANSPORT_TASK_TYPE_OUTPUT = "output";
-    constexpr auto CPPTRANSPORT_TASK_UNKNOWN_TYPE = "Internal error: unknown task type";
+    constexpr auto CPPTRANSPORT_TASK_UNKNOWN_TYPE = "Unknown task type";
 
     constexpr auto CPPTRANSPORT_TASK_TYPE_INTEGRATION_TWOPF = "twopf";
     constexpr auto CPPTRANSPORT_TASK_TYPE_INTEGRATION_THREEPF = "threepf";

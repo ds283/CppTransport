@@ -27,7 +27,7 @@
 #define CPPTRANSPORT_MESSAGES_EN_ASCIITABLE_H
 
 
-constexpr auto CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS = "Internal error: Incompatible columns and tabular array in asciitable";
+constexpr auto CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS = "Incompatible columns and tabular array in asciitable";
 
 
 #endif //CPPTRANSPORT_MESSAGES_EN_ASCIITABLE_H

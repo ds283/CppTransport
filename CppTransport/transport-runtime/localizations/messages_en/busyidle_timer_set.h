@@ -28,10 +28,10 @@
 #define CPPTRANSPORT_BUSYIDLE_TIMER_SET_MESSAGES_H
 
 
-#define CPPTRANSPORT_BUSYIDLE_TIMER_NOT_FOUND             "Internal error: could not find existing busy/idle timer"
+#define CPPTRANSPORT_BUSYIDLE_TIMER_NOT_FOUND             "Could not find existing busy/idle timer"
 
-#define CPPTRANSPORT_BUSYIDLE_INSERT_EXISTING_TIMER       "Internal error: attempt to add existing busy/idle timer"
-#define CPPTRANSPORT_BUSYIDLE_ACTIVE_INSERT_FAILED        "Internal error: insert to active busy/idle group failed for timer"
+#define CPPTRANSPORT_BUSYIDLE_INSERT_EXISTING_TIMER       "Attempt to add existing busy/idle timer"
+#define CPPTRANSPORT_BUSYIDLE_ACTIVE_INSERT_FAILED        "Insert to active busy/idle group failed for timer"
 
 
 #endif //CPPTRANSPORT_BUSYIDLE_TIMER_SET_MESSAGES_H

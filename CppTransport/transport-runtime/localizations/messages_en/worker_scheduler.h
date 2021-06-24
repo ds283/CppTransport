@@ -28,17 +28,17 @@
 #define CPPTRANSPORT_WORKER_SCHEDULER_MESSAGES_H
 
 
-#define CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE         "Internal error: worker index out of range in worker scheduler"
+#define CPPTRANSPORT_SCHEDULING_INDEX_OUT_OF_RANGE         "Worker index out of range in worker scheduler"
 
-#define CPPTRANSPORT_SCHEDULING_ALREADY_ASSIGNED           "Internal error: attempt to schedule work to an already-assigned worker process"
-#define CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED       "Internal error: attempt to de-assign a worker which is not already assigned"
-#define CPPTRANSPORT_SCHEDULING_OVERRELEASE_INFLIGHT       "Internal error: over-release of number of in-flight work items"
-#define CPPTRANSPORT_SCHEDULING_NO_UNASSIGNED              "Internal error: attempt to schedule work, but no unassigned workers"
-#define CPPTRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST           "Internal error: attempt to assign non-existent work item"
+#define CPPTRANSPORT_SCHEDULING_ALREADY_ASSIGNED           "Attempt to schedule work to an already-assigned worker process"
+#define CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED       "Attempt to de-assign a worker which is not already assigned"
+#define CPPTRANSPORT_SCHEDULING_OVERRELEASE_INFLIGHT       "Over-release of number of in-flight work items"
+#define CPPTRANSPORT_SCHEDULING_NO_UNASSIGNED              "Attempt to schedule work, but no unassigned workers"
+#define CPPTRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST           "Attempt to assign non-existent work item"
 #define CPPTRANSPORT_SCHEDULING_ASSIGN_WORKER              "to worker"
-#define CPPTRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH        "Internal error: mismatch in number of unassigned workers"
-#define CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE           "Internal error: attempt to deactivate a worker which is already inactive"
-#define CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT             "Internal error: under-release of number of in-flight work items"
+#define CPPTRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH        "Mismatch in number of unassigned workers"
+#define CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE           "Attempt to deactivate a worker which is already inactive"
+#define CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT             "Under-release of number of in-flight work items"
 
 
 #endif //CPPTRANSPORT_WORKER_SCHEDULER_MESSAGES_H

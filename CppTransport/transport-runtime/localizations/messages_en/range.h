@@ -28,7 +28,7 @@
 #define CPPTRANSPORT_MESSAGES_EN_RANGE_H
 
 
-#define CPPTRANSPORT_RANGE_RANGE                       "Internal error: Out of range when accessing 'range' object"
+#define CPPTRANSPORT_RANGE_RANGE                       "Out of range when accessing 'range' object"
 
 #define CPPTRANSPORT_STEPPING_RANGE_A                  "Stepping range: "
 #define CPPTRANSPORT_STEPPING_RANGE_B                  " steps, spacing = "
@@ -43,7 +43,7 @@
 #define CPPTRANSPORT_AGGREGATION_RANGE_B               "subranges"
 #define CPPTRANSPORT_AGGREGATION_RANGE_C               "Merged range:"
 
-#define CPPTRANSPORT_RANGE_UNKNOWN_TYPE                "Internal error: unknown range type"
+#define CPPTRANSPORT_RANGE_UNKNOWN_TYPE                "Unknown range type"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_RANGE_H
