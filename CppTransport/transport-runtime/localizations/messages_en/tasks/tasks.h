@@ -57,7 +57,7 @@ namespace transport
 
     constexpr auto CPPTRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE = "Internal error: unknown bispectrum template";
 
-    constexpr auto CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE = "fNL_task: can't construct fNL product from non-integrable task";
+    constexpr auto CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE = "fNL_task: can't construct fNL product because parent task does not have a simple linear k-grid";
 
     constexpr auto CPPTRANSPORT_TASK_DATA_NSTAR = "N*";
     constexpr auto CPPTRANSPORT_TASK_DATA_N = "N=";

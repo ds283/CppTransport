@@ -126,13 +126,16 @@ namespace transport
     // tolerance to use when testing whether kc-configurations match our constraints
     constexpr double                        CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE          = (1E-10);
 
+    // whether to store only 3pf k-configurations satisfying the ordering criterion k1 > k2 > k3
+    constexpr bool                          CPPTRANSPORT_DEFAULT_ORDER_KS                   = true;
+
     // log file name
     constexpr auto                          CPPTRANSPORT_LOG_FILENAME_A                     = "worker_";
     constexpr auto                          CPPTRANSPORT_LOG_FILENAME_B                     = "_%3N.log";
     
     constexpr auto                          CPPTRANSPORT_REPORT_FILENAME_A                  = "reports.txt";
     
-    // maximum number of attempts to gain a database lick
+    // maximum number of attempts to gain a database lock
     constexpr unsigned int                  CPPTRANSPORT_DEFAULT_LOCKFILE_ATTEMPTS          = (50);
 
     // maximum number of iterations and search tolerance to use when root-finding to compute horizon exit times

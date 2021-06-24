@@ -173,7 +173,7 @@ namespace transport
       public:
 
         //! constructor
-        threepf_kconfig_database(double cn);
+        explicit threepf_kconfig_database(double cn);
 
         //! deserialization constructor
         threepf_kconfig_database(double cn, sqlite3* handle, twopf_kconfig_database& twopf_db);
@@ -242,26 +242,29 @@ namespace transport
 
       public:
 
+        using insert_result_type = std::pair< boost::optional<record_iterator>, storage_outcome >;
+
         //! add record to the database -- specified by 'cubic mesh' of wavenumber on each leg
         template <typename StoragePolicy>
-        boost::optional<threepf_kconfig_database::record_iterator> add_k1k2k3_record(twopf_kconfig_database& twopf_db,
-                                                                                     double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
+        insert_result_type add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional,
+                                             double k2_conventional, double k3_conventional, StoragePolicy policy);
 
-        //! add record to the database -- specified by 'alpha-beta' mesh parametrization
+        //! add record to the database -- specified by 'kt-alpha-beta' mesh parametrization
         template <typename StoragePolicy>
-        boost::optional<threepf_kconfig_database::record_iterator> add_alphabeta_record(twopf_kconfig_database& twopf_db,
-                                                                                        double kt_conventional, double alpha, double beta, StoragePolicy policy);
+        insert_result_type add_alphabeta_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha,
+                                                double beta, StoragePolicy policy);
 
-        //! add a record to the database -- directly specified;
-        //! returns serial number of stored object
+        //! add a record to the database -- specified as a threepf_kconfig object
+        //! returns an iterator to the stored configuration, if the StoragePolicy in use allowed it
+        //! to be stored.
         template <typename StoragePolicy>
-        boost::optional<threepf_kconfig_database::record_iterator> add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
+        insert_result_type add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
-		    //! lookup record with a given serial number -- non const version
-		    record_iterator lookup(unsigned int serial);
+		    //! lookup record with a given sn number -- non const version
+		    record_iterator lookup(unsigned int sn);
 
-		    //! lookup record with a given serial number -- const version
-		    const_record_iterator lookup(unsigned int serial) const;
+		    //! lookup record with a given sn number -- const version
+		    const_record_iterator lookup(unsigned int sn) const;
 
 
         // INTERFACE -- LOOKUP META-INFORMATION
@@ -330,21 +333,29 @@ namespace transport
 
 				// META-INFORMATION
 
-		    //! cache maximum stored k_t wavenumber
+		    //! cache maximum stored k_t wavenumber (conventional normalization)
 		    double ktmax_conventional;
+
+        //! cache maximum stored k_t wavenumber (comoving normalization)
 		    double ktmax_comoving;
 
-		    //! cache minimum stored k_t wavenumber
+		    //! cache minimum stored k_t wavenumber (conventional normalization)
 		    double ktmin_conventional;
+
+        //! cache minimum stored k_t wavenumber (comoving normalization)
 		    double ktmin_comoving;
 
 
-        //! cache maximum 2pf wavenumber
+        //! cache maximum 2pf wavenumber (conventional normalization)
         double kmax_2pf_conventional;
+
+        //! cache maximum 2pf wavenumber (comoving normalization)
         double kmax_2pf_comoving;
 
-        //! cache minimum 2pf wavenumber
+        //! cache minimum 2pf wavenumber (conventional normalization)
         double kmin_2pf_conventional;
+
+        //! cache minimum 2pf wavenumber (conventional normalization)
         double kmin_2pf_comoving;
 
       };
@@ -484,7 +495,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    boost::optional<threepf_kconfig_database::record_iterator>
+    threepf_kconfig_database::insert_result_type
     threepf_kconfig_database::add_k1k2k3_record
       (twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional,
        StoragePolicy policy)
@@ -511,12 +522,12 @@ namespace transport
         config.t_exit          = 0.0; // this will be updated later, once all k-configurations are known
         config.t_massless      = 0.0; // this will be updated later, once all k-configurations are known
 
-        return(this->add_record(twopf_db, config, policy));
+        return this->add_record(twopf_db, config, policy);
       }
 
 
     template <typename StoragePolicy>
-    boost::optional<threepf_kconfig_database::record_iterator>
+    threepf_kconfig_database::insert_result_type
     threepf_kconfig_database::add_alphabeta_record
       (twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
       {
@@ -543,12 +554,12 @@ namespace transport
 		    config.t_exit          = 0.0; // this will be updated later, once all k-configurations are known
         config.t_massless      = 0.0; // this will be updated later, once all k-configurations are known
 
-        return(this->add_record(twopf_db, config, policy));
+        return this->add_record(twopf_db, config, policy);
       }
 
 
     template <typename StoragePolicy>
-    boost::optional<threepf_kconfig_database::record_iterator>
+    threepf_kconfig_database::insert_result_type
     threepf_kconfig_database::add_record
       (twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
       {
@@ -561,7 +572,9 @@ namespace transport
         bool k3_new_insert = false;
 
         // perform reverse-lookup to find whether twopf kconfig database records already exist for these k_i
-        twopf_kconfig_database::record_iterator k1_rec = twopf_db.find(config.k1_conventional);
+        // we have to do this *before* allowing the StoragePolicy to test whether this configuration
+        // should be included, because the test uses the threepf_kconfig object we are constructing.
+        auto k1_rec = twopf_db.find(config.k1_conventional);
         if(k1_rec != twopf_db.record_end())
           {
             config.k1_serial = (*k1_rec)->serial;
@@ -573,7 +586,7 @@ namespace transport
             config.k1_serial = (*k1_rec)->serial;
           }
 
-        twopf_kconfig_database::record_iterator k2_rec = twopf_db.find(config.k2_conventional);
+        auto k2_rec = twopf_db.find(config.k2_conventional);
         if(k2_rec != twopf_db.record_end())
           {
             config.k2_serial = (*k2_rec)->serial;
@@ -585,7 +598,7 @@ namespace transport
             config.k2_serial = (*k2_rec)->serial;
           }
 
-        twopf_kconfig_database::record_iterator k3_rec = twopf_db.find(config.k3_conventional);
+        auto k3_rec = twopf_db.find(config.k3_conventional);
         if(k3_rec != twopf_db.record_end())
           {
             config.k3_serial = (*k3_rec)->serial;
@@ -600,25 +613,33 @@ namespace transport
         // let policy object decide whether to store
         storage_outcome result = policy(config);
 
-				if(result == storage_outcome::reject_remove) // policy declined to store this configuration
-					{
-            // reset current serial number
-            --this->serial;
+        switch(result)
+          {
+            case storage_outcome::reject_remove:
+            case storage_outcome::reject_symmetry:
+              {
+                // reset current serial number
+                --this->serial;
 
-						// unwind any twopf configurations added
-						if(k1_new_insert) twopf_db.delete_record(config.k1_serial);
-						if(k2_new_insert) twopf_db.delete_record(config.k2_serial);
-						if(k3_new_insert) twopf_db.delete_record(config.k3_serial);
+                // unwind any twopf configurations added
+                if(k1_new_insert) twopf_db.delete_record(config.k1_serial);
+                if(k2_new_insert) twopf_db.delete_record(config.k2_serial);
+                if(k3_new_insert) twopf_db.delete_record(config.k3_serial);
 
-						return boost::none;
-					}
-				else if(result == storage_outcome::reject_retain) // policy declined to store this configuration, but should keep 2pf records
-					{
-            // reset current serial number
-            --this->serial;
+                return {boost::none, result};
+              }
 
-						return boost::none;
-					}
+            case storage_outcome::reject_retain:
+              {
+                // reset current serial number
+                --this->serial;
+
+                return {boost::none, storage_outcome::reject_retain};
+              }
+
+            default:
+              break;
+          }
 
 				// otherwise, policy confirms that this configuration should be retained
 
@@ -647,11 +668,13 @@ namespace transport
         bool k3_store = !k3_rec->is_stored();
         if(k3_store) k3_rec->set_stored();
 
-        std::pair<database_type::iterator, bool> emplaced_value= this->database.emplace(config.serial, threepf_kconfig_record(config, this->store_background, k1_store, k2_store, k3_store));
+        auto emplaced_value =
+          this->database.emplace(config.serial,
+                                 threepf_kconfig_record{config, this->store_background, k1_store, k2_store, k3_store});
 				this->store_background = false;
 
 				this->modified = emplaced_value.second;
-        return threepf_kconfig_database::record_iterator(emplaced_value.first);
+        return insert_result_type{emplaced_value.first, storage_outcome::accept};
       }
 
 
@@ -734,19 +757,19 @@ namespace transport
       }
 
 
-    threepf_kconfig_database::record_iterator threepf_kconfig_database::lookup(unsigned int serial)
+    threepf_kconfig_database::record_iterator threepf_kconfig_database::lookup(unsigned int sn)
 	    {
-        database_type::iterator t = this->database.find(serial);          // find has logarithmic complexity
+        auto t = this->database.find(sn);    // find has logarithmic complexity
 
-        return threepf_kconfig_database::record_iterator(t);
+        return {t};
 	    }
 
 
-    threepf_kconfig_database::const_record_iterator threepf_kconfig_database::lookup(unsigned int serial) const
+    threepf_kconfig_database::const_record_iterator threepf_kconfig_database::lookup(unsigned int sn) const
 	    {
-        database_type::const_iterator t = this->database.find(serial);    // find has logarithmic complexity
+        auto t = this->database.find(sn);    // find has logarithmic complexity
 
-        return threepf_kconfig_database::const_record_iterator(t);
+        return {t};
 	    }
 
 

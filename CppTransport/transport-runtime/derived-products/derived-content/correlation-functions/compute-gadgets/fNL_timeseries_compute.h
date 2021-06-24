@@ -229,8 +229,8 @@ namespace transport
                 throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
               }
 
-            assert(this->tk->is_integrable());
-            if(!this->tk->is_integrable())
+            assert(this->tk->is_simple_linear_grid());
+            if(!this->tk->is_simple_linear_grid())
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE << " " << this->tk->get_name();

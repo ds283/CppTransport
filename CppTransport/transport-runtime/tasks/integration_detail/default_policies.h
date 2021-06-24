@@ -33,12 +33,20 @@
 namespace transport
   {
 
-    enum class storage_outcome { accept, reject_retain, reject_remove };
+    enum class storage_outcome
+      {
+        accept,          // 3pf configuration is stored
+        reject_retain,   // 3pf configuration is not stored, but the 2pf configurations it generated are kept
+        reject_remove,   // 3pf configuration is not stored, and the 2pf configurations it generated are removed
+        reject_symmetry  // same as reject remove, but the rejection is for symmetry reasons (such as
+                         // imposing the condition k1 > k2 > k3) and should not flag the grid as not simple
+      };
 
     namespace task_policy_impl
       {
 
-        // default storage policy stores all triangles that satisfy k1 > k2 > k3
+        // default storage policy optionally stores only triangles that satisfy k1 > k2 > k3
+        // this is usually enabled by default
         class DefaultStoragePolicy
           {
 
@@ -47,8 +55,9 @@ namespace transport
           public:
 
             //! constructor is default
-            DefaultStoragePolicy(double tol = CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE)
-              : tolerance(std::abs(tol))
+            DefaultStoragePolicy(bool ord=CPPTRANSPORT_DEFAULT_ORDER_KS, double tol=CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE)
+              : order_ks{ord},
+                tolerance{std::abs(tol)}
               {
               }
 
@@ -60,22 +69,28 @@ namespace transport
 
           public:
 
-            enum storage_outcome operator()(const threepf_kconfig& data)
+            storage_outcome operator()(const threepf_kconfig& data)
               {
+                if(!order_ks)
+                  return storage_outcome::accept;
+
                 // impose k1 > k2 > k3
                 if(data.k2_conventional - data.k1_conventional > this->tolerance)
-                  return storage_outcome::reject_remove;
+                  return storage_outcome::reject_symmetry;
 
                 if(data.k3_conventional - data.k2_conventional > this->tolerance)
-                  return storage_outcome::reject_remove;
+                  return storage_outcome::reject_symmetry;
 
-                return(storage_outcome::accept);
+                return storage_outcome::accept;
               }
 
 
             // INTERNAL DATA
 
           private:
+
+            //! order k-modes?
+            bool order_ks;
 
             //! tolerance
             double tolerance;
@@ -104,9 +119,12 @@ namespace transport
 
           public:
 
+            //! operator returns true if this configuration represents a valid momentum triangle, otherwise false.
+            //! If false, the configuraiton is rejected. Triangular configurations are not automatically
+            //! accepted: this is determined by a StoragePolicy object
             bool operator()(unsigned int i, unsigned int j, unsigned int k, double k1, double k2, double k3)
               {
-                // impose triangle
+                // impose triangle condition
                 double max = std::max(std::max(k1, k2), k3);
                 return(k1 + k2 + k3 - 2.0*max >= -this->tolerance);
               }
@@ -144,6 +162,9 @@ namespace transport
 
           public:
 
+            //! operator returns true if this configuration represents a valid momentum triangle, otherwise false.
+            //! If false, the configuraiton is rejected. Triangular configurations are not automatically
+            //! accepted: this is determined by a StoragePolicy object
             bool operator()(double alpha, double beta)
               {
                 // beta should lie between 0 and 1

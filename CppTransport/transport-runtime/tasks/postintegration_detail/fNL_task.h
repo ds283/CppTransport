@@ -123,8 +123,8 @@ namespace transport
 	    : postintegration_task<number>(nm, t),
 	      type(ty)
 	    {
-        // ensure we are trying to construct this fNL task from an integrable threepf task
-        if(!t.is_integrable())
+        // ensure we are trying to construct this fNL task from an simple_linear_grid threepf task
+        if(!t.is_simple_linear_grid())
 	        {
             std::ostringstream msg;
             msg << CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE << " '" << t.get_name() << "'";

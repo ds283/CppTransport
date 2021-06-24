@@ -52,7 +52,10 @@
 namespace transport
 	{
 
+	  // in 2021.1, the CPPTRANSPORT_NODE_THREEPF_INTEGRABLE field was renamed to
+	  // CPPTRANSPORT_NODE_THREEPF_SIMPLE_CUBIC_GRID
     constexpr auto CPPTRANSPORT_NODE_THREEPF_INTEGRABLE = "integrable";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_SIMPLE_CUBIC_GRID = "simple-cubic-grid";
 
     constexpr auto CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING = "k-spacing";
     constexpr auto CPPTRANSPORT_NODE_THREEPF_ALPHABETA_KT_SPACING = "kt-spacing";
@@ -85,10 +88,10 @@ namespace transport
       public:
 
         //! supply 'derivable_task' interface
-        task_type get_type() const override final { return task_type::integration; }
+        task_type get_type() const final { return task_type::integration; }
 
         //! respond to task type query
-        integration_task_type get_task_type() const override final { return integration_task_type::threepf; }
+        integration_task_type get_task_type() const final { return integration_task_type::threepf; }
 
 
         // INTERFACE - THREEPF K-CONFIGURATIONS
@@ -102,10 +105,11 @@ namespace transport
 
         //! Should be called once the database has been populated.
         //! Horizon exit times are stored when the database is serialized, so does not need to be called again.
-        virtual void compute_horizon_exit_times() override;
+        void compute_horizon_exit_times() override;
 
-        //! Determine whether this task is integrable
-        bool is_integrable() const { return(this->integrable); }
+        //! Determine whether this task has a simple linear grid, i.e., a cubic lattice in each coordinate
+        //! (either k1, k2, k3 or k, alpha, beta) with no missing grid points
+        bool is_simple_linear_grid() const { return(this->simple_linear_grid); }
 
         //! get size of a voxel on the integration grid
         virtual double voxel_size() const = 0;
@@ -135,7 +139,7 @@ namespace transport
 		    std::vector<number> get_ics_exit_vector(const threepf_kconfig& kconfig, threepf_ics_exit_type type=threepf_ics_exit_type::smallest_wavenumber_exit) const;
 
         //! Build time-sample database
-        const time_config_database get_time_config_database(const threepf_kconfig& config) const;
+        time_config_database get_time_config_database(const threepf_kconfig& config) const;
 
 
         // INTERFACE - FAST FORWARD MANAGEMENT
@@ -146,7 +150,7 @@ namespace transport
         double get_initial_time(const threepf_kconfig& config) const;
 
         //! Set adaptics ics setting
-        virtual threepf_task<number>& set_adaptive_ics(bool g) override
+        threepf_task<number>& set_adaptive_ics(bool g) override
           {
             this->adaptive_ics = g;
             this->validate_subhorizon_efolds();
@@ -155,7 +159,7 @@ namespace transport
           }
 
         //! Set number of adaptive e-folds
-        virtual threepf_task<number>& set_adaptive_ics_efolds(double N) override
+        threepf_task<number>& set_adaptive_ics_efolds(double N) override
           {
             this->adaptive_ics = true;
             this->adaptive_efolds = (N >= 0.0 ? N : this->adaptive_efolds);
@@ -170,7 +174,7 @@ namespace transport
       public:
 
         //! Serialize this task to the repository
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // WRITE K-CONFIGURATION DATABASE
@@ -178,10 +182,10 @@ namespace transport
       public:
 
         //! Write k-configuration database to disk
-        virtual void write_kconfig_database(sqlite3* handle) override;
+        void write_kconfig_database(sqlite3* handle) override;
 
 		    //! Check whether k-configuration databases have been modified
-		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db->is_modified() || this->twopf_db_task<number>::is_kconfig_database_modified()); }
+		    bool is_kconfig_database_modified() const override { return(this->threepf_db->is_modified() || this->twopf_db_task<number>::is_kconfig_database_modified()); }
 
 
         // INTERNAL DATA
@@ -196,8 +200,12 @@ namespace transport
 		    //! shared database
         std::shared_ptr<threepf_kconfig_database> threepf_db;
 
-        //! Is this threepf task integrable? ie., have we dropped any configurations, and is the spacing linear?
-        bool integrable;
+        //! Is this threepf task a simple linear grid? set to false if the grid is not cubic, if any
+        //! configurations have been dropped (except for symmetry reasons), or if the spacing is not linear.
+        //! Currently we can only compute projections with bispectrum templates for simple cubic grids.
+        //! This makes the grid a cubic lattice in (k1, k2, k3) or (k, alpha, beta), depending which
+        //! coordinates are in use.
+        bool simple_linear_grid;
 
 	    };
 
@@ -212,7 +220,7 @@ namespace transport
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool adpt_ics)
 	    : twopf_db_task<number>{nm, i, t, adpt_ics},
-	      integrable{true}
+        simple_linear_grid{true}
 	    {
         threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar);
 	    }
@@ -220,12 +228,23 @@ namespace transport
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
-	    : twopf_db_task<number>{nm, reader, handle, i}
+	    : twopf_db_task<number>{nm, reader, handle, i},
+        simple_linear_grid{false}
 	    {
 		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar, handle, *this->twopf_db_task<number>::twopf_db);
 
-        //! deserialize integrable status
-        integrable = reader[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
+        // deserialize simple_linear_grid status
+        // in 2021.1 this field was renamed from CPPTRANSPORT_NODE_THREEPF_INTEGRABLE to
+        // CPPTRANSPORT_NODE_THREEPF_SIMPLE_CUBIC_GRID. We prefer the new field, but if it isn't present
+        // we can revert to the old one
+        if(reader.isMember(CPPTRANSPORT_NODE_THREEPF_SIMPLE_CUBIC_GRID))
+          {
+            simple_linear_grid = reader[CPPTRANSPORT_NODE_THREEPF_SIMPLE_CUBIC_GRID].asBool();
+          }
+        else if(reader.isMember(CPPTRANSPORT_NODE_THREEPF_INTEGRABLE))
+          {
+            simple_linear_grid = reader[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
+          }
 
         // rebuild database of stored times; this isn't serialized but recomputed on-the-fly
         this->cache_stored_time_config_database(threepf_db->get_kmax_2pf_conventional());
@@ -235,8 +254,8 @@ namespace transport
     template <typename number>
     void threepf_task<number>::serialize(Json::Value& writer) const
 	    {
-        // serialize integrable status
-        writer[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE] = this->integrable;
+        // serialize simple_linear_grid status
+        writer[CPPTRANSPORT_NODE_THREEPF_SIMPLE_CUBIC_GRID] = this->simple_linear_grid;
 
 		    // threepf database is serialized separately to a SQLite database
         // this serialization is handled by the repository layer via write_kconfig_database() below
@@ -254,7 +273,7 @@ namespace transport
 
 
     template <typename number>
-    const time_config_database threepf_task<number>::get_time_config_database(const threepf_kconfig& config) const
+    time_config_database threepf_task<number>::get_time_config_database(const threepf_kconfig& config) const
       {
         return this->build_time_config_database(this->get_initial_time(config), this->threepf_db->get_kmax_2pf_conventional());
       }
@@ -472,10 +491,10 @@ namespace transport
       public:
 
         //! get size of a voxel on the integration grid
-        virtual double voxel_size() const override { return(this->spacing*this->spacing*this->spacing); }
+        double voxel_size() const override { return(this->spacing*this->spacing*this->spacing); }
 
         //! get measure; here, just dk1 dk2 dk3 so there is nothing to do
-        virtual number measure(const threepf_kconfig& config) const override { return(1.0); }
+        number measure(const threepf_kconfig& config) const override { return(1.0); }
 
 
         // SERIALIZATION (implements a 'serialiazble' interface)
@@ -483,7 +502,7 @@ namespace transport
       public:
 
         //! Serialize this task to the repository
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -491,7 +510,7 @@ namespace transport
       public:
 
         //! Virtual copy
-        virtual threepf_cubic_task<number>* clone() const override { return new threepf_cubic_task<number>(static_cast<const threepf_cubic_task<number>&>(*this)); }
+        threepf_cubic_task<number>* clone() const override { return new threepf_cubic_task<number>(static_cast<const threepf_cubic_task<number>&>(*this)); }
 
 
         // INTERNAL DATA
@@ -521,23 +540,27 @@ namespace transport
 	                {
                     if(triangle(j, k, l, ks[j], ks[k], ks[l]))      // ask policy object whether this is a triangle
 	                    {
-                        auto record = this->threepf_task<number>::threepf_db->add_k1k2k3_record(
-                          *this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
+                        auto result =
+                          this->threepf_task<number>::threepf_db->add_k1k2k3_record(
+                            *this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
 
-                        if(!record)  // storage policy declined to store this configuration
+                        auto outcome = result.second;
+                        if(outcome == storage_outcome::reject_remove ||
+                           outcome == storage_outcome::reject_retain)  // storage policy declined to store this configuration
                           {
-                            this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
+                            // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
+                            this->threepf_task<number>::simple_linear_grid = false;
                           }
 	                    }
 	                }
 	            }
 	        }
 
-        // need linear spacing to be integrable
-        if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
+        // is the spacing is not linear, then disable the simple_linear_grid flag
+        if(!ks.is_simple_linear()) this->threepf_task<number>::simple_linear_grid = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
-        std::unique_ptr<reporting::key_value> kv = this->get_model()->make_key_value();
+        auto kv = this->get_model()->make_key_value();
         kv->set_tiling(true);
         kv->set_title(this->get_name());
 
@@ -597,10 +620,10 @@ namespace transport
       public:
 
         //! get size of a voxel on the integration grid
-        virtual double voxel_size() const override { return(this->kt_spacing*this->alpha_spacing*this->beta_spacing); }
+        double voxel_size() const override { return(this->kt_spacing*this->alpha_spacing*this->beta_spacing); }
 
         //! get measure; here k_t^2 dk_t dalpha dbeta
-        virtual number measure(const threepf_kconfig& config) const override { return(static_cast<number>(config.kt_conventional *config.kt_conventional)); }
+        number measure(const threepf_kconfig& config) const override { return(static_cast<number>(config.kt_conventional *config.kt_conventional)); }
 
 
         // SERIALIZATION (implements a 'serialiazble' interface)
@@ -608,7 +631,7 @@ namespace transport
       public:
 
         //! Serialize this task to the repository
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -616,7 +639,7 @@ namespace transport
       public:
 
         //! Virtual copy
-        virtual threepf_alphabeta_task<number>* clone() const override { return new threepf_alphabeta_task<number>(static_cast<const threepf_alphabeta_task<number>&>(*this)); }
+        threepf_alphabeta_task<number>* clone() const override { return new threepf_alphabeta_task<number>(static_cast<const threepf_alphabeta_task<number>&>(*this)); }
 
 
         // INTERNAL DATA
@@ -652,20 +675,24 @@ namespace transport
 	                {
                     if(triangle(alphas[k], betas[l]))     // ask policy object to decide whether this is a triangle
 	                    {
-                        auto record = this->threepf_task<number>::threepf_db->add_alphabeta_record(
-                          *this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
+                        auto result =
+                          this->threepf_task<number>::threepf_db->add_alphabeta_record(
+                            *this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
 
-                        if(!record)   // storage policy declined to store this configuration
+                        auto outcome = result.second;
+                        if(outcome == storage_outcome::reject_remove ||
+                           outcome == storage_outcome::reject_retain)  // storage policy declined to store this configuration
                           {
-                            this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
+                            // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
+                            this->threepf_task<number>::simple_linear_grid = false;
                           }
 	                    }
 	                }
 	            }
 	        }
 
-        // need linear spacing to be integrable
-        if(!kts.is_simple_linear() || !alphas.is_simple_linear() || !betas.is_simple_linear()) this->threepf_task<number>::integrable = false;
+        // need linear spacing to be simple_linear_grid
+        if(!kts.is_simple_linear() || !alphas.is_simple_linear() || !betas.is_simple_linear()) this->threepf_task<number>::simple_linear_grid = false;
         kt_spacing    = (kts.get_max() - kts.get_min()) / kts.get_steps();
         alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
         beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();

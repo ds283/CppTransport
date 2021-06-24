@@ -82,8 +82,8 @@ namespace transport
         //! set pairing status
         void set_paired(bool g) { this->paired = g; }
 
-        //! Determine whether this task is integrable; inherited from parent threepf_task
-        bool is_integrable() const { return(this->ptk_as_threepf->is_integrable()); }
+        //! Determine whether this task is simple_linear_grid; inherited from parent threepf_task
+        bool is_simple_linear_grid() const { return(this->ptk_as_threepf->is_simple_linear_grid()); }
 
         //! Provide access to threepf k-configuration database
         const threepf_kconfig_database& get_threepf_database() const { return(this->ptk_as_threepf->get_threepf_database()); }

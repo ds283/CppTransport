@@ -278,6 +278,7 @@ namespace transport
                 Json::Value p(Json::objectValue);
                 this->products.serialize(p);
                 writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_PRECOMPUTED] = p;
+                break;
               }
 
             case task_type::output:
@@ -342,6 +343,7 @@ namespace transport
             case task_type::postintegration:
               {
                 this->products |= obj.products;
+                break;
               }
 
             case task_type::output:

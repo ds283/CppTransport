@@ -1494,8 +1494,8 @@ namespace transport
             if(threepf_db.size() <= CPPTRANSPORT_DEFAULT_HTML_DATABASE_MAX_SIZE) this->write_kconfig_db_modal(bundle, threepf_db, k_dd);
             col3_list.add_element(k_dt).add_element(k_dd);
 
-            this->make_data_element("Integrable", tk.is_integrable() ? "Yes" : "No", col3_list);
-            if(tk.is_integrable())
+            this->make_data_element("Simple linear grid", tk.is_simple_linear_grid() ? "Yes" : "No", col3_list);
+            if(tk.is_simple_linear_grid())
               {
                 this->make_data_element("Voxel size", format_number(tk.voxel_size(), this->misc_precision), col3_list);
               }
