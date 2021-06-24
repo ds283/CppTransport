@@ -239,6 +239,7 @@ namespace transport
                 ics = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_ICS].asBool();
                 statistics = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_STATISTICS].asBool();
                 spectral_data = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_SPECTRAL].asBool();
+                break;
               }
 
             case task_type::postintegration:
@@ -247,6 +248,7 @@ namespace transport
                 const Json::Value& pdata = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_PRECOMPUTED];
                 precomputed_products p(pdata);
                 products = p;
+                break;
               }
 
             case task_type::output:
