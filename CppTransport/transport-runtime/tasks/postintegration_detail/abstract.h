@@ -61,8 +61,8 @@ namespace transport
         //! override copy constructor to perform a deep copy
         postintegration_task(const postintegration_task<number>& obj);
 
-        //! destroy a postintegration_task
-        virtual ~postintegration_task();
+        //! destructor can be defaulted
+        ~postintegration_task() override = default;
 
 
         // INTERFACE
@@ -78,7 +78,7 @@ namespace transport
       public:
 
         //! Get database of stored time configurations
-        virtual const time_config_database& get_stored_time_config_database() const override { return(this->ptk->get_stored_time_config_database()); }
+        const time_config_database& get_stored_time_config_database() const override { return(this->ptk->get_stored_time_config_database()); }
 
 
         // INTERFACE
@@ -86,7 +86,7 @@ namespace transport
       public:
 
         //! Get parent integration task
-        derivable_task<number>* get_parent_task() const { return(this->ptk); }
+        derivable_task<number>* get_parent_task() const { return this->ptk.get(); }
 
 
         // SERIALIZATION (implements a 'serializable' interface)
@@ -94,7 +94,7 @@ namespace transport
       public:
 
         //! serialize this object
-        virtual void serialize(Json::Value& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // WRITE TO STREAM
@@ -110,7 +110,7 @@ namespace transport
       protected:
 
         //! Parent task, which must be of derivable type
-        derivable_task<number>* ptk;
+        std::unique_ptr< derivable_task<number> > ptk;
 
 	    };
 
@@ -134,8 +134,10 @@ namespace transport
     template <typename number>
     postintegration_task<number>::postintegration_task(const std::string& nm, const derivable_task<number>& t)
 	    : derivable_task<number>(nm),
-	      ptk(dynamic_cast<derivable_task<number>*>(t.clone()))
+	      ptk(nullptr)
 	    {
+	      // copy supplied derivable task and assign it to ptk
+	      ptk.reset(dynamic_cast<derivable_task<number>*>(t.clone()));
         assert(ptk != nullptr);
 	    }
 
@@ -143,8 +145,10 @@ namespace transport
     template <typename number>
     postintegration_task<number>::postintegration_task(const postintegration_task<number>& obj)
 	    : derivable_task<number>(obj),
-	      ptk(dynamic_cast<derivable_task<number>*>(obj.ptk->clone()))
+	      ptk(nullptr)
 	    {
+	      // copy supplied derivable task and assign it to ptk
+	      ptk.reset(dynamic_cast<derivable_task<number>*>(obj.ptk->clone()));
         assert(ptk != nullptr);
 	    }
 
@@ -160,20 +164,13 @@ namespace transport
         std::unique_ptr< task_record<number> > record = finder(tk_name);
         assert(record.get() != nullptr);
 
-        ptk = dynamic_cast< derivable_task<number>* >(record->get_abstract_task()->clone());
+        ptk.reset(dynamic_cast< derivable_task<number>* >(record->get_abstract_task()->clone()));
         if(ptk == nullptr)
 	        {
             std::stringstream msg;
             msg << CPPTRANSPORT_REPO_ZETA_TASK_NOT_DERIVABLE << " '" << tk_name << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
-	    }
-
-
-    template <typename number>
-    postintegration_task<number>::~postintegration_task()
-	    {
-        delete this->ptk;
 	    }
 
 

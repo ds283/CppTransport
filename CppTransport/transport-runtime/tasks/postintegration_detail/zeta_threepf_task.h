@@ -83,13 +83,13 @@ namespace transport
         void set_paired(bool g) { this->paired = g; }
 
         //! Determine whether this task is simple_linear_grid; inherited from parent threepf_task
-        bool is_simple_linear_grid() const { return(this->ptk_as_threepf->is_simple_linear_grid()); }
+        bool is_simple_linear_grid() const { return(this->ptk_as_threepf.is_simple_linear_grid()); }
 
         //! Provide access to threepf k-configuration database
-        const threepf_kconfig_database& get_threepf_database() const { return(this->ptk_as_threepf->get_threepf_database()); }
+        const threepf_kconfig_database& get_threepf_database() const { return(this->ptk_as_threepf.get_threepf_database()); }
 
         //! Get measure at a particular k-point
-        number measure(const threepf_kconfig& config) const { return(this->ptk_as_threepf->measure(config)); }
+        number measure(const threepf_kconfig& config) const { return(this->ptk_as_threepf.measure(config)); }
 
 
         // SERIALIZATION
@@ -112,7 +112,7 @@ namespace transport
 
         //! cast-up version of parent task
         //! TODO: it would be preferable to avoid this somehow
-        threepf_task<number>* ptk_as_threepf;
+        threepf_task<number>& ptk_as_threepf;
 
         //! is this task paired to its parent integration task? ie., both tasks are performed simultaneously
         bool paired;
@@ -130,26 +130,17 @@ namespace transport
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t)
 	    : zeta_twopf_db_task<number>(nm, t),
-	      ptk_as_threepf(nullptr),
+	      ptk_as_threepf(dynamic_cast< threepf_task<number>& >(*this->ptk)),
 	      paired(false)
 	    {
-        ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
-        assert(ptk_as_threepf != nullptr);
-
-        if(ptk_as_threepf == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
 	    }
 
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : zeta_twopf_db_task<number>(nm, reader, finder),
-	      ptk_as_threepf(nullptr)
+	      ptk_as_threepf(dynamic_cast< threepf_task<number>& >(*this->ptk))
 	    {
-        ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
-        assert(ptk_as_threepf != nullptr);
-
-        if(ptk_as_threepf == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
-
         this->paired = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
 	    }
 
@@ -157,13 +148,9 @@ namespace transport
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const zeta_threepf_task<number>& obj)
 	    : zeta_twopf_db_task<number>(obj),
-	      ptk_as_threepf(nullptr),
+	      ptk_as_threepf(dynamic_cast< threepf_task<number>& >(*this->ptk)),
 	      paired(obj.paired)
 	    {
-        ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
-        assert(ptk_as_threepf != nullptr);
-
-        if(ptk_as_threepf == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
 	    }
 
 
