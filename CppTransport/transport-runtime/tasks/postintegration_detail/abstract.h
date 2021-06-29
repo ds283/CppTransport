@@ -86,6 +86,9 @@ namespace transport
       public:
 
         //! Get parent integration task
+        // TODO: refactor this so the return type is a reference, not a pointer. However, this isn't completely
+        //  trivial because we use a number of casts of the returned derivable_task<number>* to distinguish
+        //  different cases. This can probably be handled, but requires more than just syntactic refactoring.
         derivable_task<number>* get_parent_task() const { return this->ptk.get(); }
 
 
