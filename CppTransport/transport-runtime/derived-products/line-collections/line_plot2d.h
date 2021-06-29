@@ -179,7 +179,7 @@ namespace transport
 		      public:
 
 				    //! Generate our derived output
-				    virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags,
+				    virtual std::list<std::string> derive(datapipe<number>& pipe, const tag_list& tags,
                                                   slave_message_buffer& messages, local_environment& env, argument_cache& args) override;
 
 
@@ -452,7 +452,7 @@ namespace transport
 
 
 				template <typename number>
-				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags,
+				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const tag_list& tags,
                                                            slave_message_buffer& messages, local_environment& env, argument_cache& args)
 					{
             slave_message_context ctx(messages, this->name);

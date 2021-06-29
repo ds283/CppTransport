@@ -98,7 +98,7 @@ namespace transport
 
 				    //! generate data lines for plotting
 				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                      const std::list<std::string>& tags, slave_message_buffer& messages) const override;
+                                      const tag_list& tags, slave_message_buffer& messages) const override;
 
 		      protected:
 
@@ -237,7 +237,7 @@ namespace transport
 
 				template <typename number>
 				void u3_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                           const std::list<std::string>& tags, slave_message_buffer& messages) const
+                                           const tag_list& tags, slave_message_buffer& messages) const
 					{
 				    // attach our datapipe to a content group
 				    std::string group = this->attach(pipe, tags);

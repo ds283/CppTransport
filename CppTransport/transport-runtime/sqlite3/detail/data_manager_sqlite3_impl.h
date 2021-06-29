@@ -2722,7 +2722,7 @@ namespace transport
     template <typename number>
     std::unique_ptr< content_group_record<integration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_integration_content
-      (datapipe<number>& pipe, integration_content_finder<number>& finder, const std::string& name, const std::list<std::string>& tags)
+      (datapipe<number>& pipe, integration_content_finder<number>& finder, const std::string& name, const tag_list& tags)
       {
         // find a suitable content group for this task; will throw an exception if no suitable content group can be found
         auto group = finder(name, tags);
@@ -2740,7 +2740,7 @@ namespace transport
     template <typename number>
     std::unique_ptr< content_group_record<postintegration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_postintegration_content
-      (datapipe<number>& pipe, postintegration_content_finder<number>& finder, const std::string& name, const std::list<std::string>& tags)
+      (datapipe<number>& pipe, postintegration_content_finder<number>& finder, const std::string& name, const tag_list& tags)
       {
 
         // find a suitable content group for this task; will throw an exception if no suitable content group can be found

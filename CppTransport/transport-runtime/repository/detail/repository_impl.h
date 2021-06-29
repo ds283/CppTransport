@@ -212,7 +212,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< integration_writer<number> >
-    repository<number>::new_integration_task_content(integration_task_record<number>& rec, const std::list<std::string>& tags,
+    repository<number>::new_integration_task_content(integration_task_record<number>& rec, const tag_list& tags,
                                                      unsigned int worker, unsigned int workgroup, unsigned int num_cores, std::string suffix)
       {
         std::unique_ptr< repository_integration_writer_commit<number> > commit = std::make_unique< repository_integration_writer_commit<number> >(*this);
@@ -238,7 +238,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
-    repository<number>::new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags,
+    repository<number>::new_output_task_content(output_task_record<number>& rec, const tag_list& tags,
                                                 unsigned int worker, unsigned int num_cores, std::string suffix)
       {
         std::unique_ptr< repository_derived_content_writer_commit<number> > commit = std::make_unique< repository_derived_content_writer_commit<number> >(*this);
@@ -263,7 +263,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
-    repository<number>::new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags,
+    repository<number>::new_postintegration_task_content(postintegration_task_record<number>& rec, const tag_list& tags,
                                                          unsigned int worker, unsigned int num_cores, std::string suffix)
       {
         std::unique_ptr< repository_postintegration_writer_commit<number> > commit = std::make_unique< repository_postintegration_writer_commit<number> >(*this);
@@ -289,7 +289,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< integration_writer<number> >
-    repository<number>::base_new_integration_task_content(integration_task_record<number>& rec, const std::list<std::string>& tags,
+    repository<number>::base_new_integration_task_content(integration_task_record<number>& rec, const tag_list& tags,
                                                           unsigned int worker, unsigned int workgroup, unsigned int num_cores,
                                                           std::unique_ptr< repository_integration_writer_commit<number> > commit,
                                                           std::unique_ptr< repository_integration_writer_abort<number> > abort,
@@ -358,7 +358,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
-    repository<number>::base_new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags,
+    repository<number>::base_new_output_task_content(output_task_record<number>& rec, const tag_list& tags,
                                                      unsigned int worker, unsigned int num_cores,
                                                      std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
                                                      std::unique_ptr< repository_derived_content_writer_abort<number> > abort,
@@ -423,7 +423,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
-    repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags,
+    repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>& rec, const tag_list& tags,
                                                               unsigned int worker, unsigned int num_cores,
                                                               std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
                                                               std::unique_ptr< repository_postintegration_writer_abort<number> > abort,
@@ -779,16 +779,16 @@ namespace transport
 
     template<typename number>
     std::unique_ptr< content_group_record<integration_payload> >
-    repository<number>::find_integration_task_output(const std::string& name, const std::list<std::string>& tags)
+    repository<number>::find_integration_task_output(const std::string& name, const tag_list& tags)
       {
         // search for content groups associated with this task
-        integration_content_db db = this->enumerate_integration_task_content(name);
+        auto db = this->enumerate_integration_task_content(name);
 
         // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const typename content_group_set<integration_payload>::value_type& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<integration_payload> > >& group) { return(!group.second->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const typename content_group_set<integration_payload>::value_type& group) { return(!group.second->check_tags(tags)); } );
 
         // if no matching groups, raise an exception
         if(db.empty())
@@ -804,22 +804,22 @@ namespace transport
 
         std::unique_ptr< content_group_record<integration_payload> > rval;
         (*db.rbegin()).second.swap(rval);
-        return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        return rval;
       }
 
 
     template<typename number>
     std::unique_ptr< content_group_record<postintegration_payload> >
-    repository<number>::find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags)
+    repository<number>::find_postintegration_task_output(const std::string& name, const tag_list& tags)
       {
         // search for content groups associated with this task
-        postintegration_content_db db = this->enumerate_postintegration_task_content(name);
+        auto db = this->enumerate_postintegration_task_content(name);
 
         // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const typename content_group_set<postintegration_payload>::value_type& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< content_group_record<postintegration_payload> > >& group) { return(!group.second.get()->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const typename content_group_set<postintegration_payload>::value_type& group) { return(!group.second.get()->check_tags(tags)); } );
 
         // if no matching groups, raise an exception
         if(db.empty())
@@ -835,7 +835,7 @@ namespace transport
 
         std::unique_ptr< content_group_record<postintegration_payload> > rval;
         (*db.rbegin()).second.swap(rval);
-        return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        return rval;    // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
   }   // namespace transport

@@ -247,12 +247,12 @@ namespace transport
 
         //! Master node: Dispatch an integration task to the worker processes.
         //! Makes a queue then invokes master_dispatch_integration_queue()
-        void dispatch_integration_task(integration_task_record<number>& rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
+        void dispatch_integration_task(integration_task_record<number>& rec, bool seeded, const std::string& seed_group, const tag_list& tags);
 
         //! Master node: Dispatch an integration queue to the worker processes.
         template <typename TaskObject>
         void schedule_integration(integration_task_record<number>& rec, TaskObject* tk,
-                                  bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
+                                  bool seeded, const std::string& seed_group, const tag_list& tags,
                                   slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Seed an integration writer using a previous integration
@@ -281,24 +281,24 @@ namespace transport
       protected:
 
         //! Master node: Dispatch a postintegration task to the worker processes.
-        void dispatch_postintegration_task(postintegration_task_record<number>& rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
+        void dispatch_postintegration_task(postintegration_task_record<number>& rec, bool seeded, const std::string& seed_group, const tag_list& tags);
 
         //! Master node: validate that a suitable content group exists before scheduling a postintegration task
-        void validate_content_group(integration_task<number>* tk, const std::list<std::string>& tags);
+        void validate_content_group(integration_task<number>* tk, const tag_list& tags);
 
         //! Master node: validate that a suitable content group exists before scheduling a postintegration task
-        void validate_content_group(postintegration_task<number>* tk, const std::list<std::string>& tags);
+        void validate_content_group(postintegration_task<number>* tk, const tag_list& tags);
 
         //! Master node: Dispatch a postintegration queue to the worker processes
         template <typename TaskObject>
         void schedule_postintegration(postintegration_task_record<number>& rec, TaskObject* tk,
-                                      bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
+                                      bool seeded, const std::string& seed_group, const tag_list& tags,
                                       slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Dispatch a paired postintegration queue to the worker processes
         template <typename TaskObject, typename ParentTaskObject>
         void schedule_paired_postintegration(postintegration_task_record<number>& rec, TaskObject* tk, ParentTaskObject* ptk,
-                                             bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
+                                             bool seeded, const std::string& seed_group, const tag_list& tags,
                                              slave_work_event::event_type begin_label,
                                              slave_work_event::event_type end_label);
 
@@ -312,13 +312,13 @@ namespace transport
                                                  TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group);
 
         //! Master node: Pass new postintegration task to workers
-        bool postintegration_task_to_workers(postintegration_writer<number>& writer, const std::list<std::string>& tags,
+        bool postintegration_task_to_workers(postintegration_writer<number>& writer, const tag_list& tags,
                                              integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
                                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Pass new paired postintegration task to workers
         bool paired_postintegration_task_to_workers(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
-                                                    const std::list<std::string>& tags,
+                                                    const tag_list& tags,
                                                     integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
@@ -332,10 +332,10 @@ namespace transport
       protected:
 
         //! Master node: Dispatch an output 'task' (ie., generation of derived data products) to the worker processes
-        void dispatch_output_task(output_task_record<number>& rec, const std::list<std::string>& tags);
+        void dispatch_output_task(output_task_record<number>& rec, const tag_list& tags);
 
         //! Master node: Pass new output task to the workers
-        bool output_task_to_workers(derived_content_writer<number>& writer, const std::list<std::string>& tags,
+        bool output_task_to_workers(derived_content_writer<number>& writer, const tag_list& tags,
                                     integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 

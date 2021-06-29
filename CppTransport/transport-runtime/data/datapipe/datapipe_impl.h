@@ -233,7 +233,7 @@ namespace transport
 
 
     template <typename number>
-    std::string datapipe<number>::attach(const derivable_task<number>& tk, const std::list<std::string>& tags)
+    std::string datapipe<number>::attach(const derivable_task<number>& tk, const tag_list& tags)
       {
         // check that we are not already attached to a content group
         assert(this->validate_unattached());

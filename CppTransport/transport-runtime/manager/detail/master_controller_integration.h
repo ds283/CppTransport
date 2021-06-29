@@ -43,7 +43,7 @@ namespace transport
 
     template <typename number>
     void master_controller<number>::dispatch_integration_task(integration_task_record<number>& rec, bool seeded, const std::string& seed_group,
-                                                              const std::list<std::string>& tags)
+                                                              const tag_list& tags)
       {
         // can't process a task if there are no workers
         if(this->world.size() == 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
@@ -78,7 +78,7 @@ namespace transport
     template <typename number>
     template <typename TaskObject>
     void master_controller<number>::schedule_integration(integration_task_record<number>& rec, TaskObject* tk,
-                                                         bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
+                                                         bool seeded, const std::string& seed_group, const tag_list& tags,
                                                          slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         // check whether this task has a default checkpoint interval

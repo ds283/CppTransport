@@ -92,7 +92,8 @@ namespace transport
 			    }
 
 
-				void internal_enumerate_content_groups(sqlite3* db, const std::string& name, std::list<std::string>& groups, const std::string& table)
+        content_group_list
+        internal_enumerate_content_groups(sqlite3* db, const std::string& name,const std::string& table)
 					{
 				    std::stringstream find_stmt;
 						find_stmt << "SELECT name FROM " << table;
@@ -107,6 +108,8 @@ namespace transport
 				    check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
 
 				    int status;
+				    content_group_list groups;
+
 				    while((status = sqlite3_step(stmt)) != SQLITE_DONE)
 					    {
 				        if(status == SQLITE_ROW)
@@ -124,35 +127,39 @@ namespace transport
 					    }
 
 				    check_stmt(db, sqlite3_finalize(stmt));
+				    return groups;  // compiler will use RVO or move constructor
 					}
 
 
+				// declare template for enumerate_content_groups<>
+				// subsequently, this is specialized for integration payloads, postintegration payloads and
+				// output payloads
 				template <typename Payload>
-				void enumerate_content_groups(sqlite3* db, std::list<std::string>& groups, const std::string& name="");
+				content_group_list enumerate_content_groups(sqlite3* db, const std::string& name="");
 
 
 				template <>
-				void enumerate_content_groups<integration_payload>(sqlite3* db, std::list<std::string>& groups, const std::string& name)
+				content_group_list enumerate_content_groups<integration_payload>(sqlite3* db, const std::string& name)
 					{
-						internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE);
+						return internal_enumerate_content_groups(db, name, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE);
 					}
 
 
 		    template <>
-		    void enumerate_content_groups<postintegration_payload>(sqlite3* db, std::list<std::string>& groups, const std::string& name)
+        content_group_list enumerate_content_groups<postintegration_payload>(sqlite3* db,  const std::string& name)
 			    {
-		        internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE);
+		        return internal_enumerate_content_groups(db, name, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE);
 			    }
 
 
 		    template <>
-		    void enumerate_content_groups<output_payload>(sqlite3* db, std::list<std::string>& groups, const std::string& name)
+        content_group_list enumerate_content_groups<output_payload>(sqlite3* db, const std::string& name)
 			    {
-		        internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE);
+		        return internal_enumerate_content_groups(db, name, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE);
 			    }
 
 
-        void internal_enumerate_records(sqlite3* db, std::list<std::string>& list, const std::string& table)
+        record_name_list internal_enumerate_records(sqlite3* db, const std::string& table)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT name FROM " << table << ";";
@@ -161,13 +168,15 @@ namespace transport
             check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
 
             int status;
+            record_name_list items;
+
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
               {
                 if(status == SQLITE_ROW)
                   {
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
                     std::string result = std::string(sqlite_str);
-                    list.push_back(result);
+                    items.push_back(result);
                   }
                 else
                   {
@@ -178,26 +187,28 @@ namespace transport
               }
 
             check_stmt(db, sqlite3_finalize(stmt));
+            return items;  // compiler will use RVO or move constructor
           }
 
 
-        void enumerate_packages(sqlite3* db, std::list<std::string>& packages)
+        record_name_list enumerate_packages(sqlite3* db)
           {
-            internal_enumerate_records(db, packages, CPPTRANSPORT_SQLITE_PACKAGE_TABLE);
+            return internal_enumerate_records(db, CPPTRANSPORT_SQLITE_PACKAGE_TABLE);
           }
 
 
-        void enumerate_tasks(sqlite3* db, std::list<std::string>& integration, std::list<std::string>& postintegration, std::list<std::string>& output)
+        record_name_list enumerate_derived_products(sqlite3* db)
           {
-            internal_enumerate_records(db, integration, CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE);
-            internal_enumerate_records(db, postintegration, CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE);
-            internal_enumerate_records(db, output, CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE);
+            return internal_enumerate_records(db, CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE);
           }
 
 
-        void enumerate_derived_products(sqlite3* db, std::list<std::string>& derived_products)
+        using task_record_list = std::tuple< record_name_list, record_name_list, record_name_list >;
+        task_record_list enumerate_tasks(sqlite3* db)
           {
-            internal_enumerate_records(db, derived_products, CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE);
+            return {std::move(internal_enumerate_records(db, CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE)),
+                    std::move(internal_enumerate_records(db, CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE)),
+                    std::move(internal_enumerate_records(db, CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE))};
           }
 
 			}   // namespace sqlite3_operations

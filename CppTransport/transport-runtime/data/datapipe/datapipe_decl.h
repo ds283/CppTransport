@@ -236,7 +236,7 @@ namespace transport
       public:
 
         //! Attach a content group to the datapipe, ready for reading. Returns name of attached content group.
-        std::string attach(const derivable_task<number>& tk, const std::list<std::string>& tags);
+        std::string attach(const derivable_task<number>& tk, const tag_list& tags);
 
         //! Detach a content group from the datapipe
         void detach();

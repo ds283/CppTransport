@@ -285,7 +285,7 @@ namespace transport
                              std::deque<double>& axis, std::vector<output_line>& output) const;
 
 						//! Obtain output from our lines
-				    void obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags,
+				    void obtain_output(datapipe<number>& pipe, const tag_list& tags,
                                std::list< data_line<number> >& derived_lines, slave_message_buffer& messages) const;
 
 
@@ -451,7 +451,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags,
+		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const tag_list& tags,
                                                     std::list< data_line<number> >& derived_lines, slave_message_buffer& messages) const
 			    {
             for(const auto& line : this->lines)

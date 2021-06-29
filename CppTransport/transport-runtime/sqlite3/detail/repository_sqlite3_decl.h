@@ -462,11 +462,11 @@ namespace transport
 
         //! Enumerate content groups for a named task, or all tasks of a specified payload if no name is provided
         template <typename Payload>
-        void enumerate_content_groups(std::map< std::string, std::unique_ptr < content_group_record<Payload> > >& db, const std::string name="");
+        typename content_group_set<Payload>::type enumerate_content_groups(std::string name="");
 
         //! Build a database of content groups from a list of names
         template <typename Payload>
-        void content_groups_from_list(const std::list<std::string>& list, std::map< std::string, std::unique_ptr < content_group_record<Payload> > >& db);
+        typename content_group_set<Payload>::type content_groups_from_list(const content_group_list& list);
 
         //! Functions used to redirect query from content_groups_from_list() to appropriate query_* function
         //! (those functions cannot themselves be templated because they are virtual)

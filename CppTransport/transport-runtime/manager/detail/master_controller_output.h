@@ -42,7 +42,7 @@ namespace transport
     using namespace master_controller_impl;
 
     template <typename number>
-    void master_controller<number>::dispatch_output_task(output_task_record<number>& rec, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_output_task(output_task_record<number>& rec, const tag_list& tags)
       {
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
@@ -93,7 +93,7 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::output_task_to_workers(derived_content_writer<number>& writer, const std::list<std::string>& tags,
+    bool master_controller<number>::output_task_to_workers(derived_content_writer<number>& writer, const tag_list& tags,
                                                            integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
                                                            slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {

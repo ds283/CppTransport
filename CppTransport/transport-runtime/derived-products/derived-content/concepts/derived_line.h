@@ -245,7 +245,7 @@ namespace transport
 				  protected:
 
 				    //! attach datapipe to content group
-            std::string attach(datapipe<number>& pipe, const std::list<std::string>& tags, unsigned int tag=0) const;
+            std::string attach(datapipe<number>& pipe, const tag_list& tags, unsigned int tag=0) const;
 
             //! detach datapipe from content group
 				    void detach(datapipe<number>& pipe) const;
@@ -257,7 +257,7 @@ namespace transport
 
 				    //! generate data lines for plotting, output to tables, or whatever other purpose is intended
 				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
-				                              const std::list<std::string>& tags, slave_message_buffer& messages) const = 0;
+				                              const tag_list& tags, slave_message_buffer& messages) const = 0;
 
 
 				    // CLONE
@@ -569,7 +569,7 @@ namespace transport
 
 
 		    template <typename number>
-        std::string derived_line<number>::attach(datapipe<number>& pipe, const std::list<std::string>& tags, unsigned int tag) const
+        std::string derived_line<number>::attach(datapipe<number>& pipe, const tag_list& tags, unsigned int tag) const
           {
             // find required task from parent task list
             auto t = this->parent_tasks.find(tag);

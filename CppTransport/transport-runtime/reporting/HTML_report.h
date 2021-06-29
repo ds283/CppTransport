@@ -530,7 +530,7 @@ namespace transport
             void make_badged_text(std::string text, unsigned int number, HTML_node& parent);
 
             //! compose a tag list into a set of HTML labels
-            std::string compose_tag_list(const std::list<std::string>& tags, HTML_node& parent);
+            std::string compose_tag_list(const tag_list& tags, HTML_node& parent);
 
 
             // INTERNAL DATA
@@ -4528,7 +4528,7 @@ namespace transport
           }
 
 
-        std::string HTML_report::compose_tag_list(const std::list<std::string>& tags, HTML_node& parent)
+        std::string HTML_report::compose_tag_list(const tag_list& tags, HTML_node& parent)
           {
             std::ostringstream out;
 

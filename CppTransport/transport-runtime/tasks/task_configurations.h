@@ -345,8 +345,8 @@ namespace transport
         out << " " << CPPTRANSPORT_OUTPUT_ELEMENT_TAGS  << ": ";
 
         unsigned int count = 0;
-        const std::list<std::string>& tags = this->get_tags();
-        for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); ++u)
+        const tag_list& tags = this->get_tags();
+        for (auto u = tags.begin(); u != tags.end(); ++u)
           {
             if(count > 0) out << ", ";
             out << *u;

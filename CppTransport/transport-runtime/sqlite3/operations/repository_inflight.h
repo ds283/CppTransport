@@ -132,7 +132,7 @@ namespace transport
           }
 
 
-        void enumerate_inflight_groups(sqlite3* db, inflight_db& groups)
+        inflight_db enumerate_inflight_groups(sqlite3* db)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT name, task, path, posix_time, cores, completion FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << ";";
@@ -141,6 +141,8 @@ namespace transport
             check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
 
             int status;
+            inflight_db groups;
+
             groups.clear();
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
               {
@@ -170,6 +172,7 @@ namespace transport
               }
 
             check_stmt(db, sqlite3_finalize(stmt));
+            return groups;
           }
 
 
@@ -265,7 +268,7 @@ namespace transport
           }
 
 
-        void enumerate_inflight_integrations(sqlite3* db, inflight_integration_db& groups)
+        inflight_integration_db enumerate_inflight_integrations(sqlite3* db)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT content_group, task, output, container, logdir, tempdir, workgroup_number, seeded, seed_group, collect_stats, collect_ics FROM " << CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE << ";";
@@ -286,6 +289,8 @@ namespace transport
             constexpr auto COL_HAS_ICS = 10;
 
             int status;
+            inflight_integration_db groups;
+
             groups.clear();
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
               {
@@ -329,10 +334,11 @@ namespace transport
               }
 
             check_stmt(db, sqlite3_finalize(stmt));
+            return groups;
           }
 
 
-        void enumerate_inflight_postintegrations(sqlite3* db, inflight_postintegration_db& groups)
+        inflight_postintegration_db enumerate_inflight_postintegrations(sqlite3* db)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT content_group, task, output, container, logdir, tempdir, paired, parent, seeded, seed_group, has_spectral FROM " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE << ";";
@@ -353,6 +359,8 @@ namespace transport
             constexpr auto COL_HAS_SPECTRAL = 10;
 
             int status;
+            inflight_postintegration_db groups;
+
             groups.clear();
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
               {
@@ -398,10 +406,11 @@ namespace transport
               }
 
             check_stmt(db, sqlite3_finalize(stmt));
+            return groups;
           }
 
 
-        void enumerate_inflight_derived_content(sqlite3* db, inflight_derived_content_db& groups)
+        inflight_derived_content_db enumerate_inflight_derived_content(sqlite3* db)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT content_group, task, output, logdir, tempdir FROM " << CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE << ";";
@@ -416,6 +425,8 @@ namespace transport
             constexpr auto COL_TEMPDIR = 4;
 
             int status;
+            inflight_derived_content_db groups;
+
             groups.clear();
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
               {
@@ -443,6 +454,7 @@ namespace transport
               }
 
             check_stmt(db, sqlite3_finalize(stmt));
+            return groups;
           }
 
 

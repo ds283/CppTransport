@@ -108,43 +108,43 @@ namespace transport
 
 				    //! generate data lines for plotting
 				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                      const std::list<std::string>& tags, slave_message_buffer& messages) const override;
+                                      const tag_list& tags, slave_message_buffer& messages) const override;
 
 		      protected:
 
 				    //! epsilon line
 				    void epsilon_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                              const std::list<std::string>& tags, slave_message_buffer& messages,
+                              const tag_list& tags, slave_message_buffer& messages,
 				                      const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
             //! eta line
             void eta_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                          const std::list<std::string>& tags, slave_message_buffer& messages,
+                          const tag_list& tags, slave_message_buffer& messages,
                           const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
 		        //! Hubble line
 		        void Hubble_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                             const std::list<std::string>& tags, slave_message_buffer& messages,
+                             const tag_list& tags, slave_message_buffer& messages,
 		                         const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
 		        //! aHubble line
 		        void aHubble_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                              const std::list<std::string>& tags, slave_message_buffer& messages,
+                              const tag_list& tags, slave_message_buffer& messages,
 		                          const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
             //! generate lines for the mass spectrum
             void mass_spectrum_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                    const std::list<std::string>& tags, slave_message_buffer& messages,
+                                    const tag_list& tags, slave_message_buffer& messages,
                                     const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
             //! generate lines for the normalized mass spectrum, ie. M_i/H
             void norm_mass_spectrum_line(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                                         const std::list<std::string>& tags, slave_message_buffer& messages,
+                                         const tag_list& tags, slave_message_buffer& messages,
                                          const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const;
 
             //! common mass spectrum implementation
             void mass_spectrum(const std::string& group, datapipe<number>& pipe, std::list<data_line<number> >& lines,
-                               const std::list<std::string>& tags, slave_message_buffer& messages,
+                               const tag_list& tags, slave_message_buffer& messages,
                                const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data, bool norm) const;
 
 		        //! generate a LaTeX label
@@ -286,7 +286,7 @@ namespace transport
 
 				template <typename number>
 				void background_line<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                   const std::list<std::string>& tags, slave_message_buffer& messages) const
+                                                   const tag_list& tags, slave_message_buffer& messages) const
 					{
 				    // attach our datapipe to a content group
 				    std::string group = this->attach(pipe, tags);
@@ -356,7 +356,7 @@ namespace transport
 
 		    template <typename number>
 		    void background_line<number>::epsilon_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                   const std::list<std::string>& tags, slave_message_buffer& messages,
+                                                   const tag_list& tags, slave_message_buffer& messages,
 		                                               const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
 			    {
 		        model<number>* mdl = this->gadget.get_model();
@@ -376,7 +376,7 @@ namespace transport
 
         template <typename number>
         void background_line<number>::eta_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                               const std::list<std::string>& tags, slave_message_buffer& messages,
+                                               const tag_list& tags, slave_message_buffer& messages,
                                                const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
         {
           model<number>* mdl = this->gadget.get_model();
@@ -396,7 +396,7 @@ namespace transport
 
 		    template <typename number>
 		    void background_line<number>::Hubble_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                  const std::list<std::string>& tags, slave_message_buffer& messages,
+                                                  const tag_list& tags, slave_message_buffer& messages,
 		                                              const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
 			    {
 		        model<number>* mdl = this->gadget.get_model();
@@ -416,7 +416,7 @@ namespace transport
 
 		    template <typename number>
 		    void background_line<number>::aHubble_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
-		                                               const std::list<std::string>& tags, slave_message_buffer& messages,
+		                                               const tag_list& tags, slave_message_buffer& messages,
 		                                               const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
 			    {
 		        model<number>* mdl = this->gadget.get_model();
@@ -439,7 +439,7 @@ namespace transport
 
         template <typename number>
         void background_line<number>::mass_spectrum_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                         const std::list<std::string>& tags, slave_message_buffer& messages,
+                                                         const tag_list& tags, slave_message_buffer& messages,
                                                          const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
           {
             this->mass_spectrum(group, pipe, lines, tags, messages, t_axis, bg_data, false);
@@ -448,7 +448,7 @@ namespace transport
 
         template <typename number>
         void background_line<number>::norm_mass_spectrum_line(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                              const std::list<std::string>& tags, slave_message_buffer& messages,
+                                                              const tag_list& tags, slave_message_buffer& messages,
                                                               const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data) const
           {
             this->mass_spectrum(group, pipe, lines, tags, messages, t_axis, bg_data, true);
@@ -457,7 +457,7 @@ namespace transport
 
         template <typename number>
         void background_line<number>::mass_spectrum(const std::string& group, datapipe<number>& pipe, std::list< data_line<number> >& lines,
-                                                    const std::list<std::string>& tags, slave_message_buffer& messages,
+                                                    const tag_list& tags, slave_message_buffer& messages,
                                                     const std::vector<double>& t_axis, std::vector<std::vector<number> >& bg_data, bool norm) const
           {
             model<number>* mdl = this->gadget.get_model();

@@ -98,7 +98,7 @@ namespace transport
           }
 
         //! Construct a named output task using a supplied single derived_product<> object and a set of tags
-        output_task(const std::string& nm, const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
+        output_task(const std::string& nm, const derived_data::derived_product<number>& prod, const tag_list& tags)
 	        : task<number>(nm),
             serial(0)
 	        {
@@ -169,7 +169,7 @@ namespace transport
 		    output_task<number>& add_element(const derived_data::derived_product<number>& prod) { this->add_element(prod, std::list<std::string>()); return *this; }
 
 		    //! Add an element, tags provided
-        output_task<number>& add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags);
+        output_task<number>& add_element(const derived_data::derived_product<number>& prod, const tag_list& tags);
 
 		    //! Lookup a derived product
 		    boost::optional< derived_data::derived_product<number>& > lookup_derived_product(const std::string& name);
@@ -307,7 +307,7 @@ namespace transport
 
 
 		template <typename number>
-    output_task<number>& output_task<number>::add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
+    output_task<number>& output_task<number>::add_element(const derived_data::derived_product<number>& prod, const tag_list& tags)
 	    {
         // check that this derived product has a distinct filename
 

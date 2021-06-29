@@ -41,7 +41,7 @@ namespace transport
 
     template <typename number>
     void master_controller<number>::dispatch_postintegration_task(postintegration_task_record<number>& rec, bool seeded, const std::string& seed_group,
-                                                                  const std::list<std::string>& tags)
+                                                                  const tag_list& tags)
       {
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
@@ -135,7 +135,7 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::validate_content_group(integration_task<number>* tk, const std::list<std::string>& tags)
+    void master_controller<number>::validate_content_group(integration_task<number>* tk, const tag_list& tags)
       {
         assert(tk != nullptr);
 
@@ -148,7 +148,7 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::validate_content_group(postintegration_task<number>* tk, const std::list<std::string>& tags)
+    void master_controller<number>::validate_content_group(postintegration_task<number>* tk, const tag_list& tags)
       {
         assert(tk != nullptr);
 
@@ -163,7 +163,7 @@ namespace transport
     template <typename number>
     template <typename TaskObject>
     void master_controller<number>::schedule_postintegration(postintegration_task_record<number>& rec, TaskObject* tk,
-                                                             bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
+                                                             bool seeded, const std::string& seed_group, const tag_list& tags,
                                                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         // create an output writer to commit our results into the repository
@@ -178,8 +178,22 @@ namespace transport
         // initialize the writer
         this->data_mgr->initialize_writer(*writer);
 
-        // determine which content group will be used in the calculation
+        // find the output group that will be used in this computation
+        // notice that it doesn't have to be an integration task output group; it could be a postintegration
+        // task group, for example, if we are computing an fNL, C_ell or map-making coefficients from
+        // the output of a zeta task
+        auto& repo = *this->repo;
+
         const auto& ptk_name = tk->get_parent_task()->get_name();
+        auto record = repo.query_task(ptk_name);
+//        switch(record->get_type())
+//          {
+//            case task_type::integration:
+//              {
+//                auto db = repo.enumerate_integration_task_content(*)
+//              }
+//          }
+
         auto source_group = this->repo->find_integration_task_output(ptk_name, tags);
         if(!source_group)
           {
@@ -231,7 +245,7 @@ namespace transport
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
     void master_controller<number>::schedule_paired_postintegration(postintegration_task_record<number>& rec, TaskObject* tk, ParentTaskObject* ptk,
-                                                                    bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
+                                                                    bool seeded, const std::string& seed_group, const tag_list& tags,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         auto pre_prec = this->repo->query_task(ptk->get_name());
@@ -447,7 +461,7 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::postintegration_task_to_workers(postintegration_writer<number>& writer, const std::list<std::string>& tags,
+    bool master_controller<number>::postintegration_task_to_workers(postintegration_writer<number>& writer, const tag_list& tags,
                                                                     integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
@@ -500,7 +514,7 @@ namespace transport
 
     template <typename number>
     bool master_controller<number>::paired_postintegration_task_to_workers(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
-                                                                           const std::list<std::string>& tags,
+                                                                           const tag_list& tags,
                                                                            integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
                                                                            slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {

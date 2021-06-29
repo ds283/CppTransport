@@ -28,6 +28,7 @@
 
 
 #include <set>
+#include <list>
 
 
 namespace transport
@@ -35,6 +36,9 @@ namespace transport
 
   //! data type for holding a list of missing serial numbers, used during integrity testing
   using serial_number_list = std::set<unsigned int>;
+
+  //! tag list
+  using tag_list = std::list< std::string >;
 
 }   // namespace transport
 

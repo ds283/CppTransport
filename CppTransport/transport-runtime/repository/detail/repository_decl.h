@@ -35,35 +35,51 @@ namespace transport
     template <typename number>
     struct package_db
       {
-        typedef std::map< std::string, std::unique_ptr< package_record<number> > > type;
-        typedef std::pair< const std::string, std::unique_ptr< package_record<number> > > value_type;
+        using type = std::map< std::string, std::unique_ptr< package_record<number> > >;
+        using value_type = std::pair< const std::string, std::unique_ptr< package_record<number> > >;
       };
 
     //! database type for tasks
     template <typename number>
     struct task_db
       {
-        typedef std::map< std::string, std::unique_ptr< task_record<number> > > type;
-        typedef std::pair< const std::string, std::unique_ptr< task_record<number> > > value_type;
+        using type = std::map< std::string, std::unique_ptr< task_record<number> > >;
+        using value_type = std::pair< const std::string, std::unique_ptr< task_record<number> > >;
       };
 
     //! database type for derived products
     template <typename number>
     struct derived_product_db
       {
-        typedef std::map< std::string, std::unique_ptr< derived_product_record<number> > > type;
-        typedef std::pair< const std::string, std::unique_ptr< derived_product_record<number> > > value_type;
+        using type = std::map< std::string, std::unique_ptr< derived_product_record<number> > >;
+        using value_type = std::pair< const std::string, std::unique_ptr< derived_product_record<number> > >;
+      };
+
+
+    //! content group list
+    using content_group_list = std::list< std::string >;
+
+    //! record name list
+    using record_name_list = std::list< std::string >;
+
+
+    template <typename Payload>
+    class content_group_set
+      {
+      public:
+        using type = std::map< std::string, std::unique_ptr< content_group_record<Payload> > >;
+        using value_type = typename type::value_type;
       };
 
 
     //! database type for integration content groups
-    typedef std::map< std::string, std::unique_ptr< content_group_record<integration_payload> > > integration_content_db;
+    using integration_content_db = typename content_group_set<integration_payload>::type;
 
     //! database type for postintegration content groups
-    typedef std::map< std::string, std::unique_ptr< content_group_record<postintegration_payload> > > postintegration_content_db;
+    using postintegration_content_db = typename content_group_set<postintegration_payload>::type;
 
     //! database type for output content groups
-    typedef std::map< std::string, std::unique_ptr< content_group_record<output_payload> > > output_content_db;
+    using output_content_db = typename content_group_set<output_payload>::type;
 
 
     // hint for query_task() method
@@ -353,16 +369,16 @@ namespace transport
       public:
 
         //! Generate a writer object for new integration output
-        virtual std::unique_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>& rec, const std::list<std::string>& tags,
+        virtual std::unique_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>& rec, const tag_list& tags,
                                                                                            unsigned int worker, unsigned int workgroup,
                                                                                            unsigned int num_cores, std::string suffix="");
 
         //! Generate a writer object for new derived-content output
-        virtual std::unique_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags,
+        virtual std::unique_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>& rec, const tag_list& tags,
                                                                                           unsigned int worker, unsigned int num_cores, std::string suffix="");
 
         //! Generate a writer object for new postintegration output
-        virtual std::unique_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags,
+        virtual std::unique_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>& rec, const tag_list& tags,
                                                                                                    unsigned int worker, unsigned int num_cores, std::string suffix="");
 
       protected:
@@ -394,7 +410,7 @@ namespace transport
 
         //! generate an integration writer
         std::unique_ptr< integration_writer<number> > base_new_integration_task_content(integration_task_record<number>& rec,
-                                                                                        const std::list<std::string>& tags,
+                                                                                        const tag_list& tags,
                                                                                         unsigned int worker, unsigned int workgroup, unsigned int num_cores,
                                                                                         std::unique_ptr< repository_integration_writer_commit<number> > commit,
                                                                                         std::unique_ptr< repository_integration_writer_abort<number> > abort,
@@ -410,7 +426,7 @@ namespace transport
 
         //! generate a derived content writer
         std::unique_ptr< derived_content_writer<number> > base_new_output_task_content(output_task_record<number>& rec,
-                                                                                       const std::list<std::string>& tags,
+                                                                                       const tag_list& tags,
                                                                                        unsigned int worker, unsigned int num_cores,
                                                                                        std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
                                                                                        std::unique_ptr< repository_derived_content_writer_abort<number> > abort,
@@ -424,7 +440,7 @@ namespace transport
                                                                                             std::unique_ptr< repository_derived_content_writer_abort<number> > abort);
 
         std::unique_ptr< postintegration_writer<number> > base_new_postintegration_task_content(postintegration_task_record<number>& rec,
-                                                                                                const std::list<std::string>& tags,
+                                                                                                const tag_list& tags,
                                                                                                 unsigned int worker, unsigned int num_cores,
                                                                                                 std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
                                                                                                 std::unique_ptr< repository_postintegration_writer_abort<number> > abort,
@@ -473,10 +489,10 @@ namespace transport
       public:
 
         //! Find a content group for an integration task
-        std::unique_ptr< content_group_record<integration_payload> > find_integration_task_output(const std::string& name, const std::list<std::string>& tags);
+        std::unique_ptr< content_group_record<integration_payload> > find_integration_task_output(const std::string& name, const tag_list& tags);
 
         //! Find a content group for a postintegration task
-        std::unique_ptr< content_group_record<postintegration_payload> > find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags);
+        std::unique_ptr< content_group_record<postintegration_payload> > find_postintegration_task_output(const std::string& name, const tag_list& tags);
 
 
         // STANDARD WRITER CALLBACKS
