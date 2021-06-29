@@ -69,7 +69,7 @@ namespace transport
 	      twopf_db_task<number>& get_parent_task_as_twopf_db() { return *this->ptk_as_twopf_db; }
 
         //! Provide access to twopf k-configuration database
-        const twopf_kconfig_database& get_twopf_database() const { return this->ptk_as_twopf_db.get_twopf_database()); }
+        const twopf_kconfig_database& get_twopf_database() const { return this->ptk_as_twopf_db.get_twopf_database(); }
 
         //! Are we collecting spectral data? Inherited from parent spectral data task
         bool get_collect_spectral_data() const
