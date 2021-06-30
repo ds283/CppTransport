@@ -44,6 +44,12 @@
 //#define CPPTRANSPORT_STRICT_CONSISTENCY
 
 
+// Boost.Stacktrace needs _Unwind_Backtrace, which for some reason is gated behind _GNU_SOURCE
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+
 #include "transport-runtime/messages.h"
 #include "transport-runtime/defaults.h"
 

@@ -37,6 +37,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_TOO_FEW_WORKERS                    = "Too few workers: require at least two worker processes to process a task";
     constexpr auto CPPTRANSPORT_UNEXPECTED_MPI                     = "Unexpected MPI message received";
 
+    constexpr auto CPPTRANSPORT_JOB_FAILED                         = "Processing failed for job";
     constexpr auto CPPTRANSPORT_UNEXPECTED_UNHANDLED               = "Unexpected unhandled exception";
 
     constexpr auto CPPTRANSPORT_TASK_MISSING                       = "Could not find repository record for task";
@@ -53,6 +54,8 @@ namespace transport
     constexpr auto CPPTRANSPORT_POSTINTEGRATION_HAS_OUTPUT_SOURCE  = "Postintegration task has parent output task";
 
     constexpr auto CPPTRANSPORT_BAD_TASK_TYPE_CONTENT_GROUP_FILTER = "Attempt to use content group specifiers for an incompatible task type";
+
+    constexpr auto CPPTRANSPORT_CANT_COMPUTE_TOPOLOGICAL_ORDER     = "Failed to compute topological order on repository objects";
 
     constexpr auto CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A             = "Could not find a matching content group";
     constexpr auto CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B             = "to seed task";

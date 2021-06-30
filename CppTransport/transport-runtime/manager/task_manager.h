@@ -188,7 +188,10 @@ namespace transport
 #ifdef TRACE_OUTPUT
                 std::cout << "TRACE_OUTPUT A" << '\n';
 #endif
-                err(xe.what());
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what() << '\n';
+                xe.format_stacktrace(msg);
+                err(msg.str());
               }
             catch(std::exception& xe)
               {
@@ -213,7 +216,10 @@ namespace transport
 #ifdef TRACE_OUTPUT
                 std::cout << "TRACE_OUTPUT C" << '\n';
 #endif
-                err(xe.what());
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what() << '\n';
+                xe.format_stacktrace(msg);
+                err(msg.str());
               }
             catch(std::exception& xe)
               {
@@ -234,7 +240,10 @@ namespace transport
 #ifdef TRACE_OUTPUT
                 std::cout << "TRACE_OUTPUT E" << '\n';
 #endif
-                err(xe.what());
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what() << '\n';
+                xe.format_stacktrace(msg);
+                err(msg.str());
               }
             catch(std::exception& xe)
               {

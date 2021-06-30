@@ -835,7 +835,7 @@ namespace transport
 
         std::unique_ptr< content_group_record<postintegration_payload> > rval;
         (*db.rbegin()).second.swap(rval);
-        return rval;    // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        return rval;
       }
 
   }   // namespace transport

@@ -204,9 +204,12 @@ namespace transport
         // sort task list into order, and insert any required job descriptors
         repository_graphkit<number> graphkit{*this->repo, this->err, this->warn, this->msg};
         std::unique_ptr<repository_distance_matrix> dmat = graphkit.task_distance_matrix();
+
         auto topological_order = dmat->get_graph().compute_topological_order();
-        if(topological_order)
-          this->insert_job_descriptors(requirements, *topological_order);
+        if(!topological_order)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_CANT_COMPUTE_TOPOLOGICAL_ORDER);
+
+        this->insert_job_descriptors(requirements, *topological_order);
       }
 
 
@@ -498,6 +501,10 @@ namespace transport
                   }
                 t = this->job_queue.erase(t);
               }
+            catch(...)
+              {
+                this->err(CPPTRANSPORT_UNEXPECTED_UNHANDLED);
+              }
           }
       }
 
@@ -530,7 +537,7 @@ namespace transport
         // schedule extra tasks if any explicitly-required tasks depend on content from
         // a second task, but no content group is available
         this->autocomplete_task_schedule();
-    
+
         unsigned int tasks_complete = 0;
         unsigned int tasks_processed = 0;
         for(const job_descriptor& job : this->job_queue)
@@ -552,7 +559,10 @@ namespace transport
 #ifdef TRACE_OUTPUT
                         std::cout << "TRACE_OUTPUT J" << '\n';
 #endif
-                        this->err(xe.what());
+                        std::ostringstream msg;
+                        msg << CPPTRANSPORT_JOB_FAILED << " '" << job.get_name() << "' (" << xe.what() << ")" << '\n';
+                        xe.format_stacktrace(msg);
+                        this->err(msg.str());
                       }
                     catch(std::exception& xe)
                       {
@@ -560,7 +570,13 @@ namespace transport
                         std::cout << "TRACE_OUTPUT K" << '\n';
 #endif
                         std::ostringstream msg;
-                        msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " " << xe.what();
+                        msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " (job '" << job.get_name() << "', " << xe.what() << ")";
+                        this->err(msg.str());
+                      }
+                    catch(...)
+                      {
+                        std::ostringstream msg;
+                        msg << CPPTRANSPORT_UNEXPECTED_UNHANDLED << " (job '" << job.get_name() << "')";
                         this->err(msg.str());
                       }
                     break;
@@ -687,6 +703,11 @@ namespace transport
                 msg << CPPTRANSPORT_TASK_CANT_BE_READ << " '" << job.get_name() << "' (" << xe.what() << ")";
                 this->err(msg.str());
               }
+            return;
+          }
+        catch(...)
+          {
+            this->err(CPPTRANSPORT_UNEXPECTED_UNHANDLED);
             return;
           }
 

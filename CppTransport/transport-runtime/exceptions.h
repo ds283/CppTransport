@@ -31,6 +31,8 @@
 #include <string>
 #include <stdexcept>
 
+#include "boost/stacktrace.hpp"
+
 
 namespace transport
   {
@@ -70,16 +72,48 @@ namespace transport
       public:
 
         runtime_exception(exception_type t, const std::string msg)
-          : type(t), std::runtime_error(msg)
+          : std::runtime_error{msg},
+            type{t},
+            stack{}
           {
           }
 
-        exception_type get_exception_code() { return(this->type); }
+
+          // INTERFACE
+
+      public:
+
+        //! obtain exception type code
+        exception_type get_exception_code() const { return this->type; }
+
+        //! obtain stacktrace
+        const boost::stacktrace::stacktrace& get_stacktrace() const { return this->stack; }
+
+        //! format stacktrace
+        template <typename StreamObject>
+        void format_stacktrace(StreamObject& stream) const;
+
 
         // INTERNAL DATA
+
       protected:
+
+        //! record exception type
         exception_type type;
+
+        //! record stacktrace (initialized on construction)
+        boost::stacktrace::stacktrace stack;
+
       };
+
+
+    template <typename StreamObject>
+    void runtime_exception::format_stacktrace(StreamObject& stream) const
+      {
+        stream << "Collecting details about this error: please forward this information with any error report." << '\n';
+        stream << this->stack << '\n';
+      }
+
 
   }   // namespace transport
 
