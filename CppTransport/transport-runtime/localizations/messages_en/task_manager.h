@@ -52,6 +52,8 @@ namespace transport
     constexpr auto CPPTRANSPORT_NO_CANDIDATE_POSTINTEGRATION_GROUP = "Could not find a candidate postintegrationc ontent group for task";
     constexpr auto CPPTRANSPORT_POSTINTEGRATION_HAS_OUTPUT_SOURCE  = "Postintegration task has parent output task";
 
+    constexpr auto CPPTRANSPORT_BAD_TASK_TYPE_CONTENT_GROUP_FILTER = "Attempt to use content group specifiers for an incompatible task type";
+
     constexpr auto CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A             = "Could not find a matching content group";
     constexpr auto CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B             = "to seed task";
 

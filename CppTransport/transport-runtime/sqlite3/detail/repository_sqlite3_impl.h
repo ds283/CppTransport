@@ -41,7 +41,8 @@ namespace transport
     template <typename number>
     repository_sqlite3<number>::repository_sqlite3(const boost::filesystem::path path, model_manager<number>& f, repository_mode mode,
                                                    local_environment& ev, argument_cache& ar)
-      : json_repository<number>(path, f, mode, ev, ar, package_finder<number>(*this), task_finder<number>(*this), derived_product_finder<number>(*this)),
+      : json_repository<number>(path, f, mode, ev, ar, package_finder<number>(*this),
+                                task_finder<number>(*this), derived_product_finder<number>(*this)),
         db(nullptr)
       {
         // check whether object exists in filesystem at the specified path; if not, we create it
@@ -56,7 +57,7 @@ namespace transport
           {
             this->validate_repository();
 
-            unsigned int sqlite_mode = (mode == repository_mode::readonly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE);
+            int sqlite_mode = (mode == repository_mode::readonly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE);
             if(sqlite3_open_v2(db_path.string().c_str(), &db, sqlite_mode, nullptr) != SQLITE_OK)
               {
                 std::ostringstream msg;

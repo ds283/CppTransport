@@ -77,48 +77,62 @@ namespace transport
         template <typename number> class CloseDown_Context;
 
 
+        //! ContentGroupFilterPredicate is used to filter content groups supplied by task_record<>
+        //! for specific properties
         template <typename number>
         class ContentGroupFilterPredicate
           {
           public:
 
             //! constructor captures repository, content group specifiers and tag list
-            ContentGroupFilterPredicate(const repository<number>& r, const content_group_specifier& s, const tag_list& t)
-              : repo(r),
-                specifier(&s),
-                tags(t)
+            ContentGroupFilterPredicate(repository<number>& r, const content_group_specifier& s, const tag_list& tg)
+              : repo{r},
+                specifier{s},
+                tags{tg}
               {
               }
-
-            //! constructor captures tag repository and tag list; no content group specifiers are used
-            ContentGroupFilterPredicate(const repository<number>& r, const tag_list& t)
-              : repo(r),
-                specifier(nullptr),
-                tags(t)
-              {
-              }
-
 
               // INTERFACE
 
           public:
 
-              //! determine whether a named content group matches our criteria
-              bool operator()(const std::string& name)
-                {
-                  return true;
-                }
+            //! determine whether a named content group matches our criteria
+            bool operator()(const std::string& name) const
+              {
+                switch(this->specifier.get_type())
+                  {
+                    case task_type::integration:
+                      return this->match_integration_content_group(name);
 
+                    case task_type::postintegration:
+                      return this->match_postintegration_content_group(name);
+
+                    case task_type::output:
+                      throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_BAD_TASK_TYPE_CONTENT_GROUP_FILTER);
+                  }
+                return true;
+              }
+
+
+              // INTERNAL METHODS
+
+          protected:
+
+            //! test integration content group
+            bool match_integration_content_group(const std::string& name) const;
+
+            //! test postintegration content group
+            bool match_postintegration_content_group(const std::string& name) const;
 
               // INTERNAL DATA
 
           private:
 
             //! reference to repository
-            const repository<number>& repo;
+            repository<number>& repo;
 
             //!± content group specifier, or nullptr if not specified
-            const content_group_specifier* specifier;
+            const content_group_specifier& specifier;
 
             //! refernce to supplied tag list (which may be empty)
             const tag_list& tags;
@@ -132,8 +146,8 @@ namespace transport
 
 
     // a single task requirement is a named task (std:string) and a content_group_specifier that
-    // tells us the properties that it requires. That can be null if we have no specific requirements.
-    using requirement_type = std::pair< std::string, std::unique_ptr<content_group_specifier> >;
+    // tells us the properties that it requires.
+    using requirement_type = std::pair< std::string, content_group_specifier >;
 
     // a requirement list is a list of single task requirements. Note that this really is a list rather
     // than a set, because we can depend on the same task in different ways (i.e. with different content
@@ -147,12 +161,8 @@ namespace transport
         if(a.first != b.first)
           return false;
 
-        // if either specifier is empty and the other isn't, no match
-        if(!a.second && b.second || a.second && !b.second)
-          return false;
-
         // match if specifiers agree
-        return(*a.second == *b.second);
+        return(a.second == b.second);
       }
 
 

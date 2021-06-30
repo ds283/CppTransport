@@ -84,9 +84,17 @@ namespace transport
         virtual task_type get_type() const = 0;
 
         //! Add new content group
+        //! Notice that this *does not* write a content group into the main repository database table.
+        //! It is added only to the internal list of content groups held in this record. The internal list
+        //! therefore is at risk of getting out of sync with the main database table.
+        //! Insertion into the main database table is done by the store function for content_group_record<>,
+        //! which is invoked when we commit that record.
         void add_new_content_group(const std::string& name);
 
         //! Remove content group
+        //! Notice that this *does not* remove the content group into the main repository database table.
+        //! It is only removed from the internal list of content groups held in this record. The internal list
+        //! therefore is at risk of getting out of sync with the main database table.
         void delete_content_group(const std::string& name);
 
         //! Get content groups
@@ -120,6 +128,12 @@ namespace transport
       protected:
 
         //! List of content groups associated with this task
+        // TODO: consider how to prevent this getting out of sync with the main repository database tables, which
+        //  encode the same information independently.
+        //  Notice that the enumerate_*_task_content() methods in repository<> do not use this information.
+        //  They use the repository database table.
+        //  Only the get_content_groups() method of task_record<> uses this information.
+        //  Possibly they should be synced up in a database maintenance pass.
         content_group_name_set content_groups;
 
       };

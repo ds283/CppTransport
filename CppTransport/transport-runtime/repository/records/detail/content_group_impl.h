@@ -139,10 +139,10 @@ namespace transport
 
 
     template <typename Payload>
-    bool content_group_record<Payload>::check_tags(const std::list<std::string>& match_tags) const
+    bool content_group_record<Payload>::check_tags(const tag_list& match_tags) const
       {
         // iterate through match_tags, checking whether we can match each one
-        for(const std::string& tag : match_tags)
+        for(const auto& tag : match_tags)
           {
             auto t = std::find(this->tags.begin(), this->tags.end(), tag);
 

@@ -765,7 +765,7 @@ namespace transport
         void remove_tag(const std::string& tag);
 
         //! Check whether we match a set of tags; returns true if so, false otherwise
-        bool check_tags(const std::list<std::string>& match_tags) const;
+        bool check_tags(const tag_list& match_tags) const;
 
 
         // ABSOLUTE PATHS
@@ -836,7 +836,7 @@ namespace transport
         std::list<note> notes;
 
         //! Array of strings representing metadata tags
-        std::list<std::string> tags;
+        tag_list tags;
 
 
         // PATHS
@@ -1138,6 +1138,35 @@ namespace transport
             case task_type::output:
               throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_TASK_TYPE);
           }
+      }
+
+
+    bool operator==(const integration_payload& payload, const content_group_specifier& b)
+      {
+        // no match if content group specifier is not of integration type
+        if(b.get_type() != task_type::integration)
+          return false;
+
+        if(b.requires_ics() && !payload.has_initial_conditions())
+          return false;
+
+        if(b.requires_statistics() && !payload.has_initial_conditions())
+          return false;
+
+        if(b.requires_spectral_data() && !payload.has_spectral_data())
+          return false;
+
+        return true;
+      }
+
+
+    bool operator==(const postintegration_payload& payload, const content_group_specifier& b)
+      {
+        // no match if content group specifier is not of postintegration type
+        if(b.get_type() != task_type::postintegration)
+          return false;
+
+        return payload.get_precomputed_products() == b.requires_products();
       }
 
   }   // namespace transport

@@ -338,7 +338,7 @@ namespace transport
         //! Remove a postintegration group
         virtual void delete_postintegration_content(const std::string& name, const std::string& task_name, transaction_manager& mgr) = 0;
 
-        //! Remove an outpout group
+        //! Remove an output group
         virtual void delete_output_content(const std::string& name, const std::string& task_name, transaction_manager& mgr) = 0;
 
 
