@@ -302,6 +302,14 @@ namespace transport
                                              slave_work_event::event_type begin_label,
                                              slave_work_event::event_type end_label);
 
+        //! Master node: use parent content group to push settings for a postintegration writer
+        void postintegration_settings_from_integration_content(postintegration_writer<number>& writer,
+                                                               const std::string& ptk_name, const tag_list& tags);
+
+        //! Master node: use parent content group to push settings for a postintegration writer
+        void postintegration_settings_from_postintegration_content(postintegration_writer<number>& writer,
+                                                                   const std::string& ptk_name, const tag_list& tags);
+
         //! Master node: Seed an integration writer using a previous integration
         template <typename TaskObject>
         serial_number_list seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group);
