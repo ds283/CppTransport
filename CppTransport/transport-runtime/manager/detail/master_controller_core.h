@@ -137,121 +137,262 @@ namespace transport
         // check whether any work is required: if there are no jobs there is no need for autocompletion
         if(this->job_queue.empty()) return;
 
-        // build distance matrix for tasks
-        repository_graphkit<number> graphkit{*this->repo, this->err, this->warn, this->msg};
-        std::unique_ptr<repository_distance_matrix> dmat = graphkit.task_distance_matrix();
-
-        // step through list of command-line supplied tasks, building a list
-        // of tasks on which they depend
-        record_name_set required_tasks;
+        // work out which tasks are needed (and what properties their content should have, if any)
+        // to satisfy the dependencies of all tasks specified on the command line
+        requirement_list_type requirements;
         for(const job_descriptor& job : this->job_queue)
           {
             switch(job.get_type())
               {
                 case job_type::job_task:
                   {
-                    // use repository_graphkit to compute dependencies for this task
-                    auto depends = dmat->find_dependencies(job.get_name());
-
-                    // if there were dependencies, merge them into the list
-                    if(depends) required_tasks.insert(depends->begin(), depends->end());
+                    this->add_task_requirements(requirements, job.get_name());
+                    break;
                   }
               }
           }
 
         // required_tasks holds a list of all tasks needed to generate output for the set of tasks specified on
         // the command line
-        // Of these, we want to check which have no current content
-        this->prune_tasks_with_content(required_tasks);
+        // Of these, we want to check which have no current content, and therefore need tasks scheduling
+        this->prune_tasks_with_content(requirements);
 
         // required_tasks now contains only those tasks for which output is needed;
         // we need to prune it for paired tasks, because these do not need to be handled separately
-        this->prune_paired_tasks(required_tasks);
+        this->prune_paired_tasks(requirements);
 
         // sort task list into order, and insert any required job descriptors
+        repository_graphkit<number> graphkit{*this->repo, this->err, this->warn, this->msg};
+        std::unique_ptr<repository_distance_matrix> dmat = graphkit.task_distance_matrix();
         auto topological_order = dmat->get_graph().compute_topological_order();
         if(topological_order)
-          this->insert_job_descriptors(required_tasks, *topological_order);
+          this->insert_job_descriptors(requirements, *topological_order);
       }
 
 
     template <typename number>
-    void master_controller<number>::prune_tasks_with_content(record_name_set& required_tasks)
+    void master_controller<number>::add_postintegration_task_requirements
+      (requirement_list_type& requirements, const postintegration_task<number>& task)
       {
-        // capture busy/idle timers and switch to busy mode
-        busyidle_instrument timers(this->busyidle_timers);
-
-        // work through list of tasks needed as dependencies, deciding whether they have content groups
-        for(auto t = required_tasks.begin(); t != required_tasks.end(); /* intentionally no update step */)
+        switch(task.get_task_type())
           {
-            auto rec = this->repo->query_task(*t);
-            if(rec)
+            case postintegration_task_type::twopf:
               {
-                // check for presence of content group
+                // for 2pf tasks, need to check whether spectral data is expected
+                const auto& z2pf = dynamic_cast< const zeta_twopf_db_task<number>& >(task);
 
-                if(rec->get_content_groups().size() > 0)
+                auto elt = requirement_type{task.get_name(),
+                            std::make_unique<content_group_specifier>(
+                              false, false, z2pf.get_collect_spectral_data())};
+
+                auto t = std::find(requirements.begin(), requirements.end(), elt);
+                if(t == requirements.end())
                   {
-                    // group present; no need to schedule this task, so erase it from the list. Leaves t pointing to next item.
-                    t = required_tasks.erase(t);
+                    requirements.push_back(std::move(elt));
                   }
-                else
+                break;
+              }
+
+            case postintegration_task_type::threepf:
+              {
+                // no specific requirements
+                break;
+              }
+
+            case postintegration_task_type::fNL:
+              {
+                // fNL tasks expect reduced bispectrum and zeta 2pf to be present
+                const auto& zfNL = dynamic_cast< const fNL_task<number>& >(task);
+                precomputed_products products{true, false, false, true,
+                                              false, false, false, false};
+                auto elt = requirement_type{task.get_name(),
+                             std::make_unique<content_group_specifier>(products)};
+                auto t = std::find(requirements.begin(), requirements.end(), elt);
+                if(t == requirements.end())
                   {
-                    // no groups present; move on to next item
-                    ++t;
+                    requirements.push_back(std::move(elt));
                   }
+                break;
+              }
+          }
+
+        // recursively add requirements for parent task
+        const auto& ptk = *task.get_parent_task();
+        this->add_task_requirements(requirements, ptk.get_name());
+      }
+
+
+    template <typename number>
+    void master_controller<number>::add_output_task_requirements
+      (requirement_list_type& requirements, const output_task<number>& task)
+      {
+        const auto& elements = task.get_elements();
+
+        for(const auto& elt : elements)
+          {
+            auto& product = elt.get_product();
+
+            // get list of tasks this product depends on
+            auto task_list = product.get_task_dependencies();
+            for(const auto& e : task_list) // TODO: change to std::views::values in C++20 and remove use of .second
+              {
+                const auto& t = e.second.get_task();
+                const auto& s = e.second.get_specifier();
+
+                auto elt = requirement_type{t.get_name(), std::make_unique<content_group_specifier>(s)};
+                auto u = std::find(requirements.begin(), requirements.end(), elt);
+                if(u == requirements.end())
+                  {
+                    requirements.push_back(std::move(elt));
+                  }
+                this->add_task_requirements(requirements, t.get_name());
               }
           }
       }
 
 
     template <typename number>
-    void master_controller<number>::prune_paired_tasks(record_name_set& required_tasks)
+    void master_controller<number>::add_task_requirements
+      (requirement_list_type& requirements, const std::string& task_name)
+      {
+        auto rec = this->repo->query_task(task_name);
+
+        if(!rec)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_MISSING << " '" << task_name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
+
+        switch(rec->get_type())
+          {
+            case task_type::integration:
+              {
+                // integration tasks have no dependencies
+                break;
+              }
+
+            case task_type::postintegration:
+              {
+                // postintegration tasks depend on a parent task
+                const auto& prec = dynamic_cast< postintegration_task_record<number>& >(*rec);
+                const auto& tk = *prec.get_task();
+
+                this->add_postintegration_task_requirements(requirements, tk);
+                break;
+              }
+
+            case task_type::output:
+              {
+                // output tasks depend on derived products, each of which may itself depend on other tasks
+                const auto& orec = dynamic_cast< output_task_record<number>& >(*rec);
+                const auto& tk = *orec.get_task();
+
+                this->add_output_task_requirements(requirements, tk);
+                break;
+              }
+          }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::prune_tasks_with_content(requirement_list_type& requirements)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
 
-        // build list of all tasks that will be processed, including tasks explicitly specified on the command line
-        for(const job_descriptor& job : this->job_queue)
+        // work through list of tasks needed as dependencies, deciding whether they have content groups
+        for(auto t = requirements.begin(); t != requirements.end(); /* intentionally no update step */)
           {
-            required_tasks.insert(job.get_name());
-          }
+            auto rec = this->repo->query_task(t->first);
 
-        // filter out any tasks in required_tasks which are only there because they're paired
-        for(const std::string& task : required_tasks)
-          {
-            // determine whether this task has any paired tasks
-            // if so, remove them from required_tasks unless they were specified on the command line
-            std::unique_ptr< task_record<number> > rec = this->repo->query_task(task);
-            if(rec)
+            if(!rec)
               {
-                std::string paired_task;
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_MISSING << " '" << t->first << "'";
+                throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+              }
 
-                if(rec->get_type() == task_type::postintegration)
+            // check for presence of content group matching the required specifiers (if present)
+            bool found_match = false;
+            if(t->second)
+              {
+                found_match = rec->get_content_groups(
+                  master_controller_impl::ContentGroupFilterPredicate<number>(*this->repo, *t->second, this->tags)).size() > 0;
+              }
+            else
+              {
+                found_match = rec->get_content_groups(
+                  master_controller_impl::ContentGroupFilterPredicate<number>(*this->repo, this->tags)).size() > 0;
+              }
+
+            if(found_match)
+              {
+                // group present; no need to schedule this task, so erase it from the list. Leaves t pointing to next item.
+                t = requirements.erase(t);
+              }
+            else
+              {
+                // no groups present; move on to next item
+                ++t;
+              }
+          }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::prune_paired_tasks(requirement_list_type& requirements)
+      {
+        // capture busy/idle timers and switch to busy mode
+        busyidle_instrument timers(this->busyidle_timers);
+
+        // filter out any tasks in requirements which are only there because they're paired
+        for(const auto& elt : requirements)
+          {
+            // determine whether this elt has any paired tasks
+            // if so, remove them from requirements unless they were specified on the command line
+            auto rec = this->repo->query_task(elt.first);
+
+            if(!rec)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_MISSING << " '" << elt.first << "'";
+                throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+              }
+
+            std::string paired_task;
+
+            if(rec->get_type() == task_type::postintegration)
+              {
+                const auto& prec = dynamic_cast< const postintegration_task_record<number>& >(*rec);
+                const postintegration_task<number>& tk = *prec.get_task();
+
+                // only zeta 2pf and zeta 3pf tasks can be paired
+                if(tk.get_task_type() == postintegration_task_type::twopf)
                   {
-                    const auto& prec = dynamic_cast< const postintegration_task_record<number>& >(*rec);
-                    const postintegration_task<number>& tk = *prec.get_task();
-
-                    // only zeta 2pf and zeta 3pf tasks can be paired
-                    if(tk.get_task_type() == postintegration_task_type::twopf)
-                      {
-                        const auto& ztk = dynamic_cast< const zeta_twopf_task<number>& >(tk);
-                        if(ztk.is_paired()) paired_task = ztk.get_parent_task()->get_name();
-                      }
-                    else if(tk.get_task_type() == postintegration_task_type::threepf)
-                      {
-                        const auto& ztk = dynamic_cast< const zeta_threepf_task<number>& >(tk);
-                        if(ztk.is_paired()) paired_task = ztk.get_parent_task()->get_name();
-                      }
+                    const auto& ztk = dynamic_cast< const zeta_twopf_task<number>& >(tk);
+                    if(ztk.is_paired()) paired_task = ztk.get_parent_task()->get_name();
                   }
-
-                // if there is a paired task, check whether it should be removed from required_tasks
-                if(!paired_task.empty())
+                else if(tk.get_task_type() == postintegration_task_type::threepf)
                   {
-                    auto u = required_tasks.find(paired_task);
-                    auto j = std::find_if(this->job_queue.begin(), this->job_queue.end(), FindJobDescriptorByName(paired_task));
+                    const auto& ztk = dynamic_cast< const zeta_threepf_task<number>& >(tk);
+                    if(ztk.is_paired()) paired_task = ztk.get_parent_task()->get_name();
+                  }
+              }
 
-                    // if this paired task wasn't specified on the command line, but is present in required_tasks, then remove it
-                    if(j == this->job_queue.end() && u != required_tasks.end()) required_tasks.erase(u);
+            // if there is a paired elt, check whether it should be removed from requirements
+            if(!paired_task.empty())
+              {
+                auto u = std::find_if(requirements.begin(), requirements.end(),
+                                      [&](const auto& item) { return item.first == paired_task; });
+
+                // only remove if it wasn't explicitly specified on the command line
+                if(u != requirements.end())
+                  {
+                    auto j = std::find_if(this->job_queue.begin(), this->job_queue.end(),
+                                          FindJobDescriptorByName(paired_task));
+
+                    if(j == this->job_queue.end()) requirements.erase(u);
                   }
               }
           }
@@ -260,27 +401,20 @@ namespace transport
 
     template <typename number>
     void master_controller<number>::insert_job_descriptors
-      (const record_name_set& required_tasks, const ordered_record_name_set& order)
+      (const requirement_list_type& requirements, const ordered_record_name_set& order)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
 
-        // set up tags
-        tag_list tags;
-        if(this->option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
-          {
-            auto tmp = this->option_map[CPPTRANSPORT_SWITCH_TAG].template as<std::vector<std::string> >();
-            std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
-          }
-
         // add extra tasks to job queue (not yet in any particular order)
-        for(const std::string& task : required_tasks)
+        for(const auto& elt : requirements)
           {
-            auto j = std::find_if(this->job_queue.cbegin(), this->job_queue.cend(), FindJobDescriptorByName(task));
+            auto j = std::find_if(this->job_queue.cbegin(), this->job_queue.cend(),
+                                  FindJobDescriptorByName(elt.first));
 
             if(j == this->job_queue.cend())   // no corresponding job in queue, so we need to insert one
               {
-                this->job_queue.emplace_back(job_type::job_task, task, tags);
+                this->job_queue.emplace_back(job_type::job_task, elt.first, this->tags);
               }
           }
 

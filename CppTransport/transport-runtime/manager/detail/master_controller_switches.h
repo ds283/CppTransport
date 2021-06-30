@@ -319,14 +319,13 @@ namespace transport
         // (in case repository access is needed, which can depend on model instances being available)
         
         // populate list of tags
-        std::list<std::string> tags;
         if(this->option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
           {
             std::vector<std::string> tmp = this->option_map[CPPTRANSPORT_SWITCH_TAG].template as<std::vector<std::string> >();
             
-            // copy tags into std::list tags
+            // copy tags
             // Boost::program_arguments doesn't support lists, only vectors, so we have to do it this way
-            std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
+            std::copy(tmp.begin(), tmp.end(), std::inserter(this->tags, this->tags.begin()));
           }
         
         // process task item
@@ -337,7 +336,7 @@ namespace transport
             
             for(const std::string& task : tasks)
               {
-                job_queue.emplace_back(job_type::job_task, task, tags);
+                job_queue.emplace_back(job_type::job_task, task, this->tags);
                 
                 if(this->option_map.count(CPPTRANSPORT_SWITCH_SEED))
                   {

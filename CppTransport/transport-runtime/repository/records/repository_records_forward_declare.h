@@ -44,6 +44,7 @@ namespace transport
 		class integration_metadata;
 		class derived_content;
 		class precomputed_products;
+		class content_group_specifier;
 		class integration_payload;
 		class postintegration_payload;
 		class output_payload;

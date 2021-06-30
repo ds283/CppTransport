@@ -60,10 +60,10 @@ namespace transport
         Json::Value& group_list = reader[CPPTRANSPORT_NODE_TASK_CONTENT_GROUPS];
         assert(group_list.isArray());
 
-        for(auto & t : group_list)
+        for(auto& t : group_list)
           {
             std::string name = t.asString();
-            this->content_groups.push_back(name);
+            this->content_groups.insert(name);
           }
       }
 
@@ -73,7 +73,7 @@ namespace transport
       {
         Json::Value group_list(Json::arrayValue);
 
-        for(const std::string& string : this->content_groups)
+        for(const auto& string : this->content_groups)
           {
             Json::Value group_element = string;
             group_list.append(group_element);
@@ -87,9 +87,12 @@ namespace transport
     template <typename number>
     void task_record<number>::add_new_content_group(const std::string& name)
       {
-        this->content_groups.push_back(name);
-        this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_content, name);
-        this->metadata.update_last_edit_time();
+        auto result = this->content_groups.insert(name);
+        if(result.second)
+          {
+            this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_content, name);
+            this->metadata.update_last_edit_time();
+          }
       }
 
 

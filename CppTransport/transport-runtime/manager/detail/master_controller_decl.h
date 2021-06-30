@@ -72,17 +72,94 @@ namespace transport
 
     namespace master_controller_impl
       {
+
         template <typename number> class Checkpoint_Context;
         template <typename number> class CloseDown_Context;
+
+
+        template <typename number>
+        class ContentGroupFilterPredicate
+          {
+          public:
+
+            //! constructor captures repository, content group specifiers and tag list
+            ContentGroupFilterPredicate(const repository<number>& r, const content_group_specifier& s, const tag_list& t)
+              : repo(r),
+                specifier(&s),
+                tags(t)
+              {
+              }
+
+            //! constructor captures tag repository and tag list; no content group specifiers are used
+            ContentGroupFilterPredicate(const repository<number>& r, const tag_list& t)
+              : repo(r),
+                specifier(nullptr),
+                tags(t)
+              {
+              }
+
+
+              // INTERFACE
+
+          public:
+
+              //! determine whether a named content group matches our criteria
+              bool operator()(const std::string& name)
+                {
+                  return true;
+                }
+
+
+              // INTERNAL DATA
+
+          private:
+
+            //! reference to repository
+            const repository<number>& repo;
+
+            //!± content group specifier, or nullptr if not specified
+            const content_group_specifier* specifier;
+
+            //! refernce to supplied tag list (which may be empty)
+            const tag_list& tags;
+
+          };
+
       }
 
     // aggregator classes forward-declared in aggregation_forward_declare.h
     using namespace master_controller_impl;
 
 
+    // a single task requirement is a named task (std:string) and a content_group_specifier that
+    // tells us the properties that it requires. That can be null if we have no specific requirements.
+    using requirement_type = std::pair< std::string, std::unique_ptr<content_group_specifier> >;
+
+    // a requirement list is a list of single task requirements. Note that this really is a list rather
+    // than a set, because we can depend on the same task in different ways (i.e. with different content
+    // group property requirements), and we want to be sure we can fulfill all of them.
+    using requirement_list_type = std::list<requirement_type>;
+
+
+    bool operator==(const requirement_type& a, const requirement_type& b)
+      {
+        // if names don't agree, no match
+        if(a.first != b.first)
+          return false;
+
+        // if either specifier is empty and the other isn't, no match
+        if(!a.second && b.second || a.second && !b.second)
+          return false;
+
+        // match if specifiers agree
+        return(*a.second == *b.second);
+      }
+
+
     template <typename number>
     class master_controller
       {
+
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -155,14 +232,24 @@ namespace transport
         //! autocomplete content groups by scheduling tasks which are needed, but do not yet have content
         void autocomplete_task_schedule();
 
+        //! merge requirements for a task, and recursively add its dependencies
+        void add_task_requirements(requirement_list_type& requirements, const std::string& task_name);
+
+        //! merge requirements for a postintegration task
+        void add_postintegration_task_requirements(requirement_list_type& requirements,
+                                                   const postintegration_task<number>& task);
+
+        //! merge requirements for an output task
+        void add_output_task_requirements(requirement_list_type& requirments, const output_task<number>& task);
+
         //! prune autocomplete task list of tasks which already have content
-        void prune_tasks_with_content(record_name_set& required_tasks);
+        void prune_tasks_with_content(requirement_list_type& requirements);
 
         //! prune autocomplete task list of tasks which are paired with other tasks
-        void prune_paired_tasks(record_name_set& required_tasks);
+        void prune_paired_tasks(requirement_list_type& requirements);
 
         //! insert job descriptors for required jobs, and sort jobs into correct topological order
-        void insert_job_descriptors(const record_name_set& required_tasks, const ordered_record_name_set& order);
+        void insert_job_descriptors(const requirement_list_type& requirements, const ordered_record_name_set& order);
 
 
         // MPI FUNCTIONS
@@ -397,6 +484,9 @@ namespace transport
 
         //! Boost::ProgramArguments variables_map
         boost::program_options::variables_map option_map;
+
+        //! tags specified on the command line
+        tag_list tags;
 
 
         // RUNTIME AGENTS

@@ -611,20 +611,16 @@ namespace transport
 
                 for(const auto& elt : parents) // TODO: change to std::views::values in C++20 and remove use of .second
                   {
-                    const auto& tk = elt.second.get_task();
-                    auto t = std::find_if(l.begin(), l.end(), derivable_task_set_impl::FindByName<number>(tk.get_name()));
+                    // don't insert multiple copies if this task is already present with the same specifiers.
+                    // otherwise, we insert a new record. This means we might have records for multiple "versions"
+                    // of the same task, with different content group specifiers -- that's expected
+                    auto t = std::find_if(l.begin(), l.end(),
+                                          [&](const auto& v) { return v.second == elt.second; });
 
-                    // if this task is already present, we want to merge any requirements on its content group.
-                    // otherwise, we insert a new task
-                    if(t != l.end())
-                      {
-                        // merge
-                        t->second.get_specifier() |= elt.second.get_specifier();
-                      }
-                    else
+                    if(t == l.end())
                       {
                         auto tag = unique_tag++;
-                        l.insert(make_derivable_task_set_element(tk, elt.second.get_specifier(), tag));
+                        l.insert(make_derivable_task_set_element(elt.second.get_task(), elt.second.get_specifier(), tag));
                       }
                   }
               }

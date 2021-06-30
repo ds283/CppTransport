@@ -826,7 +826,7 @@ namespace transport
               {
                 case task_type::integration:
                   {
-                    const auto& irec = dynamic_cast< const integration_task_record<number>& >(rec);
+                    // integration tasks have no dependencies
                     break;
                   }
 
@@ -850,7 +850,7 @@ namespace transport
 
                     // output tasks depend on derived products, each of which may depend on other tasks
                     const auto& tk = *orec.get_task();
-                    const auto elements = tk.get_elements();
+                    const auto& elements = tk.get_elements();
 
                     for(const auto& elt : elements)
                       {

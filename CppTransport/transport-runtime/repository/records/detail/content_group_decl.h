@@ -284,6 +284,19 @@ namespace transport
       };
 
 
+    bool operator==(const precomputed_products& a, const precomputed_products& b)
+      {
+        return a.has_zeta_twopf() == b.has_zeta_twopf() &&
+               a.has_zeta_twopf_spectral() == b.has_zeta_twopf_spectral() &&
+               a.has_zeta_threepf() == b.has_zeta_threepf() &&
+               a.has_zeta_redbsp() == b.has_zeta_redbsp() &&
+               a.has_fNL_local() == b.has_fNL_local() &&
+               a.has_fNL_equi() == b.has_fNL_equi() &&
+               a.has_fNL_ortho() == b.has_fNL_ortho() &&
+               a.has_fNL_DBI() == b.has_fNL_DBI();
+      }
+
+
     //! Integration payload
     class integration_payload: public serializable
       {
@@ -847,6 +860,285 @@ namespace transport
 
       }   // namespace content_group_helper
 
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_TYPE        = "type";
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_ICS         = "require-ics";
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_STATISTICS  = "require-statistics";
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_SPECTRAL    = "require-spectral-data";
+    constexpr auto CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_PRECOMPUTED = "required-precomputed";
+
+
+    //! used to specify which properties are needed in a content group for each task
+    //! that supplies data to a derived_product<> via a derivable_task<>
+    class content_group_specifier: public serializable
+      {
+
+        // We need to capture information about different types of content groups, and while we could do that
+        // polymorphically, that woud lead to lots of dynamic_cast<> usage which is messy and slow.
+        // Instead we capture everything in a single object, with flags to indicate which kind of object is
+        // under discussion. This is also messier than we would like, but we're stuck with it for now
+
+      public:
+
+        // each constructor captures all necessary data
+
+        //! constructor: integration group
+        content_group_specifier(bool i, bool s, bool sd)
+          : type{task_type::integration},
+            ics{i},
+            statistics{s},
+            spectral_data{sd}
+          {
+          }
+
+        //! constructor: postintegration group
+        explicit content_group_specifier(precomputed_products p)
+          : type{task_type::postintegration},
+            products(p),
+            ics{false},
+            statistics{false},
+            spectral_data{false}
+          {
+          }
+
+        //! deserialization constructor
+        explicit content_group_specifier(const Json::Value& reader);
+
+        //! destructor
+        ~content_group_specifier() = default;
+
+
+        // OPERATIONS
+
+      public:
+
+        //! merge with a second object
+        //! the resulting flags should be suitable to satisfy the requirements of both original specifiers
+        content_group_specifier& operator|=(const content_group_specifier& obj);
+
+
+        // QUERY: TASK TYPE
+
+      public:
+
+        //! get type
+        task_type get_type() const { return this->type; }
+
+
+        // QUERY: INTEGRATION GROUPS
+
+      public:
+
+        //! integration content group flag: requires initial conditions
+        bool requires_ics() const;
+
+        //! integration content group flag: requires per-configuration statistics
+        bool requires_statistics() const;
+
+        //! integration content group flag: requires spectral data
+        bool requires_spectral_data() const;
+
+
+        // QUERY: POSTINTEGRATION GROUPS
+
+      public:
+
+        //! postintegration content group: which precomputed products are required?
+        const precomputed_products& requires_products() const;
+
+
+        // SERIALIZATION -- implements a serializable interface
+
+      public:
+
+        void serialize(Json::Value& writer) const override;
+
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! type of required content group
+        task_type type;
+
+
+        // FLAGS FOR INTEGRATION GROUPS
+
+        //! true if we require a content group with initial conditions data (not currently used)
+        bool ics;
+
+        //! true if we require a content group with per-configuraiton statistics
+        bool statistics;
+
+        //! true if we require a content group with spectral data
+        bool spectral_data;
+
+
+        // PRECOMPUTED SPECIFIERS FOR POSTINTEGRATION GROUPS
+
+        //! specify which precomputed products are needed
+        precomputed_products products;
+
+      };
+
+
+    // deserialization constructor
+    content_group_specifier::content_group_specifier(const Json::Value& reader)
+      : type{task_type_from_string(reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_TYPE].asString())},
+        ics{false},
+        statistics{false},
+        spectral_data{false}
+      {
+        switch(type)
+          {
+            case task_type::integration:
+              {
+                // deserialize data for integration content groups
+                ics = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_ICS].asBool();
+                statistics = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_STATISTICS].asBool();
+                spectral_data = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_SPECTRAL].asBool();
+                break;
+              }
+
+            case task_type::postintegration:
+              {
+                // deserialize precomputed products information and assign it to our local copy
+                const Json::Value& pdata = reader[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_PRECOMPUTED];
+                precomputed_products p(pdata);
+                products = p;
+                break;
+              }
+
+            case task_type::output:
+              {
+                throw runtime_exception(exception_type::SERIALIZATION_ERROR,
+                                        CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_TASK_TYPE);
+              }
+          }
+      }
+
+
+    // serialize to a JSON document
+    void content_group_specifier::serialize(Json::Value& writer) const
+      {
+        writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_TYPE] = task_type_to_string(this->type);
+
+        switch(this->type)
+          {
+            case task_type::integration:
+              {
+                writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_ICS] = this->ics;
+                writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_STATISTICS] = this->statistics;
+                writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_SPECTRAL] = this->spectral_data;
+                break;
+              }
+
+            case task_type::postintegration:
+              {
+                Json::Value p(Json::objectValue);
+                this->products.serialize(p);
+                writer[CPPTRANSPORT_NODE_CONTENT_GROUP_SPECIFIER_PRECOMPUTED] = p;
+                break;
+              }
+
+            case task_type::output:
+              {
+                throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_TASK_TYPE);
+              }
+          }
+      }
+
+
+    bool content_group_specifier::requires_ics() const
+      {
+        if(this->type != task_type::integration)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
+
+        return ics;
+      }
+
+
+    bool content_group_specifier::requires_statistics() const
+      {
+        if(this->type != task_type::integration)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
+
+        return statistics;
+      }
+
+
+    bool content_group_specifier::requires_spectral_data() const
+      {
+        if(this->type != task_type::integration)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
+
+        return spectral_data;
+      }
+
+
+    const precomputed_products& content_group_specifier::requires_products() const
+      {
+        if(this->type != task_type::integration)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
+
+        return products;
+      }
+
+
+    content_group_specifier& content_group_specifier::operator|=(const content_group_specifier& obj)
+      {
+        if(this->type != obj.type)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_MERGE);
+
+        switch(this->type)
+          {
+            case task_type::integration:
+              {
+                this->ics |= obj.ics;
+                this->statistics |= obj.statistics;
+                this->spectral_data |= obj.spectral_data;
+                break;
+              }
+
+            case task_type::postintegration:
+              {
+                this->products |= obj.products;
+                break;
+              }
+
+            case task_type::output:
+              throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_TASK_TYPE);
+          }
+
+        return *this;
+      }
+
+
+    bool operator==(const content_group_specifier& a, const content_group_specifier& b)
+      {
+        auto a_type = a.get_type();
+        auto b_type = b.get_type();
+
+        if(a_type != b_type)
+          return false;
+
+        switch(a_type)
+          {
+            case task_type::integration:
+              {
+                return a.requires_ics() == b.requires_ics() &&
+                       a.requires_statistics() == b.requires_statistics() &&
+                       a.requires_spectral_data() == b.requires_spectral_data();
+              }
+
+            case task_type::postintegration:
+              {
+                return a.requires_products() == b.requires_products();
+              }
+
+            case task_type::output:
+              throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_BAD_TASK_TYPE);
+          }
+      }
 
   }   // namespace transport
 

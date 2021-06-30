@@ -33,6 +33,21 @@ namespace transport
     // GENERIC TASK RECORD
 
 
+    namespace task_record_impl
+      {
+
+        class EmptyContentGroupFilterPredicate
+          {
+          public:
+            EmptyContentGroupFilterPredicate() = default;
+            ~EmptyContentGroupFilterPredicate() = default;
+
+            bool operator()(const std::string& group) const { return true; }
+          };
+
+      } // namespace task_record_impl
+
+
     template <typename number>
     class task_record: public repository_record
       {
@@ -75,7 +90,21 @@ namespace transport
         void delete_content_group(const std::string& name);
 
         //! Get content groups
-        const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+        template <typename FilterPredicate = task_record_impl::EmptyContentGroupFilterPredicate>
+        content_group_name_set get_content_groups(FilterPredicate p=FilterPredicate()) const
+          {
+            content_group_name_set groups;
+
+            for(const auto& g : this->content_groups)
+              {
+                if(p(g))
+                  {
+                    groups.insert(g);
+                  }
+              }
+
+            return groups;
+          }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -91,7 +120,7 @@ namespace transport
       protected:
 
         //! List of content groups associated with this task
-        std::list<std::string> content_groups;
+        content_group_name_set content_groups;
 
       };
 
@@ -227,6 +256,7 @@ namespace transport
       public:
 
         //! Get task
+        // TODO: refactor this so it returns a reference rather than a pointer to a task
         postintegration_task<number>* get_task() const { return(this->tk.get()); }
 
         //! Get abstract task

@@ -1375,7 +1375,7 @@ namespace transport
                     item.add_element(panel);
 
                     // write table of content groups, if any are present
-                    const std::list<std::string>& content_groups = rec.get_content_groups();
+                    const auto& content_groups = rec.get_content_groups();
                     if(!content_groups.empty())
                       {
                         HTML_node button("button");
@@ -1909,7 +1909,7 @@ namespace transport
                     item.add_element(panel);
 
                     // write table of content groups, if any are present
-                    const std::list<std::string>& content_groups = rec.get_content_groups();
+                    const auto& content_groups = rec.get_content_groups();
                     if(!content_groups.empty())
                       {
                         HTML_node button("button");
@@ -2110,7 +2110,7 @@ namespace transport
                       }
 
                     // write table of content groups
-                    const std::list<std::string>& content_groups = rec.get_content_groups();
+                    const auto& content_groups = rec.get_content_groups();
                     if(!content_groups.empty())
                       {
                         HTML_node button("button");

@@ -731,7 +731,7 @@ namespace transport
               }
 
             // write table of content groups
-            const std::list<std::string>& content_groups = rec.get_content_groups();
+            const auto& content_groups = rec.get_content_groups();
 
             if(!content_groups.empty())
               {
@@ -815,7 +815,7 @@ namespace transport
               }
 
             // write table of content groups
-            const std::list<std::string>& content_groups = rec.get_content_groups();
+            const auto& content_groups = rec.get_content_groups();
 
             if(!content_groups.empty())
               {
@@ -935,7 +935,7 @@ namespace transport
               }
 
             // write table of content groups
-            const std::list<std::string>& content_groups = rec.get_content_groups();
+            const auto& content_groups = rec.get_content_groups();
 
             if(!content_groups.empty())
               {

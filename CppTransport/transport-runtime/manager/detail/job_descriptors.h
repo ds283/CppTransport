@@ -52,7 +52,7 @@ namespace transport
 
           public:
 
-            job_descriptor(job_type t, std::string  n, tag_list  tg, std::string  o)
+            job_descriptor(job_type t, std::string n, tag_list tg, std::string o)
               : type(t),
                 name(std::move(n)),
                 tags(std::move(tg)),
@@ -61,7 +61,7 @@ namespace transport
               {
               }
 
-            job_descriptor(job_type t, std::string  n, tag_list  tg)
+            job_descriptor(job_type t, std::string n, tag_list tg)
               : type(t),
                 name(std::move(n)),
                 tags(std::move(tg)),
@@ -77,28 +77,28 @@ namespace transport
             //! return job type
             job_type get_type() const
               {
-                return (this->type);
+                return this->type;
               }
 
 
             //! return job name
             const std::string& get_name() const
               {
-                return (this->name);
+                return this->name;
               }
 
 
             //! return job tags
             const std::list<std::string>& get_tags() const
               {
-                return (this->tags);
+                return this->tags;
               }
 
 
             //! return job output name
             const std::string& get_output() const
               {
-                return (this->output);
+                return this->output;
               }
 
 
@@ -113,14 +113,14 @@ namespace transport
             //! determine job seeding status
             bool is_seeded() const
               {
-                return (this->seeded);
+                return this->seeded;
               }
 
 
             //! get job seeding group
             const std::string& get_seed_group() const
               {
-                return (this->seed_group);
+                return this->seed_group;
               };
 
 
