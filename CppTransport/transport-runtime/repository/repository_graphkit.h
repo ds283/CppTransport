@@ -340,7 +340,7 @@ namespace transport
       public:
 
         //! build topological ordering on graph
-        std::unique_ptr< std::list<std::string> > compute_topological_order() const;
+        std::unique_ptr<ordered_record_name_set> compute_topological_order() const;
 
         //! write graphviz representation of the plot
         void write_graphviz(boost::filesystem::path& file) const;
@@ -440,11 +440,11 @@ namespace transport
       }
 
 
-    std::unique_ptr< std::list<std::string> > repository_dependency_graph::compute_topological_order() const
+    std::unique_ptr<ordered_record_name_set> repository_dependency_graph::compute_topological_order() const
       {
-        auto objects = std::make_unique< std::list<std::string> >();
+        auto items = std::make_unique<ordered_record_name_set>();
 
-        if(!this->G || !this->M) return objects;
+        if(!this->G || !this->M) return items;
 
         // build ordered list of vertices
         vertex_list list;
@@ -453,10 +453,10 @@ namespace transport
         // convert list of vertices (remember it is supplied in reverse order) to an ordered list of object names
         for(auto t = list.crbegin(); t != list.crend(); ++t)
           {
-            objects->push_back((*this->M)[*t]);
+            items->push_back((*this->M)[*t]);
           }
 
-        return objects;
+        return items;
       }
 
 
@@ -636,10 +636,10 @@ namespace transport
       public:
 
         //! determine a list of objects (vertices) which depend on a given named object (vertex)
-        std::unique_ptr< std::set<std::string> > find_dependent_objects(const std::string& name) const;
+        std::unique_ptr<record_name_set> find_dependent_objects(const std::string& name) const;
 
         //! determine a list of objects (vertices) on which a given named object (vertex) depends
-        std::unique_ptr< std::set<std::string> > find_dependencies(const std::string& name) const;
+        std::unique_ptr<record_name_set> find_dependencies(const std::string& name) const;
 
 
         // INTERNAL DATA
@@ -669,10 +669,10 @@ namespace transport
       }
 
 
-    std::unique_ptr< std::set<std::string> >
+    std::unique_ptr<record_name_set>
     repository_distance_matrix::find_dependent_objects(const std::string& name) const
       {
-        auto objects = std::make_unique< std::set<std::string> >();
+        auto objects = std::make_unique<record_name_set>();
 
         const auto& map = *(this->G);
         const auto& graph = this->G.get_graph();
@@ -699,9 +699,9 @@ namespace transport
       }
 
 
-    std::unique_ptr< std::set<std::string> > repository_distance_matrix::find_dependencies(const std::string& name) const
+    std::unique_ptr<record_name_set> repository_distance_matrix::find_dependencies(const std::string& name) const
       {
-        auto objects = std::make_unique< std::set<std::string> >();
+        auto objects = std::make_unique<record_name_set>();
 
         const auto& map = *(this->G);
         const auto& graph = this->G.get_graph();
@@ -765,11 +765,11 @@ namespace transport
       public:
 
         //! construct dependency graph for a list of content groups
-        std::unique_ptr<repository_dependency_graph> content_group_dependency(const std::list<std::string>& groups);
+        std::unique_ptr<repository_dependency_graph> content_group_dependency(const content_group_name_set& groups);
 
         //! convenience function to construct dependency graph for a piece of content
         //! which depends on a list of content groups
-        std::unique_ptr<repository_dependency_graph> derived_content_dependency(const std::string& name, const std::list<std::string>& groups);
+        std::unique_ptr<repository_dependency_graph> derived_content_dependency(const std::string& name, const content_group_name_set& groups);
 
 
         // DEPENDENCY GRAPHS -- INTERNAL API
@@ -858,11 +858,11 @@ namespace transport
 
                         // get list of tasks this product depends on
                         auto task_list = product.get_task_dependencies();
-                        for(const auto& elt : task_list) // TODO: change to std::views::values in C++20 and remove use of .second
+                        for(const auto& e : task_list) // TODO: change to std::views::values in C++20 and remove use of .second
                           {
-                            const auto& tk = elt.second.get_task();
-                            vmap.insert(tk.get_name(), G, repository_vertex_type::task);
-                            boost::add_edge(vmap[tk.get_name()], vmap[rec.get_name()], 1, G);
+                            const auto& t = e.second.get_task();
+                            vmap.insert(t.get_name(), G, repository_vertex_type::task);
+                            boost::add_edge(vmap[t.get_name()], vmap[rec.get_name()], 1, G);
                           }
                       }
 
@@ -877,7 +877,7 @@ namespace transport
         // run Floyd-Warshall algorithm to find shortest path between each vertex pair in the graph
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
 
-        return std::move(dmat);
+        return dmat;
       }
 
 
@@ -939,13 +939,13 @@ namespace transport
         // run Floyd-Warshall algorithm to find shortest path between each vertex pair in the graph
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
 
-        return std::move(dmat);
+        return dmat;
       }
 
 
     template <typename number>
     std::unique_ptr<repository_dependency_graph>
-    repository_graphkit<number>::content_group_dependency(const std::list<std::string>& groups)
+    repository_graphkit<number>::content_group_dependency(const content_group_name_set& groups)
       {
         // build graph representing content groups and their dependencies
         repository_vertex_map vmap;
@@ -957,7 +957,7 @@ namespace transport
           }
 
         auto graph = std::make_unique<repository_dependency_graph>(G, vmap);
-        return std::move(graph);
+        return graph;
       }
 
 
@@ -1067,7 +1067,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr<repository_dependency_graph>
-    repository_graphkit<number>::derived_content_dependency(const std::string& name, const std::list<std::string>& groups)
+    repository_graphkit<number>::derived_content_dependency(const std::string& name, const content_group_name_set& groups)
       {
         auto graph = this->content_group_dependency(groups);
 
@@ -1080,7 +1080,7 @@ namespace transport
             boost::add_edge(vmap[group], vmap[name], 1, G);
           }
 
-        return std::move(graph);
+        return graph;
       }
 
 

@@ -161,50 +161,6 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::postintegration_settings_from_integration_content
-      (postintegration_writer<number>& writer, const std::string& ptk_name, const tag_list& tags)
-      {
-        auto source_group = this->repo->find_integration_task_output(ptk_name, tags);
-        if(!source_group)
-          {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_NO_CANDIDATE_INTEGRATION_GROUP << " '" << ptk_name << "'";
-            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
-          }
-
-        // tag the writer as *not* including spectral data if the source integration group hasn't got it
-        const auto& source_payload = source_group->get_payload();
-        auto& dest_products = writer.get_products();
-        if(!source_payload.has_spectral_data())
-          {
-            dest_products.set_zeta_twopf_spectral(false);
-          }
-      }
-
-
-    template <typename number>
-    void master_controller<number>::postintegration_settings_from_postintegration_content
-      (postintegration_writer<number>& writer, const std::string& ptk_name, const tag_list& tags)
-      {
-        auto source_group = this->repo->find_postintegration_task_output(ptk_name, tags);
-        if(!source_group)
-          {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_NO_CANDIDATE_POSTINTEGRATION_GROUP << " '" << ptk_name << "'";
-            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
-          }
-
-        // tag the writer as *not* including spectral data if the source integration group hasn't got it
-        const auto& source_products = source_group->get_payload().get_precomputed_products();
-        auto& dest_products = writer.get_products();
-        if(!source_products.has_zeta_twopf_spectral())
-          {
-            dest_products.set_zeta_twopf_spectral(false);
-          }
-      }
-
-
-    template <typename number>
     template <typename TaskObject>
     void master_controller<number>::schedule_postintegration(postintegration_task_record<number>& rec, TaskObject* tk,
                                                              bool seeded, const std::string& seed_group, const tag_list& tags,
@@ -221,36 +177,6 @@ namespace transport
 
         // initialize the writer
         this->data_mgr->initialize_writer(*writer);
-
-        // find the output group that will be used in this computation
-        // notice that it doesn't have to be an integration task output group; it could be a postintegration
-        // task group, for example, if we are computing an fNL, C_ell or map-making coefficients from
-        // the output of a zeta task
-        auto& rp = *this->repo;
-
-        const auto& ptk_name = tk->get_parent_task()->get_name();
-        auto record = rp.query_task(ptk_name);
-        switch(record->get_type())
-          {
-            case task_type::integration:
-              {
-                this->postintegration_settings_from_integration_content(*writer, ptk_name, tags);
-                break;
-              }
-
-            case task_type::postintegration:
-              {
-                this->postintegration_settings_from_postintegration_content(*writer, ptk_name, tags);
-                break;
-              }
-
-            case task_type::output:
-              {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_POSTINTEGRATION_HAS_OUTPUT_SOURCE << " '" << ptk_name << "'";
-                throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
-              }
-          }
 
         // create new tables needed in the database
         this->data_mgr->create_tables(*writer, tk);
@@ -518,7 +444,7 @@ namespace transport
         output_metadata        o_metadata = writer.get_metadata();
 
         // list of content groups will be overwritten
-        std::list<std::string> content_groups;
+        content_group_name_set content_groups;
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer.get_abs_tempdir_path();
@@ -546,7 +472,7 @@ namespace transport
 
         if(content_groups.size() > 1) throw runtime_exception(exception_type::RUNTIME_ERROR,  CPPTRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
 
-        writer.set_parent_group(content_groups.front());
+        writer.set_parent_group(*content_groups.cbegin());
         writer.set_metadata(o_metadata);
         wallclock_timer.stop();
         this->debrief_output(writer, o_metadata, wallclock_timer);
@@ -569,7 +495,7 @@ namespace transport
         // aggregate cache information
         integration_metadata   i_metadata = i_writer.get_metadata();
         output_metadata        o_metadata = p_writer.get_metadata();
-        std::list<std::string> content_groups;  // unused
+        content_group_name_set content_groups;  // unused
 
         // reset count of failed configurations (can be nonzero if inherited from a seed group)
         i_metadata.total_failures = 0;

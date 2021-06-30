@@ -136,7 +136,8 @@ namespace transport
 
 
     template <typename number>
-    bool sqlite3_derived_content_writer_aggregate<number>::operator()(derived_content_writer<number>& writer, const std::string& product, const std::list<std::string>& used_groups)
+    bool sqlite3_derived_content_writer_aggregate<number>::operator()
+      (derived_content_writer<number>& writer, const std::string& product, const content_group_name_set& used_groups)
       {
         return this->mgr.aggregate_derived_product(writer, product, used_groups);
       }

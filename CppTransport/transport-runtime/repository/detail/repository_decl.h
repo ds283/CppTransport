@@ -27,6 +27,11 @@
 #define CPPTRANSPORT_REPOSITORY_DECL_H
 
 
+#include "transport-runtime/common.h"
+
+#include <unordered_map>
+
+
 namespace transport
   {
 
@@ -35,36 +40,29 @@ namespace transport
     template <typename number>
     struct package_db
       {
-        using type = std::map< std::string, std::unique_ptr< package_record<number> > >;
-        using value_type = std::pair< const std::string, std::unique_ptr< package_record<number> > >;
+        using type = std::unordered_map< std::string, std::unique_ptr< package_record<number> > >;
+        using value_type = typename type::value_type ;
       };
 
     //! database type for tasks
     template <typename number>
     struct task_db
       {
-        using type = std::map< std::string, std::unique_ptr< task_record<number> > >;
-        using value_type = std::pair< const std::string, std::unique_ptr< task_record<number> > >;
+        using type = std::unordered_map< std::string, std::unique_ptr< task_record<number> > >;
+        using value_type = typename type::value_type;
       };
 
     //! database type for derived products
     template <typename number>
     struct derived_product_db
       {
-        using type = std::map< std::string, std::unique_ptr< derived_product_record<number> > >;
-        using value_type = std::pair< const std::string, std::unique_ptr< derived_product_record<number> > >;
+        using type = std::unordered_map< std::string, std::unique_ptr< derived_product_record<number> > >;
+        using value_type = typename type::value_type;
       };
 
 
-    //! content group list
-    using content_group_list = std::list< std::string >;
-
-    //! record name list
-    using record_name_list = std::list< std::string >;
-
-
     template <typename Payload>
-    class content_group_set
+    class content_group_record_set
       {
       public:
         using type = std::map< std::string, std::unique_ptr< content_group_record<Payload> > >;
@@ -73,13 +71,13 @@ namespace transport
 
 
     //! database type for integration content groups
-    using integration_content_db = typename content_group_set<integration_payload>::type;
+    using integration_content_db = typename content_group_record_set<integration_payload>::type;
 
     //! database type for postintegration content groups
-    using postintegration_content_db = typename content_group_set<postintegration_payload>::type;
+    using postintegration_content_db = typename content_group_record_set<postintegration_payload>::type;
 
     //! database type for output content groups
-    using output_content_db = typename content_group_set<output_payload>::type;
+    using output_content_db = typename content_group_record_set<output_payload>::type;
 
 
     // hint for query_task() method
@@ -213,8 +211,8 @@ namespace transport
         // This problem could be avoided with a significant overhead on constructing all read-only records, by checking
         // a datestamp in the database. But the problem isn't any different to the first part of the scenario
         // above, where A reads and caches a record which B subsequently alters. Then the original read-only record
-        // served by A is already out-of-date. Because there is no way at all to eliminate this (and because all
-        // read-write records are always safe) we choose to live with it.
+        // served by A is already out-of-date. Because there is no realistic way to eliminate this in any multi-process
+        // distributed system (and because all read-write records are always safe) we choose to live with it.
 
         //! Read a package record from the database
         //! Without a transaction_manager object, the returned record is readonly

@@ -27,6 +27,9 @@
 #define CPPTRANSPORT_CONTENT_GROUP_DECL_H
 
 
+#include <utility>
+
+
 namespace transport
   {
 
@@ -40,14 +43,14 @@ namespace transport
       public:
 
         //! Create a derived_product descriptor
-        derived_content(const std::string& prod, const std::string& fnam, const boost::posix_time::ptime& now,
-                        const std::list<std::string>& gp, const std::list<note>& nt, const std::list<std::string>& tg)
-          : parent_product(prod),
+        derived_content(std::string prod, std::string fnam, const boost::posix_time::ptime& now,
+                        content_group_name_set gp, std::list<note> nt, tag_list tg)
+          : parent_product(std::move(prod)),
             filename(fnam),
             created(now),
-            content_groups(gp),
-            notes(nt),
-            tags(tg)
+            content_groups(std::move(gp)),
+            notes(std::move(nt)),
+            tags(std::move(tg))
           {
           }
 
@@ -84,7 +87,7 @@ namespace transport
         const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
 
         //! Get names of content groups on which this piece of content depends
-        const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+        const content_group_name_set& get_content_groups() const { return(this->content_groups); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -112,10 +115,10 @@ namespace transport
         std::list<note> notes;
 
         //! Tags
-        std::list<std::string> tags;
+        tag_list tags;
 
         //! content groups used to create
-        std::list<std::string> content_groups;
+        content_group_name_set content_groups;
 
       };
 
@@ -617,7 +620,7 @@ namespace transport
       public:
 
         //! Add an output
-        void add_derived_content(const derived_content& prod) { this->content.push_back(prod); }
+        void add_derived_content(derived_content prod) { this->content.emplace_back(std::move(prod)); }
 
         //! Get derived content records
         const std::list<derived_content>& get_derived_content() const { return(this->content); }
@@ -642,10 +645,10 @@ namespace transport
         //! Get list of used content groups;
         //! this information is replicated at a more granular level in the content list,
         //! but a summary set is provided here for convenience
-        const std::list<std::string>& get_content_groups_summary() const { return(this->used_groups); }
+        const content_group_name_set& get_content_groups_summary() const { return this->used_groups; }
 
         //! Set list of used content groups
-        void set_content_groups_summary(const std::list<std::string>& list) { this->used_groups = list; }
+        void set_content_groups_summary(const content_group_name_set& list) { this->used_groups = list; }
 
 
         // WRITE TO A STREAM
@@ -678,7 +681,7 @@ namespace transport
         bool fail;
 
         //! list of content groups used to produce this output
-        std::list<std::string> used_groups;
+        content_group_name_set used_groups;
 
       };
 

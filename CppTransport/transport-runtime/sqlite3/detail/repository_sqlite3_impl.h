@@ -1535,7 +1535,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    typename content_group_set<Payload>::type repository_sqlite3<number>::enumerate_content_groups(std::string name)
+    typename content_group_record_set<Payload>::type repository_sqlite3<number>::enumerate_content_groups(std::string name)
       {
         // get list of group names associated with the task 'name', or all tasks of a specified payload if 'name' is empty.
         // Overwrites existing content of the list group_names
@@ -1552,19 +1552,19 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    typename content_group_set<Payload>::type
-    repository_sqlite3<number>::content_groups_from_list(const content_group_list& list)
+    typename content_group_record_set<Payload>::type
+    repository_sqlite3<number>::content_groups_from_list(const content_group_name_set& groups)
       {
-        typename content_group_set<Payload>::type db;
+        typename content_group_record_set<Payload>::type records;
 
-        for(const auto& name : list)
+        for(const auto& name : groups)
           {
             std::unique_ptr< content_group_record<Payload> > group;
             this->query_content(name, group);
-            db.insert(std::make_pair(group->get_name(), std::move(group)) );
+            records.insert(std::make_pair(group->get_name(), std::move(group)) );
           }
 
-        return db;
+        return records;
       }
 
 

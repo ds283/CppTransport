@@ -29,18 +29,30 @@
 
 #include <set>
 #include <list>
+#include <unordered_set>
 
 
 namespace transport
-{
+  {
 
-  //! data type for holding a list of missing serial numbers, used during integrity testing
-  using serial_number_list = std::set<unsigned int>;
+    //! data type for holding a list of missing serial numbers, used during integrity testing
+    using serial_number_list = std::set<unsigned int>;
 
-  //! tag list
-  using tag_list = std::list< std::string >;
+    //! tag list
+    using tag_list = std::list<std::string>;
 
-}   // namespace transport
+
+    //! content group list
+    using content_group_name_set = std::unordered_set<std::string>;
+
+    //! group of record names
+    using record_name_set = std::unordered_set<std::string>;
+
+    //! ordered group of record names
+    using ordered_record_name_set = std::list<std::string>;
+
+
+  }   // namespace transport
 
 
 #endif //CPPTRANSPORT_COMMON_H

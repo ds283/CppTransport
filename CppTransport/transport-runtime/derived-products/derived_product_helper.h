@@ -46,8 +46,11 @@ namespace transport
               {
                 std::string type = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 
-                if (type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return std::make_unique< line_plot2d<number> >(name, reader, finder);
-                else if(type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return std::make_unique< line_asciitable<number> >(name, reader, finder);
+                if (type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)
+                  return std::make_unique< line_plot2d<number> >(name, reader, finder);
+
+                if(type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE)
+                  return std::make_unique< line_asciitable<number> >(name, reader, finder);
 
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";

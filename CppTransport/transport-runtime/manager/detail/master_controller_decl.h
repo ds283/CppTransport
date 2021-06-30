@@ -113,7 +113,7 @@ namespace transport
         void post_process_tasks();
 
         //! execute any queued tasks
-        void execute_tasks(void);
+        void execute_tasks();
 
 
       protected:
@@ -156,13 +156,13 @@ namespace transport
         void autocomplete_task_schedule();
 
         //! prune autocomplete task list of tasks which already have content
-        void prune_tasks_with_content(std::set<std::string>& required_tasks);
+        void prune_tasks_with_content(record_name_set& required_tasks);
 
         //! prune autocomplete task list of tasks which are paired with other tasks
-        void prune_paired_tasks(std::set<std::string>& required_tasks);
+        void prune_paired_tasks(record_name_set& required_tasks);
 
         //! insert job descriptors for required jobs, and sort jobs into correct topological order
-        void insert_job_descriptors(const std::set<std::string>& required_tasks, const std::list<std::string>& order);
+        void insert_job_descriptors(const record_name_set& required_tasks, const ordered_record_name_set& order);
 
 
         // MPI FUNCTIONS
@@ -175,7 +175,7 @@ namespace transport
 
         //! Return MPI rank of this process
         // TODO: replace with a better abstraction
-        unsigned int get_rank(void) const { return(static_cast<unsigned int>(this->world.rank())); }
+        unsigned int get_rank() const { return(static_cast<unsigned int>(this->world.rank())); }
 
         //! Map worker number to communicator rank (note: has to be duplicated in WorkerBundle)
         // TODO: replace with a better abstraction (which can be shared with WorkerPool_Context)
@@ -216,7 +216,7 @@ namespace transport
         //! Master node: main loop: poll workers for events
         template <typename WriterObject>
         bool poll_workers(integration_aggregator<number>& int_agg, postintegration_aggregator<number>& post_agg, derived_content_aggregator<number>& derived_agg,
-                          integration_metadata& int_metadata, output_metadata& out_metadata, std::list<std::string>& content_groups,
+                          integration_metadata& int_metadata, output_metadata& out_metadata, content_group_name_set& content_groups,
                           WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: generate new work assignments for workers
@@ -360,7 +360,7 @@ namespace transport
         void update_output_metadata(PayloadObject& payload, output_metadata& metadata);
 
         template <typename PayloadObject>
-        void update_content_group_list(PayloadObject& payload, std::list<std::string>& groups);
+        void update_content_group_list(PayloadObject& payload, content_group_name_set& groups);
 
 
         // DECLARE AGGREGATOR CLASSES AS FRIENDS

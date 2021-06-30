@@ -152,7 +152,8 @@ namespace transport
         void schedule_output(output_task<number>* tk, const MPI::new_derived_content_payload& payload);
 
         //! Push new derived content to the master process
-        void push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& used_groups);
+        void push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product,
+                                  const content_group_name_set& used_groups);
 
 
         friend class slave_datapipe_dispatch<number>;

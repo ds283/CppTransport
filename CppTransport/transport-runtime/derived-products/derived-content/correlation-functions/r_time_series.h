@@ -179,11 +179,11 @@ namespace transport
 		    void r_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
 		                                             const tag_list& tags, slave_message_buffer& messages) const
 			    {
-            std::list< std::string > groups;
+            content_group_name_set groups;
 
 						// attach our datapipe to a content group for the zeta part of r
             std::string group = this->attach(pipe, tags, r_line_impl::ZETA_TASK);
-            groups.push_back(group);
+            groups.insert(group);
 
 				    // pull time-axis data
 				    const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
@@ -213,7 +213,7 @@ namespace transport
 
 				    // attach datapipe to a content group for the tensor part of r
             group = this->attach(pipe, tags, r_line_impl::INTEGRATION_TASK);
-            groups.push_back(group);
+            groups.insert(group);
 
 						// rebind handles
 				    i = 0;  // reset counter

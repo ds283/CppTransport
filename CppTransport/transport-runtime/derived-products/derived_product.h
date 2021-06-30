@@ -126,7 +126,7 @@ namespace transport
 
 		        //! Apply the analysis represented by this derived product to a given content group,
 		        //! specified by an attached datapipe<> object
-		        virtual std::list<std::string> derive(datapipe<number>& pipe, const tag_list& tags,
+		        virtual content_group_name_set derive(datapipe<number>& pipe, const tag_list& tags,
                                                   slave_message_buffer& messages, local_environment& env, argument_cache& args) = 0;
 
 

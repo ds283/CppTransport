@@ -612,7 +612,7 @@ namespace transport
                     bool success = true;
 
                     // track content groups we use
-                    std::list<std::string> content_groups;
+                    content_group_name_set content_groups;
 
                     // keep track of wallclock time
                     boost::timer::cpu_timer timer;
@@ -646,13 +646,13 @@ namespace transport
 
                         BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Processing derived product '" << product.get_name() << "'";
 
-                        std::list<std::string> this_groups;
-
                         try
                           {
                             boost::timer::cpu_timer derive_timer;
-                            this_groups = product.derive(*pipe, task_tags, messages, this->local_env, this->arg_cache);
-                            content_groups.merge(this_groups);
+                            auto this_groups = product.derive(*pipe, task_tags, messages, this->local_env, this->arg_cache);
+                            std::merge(this_groups.begin(), this_groups.end(),
+                                       content_groups.begin(), content_groups.end(),
+                                       std::inserter(content_groups, content_groups.begin()));
                             derive_timer.stop();
                             processing_time += derive_timer.elapsed().wall;
                             if(max_processing_time == 0 || derive_timer.elapsed().wall > max_processing_time) max_processing_time = derive_timer.elapsed().wall;
@@ -673,10 +673,6 @@ namespace transport
 
                         BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "";
                       }
-
-                    // collect content groups used during this derivation
-                    content_groups.sort();
-                    content_groups.unique();
 
                     // all work now done - stop the timer
                     timer.stop();
@@ -1125,7 +1121,7 @@ namespace transport
 
     template <typename number>
     void slave_controller<number>::push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product,
-                                                        const std::list<std::string>& used_groups)
+                                                        const content_group_name_set& used_groups)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);

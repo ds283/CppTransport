@@ -189,7 +189,7 @@ namespace transport
         // aggregate integration data reported by worker processes
         integration_metadata   i_metadata = writer.get_metadata();
         output_metadata        o_metadata;      // unused
-        std::list<std::string> content_groups;  // unused
+        content_group_name_set content_groups;  // unused
 
         // reset count of failed configurations (can be nonzero if inherited from a seed group)
         i_metadata.total_failures = 0;

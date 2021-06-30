@@ -105,7 +105,7 @@ namespace transport
         // aggregate cache information
         integration_metadata   i_metadata;      // unused
         output_metadata        o_metadata = writer.get_metadata();
-        std::list<std::string> content_groups;
+        content_group_name_set content_groups;
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer.get_abs_tempdir_path();
@@ -217,13 +217,13 @@ namespace transport
 
     template <typename number>
     template <typename PayloadObject>
-    void master_controller<number>::update_content_group_list(PayloadObject& payload, std::list<std::string>& groups)
+    void master_controller<number>::update_content_group_list(PayloadObject& payload, content_group_name_set& groups)
       {
-        std::list<std::string> this_group = payload.get_content_groups();
+        auto this_group = payload.get_content_groups();
 
-        this_group.sort();
-        groups.merge(this_group);
-        groups.unique();
+        std::merge(this_group.begin(), this_group.end(),
+                   groups.begin(), groups.end(),
+                   std::inserter(groups, groups.begin()));
       }
 
   }   // namespace transport

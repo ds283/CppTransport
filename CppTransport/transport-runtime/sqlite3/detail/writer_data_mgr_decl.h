@@ -597,7 +597,7 @@ namespace transport
       public:
 
         //! commit
-        bool operator()(derived_content_writer<number>& writer, const std::string& product, const std::list<std::string>& used_groups) override;
+        bool operator()(derived_content_writer<number>& writer, const std::string& product, const content_group_name_set& used_groups) override;
 
 
         // INTERNAL DATA

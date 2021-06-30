@@ -59,7 +59,7 @@ namespace transport
       public:
 
         //! dispatch
-        virtual void operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& used_groups) = 0;
+        virtual void operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const content_group_name_set& used_groups) = 0;
 
       };
 

@@ -1211,7 +1211,7 @@ namespace transport
             this->report_output_record_generic(rec);
 
             const output_payload& payload = rec.get_payload();
-            const std::list<std::string>& groups = payload.get_content_groups_summary();
+            const auto& groups = payload.get_content_groups_summary();
 
             if(!groups.empty())
               {
@@ -1434,7 +1434,7 @@ namespace transport
                         kv.write(std::cout);
                       }
 
-                    const std::list<std::string>& groups = item.get_content_groups();
+                    const auto& groups = item.get_content_groups();
                     if(!groups.empty())
                       {
                         std::vector<column_descriptor> columns;
@@ -1443,7 +1443,7 @@ namespace transport
                         std::vector<std::string> type;
                         std::vector<std::string> last_edit;
 
-                        for(const std::string& group : groups)
+                        for(const auto& group : groups)
                           {
                             name.push_back(group);
 

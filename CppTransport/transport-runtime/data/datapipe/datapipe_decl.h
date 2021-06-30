@@ -173,7 +173,10 @@ namespace transport
       public:
 
         //! Commit an output
-        void commit(typename derived_data::derived_product<number>* product, const std::list<std::string>& groups) { this->utilities.dispatch(this, product, groups); }
+        void commit(typename derived_data::derived_product<number>* product, const content_group_name_set& groups)
+          {
+            this->utilities.dispatch(this, product, groups);
+          }
 
 
         // CACHE STATISTICS

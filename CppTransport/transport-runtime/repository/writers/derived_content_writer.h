@@ -130,7 +130,7 @@ namespace transport
       public:
 
         //! aggregate
-        virtual bool operator()(derived_content_writer<number>& writer, const std::string& product, const std::list<std::string>& used_groups) = 0;
+        virtual bool operator()(derived_content_writer<number>& writer, const std::string& product, const content_group_name_set& used_groups) = 0;
 
       };
 
@@ -168,7 +168,7 @@ namespace transport
         void set_aggregation_handler(std::unique_ptr< derived_content_writer_aggregate<number> > c) { this->aggregate_h = std::move(c); }
 
         //! Aggregate a product
-        bool aggregate(const std::string& product, const std::list<std::string>& used_groups);
+        bool aggregate(const std::string& product, const content_group_name_set& used_groups);
 
 
         // DATABASE FUNCTIONS
@@ -200,7 +200,7 @@ namespace transport
       public:
 
         //! Push new item of derived content to the writer
-        void push_content(derived_data::derived_product<number>& product, const std::list<std::string>& used_groups);
+        void push_content(derived_data::derived_product<number>& product, const content_group_name_set& used_groups);
 
         //! Get content
         const std::list<derived_content>& get_content() const { return(this->content); }
@@ -238,10 +238,10 @@ namespace transport
         void merge_failure_list(const serial_number_list& failed) { throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED); }
 
         //! Set content groups
-        void set_content_groups(const std::list<std::string>& l) { this->content_groups = l; }
+        void set_content_groups(const content_group_name_set& l) { this->content_groups = l; }
 
         //! Get content groups
-        const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+        const content_group_name_set& get_content_groups() const { return(this->content_groups); }
 
 
         // INTERNAL DATA
@@ -278,7 +278,7 @@ namespace transport
         output_metadata metadata;
 
         //! global list of content groups used in this task
-        std::list<std::string> content_groups;
+        content_group_name_set content_groups;
 
 	    };
 
@@ -314,7 +314,7 @@ namespace transport
 
 
     template <typename number>
-    bool derived_content_writer<number>::aggregate(const std::string& product, const std::list<std::string>& used_groups)
+    bool derived_content_writer<number>::aggregate(const std::string& product, const content_group_name_set& used_groups)
 	    {
         if(!this->aggregate_h)
 	        {
@@ -327,7 +327,7 @@ namespace transport
 
 
 		template <typename number>
-    void derived_content_writer<number>::push_content(derived_data::derived_product<number>& product, const std::list<std::string>& used_groups)
+    void derived_content_writer<number>::push_content(derived_data::derived_product<number>& product, const content_group_name_set& used_groups)
 	    {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         std::list<note> notes;

@@ -65,29 +65,19 @@ namespace transport
           public:
 
 		        //! Construct a dataline object from a sequence of axis and data points
-            data_line(std::list<std::string> g, axis_value at, value_type vt,
+            data_line(content_group_name_set g, axis_value at, value_type vt,
                       const std::vector<double>& a, const std::vector<number>& d,
                       std::string Ll, std::string nLl,
                       slave_message_buffer& msg, bool spectral_index=false);
 
             //! Construct a dataline object from a sequence of axis and data points
-            //! convenience person that accepts a std::initializer_list
-            data_line(std::initializer_list<std::string> g, axis_value at, value_type vt,
-                      const std::vector<double>& a, const std::vector<number>& d,
-                      std::string Ll, std::string nLl,
-                      slave_message_buffer& msg, bool spectral_index=false)
-              : data_line(std::list<std::string>(g), at, vt, a, d, std::move(Ll), std::move(nLl), msg, spectral_index)
-              {
-              }
-
-            //! Construct a dataline object from a sequence of axis and data points
             //! convenience version that automatically wraps a string representing a single-item
-            //! provenance list into a std::list<>
+            //! provenance list into a content_group_name_set
             data_line(std::string g, axis_value at, value_type vt,
                       const std::vector<double>& a, const std::vector<number>& d,
                       std::string Ll, std::string nLl,
                       slave_message_buffer& msg, bool spectral_index=false)
-              : data_line({g}, at, vt, a, d, std::move(Ll), std::move(nLl), msg, spectral_index)
+              : data_line(content_group_name_set{g}, at, vt, a, d, std::move(Ll), std::move(nLl), msg, spectral_index)
               {
               }
 
@@ -123,7 +113,7 @@ namespace transport
 		        void set_data_line_type(data_line_type t) { this->data_type = t; }
 
             //! Get parent content groups
-            const std::list<std::string>& get_parent_groups() const { return(this->groups); }
+            const content_group_name_set& get_parent_groups() const { return(this->groups); }
 
 
             // INTERNAL API
@@ -147,7 +137,7 @@ namespace transport
             // DATA LINE
 
             //! source content group
-            std::list<std::string> groups;
+            content_group_name_set groups;
 
 		        //! axis type
 		        const axis_value x_type;
@@ -174,7 +164,7 @@ namespace transport
 
 
         template <typename number>
-        data_line<number>::data_line(std::list<std::string> g, axis_value at, value_type vt,
+        data_line<number>::data_line(content_group_name_set g, axis_value at, value_type vt,
                                      const std::vector<double>& a, const std::vector<number>& d,
                                      std::string Ll, std::string nLl,
                                      slave_message_buffer& msg, bool spectral_index)

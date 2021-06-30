@@ -119,7 +119,7 @@ namespace transport
 		      public:
 
 		        //! Add a line to the collection
-		        virtual line_asciitable<number>& add_line(const derived_line<number>& line) override
+		        line_asciitable<number>& add_line(const derived_line<number>& line) override
               {
                 this->line_collection<number>::add_line(line);
                 this->apply_default_labels(!this->x_label_set);
@@ -143,8 +143,8 @@ namespace transport
 		      public:
 
 						//! Generate our derived output
-		        virtual std::list<std::string> derive(datapipe<number>& pipe, const tag_list& tags,
-                                                  slave_message_buffer& messages, local_environment& env, argument_cache& args) override;
+            content_group_name_set derive(datapipe<number>& pipe, const tag_list& tags,
+                                          slave_message_buffer& messages, local_environment& env, argument_cache& args) override;
 
 
 		      protected:
@@ -192,14 +192,14 @@ namespace transport
 		      public:
 
 		        //! Copy this object
-		        virtual line_asciitable<number>* clone() const override { return new line_asciitable<number>(static_cast<const line_asciitable<number>&>(*this)); }
+		        line_asciitable<number>* clone() const override { return new line_asciitable<number>(static_cast<const line_asciitable<number>&>(*this)); }
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
 
 		      public:
 
-		        virtual void serialize(Json::Value& writer) const override;
+		        void serialize(Json::Value& writer) const override;
 
 
 		        // WRITE SELF TO A STANDARD STREAM
@@ -250,7 +250,7 @@ namespace transport
 
 
 				template <typename number>
-				std::list<std::string> line_asciitable<number>::derive(datapipe<number>& pipe, const tag_list& tags,
+				content_group_name_set line_asciitable<number>::derive(datapipe<number>& pipe, const tag_list& tags,
                                                                slave_message_buffer& messages, local_environment& env, argument_cache& args)
 					{
             slave_message_context ctx(messages, this->name);
@@ -268,7 +268,7 @@ namespace transport
 						this->make_table(pipe, axis, output_lines, env, args);
 
             // get content groups which were used
-            std::list<std::string> used_groups = this->extract_content_groups(derived_lines);
+            content_group_name_set used_groups = this->extract_content_groups(derived_lines);
 
 						// commit product
 						pipe.commit(this, used_groups);

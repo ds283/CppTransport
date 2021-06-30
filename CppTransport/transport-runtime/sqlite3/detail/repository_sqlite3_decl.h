@@ -462,18 +462,25 @@ namespace transport
 
         //! Enumerate content groups for a named task, or all tasks of a specified payload if no name is provided
         template <typename Payload>
-        typename content_group_set<Payload>::type enumerate_content_groups(std::string name="");
+        typename content_group_record_set<Payload>::type enumerate_content_groups(std::string name="");
 
         //! Build a database of content groups from a list of names
         template <typename Payload>
-        typename content_group_set<Payload>::type content_groups_from_list(const content_group_list& list);
+        typename content_group_record_set<Payload>::type content_groups_from_list(const content_group_name_set& list);
 
-        //! Functions used to redirect query from content_groups_from_list() to appropriate query_* function
-        //! (those functions cannot themselves be templated because they are virtual)
-        //! Odd-looking return-by-reference syntax enables us to use overloading rather then templating to
-        //! resolve the payload type; partial function specializations are not allowed, so we can't use templates for this purpose
+
+        // Functions used to redirect query from content_groups_from_list() to appropriate query_* function
+        // (those functions cannot themselves be templated because they are virtual)
+        // Odd-looking return-by-reference syntax enables us to use overloading rather then templating to
+        // resolve the payload type; partial function specializations are not allowed, so we can't use templates for this purpose.
+
+        //! Redirect to content_groups_from_list() using overloading to resolve payload type: integration_payload
         void query_content(const std::string& name, std::unique_ptr< content_group_record<integration_payload> >& group);
+
+        //! Redirect to content_groups_from_list() using overloading to resolve payload type: postintegration_payload
         void query_content(const std::string& name, std::unique_ptr< content_group_record<postintegration_payload> >& group);
+
+        //! Redirect to content_groups_from_list() using overloading to resolve payload type: output_payload
         void query_content(const std::string& name, std::unique_ptr< content_group_record<output_payload> >& group);
 
 

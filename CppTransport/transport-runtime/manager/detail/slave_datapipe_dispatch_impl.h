@@ -35,14 +35,14 @@ namespace transport
 
 
     template <typename number>
-    void slave_datapipe_dispatch<number>::operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& used_groups)
+    void slave_datapipe_dispatch<number>::operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const content_group_name_set& used_groups)
       {
         this->controller.push_derived_content(pipe, product, used_groups);
       }
 
 
     template <typename number>
-    void slave_null_dispatch_function<number>::operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& used_groups)
+    void slave_null_dispatch_function<number>::operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const content_group_name_set& used_groups)
       {
         this->controller.disallow_push_content(pipe, product);
       }

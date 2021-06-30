@@ -92,7 +92,7 @@ namespace transport
 			    }
 
 
-        content_group_list
+        content_group_name_set
         internal_enumerate_content_groups(sqlite3* db, const std::string& name,const std::string& table)
 					{
 				    std::stringstream find_stmt;
@@ -108,7 +108,7 @@ namespace transport
 				    check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
 
 				    int status;
-				    content_group_list groups;
+				    content_group_name_set groups;
 
 				    while((status = sqlite3_step(stmt)) != SQLITE_DONE)
 					    {
@@ -116,7 +116,7 @@ namespace transport
 					        {
 						        const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
 				            std::string result = std::string(sqlite_str);
-						        groups.push_back(result);
+						        groups.insert(result);
 					        }
 				        else
 					        {
@@ -135,31 +135,31 @@ namespace transport
 				// subsequently, this is specialized for integration payloads, postintegration payloads and
 				// output payloads
 				template <typename Payload>
-				content_group_list enumerate_content_groups(sqlite3* db, const std::string& name="");
+				content_group_name_set enumerate_content_groups(sqlite3* db, const std::string& name="");
 
 
 				template <>
-				content_group_list enumerate_content_groups<integration_payload>(sqlite3* db, const std::string& name)
+				content_group_name_set enumerate_content_groups<integration_payload>(sqlite3* db, const std::string& name)
 					{
 						return internal_enumerate_content_groups(db, name, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE);
 					}
 
 
 		    template <>
-        content_group_list enumerate_content_groups<postintegration_payload>(sqlite3* db,  const std::string& name)
+        content_group_name_set enumerate_content_groups<postintegration_payload>(sqlite3* db, const std::string& name)
 			    {
 		        return internal_enumerate_content_groups(db, name, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE);
 			    }
 
 
 		    template <>
-        content_group_list enumerate_content_groups<output_payload>(sqlite3* db, const std::string& name)
+        content_group_name_set enumerate_content_groups<output_payload>(sqlite3* db, const std::string& name)
 			    {
 		        return internal_enumerate_content_groups(db, name, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE);
 			    }
 
 
-        record_name_list internal_enumerate_records(sqlite3* db, const std::string& table)
+        record_name_set internal_enumerate_records(sqlite3* db, const std::string& table)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT name FROM " << table << ";";
@@ -168,7 +168,7 @@ namespace transport
             check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
 
             int status;
-            record_name_list items;
+            record_name_set items;
 
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
               {
@@ -176,7 +176,7 @@ namespace transport
                   {
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
                     std::string result = std::string(sqlite_str);
-                    items.push_back(result);
+                    items.insert(result);
                   }
                 else
                   {
@@ -191,19 +191,19 @@ namespace transport
           }
 
 
-        record_name_list enumerate_packages(sqlite3* db)
+        record_name_set enumerate_packages(sqlite3* db)
           {
             return internal_enumerate_records(db, CPPTRANSPORT_SQLITE_PACKAGE_TABLE);
           }
 
 
-        record_name_list enumerate_derived_products(sqlite3* db)
+        record_name_set enumerate_derived_products(sqlite3* db)
           {
             return internal_enumerate_records(db, CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE);
           }
 
 
-        using task_record_list = std::tuple< record_name_list, record_name_list, record_name_list >;
+        using task_record_list = std::tuple< record_name_set, record_name_set, record_name_set >;
         task_record_list enumerate_tasks(sqlite3* db)
           {
             return {std::move(internal_enumerate_records(db, CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE)),

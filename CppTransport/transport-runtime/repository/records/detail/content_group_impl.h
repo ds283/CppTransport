@@ -527,7 +527,7 @@ namespace transport
 
         for(auto& t : summary_array)
           {
-            this->used_groups.emplace_back( t.asString() );
+            this->used_groups.insert( t.asString() );
           }
       }
 
@@ -548,7 +548,7 @@ namespace transport
 
         Json::Value summary_array(Json::arrayValue);
 
-        for(const std::string& group : this->used_groups)
+        for(const auto& group : this->used_groups)
           {
             Json::Value element = group;
             summary_array.append(element);
@@ -583,7 +583,7 @@ namespace transport
 
         for(auto& t : content_groups_array)
           {
-            this->content_groups.emplace_back(t.asString());
+            this->content_groups.insert(t.asString());
           }
 
         const Json::Value& note_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];

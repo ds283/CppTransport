@@ -75,15 +75,26 @@ namespace transport
         busyidle_instrument timers(this->busyidle_timers);
 
         // perform repository operations if requested
-        if(this->arg_cache.get_recovery_mode() && this->repo) this->repo->perform_recovery(*this->data_mgr, this->get_rank());
+        if(this->arg_cache.get_recovery_mode() && this->repo)
+          {
+            this->repo->perform_recovery(*this->data_mgr, this->get_rank());
+          }
+
         if(this->arg_cache.get_upgrade_mode() && this->repo)
           {
             auto ukit = upgradekit_factory<number>(*this->repo, this->arg_cache, this->err, this->warn, this->msg);
             (*ukit)();
           }
         
-        if(this->arg_cache.get_model_list())                  this->model_mgr.write_models(std::cout);
-        if(this->arg_cache.get_create_model() && this->repo)  this->gallery.commit(*this->repo);
+        if(this->arg_cache.get_model_list())
+          {
+            this->model_mgr.write_models(std::cout);
+          }
+
+        if(this->arg_cache.get_create_model() && this->repo)
+          {
+            this->gallery.commit(*this->repo);
+          }
 
         // handle repository action switches
         // these were left unhandled during option parsing
@@ -127,12 +138,12 @@ namespace transport
         if(this->job_queue.empty()) return;
 
         // build distance matrix for tasks
-        repository_graphkit<number> graphkit(*this->repo, this->err, this->warn, this->msg);
+        repository_graphkit<number> graphkit{*this->repo, this->err, this->warn, this->msg};
         std::unique_ptr<repository_distance_matrix> dmat = graphkit.task_distance_matrix();
 
         // step through list of command-line supplied tasks, building a list
         // of tasks on which they depend
-        std::set< std::string > required_tasks;
+        record_name_set required_tasks;
         for(const job_descriptor& job : this->job_queue)
           {
             switch(job.get_type())
@@ -140,7 +151,7 @@ namespace transport
                 case job_type::job_task:
                   {
                     // use repository_graphkit to compute dependencies for this task
-                    std::unique_ptr< std::set<std::string> > depends = dmat->find_dependencies(job.get_name());
+                    auto depends = dmat->find_dependencies(job.get_name());
 
                     // if there were dependencies, merge them into the list
                     if(depends) required_tasks.insert(depends->begin(), depends->end());
@@ -158,13 +169,14 @@ namespace transport
         this->prune_paired_tasks(required_tasks);
 
         // sort task list into order, and insert any required job descriptors
-        std::unique_ptr< std::list<std::string> > topological_order = dmat->get_graph().compute_topological_order();
-        if(topological_order) this->insert_job_descriptors(required_tasks, *topological_order);
+        auto topological_order = dmat->get_graph().compute_topological_order();
+        if(topological_order)
+          this->insert_job_descriptors(required_tasks, *topological_order);
       }
 
 
     template <typename number>
-    void master_controller<number>::prune_tasks_with_content(std::set<std::string>& required_tasks)
+    void master_controller<number>::prune_tasks_with_content(record_name_set& required_tasks)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
@@ -193,20 +205,19 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::prune_paired_tasks(std::set<std::string>& required_tasks)
+    void master_controller<number>::prune_paired_tasks(record_name_set& required_tasks)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
 
         // build list of all tasks that will be processed, including tasks explicitly specified on the command line
-        std::set<std::string>& tasks_to_schedule = required_tasks;
         for(const job_descriptor& job : this->job_queue)
           {
-            tasks_to_schedule.insert(job.get_name());
+            required_tasks.insert(job.get_name());
           }
 
         // filter out any tasks in required_tasks which are only there because they're paired
-        for(const std::string& task : tasks_to_schedule)
+        for(const std::string& task : required_tasks)
           {
             // determine whether this task has any paired tasks
             // if so, remove them from required_tasks unless they were specified on the command line
@@ -248,16 +259,17 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::insert_job_descriptors(const std::set<std::string>& required_tasks, const std::list<std::string>& order)
+    void master_controller<number>::insert_job_descriptors
+      (const record_name_set& required_tasks, const ordered_record_name_set& order)
       {
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
 
         // set up tags
-        std::list<std::string> tags;
+        tag_list tags;
         if(this->option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
           {
-            std::vector<std::string> tmp = this->option_map[CPPTRANSPORT_SWITCH_TAG].template as<std::vector<std::string> >();
+            auto tmp = this->option_map[CPPTRANSPORT_SWITCH_TAG].template as<std::vector<std::string> >();
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
           }
 
@@ -734,7 +746,7 @@ namespace transport
     template <typename number>
     template <typename WriterObject>
     bool master_controller<number>::poll_workers(integration_aggregator<number>& int_agg, postintegration_aggregator<number>& post_agg, derived_content_aggregator<number>& derived_agg,
-                                                 integration_metadata& int_metadata, output_metadata& out_metadata, std::list<std::string>& content_groups,
+                                                 integration_metadata& int_metadata, output_metadata& out_metadata, content_group_name_set& content_groups,
                                                  WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         // capture busy/idle timers and switch to busy mode

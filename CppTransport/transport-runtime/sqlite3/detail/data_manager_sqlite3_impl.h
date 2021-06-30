@@ -243,7 +243,7 @@ namespace transport
     void data_manager_sqlite3<number>::initialize_writer(derived_content_writer<number>& writer, bool recovery_mode)
       {
         // set up aggregation handler
-        std::unique_ptr< sqlite3_derived_content_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_derived_content_writer_aggregate<number> >(*this);
+        auto aggregate = std::make_unique< sqlite3_derived_content_writer_aggregate<number> >(*this);
         writer.set_aggregation_handler(std::move(aggregate));
       }
 
@@ -1550,8 +1550,8 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_derived_product(derived_content_writer<number>& writer,
-                                                                 const std::string& product_name, const std::list<std::string>& used_groups)
+    bool data_manager_sqlite3<number>::aggregate_derived_product
+      (derived_content_writer<number>& writer, const std::string& product_name, const content_group_name_set& used_groups)
       {
         bool success = true;
 

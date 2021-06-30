@@ -255,7 +255,7 @@ namespace transport
         bool aggregate_threepf_batch(integration_writer<number>& writer, const boost::filesystem::path& temp_ctr);
 
         //! Aggregate a derived product
-        bool aggregate_derived_product(derived_content_writer<number>& writer, const std::string& temp_name, const std::list<std::string>& used_groups);
+        bool aggregate_derived_product(derived_content_writer<number>& writer, const std::string& temp_name, const content_group_name_set& used_groups);
 
         //! Aggregate a temporary zeta_twopf container
         bool aggregate_zeta_twopf_batch(postintegration_writer<number>& writer, const boost::filesystem::path& temp_ctr);

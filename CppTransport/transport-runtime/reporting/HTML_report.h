@@ -4398,7 +4398,7 @@ namespace transport
 
                         it.add_element(panel);
 
-                        const std::list<std::string>& groups = item.get_content_groups();
+                        const auto& groups = item.get_content_groups();
                         if(!groups.empty())
                           {
                             std::string group_tag = tag + "_" + boost::lexical_cast<std::string>(count) + "_table";

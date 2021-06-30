@@ -174,11 +174,11 @@ namespace transport
 		    void r_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                                   const tag_list& tags, slave_message_buffer& messages) const
 			    {
-            std::list<std::string> groups;
+            content_group_name_set groups;
 
 						// attach datapipe to a content group for the zeta part of r
             std::string group = this->attach(pipe, tags, r_line_impl::ZETA_TASK);
-            groups.push_back(group);
+            groups.insert(group);
 
 				    // pull wavenumber-axis data
 		        std::vector<double> w_axis = this->pull_kconfig_axis(pipe, this->kquery);
@@ -208,7 +208,7 @@ namespace transport
 
 				    // attach datapipe to a content group for the tensor part of r
 				    group = this->attach(pipe, tags, r_line_impl::INTEGRATION_TASK);
-            groups.push_back(group);
+            groups.insert(group);
 
 				    // rebind handles
 		        typename datapipe<number>::kconfig_data_handle& k_handle = pipe.new_kconfig_zeta_handle(this->kquery);

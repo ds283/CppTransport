@@ -785,10 +785,10 @@ namespace transport
         auto db = this->enumerate_integration_task_content(name);
 
         // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const typename content_group_set<integration_payload>::value_type& group) { return(group.second->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const typename content_group_record_set<integration_payload>::value_type& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const typename content_group_set<integration_payload>::value_type& group) { return(!group.second->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const typename content_group_record_set<integration_payload>::value_type& group) { return(!group.second->check_tags(tags)); } );
 
         // if no matching groups, raise an exception
         if(db.empty())
@@ -816,10 +816,10 @@ namespace transport
         auto db = this->enumerate_postintegration_task_content(name);
 
         // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const typename content_group_set<postintegration_payload>::value_type& group) { return(group.second->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const typename content_group_record_set<postintegration_payload>::value_type& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const typename content_group_set<postintegration_payload>::value_type& group) { return(!group.second.get()->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const typename content_group_record_set<postintegration_payload>::value_type& group) { return(!group.second.get()->check_tags(tags)); } );
 
         // if no matching groups, raise an exception
         if(db.empty())

@@ -28,6 +28,8 @@
 
 
 #include <string>
+#include <utility>
+#include <unordered_map>
 
 #include "transport-runtime/manager/mpi_operations.h"
 
@@ -50,19 +52,19 @@ namespace transport
 
           public:
 
-            job_descriptor(job_type t, const std::string& n, const std::list<std::string>& tg, const std::string& o)
+            job_descriptor(job_type t, std::string  n, tag_list  tg, std::string  o)
               : type(t),
-                name(n),
-                tags(tg),
-                output(o),
+                name(std::move(n)),
+                tags(std::move(tg)),
+                output(std::move(o)),
                 seeded(false)
               {
               }
 
-            job_descriptor(job_type t, const std::string& n, const std::list<std::string>& tg)
+            job_descriptor(job_type t, std::string  n, tag_list  tg)
               : type(t),
-                name(n),
-                tags(tg),
+                name(std::move(n)),
+                tags(std::move(tg)),
                 seeded(false)
               {
               }
@@ -133,7 +135,7 @@ namespace transport
             std::string name;
 
             //! tags associated with job
-            std::list<std::string> tags;
+            tag_list tags;
 
             //! output destination, if needed
             std::string output;
@@ -193,7 +195,7 @@ namespace transport
           public:
 
             //! constructor
-            CompareJobDescriptorByList(const std::list<std::string>& order);
+            CompareJobDescriptorByList(const ordered_record_name_set& order);
 
             //! destructor
             ~CompareJobDescriptorByList() = default;
@@ -213,12 +215,12 @@ namespace transport
           private:
 
             //! map from names to ordering
-            std::map< std::string, unsigned int > order_map;
+            std::unordered_map< ordered_record_name_set::value_type, unsigned int > order_map;
 
           };
 
 
-        CompareJobDescriptorByList::CompareJobDescriptorByList(const std::list<std::string>& order)
+        CompareJobDescriptorByList::CompareJobDescriptorByList(const ordered_record_name_set& order)
           {
             unsigned int number = 0;
             for(const std::string& object : order)

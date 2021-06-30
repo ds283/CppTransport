@@ -179,8 +179,8 @@ namespace transport
 		      public:
 
 				    //! Generate our derived output
-				    virtual std::list<std::string> derive(datapipe<number>& pipe, const tag_list& tags,
-                                                  slave_message_buffer& messages, local_environment& env, argument_cache& args) override;
+				    content_group_name_set derive(datapipe<number>& pipe, const tag_list& tags,
+                                          slave_message_buffer& messages, local_environment& env, argument_cache& args) override;
 
 
 		      protected:
@@ -344,13 +344,13 @@ namespace transport
 		      public:
 
 				    //! Copy this object
-				    virtual line_plot2d<number>* clone() const override { return new line_plot2d<number>(static_cast<const line_plot2d<number>&>(*this)); }
+				    line_plot2d<number>* clone() const override { return new line_plot2d<number>(static_cast<const line_plot2d<number>&>(*this)); }
 
 				    // SERIALIZATION -- implements a 'serializable' interface
 
 		      public:
 
-				    virtual void serialize(Json::Value& writer) const override;
+				    void serialize(Json::Value& writer) const override;
 
 
 				    // WRITE SELF TO A STANDARD STREAM
@@ -452,7 +452,7 @@ namespace transport
 
 
 				template <typename number>
-				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const tag_list& tags,
+        content_group_name_set line_plot2d<number>::derive(datapipe<number>& pipe, const tag_list& tags,
                                                            slave_message_buffer& messages, local_environment& env, argument_cache& args)
 					{
             slave_message_context ctx(messages, this->name);
@@ -485,7 +485,7 @@ namespace transport
 				    bool success = this->make_plot(pipe, axis, binned_lines, bin_types, env, args);
 
             // get content groups which were used
-            std::list<std::string> used_groups = this->extract_content_groups(derived_lines);
+            content_group_name_set used_groups = this->extract_content_groups(derived_lines);
 
 						// commit product (even if the plot failed to generate and we are committing the script - the next line
 						// will prevent the whole content group being committed)

@@ -31,6 +31,8 @@
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/list.hpp"
 #include "boost/serialization/set.hpp"
+#include "boost/serialization/unordered_set.hpp"
+#include "boost/serialization/unordered_map.hpp"
 #include "boost/date_time/posix_time/time_serialize.hpp"
 #include "boost/timer/timer.hpp"
 
@@ -618,7 +620,7 @@ namespace transport
                 content_ready_payload() = default;
 
                 //! Value constructor (used for sending messages)
-                content_ready_payload(std::string dp, std::list<std::string> g)
+                content_ready_payload(std::string dp, content_group_name_set g)
 	                : product(std::move(dp)),
                     content_groups(std::move(g)),
                     timestamp(boost::posix_time::second_clock::local_time())
@@ -629,7 +631,7 @@ namespace transport
                 const std::string&            get_product_name()   const { return(this->product); }
 
                 //! Get content groups used
-                const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+                const content_group_name_set& get_content_groups() const { return(this->content_groups); }
 
                 //! Get timestamp
                 boost::posix_time::ptime      get_timestamp()      const { return(this->timestamp); }
@@ -641,7 +643,7 @@ namespace transport
 		            std::string product;
 
                 //! Content groups used to create it
-                std::list<std::string> content_groups;
+                content_group_name_set content_groups;
 
                 //! Timestamp
                 boost::posix_time::ptime timestamp;
@@ -669,7 +671,7 @@ namespace transport
 		            finished_derived_payload() = default;
 
 		            //! Value constructor (used for sending messages)
-		            finished_derived_payload(std::list<std::string> cg, const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
+		            finished_derived_payload(content_group_name_set cg, const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
 		                                     const unsigned int ip, const boost::timer::nanosecond_type tp,
 		                                     const boost::timer::nanosecond_type max_tp, const boost::timer::nanosecond_type min_tp,
 		                                     const unsigned int tc, const unsigned int tc_u,
@@ -708,7 +710,7 @@ namespace transport
 			            }
 
                 //! Get content gorups
-                const std::list<std::string>   get_content_groups()            const { return(this->content_groups); }
+                const content_group_name_set   get_content_groups()            const { return(this->content_groups); }
 
 		            //! Get database time
 		            boost::timer::nanosecond_type  get_database_time()             const { return(this->database_time); }
@@ -783,7 +785,7 @@ namespace transport
 		          private:
 
                 //! Content groups used to produce this derived content
-                std::list<std::string> content_groups;
+                content_group_name_set content_groups;
 
 		            //! Time spent reading database
 		            boost::timer::nanosecond_type database_time;
@@ -1046,7 +1048,7 @@ namespace transport
                   }
 
                 //! Get parent group
-                const std::list<std::string>&  get_content_groups()            const { return(this->content_groups); }
+                const content_group_name_set&  get_content_groups()            const { return(this->content_groups); }
 
                 //! Get database time
                 boost::timer::nanosecond_type  get_database_time()             const { return(this->database_time); }
@@ -1121,7 +1123,7 @@ namespace transport
               private:
 
                 //! Parent content group
-                std::list<std::string> content_groups;
+                content_group_name_set content_groups;
 
                 //! Time spent reading database
                 boost::timer::nanosecond_type database_time;

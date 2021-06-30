@@ -60,7 +60,7 @@ namespace transport
       public:
 
         //! dispatch derived product
-        void operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const tag_list& tags) override;
+        void operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const content_group_name_set& used_groups) override;
 
 
         // INTERNAL DATA
@@ -96,7 +96,7 @@ namespace transport
 
       public:
 
-        void operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const tag_list& tags) override;
+        void operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const content_group_name_set& used_groups) override;
 
 
         // INTERNAL DATA

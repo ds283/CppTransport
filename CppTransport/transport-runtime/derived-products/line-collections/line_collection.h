@@ -303,7 +303,7 @@ namespace transport
           public:
 
             //! Collect a list of content groups used to derive content for this task
-            std::list<std::string> extract_content_groups(const std::list< data_line<number> >& list) const;
+            content_group_name_set extract_content_groups(const std::list< data_line<number> >& list) const;
 
 
 						// GET AND SET BASIC LINE PROPERTIES
@@ -391,9 +391,9 @@ namespace transport
 						assert(line_array.isArray());
 
 				    lines.clear();
-						for(Json::Value::iterator t = line_array.begin(); t != line_array.end(); ++t)
+						for(auto& t : line_array)
 					    {
-                std::unique_ptr< derived_line<number> > data = derived_line_helper::deserialize<number>(*t, finder);
+                auto data = derived_line_helper::deserialize<number>(t, finder);
 				        lines.push_back(std::move(data));
 					    }
 					}
@@ -567,7 +567,7 @@ namespace transport
                                     // output_value currently stores everything using double, so we may need an
                                     // explicit downcast at this point
                                     // TODO: consider whether output_value should retain the full 'number' type
-                                    double value = static_cast<double>(point.second);
+                                    auto value = static_cast<double>(point.second);
                                     
 		                                output[i].emplace_front(data_absy[i] ? std::abs(value) : value);
 
@@ -629,28 +629,24 @@ namespace transport
                   }
               }
 
-            return std::move(l);
+            return l;
           }
 
 
         template <typename number>
-        std::list<std::string> line_collection<number>::extract_content_groups(const std::list< data_line<number> >& list) const
+        content_group_name_set line_collection<number>::extract_content_groups(const std::list< data_line<number> >& list) const
           {
-            std::list<std::string> groups;
+            content_group_name_set groups;
 
             for(const auto& line : list)
               {
-                std::list<std::string> line_groups = line.get_parent_groups();
-                groups.merge(line_groups);
+                content_group_name_set line_groups = line.get_parent_groups();
+                std::merge(groups.begin(), groups.end(),
+                           line_groups.begin(), line_groups.end(),
+                           std::inserter(groups, groups.begin()));
               }
 
-            // sort into lexical order of content group name
-            groups.sort();
-
-            // remove duplicates (based on content group name)
-            groups.unique();
-
-            return std::move(groups);
+            return groups;
           }
 
 
