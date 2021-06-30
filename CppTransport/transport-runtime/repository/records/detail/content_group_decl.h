@@ -284,6 +284,8 @@ namespace transport
       };
 
 
+    //! test whether two precomputed_products specifiers are equal, i.e., require the same products
+    //! to be available
     bool operator==(const precomputed_products& a, const precomputed_products& b)
       {
         return a.has_zeta_twopf() == b.has_zeta_twopf() &&
@@ -294,6 +296,39 @@ namespace transport
                a.has_fNL_equi() == b.has_fNL_equi() &&
                a.has_fNL_ortho() == b.has_fNL_ortho() &&
                a.has_fNL_DBI() == b.has_fNL_DBI();
+      }
+
+
+    //! test whether precomputed_product specifier a contains b, i.e., everything required in b
+    //! is also required in a.
+    //! However, we don't demand equality; a can provide further products that are not required in b.
+    bool operator>=(const precomputed_products& a, const precomputed_products& b)
+      {
+        if(b.has_zeta_twopf() && !a.has_zeta_twopf())
+          return false;
+
+        if(b.has_zeta_twopf_spectral() && !a.has_zeta_twopf_spectral())
+          return false;
+
+        if(b.has_zeta_threepf() && !a.has_zeta_threepf())
+          return false;
+
+        if(b.has_zeta_redbsp() && !a.has_zeta_redbsp())
+          return false;
+
+        if(b.has_fNL_local() && !a.has_fNL_local())
+          return false;
+
+        if(b.has_fNL_equi() && !a.has_fNL_equi())
+          return false;
+
+        if(b.has_fNL_ortho() && !a.has_fNL_ortho())
+          return false;
+
+        if(b.has_fNL_DBI() && !a.has_fNL_DBI())
+          return false;
+
+        return true;
       }
 
 
@@ -1141,7 +1176,7 @@ namespace transport
       }
 
 
-    bool operator==(const integration_payload& payload, const content_group_specifier& b)
+    bool operator>=(const integration_payload& payload, const content_group_specifier& b)
       {
         // no match if content group specifier is not of integration type
         if(b.get_type() != task_type::integration)
@@ -1160,13 +1195,13 @@ namespace transport
       }
 
 
-    bool operator==(const postintegration_payload& payload, const content_group_specifier& b)
+    bool operator>=(const postintegration_payload& payload, const content_group_specifier& b)
       {
         // no match if content group specifier is not of postintegration type
         if(b.get_type() != task_type::postintegration)
           return false;
 
-        return payload.get_precomputed_products() == b.requires_products();
+        return payload.get_precomputed_products() >= b.requires_products();
       }
 
   }   // namespace transport
