@@ -1077,7 +1077,7 @@ namespace transport
 
     const precomputed_products& content_group_specifier::requires_products() const
       {
-        if(this->type != task_type::integration)
+        if(this->type != task_type::postintegration)
           throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_TASK_CONTENT_GROUP_OUT_OF_RANGE);
 
         return products;
