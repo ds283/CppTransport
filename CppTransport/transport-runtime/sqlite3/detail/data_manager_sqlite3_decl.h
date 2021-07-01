@@ -458,26 +458,23 @@ namespace transport
       public:
 
         //! Create a new datapipe
-        std::unique_ptr< datapipe<number> >
-          create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                          integration_content_finder<number>& integration_finder,
-                          postintegration_content_finder<number>& postintegration_finder,
-                          datapipe_dispatch_function<number>& dispatcher,
-                          unsigned int worker, bool no_log = false) override;
+        std::unique_ptr< datapipe<number> > create_datapipe
+          (const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
+           integration_content_finder<number>& integration_finder, postintegration_content_finder<number>& postintegration_finder,
+           datapipe_dispatch_function<number>& dispatcher, unsigned int worker, bool no_log = false) override;
 
         // ATTACH
 
       public:
 
         //! Attach an integration content group to a datapipe
-        std::unique_ptr< content_group_record<integration_payload> >
-        datapipe_attach_integration_content(datapipe<number>& pipe, integration_content_finder<number>& finder,
-                                            const std::string& name, const tag_list& tags) override;
+        //! Attach an integration content group to a datapipe
+        void datapipe_attach_content
+          (datapipe<number>& pipe, const content_group_record<integration_payload>& content_record) override;
 
         //! Attach an postintegration content group to a datapipe
-        std::unique_ptr< content_group_record<postintegration_payload> >
-        datapipe_attach_postintegration_content(datapipe<number>& pipe, postintegration_content_finder<number>& finder,
-                                                const std::string& name, const tag_list& tags) override;
+        void datapipe_attach_content
+          (datapipe<number>& pipe, const content_group_record<postintegration_payload>& content_record) override;
 
         //! Detach a content_group_record from a pipe
         void datapipe_detach(datapipe<number>* pipe) override;

@@ -27,64 +27,71 @@
 #define CPPTRANSPORT_REPOSITORY_DECL_H
 
 
-#include "transport-runtime/common.h"
-
-#include <unordered_map>
-
 
 namespace transport
   {
-
-
-    //! database type for packages
-    template <typename number>
-    struct package_db
-      {
-        using type = std::unordered_map< std::string, std::unique_ptr< package_record<number> > >;
-        using value_type = typename type::value_type ;
-      };
-
-    //! database type for tasks
-    template <typename number>
-    struct task_db
-      {
-        using type = std::unordered_map< std::string, std::unique_ptr< task_record<number> > >;
-        using value_type = typename type::value_type;
-      };
-
-    //! database type for derived products
-    template <typename number>
-    struct derived_product_db
-      {
-        using type = std::unordered_map< std::string, std::unique_ptr< derived_product_record<number> > >;
-        using value_type = typename type::value_type;
-      };
-
-
-    template <typename Payload>
-    class content_group_record_set
-      {
-      public:
-        using type = std::map< std::string, std::unique_ptr< content_group_record<Payload> > >;
-        using value_type = typename type::value_type;
-      };
-
-
-    //! database type for integration content groups
-    using integration_content_db = typename content_group_record_set<integration_payload>::type;
-
-    //! database type for postintegration content groups
-    using postintegration_content_db = typename content_group_record_set<postintegration_payload>::type;
-
-    //! database type for output content groups
-    using output_content_db = typename content_group_record_set<output_payload>::type;
-
 
     // hint for query_task() method
     enum query_task_hint
       {
         integration, postintegration, output, no_hint
       };
+
+
+    namespace repository_impl
+      {
+
+        class TrivialContentGroupFilterPredicate
+          {
+          public:
+
+            //! constructor is default
+            TrivialContentGroupFilterPredicate() = default;
+
+            //! destructor is default
+            ~TrivialContentGroupFilterPredicate() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! return true for every content group
+            bool operator()(const std::string& group) const { return true; }
+
+          };
+
+
+        //! MostRecentContentPolicy is the default content group policy.
+        //! It returns the most recent matching content group.
+        template <typename ContentDatabaseType>
+        class MostRecentContentPolicy
+          {
+
+          public:
+
+            //! constructor is default
+            MostRecentContentPolicy() = default;
+
+            //! destructor is default
+            ~MostRecentContentPolicy() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            typename ContentDatabaseType::value_type& operator()(ContentDatabaseType& matches) const
+              {
+                // assume ContentDatabaseType is stored in lexical order, in which case the most recent
+                // content group will be at the back
+                return *(matches.rbegin());
+              }
+
+          };
+
+
+      }   // namespace repository_impl
 
 
     template <typename number>
@@ -487,10 +494,24 @@ namespace transport
       public:
 
         //! Find a content group for an integration task
-        std::unique_ptr< content_group_record<integration_payload> > find_integration_task_output(const std::string& name, const tag_list& tags);
+        //! If raise is true, an exception is raised if no suitable content group can be found.
+        //! This is the default behaviour. If raise is false, no exception is raised and
+        //! an empty std::unique_ptr<> is returned if a group cannot be matched.
+        template <typename FilterPredicate = repository_impl::TrivialContentGroupFilterPredicate,
+                  typename ContentSelectorPolicy = repository_impl::MostRecentContentPolicy<integration_content_db> >
+        std::unique_ptr< content_group_record<integration_payload> >
+        find_integration_task_output(const std::string& name, FilterPredicate filter=FilterPredicate(),
+                                     bool raise=true, ContentSelectorPolicy policy=ContentSelectorPolicy());
 
         //! Find a content group for a postintegration task
-        std::unique_ptr< content_group_record<postintegration_payload> > find_postintegration_task_output(const std::string& name, const tag_list& tags);
+        //! If raise is true, an exception is raised if no suitable content group can be found.
+        //! This is the default behaviour. If raise is false, no exception is raised and
+        //! an empty std::unique_ptr<> is returned if a group cannot be matched.
+        template <typename FilterPredicate = repository_impl::TrivialContentGroupFilterPredicate,
+                  typename ContentSelectorPolicy = repository_impl::MostRecentContentPolicy<postintegration_content_db> >
+        std::unique_ptr< content_group_record<postintegration_payload> >
+        find_postintegration_task_output(const std::string& name, FilterPredicate filter=FilterPredicate(),
+                                         bool raise=true, ContentSelectorPolicy policy=ContentSelectorPolicy());
 
 
         // STANDARD WRITER CALLBACKS

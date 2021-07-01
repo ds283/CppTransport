@@ -33,18 +33,21 @@
 #include <memory>
 #include <functional>
 #include <map>
+#include <unordered_map>
+
 
 #include "transport-runtime/version.h"
 #include "transport-runtime/messages.h"
 #include "transport-runtime/exceptions.h"
 #include "transport-runtime/defaults.h"
+#include "transport-runtime/common.h"
 
 #include "transport-runtime/serialization/serializable.h"
 #include "transport-runtime/manager/message_handlers.h"
 #include "transport-runtime/manager/environment.h"
 
-
 #include "boost/date_time.hpp"
+
 
 // include repository_forward_declare.h to get correct declaration of template default argument
 // (it can only be given *once*)
@@ -62,7 +65,7 @@
 // forward-declare tasks if needed
 #include "transport-runtime/tasks/tasks_forward_declare.h"
 
-// forward-declare repository records
+// forward-declare repository records; this automatically pulls in repository_record_databases.h also
 #include "transport-runtime/repository/records/repository_records_forward_declare.h"
 
 // forward-declare derived_product if needed
@@ -77,7 +80,6 @@
 
 // DECLARE REPOSITORY RECORD FINDERS
 #include "transport-runtime/repository/records/record_finder_decl.h"
-#include "transport-runtime/repository/records/content_finder_decl.h"
 
 // DECLARE REPOSITORY RECORDS
 #include "transport-runtime/repository/records/repository_records_decl.h"
@@ -91,9 +93,12 @@
 // DECLARE MAIN REPOSITORY CLASS
 #include "transport-runtime/repository/detail/repository_decl.h"
 
+// DECLARE CONTENT GROUP FINDER
+#include "transport-runtime/repository/records/content_finder_decl.h"
+
+
 // DEFINITIONS FOR REPOSITORY RECORD FINDERS
 #include "transport-runtime/repository/records/record_finder_impl.h"
-#include "transport-runtime/repository/records/content_finder_impl.h"
 
 // DEFINITIONS FOR REPOSITORY RECORDS
 #include "transport-runtime/repository/records/repository_records_impl.h"
@@ -103,6 +108,9 @@
 
 // DEFINITIONS FOR MAIN REPOSITORY CLASS METHODS
 #include "transport-runtime/repository/detail/repository_impl.h"
+
+// DEFINITIONS FOR CONTENT GROUP FINDER
+#include "transport-runtime/repository/records/content_finder_impl.h"
 
 
 #endif //CPPTRANSPORT_REPOSITORY_H

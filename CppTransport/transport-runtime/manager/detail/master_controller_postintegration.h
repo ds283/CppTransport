@@ -40,8 +40,8 @@ namespace transport
   {
 
     template <typename number>
-    void master_controller<number>::dispatch_postintegration_task(postintegration_task_record<number>& rec, bool seeded, const std::string& seed_group,
-                                                                  const tag_list& tags)
+    void master_controller<number>::dispatch_postintegration_task
+      (postintegration_task_record<number>& rec, const job_descriptor& job)
       {
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
@@ -70,14 +70,17 @@ namespace transport
                 model<number>* m = ptk->get_model();
                 this->work_scheduler.set_state_size(m->backend_twopf_state_size());
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_paired_postintegration(rec, z2pf, ptk, seeded, seed_group, tags, slave_work_event::event_type::begin_twopf_assignment, slave_work_event::event_type::end_twopf_assignment);
+                this->schedule_paired_postintegration(rec, z2pf, ptk, job, slave_work_event::event_type::begin_twopf_assignment, slave_work_event::event_type::end_twopf_assignment);
               }
             else
               {
-                this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
+                // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
+                // fourth argument true forces an exception to be raised if no content group can be matched, although
+                // strictly this is the default behaviour anyway
+                auto group = (*this->i_finder)(ptk->get_name(), make_zeta_twopf_content_specifier(z2pf->get_collect_spectral_data()), job.get_tags(), true);
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_postintegration(rec, z2pf, seeded, seed_group, tags, slave_work_event::event_type::begin_zeta_twopf_assignment, slave_work_event::event_type::end_zeta_twopf_assignment);
+                this->schedule_postintegration(rec, z2pf, job, slave_work_event::event_type::begin_zeta_twopf_assignment, slave_work_event::event_type::end_zeta_twopf_assignment);
               }
           }
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
@@ -98,14 +101,17 @@ namespace transport
                 model<number>* m = ptk->get_model();
                 this->work_scheduler.set_state_size(m->backend_threepf_state_size());
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_paired_postintegration(rec, z3pf, ptk, seeded, seed_group, tags, slave_work_event::event_type::begin_threepf_assignment, slave_work_event::event_type::end_threepf_assignment);
+                this->schedule_paired_postintegration(rec, z3pf, ptk, job, slave_work_event::event_type::begin_threepf_assignment, slave_work_event::event_type::end_threepf_assignment);
               }
             else
               {
-                this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
+                // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
+                // fourth argument true forces an exception to be raised if no content group can be matched, although
+                // strictly this is the default behaviour anyway
+                auto group = (*this->i_finder)(ptk->get_name(), make_zeta_threepf_content_specifier(), job.get_tags(), true);
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_postintegration(rec, z3pf, seeded, seed_group, tags, slave_work_event::event_type::begin_zeta_threepf_assignment, slave_work_event::event_type::end_zeta_threepf_assignment);
+                this->schedule_postintegration(rec, z3pf, job, slave_work_event::event_type::begin_zeta_threepf_assignment, slave_work_event::event_type::end_zeta_threepf_assignment);
               }
           }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
@@ -120,10 +126,18 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
               }
 
-            this->validate_content_group(ptk, tags);    // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
+            // ensure a suitable content group is attached to the parent task before trying to schedule this postintegration
+            // fourth argument true forces an exception to be raised if no content group can be matched, although
+            // strictly this is the default behaviour anyway
+            auto group = (*this->p_finder)(ptk->get_name(), make_fNL_content_specifier(), job.get_tags(), true);
             this->work_scheduler.set_state_size(sizeof(number));
             this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, zfNL, false, "", tags, slave_work_event::event_type::begin_fNL_assignment, slave_work_event::event_type::end_fNL_assignment);
+
+            // drop seed information if any is provided
+            job_descriptor unseeded_job{job};
+            unseeded_job.set_unseeded();
+
+            this->schedule_postintegration(rec, zfNL, unseeded_job, slave_work_event::event_type::begin_fNL_assignment, slave_work_event::event_type::end_fNL_assignment);
           }
         else
           {
@@ -135,41 +149,15 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::validate_content_group(integration_task<number>* tk, const tag_list& tags)
-      {
-        assert(tk != nullptr);
-
-        integration_content_finder<number> finder(*this->repo);
-
-        // check whether finder can locate a suitable content group for this parent task;
-        // if not, an exception will be thrown which is caught back in the main task processing loop, so this task will be aborted
-        auto group = finder(tk->get_name(), tags);
-      }
-
-
-    template <typename number>
-    void master_controller<number>::validate_content_group(postintegration_task<number>* tk, const tag_list& tags)
-      {
-        assert(tk != nullptr);
-
-        postintegration_content_finder<number> finder(*this->repo);
-
-        // check whether finder can locate a suitable content group for this parent task;
-        // if not, an exception will be thrown which is caught back in the main task processing loop, so this task will be aborted
-        auto group = finder(tk->get_name(), tags);
-      }
-
-
-    template <typename number>
     template <typename TaskObject>
-    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>& rec, TaskObject* tk,
-                                                             bool seeded, const std::string& seed_group, const tag_list& tags,
-                                                             slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+    void master_controller<number>::schedule_postintegration
+      (postintegration_task_record<number>& rec, TaskObject* tk, const job_descriptor& job,
+       slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         // create an output writer to commit our results into the repository
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        auto writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
+        auto writer = this->repo->new_postintegration_task_content(rec, job.get_tags(), this->get_rank(), this->world.size());
     
         // create new timer for this task; the BusyIdle_Context manager
         // ensures the timer is removed when the context manager is destroyed
@@ -182,7 +170,7 @@ namespace transport
         this->data_mgr->create_tables(*writer, tk);
 
         // seed writer if a group has been provided; resets the work queue if required
-        if(seeded) this->seed_writer(*writer, tk, seed_group);
+        if(job.is_seeded()) this->seed_writer(*writer, tk, job.get_seed_group());
 
         // register writer with the repository -- allows its debris to be recovered later if a crash occurs
         this->repo->register_writer(*writer);
@@ -199,7 +187,7 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out the calculation
-        bool success = this->postintegration_task_to_workers(*writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
+        bool success = this->postintegration_task_to_workers(*writer, job.get_tags(), i_agg, p_agg, d_agg, begin_label, end_label);
 
         // close the writer; performs integrity check and finalization step
         journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
@@ -213,9 +201,9 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
-    void master_controller<number>::schedule_paired_postintegration(postintegration_task_record<number>& rec, TaskObject* tk, ParentTaskObject* ptk,
-                                                                    bool seeded, const std::string& seed_group, const tag_list& tags,
-                                                                    slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+    void master_controller<number>::schedule_paired_postintegration
+      (postintegration_task_record<number>& rec, TaskObject* tk, ParentTaskObject* ptk,
+       const job_descriptor& job, slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         auto pre_prec = this->repo->query_task(ptk->get_name());
         auto* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
@@ -237,13 +225,13 @@ namespace transport
           }
 
         // create an output writer for the postintegration task
-        auto p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
+        auto p_writer = this->repo->new_postintegration_task_content(rec, job.get_tags(), this->get_rank(), this->world.size());
 
         this->data_mgr->initialize_writer(*p_writer);
         this->data_mgr->create_tables(*p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different content groups
-        auto i_writer = this->repo->new_integration_task_content(*prec, tags, this->get_rank(), 0, this->world.size(), "paired");
+        auto i_writer = this->repo->new_integration_task_content(*prec, job.get_tags(), this->get_rank(), 0, this->world.size(), "paired");
         this->data_mgr->initialize_writer(*i_writer);
         this->data_mgr->create_tables(*i_writer, ptk);
     
@@ -259,7 +247,7 @@ namespace transport
         p_writer->set_parent_group(i_writer->get_name());
 
         // seed writers if a group has been provided; resets the work queue if required
-        if(seeded) this->seed_writer_pair(*i_writer, *p_writer, tk, ptk, seed_group);
+        if(job.is_seeded()) this->seed_writer_pair(*i_writer, *p_writer, tk, ptk, job.get_seed_group());
 
         // register writers with the repository -- allows their debris to be recovered later if a crash occurs
         this->repo->register_writer(*i_writer);
@@ -278,7 +266,7 @@ namespace transport
         BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << *ptk;
 
         // instruct workers to carry out the calculation
-        bool success = this->paired_postintegration_task_to_workers(*i_writer, *p_writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
+        bool success = this->paired_postintegration_task_to_workers(*i_writer, *p_writer, job.get_tags(), i_agg, p_agg, d_agg, begin_label, end_label);
 
         // close both writers; performs integrity check, synchronizes missing serial numbers and performs finalization step
         journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
@@ -299,7 +287,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    serial_number_list master_controller<number>::seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
+    serial_number_list master_controller<number>::seed_writer
+      (postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
         postintegration_content_db db = this->repo->enumerate_postintegration_task_content(tk->get_name());
@@ -338,9 +327,9 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
-    serial_number_list master_controller<number>::seed_writer_pair(integration_writer<number>& i_writer,
-                                                                        postintegration_writer<number>& p_writer,
-                                                                        TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group)
+    serial_number_list master_controller<number>::seed_writer_pair
+      (integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
+       TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
         integration_content_db i_db = this->repo->enumerate_integration_task_content(ptk->get_name());
@@ -430,9 +419,10 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::postintegration_task_to_workers(postintegration_writer<number>& writer, const tag_list& tags,
-                                                                    integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
-                                                                    slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+    bool master_controller<number>::postintegration_task_to_workers
+      (postintegration_writer<number>& writer, const tag_list& tags, integration_aggregator<number>& i_agg,
+       postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
+       slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         assert(this->repo != nullptr);
 

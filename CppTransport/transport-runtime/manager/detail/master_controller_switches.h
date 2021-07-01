@@ -291,9 +291,14 @@ namespace transport
           {
             try
               {
+                // generate repository instance
                 this->repo = repository_factory<number>(
                   this->option_map[CPPTRANSPORT_SWITCH_REPO_LONG].template as<std::string>(),
                   this->model_mgr, repository_mode::readwrite, this->local_env, this->arg_cache);
+
+                // generate content finder agents attached to this repository
+                this->i_finder = std::make_unique< integration_content_finder<number> >(*this->repo);
+                this->p_finder = std::make_unique< postintegration_content_finder<number> >(*this->repo);
               }
             catch(runtime_exception& xe)
               {
@@ -303,7 +308,9 @@ namespace transport
                     std::cout << "TRACE_OUTPUT H" << '\n';
 #endif
                     this->err(xe.what());
-                    repo = nullptr;
+                    this->repo = nullptr;
+                    this->i_finder = nullptr;
+                    this->p_finder = nullptr;
                   }
                 else throw;
               }
@@ -336,11 +343,11 @@ namespace transport
             
             for(const std::string& task : tasks)
               {
-                job_queue.emplace_back(job_type::job_task, task, this->tags);
-                
+                this->job_queue.emplace_back(job_type::job_task, task, this->tags);
+
                 if(this->option_map.count(CPPTRANSPORT_SWITCH_SEED))
                   {
-                    job_queue.back().set_seed(this->option_map[CPPTRANSPORT_SWITCH_SEED].template as<std::string>());
+                    this->job_queue.back().set_seed(this->option_map[CPPTRANSPORT_SWITCH_SEED].template as<std::string>());
                   }
               }
           }

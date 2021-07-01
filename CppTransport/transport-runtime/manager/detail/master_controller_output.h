@@ -42,7 +42,7 @@ namespace transport
     using namespace master_controller_impl;
 
     template <typename number>
-    void master_controller<number>::dispatch_output_task(output_task_record<number>& rec, const tag_list& tags)
+    void master_controller<number>::dispatch_output_task(output_task_record<number>& rec, const job_descriptor& job)
       {
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
@@ -55,7 +55,7 @@ namespace transport
         // set up a derived_content_writer object to coordinate logging, output destination and commits into the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::unique_ptr< derived_content_writer<number> > writer = this->repo->new_output_task_content(rec, tags, this->get_rank(), this->world.size());
+        std::unique_ptr< derived_content_writer<number> > writer = this->repo->new_output_task_content(rec, job.get_tags(), this->get_rank(), this->world.size());
     
         // create new timer for this task; the BusyIdle_Context manager
         // ensures the timer is removed when the context manager is destroyed
@@ -79,7 +79,7 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out their tasks
-        bool success = this->output_task_to_workers(*writer, tags, i_agg, p_agg, d_agg, slave_work_event::event_type::begin_output_assignment, slave_work_event::event_type::end_output_assignment);
+        bool success = this->output_task_to_workers(*writer, job.get_tags(), i_agg, p_agg, d_agg, slave_work_event::event_type::begin_output_assignment, slave_work_event::event_type::end_output_assignment);
 
         journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
 

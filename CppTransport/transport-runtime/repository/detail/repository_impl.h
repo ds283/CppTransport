@@ -778,63 +778,95 @@ namespace transport
 
 
     template<typename number>
+    template <typename FilterPredicate, typename ContentSelectorPolicy>
     std::unique_ptr< content_group_record<integration_payload> >
-    repository<number>::find_integration_task_output(const std::string& name, const tag_list& tags)
+    repository<number>::find_integration_task_output
+      (const std::string& name, FilterPredicate filter, bool raise, ContentSelectorPolicy policy)
       {
-        // search for content groups associated with this task
-        auto db = this->enumerate_integration_task_content(name);
+        auto task_rec = this->query_task(name);
 
-        // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const typename content_group_record_set<integration_payload>::value_type& group) { return(group.second->get_payload().is_failed()); } );
+        if(!task_rec)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_TASK_MISSING << " '" << name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
 
-        // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const typename content_group_record_set<integration_payload>::value_type& group) { return(!group.second->check_tags(tags)); } );
+        // get list of content groups provided by task record
+        // (this is the list of content groups serialized into the JSON document for this task, not the main
+        // database table)
+        auto groups = task_rec->get_content_groups();
+        integration_content_db filtered_groups;
+        for(const auto& g : groups)
+          {
+            if(filter(g))
+              {
+                auto group_rec = this->query_integration_content(g);
+                filtered_groups.emplace(g, std::move(group_rec));
+              }
+          }
 
         // if no matching groups, raise an exception
-        if(db.empty())
+        if(raise && filtered_groups.empty())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_CONTENT_GROUPS << " '" << name << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        // items are stored in integration_content_db according to their key, which is a lexical datestamp
-        // this means that the earliest content group will be at the front, and the most recent content
-        // group at the back
+        // Select which content group to supply
+        auto& selected = policy(filtered_groups);
 
         std::unique_ptr< content_group_record<integration_payload> > rval;
-        (*db.rbegin()).second.swap(rval);
+        selected.second.swap(rval);
+
         return rval;
       }
 
 
     template<typename number>
+    template <typename FilterPredicate, typename ContentSelectorPolicy>
     std::unique_ptr< content_group_record<postintegration_payload> >
-    repository<number>::find_postintegration_task_output(const std::string& name, const tag_list& tags)
+    repository<number>::find_postintegration_task_output
+      (const std::string& name, FilterPredicate filter, bool raise, ContentSelectorPolicy policy)
       {
-        // search for content groups associated with this task
-        auto db = this->enumerate_postintegration_task_content(name);
+        auto task_rec = this->query_task(name);
 
-        // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const typename content_group_record_set<postintegration_payload>::value_type& group) { return(group.second->get_payload().is_failed()); } );
+        if(!task_rec)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_TASK_MISSING << " '" << name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
 
-        // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const typename content_group_record_set<postintegration_payload>::value_type& group) { return(!group.second.get()->check_tags(tags)); } );
+        // get list of content groups provided by task record
+        // (this is the list of content groups serialized into the JSON document for this task, not the main
+        // database table)
+        auto groups = task_rec->get_content_groups();
+        postintegration_content_db filtered_groups;
+        for(const auto& g : groups)
+          {
+            if(filter(g))
+              {
+                auto group_rec = this->query_postintegration_content(g);
+                filtered_groups.emplace(g, std::move(group_rec));
+              }
+          }
 
         // if no matching groups, raise an exception
-        if(db.empty())
+        if(raise && filtered_groups.empty())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_CONTENT_GROUPS << " '" << name << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
-    
-        // items are stored in postintegration_content_db according to their key, which is a lexical datestamp
-        // this means that the earliest content group will be at the front, and the most recent content
-        // group at the back
+
+        // Select which content group to supply
+        auto& selected = policy(filtered_groups);
 
         std::unique_ptr< content_group_record<postintegration_payload> > rval;
-        (*db.rbegin()).second.swap(rval);
+        selected.second.swap(rval);
+
         return rval;
       }
 

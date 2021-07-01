@@ -35,6 +35,14 @@
 namespace transport
   {
 
+    // forward declare default content group policy
+    namespace repository_impl
+      {
+
+        template <typename ContentDatabaseType> class MostRecentContentPolicy;
+
+      }   // namespace repository_impl
+
     // forward-declare repository class
     template <typename number=default_number_type> class repository;
 

@@ -581,7 +581,7 @@ namespace transport
                 throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
               }
 
-		        return(pipe.attach(t->second.get_task(), tags));
+		        return pipe.attach(t->second.get_task(), t->second.get_specifier(), tags);
 			    }
 
 

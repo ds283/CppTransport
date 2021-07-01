@@ -2720,39 +2720,26 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< content_group_record<integration_payload> >
-    data_manager_sqlite3<number>::datapipe_attach_integration_content
-      (datapipe<number>& pipe, integration_content_finder<number>& finder, const std::string& name, const tag_list& tags)
+    void data_manager_sqlite3<number>::datapipe_attach_content
+      (datapipe<number>& pipe, const content_group_record<integration_payload>& content_record)
       {
-        // find a suitable content group for this task; will throw an exception if no suitable content group can be found
-        auto group = finder(name, tags);
-        const auto& payload = group->get_payload();
+        const auto& payload = content_record.get_payload();
 
         // get path to the content group data container
-        boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();
-
+        boost::filesystem::path ctr_path = content_record.get_abs_repo_path() / payload.get_container_path();
         this->datapipe_attach_container(pipe, ctr_path);
-
-        return std::move(group);   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
     template <typename number>
-    std::unique_ptr< content_group_record<postintegration_payload> >
-    data_manager_sqlite3<number>::datapipe_attach_postintegration_content
-      (datapipe<number>& pipe, postintegration_content_finder<number>& finder, const std::string& name, const tag_list& tags)
+    void data_manager_sqlite3<number>::datapipe_attach_content
+      (datapipe<number>& pipe, const content_group_record<postintegration_payload>& content_record)
       {
-
-        // find a suitable content group for this task; will throw an exception if no suitable content group can be found
-        auto group = finder(name, tags);
-        const auto& payload = group->get_payload();
+        const auto& payload = content_record.get_payload();
 
         // get path to the content group data container
-        boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();
-
+        boost::filesystem::path ctr_path = content_record.get_abs_repo_path() / payload.get_container_path();
         this->datapipe_attach_container(pipe, ctr_path);
-
-        return std::move(group);   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 

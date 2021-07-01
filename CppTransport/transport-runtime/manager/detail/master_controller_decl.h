@@ -76,69 +76,6 @@ namespace transport
         template <typename number> class Checkpoint_Context;
         template <typename number> class CloseDown_Context;
 
-
-        //! ContentGroupFilterPredicate is used to filter content groups supplied by task_record<>
-        //! for specific properties
-        template <typename number>
-        class ContentGroupFilterPredicate
-          {
-          public:
-
-            //! constructor captures repository, content group specifiers and tag list
-            ContentGroupFilterPredicate(repository<number>& r, const content_group_specifier& s, const tag_list& tg)
-              : repo{r},
-                specifier{s},
-                tags{tg}
-              {
-              }
-
-              // INTERFACE
-
-          public:
-
-            //! determine whether a named content group matches our criteria
-            bool operator()(const std::string& name) const
-              {
-                switch(this->specifier.get_type())
-                  {
-                    case task_type::integration:
-                      return this->match_integration_content_group(name);
-
-                    case task_type::postintegration:
-                      return this->match_postintegration_content_group(name);
-
-                    case task_type::output:
-                      throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_BAD_TASK_TYPE_CONTENT_GROUP_FILTER);
-                  }
-                return true;
-              }
-
-
-              // INTERNAL METHODS
-
-          protected:
-
-            //! test integration content group
-            bool match_integration_content_group(const std::string& name) const;
-
-            //! test postintegration content group
-            bool match_postintegration_content_group(const std::string& name) const;
-
-              // INTERNAL DATA
-
-          private:
-
-            //! reference to repository
-            repository<number>& repo;
-
-            //!± content group specifier, or nullptr if not specified
-            const content_group_specifier& specifier;
-
-            //! refernce to supplied tag list (which may be empty)
-            const tag_list& tags;
-
-          };
-
       }
 
     // aggregator classes forward-declared in aggregation_forward_declare.h
@@ -344,13 +281,13 @@ namespace transport
 
         //! Master node: Dispatch an integration task to the worker processes.
         //! Makes a queue then invokes master_dispatch_integration_queue()
-        void dispatch_integration_task(integration_task_record<number>& rec, bool seeded, const std::string& seed_group, const tag_list& tags);
+        void dispatch_integration_task(integration_task_record<number>& rec, const job_descriptor& job);
 
         //! Master node: Dispatch an integration queue to the worker processes.
         template <typename TaskObject>
-        void schedule_integration(integration_task_record<number>& rec, TaskObject* tk,
-                                  bool seeded, const std::string& seed_group, const tag_list& tags,
-                                  slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+        void schedule_integration
+          (integration_task_record<number>& rec, TaskObject* tk, const job_descriptor& job,
+           slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Seed an integration writer using a previous integration
         //! returns list of serial numbers which remain to be integrated
@@ -358,16 +295,18 @@ namespace transport
         serial_number_list seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group);
 
         //! Master node: Pass new integration task to the workers
-        bool integration_task_to_workers(integration_writer<number>& writer,
-                                         integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
-                                         slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+        bool integration_task_to_workers
+          (integration_writer<number>& writer, integration_aggregator<number>& i_agg,
+           postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
+           slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: debrief after task completion
         void debrief_integration(integration_writer<number>& writer, integration_metadata& i_metadata);
 
         //! Master node: respond to an aggregation request
-        void aggregate_integration(integration_writer<number>& writer, unsigned int worker, unsigned int id,
-                                   MPI::data_ready_payload& payload, integration_metadata &metadata);
+        void aggregate_integration
+          (integration_writer<number>& writer, unsigned int worker, unsigned int id,
+           MPI::data_ready_payload& payload, integration_metadata &metadata);
 
         //! Master node: update integration metadata after a worker has finished its tasks
         void update_integration_metadata(MPI::finished_integration_payload& payload, integration_metadata& metadata);
@@ -378,34 +317,27 @@ namespace transport
       protected:
 
         //! Master node: Dispatch a postintegration task to the worker processes.
-        void dispatch_postintegration_task(postintegration_task_record<number>& rec, bool seeded, const std::string& seed_group, const tag_list& tags);
-
-        //! Master node: validate that a suitable content group exists before scheduling a postintegration task
-        void validate_content_group(integration_task<number>* tk, const tag_list& tags);
-
-        //! Master node: validate that a suitable content group exists before scheduling a postintegration task
-        void validate_content_group(postintegration_task<number>* tk, const tag_list& tags);
+        void dispatch_postintegration_task(postintegration_task_record<number>& rec, const job_descriptor& job);
 
         //! Master node: Dispatch a postintegration queue to the worker processes
         template <typename TaskObject>
-        void schedule_postintegration(postintegration_task_record<number>& rec, TaskObject* tk,
-                                      bool seeded, const std::string& seed_group, const tag_list& tags,
-                                      slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+        void schedule_postintegration
+          (postintegration_task_record<number>& rec, TaskObject* tk, const job_descriptor& job,
+           slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Dispatch a paired postintegration queue to the worker processes
         template <typename TaskObject, typename ParentTaskObject>
-        void schedule_paired_postintegration(postintegration_task_record<number>& rec, TaskObject* tk, ParentTaskObject* ptk,
-                                             bool seeded, const std::string& seed_group, const tag_list& tags,
-                                             slave_work_event::event_type begin_label,
-                                             slave_work_event::event_type end_label);
+        void schedule_paired_postintegration
+          (postintegration_task_record<number>& rec, TaskObject* tk, ParentTaskObject* ptk, const job_descriptor& job,
+           slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: use parent content group to push settings for a postintegration writer
-        void postintegration_settings_from_integration_content(postintegration_writer<number>& writer,
-                                                               const std::string& ptk_name, const tag_list& tags);
+        void postintegration_settings_from_integration_content
+          (postintegration_writer<number>& writer, const std::string& ptk_name, const tag_list& tags);
 
         //! Master node: use parent content group to push settings for a postintegration writer
-        void postintegration_settings_from_postintegration_content(postintegration_writer<number>& writer,
-                                                                   const std::string& ptk_name, const tag_list& tags);
+        void postintegration_settings_from_postintegration_content
+          (postintegration_writer<number>& writer, const std::string& ptk_name, const tag_list& tags);
 
         //! Master node: Seed an integration writer using a previous integration
         template <typename TaskObject>
@@ -413,13 +345,15 @@ namespace transport
 
         //! Master node: Seed a pair of integration & postintegration writers using a previous integration/postintegration output
         template <typename TaskObject, typename ParentTaskObject>
-        serial_number_list seed_writer_pair(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
-                                                 TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group);
+        serial_number_list seed_writer_pair
+          (integration_writer<number>& i_writer, postintegration_writer<number>& p_writer, TaskObject* tk,
+           ParentTaskObject* ptk, const std::string& seed_group);
 
         //! Master node: Pass new postintegration task to workers
-        bool postintegration_task_to_workers(postintegration_writer<number>& writer, const tag_list& tags,
-                                             integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
-                                             slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+        bool postintegration_task_to_workers
+          (postintegration_writer<number>& writer, const tag_list& tags, integration_aggregator<number>& i_agg,
+           postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
+           slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Pass new paired postintegration task to workers
         bool paired_postintegration_task_to_workers(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
@@ -437,12 +371,13 @@ namespace transport
       protected:
 
         //! Master node: Dispatch an output 'task' (ie., generation of derived data products) to the worker processes
-        void dispatch_output_task(output_task_record<number>& rec, const tag_list& tags);
+        void dispatch_output_task(output_task_record<number>& rec, const job_descriptor& job);
 
         //! Master node: Pass new output task to the workers
-        bool output_task_to_workers(derived_content_writer<number>& writer, const tag_list& tags,
-                                    integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
-                                    slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+        bool output_task_to_workers
+          (derived_content_writer<number>& writer, const tag_list& tags, integration_aggregator<number>& i_agg,
+           postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
+           slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: debrief after task completion
         template <typename WriterObject>
@@ -549,6 +484,21 @@ namespace transport
         //! report manager
         report_manager reporter;
 
+        //! integration content finder
+        //! if needed, this enforces the same policies to select content groups that will be used when we attach
+        //! content to a datapipe<>. This ensures we get a consistent answer to the question of whether a
+        //! suitable content group exists
+        std::unique_ptr< integration_content_finder<number> > i_finder;
+
+        //! postintegration content finder
+        //! if needed, this enforces the same policies to select content groups that will be used when we attach
+        //! content to a datapipe<>. This ensures we get a consistent answer to the question of whether a
+        //! suitable content group exists
+        std::unique_ptr< postintegration_content_finder<number> > p_finder;
+
+
+        // JOB QUEUE
+
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;
 
@@ -580,8 +530,8 @@ namespace transport
 
             //! constructor performs setup of workers belonging to the MPI environment
             WorkerPool_Context(boost::mpi::environment& e, boost::mpi::communicator& c,
-                         repository<number>* r, work_journal& j, argument_cache& a,
-                         busyidle_timer_set& t);
+                               repository<number>* r, work_journal& j, argument_cache& a,
+                               busyidle_timer_set& t);
 
             //! destructor handles terminatiaon of workers belonging to the MPI environment
             ~WorkerPool_Context();
@@ -779,6 +729,7 @@ namespace transport
           };
 
       }
+
 
   }   // namespace transport
 

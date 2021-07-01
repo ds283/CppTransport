@@ -42,8 +42,8 @@ namespace transport
     using namespace master_controller_impl;
 
     template <typename number>
-    void master_controller<number>::dispatch_integration_task(integration_task_record<number>& rec, bool seeded, const std::string& seed_group,
-                                                              const tag_list& tags)
+    void master_controller<number>::dispatch_integration_task
+      (integration_task_record<number>& rec, const job_descriptor& job)
       {
         // can't process a task if there are no workers
         if(this->world.size() == 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
@@ -58,13 +58,13 @@ namespace transport
           {
             this->work_scheduler.set_state_size(m->backend_twopf_state_size());
             this->work_scheduler.prepare_queue(*tka);
-            this->schedule_integration(rec, tka, seeded, seed_group, tags, slave_work_event::event_type::begin_twopf_assignment, slave_work_event::event_type::end_twopf_assignment);
+            this->schedule_integration(rec, tka, job, slave_work_event::event_type::begin_twopf_assignment, slave_work_event::event_type::end_twopf_assignment);
           }
         else if((tkb = dynamic_cast< threepf_task<number>* >(tk)) != nullptr)
           {
             this->work_scheduler.set_state_size(m->backend_threepf_state_size());
             this->work_scheduler.prepare_queue(*tkb);
-            this->schedule_integration(rec, tkb, seeded, seed_group, tags, slave_work_event::event_type::begin_threepf_assignment, slave_work_event::event_type::end_threepf_assignment);
+            this->schedule_integration(rec, tkb, job, slave_work_event::event_type::begin_threepf_assignment, slave_work_event::event_type::end_threepf_assignment);
           }
         else
           {
@@ -77,9 +77,9 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    void master_controller<number>::schedule_integration(integration_task_record<number>& rec, TaskObject* tk,
-                                                         bool seeded, const std::string& seed_group, const tag_list& tags,
-                                                         slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+    void master_controller<number>::schedule_integration
+      (integration_task_record<number>& rec, TaskObject* tk, const job_descriptor& job,
+       slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         // check whether this task has a default checkpoint interval
         // if so, instruct workers to change their interval unless we have been overriden by the command line
@@ -97,7 +97,7 @@ namespace transport
         // create an output writer to commit the result of this integration to the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        auto writer = this->repo->new_integration_task_content(rec, tags, this->get_rank(), 0, this->world.size());
+        auto writer = this->repo->new_integration_task_content(rec, job.get_tags(), this->get_rank(), 0, this->world.size());
     
         // create new timer for this task; the BusyIdle_Context manager
         // ensures the timer is removed when the context manager is destroyed
@@ -110,7 +110,7 @@ namespace transport
         this->data_mgr->create_tables(*writer, tk);
 
         // seed writer if a group has been provided; resets the work queue if required
-        if(seeded) this->seed_writer(*writer, tk, seed_group);
+        if(job.is_seeded()) this->seed_writer(*writer, tk, job.get_seed_group());
 
         // register writer with the repository -- allows its debris to be recovered later if a crash occurs
         this->repo->register_writer(*writer);
@@ -177,9 +177,10 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::integration_task_to_workers(integration_writer<number>& writer,
-                                                                integration_aggregator<number>& i_agg, postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
-                                                                slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+    bool master_controller<number>::integration_task_to_workers
+      (integration_writer<number>& writer, integration_aggregator<number>& i_agg,
+       postintegration_aggregator<number>& p_agg, derived_content_aggregator<number>& d_agg,
+       slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         assert(this->repo != nullptr);
 

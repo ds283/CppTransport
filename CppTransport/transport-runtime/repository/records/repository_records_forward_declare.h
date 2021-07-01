@@ -51,5 +51,7 @@ namespace transport
 
 	}   // namespace transport
 
+#include "transport-runtime/repository/detail/repository_record_databases.h"
+
 
 #endif //CPPTRANSPORT_REPOSITORY_RECORDS_FORWARD_DECLARE_H

@@ -64,6 +64,8 @@ namespace transport
     constexpr auto CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B    = "and";
     constexpr auto CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C    = "do not have the same missing k-configurations and cannot be used to seed a paired integration";
 
+    constexpr auto CPPTRANSPORT_NO_SEED_GROUP_SET                  = "Attempt to read seed group name, but it has not been set";
+
     constexpr auto CPPTRANSPORT_PROCESSING_GANTT_CHART             = "generating process Gantt chart";
     constexpr auto CPPTRANSPORT_PROCESSING_ACTIVITY_JOURNAL        = "generating activity journal";
 

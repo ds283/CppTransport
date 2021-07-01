@@ -393,12 +393,10 @@ namespace transport
       public:
 
         //! Create a datapipe
-        virtual std::unique_ptr< datapipe<number> > create_datapipe(const boost::filesystem::path& logdir,
-                                                                    const boost::filesystem::path& tempdir,
-                                                                    integration_content_finder<number>& integration_finder,
-                                                                    postintegration_content_finder<number>& postintegration_finder,
-                                                                    datapipe_dispatch_function <number>& dispatcher,
-                                                                    unsigned int worker, bool no_log = false) = 0;
+        virtual std::unique_ptr< datapipe<number> > create_datapipe
+          (const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
+           integration_content_finder<number>& integration_finder, postintegration_content_finder<number>& postintegration_finder,
+           datapipe_dispatch_function <number>& dispatcher, unsigned int worker, bool no_log = false) = 0;
 
 
         // -- ATTACH
@@ -406,14 +404,12 @@ namespace transport
       public:
 
         //! Attach an integration content group to a datapipe
-        virtual std::unique_ptr< content_group_record<integration_payload> >
-        datapipe_attach_integration_content(datapipe<number>& pipe, integration_content_finder<number>& finder,
-                                            const std::string& name, const tag_list& tags) = 0;
+        virtual void datapipe_attach_content
+          (datapipe<number>& pipe, const content_group_record<integration_payload>& content_record) = 0;
 
         //! Attach an postintegration content group to a datapipe
-        virtual std::unique_ptr< content_group_record<postintegration_payload> >
-        datapipe_attach_postintegration_content(datapipe<number>& pipe, postintegration_content_finder<number>& finder,
-                                                const std::string& name, const tag_list& tags) = 0;
+        virtual void datapipe_attach_content
+          (datapipe<number>& pipe, const content_group_record<postintegration_payload>& content_record) = 0;
 
         //! Detach a content_group_record from a pipe
         virtual void datapipe_detach(datapipe<number>* pipe) = 0;

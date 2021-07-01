@@ -45,6 +45,9 @@ namespace transport
         arg_cache(ac),
         finder(f),
         data_mgr(data_manager_factory<number>(le, ac)),
+        repo{nullptr},        // initialized later
+        i_finder{nullptr},    // initialized with repository
+        p_finder{nullptr},    // initialized with repository
         err(error_handler(le, ac)),
         warn(warning_handler(le, ac)),
         msg(message_handler(le, ac))
@@ -158,6 +161,10 @@ namespace transport
             // set up a repository
             this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly, this->local_env, this->arg_cache);
 
+            // generate content finder agents attached to this repository
+            this->i_finder = std::make_unique< integration_content_finder<number> >(*this->repo);
+            this->p_finder = std::make_unique< postintegration_content_finder<number> >(*this->repo);
+
             // overwrite current argument cache (by copy assignment) with the one provided in the payload
             // changes in the batcher/pipe capacities and the checkpoint interval will be visible to
             // the data manager, because it has a reference to the arg_cache member
@@ -177,7 +184,9 @@ namespace transport
                 std::cout << "TRACE_OUTPUT L" << '\n';
 #endif
                 this->err(xe.what());
-                repo = nullptr;
+                this->repo = nullptr;
+                this->i_finder = nullptr;
+                this->p_finder = nullptr;
               }
             else throw;
           }
@@ -561,15 +570,13 @@ namespace transport
         // since there is currently no capacity to process output tasks on a GPU
         this->send_worker_data();
 
-        // set up content-group finder function; must survive throughout lifetime of datapipe
-        integration_content_finder<number>     i_finder(*this->repo);
-        postintegration_content_finder<number> p_finder(*this->repo);
-
-        // set up content-dispatch function; must survive throughout lifetime of datapipe
+        // set up content-dispatch agent; must survive throughout lifetime of datapipe
         slave_datapipe_dispatch<number> dispatcher(*this);
 
-        // acquire a datapipe which we can use to stream content from the databse
-        std::unique_ptr< datapipe<number> > pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank());
+        // acquire a datapipe which we can use to stream content from the database
+        std::unique_ptr< datapipe<number> > pipe =
+          this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
+                                          *(this->i_finder), *(this->p_finder), dispatcher, this->get_rank());
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -857,7 +864,7 @@ namespace transport
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
-                this->schedule_postintegration(z2pf, ptk, payload, batcher);
+                this->schedule_postintegration(z2pf, ptk, make_zeta_twopf_content_specifier(z2pf->get_collect_spectral_data()), payload, batcher);
               }
           }
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
@@ -906,7 +913,7 @@ namespace transport
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
-                this->schedule_postintegration(z3pf, ptk, payload, batcher);
+                this->schedule_postintegration(z3pf, ptk, make_zeta_threepf_content_specifier(), payload, batcher);
               }
           }
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
@@ -941,7 +948,7 @@ namespace transport
             // construct batcher to hold output
             auto batcher = this->data_mgr->create_temp_fNL_container(zfNL, payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher), zfNL->get_template());
 
-            this->schedule_postintegration(zfNL, ptk, payload, batcher);
+            this->schedule_postintegration(zfNL, ptk, make_fNL_content_specifier(), payload, batcher);
           }
         else
           {
@@ -954,8 +961,9 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject, typename BatchObject>
-    void slave_controller<number>::schedule_postintegration(TaskObject* tk, ParentTaskObject* ptk,
-                                                            const MPI::new_postintegration_payload& payload, BatchObject& batcher)
+    void slave_controller<number>::schedule_postintegration
+      (TaskObject* tk, ParentTaskObject* ptk, const content_group_specifier& specifier,
+       const MPI::new_postintegration_payload& payload, BatchObject& batcher)
       {
         assert(tk != nullptr);    // should be guaranteed
         assert(ptk != nullptr);   // should be guaranteed
@@ -968,17 +976,14 @@ namespace transport
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
-        // set up content-group finder functions; must survive throughout lifetime of datapipe
-        integration_content_finder<number>     i_finder(*this->repo);
-        postintegration_content_finder<number> p_finder(*this->repo);
-
-        // set up empty content-dispatch function -- this datapipe is not used to produce content
+        // set up empty content-dispatch agent -- this datapipe is not used to produce content
         // must survive throughout lifetime of datapipe
         slave_null_dispatch_function<number> dispatcher(*this);
 
         // acquire a datapipe which we can use to stream content from the database
-        auto pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
-                                                    i_finder, p_finder, dispatcher, this->get_rank(), true);
+        auto pipe =
+          this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
+                                          *(this->i_finder), *(this->p_finder), dispatcher, this->get_rank(), true);
 
         bool complete = false;
         while(!complete)
@@ -1027,7 +1032,7 @@ namespace transport
                     try
                       {
                         // attach datapipe to the best-match content group for the task ptk and specified tags
-                        group = pipe->attach(*ptk, payload.get_tags());
+                        group = pipe->attach(*ptk, specifier, payload.get_tags());
 
                         // use this content group to do whatever work is required
                         this->work_handler.postintegration_handler(tk, ptk, work, batcher, *pipe);

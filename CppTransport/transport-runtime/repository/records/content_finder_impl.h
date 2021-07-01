@@ -34,18 +34,66 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< content_group_record<integration_payload> >
-    integration_content_finder<number>::operator()(const std::string& name, const tag_list& tags)
+    bool ContentGroupFilterPredicate<number>::match_integration_content_group
+      (const std::string& name) const
       {
-        return this->repo.find_integration_task_output(name, tags);
+        auto rec = this->repo.query_integration_content(name);
+        if(!rec) return false;
+
+        // check required tags match, if present
+        if(!rec->check_tags(this->tags)) return false;
+
+        auto& payload = rec->get_payload();
+
+        // if failed, no match
+        if(payload.is_failed()) return false;
+
+        // test whether payload contains everything required by specifier
+        return payload >= this->specifier;
       }
 
 
     template <typename number>
-    std::unique_ptr< content_group_record<postintegration_payload> >
-    postintegration_content_finder<number>::operator()(const std::string& name, const tag_list& tags)
+    bool ContentGroupFilterPredicate<number>::match_postintegration_content_group
+      (const std::string& name) const
       {
-        return this->repo.find_postintegration_task_output(name, tags);
+        auto rec = this->repo.query_postintegration_content(name);
+        if(!rec) return false;
+
+        // check required tags match, if present
+        if(!rec->check_tags(this->tags)) return false;
+
+        auto& payload = rec->get_payload();
+
+        // if failed, no match
+        if(payload.is_failed()) return false;
+
+        // test whether payload contains everything required by specifier
+        return payload >= this->specifier;
+      }
+
+
+    template <typename number>
+    template <typename ContentSelectorPolicyType>
+    std::unique_ptr< content_group_record<integration_payload> >
+    integration_content_finder<number>::operator()
+      (const std::string& name, const content_group_specifier& specifier, const tag_list& tags,
+        bool raise, ContentSelectorPolicyType policy)
+      {
+        return this->repo.find_integration_task_output(
+          name, ContentGroupFilterPredicate<number>(this->repo, specifier, tags), raise, policy);
+      }
+
+
+    template <typename number>
+    template <typename ContentSelectorPolicyType>
+    std::unique_ptr< content_group_record<postintegration_payload> >
+    postintegration_content_finder<number>::operator()
+      (const std::string& name, const content_group_specifier& specifier, const tag_list& tags,
+       bool raise, ContentSelectorPolicyType policy)
+      {
+        return this->repo.find_postintegration_task_output(
+          name, ContentGroupFilterPredicate<number>(this->repo, specifier, tags), raise, policy);
       }
 
 

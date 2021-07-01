@@ -134,7 +134,7 @@ namespace transport
 
         //! Slave node: process a postintegration queue
         template <typename TaskObject, typename ParentTaskObject, typename BatchObject>
-        void schedule_postintegration(TaskObject* tk, ParentTaskObject* ptk,
+        void schedule_postintegration(TaskObject* tk, ParentTaskObject* ptk, const content_group_specifier& specifier,
                                       const MPI::new_postintegration_payload& payload, BatchObject& batcher);
 
         //! No-op push content for connexion to datapipe
@@ -198,6 +198,21 @@ namespace transport
 
         //! Handler for postintegration and output tasks
         slave_work_handler<number> work_handler;
+
+
+        // AGENTS
+
+        //! integration content finder
+        //! if needed, this enforces the same policies to select content groups that will be used when we attach
+        //! content to a datapipe<>. This ensures we get a consistent answer to the question of whether a
+        //! suitable content group exists
+        std::unique_ptr< integration_content_finder<number> > i_finder;
+
+        //! postintegration content finder
+        //! if needed, this enforces the same policies to select content groups that will be used when we attach
+        //! content to a datapipe<>. This ensures we get a consistent answer to the question of whether a
+        //! suitable content group exists
+        std::unique_ptr< postintegration_content_finder<number> > p_finder;
 
 
         // ERROR CALLBACKS

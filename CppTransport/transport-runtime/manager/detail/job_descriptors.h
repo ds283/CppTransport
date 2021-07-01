@@ -53,19 +53,19 @@ namespace transport
           public:
 
             job_descriptor(job_type t, std::string n, tag_list tg, std::string o)
-              : type(t),
-                name(std::move(n)),
-                tags(std::move(tg)),
-                output(std::move(o)),
-                seeded(false)
+              : type{t},
+                name{std::move(n)},
+                tags{std::move(tg)},
+                output{std::move(o)},
+                seed_group{boost::none}
               {
               }
 
             job_descriptor(job_type t, std::string n, tag_list tg)
-              : type(t),
-                name(std::move(n)),
-                tags(std::move(tg)),
-                seeded(false)
+              : type{t},
+                name{std::move(n)},
+                tags{std::move(tg)},
+                seed_group{boost::none}
               {
               }
 
@@ -89,7 +89,7 @@ namespace transport
 
 
             //! return job tags
-            const std::list<std::string>& get_tags() const
+            const tag_list& get_tags() const
               {
                 return this->tags;
               }
@@ -105,7 +105,6 @@ namespace transport
             //! set job seeding group
             void set_seed(const std::string& s)
               {
-                this->seeded = true;
                 this->seed_group = s;
               }
 
@@ -113,15 +112,25 @@ namespace transport
             //! determine job seeding status
             bool is_seeded() const
               {
-                return this->seeded;
+                // boost::optional support conversion to bool, to determine if it is populated
+                return static_cast<bool>(this->seed_group);
               }
 
 
             //! get job seeding group
             const std::string& get_seed_group() const
               {
-                return this->seed_group;
+                if(!this->seed_group)
+                  throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_NO_SEED_GROUP_SET);
+                return this->seed_group.get();
               };
+
+
+            //! set as unseeded
+            void set_unseeded()
+              {
+                this->seed_group = boost::none;
+              }
 
 
             // INTERNAL DATA
@@ -140,11 +149,8 @@ namespace transport
             //! output destination, if needed
             std::string output;
 
-            //! is this job seeded
-            bool seeded;
-
             //! seed group, if used
-            std::string seed_group;
+            boost::optional<std::string> seed_group;
 
           };
 

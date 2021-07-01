@@ -233,7 +233,7 @@ namespace transport
 
 
     template <typename number>
-    std::string datapipe<number>::attach(const derivable_task<number>& tk, const tag_list& tags)
+    std::string datapipe<number>::attach(const derivable_task<number>& tk, const content_group_specifier& specifier, const tag_list& tags)
       {
         // check that we are not already attached to a content group
         assert(this->validate_unattached());
@@ -247,10 +247,10 @@ namespace transport
               {
                 const auto& itk = dynamic_cast< const integration_task<number>& >(tk);
 
-                // datapipe_attach_integration_content() will throw an exception if no suitable content group can be found
-                this->attached_integration_group =
-                  this->data_mgr.datapipe_attach_integration_content(
-                    *this, this->utilities.integration_finder, itk.get_name(), tags);
+                // fourth argument 'true' forces an exception to be thrown if no suitable content group can be
+                // matched, so it is safe to assume that the returned record is not nullptr
+                this->attached_integration_group = this->utilities.integration_finder(itk.get_name(), specifier, tags, true);
+                this->data_mgr.datapipe_attach_content(*this, *this->attached_integration_group);
 
                 this->type = attachment_type::integration_attached;
 
@@ -271,13 +271,13 @@ namespace transport
 
             case task_type::postintegration:
               {
-                // datapipe_attach_postintegration_content() will throw an exception if no suitable content group can be found
-                this->attached_postintegration_group =
-                  this->data_mgr.datapipe_attach_postintegration_content(
-                    *this, this->utilities.postintegration_finder, tk.get_name(), tags);
+                // fourth argument 'true' forces an exception to be thrown if no suitable content group can be
+                // matched, so it is safe to assume that the returned record is not nullptr
+                this->attached_postintegration_group = this->utilities.postintegration_finder(tk.get_name(), specifier, tags, true);
+
+                this->data_mgr.datapipe_attach_content(*this, *this->attached_postintegration_group);
 
                 this->type = attachment_type::postintegration_attached;
-
                 this->N_fields = 0;
 
                 postintegration_payload& payload = this->attached_postintegration_group->get_payload();

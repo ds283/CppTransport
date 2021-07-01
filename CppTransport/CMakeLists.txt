@@ -1121,6 +1121,7 @@ SET(TRANSPORT_RUNTIME_REPOSITORY_DETAIL_FILES
   transport-runtime/repository/detail/repository_decl.h
   transport-runtime/repository/detail/repository_impl.h
   transport-runtime/repository/detail/repository_mode.h
+  transport-runtime/repository/detail/repository_record_databases.h
   transport-runtime/repository/detail/writer_repo_decl.h
   transport-runtime/repository/detail/writer_repo_impl.h
   )
