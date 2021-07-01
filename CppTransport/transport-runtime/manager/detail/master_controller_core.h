@@ -313,6 +313,12 @@ namespace transport
         // capture busy/idle timers and switch to busy mode
         busyidle_instrument timers(this->busyidle_timers);
 
+        if(!this->i_finder)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_CONTENT_FINDER_NOT_SET);
+
+        if(!this->p_finder)
+          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_POSTINTEGRATION_CONTENT_FINDER_NOT_SET);
+
         // work through list of tasks needed as dependencies, deciding whether they have content groups
         for(auto t = requirements.begin(); t != requirements.end(); /* NOTE! intentionally no update step */)
           {
