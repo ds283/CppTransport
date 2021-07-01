@@ -806,19 +806,22 @@ namespace transport
               }
           }
 
+        // Select which content group to supply
+        auto selected = policy(filtered_groups);
+        std::unique_ptr< content_group_record<integration_payload> > rval;
+
+        if(selected)
+          {
+            selected.get().second.swap(rval);
+          }
+
         // if no matching groups, raise an exception
-        if(raise && filtered_groups.empty())
+        if(raise && !rval)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_CONTENT_GROUPS << " '" << name << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
-
-        // Select which content group to supply
-        auto& selected = policy(filtered_groups);
-
-        std::unique_ptr< content_group_record<integration_payload> > rval;
-        selected.second.swap(rval);
 
         return rval;
       }
@@ -853,19 +856,22 @@ namespace transport
               }
           }
 
+        // Select which content group to supply
+        auto selected = policy(filtered_groups);
+        std::unique_ptr< content_group_record<postintegration_payload> > rval;
+
+        if(selected)
+          {
+            selected.get().second.swap(rval);
+          }
+
         // if no matching groups, raise an exception
-        if(raise && filtered_groups.empty())
+        if(raise && !rval)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_CONTENT_GROUPS << " '" << name << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
-
-        // Select which content group to supply
-        auto& selected = policy(filtered_groups);
-
-        std::unique_ptr< content_group_record<postintegration_payload> > rval;
-        selected.second.swap(rval);
 
         return rval;
       }

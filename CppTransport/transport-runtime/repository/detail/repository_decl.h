@@ -81,10 +81,18 @@ namespace transport
 
           public:
 
-            typename ContentDatabaseType::value_type& operator()(ContentDatabaseType& matches) const
+            //! Select a content group from a database of candidate groups according to our policy.
+            //! Note that the database of candidates may be empty.
+            //! If we decline to select a group, we can return an empty boost::optional<>
+            boost::optional< typename ContentDatabaseType::value_type& > operator()(ContentDatabaseType& matches) const
               {
+                // test whether database is empty
+                if(matches.empty())
+                  return boost::none;
+
                 // assume ContentDatabaseType is stored in lexical order, in which case the most recent
-                // content group will be at the back
+                // content group will be at the back.
+                // here, it is safe to assume that the database is not empty.
                 return *(matches.rbegin());
               }
 
