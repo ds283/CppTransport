@@ -152,15 +152,18 @@ namespace transport
 
 
     template <typename number>
-    void slave_work_handler<number>::postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, device_queue_manager<threepf_kconfig_record>& work,
-                                                             zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe)
+    void slave_work_handler<number>::postintegration_handler
+      (zeta_threepf_task<number>* tk, threepf_task<number>* ptk, device_queue_manager<threepf_kconfig_record>& work,
+       zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
+        // extract work queues
         const auto& queues = work[0];
         assert(queues.size() == 1);
 
+        // extract work list from queue
         const auto& list = queues[0];
 
         // check that the datapipe is attached to an integration content group
@@ -171,19 +174,21 @@ namespace transport
         const derived_data::SQL_time_query tquery("1=1");
 
         // pull time configuration information from the database
-        typename datapipe<number>::time_config_handle& tc_handle   = pipe.new_time_config_handle(tquery);
-        time_config_tag<number>                        tc_tag      = pipe.new_time_config_tag();
-        const std::vector<time_config>                 time_values = tc_handle.lookup_tag(tc_tag);
+        auto& tc_handle   = pipe.new_time_config_handle(tquery);
+        auto  tc_tag      = pipe.new_time_config_tag();
+        auto  time_values = tc_handle.lookup_tag(tc_tag);
 
         // set up handle for compute delegate
         unsigned int N_fields = ptk->get_model()->get_N_fields();
-        std::unique_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, N_fields);
+        auto handle = this->zeta_computer.make_handle(pipe, ptk, tquery, N_fields);
 
-		    // buffer for computed values
+		    // set up reusable buffers to hold computed values, and intermediate working products
+		    // first, decide what size buffers are required
         const auto time_size = time_values.size();
         const auto gauge_xfm1_size = 2*N_fields;
         const auto gauge_xfm2_size = 2*N_fields * 2*N_fields;
 
+        // second, allocate storage
         std::vector<number> zeta_npf(time_size);
         std::vector<number> zeta_ns(time_size);
         std::vector<number> redbsp(time_size);
@@ -201,10 +206,14 @@ namespace transport
             gauge_xfm2_312[j].resize(gauge_xfm2_size);
           }
 
+        // step through required k-configurations, evaluating the zeta 2pf, 3pf and spectral index at each
+        // time sample point
         for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
+            // compute 3pf and reduced bispectrum
+            // The buffers zeta_npf, redbsp and gauge_* are re-used each time
             this->zeta_computer.threepf(*handle, zeta_npf, redbsp, gauge_xfm2_123, gauge_xfm2_213, gauge_xfm2_312, *(list[i]));
 		        assert(zeta_npf.size() == time_size);
 		        assert(redbsp.size() == time_size);
@@ -213,6 +222,7 @@ namespace transport
 		        assert(gauge_xfm2_213.size() == time_size);
 		        assert(gauge_xfm2_312.size() == time_size);
 
+		        // push computed values into the batcher
             for(unsigned int j = 0; j < time_size; ++j)
 	            {
                 batcher.push_threepf(time_values[j].serial, list[i]->serial, zeta_npf[j], redbsp[j]);
@@ -225,6 +235,7 @@ namespace transport
                 batcher.push_gauge_xfm2_312(time_values[j].serial, list[i]->serial, gauge_xfm2_312[j]);
 	            }
 
+            // if 2pf for configuration k1 is being stores, compute it and push to batcher
             if(list[i].is_twopf_k1_stored())
 	            {
                 twopf_kconfig k1;
@@ -241,6 +252,7 @@ namespace transport
 	                }
 	            }
 
+            // if 2pf for configuration k2 is being stores, compute it and push to batcher
             if(list[i].is_twopf_k2_stored())
 	            {
                 twopf_kconfig k2;
@@ -257,6 +269,7 @@ namespace transport
 	                }
 	            }
 
+            // if 2pf for configuration k3 is being stores, compute it and push to batcher
             if(list[i].is_twopf_k3_stored())
 	            {
                 twopf_kconfig k3;

@@ -108,6 +108,15 @@ namespace transport
 
                 //! cached gauge transformation coefficients
                 std::vector< std::vector<number> > dN;
+                
+                //! working space for temporary zeta 2pf values in k1 configuration, needed to computed reduced bispectrum
+                std::vector<number> twopf_k1;
+
+                //! working space for temporary zeta 2pf values in k2 configuration, needed to computed reduced bispectrum
+                std::vector<number> twopf_k2;
+
+                //! working space for temporary zeta 2pf values in k3 configuration, needed to computed reduced bispectrum
+                std::vector<number> twopf_k3;
 
                 friend class zeta_timeseries_compute;
 
@@ -136,11 +145,23 @@ namespace transport
 
           public:
 
-            //! compute a time series for the zeta two-point function
+            //! Compute a time series for the zeta two-point function.
+            //! The computed twopf is written into zeta_twopf and its spectral index is written into zeta_ns.
+            //! These buffers are assumed to be large enough to contain all time sample values in the handle h.
+            //! Each buffer is zeroed, but not resized.
+            //! The linear gauge transformation is copied into gauge_xfm1.
             void twopf(handle& h, std::vector<number>& zeta_twopf, std::vector<number>& zeta_ns,
                        std::vector< std::vector<number> >& gauge_xfm1, const twopf_kconfig& k) const;
 
-            //! compute a time series for the zeta three-point function
+            //! Compute a time series for the zeta three-point function
+            //! The computed threepf and reduced bipsectrum are written into zeta_threepf and redbsp respectively.
+            //! These buffers are assumed to be large enough to contain all time sample values in the handle h.
+            //! Each buffer is zeroed, but not resized.
+            //! The buffers gauge_xfm2_* provide working space for the computation of the 2nd order gauge
+            //! transformation. The first axis should be the length of the time series in h.
+            //! The second axis is a flattened 2N x 2N tensor, where N is the number of fields in the model.
+            //! These are assumed to be the correct size on entry. On exit they are overwritten with
+            //! the value of the gauge transformation.
             void threepf(handle& h, std::vector<number>& zeta_threepf, std::vector<number>& redbsp,
                          std::vector< std::vector<number> >& gauge_xfm2_123, std::vector< std::vector<number> >& gauge_xfm_213,
                          std::vector< std::vector<number> >& gauge_xfm2_312, const threepf_kconfig& k) const;
@@ -181,8 +202,9 @@ namespace transport
 
             // pull background data for the time_sample we are using,
             // and slice it up by time in an array 'background'
+            const auto t_axis_size = t_axis.size();
             background.clear();
-            background.resize(t_axis.size());
+            background.resize(t_axis_size);
 
             for(unsigned int i = 0; i < 2*N_fields; ++i)
               {
@@ -199,12 +221,16 @@ namespace transport
               }
 
             // cache gauge transformation coefficients
-            dN.resize(t_axis.size());
+            dN.resize(t_axis_size);
 		        for(unsigned int j = 0; j < background.size(); ++j)
               {
                 dN[j].resize(2*N_fields);
                 mdl->compute_gauge_xfm_1(tk, background[j], dN[j]);
               }
+              
+            twopf_k1.resize(t_axis_size);
+		        twopf_k2.resize(t_axis_size);
+		        twopf_k3.resize(t_axis_size);
           }
 
 
@@ -224,12 +250,9 @@ namespace transport
             (typename zeta_timeseries_compute<number>::handle& h, std::vector<number>& zeta_twopf,
              std::vector<number>& zeta_ns, const twopf_kconfig& k) const
           {
-            unsigned int N_fields = h.N_fields;
+            const unsigned int N_fields = h.N_fields;
 
-            // zero data vectors
-            zeta_twopf.clear();
-            zeta_ns.clear();
-
+            // zero output buffer
             const auto t_axis_size = h.t_axis.size();
             zeta_twopf.assign(t_axis_size, 0.0);
             zeta_ns.assign(t_axis_size, 0.0);
@@ -284,11 +307,9 @@ namespace transport
         void zeta_timeseries_compute<number>::twopf_no_ns
           (typename zeta_timeseries_compute<number>::handle& h, std::vector<number>& zeta_twopf, const twopf_kconfig& k) const
           {
-            unsigned int N_fields = h.N_fields;
+            const unsigned int N_fields = h.N_fields;
 
-            // zero data vector
-            zeta_twopf.clear();
-
+            // zero output buffer
             const auto t_axis_size = h.t_axis.size();
             zeta_twopf.assign(t_axis_size, 0.0);
 
@@ -335,7 +356,7 @@ namespace transport
            std::vector< std::vector<number> >& gauge_xfm2_213, std::vector< std::vector<number> >& gauge_xfm2_312,
            const threepf_kconfig& k) const
           {
-            unsigned int N_fields = h.N_fields;
+            const unsigned int N_fields = h.N_fields;
 
             const double k1 = k.k1_comoving;
             const double k2 = k.k2_comoving;
@@ -345,20 +366,28 @@ namespace transport
             const double k1k3 = k2*k2/(k1*k3);
             const double k2k3 = k1*k1/(k2*k3);
 
+            const auto t_axis_size = h.t_axis.size();
+
             // zeta_threepf, redbsp, gauge_xfm2_123, gauge_xfm2_213, gauge_xfm2_312 should be sized appropriately:
             // first axis is t_axis.size()
             // for gauge xfm2 values, second axis should be 2*Nfields * 2*Nfields
-            assert(zeta_threepf.size() == h.t_axis.size());
-            assert(redbsp.size() == h.t_axis.size());
-            assert(gauge_xfm2_123.size() == h.t_axis.size());
-            assert(gauge_xfm2_213.size() == h.t_axis.size());
-            assert(gauge_xfm2_312.size() == h.t_axis.size());
+            assert(zeta_threepf.size() == t_axis_size);
+            assert(redbsp.size() == t_axis_size);
+            assert(gauge_xfm2_123.size() == t_axis_size);
+            assert(gauge_xfm2_213.size() == t_axis_size);
+            assert(gauge_xfm2_312.size() == t_axis_size);
 
-            // cache gauge transformation coefficients
+            // zero output buffers
+            zeta_threepf.assign(t_axis_size, 0.0);
+            redbsp.assign(t_axis_size, 0.0);
+
+            // cache 2nd order gauge transformation coefficients
             // these have to be recomputed for each k-configuration, because they are time and shape-dependent
             // we take advantage of the caller-provided caches to store them; they should be correctly sized
 
-            for(unsigned int j = 0; j < h.t_axis.size(); ++j)
+            // notice we don't need to recompute the coefficients on the linear gauge transformation.
+            // these are stored in this->dN.
+            for(unsigned int j = 0; j < t_axis_size; ++j)
               {
                 assert(gauge_xfm2_123[j].size() == 2*N_fields * 2*N_fields);
                 assert(gauge_xfm2_213[j].size() == 2*N_fields * 2*N_fields);
@@ -452,10 +481,6 @@ namespace transport
               }
 
             // compute reduced bispectrum
-            std::vector<number> twopf_k1;
-            std::vector<number> twopf_k2;
-            std::vector<number> twopf_k3;
-
             twopf_kconfig k1_config;
             k1_config.serial         = k.k1_serial;
             k1_config.k_comoving     = k.k1_comoving;
@@ -471,14 +496,17 @@ namespace transport
             k3_config.k_comoving     = k.k3_comoving;
             k3_config.k_conventional = k.k3_conventional;
 
-            this->twopf_no_ns(h, twopf_k1, k1_config);
-            this->twopf_no_ns(h, twopf_k2, k2_config);
-            this->twopf_no_ns(h, twopf_k3, k3_config);
+            this->twopf_no_ns(h, h.twopf_k1, k1_config);
+            this->twopf_no_ns(h, h.twopf_k2, k2_config);
+            this->twopf_no_ns(h, h.twopf_k3, k3_config);
 
             // build the reduced bispectrum
             for(unsigned int j = 0; j < h.t_axis.size(); ++j)
               {
-                number form_factor = (6.0/5.0) * ( twopf_k1[j]*twopf_k2[j]*k1k2 + twopf_k1[j]*twopf_k3[j]*k1k3 + twopf_k2[j]*twopf_k3[j]*k2k3 );
+                number form_factor =
+                  (6.0/5.0) * ( h.twopf_k1[j]*h.twopf_k2[j]*k1k2
+                                + h.twopf_k1[j]*h.twopf_k3[j]*k1k3
+                                + h.twopf_k2[j]*h.twopf_k3[j]*k2k3 );
 
                 redbsp[j] = zeta_threepf[j] / form_factor;
               }
