@@ -140,9 +140,11 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
     zeta_twopf_index.set_dimensionless(true);
     zeta_twopf_index.set_spectral_index(true);
 
+    vis_toolkit::zeta_ns_wavenumber_series<> zeta_ns(ztk3, last_time, all_twopfs);
+
     vis_toolkit::wavenumber_series_plot<> zeta_twopf_index_plot("dquad.product.zeta-twopf.index-plot", "twopf-index-plot.pdf");
     zeta_twopf_index_plot.set_log_x(true);
-    zeta_twopf_index_plot += zeta_twopf_index;
+    zeta_twopf_index_plot += zeta_twopf_index + zeta_ns;
 
     // 4. Reduced bispectrum on equilateral configurations
 
@@ -179,13 +181,23 @@ void write_zeta_products(transport::repository<>& repo, transport::initial_condi
     vis_toolkit::time_series_plot<> threepf_time_plot("dquad.product.threepf-time", "threepf-time.pdf");
     threepf_time_plot += threepf_time;
 
+    // 8. Tensor spectral index
+
+    vis_toolkit::tensor_nt_wavenumber_series<> nt{tk3, vis_toolkit::index_selector<2>(2).none().set_on({0,0}),
+                                                  last_time, all_twopfs};
+    nt.set_current_x_axis_value(vis_toolkit::axis_value::k);
+
+    vis_toolkit::wavenumber_series_plot<> nt_plot{"dquad.product.tensor.indexx-plot", "tensor-index-plot.pdf"};
+    nt_plot.set_log_x(true);
+    nt_plot += nt;
+
     // Output task
 
     transport::output_task<> out_tk("dquad.output.zeta");
     out_tk += bg_plot + bg_mass_plot + bg_norm_mass_plot + sr_plot
               + zeta_twopf_plot + zeta_twopf_index_plot + zeta_redbsp_equi_plot
               + zeta_redbsp_equi_index_plot + zeta_redbsp_squeeze_plot
-              + threepf_time_plot;
+              + threepf_time_plot + nt_plot;
 
     repo.commit(out_tk);
   }
