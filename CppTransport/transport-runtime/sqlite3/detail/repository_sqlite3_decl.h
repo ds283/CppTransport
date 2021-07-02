@@ -218,6 +218,7 @@ namespace transport
         //! Without a transaction_manager object, the returned record is readonly
         virtual std::unique_ptr< content_group_record<output_payload> > query_output_content(const std::string& name) override;
 
+
         // READ/WRITE
 
         //! Read a package record from the database

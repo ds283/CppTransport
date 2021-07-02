@@ -531,7 +531,10 @@ namespace transport
           {
             // advise report manager that we are commencing a new task
             this->reporter.new_task(job.get_name(), tasks_processed+1, this->job_queue.size());
-        
+
+            // invalidate all record caches in the repository, so we do not receive stale copies
+            this->repo->flush_caches();
+
             switch(job.get_type())
               {
                 case job_type::job_task:

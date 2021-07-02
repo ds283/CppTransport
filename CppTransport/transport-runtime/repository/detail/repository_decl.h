@@ -257,6 +257,7 @@ namespace transport
         //! Without a transaction_manager object, the returned record is readonly
         virtual std::unique_ptr< content_group_record<output_payload> > query_output_content(const std::string& name) = 0;
 
+
         // READ/WRITE
 
         //! Read a package record from the database
@@ -330,7 +331,7 @@ namespace transport
 
         // RECORD CACHE, CACHE MANAGEMENT
 
-      protected:
+      public:
 
         //! flush record cache
         void flush_caches();

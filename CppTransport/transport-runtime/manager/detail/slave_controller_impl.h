@@ -234,13 +234,16 @@ namespace transport
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
+        // invalidate all record caches in the repository, so we do not receive stale copies
+        this->repo->flush_caches();
+
         // extract our task from the database
         // much of this is boiler-plate which is similar to master_process_task()
         // TODO: it would be nice to make this sharing more explicit, so the code isn't just duplicated
         try
           {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name());
+            auto record = this->repo->query_task(payload.get_task_name());
 
             switch(record->get_type())
               {
@@ -499,13 +502,16 @@ namespace transport
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
+        // invalidate all record caches in the repository, so we do not receive stale copies
+        this->repo->flush_caches();
+
         // extract our task from the database
         // much of this is boiler-plate which is similar to master_process_task()
         // TODO: it would be nice to make this sharing more explicit, so the code isn't just duplicated
         try
           {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name());
+            auto record = this->repo->query_task(payload.get_task_name());
 
             switch(record->get_type())
               {
@@ -748,6 +754,9 @@ namespace transport
 
         // ensure that a valid repository object has been constructed
         if(!this->repo) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
+
+        // invalidate all record caches in the repository, so we do not receive stale copies
+        this->repo->flush_caches();
 
         // extract our task from the database
         try
